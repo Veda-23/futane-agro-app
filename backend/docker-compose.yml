@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: futane-mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: Vedant
+      MYSQL_DATABASE: futane_agro
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  futane-app:
+    build: .
+    container_name: futane-agro-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/futane_agro?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Vedant
+    depends_on:
+      - mysql-db
+
+volumes:
+  mysql_data:

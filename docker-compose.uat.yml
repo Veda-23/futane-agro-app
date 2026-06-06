@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # MySQL Database Service for UAT
+  mysql-uat:
+    image: mysql:8.0
+    container_name: futane_agro_mysql_uat
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: Vedant
+      MYSQL_DATABASE: futane_agro_uat
+    volumes:
+      - mysql_uat_data:/var/lib/mysql
+    restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pVedant"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Spring Boot Backend Service for UAT
+  backend-uat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: futane_agro_backend_uat
+    ports:
+      - "8082:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=uat
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-uat:3306/futane_agro_uat?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=Vedant
+    depends_on:
+      mysql-uat:
+        condition: service_healthy
+    volumes:
+      - backend_uat_uploads:/app/uploads
+    restart: always
+
+  # Angular Frontend Service for UAT
+  frontend-uat:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - BUILD_CONFIG=uat
+    container_name: futane_agro_frontend_uat
+    ports:
+      - "8081:80"
+    depends_on:
+      - backend-uat
+    restart: always
+
+volumes:
+  mysql_uat_data:
+  backend_uat_uploads:

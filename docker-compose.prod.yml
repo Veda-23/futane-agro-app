@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # MySQL Database Service for Production
+  mysql-prod:
+    image: mysql:8.0
+    container_name: futane_agro_mysql_prod
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: Vedant
+      MYSQL_DATABASE: futane_agro_prod
+    volumes:
+      - mysql_prod_data:/var/lib/mysql
+    restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pVedant"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Spring Boot Backend Service for Production
+  backend-prod:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: futane_agro_backend_prod
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-prod:3306/futane_agro_prod?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=Vedant
+    depends_on:
+      mysql-prod:
+        condition: service_healthy
+    volumes:
+      - backend_prod_uploads:/app/uploads
+    restart: always
+
+  # Angular Frontend Service for Production
+  frontend-prod:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - BUILD_CONFIG=production
+    container_name: futane_agro_frontend_prod
+    ports:
+      - "80:80"
+    depends_on:
+      - backend-prod
+    restart: always
+
+volumes:
+  mysql_prod_data:
+  backend_prod_uploads:

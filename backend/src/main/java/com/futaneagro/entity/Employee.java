@@ -1,0 +1,185 @@
+package com.futaneagro.entity;
+
+import com.futaneagro.security.AttributeEncryptor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
+
+import javax.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "Employees")
+@SQLDelete(sql = "UPDATE Employees SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE emp_id = ?")
+@Where(clause = "is_deleted = false")
+public class Employee {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "emp_id")
+    private Integer empId;
+
+    @Column(name = "emp_name", nullable = false, length = 100)
+    private String empName;
+
+    @Column(name = "emp_contact", length = 20)
+    private String empContact;
+
+    @Column(name = "salary", nullable = false)
+    private BigDecimal salary;
+
+    @Column(name = "address", length = 255)
+    private String address;
+
+    @Column(name = "designation", length = 100)
+    private String designation;
+
+    @Column(name = "joining_date")
+    private LocalDate joiningDate;
+
+    @Column(name = "aadhaar_no", length = 20)
+    private String aadhaarNo;
+
+    @Column(name = "bank_account")
+    @Convert(converter = AttributeEncryptor.class)
+    private String bankAccount;
+
+    @Column(name = "photo_path", length = 255)
+    private String photoPath;
+
+    @Column(name = "aadhaar_card_path", length = 255)
+    private String aadhaarCardPath;
+
+    @Column(name = "bank_passbook_path", length = 255)
+    private String bankPassbookPath;
+
+    @Column(name = "is_deleted")
+    private Boolean isDeleted = false;
+
+    @Column(name = "deleted_by", length = 100)
+    private String deletedBy;
+
+    @Column(name = "deleted_date")
+    private LocalDate deletedDate;
+
+    public Employee() {}
+
+    public Integer getEmpId() {
+        return empId;
+    }
+
+    public void setEmpId(Integer empId) {
+        this.empId = empId;
+    }
+
+    public String getEmpName() {
+        return empName;
+    }
+
+    public void setEmpName(String empName) {
+        this.empName = empName;
+    }
+
+    public String getEmpContact() {
+        return empContact;
+    }
+
+    public void setEmpContact(String empContact) {
+        this.empContact = empContact;
+    }
+
+    public BigDecimal getSalary() {
+        return salary;
+    }
+
+    public void setSalary(BigDecimal salary) {
+        this.salary = salary;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getDesignation() {
+        return designation;
+    }
+
+    public void setDesignation(String designation) {
+        this.designation = designation;
+    }
+
+    public LocalDate getJoiningDate() {
+        return joiningDate;
+    }
+
+    public void setJoiningDate(LocalDate joiningDate) {
+        this.joiningDate = joiningDate;
+    }
+
+    public String getAadhaarNo() {
+        return aadhaarNo;
+    }
+
+    public void setAadhaarNo(String aadhaarNo) {
+        this.aadhaarNo = aadhaarNo;
+    }
+
+    public String getBankAccount() {
+        return bankAccount;
+    }
+
+    public void setBankAccount(String bankAccount) {
+        this.bankAccount = bankAccount;
+    }
+
+    public String getPhotoPath() {
+        return photoPath;
+    }
+
+    public void setPhotoPath(String photoPath) {
+        this.photoPath = photoPath;
+    }
+
+    public String getAadhaarCardPath() {
+        return aadhaarCardPath;
+    }
+
+    public void setAadhaarCardPath(String aadhaarCardPath) {
+        this.aadhaarCardPath = aadhaarCardPath;
+    }
+
+    public String getBankPassbookPath() {
+        return bankPassbookPath;
+    }
+
+    public void setBankPassbookPath(String bankPassbookPath) {
+        this.bankPassbookPath = bankPassbookPath;
+    }
+
+    public Boolean getIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(Boolean deleted) {
+        isDeleted = deleted;
+    }
+
+    public String getDeletedBy() {
+        return deletedBy;
+    }
+
+    public void setDeletedBy(String deletedBy) {
+        this.deletedBy = deletedBy;
+    }
+
+    public LocalDate getDeletedDate() {
+        return deletedDate;
+    }
+
+    public void setDeletedDate(LocalDate deletedDate) {
+        this.deletedDate = deletedDate;
+    }
+}
