@@ -164,7 +164,7 @@ export class AppComponent implements OnInit {
   isDarkMode = false;
   settingsList: any[] = [];
   usersList: any[] = [];
-  userForm = { username: '', password: '', role: 'OPERATOR', name: '' };
+  userForm = { username: '', password: '', role: 'OPERATOR', name: '', email: '' };
 
   constructor(private apiService: ApiService, private translateService: TranslateService, private sanitizer: DomSanitizer) {}
 
@@ -247,6 +247,15 @@ export class AppComponent implements OnInit {
         'expenses', 'bank', 'invoices', 'billinghub', 'reports', 'analytics'
       ];
       adminTabs.forEach(t => this.accessibleTabs[t] = true);
+    } else if (role === 'MANAGER') {
+      // Cannot access Settings or Audit Logs, but can access almost everything else
+      const managerTabs = [
+        'dashboard', 'production', 'monthly-production', 'parties', 'sales',
+        'payments', 'raw-materials', 'vendors', 'inventory', 'employees',
+        'salaries', 'transports', 'drivers', 'machines', 'dispatch',
+        'expenses', 'bank', 'invoices', 'billinghub', 'reports', 'analytics'
+      ];
+      managerTabs.forEach(t => this.accessibleTabs[t] = true);
     } else if (role === 'ACCOUNTANT') {
       // Payments, Salary, Expenses, Invoices, Reports
       const accountantTabs = [
@@ -1291,14 +1300,33 @@ export class AppComponent implements OnInit {
     this.apiService.createUser(this.userForm).subscribe(() => {
       this.loadAllData();
       this.logAudit('Created user account: ' + this.userForm.username);
-      this.userForm = { username: '', password: '', role: 'OPERATOR', name: '' };
+      this.userForm = { username: '', password: '', role: 'OPERATOR', name: '', email: '' };
     });
   }
 
-  updateUserRole(username: string, role: string) {
-    this.apiService.updateUser(username, { role }).subscribe(() => {
-      this.loadAllData();
-      this.logAudit('Updated role for user ' + username + ' to ' + role);
+  updateUserRole(username: string, newRole: string) {
+    if (this.isViewer()) return;
+    this.apiService.updateUser(username, { role: newRole }).subscribe({
+      next: () => {
+        const u = this.usersList.find(x => x.username === username);
+        if (u) u.role = newRole;
+      },
+      error: err => console.error('Error updating role', err)
+    });
+  }
+
+  updateUserEmail(username: string, newEmail: string) {
+    if (this.isViewer()) return;
+    this.apiService.updateUser(username, { email: newEmail }).subscribe({
+      next: () => {
+        const u = this.usersList.find(x => x.username === username);
+        if (u) u.email = newEmail;
+        alert('Email updated successfully!');
+      },
+      error: err => {
+        console.error('Error updating email', err);
+        alert('Failed to update email.');
+      }
     });
   }
 

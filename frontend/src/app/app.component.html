@@ -2870,6 +2870,10 @@
                 <label>{{ 'settings.password' | translate:currentLang }}</label>
                 <input type="password" [(ngModel)]="userForm.password" name="usrPassword" required [placeholder]="'settings.password' | translate:currentLang">
               </div>
+              <div class="form-group" *ngIf="isUat">
+                <label>Email Address</label>
+                <input type="email" [(ngModel)]="userForm.email" name="usrEmail" placeholder="name@company.com">
+              </div>
               <div class="form-group">
                 <label>{{ 'settings.role' | translate:currentLang }}</label>
                 <select [(ngModel)]="userForm.role" name="usrRole" required>
@@ -2891,6 +2895,10 @@
                 </div>
                 <div style="font-size:12px; color: var(--text-secondary);">{{ 'settings.username' | translate:currentLang }}: <code>{{ u.username }}</code></div>
                 
+                <div style="display: flex; align-items: center; gap: 5px; margin-top: 4px;" *ngIf="isUat">
+                  <span style="font-size: 11px; color: var(--text-secondary);">Email:</span>
+                  <input type="email" [value]="u.email || ''" (change)="updateUserEmail(u.username, $any($event.target).value)" placeholder="No email set" style="padding: 2px 4px; font-size: 11px; border: 1px solid var(--border-glass); border-radius: 4px; background: rgba(0,0,0,0.1); color: var(--text-primary); flex: 1;">
+                </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
                   <button type="button" class="btn btn-sm" [class.btn-danger]="u.accountLocked" [class.btn-secondary]="!u.accountLocked" (click)="toggleUserLock(u.username, u.accountLocked)" style="padding: 4px 8px; font-size:11px;">
                     {{ u.accountLocked ? '🔒 Locked' : '🔓 Active' }}

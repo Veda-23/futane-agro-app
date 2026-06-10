@@ -18,6 +18,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - uat-network
 
   # Spring Boot Backend Service for UAT
   backend-uat:
@@ -26,24 +28,28 @@ services:
       dockerfile: Dockerfile
     container_name: futane_agro_backend_uat
     ports:
-      - "8082:8080"
+      - "8082:8081"
     environment:
       - SPRING_PROFILES_ACTIVE=uat
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-uat:3306/futane_agro_uat?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=Vedant
+      - MAIL_USERNAME=vedantmehare25@gmail.com
+      - MAIL_PASSWORD=vsbtirkwuqviuicj
     depends_on:
       mysql-uat:
         condition: service_healthy
     volumes:
       - backend_uat_uploads:/app/uploads
     restart: always
+    networks:
+      - uat-network
 
   # Angular Frontend Service for UAT
   frontend-uat:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.uat
       args:
         - BUILD_CONFIG=uat
     container_name: futane_agro_frontend_uat
@@ -52,7 +58,13 @@ services:
     depends_on:
       - backend-uat
     restart: always
+    networks:
+      - uat-network
 
 volumes:
   mysql_uat_data:
   backend_uat_uploads:
+
+networks:
+  uat-network:
+    name: futane-uat-network

@@ -95,4 +95,26 @@ public class User {
     public void setLockTime(LocalDateTime lockTime) {
         this.lockTime = lockTime;
     }
+
+    @Column(name = "email", length = 150)
+    private String email;
+
+    @Column(name = "mobile_number", length = 20)
+    private String mobileNumber;
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getMobileNumber() {
+        return mobileNumber;
+    }
+
+    public void setMobileNumber(String mobileNumber) {
+        this.mobileNumber = mobileNumber;
+    }
 }

@@ -18,6 +18,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - prod-network
 
   # Spring Boot Backend Service for Production
   backend-prod:
@@ -32,18 +34,22 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-prod:3306/futane_agro_prod?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=Vedant
+      - MAIL_USERNAME=vedantmehare25@gmail.com
+      - MAIL_PASSWORD=vsbtirkwuqviuicj
     depends_on:
       mysql-prod:
         condition: service_healthy
     volumes:
       - backend_prod_uploads:/app/uploads
     restart: always
+    networks:
+      - prod-network
 
   # Angular Frontend Service for Production
   frontend-prod:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
       args:
         - BUILD_CONFIG=production
     container_name: futane_agro_frontend_prod
@@ -52,7 +58,13 @@ services:
     depends_on:
       - backend-prod
     restart: always
+    networks:
+      - prod-network
 
 volumes:
   mysql_prod_data:
   backend_prod_uploads:
+
+networks:
+  prod-network:
+    name: futane-prod-network

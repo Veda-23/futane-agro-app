@@ -83,10 +83,10 @@ public class AppStartupRunner implements CommandLineRunner {
         System.out.println("🚀 AppStartupRunner: Initializing Futane Agro bootstrap processes for 18 tables...");
 
         // 1. Generate sample Excel file if it doesn't exist
-        String excelFilePath = "C:\\Users\\Vedant\\.gemini\\antigravity-ide\\scratch\\futane-agro-app\\futane_agro_data.xlsx";
+        String excelFilePath = "futane_agro_data.xlsx";
         File excelFile = new File(excelFilePath);
         if (!excelFile.exists()) {
-            System.out.println("Generating sample Excel spreadsheet at: " + excelFilePath);
+            System.out.println("Generating sample Excel spreadsheet at: " + excelFile.getAbsolutePath());
             generateSampleExcel(excelFile);
         }
 
@@ -104,13 +104,34 @@ public class AppStartupRunner implements CommandLineRunner {
 
         if (userRepo.count() == 0) {
             if (isUat) {
-                userRepo.save(new User("SUPER_ADMIN",  passwordEncoder.encode("superadmin123"), "SUPER_ADMIN", "Super Admin"));
-                userRepo.save(new User("UAT_ADMIN",    passwordEncoder.encode("admin123"),    "ADMIN",    "UAT Admin User"));
-                userRepo.save(new User("ADMIN",        passwordEncoder.encode("admin123"),    "ADMIN",    "Admin User"));
-                userRepo.save(new User("ACCOUNTANT",   passwordEncoder.encode("accountant123"), "ACCOUNTANT", "Accountant User"));
-                userRepo.save(new User("UAT_OPERATOR", passwordEncoder.encode("operator123"), "OPERATOR", "UAT Operator User"));
-                userRepo.save(new User("OPERATOR",     passwordEncoder.encode("operator123"), "OPERATOR", "Operator User"));
-                userRepo.save(new User("VIEWER",       passwordEncoder.encode("viewer123"),     "VIEWER",      "Viewer User"));
+                User superAdmin = new User("SUPER_ADMIN", passwordEncoder.encode("superadmin123"), "SUPER_ADMIN", "Super Admin");
+                superAdmin.setEmail("vedantmehare25@gmail.com");
+                userRepo.save(superAdmin);
+
+                User uatAdmin = new User("UAT_ADMIN", passwordEncoder.encode("admin123"), "ADMIN", "UAT Admin User");
+                uatAdmin.setEmail("vedantmehare25@gmail.com");
+                userRepo.save(uatAdmin);
+
+                User admin = new User("ADMIN", passwordEncoder.encode("admin123"), "ADMIN", "Admin User");
+                admin.setEmail("vedantmehare25@gmail.com");
+                userRepo.save(admin);
+
+                User accountant = new User("ACCOUNTANT", passwordEncoder.encode("accountant123"), "ACCOUNTANT", "Accountant User");
+                accountant.setEmail("vedantmehare25@gmail.com");
+                userRepo.save(accountant);
+
+                User uatOperator = new User("UAT_OPERATOR", passwordEncoder.encode("operator123"), "OPERATOR", "UAT Operator User");
+                uatOperator.setEmail("vedantmehare25@gmail.com");
+                userRepo.save(uatOperator);
+
+                User operator = new User("OPERATOR", passwordEncoder.encode("operator123"), "OPERATOR", "Operator User");
+                operator.setEmail("vedantmehare25@gmail.com");
+                userRepo.save(operator);
+
+                User viewer = new User("VIEWER", passwordEncoder.encode("viewer123"), "VIEWER", "Viewer User");
+                viewer.setEmail("vedantmehare25@gmail.com");
+                userRepo.save(viewer);
+
                 System.out.println("✓ UAT Users seeded with BCrypt-encoded passwords.");
             } else if (isProd) {
                 userRepo.save(new User("SUPER_ADMIN",  passwordEncoder.encode("superadmin123"), "SUPER_ADMIN", "Super Admin"));
@@ -397,7 +418,9 @@ public class AppStartupRunner implements CommandLineRunner {
 
     private void generateSampleExcel(File file) {
         try {
-            file.getParentFile().mkdirs();
+            if (file.getParentFile() != null) {
+                file.getParentFile().mkdirs();
+            }
             try (Workbook workbook = new XSSFWorkbook()) {
                 Sheet invSheet = workbook.createSheet("Inventory");
                 Row invHeader = invSheet.createRow(0);

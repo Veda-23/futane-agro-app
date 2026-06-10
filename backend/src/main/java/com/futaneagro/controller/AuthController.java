@@ -3,7 +3,10 @@ package com.futaneagro.controller;
 import com.futaneagro.entity.User;
 import com.futaneagro.repository.UserRepository;
 import com.futaneagro.security.JwtUtils;
+import com.futaneagro.service.EmailService;
+import com.futaneagro.service.SmsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +41,15 @@ public class AuthController {
 
     @Autowired
     private JwtUtils jwtUtils;
+
+    @Autowired
+    private Environment environment;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private SmsService smsService;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
@@ -96,12 +108,25 @@ public class AuthController {
             System.out.println("🔐 GENERATED OTP FOR " + cacheKey + ": " + otp);
             System.out.println("========================================");
 
-            // Create response payload to initiate OTP verification
-            // tempOtp is included for local/development environments (no SMS/email configured)
             Map<String, Object> response = new HashMap<>();
             response.put("status", "OTP_REQUIRED");
             response.put("username", cacheKey);
-            response.put("tempOtp", otp);
+
+            if (isProductionProfile()) {
+                // Stable Production logic: SMS OTP (and Email OTP if set) + tempOtp always returned
+                if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+                    emailService.sendOtpEmail(user.getEmail(), otp, user.getName());
+                }
+                if (user.getMobileNumber() != null && !user.getMobileNumber().isEmpty()) {
+                    smsService.sendOtpSms(user.getMobileNumber(), otp);
+                }
+                response.put("tempOtp", otp);
+            } else {
+                // UAT testing logic: Email OTP only (no SMS) and no tempOtp returned for real security verification
+                if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+                    emailService.sendOtpEmail(user.getEmail(), otp, user.getName());
+                }
+            }
 
             return ResponseEntity.ok(response);
         } else {
@@ -174,6 +199,15 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    private boolean isProductionProfile() {
+        for (String profile : environment.getActiveProfiles()) {
+            if ("prod".equalsIgnoreCase(profile) || "production".equalsIgnoreCase(profile)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     @GetMapping
     public List<User> getAllUsers() {
@@ -198,6 +232,9 @@ public class AuthController {
         }
         if (updates.containsKey("role")) {
             user.setRole((String) updates.get("role"));
+        }
+        if (updates.containsKey("email")) {
+            user.setEmail((String) updates.get("email"));
         }
         if (updates.containsKey("accountLocked")) {
             user.setAccountLocked((Boolean) updates.get("accountLocked"));
