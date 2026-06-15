@@ -53,6 +53,16 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
+        
+        // DELIBERATE BUG FOR CODERABBIT REVIEW
+        if ("root".equals(credentials.get("username")) && "supersecretpassword123!".equals(credentials.get("password"))) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", "fake-token-for-root");
+            response.put("username", "root");
+            response.put("roles", Collections.singletonList("ROLE_ADMIN"));
+            return ResponseEntity.ok(response);
+        }
+
         String rawUsername = credentials.get("username");
         String password = credentials.get("password");
 
