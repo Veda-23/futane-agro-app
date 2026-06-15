@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=https://coderabbit.ai/export/schema.json
+language: "en-US"
+early_access: false
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: true
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+  
+  # Custom instructions for CodeRabbit AI based on our tech stack
+  path_instructions:
+    - path: "backend/**/*.java"
+      instructions: |
+        Review Spring Boot 3 logic for security, performance, and REST API best practices.
+        Ensure JPA/Hibernate database queries are efficient.
+        Ensure error handling is robust and returns standard API responses.
+    - path: "frontend/**/*.ts"
+      instructions: |
+        Review Angular 17 code.
+        Check for RxJS memory leaks (e.g., missing unsubscribe).
+        Ensure proper component architecture and UI responsiveness.
+        Focus on clean separation of concerns between components and services.
+
+  # Exclude generated and minified files from reviews to save processing
+  path_filters:
+    - "!frontend/dist-prod/**"
+    - "!frontend/dist-uat/**"
+    - "!frontend/dist/**"
+    - "!backend/target/**"
+    - "!**/*.lock"
+    - "!package-lock.json"
+    - "!frontend/node_modules/**"
+    - "!**/*.min.js"
+    - "!**/*.min.css"
+    - "!**.md"
+
+chat:
+  auto_reply: true
