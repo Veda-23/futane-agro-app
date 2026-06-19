@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -60,14 +61,14 @@ public class PartyController {
     }
 
     @PostMapping("/parties")
-    public Party createParty(@RequestBody Party party) {
+    public Party createParty(@Valid @RequestBody Party party) {
         Party saved = partyRepository.save(party);
         saveAuditLog("Created party: " + saved.getPartyName(), "Party", null, toJson(saved));
         return saved;
     }
 
     @PutMapping("/parties/{id}")
-    public Party updateParty(@PathVariable Integer id, @RequestBody Party details) {
+    public Party updateParty(@PathVariable Integer id, @Valid @RequestBody Party details) {
         Party party = partyRepository.findById(id).orElseThrow(() -> new RuntimeException("Party not found"));
         String oldState = toJson(party);
 
@@ -107,14 +108,14 @@ public class PartyController {
     }
 
     @PostMapping("/vendors")
-    public Vendor createVendor(@RequestBody Vendor vendor) {
+    public Vendor createVendor(@Valid @RequestBody Vendor vendor) {
         Vendor saved = vendorRepository.save(vendor);
         saveAuditLog("Created vendor: " + saved.getVendorName(), "Vendor", null, toJson(saved));
         return saved;
     }
 
     @PutMapping("/vendors/{id}")
-    public Vendor updateVendor(@PathVariable Integer id, @RequestBody Vendor details) {
+    public Vendor updateVendor(@PathVariable Integer id, @Valid @RequestBody Vendor details) {
         Vendor vendor = vendorRepository.findById(id).orElseThrow(() -> new RuntimeException("Vendor not found"));
         String oldState = toJson(vendor);
 

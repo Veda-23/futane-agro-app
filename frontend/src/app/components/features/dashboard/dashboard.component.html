@@ -1,0 +1,102 @@
+<div class="dashboard-container">
+  <!-- Stats Cards -->
+  <div class="grid-cols-4 stats-grid">
+    <div class="glass-card stat-card">
+      <h4>{{ 'dashboard.todayProduction' | translate:currentLang }}</h4>
+      <div class="stat-value text-purple">{{ stats.todayProduction }}</div>
+      <div class="stat-label">{{ 'dashboard.todayProduction.desc' | translate:currentLang }}</div>
+    </div>
+    <div class="glass-card stat-card">
+      <h4>{{ 'dashboard.monthlyProduction' | translate:currentLang }}</h4>
+      <div class="stat-value text-blue">{{ stats.monthlyProduction }}</div>
+      <div class="stat-label">{{ 'dashboard.monthlyProduction.desc' | translate:currentLang }}</div>
+    </div>
+    <div class="glass-card stat-card">
+      <h4>{{ 'dashboard.totalSales' | translate:currentLang }}</h4>
+      <div class="stat-value text-green">₹{{ stats.totalSales | number:'1.2-2' }}</div>
+      <div class="stat-label">{{ 'dashboard.totalSales.desc' | translate:currentLang }}</div>
+    </div>
+    <div class="glass-card stat-card">
+      <h4>{{ 'dashboard.pendingAmount' | translate:currentLang }}</h4>
+      <div class="stat-value text-red">₹{{ stats.pendingAmount | number:'1.2-2' }}</div>
+      <div class="stat-label">{{ 'dashboard.pendingAmount.desc' | translate:currentLang }}</div>
+    </div>
+  </div>
+
+  <div class="grid-cols-4 stats-grid" style="margin-top: 20px;">
+    <div class="glass-card stat-card">
+      <h4>{{ 'dashboard.inventoryStock' | translate:currentLang }}</h4>
+      <div class="stat-value text-yellow">{{ stats.inventoryStock }}</div>
+      <div class="stat-label">{{ 'dashboard.inventoryStock.desc' | translate:currentLang }}</div>
+    </div>
+    <div class="glass-card stat-card">
+      <h4>{{ 'dashboard.rawMaterialStock' | translate:currentLang }}</h4>
+      <div class="stat-value text-purple">{{ stats.rawMaterialStock }} kg</div>
+      <div class="stat-label">{{ 'dashboard.rawMaterialStock.desc' | translate:currentLang }}</div>
+    </div>
+    <div class="glass-card stat-card">
+      <h4>{{ 'dashboard.employees' | translate:currentLang }}</h4>
+      <div class="stat-value text-blue">{{ stats.employeeCount }}</div>
+      <div class="stat-label">{{ 'dashboard.employees.desc' | translate:currentLang }}</div>
+    </div>
+    <div class="glass-card stat-card">
+      <h4>{{ 'dashboard.transportCost' | translate:currentLang }}</h4>
+      <div class="stat-value text-red">₹{{ stats.transportCost | number:'1.2-2' }}</div>
+      <div class="stat-label">{{ 'dashboard.transportCost.desc' | translate:currentLang }}</div>
+    </div>
+  </div>
+
+  <!-- P&L Card -->
+  <div class="grid-cols-3 stats-grid" style="margin-top: 20px;">
+    <div class="glass-card stat-card" style="background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(139,92,246,0.15));">
+      <h4>{{ 'dashboard.totalIncome' | translate:currentLang }}</h4>
+      <div class="stat-value text-green">₹{{ stats.totalSalesAmount | number:'1.2-2' }}</div>
+      <div class="stat-label">{{ 'dashboard.totalIncome.desc' | translate:currentLang }}</div>
+    </div>
+    <div class="glass-card stat-card" style="background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(245,158,11,0.15));">
+      <h4>{{ 'dashboard.totalExpenses' | translate:currentLang }}</h4>
+      <div class="stat-value text-red">₹{{ (stats.totalRawMaterialCost || 0) + (stats.totalTransportCost || 0) + (stats.totalSalaries || 0) | number:'1.2-2' }}</div>
+      <div class="stat-label">{{ 'dashboard.totalExpenses.desc' | translate:currentLang }}</div>
+    </div>
+    <div class="glass-card stat-card" [style.background]="computedNetProfit >= 0 ? 'linear-gradient(135deg,rgba(16,185,129,0.2),rgba(59,130,246,0.2))' : 'linear-gradient(135deg,rgba(239,68,68,0.2),rgba(245,158,11,0.2))'">
+      <h4>{{ 'dashboard.netProfit' | translate:currentLang }}</h4>
+      <div class="stat-value" [class.text-green]="computedNetProfit >= 0" [class.text-red]="computedNetProfit < 0">₹{{ computedNetProfit | number:'1.2-2' }}</div>
+      <div class="stat-label">{{ 'dashboard.netProfit.desc' | translate:currentLang }}</div>
+    </div>
+  </div>
+
+  <!-- Excel Import & Excel Generator -->
+  <div class="glass-panel excel-section" style="margin-top: 20px; padding: 20px;">
+    <h3>{{ 'dashboard.excel_importer' | translate:currentLang }}</h3>
+    <p style="color: var(--text-secondary); margin-bottom: 15px;">{{ 'dashboard.excel_desc' | translate:currentLang }}</p>
+    <div class="flex-row">
+      <input type="file" (change)="onExcelFileSelected($event)" accept=".xlsx, .xls" style="max-width: 300px; margin-right: 15px;">
+      <button class="btn btn-primary" (click)="handleExcelUpload()" [disabled]="!excelFile">{{ 'dashboard.excel_btn' | translate:currentLang }}</button>
+    </div>
+    <div *ngIf="uploadStatus" class="upload-status-msg" style="margin-top: 10px; font-weight: 500; color: var(--accent-green);">{{ uploadStatus }}</div>
+  </div>
+
+  <!-- Charts Container -->
+  <div class="grid-cols-2 charts-grid" style="margin-top: 20px;">
+    <div class="glass-card chart-container">
+      <h3>📈 {{ 'dashboard.chart_prod' | translate:currentLang }}</h3>
+      <div class="canvas-wrapper">
+        <canvas id="prodChartCanvas"></canvas>
+      </div>
+    </div>
+    <div class="glass-card chart-container">
+      <h3>💸 {{ 'dashboard.chart_sales' | translate:currentLang }}</h3>
+      <div class="canvas-wrapper">
+        <canvas id="salesChartCanvas"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="grid-cols-3 charts-grid" style="margin-top: 20px;">
+    <div class="glass-card chart-container" style="grid-column: span 2;">
+      <h3>👥 {{ 'dashboard.chart_cust' | translate:currentLang }}</h3>
+      <div class="canvas-wrapper">
+        <canvas id="custChartCanvas"></canvas>
+      </div>
+    </div>
+  </div>
+</div>

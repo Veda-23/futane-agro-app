@@ -72,7 +72,7 @@
         </div>
         <!-- Forgot Password Link -->
         <div style="text-align: right; margin-top: 10px;">
-          <a href="javascript:void(0)" (click)="forgotPassword()" style="font-size: 12px; color: var(--accent-purple); text-decoration: none; font-weight: 600;">Forgot Password?</a>
+          <a href="javascript:void(0)" (click)="forgotPassword()" style="font-size: 12px; color: var(--accent-orange); text-decoration: none; font-weight: 600;">Forgot Password?</a>
         </div>
       </form>
 
@@ -158,83 +158,33 @@
 <!-- Main Application Layout -->
 <div *ngIf="isAuthenticated" class="app-container">
   <!-- Sidebar Navigation -->
-  <aside class="sidebar glass-panel">
-    <div class="sidebar-header">
-      <h3>🏭 FUTANE AGRO</h3>
-      <span class="badge badge-info">{{ loggedInUser?.role }}</span>
-    </div>
-    <nav class="sidebar-nav">
-      <ul>
-        <li [class.active]="activeTab === 'dashboard'" *ngIf="accessibleTabs['dashboard']" (click)="switchTab('dashboard')">📊 {{ 'nav.dashboard' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'production'" *ngIf="accessibleTabs['production']" (click)="switchTab('production')">⚙️ {{ 'nav.production' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'monthly-production'" *ngIf="accessibleTabs['monthly-production']" (click)="switchTab('monthly-production')">📅 {{ 'nav.monthly-production' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'parties'" *ngIf="accessibleTabs['parties']" (click)="switchTab('parties')">👥 {{ 'nav.parties' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'sales'" *ngIf="accessibleTabs['sales']" (click)="switchTab('sales')">💼 {{ 'nav.sales' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'payments'" *ngIf="accessibleTabs['payments']" (click)="switchTab('payments')">💳 {{ 'nav.payments' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'raw-materials'" *ngIf="accessibleTabs['raw-materials']" (click)="switchTab('raw-materials')">🪵 {{ 'nav.raw-materials' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'vendors'" *ngIf="accessibleTabs['vendors']" (click)="switchTab('vendors')">🏪 {{ 'nav.vendors' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'inventory'" *ngIf="accessibleTabs['inventory']" (click)="switchTab('inventory')">📦 {{ 'nav.inventory' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'employees'" *ngIf="accessibleTabs['employees']" (click)="switchTab('employees')">👔 {{ 'nav.hr' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'salaries'" *ngIf="accessibleTabs['salaries']" (click)="switchTab('salaries')">💵 {{ 'nav.salaries' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'transports'" *ngIf="accessibleTabs['transports']" (click)="switchTab('transports')">🚚 {{ 'nav.transport' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'drivers'" *ngIf="accessibleTabs['drivers']" (click)="switchTab('drivers')">🚘 {{ 'nav.drivers' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'machines'" *ngIf="accessibleTabs['machines']" (click)="switchTab('machines')">🏭 {{ 'nav.machines' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'dispatch'" *ngIf="accessibleTabs['dispatch']" (click)="switchTab('dispatch')">📤 {{ 'nav.dispatch' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'expenses'" *ngIf="accessibleTabs['expenses']" (click)="switchTab('expenses')">💸 {{ 'nav.expenses' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'bank'" *ngIf="accessibleTabs['bank']" (click)="switchTab('bank')">🏦 {{ 'nav.bank' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'invoices'" *ngIf="accessibleTabs['invoices']" (click)="switchTab('invoices')">🧾 {{ 'nav.invoices' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'billinghub'" *ngIf="accessibleTabs['billinghub']" (click)="switchTab('billinghub')">🧾 {{ 'nav.billinghub' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'reports'" *ngIf="accessibleTabs['reports']" (click)="switchTab('reports')">📈 {{ 'nav.reports' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'analytics'" *ngIf="accessibleTabs['analytics']" (click)="switchTab('analytics')">📊 {{ 'nav.analytics' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'settings'" *ngIf="accessibleTabs['settings']" (click)="switchTab('settings')">⚙️ {{ 'nav.settings' | translate:currentLang }}</li>
-        <li [class.active]="activeTab === 'audit-logs'" *ngIf="accessibleTabs['audit-logs']" (click)="switchTab('audit-logs')">🔒 {{ 'nav.auditlog' | translate:currentLang }}</li>
-      </ul>
-    </nav>
-  </aside>
+  <app-sidebar 
+    [isSidebarOpen]="isSidebarOpen"
+    [loggedInUser]="loggedInUser"
+    [activeTab]="activeTab"
+    [accessibleTabs]="accessibleTabs"
+    [currentLang]="currentLang"
+    (onToggleSidebar)="toggleSidebar()"
+    (onSwitchTab)="switchTab($event)">
+  </app-sidebar>
 
   <!-- Main Content Area -->
   <main class="main-content">
     <!-- Navbar Header -->
-    <header class="header glass-panel">
-      <div class="header-left" style="display: flex; align-items: center; gap: 20px;">
-        <div class="header-logo-brand" style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 24px;">🏭</span>
-          <span style="font-size: 18px; font-weight: 800; letter-spacing: 0.5px; color: var(--accent-purple);">FUTANE AGRO ERP</span>
-        </div>
-        <span class="header-divider" style="color: var(--border-glass);">|</span>
-        <h2 style="font-size: 18px; font-weight: 700; margin: 0; color: var(--text-primary);">{{ activeTab | uppercase }}</h2>
-        <div class="header-datetime" style="font-size: 13px; font-weight: 600; color: var(--text-secondary); background: rgba(255, 255, 255, 0.05); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 6px;">
-          📅 <span>{{ currentDateTimeString }}</span>
-        </div>
-      </div>
-      <div class="header-right">
-        <!-- Developer setting (API URL field): ONLY visible to Super Admin in UAT mode -->
-        <div class="backend-config" *ngIf="!isProduction && loggedInUser?.role === 'SUPER_ADMIN'" style="margin-right: 15px; display: flex; align-items: center; gap: 5px;">
-          <span style="font-size: 11px; color: var(--text-secondary); font-weight: 500;">API:</span>
-          <input type="text" [(ngModel)]="customBackendUrl" (change)="saveBackendUrl()" placeholder="Backend URL" style="padding: 4px 8px; font-size: 11px; border: 1px solid var(--border-color); border-radius: 4px; background: rgba(0,0,0,0.2); color: var(--text-primary); width: 180px;">
-        </div>
-
-        <!-- Notification Bell -->
-        <div class="notification-bell" style="font-size: 20px; cursor: pointer; position: relative; margin-right: 15px;">
-          🔔
-          <span class="bell-dot" style="position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background: var(--accent-red); border-radius: 50%;"></span>
-        </div>
-
-        <!-- Language Switcher -->
-        <div class="lang-switcher">
-          <button class="lang-btn" [class.lang-active]="currentLang === 'en'" (click)="setLanguage('en')">EN</button>
-          <span class="lang-sep">|</span>
-          <button class="lang-btn" [class.lang-active]="currentLang === 'mr'" (click)="setLanguage('mr')">मराठी</button>
-          <span class="lang-sep">|</span>
-          <button class="lang-btn" [class.lang-active]="currentLang === 'hi'" (click)="setLanguage('hi')">हिंदी</button>
-        </div>
-        <div class="session-info" style="display: flex; flex-direction: column; align-items: flex-end; font-size: 12px; line-height: 1.3; color: var(--text-secondary); background: rgba(0,0,0,0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-color);">
-          <span style="font-weight: 600;">👤 {{ loggedInUser?.name }} ({{ loggedInUser?.role }})</span>
-          <span style="font-size: 11px; color: var(--text-muted);">Session: {{ sessionDuration }} | Auto-Logout: {{ logoutCountdown }}</span>
-        </div>
-        <button class="btn btn-secondary btn-sm" id="signout-btn" (click)="handleLogout()">{{ 'btn.logout' | translate:currentLang }}</button>
-      </div>
-    </header>
+    <app-header
+      [isProduction]="isProduction"
+      [loggedInUser]="loggedInUser"
+      [currentLang]="currentLang"
+      [activeTab]="activeTab"
+      [currentDateTimeString]="currentDateTimeString"
+      [sessionDuration]="sessionDuration"
+      [logoutCountdown]="logoutCountdown"
+      [customBackendUrl]="customBackendUrl"
+      (onToggleSidebar)="toggleSidebar()"
+      (onLogout)="handleLogout()"
+      (onSetLanguage)="setLanguage($event)"
+      (onCustomBackendUrlChange)="saveBackendUrl()">
+    </app-header>
 
     <div class="content-body animated-fade">
       <!-- Global Search & Filter Panel -->
@@ -336,328 +286,48 @@
         </div>
       </div>
       <!-- 1. Dashboard Tab -->
-      <div *ngIf="activeTab === 'dashboard'">
-        <!-- Stats Cards -->
-        <div class="grid-cols-4 stats-grid">
-          <div class="glass-card stat-card">
-            <h4>{{ 'dashboard.todayProduction' | translate:currentLang }}</h4>
-            <div class="stat-value text-purple">{{ stats.todayProduction }}</div>
-            <div class="stat-label">{{ 'dashboard.todayProduction.desc' | translate:currentLang }}</div>
-          </div>
-          <div class="glass-card stat-card">
-            <h4>{{ 'dashboard.monthlyProduction' | translate:currentLang }}</h4>
-            <div class="stat-value text-blue">{{ stats.monthlyProduction }}</div>
-            <div class="stat-label">{{ 'dashboard.monthlyProduction.desc' | translate:currentLang }}</div>
-          </div>
-          <div class="glass-card stat-card">
-            <h4>{{ 'dashboard.totalSales' | translate:currentLang }}</h4>
-            <div class="stat-value text-green">₹{{ stats.totalSales | number:'1.2-2' }}</div>
-            <div class="stat-label">{{ 'dashboard.totalSales.desc' | translate:currentLang }}</div>
-          </div>
-          <div class="glass-card stat-card">
-            <h4>{{ 'dashboard.pendingAmount' | translate:currentLang }}</h4>
-            <div class="stat-value text-red">₹{{ stats.pendingAmount | number:'1.2-2' }}</div>
-            <div class="stat-label">{{ 'dashboard.pendingAmount.desc' | translate:currentLang }}</div>
-          </div>
-        </div>
+      <app-dashboard *ngIf="activeTab === 'dashboard'" [currentLang]="currentLang"></app-dashboard>
 
-        <div class="grid-cols-4 stats-grid" style="margin-top: 20px;">
-          <div class="glass-card stat-card">
-            <h4>{{ 'dashboard.inventoryStock' | translate:currentLang }}</h4>
-            <div class="stat-value text-yellow">{{ stats.inventoryStock }}</div>
-            <div class="stat-label">{{ 'dashboard.inventoryStock.desc' | translate:currentLang }}</div>
-          </div>
-          <div class="glass-card stat-card">
-            <h4>{{ 'dashboard.rawMaterialStock' | translate:currentLang }}</h4>
-            <div class="stat-value text-purple">{{ stats.rawMaterialStock }} kg</div>
-            <div class="stat-label">{{ 'dashboard.rawMaterialStock.desc' | translate:currentLang }}</div>
-          </div>
-          <div class="glass-card stat-card">
-            <h4>{{ 'dashboard.employees' | translate:currentLang }}</h4>
-            <div class="stat-value text-blue">{{ stats.employeeCount }}</div>
-            <div class="stat-label">{{ 'dashboard.employees.desc' | translate:currentLang }}</div>
-          </div>
-          <div class="glass-card stat-card">
-            <h4>{{ 'dashboard.transportCost' | translate:currentLang }}</h4>
-            <div class="stat-value text-red">₹{{ stats.transportCost | number:'1.2-2' }}</div>
-            <div class="stat-label">{{ 'dashboard.transportCost.desc' | translate:currentLang }}</div>
-          </div>
-        </div>
-
-        <!-- P&L Card -->
-        <div class="grid-cols-3 stats-grid" style="margin-top: 20px;">
-          <div class="glass-card stat-card" style="background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(139,92,246,0.15));">
-            <h4>{{ 'dashboard.totalIncome' | translate:currentLang }}</h4>
-            <div class="stat-value text-green">₹{{ stats.totalSalesAmount | number:'1.2-2' }}</div>
-            <div class="stat-label">{{ 'dashboard.totalIncome.desc' | translate:currentLang }}</div>
-          </div>
-          <div class="glass-card stat-card" style="background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(245,158,11,0.15));">
-            <h4>{{ 'dashboard.totalExpenses' | translate:currentLang }}</h4>
-            <div class="stat-value text-red">₹{{ (stats.totalRawMaterialCost || 0) + (stats.totalTransportCost || 0) + (stats.totalSalaries || 0) | number:'1.2-2' }}</div>
-            <div class="stat-label">{{ 'dashboard.totalExpenses.desc' | translate:currentLang }}</div>
-          </div>
-          <div class="glass-card stat-card" [style.background]="computedNetProfit >= 0 ? 'linear-gradient(135deg,rgba(16,185,129,0.2),rgba(59,130,246,0.2))' : 'linear-gradient(135deg,rgba(239,68,68,0.2),rgba(245,158,11,0.2))'">
-            <h4>{{ 'dashboard.netProfit' | translate:currentLang }}</h4>
-            <div class="stat-value" [class.text-green]="computedNetProfit >= 0" [class.text-red]="computedNetProfit < 0">₹{{ computedNetProfit | number:'1.2-2' }}</div>
-            <div class="stat-label">{{ 'dashboard.netProfit.desc' | translate:currentLang }}</div>
-          </div>
-        </div>
-
-        <!-- Excel Import & Excel Generator -->
-        <div class="glass-panel excel-section" style="margin-top: 20px; padding: 20px;">
-          <h3>{{ 'dashboard.excel_importer' | translate:currentLang }}</h3>
-          <p style="color: var(--text-secondary); margin-bottom: 15px;">{{ 'dashboard.excel_desc' | translate:currentLang }}</p>
-          <div class="flex-row">
-            <input type="file" (change)="onExcelFileSelected($event)" accept=".xlsx, .xls" style="max-width: 300px; margin-right: 15px;">
-            <button class="btn btn-primary" (click)="handleExcelUpload()" [disabled]="!excelFile">{{ 'dashboard.excel_btn' | translate:currentLang }}</button>
-          </div>
-          <div *ngIf="uploadStatus" class="upload-status-msg" style="margin-top: 10px; font-weight: 500; color: var(--accent-green);">{{ uploadStatus }}</div>
-        </div>
-
-        <!-- Charts Container -->
-        <div class="grid-cols-2 charts-grid" style="margin-top: 20px;">
-          <div class="glass-card chart-container">
-            <h3>📈 {{ 'dashboard.chart_prod' | translate:currentLang }}</h3>
-            <div class="canvas-wrapper">
-              <canvas id="prodChartCanvas"></canvas>
-            </div>
-          </div>
-          <div class="glass-card chart-container">
-            <h3>💸 {{ 'dashboard.chart_sales' | translate:currentLang }}</h3>
-            <div class="canvas-wrapper">
-              <canvas id="salesChartCanvas"></canvas>
-            </div>
-          </div>
-        </div>
-        <div class="grid-cols-3 charts-grid" style="margin-top: 20px;">
-          <div class="glass-card chart-container" style="grid-column: span 2;">
-            <h3>👥 {{ 'dashboard.chart_cust' | translate:currentLang }}</h3>
-            <div class="canvas-wrapper">
-              <canvas id="custChartCanvas"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 2. Daily Production Tab -->
-      <div *ngIf="activeTab === 'production'">
-        <div class="grid-cols-3">
-          <!-- Form -->
-          <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
-            <h3>{{ 'ppd.add_title' | translate:currentLang }}</h3>
-            <form (submit)="savePpd()">
-              <div class="form-group">
-                <label>{{ 'label.date' | translate:currentLang }}</label>
-                <input type="date" [(ngModel)]="ppdForm.date" name="ppdDate" required>
-              </div>
-              <div class="form-group">
-                <label>{{ 'ppd.crateType' | translate:currentLang }}</label>
-                <select [(ngModel)]="ppdForm.crateType" name="ppdCrateType" required>
-                  <option value="Apple Crate">Apple Crate</option>
-                  <option value="Tomato Tray">Tomato Tray</option>
-                  <option value="Mango Box">Mango Box</option>
-                  <option value="Grape Box">Grape Box</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>{{ 'ppd.totalProduction' | translate:currentLang }}</label>
-                <input type="number" [(ngModel)]="ppdForm.totalProduction" name="ppdTotal" required>
-              </div>
-              <div class="form-group">
-                <label>{{ 'ppd.successful' | translate:currentLang }}</label>
-                <input type="number" [(ngModel)]="ppdForm.successful" name="ppdSuccessful" required>
-              </div>
-              <div class="form-group">
-                <label>{{ 'ppd.rejected' | translate:currentLang }}</label>
-                <input type="number" [(ngModel)]="ppdForm.rejected" name="ppdRejected" required>
-              </div>
-              <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'ppd.save_btn' | translate:currentLang }}</button>
-            </form>
-          </div>
-          <!-- Table -->
-          <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
-            <h3>{{ 'ppd.records_title' | translate:currentLang }}</h3>
-            
-            <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
-              <div class="column-visibility-dropdown" style="position:relative;">
-                <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('ppd')" style="padding: 6px 12px; font-size: 13px;">
-                  ⚙️ Columns
-                </button>
-                <div class="dropdown-menu" *ngIf="showColDropdown['ppd']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
-                  <label *ngFor="let col of getTableColumns('ppd')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-                    <input type="checkbox" [checked]="isColumnVisible('ppd', col)" (change)="toggleColumn('ppd', col)" style="width:auto; margin:0; cursor:pointer;">
-                    {{col}}
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div class="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th *ngIf="isColumnVisible('ppd', 'Date')" (click)="setSort('date')" style="cursor:pointer;">{{ 'label.date' | translate:currentLang }} <span *ngIf="sortField === 'date'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('ppd', 'Crate Type')" (click)="setSort('crateType')" style="cursor:pointer;">{{ 'ppd.crateType' | translate:currentLang }} <span *ngIf="sortField === 'crateType'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('ppd', 'Total Production')" (click)="setSort('totalProduction')" style="cursor:pointer;">{{ 'ppd.totalProduction' | translate:currentLang }} <span *ngIf="sortField === 'totalProduction'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('ppd', 'Successful')" (click)="setSort('successful')" style="cursor:pointer;">{{ 'ppd.successful' | translate:currentLang }} <span *ngIf="sortField === 'successful'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('ppd', 'Rejected')" (click)="setSort('rejected')" style="cursor:pointer;">{{ 'ppd.rejected' | translate:currentLang }} <span *ngIf="sortField === 'rejected'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('ppd', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let ppd of getProcessedList(ppdList, 'ppd')">
-                    <td *ngIf="isColumnVisible('ppd', 'Date')">{{ ppd.date }}</td>
-                    <td *ngIf="isColumnVisible('ppd', 'Crate Type')">{{ ppd.crateType }}</td>
-                    <td *ngIf="isColumnVisible('ppd', 'Total Production')">{{ ppd.totalProduction }}</td>
-                    <td *ngIf="isColumnVisible('ppd', 'Successful')"><span class="badge badge-success">{{ ppd.successful }}</span></td>
-                    <td *ngIf="isColumnVisible('ppd', 'Rejected')"><span class="badge badge-danger">{{ ppd.rejected }}</span></td>
-                    <td *ngIf="isColumnVisible('ppd', 'Actions')">
-                      <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deletePpd(ppd.ppdId)">{{ 'btn.delete' | translate:currentLang }}</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
-              <span style="font-size:13px; color:var(--text-secondary);">
-                Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['ppd'] || 0) }} of {{ tableFilteredCounts['ppd'] || 0 }} entries
-              </span>
-              <div style="display:flex; gap:8px;">
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
-                  Previous
-                </button>
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['ppd'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
-                  Next
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 3. Monthly Production Tab -->
-      <div *ngIf="activeTab === 'monthly-production'">
-        <div class="grid-cols-3">
-          <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
-            <h3>{{ 'ppm.add_title' | translate:currentLang }}</h3>
-            <form (submit)="savePpm()">
-              <div class="form-group">
-                <label>{{ 'ppm.month_year' | translate:currentLang }}</label>
-                <select [(ngModel)]="ppmForm.month" name="ppmMonth" required>
-                  <option value="January">January</option>
-                  <option value="February">February</option>
-                  <option value="March">March</option>
-                  <option value="April">April</option>
-                  <option value="May">May</option>
-                  <option value="June">June</option>
-                  <option value="July">July</option>
-                  <option value="August">August</option>
-                  <option value="September">September</option>
-                  <option value="October">October</option>
-                  <option value="November">November</option>
-                  <option value="December">December</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>{{ 'ppm.month_year' | translate:currentLang }} ({{ 'nav.reports' | translate:currentLang }})</label>
-                <input type="number" [(ngModel)]="ppmForm.year" name="ppmYear" required>
-              </div>
-              <div class="form-group">
-                <label>{{ 'ppd.totalProduction' | translate:currentLang }}</label>
-                <input type="number" [(ngModel)]="ppmForm.cratesProduced" name="ppmCrates" required>
-              </div>
-              <div class="form-group">
-                <label>{{ 'ppm.units' | translate:currentLang }}</label>
-                <input type="number" step="0.01" [(ngModel)]="ppmForm.electricityUnits" name="ppmUnits" required>
-              </div>
-              <div class="form-group">
-                <label>{{ 'ppm.bill' | translate:currentLang }}</label>
-                <input type="number" step="0.01" [(ngModel)]="ppmForm.electricityBill" name="ppmBill" required>
-              </div>
-              <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'ppm.save_btn' | translate:currentLang }}</button>
-            </form>
-          </div>
-          <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
-            <h3>{{ 'ppm.records_title' | translate:currentLang }}</h3>
-            
-            <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
-              <div class="column-visibility-dropdown" style="position:relative;">
-                <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('ppm')" style="padding: 6px 12px; font-size: 13px;">
-                  ⚙️ Columns
-                </button>
-                <div class="dropdown-menu" *ngIf="showColDropdown['ppm']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
-                  <label *ngFor="let col of getTableColumns('ppm')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-                    <input type="checkbox" [checked]="isColumnVisible('ppm', col)" (change)="toggleColumn('ppm', col)" style="width:auto; margin:0; cursor:pointer;">
-                    {{col}}
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div class="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th *ngIf="isColumnVisible('ppm', 'Month/Year')" (click)="setSort('month')" style="cursor:pointer;">{{ 'ppm.month_year' | translate:currentLang }} <span *ngIf="sortField === 'month'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('ppm', 'Crates Produced')" (click)="setSort('cratesProduced')" style="cursor:pointer;">{{ 'ppd.totalProduction' | translate:currentLang }} <span *ngIf="sortField === 'cratesProduced'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('ppm', 'Electricity Units')" (click)="setSort('electricityUnits')" style="cursor:pointer;">{{ 'ppm.units' | translate:currentLang }} <span *ngIf="sortField === 'electricityUnits'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('ppm', 'Electricity Bill')" (click)="setSort('electricityBill')" style="cursor:pointer;">{{ 'ppm.bill' | translate:currentLang }} <span *ngIf="sortField === 'electricityBill'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('ppm', 'Units/Crate')">{{ 'ppm.units_crate' | translate:currentLang }}</th>
-                    <th *ngIf="isColumnVisible('ppm', 'Cost/Crate')">{{ 'ppm.cost_crate' | translate:currentLang }}</th>
-                    <th *ngIf="isColumnVisible('ppm', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let ppm of getProcessedList(ppmList, 'ppm')">
-                    <td *ngIf="isColumnVisible('ppm', 'Month/Year')">{{ ppm.month }} {{ ppm.year }}</td>
-                    <td *ngIf="isColumnVisible('ppm', 'Crates Produced')">{{ ppm.cratesProduced }}</td>
-                    <td *ngIf="isColumnVisible('ppm', 'Electricity Units')">{{ ppm.electricityUnits | number:'1.2-2' }}</td>
-                    <td *ngIf="isColumnVisible('ppm', 'Electricity Bill')">₹{{ ppm.electricityBill | number:'1.2-2' }}</td>
-                    <td *ngIf="isColumnVisible('ppm', 'Units/Crate')">{{ (ppm.electricityUnits / ppm.cratesProduced) | number:'1.2-2' }}</td>
-                    <td *ngIf="isColumnVisible('ppm', 'Cost/Crate')">₹{{ (ppm.electricityBill / ppm.cratesProduced) | number:'1.2-2' }}</td>
-                    <td *ngIf="isColumnVisible('ppm', 'Actions')">
-                      <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deletePpm(ppm.ppmId)">{{ 'btn.delete' | translate:currentLang }}</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
-              <span style="font-size:13px; color:var(--text-secondary);">
-                Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['ppm'] || 0) }} of {{ tableFilteredCounts['ppm'] || 0 }} entries
-              </span>
-              <div style="display:flex; gap:8px;">
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
-                  Previous
-                </button>
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['ppm'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
-                  Next
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- 2 & 3. Production Tabs (Daily & Monthly) -->
+      <app-production *ngIf="activeTab === 'production' || activeTab === 'monthly-production'" [currentLang]="currentLang" [activeTab]="activeTab" [loggedInUser]="loggedInUser"></app-production>
 
       <!-- 4. Party Tab -->
       <div *ngIf="activeTab === 'parties'">
         <div class="grid-cols-3">
           <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
             <h3>{{ 'party.add_title' | translate:currentLang }}</h3>
-            <form (submit)="saveParty()">
+            <form #partyNgForm="ngForm" (submit)="saveParty()">
               <div class="form-group">
                 <label>{{ 'party.name' | translate:currentLang }}</label>
-                <input type="text" [(ngModel)]="partyForm.partyName" name="partyName" required>
+                <input type="text" [(ngModel)]="partyForm.partyName" name="partyName" #partyNameRef="ngModel" required minlength="2">
+                <div *ngIf="partyNameRef.invalid && (partyNameRef.dirty || partyNameRef.touched)" class="error-msg" style="margin-top:4px; margin-bottom:0; padding:4px 8px;">
+                  <small *ngIf="partyNameRef.errors?.['required']">Name is required.</small>
+                  <small *ngIf="partyNameRef.errors?.['minlength']">Name must be at least 2 characters.</small>
+                </div>
               </div>
               <div class="form-group">
                 <label>{{ 'party.gst' | translate:currentLang }}</label>
-                <input type="text" [(ngModel)]="partyForm.gstNumber" name="partyGst" required placeholder="15-digit GSTIN number">
+                <input type="text" [(ngModel)]="partyForm.gstNumber" name="partyGst" #partyGstRef="ngModel" required pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$" placeholder="15-digit GSTIN number">
+                <div *ngIf="partyGstRef.invalid && (partyGstRef.dirty || partyGstRef.touched)" class="error-msg" style="margin-top:4px; margin-bottom:0; padding:4px 8px;">
+                  <small *ngIf="partyGstRef.errors?.['required']">GST is required.</small>
+                  <small *ngIf="partyGstRef.errors?.['pattern']">Invalid GST Number format.</small>
+                </div>
               </div>
               <div class="form-group">
                 <label>{{ 'party.email' | translate:currentLang }}</label>
-                <input type="email" [(ngModel)]="partyForm.email" name="partyEmail" required placeholder="name@company.com">
+                <input type="email" [(ngModel)]="partyForm.email" name="partyEmail" #partyEmailRef="ngModel" required email placeholder="name@company.com">
+                <div *ngIf="partyEmailRef.invalid && (partyEmailRef.dirty || partyEmailRef.touched)" class="error-msg" style="margin-top:4px; margin-bottom:0; padding:4px 8px;">
+                  <small *ngIf="partyEmailRef.errors?.['required']">Email is required.</small>
+                  <small *ngIf="partyEmailRef.errors?.['email']">Invalid Email format.</small>
+                </div>
               </div>
               <div class="form-group">
                 <label>{{ 'party.contact' | translate:currentLang }}</label>
-                <input type="text" [(ngModel)]="partyForm.partyContact" name="partyContact" required placeholder="10-digit mobile">
+                <input type="text" [(ngModel)]="partyForm.partyContact" name="partyContact" #partyContactRef="ngModel" required pattern="^\d{10}$" placeholder="10-digit mobile">
+                <div *ngIf="partyContactRef.invalid && (partyContactRef.dirty || partyContactRef.touched)" class="error-msg" style="margin-top:4px; margin-bottom:0; padding:4px 8px;">
+                  <small *ngIf="partyContactRef.errors?.['required']">Contact is required.</small>
+                  <small *ngIf="partyContactRef.errors?.['pattern']">Must be exactly 10 digits.</small>
+                </div>
               </div>
               <div class="form-group">
                 <label>{{ 'party.address' | translate:currentLang }}</label>
@@ -667,71 +337,21 @@
                 <label>{{ 'party.state' | translate:currentLang }}</label>
                 <input type="text" [(ngModel)]="partyForm.state" name="partyState" required placeholder="State (e.g. Maharashtra)">
               </div>
-              <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'party.register_btn' | translate:currentLang }}</button>
+              <button type="submit" class="btn btn-success" [disabled]="partyNgForm.invalid" style="width: 100%;">{{ 'party.register_btn' | translate:currentLang }}</button>
             </form>
           </div>
           <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
             <h3>{{ 'party.records_title' | translate:currentLang }}</h3>
             
-            <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
-              <div class="column-visibility-dropdown" style="position:relative;">
-                <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('parties')" style="padding: 6px 12px; font-size: 13px;">
-                  ⚙️ Columns
-                </button>
-                <div class="dropdown-menu" *ngIf="showColDropdown['parties']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
-                  <label *ngFor="let col of getTableColumns('parties')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-                    <input type="checkbox" [checked]="isColumnVisible('parties', col)" (change)="toggleColumn('parties', col)" style="width:auto; margin:0; cursor:pointer;">
-                    {{col}}
-                  </label>
-                </div>
+              <div class="table-container" style="margin-top: 15px;">
+                <app-data-table 
+                  [data]="parties" 
+                  [columns]="partyTableColumns" 
+                  [actions]="partyTableActions" 
+                  (actionClicked)="handlePartyAction($event)"
+                  searchPlaceholder="Search Parties...">
+                </app-data-table>
               </div>
-            </div>
-            <div class="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th *ngIf="isColumnVisible('parties', 'ID')" (click)="setSort('partyId')" style="cursor:pointer;">ID <span *ngIf="sortField === 'partyId'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('parties', 'Name')" (click)="setSort('partyName')" style="cursor:pointer;">{{ 'party.name' | translate:currentLang }} <span *ngIf="sortField === 'partyName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('parties', 'GST')" (click)="setSort('gstNumber')" style="cursor:pointer;">{{ 'party.gst' | translate:currentLang }} <span *ngIf="sortField === 'gstNumber'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('parties', 'Email')" (click)="setSort('email')" style="cursor:pointer;">{{ 'party.email' | translate:currentLang }} <span *ngIf="sortField === 'email'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('parties', 'Address')">{{ 'party.address' | translate:currentLang }}</th>
-                    <th *ngIf="isColumnVisible('parties', 'Contact')" (click)="setSort('partyContact')" style="cursor:pointer;">{{ 'party.contact' | translate:currentLang }} <span *ngIf="sortField === 'partyContact'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('parties', 'Status')" (click)="setSort('isActive')" style="cursor:pointer;">{{ 'label.status' | translate:currentLang }} <span *ngIf="sortField === 'isActive'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('parties', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let party of getProcessedList(parties, 'parties')">
-                    <td *ngIf="isColumnVisible('parties', 'ID')">{{ party.partyId }}</td>
-                    <td *ngIf="isColumnVisible('parties', 'Name')"><strong>{{ party.partyName }}</strong></td>
-                    <td *ngIf="isColumnVisible('parties', 'GST')">{{ party.gstNumber }}</td>
-                    <td *ngIf="isColumnVisible('parties', 'Email')">{{ party.email }}</td>
-                    <td *ngIf="isColumnVisible('parties', 'Address')">{{ party.city || 'N/A' }}, {{ party.state }}</td>
-                    <td *ngIf="isColumnVisible('parties', 'Contact')">{{ party.partyContact }}</td>
-                    <td *ngIf="isColumnVisible('parties', 'Status')">
-                      <span class="badge badge-success" *ngIf="party.isActive">Active</span>
-                      <span class="badge badge-danger" *ngIf="!party.isActive">Inactive</span>
-                    </td>
-                    <td *ngIf="isColumnVisible('parties', 'Actions')">
-                      <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteParty(party.partyId)">{{ 'btn.delete' | translate:currentLang }}</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
-              <span style="font-size:13px; color:var(--text-secondary);">
-                Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['parties'] || 0) }} of {{ tableFilteredCounts['parties'] || 0 }} entries
-              </span>
-              <div style="display:flex; gap:8px;">
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
-                  Previous
-                </button>
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['parties'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
-                  Next
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -780,7 +400,7 @@
               <!-- Calculates automatically -->
               <div class="form-group">
                 <label>{{ 'sales.total' | translate:currentLang }}</label>
-                <input type="number" [value]="salesForm.totalAmount" disabled style="background: rgba(255,255,255,0.02); color: var(--accent-purple); font-weight: bold;">
+                <input type="number" [value]="salesForm.totalAmount" disabled style="background: rgba(255,255,255,0.02); color: var(--accent-orange); font-weight: bold;">
               </div>
               <div class="form-group">
                 <label>{{ 'sales.remaining' | translate:currentLang }}</label>
@@ -1072,57 +692,14 @@
           <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
             <h3>{{ 'vendor.records_title' | translate:currentLang }}</h3>
             
-            <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
-              <div class="column-visibility-dropdown" style="position:relative;">
-                <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('vendors')" style="padding: 6px 12px; font-size: 13px;">
-                  ⚙️ Columns
-                </button>
-                <div class="dropdown-menu" *ngIf="showColDropdown['vendors']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
-                  <label *ngFor="let col of getTableColumns('vendors')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-                    <input type="checkbox" [checked]="isColumnVisible('vendors', col)" (change)="toggleColumn('vendors', col)" style="width:auto; margin:0; cursor:pointer;">
-                    {{col}}
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div class="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th *ngIf="isColumnVisible('vendors', 'ID')" (click)="setSort('vendorId')" style="cursor:pointer;">ID <span *ngIf="sortField === 'vendorId'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('vendors', 'Name')" (click)="setSort('vendorName')" style="cursor:pointer;">{{ 'vendor.name' | translate:currentLang }} <span *ngIf="sortField === 'vendorName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('vendors', 'Mobile')" (click)="setSort('mobile')" style="cursor:pointer;">{{ 'vendor.mobile' | translate:currentLang }} <span *ngIf="sortField === 'mobile'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('vendors', 'GST')" (click)="setSort('gstNumber')" style="cursor:pointer;">{{ 'vendor.gst' | translate:currentLang }} <span *ngIf="sortField === 'gstNumber'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('vendors', 'Address')">{{ 'vendor.address' | translate:currentLang }}</th>
-                    <th *ngIf="isColumnVisible('vendors', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let vendor of getProcessedList(vendors, 'vendors')">
-                    <td *ngIf="isColumnVisible('vendors', 'ID')">{{ vendor.vendorId }}</td>
-                    <td *ngIf="isColumnVisible('vendors', 'Name')"><strong>{{ vendor.vendorName }}</strong></td>
-                    <td *ngIf="isColumnVisible('vendors', 'Mobile')">{{ vendor.mobile }}</td>
-                    <td *ngIf="isColumnVisible('vendors', 'GST')">{{ vendor.gstNumber }}</td>
-                    <td *ngIf="isColumnVisible('vendors', 'Address')">{{ vendor.address }}</td>
-                    <td *ngIf="isColumnVisible('vendors', 'Actions')">
-                      <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteVendor(vendor.vendorId)">{{ 'btn.delete' | translate:currentLang }}</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
-              <span style="font-size:13px; color:var(--text-secondary);">
-                Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['vendors'] || 0) }} of {{ tableFilteredCounts['vendors'] || 0 }} entries
-              </span>
-              <div style="display:flex; gap:8px;">
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
-                  Previous
-                </button>
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['vendors'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
-                  Next
-                </button>
-              </div>
+            <div class="table-container" style="margin-top: 15px;">
+              <app-data-table 
+                [data]="vendors" 
+                [columns]="vendorTableColumns" 
+                [actions]="vendorTableActions" 
+                (actionClicked)="handleVendorAction($event)"
+                searchPlaceholder="Search Vendors...">
+              </app-data-table>
             </div>
           </div>
         </div>
@@ -1237,64 +814,14 @@
           <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
             <h3>{{ 'hr.records_title' | translate:currentLang }}</h3>
             
-            <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
-              <div class="column-visibility-dropdown" style="position:relative;">
-                <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('employees')" style="padding: 6px 12px; font-size: 13px;">
-                  ⚙️ Columns
-                </button>
-                <div class="dropdown-menu" *ngIf="showColDropdown['employees']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
-                  <label *ngFor="let col of getTableColumns('employees')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-                    <input type="checkbox" [checked]="isColumnVisible('employees', col)" (change)="toggleColumn('employees', col)" style="width:auto; margin:0; cursor:pointer;">
-                    {{col}}
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div class="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th *ngIf="isColumnVisible('employees', 'ID')" (click)="setSort('empId')" style="cursor:pointer;">Emp ID <span *ngIf="sortField === 'empId'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('employees', 'Name')" (click)="setSort('empName')" style="cursor:pointer;">{{ 'hr.name' | translate:currentLang }} <span *ngIf="sortField === 'empName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('employees', 'Designation')" (click)="setSort('designation')" style="cursor:pointer;">{{ 'hr.designation' | translate:currentLang }} <span *ngIf="sortField === 'designation'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('employees', 'Aadhaar')">Aadhaar / Bank Details</th>
-                    <th *ngIf="isColumnVisible('employees', 'Salary')" (click)="setSort('salary')" style="cursor:pointer;">{{ 'hr.salary' | translate:currentLang }} <span *ngIf="sortField === 'salary'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('employees', 'Mobile')" (click)="setSort('empContact')" style="cursor:pointer;">{{ 'hr.mobile' | translate:currentLang }} <span *ngIf="sortField === 'empContact'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('employees', 'Joining Date')" (click)="setSort('joiningDate')" style="cursor:pointer;">{{ 'hr.joining_date' | translate:currentLang }} <span *ngIf="sortField === 'joiningDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-                    <th *ngIf="isColumnVisible('employees', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let emp of getProcessedList(employees, 'employees')">
-                    <td *ngIf="isColumnVisible('employees', 'ID')">{{ emp.empId }}</td>
-                    <td *ngIf="isColumnVisible('employees', 'Name')"><strong>{{ emp.empName }}</strong></td>
-                    <td *ngIf="isColumnVisible('employees', 'Designation')"><span class="badge badge-info">{{ emp.designation }}</span></td>
-                    <td *ngIf="isColumnVisible('employees', 'Aadhaar')">
-                      <div>Aadhaar: <code>{{ emp.aadhaarNo }}</code></div>
-                      <div>Bank: <code>{{ emp.bankAccount }}</code></div>
-                    </td>
-                    <td *ngIf="isColumnVisible('employees', 'Salary')">₹{{ emp.salary }}</td>
-                    <td *ngIf="isColumnVisible('employees', 'Mobile')">{{ emp.empContact }}</td>
-                    <td *ngIf="isColumnVisible('employees', 'Joining Date')">{{ emp.joiningDate }}</td>
-                    <td *ngIf="isColumnVisible('employees', 'Actions')">
-                      <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteEmployee(emp.empId)">{{ 'btn.delete' | translate:currentLang }}</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
-              <span style="font-size:13px; color:var(--text-secondary);">
-                Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['employees'] || 0) }} of {{ tableFilteredCounts['employees'] || 0 }} entries
-              </span>
-              <div style="display:flex; gap:8px;">
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
-                  Previous
-                </button>
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['employees'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
-                  Next
-                </button>
-              </div>
+            <div class="table-container" style="margin-top: 15px;">
+              <app-data-table 
+                [data]="employees" 
+                [columns]="employeeTableColumns" 
+                [actions]="employeeTableActions" 
+                (actionClicked)="handleEmployeeAction($event)"
+                searchPlaceholder="Search Employees...">
+              </app-data-table>
             </div>
           </div>
         </div>
@@ -2934,7 +2461,7 @@
             <!-- Company & Bank visual panel -->
             <div class="grid-cols-2" style="gap: 15px; margin-bottom: 25px; border-bottom: 1px solid var(--border-glass); padding-bottom: 20px; display: grid;">
               <div class="glass-panel" style="padding: 15px; background: rgba(255,255,255,0.01);">
-                <h4 style="margin-top:0; color: var(--accent-purple);">🏢 Company Profile Settings</h4>
+                <h4 style="margin-top:0; color: var(--accent-orange);">🏢 Company Profile Settings</h4>
                 <div class="form-group">
                   <label>Company Name</label>
                   <input type="text" [ngModel]="getSettingVal('bill.company_name')" (ngModelChange)="setSettingVal('bill.company_name', $event)">
@@ -2953,7 +2480,7 @@
                 </div>
               </div>
               <div class="glass-panel" style="padding: 15px; background: rgba(255,255,255,0.01);">
-                <h4 style="margin-top:0; color: var(--accent-purple);">🏦 Bank Account details</h4>
+                <h4 style="margin-top:0; color: var(--accent-orange);">🏦 Bank Account details</h4>
                 <div class="form-group">
                   <label>Bank Name</label>
                   <input type="text" [ngModel]="getSettingVal('bank_name')" (ngModelChange)="setSettingVal('bank_name', $event)">
@@ -2975,7 +2502,7 @@
 
             <!-- Backup & Recovery visual panel -->
             <div class="glass-panel" style="margin-bottom: 25px; border-bottom: 1px solid var(--border-glass); padding-bottom: 20px; background: rgba(255,255,255,0.01);">
-              <h4 style="margin-top:0; display:flex; justify-content:space-between; align-items:center; color: var(--accent-purple);">
+              <h4 style="margin-top:0; display:flex; justify-content:space-between; align-items:center; color: var(--accent-orange);">
                 💾 Database Backup & Recovery Manager
                 <button type="button" class="btn btn-primary btn-sm" (click)="triggerBackup()">Create Manual Backup Now</button>
               </h4>
@@ -3014,7 +2541,7 @@
             </div>
             
             <!-- AI Suggestion box -->
-            <div style="background: rgba(217, 119, 6, 0.08); border: 1px dashed var(--accent-purple); padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 500; margin-bottom: 20px; color: #b45309; display: flex; align-items: center; gap: 8px;">
+            <div style="background: rgba(217, 119, 6, 0.08); border: 1px dashed var(--accent-orange); padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 500; margin-bottom: 20px; color: #b45309; display: flex; align-items: center; gap: 8px;">
               <span>{{ aiRecommendation }}</span>
             </div>
 

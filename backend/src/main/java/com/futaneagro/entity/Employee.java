@@ -5,11 +5,18 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Min;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "Employees")
+@Table(name = "Employees", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"emp_name"}),
+    @UniqueConstraint(columnNames = {"emp_contact"})
+})
 @SQLDelete(sql = "UPDATE Employees SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE emp_id = ?")
 @Where(clause = "is_deleted = false")
 public class Employee {
@@ -18,12 +25,17 @@ public class Employee {
     @Column(name = "emp_id")
     private Integer empId;
 
+    @NotBlank(message = "Employee Name is required")
     @Column(name = "emp_name", nullable = false, length = 100)
     private String empName;
 
+    @NotBlank(message = "Contact number is required")
+    @Pattern(regexp = "^\\d{10}$", message = "Contact must be a 10-digit number")
     @Column(name = "emp_contact", length = 20)
     private String empContact;
 
+    @NotNull(message = "Salary is required")
+    @Min(value = 0, message = "Salary cannot be negative")
     @Column(name = "salary", nullable = false)
     private BigDecimal salary;
 

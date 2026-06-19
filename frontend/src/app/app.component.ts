@@ -1,5 +1,5 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ApiService } from './api.service';
@@ -7,13 +7,17 @@ import { TranslateService, Language, TranslatePipe } from './translate.service';
 import { Chart, registerables } from 'chart.js';
 import { jsPDF } from 'jspdf';
 import { environment } from '../environments/environment';
-
+import { DataTableComponent } from './components/data-table/data-table.component';
+import { DashboardComponent } from './components/features/dashboard/dashboard.component';
+import { ProductionComponent } from './components/features/production/production.component';
+import { HeaderComponent } from './components/layout/header/header.component';
+import { SidebarComponent } from './components/layout/sidebar/sidebar.component';
 Chart.register(...registerables);
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, DataTableComponent, HeaderComponent, SidebarComponent, DashboardComponent, ProductionComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
@@ -23,6 +27,13 @@ export class AppComponent implements OnInit {
 
   // Expose Math helper for template calls
   Math = Math;
+
+  // Sidebar Mobile State
+  isSidebarOpen = false;
+
+  toggleSidebar() {
+    this.isSidebarOpen = !this.isSidebarOpen;
+  }
 
   // Environment State
   isProduction = environment.production;
@@ -68,21 +79,64 @@ export class AppComponent implements OnInit {
   private readonly IDLE_TIMEOUT = 120000; // 2 minutes in ms
   lastActivityTime = Date.now();
   logoutCountdown = '';
-  computedNetProfit = 0;
-
-
-  // Excel Upload State
-  excelFile: File | null = null;
-  uploadStatus = '';
 
   // Database lists
-  stats: any = {};
   parties: any[] = [];
   vendors: any[] = [];
   drivers: any[] = [];
   employees: any[] = [];
   ppdList: any[] = [];
   ppmList: any[] = [];
+
+  partyTableColumns = [
+    { key: 'partyName', label: 'Name' },
+    { key: 'partyContact', label: 'Contact' },
+    { key: 'gstNumber', label: 'GST' },
+    { key: 'city', label: 'City' },
+    { key: 'state', label: 'State' },
+    { key: 'createdDate', label: 'Date', type: 'date' }
+  ];
+  
+  partyTableActions = [
+    { label: 'Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
+  ];
+
+  handlePartyAction(event: any) {
+    if (event.action === 'delete') this.deleteParty(event.item.partyId);
+  }
+
+  vendorTableColumns = [
+    { key: 'vendorName', label: 'Name' },
+    { key: 'mobile', label: 'Mobile' },
+    { key: 'gstNumber', label: 'GST' },
+    { key: 'address', label: 'Address' },
+    { key: 'createdDate', label: 'Date', type: 'date' }
+  ];
+  
+  vendorTableActions = [
+    { label: 'Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
+  ];
+
+  handleVendorAction(event: any) {
+    if (event.action === 'delete') this.deleteVendor(event.item.vendorId);
+  }
+
+  employeeTableColumns = [
+    { key: 'empName', label: 'Name' },
+    { key: 'empContact', label: 'Contact' },
+    { key: 'designation', label: 'Designation' },
+    { key: 'salary', label: 'Salary', type: 'currency' },
+    { key: 'joiningDate', label: 'Joined', type: 'date' }
+  ];
+  
+  employeeTableActions = [
+    { label: 'Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
+  ];
+
+  handleEmployeeAction(event: any) {
+    if (event.action === 'delete') this.deleteEmployee(event.item.empId);
+  }
+
   salesList: any[] = [];
   paymentsList: any[] = [];
   inventoryList: any[] = [];
@@ -130,11 +184,6 @@ export class AppComponent implements OnInit {
 
   // Invoice view / print details
   selectedInvoice: any = null;
-
-  // Chart instances
-  prodChart: any = null;
-  salesChart: any = null;
-  customersChart: any = null;
 
   // Reports state
   reportFilter = { type: 'production', date: '', partyId: '' };
@@ -496,7 +545,6 @@ export class AppComponent implements OnInit {
 
   // --- Load Database Data ---
   loadAllData() {
-    this.apiService.getStats().subscribe(stats => { this.stats = stats; this.recalculateNetProfit(); });
     this.apiService.getParties().subscribe(list => this.parties = list);
     this.apiService.getVendors().subscribe(list => this.vendors = list);
     this.apiService.getDrivers().subscribe(list => this.drivers = list);
@@ -515,7 +563,7 @@ export class AppComponent implements OnInit {
     this.apiService.getMachines().subscribe(list => this.machinesList = list);
     this.apiService.getMachineBreakdowns().subscribe(list => this.machineBreakdownsList = list);
     this.apiService.getDispatches().subscribe(list => this.dispatchesList = list);
-    this.apiService.getExpenses().subscribe(list => { this.expensesList = list; this.recalculateNetProfit(); });
+    this.apiService.getExpenses().subscribe(list => { this.expensesList = list; });
     this.apiService.getBankTransactions().subscribe(list => this.bankTransactionsList = list);
     this.apiService.getUsers().subscribe(list => this.usersList = list);
     // Power BI settings
@@ -528,144 +576,25 @@ export class AppComponent implements OnInit {
       }
     });
 
-    // Load charts
+    // Load other async ops
     setTimeout(() => {
-      this.loadCharts();
       this.onBillTypeChange();
       this.loadBackups();
     }, 500);
   }
 
-  // --- Chart.js Initializer ---
-  loadCharts() {
-    this.apiService.getCharts().subscribe(chartData => {
-      const themeColors = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
-
-      // Destroy existing chart instances if they exist
-      if (this.prodChart) this.prodChart.destroy();
-      if (this.salesChart) this.salesChart.destroy();
-      if (this.customersChart) this.customersChart.destroy();
-
-      // 1. Production Bar Chart
-      const prodCtx = document.getElementById('prodChartCanvas') as HTMLCanvasElement;
-      if (prodCtx) {
-        const labels = Object.keys(chartData.productionData);
-        const data = Object.values(chartData.productionData);
-        this.prodChart = new Chart(prodCtx, {
-          type: 'bar',
-          data: {
-            labels: labels,
-            datasets: [{
-              label: 'Crates Produced',
-              data: data,
-              backgroundColor: 'rgba(139, 92, 246, 0.6)',
-              borderColor: '#8b5cf6',
-              borderWidth: 1
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af' } },
-              x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
-            },
-            plugins: { legend: { display: false } }
-          }
-        });
-      }
-
-      // 2. Sales Line Chart
-      const salesCtx = document.getElementById('salesChartCanvas') as HTMLCanvasElement;
-      if (salesCtx) {
-        const labels = Object.keys(chartData.salesGrowthData);
-        const data = Object.values(chartData.salesGrowthData);
-        this.salesChart = new Chart(salesCtx, {
-          type: 'line',
-          data: {
-            labels: labels,
-            datasets: [{
-              label: 'Sales Revenue',
-              data: data,
-              borderColor: '#3b82f6',
-              backgroundColor: 'rgba(59, 130, 246, 0.1)',
-              fill: true,
-              tension: 0.4
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af' } },
-              x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
-            },
-            plugins: { legend: { display: false } }
-          }
-        });
-      }
-
-      // 3. Top Customers Pie Chart
-      const custCtx = document.getElementById('custChartCanvas') as HTMLCanvasElement;
-      if (custCtx) {
-        const labels = Object.keys(chartData.topCustomersData);
-        const data = Object.values(chartData.topCustomersData);
-        this.customersChart = new Chart(custCtx, {
-          type: 'doughnut',
-          data: {
-            labels: labels,
-            datasets: [{
-              data: data,
-              backgroundColor: themeColors.slice(0, labels.length),
-              borderWidth: 0
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { position: 'right', labels: { color: '#9ca3af' } }
-            }
-          }
-        });
-      }
-    });
-  }
-
+  // --- Tab Switcher ---
   // --- Tab Switcher ---
   switchTab(tab: string) {
     if (this.accessibleTabs[tab]) {
       this.activeTab = tab;
       this.currentPage = 1;
-      if (tab === 'dashboard') {
-        setTimeout(() => this.loadCharts(), 100);
-      }
       if (tab === 'reports') {
         this.runReport();
       }
     }
   }
 
-
-  // --- Excel Import ---
-  onExcelFileSelected(event: any) {
-    this.excelFile = event.target.files[0];
-  }
-
-  handleExcelUpload() {
-    if (!this.excelFile) return;
-    this.uploadStatus = 'Uploading and processing file...';
-    this.apiService.importExcel(this.excelFile).subscribe({
-      next: (res) => {
-        this.uploadStatus = 'Excel spreadsheet imported successfully!';
-        this.loadAllData();
-        this.logAudit("Imported Excel spreadsheet data");
-      },
-      error: (err) => {
-        this.uploadStatus = 'Error importing file: ' + err.error;
-      }
-    });
-  }
 
   // --- Form Auto Calculations ---
   calculateSalesTotal() {
@@ -1119,16 +1048,6 @@ export class AppComponent implements OnInit {
     this.powerBiUrlInput = '';
     this.powerBiEmbedUrl = null;
     this.powerBiSimulatorActive = true;
-  }
-
-  // P&L calculation from dashboard stats
-  recalculateNetProfit() {
-    const income = this.stats.totalSalesAmount || 0;
-    const material = this.stats.totalRawMaterialCost || 0;
-    const transport = this.stats.totalTransportCost || 0;
-    const salaries = this.stats.totalSalaries || 0;
-    const expenses = this.expensesList ? this.expensesList.reduce((sum: number, e: any) => sum + (e.amount || 0), 0) : 0;
-    this.computedNetProfit = income - material - transport - salaries - expenses;
   }
 
   // 80+ Settings Array Initialization

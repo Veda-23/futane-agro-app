@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -57,14 +58,14 @@ public class HRController {
     }
 
     @PostMapping("/employees")
-    public Employee createEmployee(@RequestBody Employee employee) {
+    public Employee createEmployee(@Valid @RequestBody Employee employee) {
         Employee saved = employeeRepository.save(employee);
         saveAuditLog("Created employee: " + saved.getEmpName(), "Employees", null, toJson(saved));
         return saved;
     }
 
     @PutMapping("/employees/{id}")
-    public Employee updateEmployee(@PathVariable Integer id, @RequestBody Employee details) {
+    public Employee updateEmployee(@PathVariable Integer id, @Valid @RequestBody Employee details) {
         Employee emp = employeeRepository.findById(id).orElseThrow(() -> new RuntimeException("Employee not found"));
         String oldState = toJson(emp);
 

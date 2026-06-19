@@ -7,7 +7,9 @@ import javax.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "Machine_Master")
+@Table(name = "Machine_Master", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"machine_name"})
+})
 @SQLDelete(sql = "UPDATE Machine_Master SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE machine_id = ?")
 @Where(clause = "is_deleted = false")
 public class MachineMaster {

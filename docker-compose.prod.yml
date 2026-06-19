@@ -23,9 +23,7 @@ services:
 
   # Spring Boot Backend Service for Production
   backend-prod:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: futane-agro-app_backend-prod:latest
     container_name: futane_agro_backend_prod
     ports:
       - "8080:8080"
@@ -47,14 +45,8 @@ services:
 
   # Angular Frontend Service for Production
   frontend-prod:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.prod
-      args:
-        - BUILD_CONFIG=production
+    image: futane-agro-app_frontend-prod:latest
     container_name: futane_agro_frontend_prod
-    ports:
-      - "80:80"
     depends_on:
       - backend-prod
     restart: always

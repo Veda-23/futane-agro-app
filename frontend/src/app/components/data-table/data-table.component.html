@@ -1,0 +1,58 @@
+<div class="data-table-wrapper">
+  <!-- Toolbar -->
+  <div class="table-toolbar">
+    <div class="search-box">
+      <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()" [placeholder]="searchPlaceholder" class="form-control" style="max-width: 300px; display: inline-block;">
+    </div>
+    <div class="toolbar-actions">
+      <button class="btn btn-outline btn-sm" (click)="exportCSV()">Export CSV</button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container" style="overflow-x: auto;">
+    <table>
+      <thead>
+        <tr>
+          <th *ngFor="let col of columns" (click)="setSort(col.key)" style="cursor:pointer;">
+            {{ col.label }}
+            <span *ngIf="sortColumn === col.key">
+              {{ sortDirection === 'asc' ? '▲' : '▼' }}
+            </span>
+          </th>
+          <th *ngIf="actions && actions.length > 0">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of processedData">
+          <td *ngFor="let col of columns">
+            <span *ngIf="!col.type || col.type === 'text'">{{ item[col.key] }}</span>
+            <span *ngIf="col.type === 'date'">{{ item[col.key] | date:'shortDate' }}</span>
+            <span *ngIf="col.type === 'currency'">{{ item[col.key] | currency:'INR' }}</span>
+            <span *ngIf="col.type === 'badge'" class="badge badge-info">{{ item[col.key] }}</span>
+          </td>
+          <td *ngIf="actions && actions.length > 0">
+            <button *ngFor="let action of actions" 
+                    [class]="action.class || 'btn btn-sm btn-outline'" 
+                    style="margin-right: 5px;"
+                    (click)="onActionClick(action.action, item)">
+              {{ action.label }}
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="processedData.length === 0">
+          <td [attr.colspan]="columns.length + (actions.length > 0 ? 1 : 0)" style="text-align: center; padding: 20px;">
+            No records found.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="getTotalPages() > 1">
+    <button class="btn btn-sm" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">Previous</button>
+    <span>Page {{ currentPage }} of {{ getTotalPages() }}</span>
+    <button class="btn btn-sm" [disabled]="currentPage === getTotalPages()" (click)="changePage(currentPage + 1)">Next</button>
+  </div>
+</div>

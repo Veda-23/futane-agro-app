@@ -43,6 +43,7 @@ public class SecurityConfig {
             .authorizeRequests()
             .antMatchers("/api/users/login", "/api/users/login/verify").permitAll()
             .antMatchers("/api/uploads/**").permitAll() // Serve public files
+            .antMatchers("/api/health").permitAll() // Health Check Endpoint
             
             // SUPER_ADMIN Only Administrative Endpoints
             .antMatchers("/api/users/**").hasRole("SUPER_ADMIN")

@@ -8,7 +8,10 @@ import javax.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "Vendor")
+@Table(name = "Vendor", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"vendor_name"}),
+    @UniqueConstraint(columnNames = {"mobile"})
+})
 @SQLDelete(sql = "UPDATE Vendor SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE vendor_id = ?")
 @Where(clause = "is_deleted = false")
 public class Vendor {
