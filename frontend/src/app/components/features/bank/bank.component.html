@@ -1,0 +1,85 @@
+<div class="grid-cols-3">
+  <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
+    <h3>🏦 {{ 'bank.title' | translate:currentLang }}</h3>
+    <form (submit)="saveBankTransaction()">
+      <div class="form-group">
+        <label>{{ 'bank.date' | translate:currentLang }}</label>
+        <input type="date" [(ngModel)]="bankTxnForm.transactionDate" name="bDate" required>
+      </div>
+      <div class="form-group">
+        <label>{{ 'bank.type' | translate:currentLang }}</label>
+        <select [(ngModel)]="bankTxnForm.transactionType" name="bType" required>
+          <option value="Credit">Credit (Income)</option>
+          <option value="Debit">Debit (Payment)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>{{ 'bank.amount' | translate:currentLang }}</label>
+        <input type="number" step="0.01" [(ngModel)]="bankTxnForm.amount" name="bAmt" required>
+      </div>
+      <div class="form-group">
+        <label>{{ 'bank.desc' | translate:currentLang }}</label>
+        <input type="text" [(ngModel)]="bankTxnForm.description" name="bDesc" required placeholder="Transaction purpose">
+      </div>
+      <div class="form-group">
+        <label>{{ 'bank.reference' | translate:currentLang }}</label>
+        <input type="text" [(ngModel)]="bankTxnForm.referenceNo" name="bRef" placeholder="UPI/NEFT Reference No">
+      </div>
+      <button type="submit" class="btn btn-success" style="width:100%">{{ 'btn.save' | translate:currentLang }}</button>
+    </form>
+  </div>
+  <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
+    <h3>{{ 'bank.records_title' | translate:currentLang }}</h3>
+    
+    <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
+      <div class="column-visibility-dropdown" style="position:relative;">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('bank')" style="padding: 6px 12px; font-size: 13px;">
+          ⚙️ Columns
+        </button>
+        <div class="dropdown-menu" *ngIf="showColDropdown['bank']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
+          <label *ngFor="let col of getTableColumns('bank')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
+            <input type="checkbox" [checked]="isColumnVisible('bank', col)" (change)="toggleColumn('bank', col)" style="width:auto; margin:0; cursor:pointer;">
+            {{col}}
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th *ngIf="isColumnVisible('bank', 'Date')" (click)="setSort('transactionDate')" style="cursor:pointer;">{{ 'bank.date' | translate:currentLang }} <span *ngIf="sortField === 'transactionDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('bank', 'Type')" (click)="setSort('transactionType')" style="cursor:pointer;">{{ 'bank.type' | translate:currentLang }} <span *ngIf="sortField === 'transactionType'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('bank', 'Amount')" (click)="setSort('amount')" style="cursor:pointer;">{{ 'bank.amount' | translate:currentLang }} <span *ngIf="sortField === 'amount'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('bank', 'Description')">{{ 'bank.desc' | translate:currentLang }}</th>
+            <th *ngIf="isColumnVisible('bank', 'Reference')" (click)="setSort('referenceNo')" style="cursor:pointer;">{{ 'bank.reference' | translate:currentLang }} <span *ngIf="sortField === 'referenceNo'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('bank', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let bt of getProcessedList(bankTransactionsList, 'bank')">
+            <td *ngIf="isColumnVisible('bank', 'Date')">{{ bt.transactionDate }}</td>
+            <td *ngIf="isColumnVisible('bank', 'Type')"><span class="badge" [class.badge-success]="bt.transactionType === 'Credit'" [class.badge-danger]="bt.transactionType === 'Debit'">{{ bt.transactionType }}</span></td>
+            <td *ngIf="isColumnVisible('bank', 'Amount')"><strong [class.text-green]="bt.transactionType === 'Credit'" [class.text-red]="bt.transactionType === 'Debit'">₹{{ bt.amount }}</strong></td>
+            <td *ngIf="isColumnVisible('bank', 'Description')">{{ bt.description }}</td>
+            <td *ngIf="isColumnVisible('bank', 'Reference')"><code>{{ bt.referenceNo || 'N/A' }}</code></td>
+            <td *ngIf="isColumnVisible('bank', 'Actions')"><button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteBankTransaction(bt.transactionId)">{{ 'btn.delete' | translate:currentLang }}</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
+      <span style="font-size:13px; color:var(--text-secondary);">
+        Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['bank'] || 0) }} of {{ tableFilteredCounts['bank'] || 0 }} entries
+      </span>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+          Previous
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['bank'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

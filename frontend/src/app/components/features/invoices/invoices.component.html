@@ -1,0 +1,120 @@
+<div class="glass-panel" style="padding: 20px;">
+  <h3>🧾 {{ 'inv.title' | translate:currentLang }}</h3>
+  <p style="color: var(--text-secondary); margin-bottom: 15px;">{{ 'inv.desc' | translate:currentLang }}</p>
+  
+  <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
+    <div class="column-visibility-dropdown" style="position:relative;">
+      <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('invoices')" style="padding: 6px 12px; font-size: 13px;">
+        ⚙️ Columns
+      </button>
+      <div class="dropdown-menu" *ngIf="showColDropdown['invoices']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
+        <label *ngFor="let col of getTableColumns('invoices')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
+          <input type="checkbox" [checked]="isColumnVisible('invoices', col)" (change)="toggleColumn('invoices', col)" style="width:auto; margin:0; cursor:pointer;">
+          {{col}}
+        </label>
+      </div>
+    </div>
+  </div>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th *ngIf="isColumnVisible('invoices', 'ID')" (click)="setSort('invoiceId')" style="cursor:pointer;">Invoice ID <span *ngIf="sortField === 'invoiceId'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+          <th *ngIf="isColumnVisible('invoices', 'Invoice No')" (click)="setSort('invoiceNo')" style="cursor:pointer;">{{ 'inv.no' | translate:currentLang }} <span *ngIf="sortField === 'invoiceNo'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+          <th *ngIf="isColumnVisible('invoices', 'Date')" (click)="setSort('createdDate')" style="cursor:pointer;">{{ 'inv.date' | translate:currentLang }} <span *ngIf="sortField === 'createdDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+          <th *ngIf="isColumnVisible('invoices', 'Party')" (click)="setSort('sale.party.partyName')" style="cursor:pointer;">{{ 'inv.party_name' | translate:currentLang }} <span *ngIf="sortField === 'sale.party.partyName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+          <th *ngIf="isColumnVisible('invoices', 'Description')">Sales Description</th>
+          <th *ngIf="isColumnVisible('invoices', 'Total Bill')" (click)="setSort('sale.totalAmount')" style="cursor:pointer;">{{ 'inv.total_bill' | translate:currentLang }} <span *ngIf="sortField === 'sale.totalAmount'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+          <th *ngIf="isColumnVisible('invoices', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let inv of getProcessedList(invoicesList, 'invoices')">
+          <td *ngIf="isColumnVisible('invoices', 'ID')">{{ inv.invoiceId }}</td>
+          <td *ngIf="isColumnVisible('invoices', 'Invoice No')"><code>{{ inv.invoiceNo }}</code></td>
+          <td *ngIf="isColumnVisible('invoices', 'Date')">{{ inv.createdDate }}</td>
+          <td *ngIf="isColumnVisible('invoices', 'Party')"><strong>{{ inv.sale.party.partyName }}</strong></td>
+          <td *ngIf="isColumnVisible('invoices', 'Description')">{{ inv.sale.crateType }} (Qty: {{ inv.sale.quantity }})</td>
+          <td *ngIf="isColumnVisible('invoices', 'Total Bill')"><strong>₹{{ inv.sale.totalAmount }}</strong></td>
+          <td *ngIf="isColumnVisible('invoices', 'Actions')">
+            <button class="btn btn-primary btn-sm" (click)="viewInvoice(inv)" style="margin-right: 8px;">View</button>
+            <button class="btn btn-success btn-sm" (click)="downloadPDFInvoice(inv)">{{ 'inv.download_btn' | translate:currentLang }}</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
+    <span style="font-size:13px; color:var(--text-secondary);">
+      Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['invoices'] || 0) }} of {{ tableFilteredCounts['invoices'] || 0 }} entries
+    </span>
+    <div style="display:flex; gap:8px;">
+      <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+        Previous
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['invoices'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+        Next
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Invoice View Modal -->
+<div class="invoice-modal-overlay animated-fade" *ngIf="selectedInvoice">
+  <div class="invoice-modal-content">
+    <div class="invoice-modal-header">
+      <h2>Invoice Preview</h2>
+      <button class="btn-close-modal" (click)="closeInvoiceModal()">&times;</button>
+    </div>
+    <div class="invoice-modal-body" style="padding: 20px; color: #fff; text-align: left; background: var(--bg-secondary);">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h1 style="color: var(--accent-green);">FUTANE AGRO INDUSTRIES PVT. LTD.</h1>
+        <p>Manufacturers of High-Quality Plastic Crates & Containers</p>
+        <p>Gate No 144, Hadapsar Industrial Area, Pune - 411028</p>
+      </div>
+      <hr style="border-color: rgba(255,255,255,0.1); margin-bottom: 20px;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+        <div>
+          <p><strong>INVOICE NO:</strong> {{ selectedInvoice.invoiceNo }}</p>
+          <p><strong>INVOICE DATE:</strong> {{ selectedInvoice.createdDate }}</p>
+        </div>
+        <div style="text-align: right;">
+          <p><strong>BILLED TO:</strong> {{ selectedInvoice.sale.party.partyName }}</p>
+          <p><strong>GST NUMBER:</strong> {{ selectedInvoice.sale.party.gstNumber || 'N/A' }}</p>
+          <p><strong>EMAIL:</strong> {{ selectedInvoice.sale.party.email }}</p>
+        </div>
+      </div>
+      
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; background: rgba(0,0,0,0.2);">
+        <thead>
+          <tr style="background: rgba(255,255,255,0.1);">
+            <th style="padding: 10px; border-bottom: 2px solid var(--border-glass); text-align: left;">Description</th>
+            <th style="padding: 10px; border-bottom: 2px solid var(--border-glass); text-align: left;">Material</th>
+            <th style="padding: 10px; border-bottom: 2px solid var(--border-glass); text-align: right;">Qty</th>
+            <th style="padding: 10px; border-bottom: 2px solid var(--border-glass); text-align: right;">Rate</th>
+            <th style="padding: 10px; border-bottom: 2px solid var(--border-glass); text-align: right;">Total Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">{{ selectedInvoice.sale.crateType }}</td>
+            <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">{{ selectedInvoice.sale.crateMaterial }}</td>
+            <td style="text-align: right; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">{{ selectedInvoice.sale.quantity }}</td>
+            <td style="text-align: right; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">₹{{ selectedInvoice.sale.rate }}</td>
+            <td style="text-align: right; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);"><strong>₹{{ selectedInvoice.sale.totalAmount }}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div style="text-align: right; margin-top: 10px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+        <p><strong>Gross Subtotal:</strong> ₹{{ selectedInvoice.sale.totalAmount | number:'1.2-2' }}</p>
+        <p style="color: var(--accent-green);"><strong>Amount Paid:</strong> ₹{{ selectedInvoice.sale.paid | number:'1.2-2' }}</p>
+        <p style="color: var(--accent-red); font-size: 18px; margin-top: 5px;"><strong>Balance Remaining Due:</strong> ₹{{ selectedInvoice.sale.remaining | number:'1.2-2' }}</p>
+      </div>
+    </div>
+    <div class="invoice-modal-footer">
+      <button class="btn btn-secondary" (click)="closeInvoiceModal()" style="margin-right: 10px;">Close Preview</button>
+      <button class="btn btn-success" (click)="downloadPDFInvoice(selectedInvoice)">Download PDF Invoice</button>
+    </div>
+  </div>
+</div>

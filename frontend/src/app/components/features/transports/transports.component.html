@@ -1,0 +1,88 @@
+<div class="grid-cols-3">
+  <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
+    <h3>{{ 'trans.add_title' | translate:currentLang }}</h3>
+    <form (submit)="saveTransport()">
+      <div class="form-group">
+        <label>{{ 'trans.date' | translate:currentLang }}</label>
+        <input type="date" [(ngModel)]="transportsForm.date" name="trDate" required>
+      </div>
+      <div class="form-group">
+        <label>{{ 'trans.truck' | translate:currentLang }}</label>
+        <input type="text" [(ngModel)]="transportsForm.truckNumber" name="trTruck" required placeholder="MH-12-XX-XXXX">
+      </div>
+      <div class="form-group">
+        <label>{{ 'label.select_driver' | translate:currentLang }}</label>
+        <select [(ngModel)]="transportsForm.driverId" name="trDriver" required>
+          <option *ngFor="let driver of drivers" [value]="driver.driverId">{{ driver.driverName }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>{{ 'trans.rent' | translate:currentLang }}</label>
+        <input type="number" [(ngModel)]="transportsForm.rent" name="trRent" required>
+      </div>
+      <div class="form-group">
+        <label>{{ 'trans.advance' | translate:currentLang }}</label>
+        <input type="number" [(ngModel)]="transportsForm.advance" name="trAdv" required>
+      </div>
+      <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'trans.save_btn' | translate:currentLang }}</button>
+    </form>
+  </div>
+  <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
+    <h3>{{ 'trans.records_title' | translate:currentLang }}</h3>
+    
+    <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
+      <div class="column-visibility-dropdown" style="position:relative;">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('transports')" style="padding: 6px 12px; font-size: 13px;">
+          ⚙️ Columns
+        </button>
+        <div class="dropdown-menu" *ngIf="showColDropdown['transports']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
+          <label *ngFor="let col of getTableColumns('transports')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
+            <input type="checkbox" [checked]="isColumnVisible('transports', col)" (change)="toggleColumn('transports', col)" style="width:auto; margin:0; cursor:pointer;">
+            {{col}}
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th *ngIf="isColumnVisible('transports', 'Date')" (click)="setSort('date')" style="cursor:pointer;">{{ 'trans.date' | translate:currentLang }} <span *ngIf="sortField === 'date'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('transports', 'Truck')" (click)="setSort('truckNumber')" style="cursor:pointer;">{{ 'trans.truck' | translate:currentLang }} <span *ngIf="sortField === 'truckNumber'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('transports', 'Driver')" (click)="setSort('driver.driverName')" style="cursor:pointer;">{{ 'driver.name' | translate:currentLang }} <span *ngIf="sortField === 'driver.driverName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('transports', 'Rent')" (click)="setSort('rent')" style="cursor:pointer;">{{ 'trans.rent' | translate:currentLang }} <span *ngIf="sortField === 'rent'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('transports', 'Advance')" (click)="setSort('advance')" style="cursor:pointer;">{{ 'trans.advance' | translate:currentLang }} <span *ngIf="sortField === 'advance'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('transports', 'Remaining')" (click)="setSort('remaining')" style="cursor:pointer;">{{ 'trans.remaining' | translate:currentLang }} <span *ngIf="sortField === 'remaining'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('transports', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let tr of getProcessedList(transportsList, 'transports')">
+            <td *ngIf="isColumnVisible('transports', 'Date')">{{ tr.date }}</td>
+            <td *ngIf="isColumnVisible('transports', 'Truck')"><code>{{ tr.truckNumber }}</code></td>
+            <td *ngIf="isColumnVisible('transports', 'Driver')">{{ tr.driver.driverName }} ({{ tr.driver.mobile }})</td>
+            <td *ngIf="isColumnVisible('transports', 'Rent')">₹{{ tr.rent }}</td>
+            <td *ngIf="isColumnVisible('transports', 'Advance')"><span class="badge badge-success">₹{{ tr.advance }}</span></td>
+            <td *ngIf="isColumnVisible('transports', 'Remaining')"><span class="badge badge-danger">₹{{ tr.remaining }}</span></td>
+            <td *ngIf="isColumnVisible('transports', 'Actions')">
+              <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteTransport(tr.transportId)">{{ 'btn.delete' | translate:currentLang }}</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
+      <span style="font-size:13px; color:var(--text-secondary);">
+        Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['transports'] || 0) }} of {{ tableFilteredCounts['transports'] || 0 }} entries
+      </span>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+          Previous
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['transports'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

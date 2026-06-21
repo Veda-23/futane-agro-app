@@ -140,7 +140,12 @@ public class SalesController {
             Optional<Invoice> invOpt = invoiceRepository.findByInvoiceNo(payment.getInvoiceNo());
             if (invOpt.isPresent()) {
                 Sales sale = invOpt.get().getSale();
-                sale.setPaid(sale.getPaid().add(payment.getAmountReceived()));
+                java.math.BigDecimal newPaid = sale.getPaid().add(payment.getAmountReceived());
+                if (newPaid.compareTo(sale.getTotalAmount()) > 0) {
+                    throw new IllegalArgumentException("Payment amount exceeds remaining invoice balance.");
+                }
+                sale.setPaid(newPaid);
+                sale.setRemaining(sale.getTotalAmount().subtract(newPaid));
                 salesRepository.save(sale);
             }
         }
@@ -156,7 +161,9 @@ public class SalesController {
             if (payment.getInvoiceNo() != null && !payment.getInvoiceNo().trim().isEmpty()) {
                 invoiceRepository.findByInvoiceNo(payment.getInvoiceNo()).ifPresent(inv -> {
                     Sales sale = inv.getSale();
-                    sale.setPaid(sale.getPaid().subtract(payment.getAmountReceived()));
+                    java.math.BigDecimal newPaid = sale.getPaid().subtract(payment.getAmountReceived());
+                    sale.setPaid(newPaid);
+                    sale.setRemaining(sale.getTotalAmount().subtract(newPaid));
                     salesRepository.save(sale);
                 });
             }

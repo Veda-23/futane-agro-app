@@ -1,0 +1,24 @@
+<div class="glass-panel" style="padding: 20px;">
+  <h3>{{ 'audit.title' | translate:currentLang }}</h3>
+  <p style="color: var(--text-secondary); margin-bottom: 15px;">{{ 'audit.desc' | translate:currentLang }}</p>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ 'audit.id' | translate:currentLang }}</th>
+          <th>{{ 'audit.time' | translate:currentLang }}</th>
+          <th>{{ 'audit.user' | translate:currentLang }}</th>
+          <th>{{ 'audit.action' | translate:currentLang }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let log of auditLogsList">
+          <td>{{ log.auditId }}</td>
+          <td><code>{{ log.timestamp }}</code></td>
+          <td><span class="badge badge-info">{{ log.username }}</span></td>
+          <td>{{ log.action }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

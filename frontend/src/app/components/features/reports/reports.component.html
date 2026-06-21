@@ -1,0 +1,154 @@
+<div class="glass-panel" style="padding: 20px; margin-bottom: 20px;">
+  <h3>📈 {{ 'rep.title' | translate:currentLang }}</h3>
+  <div class="grid-cols-4" style="margin-top: 15px;">
+    <div class="form-group">
+      <label>{{ 'rep.category' | translate:currentLang }}</label>
+      <select [(ngModel)]="reportFilter.type" name="repType" (change)="runReport()">
+        <option value="production">Production report (Daily logs)</option>
+        <option value="sales">Sales & Revenue report</option>
+        <option value="inventory">Inventory stock status</option>
+        <option value="salary">Payroll Released report</option>
+        <option value="transport">Transport Logistics report</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>{{ 'rep.date' | translate:currentLang }}</label>
+      <input type="date" [(ngModel)]="reportFilter.date" name="repDate" (change)="runReport()">
+    </div>
+    <div class="form-group">
+      <label>{{ 'rep.party' | translate:currentLang }}</label>
+      <select [(ngModel)]="reportFilter.partyId" name="repParty" (change)="runReport()">
+        <option value="">All customers</option>
+        <option *ngFor="let party of parties" [value]="party.partyId">{{ party.partyName }}</option>
+      </select>
+    </div>
+    <div class="form-group" style="display:flex; align-items:flex-end;">
+      <button class="btn btn-primary" (click)="runReport()" style="width: 100%;">{{ 'rep.run_btn' | translate:currentLang }}</button>
+    </div>
+  </div>
+</div>
+
+<div class="glass-panel" style="padding: 20px;">
+  <h3>{{ 'rep.results_title' | translate:currentLang }}</h3>
+  <div class="table-container" style="margin-top: 15px;">
+    <!-- Render Production report -->
+    <table *ngIf="reportFilter.type === 'production'">
+      <thead>
+        <tr>
+          <th>{{ 'label.date' | translate:currentLang }}</th>
+          <th>{{ 'ppd.crateType' | translate:currentLang }}</th>
+          <th>{{ 'ppd.totalProduction' | translate:currentLang }}</th>
+          <th>{{ 'ppd.successful' | translate:currentLang }}</th>
+          <th>{{ 'ppd.rejected' | translate:currentLang }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of filteredReportData">
+          <td>{{ item.date }}</td>
+          <td>{{ item.crateType }}</td>
+          <td>{{ item.totalProduction }}</td>
+          <td>{{ item.successful }}</td>
+          <td>{{ item.rejected }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Render Sales report -->
+    <table *ngIf="reportFilter.type === 'sales'">
+      <thead>
+        <tr>
+          <th>{{ 'label.date' | translate:currentLang }}</th>
+          <th>{{ 'party.name' | translate:currentLang }}</th>
+          <th>{{ 'sales.crate_type' | translate:currentLang }}</th>
+          <th>{{ 'sales.quantity' | translate:currentLang }}</th>
+          <th>{{ 'sales.rate' | translate:currentLang }}</th>
+          <th>{{ 'sales.total' | translate:currentLang }}</th>
+          <th>{{ 'sales.paid' | translate:currentLang }}</th>
+          <th>{{ 'sales.remaining' | translate:currentLang }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of filteredReportData">
+          <td>{{ item.date }}</td>
+          <td>{{ item.party.partyName }}</td>
+          <td>{{ item.crateType }} ({{ item.crateMaterial }})</td>
+          <td>{{ item.quantity }}</td>
+          <td>₹{{ item.rate }}</td>
+          <td>₹{{ item.totalAmount }}</td>
+          <td>₹{{ item.paid }}</td>
+          <td>₹{{ item.remaining }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Render Inventory report -->
+    <table *ngIf="reportFilter.type === 'inventory'">
+      <thead>
+        <tr>
+          <th>{{ 'inv.crate_type' | translate:currentLang }}</th>
+          <th>{{ 'inv.material' | translate:currentLang }}</th>
+          <th>Opening</th>
+          <th>Produced</th>
+          <th>Sold</th>
+          <th>{{ 'inv.available' | translate:currentLang }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of filteredReportData">
+          <td>{{ item.crateType }}</td>
+          <td>{{ item.materialType }}</td>
+          <td>{{ item.openingStock }}</td>
+          <td>{{ item.producedStock }}</td>
+          <td>{{ item.soldStock }}</td>
+          <td><strong>{{ item.currentStock }}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Render Salary report -->
+    <table *ngIf="reportFilter.type === 'salary'">
+      <thead>
+        <tr>
+          <th>{{ 'hr.name' | translate:currentLang }}</th>
+          <th>{{ 'sal.month' | translate:currentLang }}</th>
+          <th>{{ 'sal.amount' | translate:currentLang }}</th>
+          <th>{{ 'label.status' | translate:currentLang }}</th>
+          <th>{{ 'sal.date' | translate:currentLang }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of filteredReportData">
+          <td>{{ item.employee.empName }}</td>
+          <td>{{ item.month }} / {{ item.year }}</td>
+          <td>₹{{ item.salaryAmount }}</td>
+          <td>{{ item.status }}</td>
+          <td>{{ item.paidDate || 'N/A' }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Render Transport report -->
+    <table *ngIf="reportFilter.type === 'transport'">
+      <thead>
+        <tr>
+          <th>{{ 'trans.date' | translate:currentLang }}</th>
+          <th>{{ 'trans.truck' | translate:currentLang }}</th>
+          <th>{{ 'driver.name' | translate:currentLang }}</th>
+          <th>{{ 'trans.rent' | translate:currentLang }}</th>
+          <th>{{ 'trans.advance' | translate:currentLang }}</th>
+          <th>{{ 'trans.remaining' | translate:currentLang }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of filteredReportData">
+          <td>{{ item.date }}</td>
+          <td>{{ item.truckNumber }}</td>
+          <td>{{ item.driver.driverName }}</td>
+          <td>₹{{ item.rent }}</td>
+          <td>₹{{ item.advance }}</td>
+          <td>₹{{ item.remaining }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

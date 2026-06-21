@@ -1,0 +1,169 @@
+<div class="grid-cols-3">
+  <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
+    <h3>🏭 {{ 'machine.title' | translate:currentLang }}</h3>
+    <form (submit)="saveMachine()">
+      <div class="form-group">
+        <label>{{ 'machine.name' | translate:currentLang }}</label>
+        <input type="text" [(ngModel)]="machineForm.machineName" name="mName" required placeholder="e.g. Injection Moulding Machine 1">
+      </div>
+      <div class="form-group">
+        <label>{{ 'machine.code' | translate:currentLang }}</label>
+        <input type="text" [(ngModel)]="machineForm.machineCode" name="mCode" required placeholder="e.g. IMM-003">
+      </div>
+      <div class="form-group">
+        <label>{{ 'machine.capacity_hour' | translate:currentLang }}</label>
+        <input type="number" [(ngModel)]="machineForm.capacityPerHour" name="mCapacity" required>
+      </div>
+      <div class="form-group">
+        <label>{{ 'machine.installed' | translate:currentLang }}</label>
+        <input type="date" [(ngModel)]="machineForm.installedDate" name="mDate" required>
+      </div>
+      <div class="form-group">
+        <label>{{ 'machine.status' | translate:currentLang }}</label>
+        <select [(ngModel)]="machineForm.status" name="mStatus" required>
+          <option value="Running">Running</option>
+          <option value="Idle">Idle</option>
+          <option value="Under Maintenance">Under Maintenance</option>
+          <option value="Breakdown">Breakdown</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-success" style="width:100%">{{ 'btn.save' | translate:currentLang }}</button>
+    </form>
+
+    <hr style="border-color: rgba(255,255,255,0.1); margin: 20px 0;">
+    <h4>Log Machine Breakdown</h4>
+    <form (submit)="saveBreakdown()">
+      <div class="form-group">
+        <label>{{ 'label.select_machine' | translate:currentLang }}</label>
+        <select [(ngModel)]="breakdownForm.machineId" name="bdMachine" required>
+          <option *ngFor="let m of machinesList" [value]="m.machineId">{{ m.machineName }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Breakdown Date</label>
+        <input type="date" [(ngModel)]="breakdownForm.breakdownDate" name="bdDate" required>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <input type="text" [(ngModel)]="breakdownForm.description" name="bdDesc" required placeholder="What failed?">
+      </div>
+      <div class="form-group">
+        <label>Downtime (hours)</label>
+        <input type="number" [(ngModel)]="breakdownForm.downtimeHours" name="bdHours" required>
+      </div>
+      <div class="form-group">
+        <label>Resolved Date</label>
+        <input type="date" [(ngModel)]="breakdownForm.resolvedDate" name="bdResolved">
+      </div>
+      <button type="submit" class="btn btn-warning" style="width:100%">Log Breakdown</button>
+    </form>
+  </div>
+  <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
+    <h3>{{ 'machine.records_title' | translate:currentLang }}</h3>
+    
+    <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
+      <div class="column-visibility-dropdown" style="position:relative;">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('machines')" style="padding: 6px 12px; font-size: 13px;">
+          ⚙️ Columns
+        </button>
+        <div class="dropdown-menu" *ngIf="showColDropdown['machines']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
+          <label *ngFor="let col of getTableColumns('machines')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
+            <input type="checkbox" [checked]="isColumnVisible('machines', col)" (change)="toggleColumn('machines', col)" style="width:auto; margin:0; cursor:pointer;">
+            {{col}}
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th *ngIf="isColumnVisible('machines', 'Code')" (click)="setSort('machineCode')" style="cursor:pointer;">{{ 'machine.code' | translate:currentLang }} <span *ngIf="sortField === 'machineCode'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('machines', 'Name')" (click)="setSort('machineName')" style="cursor:pointer;">{{ 'machine.name' | translate:currentLang }} <span *ngIf="sortField === 'machineName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('machines', 'Capacity')" (click)="setSort('capacityPerHour')" style="cursor:pointer;">{{ 'machine.capacity' | translate:currentLang }} <span *ngIf="sortField === 'capacityPerHour'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('machines', 'Installed')" (click)="setSort('installedDate')" style="cursor:pointer;">Installed <span *ngIf="sortField === 'installedDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('machines', 'Status')" (click)="setSort('status')" style="cursor:pointer;">{{ 'machine.status' | translate:currentLang }} <span *ngIf="sortField === 'status'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('machines', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let m of getProcessedList(machinesList, 'machines')">
+            <td *ngIf="isColumnVisible('machines', 'Code')"><code>{{ m.machineCode }}</code></td>
+            <td *ngIf="isColumnVisible('machines', 'Name')"><strong>{{ m.machineName }}</strong></td>
+            <td *ngIf="isColumnVisible('machines', 'Capacity')">{{ m.capacityPerHour }}/hr</td>
+            <td *ngIf="isColumnVisible('machines', 'Installed')">{{ m.installedDate }}</td>
+            <td *ngIf="isColumnVisible('machines', 'Status')">
+              <span class="badge" [class.badge-success]="m.status === 'Running'" [class.badge-danger]="m.status === 'Breakdown'" [class.badge-info]="m.status !== 'Running' && m.status !== 'Breakdown'">{{ m.status }}</span>
+            </td>
+            <td *ngIf="isColumnVisible('machines', 'Actions')"><button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteMachine(m.machineId)">{{ 'btn.delete' | translate:currentLang }}</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
+      <span style="font-size:13px; color:var(--text-secondary);">
+        Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['machines'] || 0) }} of {{ tableFilteredCounts['machines'] || 0 }} entries
+      </span>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+          Previous
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['machines'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+          Next
+        </button>
+      </div>
+    </div>
+    <h4 style="margin-top: 20px;">Breakdown Logs</h4>
+    
+    <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
+      <div class="column-visibility-dropdown" style="position:relative;">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('breakdowns')" style="padding: 6px 12px; font-size: 13px;">
+          ⚙️ Columns
+        </button>
+        <div class="dropdown-menu" *ngIf="showColDropdown['breakdowns']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
+          <label *ngFor="let col of getTableColumns('breakdowns')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
+            <input type="checkbox" [checked]="isColumnVisible('breakdowns', col)" (change)="toggleColumn('breakdowns', col)" style="width:auto; margin:0; cursor:pointer;">
+            {{col}}
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th *ngIf="isColumnVisible('breakdowns', 'Machine')" (click)="setSort('machine.machineName')" style="cursor:pointer;">Machine <span *ngIf="sortField === 'machine.machineName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('breakdowns', 'Date')" (click)="setSort('breakdownDate')" style="cursor:pointer;">Date <span *ngIf="sortField === 'breakdownDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('breakdowns', 'Description')">Description</th>
+            <th *ngIf="isColumnVisible('breakdowns', 'Downtime')" (click)="setSort('downtimeHours')" style="cursor:pointer;">Downtime (hrs) <span *ngIf="sortField === 'downtimeHours'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('breakdowns', 'Resolved')" (click)="setSort('resolvedDate')" style="cursor:pointer;">Resolved <span *ngIf="sortField === 'resolvedDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('breakdowns', 'Actions')">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let bd of getProcessedList(machineBreakdownsList, 'breakdowns')">
+            <td *ngIf="isColumnVisible('breakdowns', 'Machine')">{{ bd.machine.machineName }}</td>
+            <td *ngIf="isColumnVisible('breakdowns', 'Date')">{{ bd.breakdownDate }}</td>
+            <td *ngIf="isColumnVisible('breakdowns', 'Description')">{{ bd.description }}</td>
+            <td *ngIf="isColumnVisible('breakdowns', 'Downtime')"><span class="badge badge-danger">{{ bd.downtimeHours }} hrs</span></td>
+            <td *ngIf="isColumnVisible('breakdowns', 'Resolved')">{{ bd.resolvedDate || 'Pending' }}</td>
+            <td *ngIf="isColumnVisible('breakdowns', 'Actions')"><button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteBreakdown(bd.breakdownId)">{{ 'btn.delete' | translate:currentLang }}</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
+      <span style="font-size:13px; color:var(--text-secondary);">
+        Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['breakdowns'] || 0) }} of {{ tableFilteredCounts['breakdowns'] || 0 }} entries
+      </span>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+          Previous
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['breakdowns'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

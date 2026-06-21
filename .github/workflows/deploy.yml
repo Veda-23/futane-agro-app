@@ -1,0 +1,35 @@
+name: Deploy to Oracle Cloud
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Configure SSH and Deploy
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.ORACLE_HOST }}
+          username: ubuntu
+          key: ${{ secrets.ORACLE_SSH_KEY }}
+          script: |
+            # Navigate to project directory
+            cd ~/futane-agro-app
+            
+            # Setup environment variables dynamically
+            cd backend
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" > .env
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+            echo "APP_ENCRYPTION_KEY=${{ secrets.APP_ENCRYPTION_KEY }}" >> .env
+            
+            # Execute deployment script
+            cd ..
+            chmod +x deploy.sh
+            ./deploy.sh

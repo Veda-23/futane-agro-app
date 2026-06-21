@@ -5,12 +5,17 @@ services:
     image: mysql:8.0
     container_name: futane-mysql-db
     environment:
-      MYSQL_ROOT_PASSWORD: Vedant
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-Vedant}
       MYSQL_DATABASE: futane_agro
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   futane-app:
     build: .
@@ -20,9 +25,20 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/futane_agro?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: Vedant
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-Vedant}
+      JAVA_OPTS: "-Xmx512m -Xms256m"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
     depends_on:
-      - mysql-db
+      mysql-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   mysql_data:

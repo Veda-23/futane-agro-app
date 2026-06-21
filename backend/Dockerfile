@@ -1,5 +1,5 @@
 # Stage 1: Build & Test
-FROM maven:3.8-eclipse-temurin-8 AS build
+FROM maven:3.8-eclipse-temurin-17 AS build
 WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
@@ -10,7 +10,7 @@ COPY src ./src
 RUN mvn package -DskipTests -B
 
 # Stage 2: Runtime Environment
-FROM eclipse-temurin:8-jre-focal
+FROM eclipse-temurin:17-jre-focal
 WORKDIR /app
 COPY --from=build /app/target/futane-agro-app-0.0.1-SNAPSHOT.jar app.jar
 # Create upload directory in case it does not exist

@@ -1,0 +1,61 @@
+<div class="glass-panel" style="padding: 20px;">
+  <div class="flex-header" style="display:flex; justify-content:space-between; margin-bottom: 15px;">
+    <h3>📦 {{ 'inv.records_title' | translate:currentLang }}</h3>
+    <span class="badge badge-info">Formula Verified</span>
+  </div>
+  
+  <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
+    <div class="column-visibility-dropdown" style="position:relative;">
+      <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('inventory')" style="padding: 6px 12px; font-size: 13px;">
+        ⚙️ Columns
+      </button>
+      <div class="dropdown-menu" *ngIf="showColDropdown['inventory']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
+        <label *ngFor="let col of getTableColumns('inventory')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
+          <input type="checkbox" [checked]="isColumnVisible('inventory', col)" (change)="toggleColumn('inventory', col)" style="width:auto; margin:0; cursor:pointer;">
+          {{col}}
+        </label>
+      </div>
+    </div>
+  </div>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th *ngIf="isColumnVisible('inventory', 'ID')" (click)="setSort('inventoryId')" style="cursor:pointer;">Inventory ID <span *ngIf="sortField === 'inventoryId'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+          <th *ngIf="isColumnVisible('inventory', 'Crate Type')" (click)="setSort('crateType')" style="cursor:pointer;">{{ 'inv.crate_type' | translate:currentLang }} <span *ngIf="sortField === 'crateType'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+          <th *ngIf="isColumnVisible('inventory', 'Material')" (click)="setSort('materialType')" style="cursor:pointer;">{{ 'inv.material' | translate:currentLang }} <span *ngIf="sortField === 'materialType'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+          <th *ngIf="isColumnVisible('inventory', 'Opening')" (click)="setSort('openingStock')" style="cursor:pointer;">Opening Stock <span *ngIf="sortField === 'openingStock'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+          <th *ngIf="isColumnVisible('inventory', 'Produced')" (click)="setSort('producedStock')" style="cursor:pointer;">Produced Stock (+) <span *ngIf="sortField === 'producedStock'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+          <th *ngIf="isColumnVisible('inventory', 'Sold')" (click)="setSort('soldStock')" style="cursor:pointer;">Sold Stock (-) <span *ngIf="sortField === 'soldStock'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+          <th *ngIf="isColumnVisible('inventory', 'Available')" (click)="setSort('currentStock')" style="cursor:pointer;">{{ 'inv.available' | translate:currentLang }} <span *ngIf="sortField === 'currentStock'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+          <th *ngIf="isColumnVisible('inventory', 'Last Updated')" (click)="setSort('lastUpdated')" style="cursor:pointer;">{{ 'inv.last_updated' | translate:currentLang }} <span *ngIf="sortField === 'lastUpdated'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let inv of getProcessedList(inventoryList, 'inventory')">
+          <td *ngIf="isColumnVisible('inventory', 'ID')">{{ inv.inventoryId }}</td>
+          <td *ngIf="isColumnVisible('inventory', 'Crate Type')"><strong>{{ inv.crateType }}</strong></td>
+          <td *ngIf="isColumnVisible('inventory', 'Material')">{{ inv.materialType }}</td>
+          <td *ngIf="isColumnVisible('inventory', 'Opening')">{{ inv.openingStock }}</td>
+          <td *ngIf="isColumnVisible('inventory', 'Produced')"><span class="badge badge-success">+ {{ inv.producedStock }}</span></td>
+          <td *ngIf="isColumnVisible('inventory', 'Sold')"><span class="badge badge-danger">- {{ inv.soldStock }}</span></td>
+          <td *ngIf="isColumnVisible('inventory', 'Available')"><strong class="text-purple" style="font-size: 16px;">{{ inv.currentStock }}</strong></td>
+          <td *ngIf="isColumnVisible('inventory', 'Last Updated')">{{ inv.lastUpdated || 'N/A' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
+    <span style="font-size:13px; color:var(--text-secondary);">
+      Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['inventory'] || 0) }} of {{ tableFilteredCounts['inventory'] || 0 }} entries
+    </span>
+    <div style="display:flex; gap:8px;">
+      <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+        Previous
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['inventory'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+        Next
+      </button>
+    </div>
+  </div>
+</div>

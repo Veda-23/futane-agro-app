@@ -10,14 +10,36 @@ import { environment } from '../environments/environment';
 import { DataTableComponent } from './components/data-table/data-table.component';
 import { DashboardComponent } from './components/features/dashboard/dashboard.component';
 import { ProductionComponent } from './components/features/production/production.component';
+import { PartyComponent } from './components/features/party/party.component';
+import { SalesComponent } from './components/features/sales/sales.component';
+import { PaymentsComponent } from './components/features/payments/payments.component';
+import { RawMaterialsComponent } from './components/features/raw-materials/raw-materials.component';
+import { VendorsComponent } from './components/features/vendors/vendors.component';
+import { InventoryComponent } from './components/features/inventory/inventory.component';
+import { EmployeesComponent } from './components/features/employees/employees.component';
+import { SalariesComponent } from './components/features/salaries/salaries.component';
+import { TransportsComponent } from './components/features/transports/transports.component';
+import { DriversComponent } from './components/features/drivers/drivers.component';
+import { InvoicesComponent } from './components/features/invoices/invoices.component';
+import { ReportsComponent } from './components/features/reports/reports.component';
+import { MachinesComponent } from './components/features/machines/machines.component';
+import { DispatchComponent } from './components/features/dispatch/dispatch.component';
+import { ExpensesComponent } from './components/features/expenses/expenses.component';
+import { BankComponent } from './components/features/bank/bank.component';
+import { AnalyticsComponent } from './components/features/analytics/analytics.component';
+import { AuditLogsComponent } from './components/features/audit-logs/audit-logs.component';
+import { BillingHubComponent } from './components/features/billing-hub/billing-hub.component';
+import { SettingsComponent } from './components/features/settings/settings.component';
 import { HeaderComponent } from './components/layout/header/header.component';
 import { SidebarComponent } from './components/layout/sidebar/sidebar.component';
+import { LoginComponent } from './components/features/auth/login/login.component';
+import { GlobalFilterComponent } from './components/features/global-filter/global-filter.component';
 Chart.register(...registerables);
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, DataTableComponent, HeaderComponent, SidebarComponent, DashboardComponent, ProductionComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, DataTableComponent, HeaderComponent, SidebarComponent, DashboardComponent, ProductionComponent, PartyComponent, SalesComponent, PaymentsComponent, RawMaterialsComponent, VendorsComponent, InventoryComponent, EmployeesComponent, SalariesComponent, TransportsComponent, DriversComponent, InvoicesComponent, ReportsComponent, MachinesComponent, DispatchComponent, ExpensesComponent, BankComponent, AnalyticsComponent, AuditLogsComponent, BillingHubComponent, SettingsComponent, LoginComponent, GlobalFilterComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
@@ -37,12 +59,26 @@ export class AppComponent implements OnInit {
 
   // Environment State
   isProduction = environment.production;
-  isUat = environment.uat;
 
   // Generic Filter, Sort & Search State
   filterSearchQuery = '';
   filterDate = '';
   filterMonth = '';
+  showFilters = false;
+
+  get currentFilters() {
+    return {
+      query: this.filterSearchQuery,
+      date: this.filterDate,
+      month: this.filterMonth
+    };
+  }
+
+  applyFilters(newFilters: any) {
+    this.filterSearchQuery = newFilters.query;
+    this.filterDate = newFilters.date;
+    this.filterMonth = newFilters.month;
+  }
   filterYear: number | null = null;
   filterStatus = '';
   filterPartyId = '';
@@ -61,22 +97,19 @@ export class AppComponent implements OnInit {
 
   columnsVisibility: { [table: string]: { [col: string]: boolean } } = {};
   backupsList: any[] = [];
-  showFilters = false;
   tableFilteredCounts: { [key: string]: number } = {};
   showColDropdown: { [key: string]: boolean } = {};
 
   // Auth State
   isAuthenticated = false;
   loggedInUser: any = null;
-  loginError = '';
-  loginCredentials = { username: '', password: '' };
 
   // UI Tabs State
   activeTab = 'dashboard';
   accessibleTabs: { [key: string]: boolean } = {};
 
   // Idle Timer
-  private readonly IDLE_TIMEOUT = 120000; // 2 minutes in ms
+  private readonly IDLE_TIMEOUT = 1800000; // 30 minutes in ms
   lastActivityTime = Date.now();
   logoutCountdown = '';
 
@@ -189,13 +222,6 @@ export class AppComponent implements OnInit {
   reportFilter = { type: 'production', date: '', partyId: '' };
   filteredReportData: any[] = [];
 
-  // OTP Login Flow State
-  showOtpScreen = false;
-  otpValue = '';
-  tempOtp = '';
-  otpCountdown = 120;
-  otpTimerInterval: any = null;
-
   customBackendUrl = '';
 
   // Live Clock & Session State
@@ -263,7 +289,7 @@ export class AppComponent implements OnInit {
   logoutDueToInactivity() {
     if (this.isAuthenticated) {
       this.lastActivityTime = Date.now();
-      alert('You have been automatically logged out due to 2 minutes of inactivity.');
+      alert('You have been automatically logged out due to 30 minutes of inactivity.');
       this.handleLogout();
     }
   }
@@ -396,88 +422,6 @@ export class AppComponent implements OnInit {
   }
 
   // --- Auth Handlers ---
-  handleLogin() {
-    this.loginError = '';
-    this.apiService.login(this.loginCredentials).subscribe({
-      next: (res) => {
-        // Backend returns either { status: 'OTP_REQUIRED', username, tempOtp }
-        // or the full user token if OTP is bypassed (though not by default now)
-        if (res.status === 'OTP_REQUIRED') {
-          this.showOtpScreen = true;
-          this.tempOtp = res.tempOtp || '';
-          this.startOtpTimer();
-        } else {
-          this.completeLogin(res);
-        }
-      },
-      error: (err) => {
-        if (err.status === 423) {
-          this.loginError = 'Account is locked due to multiple failed attempts. Please wait 30 minutes.';
-        } else {
-          this.loginError = err.error?.message || 'Invalid username or password.';
-        }
-      }
-    });
-  }
-
-  startOtpTimer() {
-    this.clearOtpTimer();
-    this.otpCountdown = 120;
-    this.otpTimerInterval = setInterval(() => {
-      if (this.otpCountdown > 0) {
-        this.otpCountdown--;
-      } else {
-        this.clearOtpTimer();
-        this.loginError = 'OTP has expired. Please request a new one.';
-      }
-    }, 1000);
-  }
-
-  clearOtpTimer() {
-    if (this.otpTimerInterval) {
-      clearInterval(this.otpTimerInterval);
-      this.otpTimerInterval = null;
-    }
-  }
-
-  formatCountdown(): string {
-    const minutes = Math.floor(this.otpCountdown / 60);
-    const seconds = this.otpCountdown % 60;
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-  }
-
-  verifyOtp() {
-    this.loginError = '';
-    this.apiService.verifyOtp({
-      username: this.loginCredentials.username,
-      otp: this.otpValue
-    }).subscribe({
-      next: (res) => {
-        this.completeLogin(res);
-        this.showOtpScreen = false;
-        this.otpValue = '';
-        this.tempOtp = '';
-        this.clearOtpTimer();
-      },
-      error: (err) => {
-        this.loginError = err.error?.message || 'Invalid or expired OTP.';
-      }
-    });
-  }
-
-  resendOtp() {
-    this.handleLogin();
-  }
-
-  backToLogin() {
-    this.showOtpScreen = false;
-    this.otpValue = '';
-    this.tempOtp = '';
-    this.loginError = '';
-    this.loginCredentials.password = '';
-    this.clearOtpTimer();
-  }
-
   completeLogin(res: any) {
     this.loggedInUser = res;
     this.isAuthenticated = true;
@@ -504,8 +448,6 @@ export class AppComponent implements OnInit {
     localStorage.removeItem('loginTime');
     this.loginTime = '';
     this.sessionDuration = '';
-    this.clearOtpTimer();
-    this.showOtpScreen = false;
 
     this.accessibleTabs = {};
   }

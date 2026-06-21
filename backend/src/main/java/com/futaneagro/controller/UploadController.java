@@ -64,7 +64,9 @@ public class UploadController {
             }
 
             // Save file
-            String newFilename = UUID.randomUUID().toString() + "_" + originalFilename.replaceAll("\\s+", "_");
+            // Clean filename to prevent path traversal
+            String cleanFilename = Paths.get(originalFilename).getFileName().toString();
+            String newFilename = UUID.randomUUID().toString() + "_" + cleanFilename.replaceAll("\\s+", "_");
             Path targetPath = Paths.get(UPLOAD_DIR).resolve(newFilename);
             Files.copy(file.getInputStream(), targetPath);
 

@@ -56,7 +56,9 @@ public class SecurityConfig {
             // Role-specific write permissions
             .antMatchers("/api/payments/**", "/api/expenses/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "ACCOUNTANT")
             .antMatchers("/api/salaries/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "ACCOUNTANT")
+            .antMatchers("/api/sales/**", "/api/parties/**", "/api/invoices/**", "/api/vendors/**", "/api/bank/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "ACCOUNTANT")
             .antMatchers("/api/ppd/**", "/api/ppm/**", "/api/inventory/**", "/api/raw-materials/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "OPERATOR")
+            .antMatchers("/api/production/**", "/api/machines/**", "/api/dispatch/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "OPERATOR")
             
             // All other modification endpoints require ADMIN or SUPER_ADMIN
             .anyRequest().hasAnyRole("SUPER_ADMIN", "ADMIN")

@@ -1,0 +1,37 @@
+<div class="grid-cols-3">
+  <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
+    <h3>{{ 'vendor.add_title' | translate:currentLang }}</h3>
+    <form (submit)="saveVendor()">
+      <div class="form-group">
+        <label>{{ 'vendor.name' | translate:currentLang }}</label>
+        <input type="text" [(ngModel)]="vendorForm.vendorName" name="vName" required placeholder="Company/Supplier name">
+      </div>
+      <div class="form-group">
+        <label>{{ 'vendor.mobile' | translate:currentLang }}</label>
+        <input type="text" [(ngModel)]="vendorForm.mobile" name="vMobile" required placeholder="10-digit mobile">
+      </div>
+      <div class="form-group">
+        <label>{{ 'vendor.address' | translate:currentLang }}</label>
+        <input type="text" [(ngModel)]="vendorForm.address" name="vAddress" required placeholder="Office street address">
+      </div>
+      <div class="form-group">
+        <label>{{ 'vendor.gst' | translate:currentLang }}</label>
+        <input type="text" [(ngModel)]="vendorForm.gstNumber" name="vGst" required placeholder="15-digit GSTIN">
+      </div>
+      <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'vendor.register_btn' | translate:currentLang }}</button>
+    </form>
+  </div>
+  <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
+    <h3>{{ 'vendor.records_title' | translate:currentLang }}</h3>
+    
+    <div class="table-container" style="margin-top: 15px;">
+      <app-data-table 
+        [data]="vendors" 
+        [columns]="vendorTableColumns" 
+        [actions]="vendorTableActions" 
+        (actionClicked)="handleVendorAction($event)"
+        searchPlaceholder="Search Vendors...">
+      </app-data-table>
+    </div>
+  </div>
+</div>
