@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Collections;
 import java.util.Optional;
 
 @RestController
@@ -123,22 +124,37 @@ public class AuthController {
             response.put("username", cacheKey);
 
             if (isProductionProfile()) {
-                // Stable Production logic: SMS OTP (and Email OTP if set) + tempOtp always returned
+                // Production: try to send email/SMS but never fail the login if they throw
                 if (user.getEmail() != null && !user.getEmail().isEmpty()) {
-                    emailService.sendOtpEmail(user.getEmail(), otp, user.getName());
+                    try {
+                        emailService.sendOtpEmail(user.getEmail(), otp, user.getName());
+                    } catch (Exception e) {
+                        System.out.println("⚠️  Email OTP failed (non-fatal): " + e.getMessage());
+                    }
                 }
                 if (user.getMobileNumber() != null && !user.getMobileNumber().isEmpty()) {
-                    smsService.sendOtpSms(user.getMobileNumber(), otp);
+                    try {
+                        smsService.sendOtpSms(user.getMobileNumber(), otp);
+                    } catch (Exception e) {
+                        System.out.println("⚠️  SMS OTP failed (non-fatal): " + e.getMessage());
+                    }
                 }
+                // Always return tempOtp so on-screen OTP display works
                 response.put("tempOtp", otp);
             } else {
-                // UAT testing logic: Email OTP only (no SMS) and no tempOtp returned for real security verification
+                // UAT: try email but non-fatal; always return tempOtp for ease of testing
                 if (user.getEmail() != null && !user.getEmail().isEmpty()) {
-                    emailService.sendOtpEmail(user.getEmail(), otp, user.getName());
+                    try {
+                        emailService.sendOtpEmail(user.getEmail(), otp, user.getName());
+                    } catch (Exception e) {
+                        System.out.println("⚠️  UAT Email OTP failed (non-fatal): " + e.getMessage());
+                    }
                 }
+                response.put("tempOtp", otp);
             }
 
             return ResponseEntity.ok(response);
+
         } else {
             // Failed attempt
             int attempts = (user.getFailedAttempts() != null) ? user.getFailedAttempts() + 1 : 1;
