@@ -1,43 +1,51 @@
 <!-- 6. Payment Collection Tab -->
 <div *ngIf="activeTab === 'payments'">
-  <div class="grid-cols-3">
-    <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
+  <div class="grid grid-cols-3">
+    <div class="card" style="grid-column: span 1;" *ngIf="!isViewer()">
       <h3>{{ 'payments.add_title' | translate:currentLang }}</h3>
-      <form (submit)="savePayment()">
+      <form #paymentsNgForm="ngForm" (submit)="savePayment()">
         <div class="form-group">
           <label>{{ 'payments.date' | translate:currentLang }}</label>
-          <input type="date" [(ngModel)]="paymentsForm.paymentDate" name="payDate" required>
+          <input class="form-control" type="date" [(ngModel)]="paymentsForm.paymentDate" name="payDate" #payDateRef="ngModel" required [max]="today">
+          <div *ngIf="payDateRef.invalid && (payDateRef.dirty || payDateRef.touched)" class="error-text">
+            <small *ngIf="payDateRef.errors?.['required']">Date is required.</small>
+            <small *ngIf="payDateRef.errors?.['max']">Cannot select future date.</small>
+          </div>
         </div>
         <div class="form-group">
           <label>{{ 'label.select_party' | translate:currentLang }}</label>
-          <select [(ngModel)]="paymentsForm.partyId" name="payParty" required>
+          <select class="form-control" [(ngModel)]="paymentsForm.partyId" name="payParty" required>
             <option *ngFor="let party of parties" [value]="party.partyId">{{ party.partyName }}</option>
           </select>
         </div>
         <div class="form-group">
           <label>{{ 'payments.invoice_ref' | translate:currentLang }}</label>
-          <select [(ngModel)]="paymentsForm.invoiceNo" name="payInvoice" required>
+          <select class="form-control" [(ngModel)]="paymentsForm.invoiceNo" name="payInvoice" required>
             <option value="">General payment (No Invoice)</option>
             <option *ngFor="let invoice of invoicesList" [value]="invoice.invoiceNo">{{ invoice.invoiceNo }} (₹{{ invoice.sale?.remaining || 0 }} due)</option>
           </select>
         </div>
         <div class="form-group">
           <label>{{ 'payments.amount' | translate:currentLang }}</label>
-          <input type="number" step="0.01" [(ngModel)]="paymentsForm.amountReceived" name="payAmt" required>
+          <input class="form-control" type="number" step="0.01" [(ngModel)]="paymentsForm.amountReceived" name="payAmt" #payAmtRef="ngModel" required min="1">
+          <div *ngIf="payAmtRef.invalid && (payAmtRef.dirty || payAmtRef.touched)" class="error-text">
+            <small *ngIf="payAmtRef.errors?.['required']">Amount is required.</small>
+            <small *ngIf="payAmtRef.errors?.['min']">Amount must be greater than 0.</small>
+          </div>
         </div>
         <div class="form-group">
           <label>{{ 'payments.mode' | translate:currentLang }}</label>
-          <select [(ngModel)]="paymentsForm.paymentMode" name="payMode" required>
+          <select class="form-control" [(ngModel)]="paymentsForm.paymentMode" name="payMode" required>
             <option value="Cash">Cash</option>
             <option value="UPI">UPI (Google Pay / PhonePe)</option>
             <option value="Cheque">Cheque</option>
             <option value="Bank Transfer">Bank Transfer / NEFT</option>
           </select>
         </div>
-        <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'payments.save_btn' | translate:currentLang }}</button>
+        <button type="submit" class="btn btn-success" [disabled]="paymentsNgForm.invalid" style="width: 100%; margin-top: 16px;">{{ 'payments.save_btn' | translate:currentLang }}</button>
       </form>
     </div>
-    <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
+    <div class="card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'">
       <h3>{{ 'payments.records_title' | translate:currentLang }}</h3>
       
       <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
@@ -47,13 +55,13 @@
           </button>
           <div class="dropdown-menu" *ngIf="showColDropdown['payments']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
             <label *ngFor="let col of getTableColumns('payments')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-              <input type="checkbox" [checked]="isColumnVisible('payments', col)" (change)="toggleColumn('payments', col)" style="width:auto; margin:0; cursor:pointer;">
+              <input class="form-control" type="checkbox" [checked]="isColumnVisible('payments', col)" (change)="toggleColumn('payments', col)" style="width:auto; margin:0; cursor:pointer;">
               {{col}}
             </label>
           </div>
         </div>
       </div>
-      <div class="table-container">
+      <div class="table-responsive">
         <table>
           <thead>
             <tr>

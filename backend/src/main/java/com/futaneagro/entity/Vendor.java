@@ -5,6 +5,9 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import java.time.LocalDate;
 
 @Entity
@@ -20,15 +23,20 @@ public class Vendor {
     @Column(name = "vendor_id")
     private Integer vendorId;
 
+    @NotBlank(message = "Vendor name is required")
+    @Size(min = 2, max = 100, message = "Vendor name must be between 2 and 100 characters")
     @Column(name = "vendor_name", nullable = false, length = 100)
     private String vendorName;
 
+    @NotBlank(message = "Mobile number is required")
+    @Pattern(regexp = "^\\d{10}$", message = "Mobile must be a 10-digit number")
     @Column(name = "mobile", length = 20)
     private String mobile;
 
     @Column(name = "address", length = 255)
     private String address;
 
+    @Pattern(regexp = "^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$", message = "Invalid GST Number format")
     @Column(name = "gst_number")
     @Convert(converter = AttributeEncryptor.class)
     private String gstNumber;

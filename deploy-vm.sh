@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 # VM deployment script for Futane Agro ERP
 
 ENV=$1

@@ -7,7 +7,7 @@ COPY src ./src
 # Run unit testing phase first to validate code correctness!
 # Skipping test phase during Docker build as it requires a live database connection
 # Package application
-RUN mvn package -DskipTests -B
+RUN mvn package -Dmaven.test.skip=true -B
 
 # Stage 2: Runtime Environment
 FROM eclipse-temurin:17-jre-focal

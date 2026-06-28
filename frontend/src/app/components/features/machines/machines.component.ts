@@ -19,8 +19,9 @@ export class MachinesComponent implements OnInit {
   machinesList: any[] = [];
   machineBreakdownsList: any[] = [];
 
-  machineForm = { machineName: '', machineCode: '', installedDate: '', status: 'Running', capacityPerHour: 0 };
-  breakdownForm = { machineId: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 };
+  machineForm = { machineName: '', machineCode: '', capacityPerHour: 0, installedDate: '', status: 'Running' };
+  breakdownForm = { machineId: '', breakdownDate: '', description: '', downtimeHours: 0, resolvedDate: '' };
+  today: string = new Date().toISOString().split('T')[0];
 
   Math = Math;
 

@@ -1,33 +1,49 @@
-<div class="grid-cols-3">
-  <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
+<div class="grid grid-cols-3">
+  <div class="card" style="grid-column: span 1;" *ngIf="!isViewer()">
     <h3>{{ 'trans.add_title' | translate:currentLang }}</h3>
-    <form (submit)="saveTransport()">
+    <form #transportNgForm="ngForm" (submit)="saveTransport()">
       <div class="form-group">
         <label>{{ 'trans.date' | translate:currentLang }}</label>
-        <input type="date" [(ngModel)]="transportsForm.date" name="trDate" required>
+        <input class="form-control" type="date" [(ngModel)]="transportsForm.date" name="trDate" #trDateRef="ngModel" required [max]="today">
+        <div *ngIf="trDateRef.invalid && (trDateRef.dirty || trDateRef.touched)" class="error-text">
+          <small *ngIf="trDateRef.errors?.['required']">Date is required.</small>
+          <small *ngIf="trDateRef.errors?.['max']">Cannot select future date.</small>
+        </div>
       </div>
       <div class="form-group">
         <label>{{ 'trans.truck' | translate:currentLang }}</label>
-        <input type="text" [(ngModel)]="transportsForm.truckNumber" name="trTruck" required placeholder="MH-12-XX-XXXX">
+        <input class="form-control" type="text" [(ngModel)]="transportsForm.truckNumber" name="trTruck" #trTruckRef="ngModel" required pattern="^[A-Za-z]{2}[0-9]{1,2}[A-Za-z]{0,2}[0-9]{4}$" placeholder="e.g. MH12AB1234">
+        <div *ngIf="trTruckRef.invalid && (trTruckRef.dirty || trTruckRef.touched)" class="error-text">
+          <small *ngIf="trTruckRef.errors?.['required']">Truck number is required.</small>
+          <small *ngIf="trTruckRef.errors?.['pattern']">Invalid truck number format.</small>
+        </div>
       </div>
       <div class="form-group">
         <label>{{ 'label.select_driver' | translate:currentLang }}</label>
-        <select [(ngModel)]="transportsForm.driverId" name="trDriver" required>
+        <select class="form-control" [(ngModel)]="transportsForm.driverId" name="trDriver" required>
           <option *ngFor="let driver of drivers" [value]="driver.driverId">{{ driver.driverName }}</option>
         </select>
       </div>
       <div class="form-group">
         <label>{{ 'trans.rent' | translate:currentLang }}</label>
-        <input type="number" [(ngModel)]="transportsForm.rent" name="trRent" required>
+        <input class="form-control" type="number" [(ngModel)]="transportsForm.rent" name="trRent" #trRentRef="ngModel" required min="0">
+        <div *ngIf="trRentRef.invalid && (trRentRef.dirty || trRentRef.touched)" class="error-text">
+          <small *ngIf="trRentRef.errors?.['required']">Rent is required.</small>
+          <small *ngIf="trRentRef.errors?.['min']">Rent cannot be negative.</small>
+        </div>
       </div>
       <div class="form-group">
         <label>{{ 'trans.advance' | translate:currentLang }}</label>
-        <input type="number" [(ngModel)]="transportsForm.advance" name="trAdv" required>
+        <input class="form-control" type="number" [(ngModel)]="transportsForm.advance" name="trAdv" #trAdvRef="ngModel" required min="0">
+        <div *ngIf="trAdvRef.invalid && (trAdvRef.dirty || trAdvRef.touched)" class="error-text">
+          <small *ngIf="trAdvRef.errors?.['required']">Advance is required.</small>
+          <small *ngIf="trAdvRef.errors?.['min']">Advance cannot be negative.</small>
+        </div>
       </div>
-      <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'trans.save_btn' | translate:currentLang }}</button>
+      <button type="submit" class="btn btn-success" [disabled]="transportNgForm.invalid" style="width: 100%; margin-top: 16px;">{{ 'trans.save_btn' | translate:currentLang }}</button>
     </form>
   </div>
-  <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
+  <div class="card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'">
     <h3>{{ 'trans.records_title' | translate:currentLang }}</h3>
     
     <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
@@ -37,13 +53,13 @@
         </button>
         <div class="dropdown-menu" *ngIf="showColDropdown['transports']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
           <label *ngFor="let col of getTableColumns('transports')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-            <input type="checkbox" [checked]="isColumnVisible('transports', col)" (change)="toggleColumn('transports', col)" style="width:auto; margin:0; cursor:pointer;">
+            <input class="form-control" type="checkbox" [checked]="isColumnVisible('transports', col)" (change)="toggleColumn('transports', col)" style="width:auto; margin:0; cursor:pointer;">
             {{col}}
           </label>
         </div>
       </div>
     </div>
-    <div class="table-container">
+    <div class="table-responsive">
       <table>
         <thead>
           <tr>

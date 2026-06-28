@@ -9,13 +9,15 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "Employees", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"emp_name"}),
-    @UniqueConstraint(columnNames = {"emp_contact"})
+    @UniqueConstraint(columnNames = {"emp_contact"}),
+    @UniqueConstraint(columnNames = {"aadhaar_no"})
 })
 @SQLDelete(sql = "UPDATE Employees SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE emp_id = ?")
 @Where(clause = "is_deleted = false")
@@ -26,6 +28,7 @@ public class Employee {
     private Integer empId;
 
     @NotBlank(message = "Employee Name is required")
+    @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
     @Column(name = "emp_name", nullable = false, length = 100)
     private String empName;
 
@@ -48,6 +51,7 @@ public class Employee {
     @Column(name = "joining_date")
     private LocalDate joiningDate;
 
+    @Pattern(regexp = "^\\d{12}$", message = "Aadhaar must be a 12-digit number")
     @Column(name = "aadhaar_no", length = 20)
     private String aadhaarNo;
 

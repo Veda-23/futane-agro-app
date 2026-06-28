@@ -1,13 +1,10 @@
 package com.futaneagro.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.futaneagro.entity.*;
-import com.futaneagro.repository.*;
+import com.futaneagro.entity.Transport;
+import com.futaneagro.service.TransportService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -16,76 +13,25 @@ import java.util.List;
 public class TransportController {
 
     @Autowired
-    private TransportRepository transportRepository;
-
-    @Autowired
-    private AuditLogRepository auditRepo;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    private String getCurrentUser() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return (principal != null) ? principal.toString() : "system";
-    }
-
-    private void saveAuditLog(String action, String tableName, String oldValue, String newValue) {
-        AuditLog log = new AuditLog();
-        log.setUsername(getCurrentUser());
-        log.setAction(action);
-        log.setTableName(tableName);
-        log.setOldValue(oldValue);
-        log.setNewValue(newValue);
-        auditRepo.save(log);
-    }
-
-    private String toJson(Object obj) {
-        try {
-            return objectMapper.writeValueAsString(obj);
-        } catch (Exception e) {
-            return "";
-        }
-    }
+    private TransportService transportService;
 
     @GetMapping("/transports")
     public List<Transport> getAllTransports() {
-        return transportRepository.findAll();
+        return transportService.getAllTransports();
     }
 
     @PostMapping("/transports")
     public Transport createTransport(@RequestBody Transport transport) {
-        Transport saved = transportRepository.save(transport);
-        saveAuditLog("Created transport entry: truck " + saved.getTruckNumber(), "Transport", null, toJson(saved));
-        return saved;
+        return transportService.createTransport(transport);
     }
 
     @PutMapping("/transports/{id}")
     public Transport updateTransport(@PathVariable Integer id, @RequestBody Transport details) {
-        Transport transport = transportRepository.findById(id).orElseThrow(() -> new RuntimeException("Transport not found"));
-        String oldState = toJson(transport);
-
-        transport.setDate(details.getDate());
-        transport.setTruckNumber(details.getTruckNumber());
-        transport.setDriver(details.getDriver());
-        transport.setRent(details.getRent());
-        transport.setAdvance(details.getAdvance());
-        transport.setTruckPhotoPath(details.getTruckPhotoPath());
-        transport.setDriverLicensePath(details.getDriverLicensePath());
-
-        Transport saved = transportRepository.save(transport);
-        saveAuditLog("Updated transport ID: " + id, "Transport", oldState, toJson(saved));
-        return saved;
+        return transportService.updateTransport(id, details);
     }
 
     @DeleteMapping("/transports/{id}")
     public void deleteTransport(@PathVariable Integer id) {
-        transportRepository.findById(id).ifPresent(transport -> {
-            String oldState = toJson(transport);
-            transport.setIsDeleted(true);
-            transport.setDeletedBy(getCurrentUser());
-            transport.setDeletedDate(LocalDate.now());
-            transportRepository.save(transport);
-            saveAuditLog("Soft-deleted transport ID: " + id, "Transport", oldState, null);
-        });
+        transportService.deleteTransport(id);
     }
 }

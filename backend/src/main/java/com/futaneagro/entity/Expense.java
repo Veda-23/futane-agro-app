@@ -8,7 +8,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "Expense")
+@Table(name = "Expense", indexes = {
+    @Index(name = "idx_expense_date_del", columnList = "date, is_deleted")
+})
 @SQLDelete(sql = "UPDATE Expense SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE expense_id = ?")
 @Where(clause = "is_deleted = false")
 public class Expense {

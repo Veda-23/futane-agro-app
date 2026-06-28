@@ -19,6 +19,7 @@ export class EmployeesComponent implements OnInit {
 
   employees: any[] = [];
   employeeForm = { empName: '', empContact: '', salary: 0, address: '', designation: '', joiningDate: '', aadhaarNo: '', bankAccount: '', photoPath: '', aadhaarCardPath: '', bankPassbookPath: '' };
+  today: string = new Date().toISOString().split('T')[0];
 
   employeeTableColumns = [
     { key: 'empName', label: 'Name' },

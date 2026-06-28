@@ -1,27 +1,39 @@
-<div class="grid-cols-3">
-  <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
+<div class="grid grid-cols-3">
+  <div class="card" style="grid-column: span 1;" *ngIf="!isViewer()">
     <h3>{{ 'driver.add_title' | translate:currentLang }}</h3>
-    <form (submit)="saveDriver()">
+    <form #driverNgForm="ngForm" (submit)="saveDriver()">
       <div class="form-group">
         <label>{{ 'driver.name' | translate:currentLang }}</label>
-        <input type="text" [(ngModel)]="driverForm.driverName" name="dName" required placeholder="Driver full name">
+        <input class="form-control" type="text" [(ngModel)]="driverForm.driverName" name="dName" #dNameRef="ngModel" required minlength="2" placeholder="Driver full name">
+        <div *ngIf="dNameRef.invalid && (dNameRef.dirty || dNameRef.touched)" class="error-text">
+          <small *ngIf="dNameRef.errors?.['required']">Driver name is required.</small>
+          <small *ngIf="dNameRef.errors?.['minlength']">Must be at least 2 characters.</small>
+        </div>
       </div>
       <div class="form-group">
         <label>{{ 'driver.mobile' | translate:currentLang }}</label>
-        <input type="text" [(ngModel)]="driverForm.mobile" name="dMobile" required placeholder="10-digit mobile">
+        <input class="form-control" type="text" [(ngModel)]="driverForm.mobile" name="dMobile" #dMobileRef="ngModel" required pattern="^\d{10}$" placeholder="10-digit mobile">
+        <div *ngIf="dMobileRef.invalid && (dMobileRef.dirty || dMobileRef.touched)" class="error-text">
+          <small *ngIf="dMobileRef.errors?.['required']">Mobile is required.</small>
+          <small *ngIf="dMobileRef.errors?.['pattern']">Must be exactly 10 digits.</small>
+        </div>
       </div>
       <div class="form-group">
         <label>{{ 'driver.license' | translate:currentLang }}</label>
-        <input type="text" [(ngModel)]="driverForm.licenseNumber" name="dLic" required placeholder="Driver License ID">
+        <input class="form-control" type="text" [(ngModel)]="driverForm.licenseNumber" name="dLic" #dLicRef="ngModel" required minlength="5" placeholder="Driver License ID">
+        <div *ngIf="dLicRef.invalid && (dLicRef.dirty || dLicRef.touched)" class="error-text">
+          <small *ngIf="dLicRef.errors?.['required']">License number is required.</small>
+          <small *ngIf="dLicRef.errors?.['minlength']">Must be at least 5 characters.</small>
+        </div>
       </div>
       <div class="form-group">
         <label>{{ 'driver.address' | translate:currentLang }}</label>
-        <input type="text" [(ngModel)]="driverForm.address" name="dAddr" required placeholder="Residential address">
+        <input class="form-control" type="text" [(ngModel)]="driverForm.address" name="dAddr" required placeholder="Residential address">
       </div>
-      <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'driver.register_btn' | translate:currentLang }}</button>
+      <button type="submit" class="btn btn-success" [disabled]="driverNgForm.invalid" style="width: 100%; margin-top: 16px;">{{ 'driver.register_btn' | translate:currentLang }}</button>
     </form>
   </div>
-  <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
+  <div class="card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'">
     <h3>{{ 'driver.records_title' | translate:currentLang }}</h3>
     
     <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
@@ -31,13 +43,13 @@
         </button>
         <div class="dropdown-menu" *ngIf="showColDropdown['drivers']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
           <label *ngFor="let col of getTableColumns('drivers')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-            <input type="checkbox" [checked]="isColumnVisible('drivers', col)" (change)="toggleColumn('drivers', col)" style="width:auto; margin:0; cursor:pointer;">
+            <input class="form-control" type="checkbox" [checked]="isColumnVisible('drivers', col)" (change)="toggleColumn('drivers', col)" style="width:auto; margin:0; cursor:pointer;">
             {{col}}
           </label>
         </div>
       </div>
     </div>
-    <div class="table-container">
+    <div class="table-responsive">
       <table>
         <thead>
           <tr>

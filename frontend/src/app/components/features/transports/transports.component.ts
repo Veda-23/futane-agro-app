@@ -19,6 +19,7 @@ export class TransportsComponent implements OnInit {
   transportsList: any[] = [];
   drivers: any[] = [];
   transportsForm = { date: '', truckNumber: '', driverId: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
+  today: string = new Date().toISOString().split('T')[0];
   Math = Math;
 
   // Pagination & Sort state

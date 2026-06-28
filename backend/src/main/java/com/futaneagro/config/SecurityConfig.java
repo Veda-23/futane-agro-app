@@ -42,7 +42,6 @@ public class SecurityConfig {
         http.cors().and().csrf().disable()
             .authorizeRequests()
             .antMatchers("/api/users/login", "/api/users/login/verify").permitAll()
-            .antMatchers("/api/uploads/**").permitAll() // Serve public files
             .antMatchers("/api/health").permitAll() // Health Check Endpoint
             
             // SUPER_ADMIN Only Administrative Endpoints
@@ -72,7 +71,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "https://futane-agro-erp.local", "http://futane-agro-erp.local"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

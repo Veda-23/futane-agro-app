@@ -1,56 +1,56 @@
 <!-- 4. Party Tab -->
 <div *ngIf="activeTab === 'parties'">
-  <div class="grid-cols-3">
-    <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
+  <div class="grid grid-cols-3">
+    <div class="card" style="grid-column: span 1;" *ngIf="!isViewer()">
       <h3>{{ 'party.add_title' | translate:currentLang }}</h3>
       <form #partyNgForm="ngForm" (submit)="saveParty()">
         <div class="form-group">
           <label>{{ 'party.name' | translate:currentLang }}</label>
-          <input type="text" [(ngModel)]="partyForm.partyName" name="partyName" #partyNameRef="ngModel" required minlength="2">
-          <div *ngIf="partyNameRef.invalid && (partyNameRef.dirty || partyNameRef.touched)" class="error-msg" style="margin-top:4px; margin-bottom:0; padding:4px 8px;">
+          <input class="form-control" type="text" [(ngModel)]="partyForm.partyName" name="partyName" #partyNameRef="ngModel" required minlength="2">
+          <div *ngIf="partyNameRef.invalid && (partyNameRef.dirty || partyNameRef.touched)" class="error-text">
             <small *ngIf="partyNameRef.errors?.['required']">Name is required.</small>
             <small *ngIf="partyNameRef.errors?.['minlength']">Name must be at least 2 characters.</small>
           </div>
         </div>
         <div class="form-group">
           <label>{{ 'party.gst' | translate:currentLang }}</label>
-          <input type="text" [(ngModel)]="partyForm.gstNumber" name="partyGst" #partyGstRef="ngModel" required pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$" placeholder="15-digit GSTIN number">
-          <div *ngIf="partyGstRef.invalid && (partyGstRef.dirty || partyGstRef.touched)" class="error-msg" style="margin-top:4px; margin-bottom:0; padding:4px 8px;">
+          <input class="form-control" type="text" [(ngModel)]="partyForm.gstNumber" name="partyGst" #partyGstRef="ngModel" required pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$" placeholder="15-digit GSTIN number">
+          <div *ngIf="partyGstRef.invalid && (partyGstRef.dirty || partyGstRef.touched)" class="error-text">
             <small *ngIf="partyGstRef.errors?.['required']">GST is required.</small>
             <small *ngIf="partyGstRef.errors?.['pattern']">Invalid GST Number format.</small>
           </div>
         </div>
         <div class="form-group">
           <label>{{ 'party.email' | translate:currentLang }}</label>
-          <input type="email" [(ngModel)]="partyForm.email" name="partyEmail" #partyEmailRef="ngModel" required email placeholder="name@company.com">
-          <div *ngIf="partyEmailRef.invalid && (partyEmailRef.dirty || partyEmailRef.touched)" class="error-msg" style="margin-top:4px; margin-bottom:0; padding:4px 8px;">
+          <input class="form-control" type="email" [(ngModel)]="partyForm.email" name="partyEmail" #partyEmailRef="ngModel" required email placeholder="name@company.com">
+          <div *ngIf="partyEmailRef.invalid && (partyEmailRef.dirty || partyEmailRef.touched)" class="error-text">
             <small *ngIf="partyEmailRef.errors?.['required']">Email is required.</small>
             <small *ngIf="partyEmailRef.errors?.['email']">Invalid Email format.</small>
           </div>
         </div>
         <div class="form-group">
           <label>{{ 'party.contact' | translate:currentLang }}</label>
-          <input type="text" [(ngModel)]="partyForm.partyContact" name="partyContact" #partyContactRef="ngModel" required pattern="^\d{10}$" placeholder="10-digit mobile">
-          <div *ngIf="partyContactRef.invalid && (partyContactRef.dirty || partyContactRef.touched)" class="error-msg" style="margin-top:4px; margin-bottom:0; padding:4px 8px;">
+          <input class="form-control" type="text" [(ngModel)]="partyForm.partyContact" name="partyContact" #partyContactRef="ngModel" required pattern="^\d{10}$" placeholder="10-digit mobile">
+          <div *ngIf="partyContactRef.invalid && (partyContactRef.dirty || partyContactRef.touched)" class="error-text">
             <small *ngIf="partyContactRef.errors?.['required']">Contact is required.</small>
             <small *ngIf="partyContactRef.errors?.['pattern']">Must be exactly 10 digits.</small>
           </div>
         </div>
         <div class="form-group">
           <label>{{ 'party.address' | translate:currentLang }}</label>
-          <input type="text" [(ngModel)]="partyForm.partyAddress" name="partyAddress" required placeholder="Full street address">
+          <input class="form-control" type="text" [(ngModel)]="partyForm.partyAddress" name="partyAddress" required placeholder="Full street address">
         </div>
         <div class="form-group">
           <label>{{ 'party.state' | translate:currentLang }}</label>
-          <input type="text" [(ngModel)]="partyForm.state" name="partyState" required placeholder="State (e.g. Maharashtra)">
+          <input class="form-control" type="text" [(ngModel)]="partyForm.state" name="partyState" required placeholder="State (e.g. Maharashtra)">
         </div>
-        <button type="submit" class="btn btn-success" [disabled]="partyNgForm.invalid" style="width: 100%;">{{ 'party.register_btn' | translate:currentLang }}</button>
+        <button type="submit" class="btn btn-success" [disabled]="partyNgForm.invalid" style="width: 100%; margin-top: 16px;">{{ 'party.register_btn' | translate:currentLang }}</button>
       </form>
     </div>
-    <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
+    <div class="card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'">
       <h3>{{ 'party.records_title' | translate:currentLang }}</h3>
       
-        <div class="table-container" style="margin-top: 15px;">
+        <div class="table-responsive" style="margin-top: 15px;">
           <app-data-table 
             [data]="parties" 
             [columns]="partyTableColumns" 

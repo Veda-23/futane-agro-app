@@ -8,13 +8,13 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: Vedant
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: futane_agro_prod
     volumes:
       - mysql_prod_data:/var/lib/mysql
     restart: always
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pVedant"]
+      test: ["CMD", "sh", "-c", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,6 +23,9 @@ services:
 
   # Spring Boot Backend Service for Production
   backend-prod:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     image: futane-agro-app_backend-prod:latest
     container_name: futane_agro_backend_prod
     ports:
@@ -31,9 +34,9 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-prod:3306/futane_agro_prod?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=Vedant
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - MAIL_USERNAME=vedantmehare25@gmail.com
-      - MAIL_PASSWORD=vsbtirkwuqviuicj
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
     depends_on:
       mysql-prod:
         condition: service_healthy
@@ -45,6 +48,9 @@ services:
 
   # Angular Frontend Service for Production
   frontend-prod:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
     image: futane-agro-app_frontend-prod:latest
     container_name: futane_agro_frontend_prod
     depends_on:

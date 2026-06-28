@@ -19,7 +19,8 @@ export class SalesComponent implements OnInit {
 
   salesList: any[] = [];
   parties: any[] = [];
-  salesForm = { date: '', partyId: '', crateType: 'Apple Crate', crateMaterial: 'Plastic', quantity: 0, rate: 0, totalAmount: 0, paid: 0, remaining: 0 };
+  salesForm = { date: '', partyId: '', crateType: 'Apple Crate', crateMaterial: '', quantity: 1, rate: 0, totalAmount: 0, paid: 0, remaining: 0 };
+  today: string = new Date().toISOString().split('T')[0];
 
   // Pagination & Sort state for local logic if needed
   currentPage = 1;

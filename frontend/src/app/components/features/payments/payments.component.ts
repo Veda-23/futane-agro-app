@@ -22,6 +22,7 @@ export class PaymentsComponent implements OnInit {
   invoicesList: any[] = [];
   
   paymentsForm = { partyId: '', invoiceNo: '', amountReceived: 0, paymentMode: 'UPI', paymentDate: '' };
+  today: string = new Date().toISOString().split('T')[0];
 
   // Pagination & Sort state
   currentPage = 1;

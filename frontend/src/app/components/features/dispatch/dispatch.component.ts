@@ -18,8 +18,8 @@ export class DispatchComponent implements OnInit {
 
   salesList: any[] = [];
   dispatchesList: any[] = [];
-
   dispatchForm = { saleId: '', dispatchDate: '', vehicleNumber: '', driverName: '', deliveryAddress: '', dispatchStatus: 'Pending' };
+  today: string = new Date().toISOString().split('T')[0];
 
   Math = Math;
 

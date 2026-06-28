@@ -1,31 +1,23 @@
-describe('Login Flow', () => {
-  it('should display login page successfully', () => {
-    cy.visit('/');
-    cy.get('.login-container').should('exist');
-    cy.get('input[name="username"]').should('exist');
-    cy.get('input[name="password"]').should('exist');
-  });
-
-  it('should authenticate and load dashboard with correct credentials', () => {
-    cy.visit('/');
-    cy.get('input[name="username"]').type('superadmin');
+describe('Authentication Flow', () => {
+  it('should successfully log in and redirect to dashboard', () => {
+    cy.visit('/login');
+    
+    cy.get('input[name="username"]').type('admin');
     cy.get('input[name="password"]').type('admin123');
-    cy.get('button.login-button').click();
+    cy.get('button[type="submit"]').click();
 
-    // Verify successful login by checking for the dashboard container
-    cy.get('.dashboard-container', { timeout: 10000 }).should('exist');
-    cy.contains('Revenue').should('exist');
+    cy.url().should('include', '/dashboard');
+    cy.get('h1').should('contain', 'Dashboard');
   });
 
-  it('should show error with invalid credentials', () => {
-    cy.visit('/');
-    cy.get('input[name="username"]').type('invaliduser');
-    cy.get('input[name="password"]').type('wrongpassword');
-    cy.get('button.login-button').click();
+  it('should show error on invalid credentials', () => {
+    cy.visit('/login');
+    
+    cy.get('input[name="username"]').type('wronguser');
+    cy.get('input[name="password"]').type('wrongpass');
+    cy.get('button[type="submit"]').click();
 
-    // The frontend alerts the user with an error message
-    cy.on('window:alert', (text) => {
-      expect(text).to.contains('Invalid credentials');
-    });
+    cy.get('.error-message').should('be.visible').and('contain', 'Invalid credentials');
+    cy.url().should('include', '/login');
   });
 });

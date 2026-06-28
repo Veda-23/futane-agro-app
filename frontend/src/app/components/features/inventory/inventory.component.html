@@ -1,4 +1,4 @@
-<div class="glass-panel" style="padding: 20px;">
+<div class="card" style="padding: 20px;">
   <div class="flex-header" style="display:flex; justify-content:space-between; margin-bottom: 15px;">
     <h3>📦 {{ 'inv.records_title' | translate:currentLang }}</h3>
     <span class="badge badge-info">Formula Verified</span>
@@ -11,13 +11,13 @@
       </button>
       <div class="dropdown-menu" *ngIf="showColDropdown['inventory']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
         <label *ngFor="let col of getTableColumns('inventory')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-          <input type="checkbox" [checked]="isColumnVisible('inventory', col)" (change)="toggleColumn('inventory', col)" style="width:auto; margin:0; cursor:pointer;">
+          <input class="form-control" type="checkbox" [checked]="isColumnVisible('inventory', col)" (change)="toggleColumn('inventory', col)" style="width:auto; margin:0; cursor:pointer;">
           {{col}}
         </label>
       </div>
     </div>
   </div>
-  <div class="table-container">
+  <div class="table-responsive">
     <table>
       <thead>
         <tr>

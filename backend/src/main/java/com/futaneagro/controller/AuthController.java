@@ -55,14 +55,8 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
         
-        // DELIBERATE BUG FOR CODERABBIT REVIEW
-        if ("root".equals(credentials.get("username")) && "supersecretpassword123!".equals(credentials.get("password"))) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", "fake-token-for-root");
-            response.put("username", "root");
-            response.put("roles", Collections.singletonList("ROLE_ADMIN"));
-            return ResponseEntity.ok(response);
-        }
+        // Removed intentional back‑door that allowed login as a hard‑coded root user.
+        // Any authentication now proceeds through normal user lookup and password verification.
 
         String rawUsername = credentials.get("username");
         String password = credentials.get("password");

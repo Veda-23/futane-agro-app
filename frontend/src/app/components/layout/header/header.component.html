@@ -1,41 +1,54 @@
-<header class="header glass-panel">
-  <div class="header-left" style="display: flex; align-items: center; gap: 20px;">
-    <button class="mobile-menu-btn" (click)="toggleSidebar()">☰</button>
-    <div class="header-logo-brand">
-      <span class="logo-icon">🏭</span>
-      <span style="font-size: 18px; font-weight: 800; letter-spacing: 0.5px; color: var(--accent-orange);">FUTANE AGRO ERP</span>
+<header class="header flex items-center justify-between" style="position: sticky; top: 0; z-index: var(--z-header); background: var(--bg-secondary); border-bottom: 1px solid var(--border-light); padding: 0 clamp(16px, 2vw, 24px); height: var(--header-height);">
+  <div class="header-left flex items-center gap-3">
+    <!-- Hamburger Menu (Mobile Only) -->
+    <button class="btn btn-secondary btn-sm mobile-menu-btn" aria-label="Toggle Sidebar" (click)="toggleSidebar()" style="display: none;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+    
+    <!-- Branding -->
+    <div class="header-logo-brand flex items-center gap-2">
+      <span class="logo-icon" style="font-size: 1.5rem;">🏭</span>
+      <span class="text-primary h4 m-0" style="letter-spacing: 0.5px; display: none;">FUTANE AGRO</span>
     </div>
-    <span class="header-divider" style="color: var(--border-glass);">|</span>
-    <h2 style="font-size: 18px; font-weight: 700; margin: 0; color: var(--text-primary);">{{ activeTab | uppercase }}</h2>
-    <div class="header-datetime" style="font-size: 13px; font-weight: 600; color: var(--text-secondary); background: rgba(255, 255, 255, 0.05); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 6px;">
+    
+    <span class="header-divider text-muted" style="display: none;">|</span>
+    <h2 class="h4 m-0 text-primary" style="text-transform: uppercase;">{{ activeTab }}</h2>
+    
+    <!-- Date/Time Chip (Hidden on small mobile) -->
+    <div class="badge badge-secondary hidden-sm flex items-center gap-2" style="font-size: 0.75rem; font-weight: 500; padding: 6px 12px; margin-left: 8px;">
       📅 <span>{{ currentDateTimeString }}</span>
     </div>
   </div>
-  <div class="header-right">
-    <!-- Developer setting (API URL field): ONLY visible to Super Admin in UAT mode -->
-    <div class="backend-config" *ngIf="!isProduction && loggedInUser?.role === 'SUPER_ADMIN'" style="margin-right: 15px; display: flex; align-items: center; gap: 5px;">
-      <span style="font-size: 11px; color: var(--text-secondary); font-weight: 500;">API:</span>
-      <input type="text" [(ngModel)]="customBackendUrl" (change)="saveBackendUrl()" placeholder="Backend URL" style="padding: 4px 8px; font-size: 11px; border: 1px solid var(--border-color); border-radius: 4px; background: rgba(0,0,0,0.2); color: var(--text-primary); width: 180px;">
+
+  <div class="header-right flex items-center gap-4">
+    <!-- Developer API Toggle (Super Admin UAT) -->
+    <div class="backend-config hidden-sm flex items-center gap-2" *ngIf="!isProduction && loggedInUser?.role === 'SUPER_ADMIN'">
+      <span class="subtitle font-weight-bold">API:</span>
+      <input type="text" class="form-control" [(ngModel)]="customBackendUrl" (change)="saveBackendUrl()" placeholder="Backend URL" style="padding: 4px 8px; font-size: 0.75rem; width: 160px;">
     </div>
 
     <!-- Notification Bell -->
-    <div class="notification-bell" style="font-size: 20px; cursor: pointer; position: relative; margin-right: 15px;">
+    <div class="notification-bell" style="font-size: 1.25rem; cursor: pointer; position: relative;" aria-label="Notifications">
       🔔
-      <span class="bell-dot" style="position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background: var(--accent-red); border-radius: 50%;"></span>
+      <span class="bell-dot" style="position: absolute; top: 0px; right: 0px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; box-shadow: 0 0 0 2px var(--bg-secondary);"></span>
     </div>
 
     <!-- Language Switcher -->
-    <div class="lang-switcher">
-      <button class="lang-btn" [class.lang-active]="currentLang === 'en'" (click)="setLanguage('en')">EN</button>
-      <span class="lang-sep">|</span>
-      <button class="lang-btn" [class.lang-active]="currentLang === 'mr'" (click)="setLanguage('mr')">मराठी</button>
-      <span class="lang-sep">|</span>
-      <button class="lang-btn" [class.lang-active]="currentLang === 'hi'" (click)="setLanguage('hi')">हिंदी</button>
+    <div class="lang-switcher flex items-center gap-2" style="background: var(--bg-primary); border: 1px solid var(--border-light); border-radius: 20px; padding: 4px;">
+      <button class="btn btn-sm" [ngClass]="currentLang === 'en' ? 'btn-primary' : 'btn-secondary'" (click)="setLanguage('en')" style="border: none; padding: 2px 8px;">EN</button>
+      <button class="btn btn-sm" [ngClass]="currentLang === 'mr' ? 'btn-primary' : 'btn-secondary'" (click)="setLanguage('mr')" style="border: none; padding: 2px 8px;">मराठी</button>
+      <button class="btn btn-sm" [ngClass]="currentLang === 'hi' ? 'btn-primary' : 'btn-secondary'" (click)="setLanguage('hi')" style="border: none; padding: 2px 8px;">हिंदी</button>
     </div>
-    <div class="session-info" style="display: flex; flex-direction: column; align-items: flex-end; font-size: 12px; line-height: 1.3; color: var(--text-secondary); background: rgba(0,0,0,0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-color);">
-      <span style="font-weight: 600;">👤 {{ loggedInUser?.name }} ({{ loggedInUser?.role }})</span>
-      <span style="font-size: 11px; color: var(--text-muted);">Session: {{ sessionDuration }} | Auto-Logout: {{ logoutCountdown }}</span>
+
+    <!-- Session Info & Logout -->
+    <div class="session-info flex-col justify-end text-right hidden-sm" style="background: var(--bg-primary); padding: 4px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-light);">
+      <span style="font-size: 0.8125rem; font-weight: 600;">👤 {{ loggedInUser?.name }}</span>
+      <span class="text-muted" style="font-size: 0.6875rem;">Session: {{ sessionDuration }} | Exp: {{ logoutCountdown }}</span>
     </div>
-    <button class="btn btn-secondary btn-sm" id="signout-btn" (click)="handleLogout()">{{ 'btn.logout' | translate:currentLang }}</button>
+    
+    <button class="btn btn-danger btn-sm" (click)="handleLogout()" aria-label="Logout">
+      <span class="hidden-sm">{{ 'btn.logout' | translate:currentLang }}</span>
+      <svg class="visible-sm" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+    </button>
   </div>
 </header>

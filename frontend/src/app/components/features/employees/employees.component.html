@@ -1,46 +1,65 @@
-<div class="grid-cols-3">
-  <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
+<div class="grid grid-cols-3">
+  <div class="card" style="grid-column: span 1;" *ngIf="!isViewer()">
     <h3>{{ 'hr.add_title' | translate:currentLang }}</h3>
-    <form (submit)="saveEmployee()">
+    <form #employeeNgForm="ngForm" (submit)="saveEmployee()">
       <div class="form-group">
         <label>{{ 'hr.name' | translate:currentLang }}</label>
-        <input type="text" [(ngModel)]="employeeForm.empName" name="eName" required placeholder="Worker name">
+        <input class="form-control" type="text" [(ngModel)]="employeeForm.empName" name="eName" #eNameRef="ngModel" required minlength="2" placeholder="Worker name">
+        <div *ngIf="eNameRef.invalid && (eNameRef.dirty || eNameRef.touched)" class="error-text">
+          <small *ngIf="eNameRef.errors?.['required']">Employee name is required.</small>
+          <small *ngIf="eNameRef.errors?.['minlength']">Must be at least 2 characters.</small>
+        </div>
       </div>
       <div class="form-group">
         <label>{{ 'hr.designation' | translate:currentLang }}</label>
-        <input type="text" [(ngModel)]="employeeForm.designation" name="eDesig" required placeholder="Role (e.g. Operator, Accountant)">
+        <input class="form-control" type="text" [(ngModel)]="employeeForm.designation" name="eDesig" required placeholder="Role (e.g. Operator, Accountant)">
       </div>
       <div class="form-group">
         <label>{{ 'hr.mobile' | translate:currentLang }}</label>
-        <input type="text" [(ngModel)]="employeeForm.empContact" name="eContact" required placeholder="10-digit mobile">
+        <input class="form-control" type="text" [(ngModel)]="employeeForm.empContact" name="eContact" #eContactRef="ngModel" required pattern="^\d{10}$" placeholder="10-digit mobile">
+        <div *ngIf="eContactRef.invalid && (eContactRef.dirty || eContactRef.touched)" class="error-text">
+          <small *ngIf="eContactRef.errors?.['required']">Mobile is required.</small>
+          <small *ngIf="eContactRef.errors?.['pattern']">Must be exactly 10 digits.</small>
+        </div>
       </div>
       <div class="form-group">
         <label>{{ 'hr.salary' | translate:currentLang }}</label>
-        <input type="number" [(ngModel)]="employeeForm.salary" name="eSalary" required>
+        <input class="form-control" type="number" [(ngModel)]="employeeForm.salary" name="eSalary" #eSalaryRef="ngModel" required min="0">
+        <div *ngIf="eSalaryRef.invalid && (eSalaryRef.dirty || eSalaryRef.touched)" class="error-text">
+          <small *ngIf="eSalaryRef.errors?.['required']">Salary is required.</small>
+          <small *ngIf="eSalaryRef.errors?.['min']">Salary cannot be negative.</small>
+        </div>
       </div>
       <div class="form-group">
         <label>{{ 'hr.aadhaar' | translate:currentLang }}</label>
-        <input type="text" [(ngModel)]="employeeForm.aadhaarNo" name="eAadhaar" required placeholder="12-digit Aadhaar Card number">
+        <input class="form-control" type="text" [(ngModel)]="employeeForm.aadhaarNo" name="eAadhaar" #eAadhaarRef="ngModel" required pattern="^\d{12}$" placeholder="12-digit Aadhaar Card number">
+        <div *ngIf="eAadhaarRef.invalid && (eAadhaarRef.dirty || eAadhaarRef.touched)" class="error-text">
+          <small *ngIf="eAadhaarRef.errors?.['required']">Aadhaar number is required.</small>
+          <small *ngIf="eAadhaarRef.errors?.['pattern']">Must be exactly 12 digits.</small>
+        </div>
       </div>
       <div class="form-group">
         <label>{{ 'hr.bank' | translate:currentLang }}</label>
-        <input type="text" [(ngModel)]="employeeForm.bankAccount" name="eBank" required placeholder="IFS Code / Account No">
+        <input class="form-control" type="text" [(ngModel)]="employeeForm.bankAccount" name="eBank" required placeholder="IFS Code / Account No">
       </div>
       <div class="form-group">
         <label>{{ 'hr.joining_date' | translate:currentLang }}</label>
-        <input type="date" [(ngModel)]="employeeForm.joiningDate" name="eJoin" required>
+        <input class="form-control" type="date" [(ngModel)]="employeeForm.joiningDate" name="eJoin" #eJoinRef="ngModel" required [max]="today">
+        <div *ngIf="eJoinRef.invalid && (eJoinRef.dirty || eJoinRef.touched)" class="error-text">
+          <small *ngIf="eJoinRef.errors?.['required']">Joining date is required.</small>
+        </div>
       </div>
       <div class="form-group">
         <label>{{ 'hr.address' | translate:currentLang }}</label>
-        <input type="text" [(ngModel)]="employeeForm.address" name="eAddr" required placeholder="Residential address">
+        <input class="form-control" type="text" [(ngModel)]="employeeForm.address" name="eAddr" required placeholder="Residential address">
       </div>
-      <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'hr.register_btn' | translate:currentLang }}</button>
+      <button type="submit" class="btn btn-success" [disabled]="employeeNgForm.invalid" style="width: 100%; margin-top: 16px;">{{ 'hr.register_btn' | translate:currentLang }}</button>
     </form>
   </div>
-  <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
+  <div class="card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'">
     <h3>{{ 'hr.records_title' | translate:currentLang }}</h3>
     
-    <div class="table-container" style="margin-top: 15px;">
+    <div class="table-responsive" style="margin-top: 15px;">
       <app-data-table 
         [data]="employees" 
         [columns]="employeeTableColumns" 

@@ -6,7 +6,7 @@
           <div class="billing-hub-controls">
             <div class="form-group" style="min-width: 220px; margin-bottom: 0;">
               <label>{{ 'bill.doc_type' | translate:currentLang }}</label>
-              <select [(ngModel)]="activeBillType" name="activeBillType" (change)="onBillTypeChange()">
+              <select class="form-control" [(ngModel)]="activeBillType" name="activeBillType" (change)="onBillTypeChange()">
                 <option value="tax_invoice">Tax Invoice</option>
                 <option value="proforma">Proforma Invoice</option>
                 <option value="delivery_challan">Delivery Challan</option>
@@ -19,7 +19,7 @@
             
             <div class="form-group" style="min-width: 280px; margin-bottom: 0;">
               <label>{{ 'bill.ref_record' | translate:currentLang }}</label>
-              <select [(ngModel)]="selectedBillRecordId" name="selectedBillRecordId" (change)="onBillRecordChange()">
+              <select class="form-control" [(ngModel)]="selectedBillRecordId" name="selectedBillRecordId" (change)="onBillRecordChange()">
                 <option value="">-- {{ 'label.select_sale' | translate:currentLang }} --</option>
                 <ng-container *ngIf="activeBillType === 'tax_invoice' || activeBillType === 'proforma'">
                   <option *ngFor="let s of salesList" [value]="s.saleId">{{ s.party.partyName }} - Qty: {{ s.quantity }} (₹{{ s.totalAmount }})</option>

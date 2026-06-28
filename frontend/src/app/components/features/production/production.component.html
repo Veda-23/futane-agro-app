@@ -1,17 +1,17 @@
 <!-- 2. Daily Production Tab -->
 <div *ngIf="activeTab === 'production'">
-  <div class="grid-cols-3">
+  <div class="grid grid-cols-3">
     <!-- Form -->
-    <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
+    <div class="card" style="grid-column: span 1;" *ngIf="!isViewer()">
       <h3>{{ 'ppd.add_title' | translate:currentLang }}</h3>
       <form (submit)="savePpd()">
         <div class="form-group">
           <label>{{ 'label.date' | translate:currentLang }}</label>
-          <input type="date" [(ngModel)]="ppdForm.date" name="ppdDate" required>
+          <input class="form-control" type="date" [(ngModel)]="ppdForm.date" name="ppdDate" required>
         </div>
         <div class="form-group">
           <label>{{ 'ppd.crateType' | translate:currentLang }}</label>
-          <select [(ngModel)]="ppdForm.crateType" name="ppdCrateType" required>
+          <select class="form-control" [(ngModel)]="ppdForm.crateType" name="ppdCrateType" required>
             <option value="Apple Crate">Apple Crate</option>
             <option value="Tomato Tray">Tomato Tray</option>
             <option value="Mango Box">Mango Box</option>
@@ -20,21 +20,21 @@
         </div>
         <div class="form-group">
           <label>{{ 'ppd.totalProduction' | translate:currentLang }}</label>
-          <input type="number" [(ngModel)]="ppdForm.totalProduction" name="ppdTotal" required>
+          <input class="form-control" type="number" [(ngModel)]="ppdForm.totalProduction" name="ppdTotal" required>
         </div>
         <div class="form-group">
           <label>{{ 'ppd.successful' | translate:currentLang }}</label>
-          <input type="number" [(ngModel)]="ppdForm.successful" name="ppdSuccessful" required>
+          <input class="form-control" type="number" [(ngModel)]="ppdForm.successful" name="ppdSuccessful" required>
         </div>
         <div class="form-group">
           <label>{{ 'ppd.rejected' | translate:currentLang }}</label>
-          <input type="number" [(ngModel)]="ppdForm.rejected" name="ppdRejected" required>
+          <input class="form-control" type="number" [(ngModel)]="ppdForm.rejected" name="ppdRejected" required>
         </div>
-        <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'ppd.save_btn' | translate:currentLang }}</button>
+        <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 16px;">{{ 'ppd.save_btn' | translate:currentLang }}</button>
       </form>
     </div>
     <!-- Table -->
-    <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
+    <div class="card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'">
       <h3>{{ 'ppd.records_title' | translate:currentLang }}</h3>
       
       <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
@@ -44,13 +44,13 @@
           </button>
           <div class="dropdown-menu" *ngIf="showColDropdown['ppd']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
             <label *ngFor="let col of getTableColumns('ppd')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-              <input type="checkbox" [checked]="isColumnVisible('ppd', col)" (change)="toggleColumn('ppd', col)" style="width:auto; margin:0; cursor:pointer;">
+              <input class="form-control" type="checkbox" [checked]="isColumnVisible('ppd', col)" (change)="toggleColumn('ppd', col)" style="width:auto; margin:0; cursor:pointer;">
               {{col}}
             </label>
           </div>
         </div>
       </div>
-      <div class="table-container">
+      <div class="table-responsive">
         <table>
           <thead>
             <tr>
@@ -95,13 +95,13 @@
 
 <!-- 3. Monthly Production Tab -->
 <div *ngIf="activeTab === 'monthly-production'">
-  <div class="grid-cols-3">
-    <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
+  <div class="grid grid-cols-3">
+    <div class="card" style="grid-column: span 1;" *ngIf="!isViewer()">
       <h3>{{ 'ppm.add_title' | translate:currentLang }}</h3>
       <form (submit)="savePpm()">
         <div class="form-group">
           <label>{{ 'ppm.month_year' | translate:currentLang }}</label>
-          <select [(ngModel)]="ppmForm.month" name="ppmMonth" required>
+          <select class="form-control" [(ngModel)]="ppmForm.month" name="ppmMonth" required>
             <option value="January">January</option>
             <option value="February">February</option>
             <option value="March">March</option>
@@ -118,24 +118,24 @@
         </div>
         <div class="form-group">
           <label>{{ 'ppm.month_year' | translate:currentLang }} ({{ 'nav.reports' | translate:currentLang }})</label>
-          <input type="number" [(ngModel)]="ppmForm.year" name="ppmYear" required>
+          <input class="form-control" type="number" [(ngModel)]="ppmForm.year" name="ppmYear" required>
         </div>
         <div class="form-group">
           <label>{{ 'ppd.totalProduction' | translate:currentLang }}</label>
-          <input type="number" [(ngModel)]="ppmForm.cratesProduced" name="ppmCrates" required>
+          <input class="form-control" type="number" [(ngModel)]="ppmForm.cratesProduced" name="ppmCrates" required>
         </div>
         <div class="form-group">
           <label>{{ 'ppm.units' | translate:currentLang }}</label>
-          <input type="number" step="0.01" [(ngModel)]="ppmForm.electricityUnits" name="ppmUnits" required>
+          <input class="form-control" type="number" step="0.01" [(ngModel)]="ppmForm.electricityUnits" name="ppmUnits" required>
         </div>
         <div class="form-group">
           <label>{{ 'ppm.bill' | translate:currentLang }}</label>
-          <input type="number" step="0.01" [(ngModel)]="ppmForm.electricityBill" name="ppmBill" required>
+          <input class="form-control" type="number" step="0.01" [(ngModel)]="ppmForm.electricityBill" name="ppmBill" required>
         </div>
-        <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'ppm.save_btn' | translate:currentLang }}</button>
+        <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 16px;">{{ 'ppm.save_btn' | translate:currentLang }}</button>
       </form>
     </div>
-    <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
+    <div class="card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'">
       <h3>{{ 'ppm.records_title' | translate:currentLang }}</h3>
       
       <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
@@ -145,13 +145,13 @@
           </button>
           <div class="dropdown-menu" *ngIf="showColDropdown['ppm']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
             <label *ngFor="let col of getTableColumns('ppm')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-              <input type="checkbox" [checked]="isColumnVisible('ppm', col)" (change)="toggleColumn('ppm', col)" style="width:auto; margin:0; cursor:pointer;">
+              <input class="form-control" type="checkbox" [checked]="isColumnVisible('ppm', col)" (change)="toggleColumn('ppm', col)" style="width:auto; margin:0; cursor:pointer;">
               {{col}}
             </label>
           </div>
         </div>
       </div>
-      <div class="table-container">
+      <div class="table-responsive">
         <table>
           <thead>
             <tr>

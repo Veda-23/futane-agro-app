@@ -1,22 +1,31 @@
 <!-- 5. Sales Entry Tab -->
 <div *ngIf="activeTab === 'sales'">
-  <div class="grid-cols-3">
-    <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
-      <h3>{{ 'sales.add_title' | translate:currentLang }}</h3>
-      <form (submit)="saveSales()">
+  <!-- Responsive Layout: 1 col on mobile, 3 cols on large desktop -->
+  <div class="grid grid-cols-3">
+    
+    <!-- Sales Form Panel -->
+    <div class="card" *ngIf="!isViewer()">
+      <div class="card-header">
+        <h3 class="h4 m-0">{{ 'sales.add_title' | translate:currentLang }}</h3>
+      </div>
+      <form #salesNgForm="ngForm" (submit)="saveSales()">
         <div class="form-group">
           <label>{{ 'label.date' | translate:currentLang }}</label>
-          <input type="date" [(ngModel)]="salesForm.date" name="salesDate" required>
+          <input type="date" class="form-control" [(ngModel)]="salesForm.date" name="salesDate" #salesDateRef="ngModel" required [max]="today">
+          <div *ngIf="salesDateRef.invalid && (salesDateRef.dirty || salesDateRef.touched)" class="error-text">
+            <span *ngIf="salesDateRef.errors?.['required']">Date is required.</span>
+            <span *ngIf="salesDateRef.errors?.['max']">Cannot select future date.</span>
+          </div>
         </div>
         <div class="form-group">
           <label>{{ 'label.select_party' | translate:currentLang }}</label>
-          <select [(ngModel)]="salesForm.partyId" name="salesParty" required>
+          <select class="form-control" [(ngModel)]="salesForm.partyId" name="salesParty" required>
             <option *ngFor="let party of parties" [value]="party.partyId">{{ party.partyName }}</option>
           </select>
         </div>
         <div class="form-group">
           <label>{{ 'sales.crate_type' | translate:currentLang }}</label>
-          <select [(ngModel)]="salesForm.crateType" name="salesCrateType" required>
+          <select class="form-control" [(ngModel)]="salesForm.crateType" name="salesCrateType" required>
             <option value="Apple Crate">Apple Crate</option>
             <option value="Tomato Tray">Tomato Tray</option>
             <option value="Mango Box">Mango Box</option>
@@ -25,93 +34,134 @@
         </div>
         <div class="form-group">
           <label>{{ 'sales.crate_material' | translate:currentLang }}</label>
-          <input type="text" [(ngModel)]="salesForm.crateMaterial" name="salesMaterial" required>
+          <input type="text" class="form-control" [(ngModel)]="salesForm.crateMaterial" name="salesMaterial" required>
         </div>
-        <div class="form-group">
-          <label>{{ 'sales.quantity' | translate:currentLang }}</label>
-          <input type="number" [(ngModel)]="salesForm.quantity" name="salesQty" required (input)="calculateSalesTotal()">
+        
+        <div class="form-grid">
+          <div class="form-group">
+            <label>{{ 'sales.quantity' | translate:currentLang }}</label>
+            <input type="number" class="form-control" [(ngModel)]="salesForm.quantity" name="salesQty" #salesQtyRef="ngModel" required min="1" (input)="calculateSalesTotal()">
+            <div *ngIf="salesQtyRef.invalid && (salesQtyRef.dirty || salesQtyRef.touched)" class="error-text">
+              <span *ngIf="salesQtyRef.errors?.['required']">Required.</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>{{ 'sales.rate' | translate:currentLang }}</label>
+            <input type="number" step="0.01" class="form-control" [(ngModel)]="salesForm.rate" name="salesRate" #salesRateRef="ngModel" required min="0" (input)="calculateSalesTotal()">
+            <div *ngIf="salesRateRef.invalid && (salesRateRef.dirty || salesRateRef.touched)" class="error-text">
+              <span *ngIf="salesRateRef.errors?.['required']">Required.</span>
+            </div>
+          </div>
         </div>
-        <div class="form-group">
-          <label>{{ 'sales.rate' | translate:currentLang }}</label>
-          <input type="number" step="0.01" [(ngModel)]="salesForm.rate" name="salesRate" required (input)="calculateSalesTotal()">
-        </div>
+
         <div class="form-group">
           <label>{{ 'sales.paid' | translate:currentLang }}</label>
-          <input type="number" step="0.01" [(ngModel)]="salesForm.paid" name="salesPaid" required (input)="calculateSalesTotal()">
+          <input type="number" step="0.01" class="form-control" [(ngModel)]="salesForm.paid" name="salesPaid" #salesPaidRef="ngModel" required min="0" (input)="calculateSalesTotal()">
         </div>
-        <!-- Calculates automatically -->
-        <div class="form-group">
-          <label>{{ 'sales.total' | translate:currentLang }}</label>
-          <input type="number" [value]="salesForm.totalAmount" disabled style="background: rgba(255,255,255,0.02); color: var(--accent-orange); font-weight: bold;">
+        
+        <div class="form-grid">
+          <div class="form-group">
+            <label>{{ 'sales.total' | translate:currentLang }}</label>
+            <input type="number" class="form-control" [value]="salesForm.totalAmount" disabled style="color: var(--primary); font-weight: bold; background: var(--bg-primary);">
+          </div>
+          <div class="form-group">
+            <label>{{ 'sales.remaining' | translate:currentLang }}</label>
+            <input type="number" class="form-control" [value]="salesForm.remaining" disabled style="color: var(--danger); font-weight: bold; background: var(--bg-primary);">
+          </div>
         </div>
-        <div class="form-group">
-          <label>{{ 'sales.remaining' | translate:currentLang }}</label>
-          <input type="number" [value]="salesForm.remaining" disabled style="background: rgba(255,255,255,0.02); color: var(--accent-red); font-weight: bold;">
-        </div>
-        <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'sales.save_btn' | translate:currentLang }}</button>
+
+        <button type="submit" class="btn btn-success" [disabled]="salesNgForm.invalid" style="width: 100%; margin-top: 16px;">
+          {{ 'sales.save_btn' | translate:currentLang }}
+        </button>
       </form>
     </div>
-    <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
-      <h3>{{ 'sales.records_title' | translate:currentLang }}</h3>
-      
-      <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
-        <div class="column-visibility-dropdown" style="position:relative;">
-          <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('sales')" style="padding: 6px 12px; font-size: 13px;">
+    
+    <!-- Sales Data Table Panel -->
+    <div class="card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'">
+      <div class="card-header">
+        <h3 class="h4 m-0">{{ 'sales.records_title' | translate:currentLang }}</h3>
+        
+        <div class="table-toolbar no-print" style="position: relative;">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('sales')">
             ⚙️ Columns
           </button>
-          <div class="dropdown-menu" *ngIf="showColDropdown['sales']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
-            <label *ngFor="let col of getTableColumns('sales')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-              <input type="checkbox" [checked]="isColumnVisible('sales', col)" (change)="toggleColumn('sales', col)" style="width:auto; margin:0; cursor:pointer;">
+          
+          <div class="dropdown-menu card" *ngIf="showColDropdown['sales']" style="position: absolute; right: 0; top: 100%; margin-top: 8px; z-index: var(--z-overlay); width: 200px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+            <label *ngFor="let col of getTableColumns('sales')" class="flex items-center gap-2 m-0" style="cursor: pointer; text-transform: none; font-size: 0.875rem;">
+              <input class="form-control" type="checkbox" [checked]="isColumnVisible('sales', col)" (change)="toggleColumn('sales', col)">
               {{col}}
             </label>
           </div>
         </div>
       </div>
-      <div class="table-container">
+      
+      <div class="table-responsive">
         <table>
           <thead>
             <tr>
-              <th *ngIf="isColumnVisible('sales', 'Date')" (click)="setSort('date')" style="cursor:pointer;">{{ 'label.date' | translate:currentLang }} <span *ngIf="sortField === 'date'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('sales', 'Party')" (click)="setSort('party.partyName')" style="cursor:pointer;">{{ 'party.name' | translate:currentLang }} <span *ngIf="sortField === 'party.partyName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('sales', 'Crate Type')" (click)="setSort('crateType')" style="cursor:pointer;">{{ 'sales.crate_type' | translate:currentLang }} <span *ngIf="sortField === 'crateType'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('sales', 'Quantity')" (click)="setSort('quantity')" style="cursor:pointer;">{{ 'sales.quantity' | translate:currentLang }} <span *ngIf="sortField === 'quantity'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('sales', 'Rate')" (click)="setSort('rate')" style="cursor:pointer;">{{ 'sales.rate' | translate:currentLang }} <span *ngIf="sortField === 'rate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('sales', 'Total')" (click)="setSort('totalAmount')" style="cursor:pointer;">{{ 'sales.total' | translate:currentLang }} <span *ngIf="sortField === 'totalAmount'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('sales', 'Paid')" (click)="setSort('paid')" style="cursor:pointer;">{{ 'sales.paid' | translate:currentLang }} <span *ngIf="sortField === 'paid'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('sales', 'Remaining')" (click)="setSort('remaining')" style="cursor:pointer;">{{ 'sales.remaining' | translate:currentLang }} <span *ngIf="sortField === 'remaining'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('sales', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
+              <th *ngIf="isColumnVisible('sales', 'Date')" (click)="setSort('date')" style="cursor:pointer;">
+                {{ 'label.date' | translate:currentLang }} <span *ngIf="sortField === 'date'">{{ sortAsc ? '▲' : '▼' }}</span>
+              </th>
+              <th *ngIf="isColumnVisible('sales', 'Party')" (click)="setSort('party.partyName')" style="cursor:pointer;">
+                {{ 'party.name' | translate:currentLang }} <span *ngIf="sortField === 'party.partyName'">{{ sortAsc ? '▲' : '▼' }}</span>
+              </th>
+              <th *ngIf="isColumnVisible('sales', 'Crate Type')" (click)="setSort('crateType')" style="cursor:pointer;">
+                {{ 'sales.crate_type' | translate:currentLang }} <span *ngIf="sortField === 'crateType'">{{ sortAsc ? '▲' : '▼' }}</span>
+              </th>
+              <th *ngIf="isColumnVisible('sales', 'Quantity')" (click)="setSort('quantity')" style="cursor:pointer;" class="text-right">
+                {{ 'sales.quantity' | translate:currentLang }} <span *ngIf="sortField === 'quantity'">{{ sortAsc ? '▲' : '▼' }}</span>
+              </th>
+              <th *ngIf="isColumnVisible('sales', 'Rate')" (click)="setSort('rate')" style="cursor:pointer;" class="text-right">
+                {{ 'sales.rate' | translate:currentLang }} <span *ngIf="sortField === 'rate'">{{ sortAsc ? '▲' : '▼' }}</span>
+              </th>
+              <th *ngIf="isColumnVisible('sales', 'Total')" (click)="setSort('totalAmount')" style="cursor:pointer;" class="text-right">
+                {{ 'sales.total' | translate:currentLang }} <span *ngIf="sortField === 'totalAmount'">{{ sortAsc ? '▲' : '▼' }}</span>
+              </th>
+              <th *ngIf="isColumnVisible('sales', 'Paid')" (click)="setSort('paid')" style="cursor:pointer;" class="text-right">
+                {{ 'sales.paid' | translate:currentLang }} <span *ngIf="sortField === 'paid'">{{ sortAsc ? '▲' : '▼' }}</span>
+              </th>
+              <th *ngIf="isColumnVisible('sales', 'Remaining')" (click)="setSort('remaining')" style="cursor:pointer;" class="text-right">
+                {{ 'sales.remaining' | translate:currentLang }} <span *ngIf="sortField === 'remaining'">{{ sortAsc ? '▲' : '▼' }}</span>
+              </th>
+              <th *ngIf="isColumnVisible('sales', 'Actions')" class="text-center">{{ 'label.actions' | translate:currentLang }}</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let sale of getProcessedList(salesList, 'sales')">
               <td *ngIf="isColumnVisible('sales', 'Date')">{{ sale.date }}</td>
               <td *ngIf="isColumnVisible('sales', 'Party')">{{ sale.party?.partyName }}</td>
-              <td *ngIf="isColumnVisible('sales', 'Crate Type')">{{ sale.crateType }} ({{ sale.crateMaterial }})</td>
-              <td *ngIf="isColumnVisible('sales', 'Quantity')">{{ sale.quantity }}</td>
-              <td *ngIf="isColumnVisible('sales', 'Rate')">₹{{ sale.rate }}</td>
-              <td *ngIf="isColumnVisible('sales', 'Total')"><strong>₹{{ sale.totalAmount }}</strong></td>
-              <td *ngIf="isColumnVisible('sales', 'Paid')"><span class="badge badge-success">₹{{ sale.paid }}</span></td>
-              <td *ngIf="isColumnVisible('sales', 'Remaining')"><span class="badge badge-danger">₹{{ sale.remaining }}</span></td>
-              <td *ngIf="isColumnVisible('sales', 'Actions')">
+              <td *ngIf="isColumnVisible('sales', 'Crate Type')">{{ sale.crateType }} <span class="text-muted">({{ sale.crateMaterial }})</span></td>
+              <td *ngIf="isColumnVisible('sales', 'Quantity')" class="text-right">{{ sale.quantity }}</td>
+              <td *ngIf="isColumnVisible('sales', 'Rate')" class="text-right">₹{{ sale.rate }}</td>
+              <td *ngIf="isColumnVisible('sales', 'Total')" class="text-right"><strong>₹{{ sale.totalAmount }}</strong></td>
+              <td *ngIf="isColumnVisible('sales', 'Paid')" class="text-right"><span class="badge badge-success">₹{{ sale.paid }}</span></td>
+              <td *ngIf="isColumnVisible('sales', 'Remaining')" class="text-right"><span class="badge badge-danger">₹{{ sale.remaining }}</span></td>
+              <td *ngIf="isColumnVisible('sales', 'Actions')" class="text-center">
                 <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteSale(sale.saleId)">{{ 'btn.delete' | translate:currentLang }}</button>
               </td>
+            </tr>
+            <tr *ngIf="getProcessedList(salesList, 'sales').length === 0">
+              <td colspan="100%" class="text-center text-muted py-4">No records found.</td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
-        <span style="font-size:13px; color:var(--text-secondary);">
+      
+      <!-- Standardized Table Pagination -->
+      <div class="flex items-center justify-between mt-4 pt-4 border-t no-print">
+        <span class="subtitle">
           Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['sales'] || 0) }} of {{ tableFilteredCounts['sales'] || 0 }} entries
         </span>
-        <div style="display:flex; gap:8px;">
-          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+        <div class="flex gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
             Previous
           </button>
-          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['sales'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['sales'] || 0)" (click)="currentPage = currentPage + 1">
             Next
           </button>
         </div>
       </div>
+      
     </div>
   </div>
 </div>

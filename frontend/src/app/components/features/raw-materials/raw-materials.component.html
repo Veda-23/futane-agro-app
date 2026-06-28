@@ -1,33 +1,33 @@
-<div class="grid-cols-3">
-  <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
+<div class="grid grid-cols-3">
+  <div class="card" style="grid-column: span 1;" *ngIf="!isViewer()">
     <h3>{{ 'raw.add_title' | translate:currentLang }}</h3>
     <form (submit)="saveRawMaterial()">
       <div class="form-group">
         <label>{{ 'raw.date' | translate:currentLang }}</label>
-        <input type="date" [(ngModel)]="rawMaterialsForm.date" name="rawDate" required>
+        <input class="form-control" type="date" [(ngModel)]="rawMaterialsForm.date" name="rawDate" required>
       </div>
       <div class="form-group">
         <label>{{ 'raw.material_name' | translate:currentLang }}</label>
-        <input type="text" [(ngModel)]="rawMaterialsForm.materialName" name="rawName" required placeholder="e.g. HDPE Granules">
+        <input class="form-control" type="text" [(ngModel)]="rawMaterialsForm.materialName" name="rawName" required placeholder="e.g. HDPE Granules">
       </div>
       <div class="form-group">
         <label>{{ 'label.select_vendor' | translate:currentLang }}</label>
-        <select [(ngModel)]="rawMaterialsForm.vendorId" name="rawVendor" required>
+        <select class="form-control" [(ngModel)]="rawMaterialsForm.vendorId" name="rawVendor" required>
           <option *ngFor="let vendor of vendors" [value]="vendor.vendorId">{{ vendor.vendorName }}</option>
         </select>
       </div>
       <div class="form-group">
         <label>{{ 'raw.weight' | translate:currentLang }}</label>
-        <input type="number" step="0.1" [(ngModel)]="rawMaterialsForm.weight" name="rawWeight" required>
+        <input class="form-control" type="number" step="0.1" [(ngModel)]="rawMaterialsForm.weight" name="rawWeight" required>
       </div>
       <div class="form-group">
         <label>{{ 'raw.rate' | translate:currentLang }}</label>
-        <input type="number" step="0.01" [(ngModel)]="rawMaterialsForm.rate" name="rawRate" required>
+        <input class="form-control" type="number" step="0.01" [(ngModel)]="rawMaterialsForm.rate" name="rawRate" required>
       </div>
-      <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'raw.save_btn' | translate:currentLang }}</button>
+      <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 16px;">{{ 'raw.save_btn' | translate:currentLang }}</button>
     </form>
   </div>
-  <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
+  <div class="card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'">
     <h3>{{ 'raw.records_title' | translate:currentLang }}</h3>
     
     <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
@@ -37,13 +37,13 @@
         </button>
         <div class="dropdown-menu" *ngIf="showColDropdown['raw']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
           <label *ngFor="let col of getTableColumns('raw')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-            <input type="checkbox" [checked]="isColumnVisible('raw', col)" (change)="toggleColumn('raw', col)" style="width:auto; margin:0; cursor:pointer;">
+            <input class="form-control" type="checkbox" [checked]="isColumnVisible('raw', col)" (change)="toggleColumn('raw', col)" style="width:auto; margin:0; cursor:pointer;">
             {{col}}
           </label>
         </div>
       </div>
     </div>
-    <div class="table-container">
+    <div class="table-responsive">
       <table>
         <thead>
           <tr>

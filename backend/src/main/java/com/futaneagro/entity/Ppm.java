@@ -7,7 +7,9 @@ import javax.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "PPM")
+@Table(name = "PPM", indexes = {
+    @Index(name = "idx_ppm_period_del", columnList = "month, year, is_deleted")
+})
 @SQLDelete(sql = "UPDATE PPM SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE ppm_id = ?")
 @Where(clause = "is_deleted = false")
 public class Ppm {

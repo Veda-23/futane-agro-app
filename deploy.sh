@@ -10,12 +10,11 @@ git reset --hard origin/main
 
 # 2. Stop existing containers
 echo "Stopping existing containers..."
-cd backend
-docker-compose down
+docker-compose -f docker-compose.prod.yml down
 
 # 3. Build and Start the new containers
 echo "Building and starting new containers..."
-docker-compose up -d --build
+docker-compose -f docker-compose.prod.yml up -d --build
 
 # 4. Clean up dangling images to save Oracle Cloud disk space
 echo "Pruning dangling images..."
