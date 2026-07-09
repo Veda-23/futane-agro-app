@@ -15,7 +15,7 @@ export class ReportsComponent implements OnInit {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'reports';
 
-  reportFilter = { type: 'production', date: '', partyId: '' };
+  reportFilter = { type: 'production', date: '', id: '' };
   filteredReportData: any[] = [];
 
   ppdList: any[] = [];
@@ -54,8 +54,8 @@ export class ReportsComponent implements OnInit {
       if (filter.date) {
         this.filteredReportData = this.filteredReportData.filter(d => d.date === filter.date);
       }
-      if (filter.partyId) {
-        this.filteredReportData = this.filteredReportData.filter(d => d.party.partyId === parseInt(filter.partyId));
+      if (filter.id) {
+        this.filteredReportData = this.filteredReportData.filter(d => d.party.id === parseInt(filter.id));
       }
     } else if (filter.type === 'inventory') {
       this.filteredReportData = [...this.inventoryList];
@@ -66,3 +66,4 @@ export class ReportsComponent implements OnInit {
     }
   }
 }
+

@@ -14,9 +14,7 @@ import java.time.LocalDate;
 })
 @SQLDelete(sql = "UPDATE Vendor SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE vendor_id = ?")
 @Where(clause = "is_deleted = false")
-public class Vendor {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class Vendor extends BaseEntity {
     @Column(name = "vendor_id")
     private Integer vendorId;
 
@@ -34,13 +32,10 @@ public class Vendor {
     private String gstNumber;
 
     @Column(name = "is_deleted")
-    private Boolean isDeleted = false;
 
     @Column(name = "deleted_by", length = 100)
-    private String deletedBy;
 
     @Column(name = "deleted_date")
-    private LocalDate deletedDate;
 
     public Vendor() {}
 

@@ -10,9 +10,7 @@ import java.time.LocalDate;
 @Table(name = "PPD")
 @SQLDelete(sql = "UPDATE PPD SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE ppd_id = ?")
 @Where(clause = "is_deleted = false")
-public class Ppd {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class Ppd extends BaseEntity {
     @Column(name = "ppd_id")
     private Integer ppdId;
 
@@ -35,13 +33,10 @@ public class Ppd {
     private String shift = "Morning Shift"; // Morning Shift, Afternoon Shift, Night Shift
 
     @Column(name = "is_deleted")
-    private Boolean isDeleted = false;
 
     @Column(name = "deleted_by", length = 100)
-    private String deletedBy;
 
     @Column(name = "deleted_date")
-    private LocalDate deletedDate;
 
     public Ppd() {}
 

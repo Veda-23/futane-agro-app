@@ -25,7 +25,7 @@ export class InvoicesComponent implements OnInit {
   // Pagination & Sort state
   currentPage = 1;
   pageSize = 10;
-  sortField = 'invoiceId';
+  sortField = 'id';
   sortAsc = false;
   tableFilteredCounts: { [key: string]: number } = {};
   showColDropdown: { [key: string]: boolean } = {};
@@ -62,33 +62,33 @@ export class InvoicesComponent implements OnInit {
     this.logAudit("Downloaded PDF Invoice: " + inv.invoiceNo);
     const doc = new jsPDF();
 
-    doc.setFont("Outfit", "bold");
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(22);
     doc.text("FUTANE AGRO INDUSTRIES PVT. LTD.", 105, 20, { align: "center" });
 
     doc.setFontSize(10);
-    doc.setFont("Outfit", "normal");
+    doc.setFont("helvetica", "normal");
     doc.text("Manufacturers of High-Quality Plastic Crates & Containers", 105, 26, { align: "center" });
     doc.text("Factory: Gate No 144, Hadapsar Industrial Area, Pune - 411028", 105, 31, { align: "center" });
     doc.line(15, 36, 195, 36);
 
     doc.setFontSize(11);
-    doc.setFont("Outfit", "bold");
+    doc.setFont("helvetica", "bold");
     doc.text("INVOICE DETAILS", 15, 45);
-    doc.setFont("Outfit", "normal");
+    doc.setFont("helvetica", "normal");
     doc.text(`Invoice No: ${inv.invoiceNo}`, 15, 52);
     doc.text(`Invoice Date: ${inv.createdDate}`, 15, 58);
     
-    doc.setFont("Outfit", "bold");
+    doc.setFont("helvetica", "bold");
     doc.text("BILLED TO:", 115, 45);
-    doc.setFont("Outfit", "normal");
+    doc.setFont("helvetica", "normal");
     doc.text(`Name: ${inv.sale.party.partyName}`, 115, 52);
     doc.text(`Address: ${inv.sale.party.partyAddress}`, 115, 58);
     doc.text(`GSTIN: ${inv.sale.party.gstNumber || 'N/A'}`, 115, 64);
 
     doc.line(15, 72, 195, 72);
 
-    doc.setFont("Outfit", "bold");
+    doc.setFont("helvetica", "bold");
     doc.text("Description", 20, 80);
     doc.text("Material", 75, 80);
     doc.text("Qty", 105, 80);
@@ -96,7 +96,7 @@ export class InvoicesComponent implements OnInit {
     doc.text("Total (INR)", 165, 80);
     doc.line(15, 84, 195, 84);
 
-    doc.setFont("Outfit", "normal");
+    doc.setFont("helvetica", "normal");
     doc.text(`${inv.sale.crateType}`, 20, 92);
     doc.text(`${inv.sale.crateMaterial}`, 75, 92);
     doc.text(`${inv.sale.quantity}`, 105, 92);
@@ -105,17 +105,17 @@ export class InvoicesComponent implements OnInit {
 
     doc.line(15, 98, 195, 98);
 
-    doc.setFont("Outfit", "bold");
+    doc.setFont("helvetica", "bold");
     doc.text("Summary:", 115, 110);
-    doc.setFont("Outfit", "normal");
+    doc.setFont("helvetica", "normal");
     doc.text(`Sub-Total: INR ${inv.sale.totalAmount.toFixed(2)}`, 115, 117);
     doc.text(`Paid Amount: INR ${inv.sale.paid.toFixed(2)}`, 115, 123);
     
-    doc.setFont("Outfit", "bold");
+    doc.setFont("helvetica", "bold");
     doc.text(`Balance Due: INR ${inv.sale.remaining.toFixed(2)}`, 115, 130);
 
     doc.setFontSize(9);
-    doc.setFont("Outfit", "normal");
+    doc.setFont("helvetica", "normal");
     doc.text("Thank you for your business!", 105, 150, { align: "center" });
     doc.text("Note: This is a computer-generated invoice and requires no physical signature.", 105, 155, { align: "center" });
 
@@ -178,3 +178,4 @@ export class InvoicesComponent implements OnInit {
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
 }
+

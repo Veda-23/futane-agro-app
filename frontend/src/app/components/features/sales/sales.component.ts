@@ -19,7 +19,7 @@ export class SalesComponent implements OnInit {
 
   salesList: any[] = [];
   parties: any[] = [];
-  salesForm = { date: '', partyId: '', crateType: 'Apple Crate', crateMaterial: 'Plastic', quantity: 0, rate: 0, totalAmount: 0, paid: 0, remaining: 0 };
+  salesForm = { date: '', id: '', crateType: 'Apple Crate', crateMaterial: 'Plastic', quantity: 0, rate: 0, totalAmount: 0, paid: 0, remaining: 0 };
 
   // Pagination & Sort state for local logic if needed
   currentPage = 1;
@@ -66,7 +66,7 @@ export class SalesComponent implements OnInit {
   }
 
   saveSales() {
-    if (!this.salesForm.date || !this.salesForm.partyId || this.salesForm.quantity <= 0) {
+    if (!this.salesForm.date || !this.salesForm.id || this.salesForm.quantity <= 0) {
       alert("Please fill required valid fields");
       return;
     }
@@ -74,7 +74,7 @@ export class SalesComponent implements OnInit {
       next: () => {
         this.loadData();
         this.logAudit("Added new sale record");
-        this.salesForm = { date: '', partyId: '', crateType: 'Apple Crate', crateMaterial: 'Plastic', quantity: 0, rate: 0, totalAmount: 0, paid: 0, remaining: 0 };
+        this.salesForm = { date: '', id: '', crateType: 'Apple Crate', crateMaterial: 'Plastic', quantity: 0, rate: 0, totalAmount: 0, paid: 0, remaining: 0 };
       },
       error: (err) => {
         if (err.status === 409) {
@@ -86,7 +86,7 @@ export class SalesComponent implements OnInit {
     });
   }
 
-  deleteSale(id: number) {
+  deleteSale(id: string) {
     if (!this.canDelete()) {
       alert("Permission denied");
       return;
@@ -156,3 +156,4 @@ export class SalesComponent implements OnInit {
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
 }
+

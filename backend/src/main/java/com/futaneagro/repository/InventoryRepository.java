@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
+public interface InventoryRepository extends JpaRepository<Inventory, String> {
     Optional<Inventory> findByCrateTypeAndMaterialType(String crateType, String materialType);
 }
+

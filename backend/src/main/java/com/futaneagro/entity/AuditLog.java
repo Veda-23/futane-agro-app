@@ -5,9 +5,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "Audit_Log")
-public class AuditLog {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class AuditLog extends BaseEntity {
     @Column(name = "audit_id")
     private Integer auditId;
 

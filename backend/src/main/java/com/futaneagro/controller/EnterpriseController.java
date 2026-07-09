@@ -84,7 +84,7 @@ public class EnterpriseController {
     }
 
     @PutMapping("/machines/{id}")
-    public MachineMaster updateMachine(@PathVariable Integer id, @RequestBody MachineMaster details) {
+    public MachineMaster updateMachine(@PathVariable String id, @RequestBody MachineMaster details) {
         MachineMaster machine = machineRepo.findById(id).orElseThrow(() -> new RuntimeException("Machine not found"));
         String oldState = toJson(machine);
         
@@ -100,12 +100,12 @@ public class EnterpriseController {
     }
 
     @DeleteMapping("/machines/{id}")
-    public void deleteMachine(@PathVariable Integer id) {
+    public void deleteMachine(@PathVariable String id) {
         machineRepo.findById(id).ifPresent(machine -> {
             String oldState = toJson(machine);
-            machine.setIsDeleted(true);
-            machine.setDeletedBy(getCurrentUser());
-            machine.setDeletedDate(LocalDate.now());
+            machine.setIsActive(false);
+            machine.setUpdatedBy(getCurrentUser());
+            machine.setUpdatedAt(LocalDate.now());
             machineRepo.save(machine);
             saveAuditLog("Soft-deleted machine ID: " + id, "Machine_Master", oldState, null);
         });
@@ -120,17 +120,17 @@ public class EnterpriseController {
     @PostMapping("/breakdowns")
     public MachineBreakdown createBreakdown(@RequestBody MachineBreakdown breakdown) {
         MachineBreakdown saved = breakdownRepo.save(breakdown);
-        saveAuditLog("Logged breakdown for machine ID: " + saved.getMachine().getMachineId(), "Machine_Breakdown", null, toJson(saved));
+        saveAuditLog("Logged breakdown for machine ID: " + saved.getMachine().getId(), "Machine_Breakdown", null, toJson(saved));
         return saved;
     }
 
     @DeleteMapping("/breakdowns/{id}")
-    public void deleteBreakdown(@PathVariable Integer id) {
+    public void deleteBreakdown(@PathVariable String id) {
         breakdownRepo.findById(id).ifPresent(b -> {
             String oldState = toJson(b);
-            b.setIsDeleted(true);
-            b.setDeletedBy(getCurrentUser());
-            b.setDeletedDate(LocalDate.now());
+            b.setIsActive(false);
+            b.setUpdatedBy(getCurrentUser());
+            b.setUpdatedAt(LocalDate.now());
             breakdownRepo.save(b);
             saveAuditLog("Soft-deleted breakdown ID: " + id, "Machine_Breakdown", oldState, null);
         });
@@ -150,7 +150,7 @@ public class EnterpriseController {
     }
 
     @PutMapping("/dispatches/{id}")
-    public Dispatch updateDispatch(@PathVariable Integer id, @RequestBody Dispatch details) {
+    public Dispatch updateDispatch(@PathVariable String id, @RequestBody Dispatch details) {
         Dispatch dispatch = dispatchRepo.findById(id).orElseThrow(() -> new RuntimeException("Dispatch not found"));
         String oldState = toJson(dispatch);
         
@@ -165,12 +165,12 @@ public class EnterpriseController {
     }
 
     @DeleteMapping("/dispatches/{id}")
-    public void deleteDispatch(@PathVariable Integer id) {
+    public void deleteDispatch(@PathVariable String id) {
         dispatchRepo.findById(id).ifPresent(d -> {
             String oldState = toJson(d);
-            d.setIsDeleted(true);
-            d.setDeletedBy(getCurrentUser());
-            d.setDeletedDate(LocalDate.now());
+            d.setIsActive(false);
+            d.setUpdatedBy(getCurrentUser());
+            d.setUpdatedAt(LocalDate.now());
             dispatchRepo.save(d);
             saveAuditLog("Soft-deleted dispatch ID: " + id, "Dispatch", oldState, null);
         });
@@ -190,12 +190,12 @@ public class EnterpriseController {
     }
 
     @DeleteMapping("/expenses/{id}")
-    public void deleteExpense(@PathVariable Integer id) {
+    public void deleteExpense(@PathVariable String id) {
         expenseRepo.findById(id).ifPresent(e -> {
             String oldState = toJson(e);
-            e.setIsDeleted(true);
-            e.setDeletedBy(getCurrentUser());
-            e.setDeletedDate(LocalDate.now());
+            e.setIsActive(false);
+            e.setUpdatedBy(getCurrentUser());
+            e.setUpdatedAt(LocalDate.now());
             expenseRepo.save(e);
             saveAuditLog("Soft-deleted expense ID: " + id, "Expense", oldState, null);
         });
@@ -215,12 +215,12 @@ public class EnterpriseController {
     }
 
     @DeleteMapping("/bank-transactions/{id}")
-    public void deleteTransaction(@PathVariable Integer id) {
+    public void deleteTransaction(@PathVariable String id) {
         bankRepo.findById(id).ifPresent(t -> {
             String oldState = toJson(t);
-            t.setIsDeleted(true);
-            t.setDeletedBy(getCurrentUser());
-            t.setDeletedDate(LocalDate.now());
+            t.setIsActive(false);
+            t.setUpdatedBy(getCurrentUser());
+            t.setUpdatedAt(LocalDate.now());
             bankRepo.save(t);
             saveAuditLog("Soft-deleted bank transaction ID: " + id, "Bank_Transaction", oldState, null);
         });
@@ -344,3 +344,6 @@ public class EnterpriseController {
         }
     }
 }
+
+
+

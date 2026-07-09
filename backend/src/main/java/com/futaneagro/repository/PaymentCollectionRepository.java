@@ -5,5 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface PaymentCollectionRepository extends JpaRepository<PaymentCollection, Integer> {
+public interface PaymentCollectionRepository extends JpaRepository<PaymentCollection, String> {
 }
+

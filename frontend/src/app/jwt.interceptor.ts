@@ -1,7 +1,7 @@
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn } from '@angular/common/http';
 
 export const jwtInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: HttpHandlerFn) => {
-  const token = localStorage.getItem('jwtToken');
+  const token = sessionStorage.getItem('jwtToken');
   
   const headers: { [key: string]: string } = {
     'bypass-tunnel-reminder': 'true'

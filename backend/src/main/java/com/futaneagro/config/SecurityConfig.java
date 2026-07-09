@@ -41,7 +41,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors().and().csrf().disable()
             .authorizeRequests()
-            .antMatchers("/api/users/login", "/api/users/login/verify").permitAll()
+            .antMatchers("/api/users/login", "/api/users/login/verify", "/api/users/verify-session").permitAll()
             .antMatchers("/api/uploads/**").permitAll() // Serve public files
             .antMatchers("/api/health").permitAll() // Health Check Endpoint
             
@@ -66,6 +66,14 @@ public class SecurityConfig {
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+
+        http.headers()
+            .frameOptions().sameOrigin()
+            .contentTypeOptions().and()
+            .httpStrictTransportSecurity().includeSubDomains(true).maxAgeInSeconds(31536000).and()
+            .referrerPolicy().and()
+            .cacheControl().disable();
+
         return http.build();
     }
 

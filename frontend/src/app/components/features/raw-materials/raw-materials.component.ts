@@ -18,7 +18,7 @@ export class RawMaterialsComponent implements OnInit {
 
   rawMaterialsList: any[] = [];
   vendors: any[] = [];
-  rawMaterialsForm = { date: '', materialName: 'HDPE Plastic Granules', vendorId: '', weight: 0, rate: 0, purchaseBillPath: '', weightSlipPath: '' };
+  rawMaterialsForm = { date: '', materialName: 'HDPE Plastic Granules', id: '', weight: 0, rate: 0, purchaseBillPath: '', weightSlipPath: '' };
 
   Math = Math; // to use Math.min in HTML
 
@@ -60,11 +60,11 @@ export class RawMaterialsComponent implements OnInit {
   }
 
   saveRawMaterial() {
-    if (!this.rawMaterialsForm.date || !this.rawMaterialsForm.materialName || !this.rawMaterialsForm.vendorId) {
+    if (!this.rawMaterialsForm.date || !this.rawMaterialsForm.materialName || !this.rawMaterialsForm.id) {
       alert("Please fill required fields");
       return;
     }
-    const vendor = this.vendors.find(v => v.vendorId === parseInt(this.rawMaterialsForm.vendorId));
+    const vendor = this.vendors.find(v => v.id === parseInt(this.rawMaterialsForm.id));
     
     const payload = {
       date: this.rawMaterialsForm.date,
@@ -79,11 +79,11 @@ export class RawMaterialsComponent implements OnInit {
     this.apiService.createRawMaterial(payload).subscribe(() => {
       this.loadData();
       this.logAudit("Added new raw material purchase: " + this.rawMaterialsForm.materialName);
-      this.rawMaterialsForm = { date: '', materialName: 'HDPE Plastic Granules', vendorId: '', weight: 0, rate: 0, purchaseBillPath: '', weightSlipPath: '' };
+      this.rawMaterialsForm = { date: '', materialName: 'HDPE Plastic Granules', id: '', weight: 0, rate: 0, purchaseBillPath: '', weightSlipPath: '' };
     });
   }
 
-  deleteRawMaterial(id: number) {
+  deleteRawMaterial(id: string) {
     if (!this.canDelete()) {
       alert("Permission denied");
       return;
@@ -153,3 +153,4 @@ export class RawMaterialsComponent implements OnInit {
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
 }
+

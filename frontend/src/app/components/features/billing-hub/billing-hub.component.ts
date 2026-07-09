@@ -67,19 +67,19 @@ export class BillingHubComponent implements OnInit {
 
   getRecordId(item: any): any {
     if (!item) return null;
-    if (item.saleId !== undefined) return item.saleId;
-    if (item.dispatchId !== undefined) return item.dispatchId;
+    if (item.id !== undefined) return item.id;
+    if (item.id !== undefined) return item.id;
     if (item.paymentId !== undefined) return item.paymentId;
     if (item.rawMaterialId !== undefined) return item.rawMaterialId;
-    if (item.transportId !== undefined) return item.transportId;
-    if (item.salaryId !== undefined) return item.salaryId;
+    if (item.id !== undefined) return item.id;
+    if (item.id !== undefined) return item.id;
     return null;
   }
 
   onBillRecordChange() {
     const list = this.getBillSourceList();
     const id = this.selectedBillRecordId;
-    this.selectedBillRecord = list.find(item => String(this.getRecordId(item)) === id) || null;
+    this.selectedBillRecord = list.find(item => String(this.getRecordId(item)) === String(id)) || null;
   }
 
   shareOnWhatsApp() {
@@ -188,3 +188,4 @@ export class BillingHubComponent implements OnInit {
   getIGST(amount: number): number { return amount * 0.18; }
   getGrandTotal(amount: number): number { return amount * 1.18; }
 }
+

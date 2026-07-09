@@ -22,10 +22,10 @@
               <select [(ngModel)]="selectedBillRecordId" name="selectedBillRecordId" (change)="onBillRecordChange()">
                 <option value="">-- {{ 'label.select_sale' | translate:currentLang }} --</option>
                 <ng-container *ngIf="activeBillType === 'tax_invoice' || activeBillType === 'proforma'">
-                  <option *ngFor="let s of salesList" [value]="s.saleId">{{ s.party.partyName }} - Qty: {{ s.quantity }} (₹{{ s.totalAmount }})</option>
+                  <option *ngFor="let s of salesList" [value]="s.id">{{ s.party.partyName }} - Qty: {{ s.quantity }} (₹{{ s.totalAmount }})</option>
                 </ng-container>
                 <ng-container *ngIf="activeBillType === 'delivery_challan'">
-                  <option *ngFor="let d of dispatchesList" [value]="d.dispatchId">{{ d.sale.party.partyName }} - Vehicle: {{ d.vehicleNumber }} (Qty: {{ d.sale.quantity }})</option>
+                  <option *ngFor="let d of dispatchesList" [value]="d.id">{{ d.sale.party.partyName }} - Vehicle: {{ d.vehicleNumber }} (Qty: {{ d.sale.quantity }})</option>
                 </ng-container>
                 <ng-container *ngIf="activeBillType === 'payment_receipt'">
                   <option *ngFor="let p of paymentsList" [value]="p.paymentId">{{ p.party.partyName }} - ₹{{ p.amountReceived }} ({{ p.paymentDate }})</option>
@@ -34,10 +34,10 @@
                   <option *ngFor="let rm of rawMaterialsList" [value]="rm.rawMaterialId">{{ rm.vendor.vendorName }} - {{ rm.materialName }} (₹{{ rm.amount }})</option>
                 </ng-container>
                 <ng-container *ngIf="activeBillType === 'transport_receipt'">
-                  <option *ngFor="let tr of transportsList" [value]="tr.transportId">Truck: {{ tr.truckNumber }} - Driver: {{ tr.driver.driverName }} (₹{{ tr.rent }})</option>
+                  <option *ngFor="let tr of transportsList" [value]="tr.id">Truck: {{ tr.truckNumber }} - Driver: {{ tr.driver.driverName }} (₹{{ tr.rent }})</option>
                 </ng-container>
                 <ng-container *ngIf="activeBillType === 'salary_slip'">
-                  <option *ngFor="let sal of salariesList" [value]="sal.salaryId">{{ sal.employee.empName }} - {{ sal.month }}/{{ sal.year }} (₹{{ sal.salaryAmount }})</option>
+                  <option *ngFor="let sal of salariesList" [value]="sal.id">{{ sal.employee.empName }} - {{ sal.month }}/{{ sal.year }} (₹{{ sal.salaryAmount }})</option>
                 </ng-container>
               </select>
             </div>
@@ -105,7 +105,7 @@
             </div>
             <div class="bill-col-right">
               <h4>{{ 'bill.doc_details' | translate:currentLang }}</h4>
-              <strong>{{ 'bill.doc_no' | translate:currentLang }}</strong> {{ activeBillType === 'tax_invoice' ? 'FA/2026/0' + selectedBillRecord.saleId : 'FAP/2026/0' + selectedBillRecord.saleId }}<br>
+              <strong>{{ 'bill.doc_no' | translate:currentLang }}</strong> {{ activeBillType === 'tax_invoice' ? 'FA/2026/0' + selectedBillRecord.id : 'FAP/2026/0' + selectedBillRecord.id }}<br>
               <strong>{{ 'bill.date_label' | translate:currentLang }}</strong> {{ selectedBillRecord.date }}<br>
               <strong>{{ 'bill.state_supply' | translate:currentLang }}</strong> {{ selectedBillRecord.party.state }} (Code: 27)<br>
               <strong>{{ 'bill.pay_status' | translate:currentLang }}</strong> {{ selectedBillRecord.remaining === 0 ? ('bill.fully_paid' | translate:currentLang) : ('bill.balance_pending' | translate:currentLang) }}
@@ -122,7 +122,7 @@
             </div>
             <div class="bill-col-right">
               <h4>{{ 'bill.logistics_details' | translate:currentLang }}</h4>
-              <strong>{{ 'bill.challan_no' | translate:currentLang }}</strong> FAC/2026/0{{ selectedBillRecord.dispatchId }}<br>
+              <strong>{{ 'bill.challan_no' | translate:currentLang }}</strong> FAC/2026/0{{ selectedBillRecord.id }}<br>
               <strong>{{ 'bill.challan_date' | translate:currentLang }}</strong> {{ selectedBillRecord.dispatchDate }}<br>
               <strong>{{ 'bill.vehicle_no' | translate:currentLang }}</strong> {{ selectedBillRecord.vehicleNumber }}<br>
               <strong>{{ 'bill.driver_assigned' | translate:currentLang }}</strong> {{ selectedBillRecord.driverName }}
@@ -172,7 +172,7 @@
             </div>
             <div class="bill-col-right">
               <h4>{{ 'bill.doc_details' | translate:currentLang }}</h4>
-              <strong>{{ 'bill.freight_slip_no' | translate:currentLang }}</strong> FATR/2026/0{{ selectedBillRecord.transportId }}<br>
+              <strong>{{ 'bill.freight_slip_no' | translate:currentLang }}</strong> FATR/2026/0{{ selectedBillRecord.id }}<br>
               <strong>{{ 'bill.date_label' | translate:currentLang }}</strong> {{ selectedBillRecord.date }}<br>
               <strong>{{ 'bill.vehicle_no' | translate:currentLang }}</strong> {{ selectedBillRecord.truckNumber }}<br>
               <strong>{{ 'bill.status_lbl' | translate:currentLang }}</strong> {{ 'bill.freight_logged' | translate:currentLang }}
@@ -190,7 +190,7 @@
             </div>
             <div class="bill-col-right">
               <h4>{{ 'bill.doc_details' | translate:currentLang }}</h4>
-              <strong>{{ 'bill.salary_slip_no' | translate:currentLang }}</strong> FASL/2026/0{{ selectedBillRecord.salaryId }}<br>
+              <strong>{{ 'bill.salary_slip_no' | translate:currentLang }}</strong> FASL/2026/0{{ selectedBillRecord.id }}<br>
               <strong>{{ 'bill.pay_period' | translate:currentLang }}</strong> {{ selectedBillRecord.month }} / {{ selectedBillRecord.year }}<br>
               <strong>{{ 'bill.status_lbl' | translate:currentLang }}</strong> {{ selectedBillRecord.status }}<br>
               <strong>{{ 'bill.released_date' | translate:currentLang }}</strong> {{ selectedBillRecord.paidDate || 'Pending' }}
@@ -453,4 +453,5 @@
 
         </div>
       </div>
+
 

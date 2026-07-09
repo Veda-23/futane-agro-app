@@ -65,7 +65,7 @@ public class HRController {
     }
 
     @PutMapping("/employees/{id}")
-    public Employee updateEmployee(@PathVariable Integer id, @Valid @RequestBody Employee details) {
+    public Employee updateEmployee(@PathVariable String id, @Valid @RequestBody Employee details) {
         Employee emp = employeeRepository.findById(id).orElseThrow(() -> new RuntimeException("Employee not found"));
         String oldState = toJson(emp);
 
@@ -87,12 +87,12 @@ public class HRController {
     }
 
     @DeleteMapping("/employees/{id}")
-    public void deleteEmployee(@PathVariable Integer id) {
+    public void deleteEmployee(@PathVariable String id) {
         employeeRepository.findById(id).ifPresent(emp -> {
             String oldState = toJson(emp);
-            emp.setIsDeleted(true);
-            emp.setDeletedBy(getCurrentUser());
-            emp.setDeletedDate(LocalDate.now());
+            emp.setIsActive(false);
+            emp.setUpdatedBy(getCurrentUser());
+            emp.setUpdatedAt(LocalDate.now());
             employeeRepository.save(emp);
             saveAuditLog("Soft-deleted employee ID: " + id, "Employees", oldState, null);
         });
@@ -107,12 +107,12 @@ public class HRController {
     @PostMapping("/salaries")
     public EmployeeSalary createSalary(@RequestBody EmployeeSalary salary) {
         EmployeeSalary saved = employeeSalaryRepository.save(salary);
-        saveAuditLog("Created salary record for employee ID: " + saved.getEmployee().getEmpId(), "Employee_Salary", null, toJson(saved));
+        saveAuditLog("Created salary record for employee ID: " + saved.getEmployee().getId(), "Employee_Salary", null, toJson(saved));
         return saved;
     }
 
     @PutMapping("/salaries/{id}")
-    public EmployeeSalary updateSalary(@PathVariable Integer id, @RequestBody EmployeeSalary details) {
+    public EmployeeSalary updateSalary(@PathVariable String id, @RequestBody EmployeeSalary details) {
         EmployeeSalary salary = employeeSalaryRepository.findById(id).orElseThrow(() -> new RuntimeException("Salary record not found"));
         String oldState = toJson(salary);
 
@@ -128,14 +128,17 @@ public class HRController {
     }
 
     @DeleteMapping("/salaries/{id}")
-    public void deleteSalary(@PathVariable Integer id) {
+    public void deleteSalary(@PathVariable String id) {
         employeeSalaryRepository.findById(id).ifPresent(salary -> {
             String oldState = toJson(salary);
-            salary.setIsDeleted(true);
-            salary.setDeletedBy(getCurrentUser());
-            salary.setDeletedDate(LocalDate.now());
+            salary.setIsActive(false);
+            salary.setUpdatedBy(getCurrentUser());
+            salary.setUpdatedAt(LocalDate.now());
             employeeSalaryRepository.save(salary);
             saveAuditLog("Soft-deleted salary record ID: " + id, "Employee_Salary", oldState, null);
         });
     }
 }
+
+
+

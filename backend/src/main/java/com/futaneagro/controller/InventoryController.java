@@ -60,7 +60,7 @@ public class InventoryController {
     }
 
     @PutMapping("/inventory/{id}")
-    public Inventory updateInventory(@PathVariable Integer id, @RequestBody Inventory details) {
+    public Inventory updateInventory(@PathVariable String id, @RequestBody Inventory details) {
         Inventory inventory = inventoryRepository.findById(id).orElseThrow(() -> new RuntimeException("Inventory not found"));
         String oldState = toJson(inventory);
 
@@ -76,14 +76,16 @@ public class InventoryController {
     }
 
     @DeleteMapping("/inventory/{id}")
-    public void deleteInventory(@PathVariable Integer id) {
+    public void deleteInventory(@PathVariable String id) {
         inventoryRepository.findById(id).ifPresent(inventory -> {
             String oldState = toJson(inventory);
-            inventory.setIsDeleted(true);
-            inventory.setDeletedBy(getCurrentUser());
-            inventory.setDeletedDate(LocalDate.now());
+            inventory.setIsActive(false);
+            inventory.setUpdatedBy(getCurrentUser());
+            inventory.setUpdatedAt(LocalDate.now());
             inventoryRepository.save(inventory);
             saveAuditLog("Soft-deleted inventory ID: " + id, "Inventory", oldState, null);
         });
     }
 }
+
+

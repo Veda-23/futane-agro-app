@@ -4,8 +4,8 @@
     <form (submit)="saveDispatch()">
       <div class="form-group">
         <label>{{ 'label.select_sale' | translate:currentLang }}</label>
-        <select [(ngModel)]="dispatchForm.saleId" name="dSale" required>
-          <option *ngFor="let s of salesList" [value]="s.saleId">{{ s.party.partyName }} - {{ s.crateType }} ({{ s.date }})</option>
+        <select [(ngModel)]="dispatchForm.id" name="dSale" required>
+          <option *ngFor="let s of salesList" [value]="s.id">{{ s.party.partyName }} - {{ s.crateType }} ({{ s.date }})</option>
         </select>
       </div>
       <div class="form-group">
@@ -72,7 +72,7 @@
             <td *ngIf="isColumnVisible('dispatch', 'Status')">
               <span class="badge" [class.badge-info]="d.dispatchStatus === 'Pending'" [class.badge-warning]="d.dispatchStatus === 'In Transit'" [class.badge-success]="d.dispatchStatus === 'Delivered'">{{ d.dispatchStatus }}</span>
             </td>
-            <td *ngIf="isColumnVisible('dispatch', 'Actions')"><button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteDispatch(d.dispatchId)">{{ 'btn.delete' | translate:currentLang }}</button></td>
+            <td *ngIf="isColumnVisible('dispatch', 'Actions')"><button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteDispatch(d.id)">{{ 'btn.delete' | translate:currentLang }}</button></td>
           </tr>
         </tbody>
       </table>
@@ -92,3 +92,4 @@
     </div>
   </div>
 </div>
+

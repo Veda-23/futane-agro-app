@@ -225,6 +225,28 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/verify-session")
+    public ResponseEntity<?> verifySession(@CookieValue(value = "erp_session_cookie", required = false) String token, @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        String jwtToken = token;
+        if (jwtToken == null && authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwtToken = authHeader.substring(7);
+        }
+
+        if (jwtToken == null) {
+            return ResponseEntity.status(401).body("No session token provided");
+        }
+
+        try {
+            String username = jwtUtils.extractUsername(jwtToken);
+            if (jwtUtils.validateToken(jwtToken, username)) {
+                return ResponseEntity.ok("Valid session");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Invalid session token");
+        }
+        return ResponseEntity.status(401).body("Invalid session token");
+    }
+
     private boolean isProductionProfile() {
         for (String profile : environment.getActiveProfiles()) {
             if ("prod".equalsIgnoreCase(profile) || "production".equalsIgnoreCase(profile)) {
@@ -287,3 +309,4 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 }
+

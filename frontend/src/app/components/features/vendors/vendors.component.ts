@@ -62,7 +62,7 @@ export class VendorsComponent implements OnInit {
     });
   }
 
-  deleteVendor(id: number) {
+  deleteVendor(id: string) {
     if (!this.canDelete()) {
       alert("Permission denied");
       return;
@@ -74,7 +74,7 @@ export class VendorsComponent implements OnInit {
   }
 
   handleVendorAction(event: any) {
-    if (event.action === 'delete') this.deleteVendor(event.item.vendorId);
+    if (event.action === 'delete') this.deleteVendor(event.item.id);
   }
 
   logAudit(action: string) {
@@ -83,3 +83,4 @@ export class VendorsComponent implements OnInit {
     }
   }
 }
+

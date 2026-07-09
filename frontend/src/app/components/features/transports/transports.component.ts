@@ -18,7 +18,7 @@ export class TransportsComponent implements OnInit {
 
   transportsList: any[] = [];
   drivers: any[] = [];
-  transportsForm = { date: '', truckNumber: '', driverId: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
+  transportsForm = { date: '', truckNumber: '', id: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
   Math = Math;
 
   // Pagination & Sort state
@@ -59,11 +59,11 @@ export class TransportsComponent implements OnInit {
   }
 
   saveTransport() {
-    if (!this.transportsForm.date || !this.transportsForm.truckNumber || !this.transportsForm.driverId || this.transportsForm.rent === null || this.transportsForm.advance === null) {
+    if (!this.transportsForm.date || !this.transportsForm.truckNumber || !this.transportsForm.id || this.transportsForm.rent === null || this.transportsForm.advance === null) {
       alert("Please fill required fields");
       return;
     }
-    const driver = this.drivers.find(d => d.driverId === parseInt(this.transportsForm.driverId));
+    const driver = this.drivers.find(d => d.id === parseInt(this.transportsForm.id));
     if (!driver) return;
 
     const payload = {
@@ -79,11 +79,11 @@ export class TransportsComponent implements OnInit {
     this.apiService.createTransport(payload).subscribe(() => {
       this.loadData();
       this.logAudit("Logged transport rental for truck: " + this.transportsForm.truckNumber);
-      this.transportsForm = { date: '', truckNumber: '', driverId: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
+      this.transportsForm = { date: '', truckNumber: '', id: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
     });
   }
 
-  deleteTransport(id: number) {
+  deleteTransport(id: string) {
     if (!this.canDelete()) {
       alert("Permission denied");
       return;
@@ -150,3 +150,4 @@ export class TransportsComponent implements OnInit {
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
 }
+

@@ -60,7 +60,7 @@ public class TransportController {
     }
 
     @PutMapping("/transports/{id}")
-    public Transport updateTransport(@PathVariable Integer id, @RequestBody Transport details) {
+    public Transport updateTransport(@PathVariable String id, @RequestBody Transport details) {
         Transport transport = transportRepository.findById(id).orElseThrow(() -> new RuntimeException("Transport not found"));
         String oldState = toJson(transport);
 
@@ -78,14 +78,16 @@ public class TransportController {
     }
 
     @DeleteMapping("/transports/{id}")
-    public void deleteTransport(@PathVariable Integer id) {
+    public void deleteTransport(@PathVariable String id) {
         transportRepository.findById(id).ifPresent(transport -> {
             String oldState = toJson(transport);
-            transport.setIsDeleted(true);
-            transport.setDeletedBy(getCurrentUser());
-            transport.setDeletedDate(LocalDate.now());
+            transport.setIsActive(false);
+            transport.setUpdatedBy(getCurrentUser());
+            transport.setUpdatedAt(LocalDate.now());
             transportRepository.save(transport);
             saveAuditLog("Soft-deleted transport ID: " + id, "Transport", oldState, null);
         });
     }
 }
+
+

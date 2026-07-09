@@ -68,7 +68,7 @@ public class PartyController {
     }
 
     @PutMapping("/parties/{id}")
-    public Party updateParty(@PathVariable Integer id, @Valid @RequestBody Party details) {
+    public Party updateParty(@PathVariable String id, @Valid @RequestBody Party details) {
         Party party = partyRepository.findById(id).orElseThrow(() -> new RuntimeException("Party not found"));
         String oldState = toJson(party);
 
@@ -90,12 +90,12 @@ public class PartyController {
     }
 
     @DeleteMapping("/parties/{id}")
-    public void deleteParty(@PathVariable Integer id) {
+    public void deleteParty(@PathVariable String id) {
         partyRepository.findById(id).ifPresent(party -> {
             String oldState = toJson(party);
-            party.setIsDeleted(true);
-            party.setDeletedBy(getCurrentUser());
-            party.setDeletedDate(LocalDate.now());
+            party.setIsActive(false);
+            party.setUpdatedBy(getCurrentUser());
+            party.setUpdatedAt(LocalDate.now());
             partyRepository.save(party);
             saveAuditLog("Soft-deleted party ID: " + id, "Party", oldState, null);
         });
@@ -115,7 +115,7 @@ public class PartyController {
     }
 
     @PutMapping("/vendors/{id}")
-    public Vendor updateVendor(@PathVariable Integer id, @Valid @RequestBody Vendor details) {
+    public Vendor updateVendor(@PathVariable String id, @Valid @RequestBody Vendor details) {
         Vendor vendor = vendorRepository.findById(id).orElseThrow(() -> new RuntimeException("Vendor not found"));
         String oldState = toJson(vendor);
 
@@ -130,12 +130,12 @@ public class PartyController {
     }
 
     @DeleteMapping("/vendors/{id}")
-    public void deleteVendor(@PathVariable Integer id) {
+    public void deleteVendor(@PathVariable String id) {
         vendorRepository.findById(id).ifPresent(vendor -> {
             String oldState = toJson(vendor);
-            vendor.setIsDeleted(true);
-            vendor.setDeletedBy(getCurrentUser());
-            vendor.setDeletedDate(LocalDate.now());
+            vendor.setIsActive(false);
+            vendor.setUpdatedBy(getCurrentUser());
+            vendor.setUpdatedAt(LocalDate.now());
             vendorRepository.save(vendor);
             saveAuditLog("Soft-deleted vendor ID: " + id, "Vendor", oldState, null);
         });
@@ -155,7 +155,7 @@ public class PartyController {
     }
 
     @PutMapping("/drivers/{id}")
-    public Driver updateDriver(@PathVariable Integer id, @RequestBody Driver details) {
+    public Driver updateDriver(@PathVariable String id, @RequestBody Driver details) {
         Driver driver = driverRepository.findById(id).orElseThrow(() -> new RuntimeException("Driver not found"));
         String oldState = toJson(driver);
 
@@ -170,14 +170,16 @@ public class PartyController {
     }
 
     @DeleteMapping("/drivers/{id}")
-    public void deleteDriver(@PathVariable Integer id) {
+    public void deleteDriver(@PathVariable String id) {
         driverRepository.findById(id).ifPresent(driver -> {
             String oldState = toJson(driver);
-            driver.setIsDeleted(true);
-            driver.setDeletedBy(getCurrentUser());
-            driver.setDeletedDate(LocalDate.now());
+            driver.setIsActive(false);
+            driver.setUpdatedBy(getCurrentUser());
+            driver.setUpdatedAt(LocalDate.now());
             driverRepository.save(driver);
             saveAuditLog("Soft-deleted driver ID: " + id, "Driver", oldState, null);
         });
     }
 }
+
+

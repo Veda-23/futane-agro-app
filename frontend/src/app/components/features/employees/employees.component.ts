@@ -62,7 +62,7 @@ export class EmployeesComponent implements OnInit {
     });
   }
 
-  deleteEmployee(id: number) {
+  deleteEmployee(id: string) {
     if (!this.canDelete()) {
       alert("Permission denied");
       return;
@@ -74,7 +74,7 @@ export class EmployeesComponent implements OnInit {
   }
 
   handleEmployeeAction(event: any) {
-    if (event.action === 'delete') this.deleteEmployee(event.item.empId);
+    if (event.action === 'delete') this.deleteEmployee(event.item.id);
   }
 
   logAudit(action: string) {
@@ -83,3 +83,4 @@ export class EmployeesComponent implements OnInit {
     }
   }
 }
+

@@ -89,7 +89,7 @@ public class SalesController {
         Invoice invoice = new Invoice();
         invoice.setSale(savedSale);
         invoice.setCreatedDate(LocalDate.now());
-        invoice.setInvoiceNo("INV-" + LocalDate.now().toString().replace("-", "") + "-" + savedSale.getSaleId());
+        invoice.setInvoiceNo("INV-" + LocalDate.now().toString().replace("-", "") + "-" + savedSale.getId());
         invoiceRepository.save(invoice);
 
         saveAuditLog("Created sale entry for party: " + savedSale.getParty().getPartyName(), "Sales", null, toJson(savedSale));
@@ -97,7 +97,7 @@ public class SalesController {
     }
 
     @DeleteMapping("/sales/{id}")
-    public void deleteSale(@PathVariable Integer id) {
+    public void deleteSale(@PathVariable String id) {
         salesRepository.findById(id).ifPresent(sale -> {
             String oldState = toJson(sale);
             // Revert inventory sold stock
@@ -107,18 +107,18 @@ public class SalesController {
             });
             // Soft-delete associated invoices
             invoiceRepository.findAll().stream()
-                .filter(inv -> inv.getSale() != null && inv.getSale().getSaleId().equals(id))
+                .filter(inv -> inv.getSale() != null && inv.getSale().getId().equals(id))
                 .forEach(inv -> {
-                    inv.setIsDeleted(true);
-                    inv.setDeletedBy(getCurrentUser());
-                    inv.setDeletedDate(LocalDate.now());
+                    inv.setIsActive(false);
+                    inv.setUpdatedBy(getCurrentUser());
+                    inv.setUpdatedAt(LocalDate.now());
                     invoiceRepository.save(inv);
                 });
 
             // Soft-delete sale
-            sale.setIsDeleted(true);
-            sale.setDeletedBy(getCurrentUser());
-            sale.setDeletedDate(LocalDate.now());
+            sale.setIsActive(false);
+            sale.setUpdatedBy(getCurrentUser());
+            sale.setUpdatedAt(LocalDate.now());
             salesRepository.save(sale);
 
             saveAuditLog("Soft-deleted sale ID: " + id, "Sales", oldState, null);
@@ -149,12 +149,12 @@ public class SalesController {
                 salesRepository.save(sale);
             }
         }
-        saveAuditLog("Created payment record for party ID: " + saved.getParty().getPartyId(), "Payment_Collection", null, toJson(saved));
+        saveAuditLog("Created payment record for party ID: " + saved.getParty().getId(), "Payment_Collection", null, toJson(saved));
         return saved;
     }
 
     @DeleteMapping("/payments/{id}")
-    public void deletePayment(@PathVariable Integer id) {
+    public void deletePayment(@PathVariable String id) {
         paymentCollectionRepository.findById(id).ifPresent(payment -> {
             String oldState = toJson(payment);
             // Revert payment from Sales Paid status
@@ -167,9 +167,9 @@ public class SalesController {
                     salesRepository.save(sale);
                 });
             }
-            payment.setIsDeleted(true);
-            payment.setDeletedBy(getCurrentUser());
-            payment.setDeletedDate(LocalDate.now());
+            payment.setIsActive(false);
+            payment.setUpdatedBy(getCurrentUser());
+            payment.setUpdatedAt(LocalDate.now());
             paymentCollectionRepository.save(payment);
 
             saveAuditLog("Soft-deleted payment ID: " + id, "Payment_Collection", oldState, null);
@@ -182,3 +182,6 @@ public class SalesController {
         return invoiceRepository.findAll();
     }
 }
+
+
+

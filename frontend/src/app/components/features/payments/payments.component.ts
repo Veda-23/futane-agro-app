@@ -21,7 +21,7 @@ export class PaymentsComponent implements OnInit {
   parties: any[] = [];
   invoicesList: any[] = [];
   
-  paymentsForm = { partyId: '', invoiceNo: '', amountReceived: 0, paymentMode: 'UPI', paymentDate: '' };
+  paymentsForm = { id: '', invoiceNo: '', amountReceived: 0, paymentMode: 'UPI', paymentDate: '' };
 
   // Pagination & Sort state
   currentPage = 1;
@@ -64,18 +64,18 @@ export class PaymentsComponent implements OnInit {
   }
 
   savePayment() {
-    if (!this.paymentsForm.paymentDate || !this.paymentsForm.partyId || this.paymentsForm.amountReceived <= 0) {
+    if (!this.paymentsForm.paymentDate || !this.paymentsForm.id || this.paymentsForm.amountReceived <= 0) {
       alert("Please fill required valid fields");
       return;
     }
     this.apiService.createPayment(this.paymentsForm).subscribe(() => {
       this.loadData();
       this.logAudit("Added new payment collection");
-      this.paymentsForm = { partyId: '', invoiceNo: '', amountReceived: 0, paymentMode: 'UPI', paymentDate: '' };
+      this.paymentsForm = { id: '', invoiceNo: '', amountReceived: 0, paymentMode: 'UPI', paymentDate: '' };
     });
   }
 
-  deletePayment(id: number) {
+  deletePayment(id: string) {
     if (!this.canDelete()) {
       alert("Permission denied");
       return;
@@ -145,3 +145,4 @@ export class PaymentsComponent implements OnInit {
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
 }
+

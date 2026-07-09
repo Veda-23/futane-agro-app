@@ -40,6 +40,12 @@ export class AnalyticsComponent implements OnInit {
         this.powerBiUrlInput = biSetting.settingValue;
         this.powerBiSimulatorActive = false;
         this.powerBiEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(biSetting.settingValue);
+      } else {
+        // Default to the provided Grafana URL
+        const defaultGrafanaUrl = 'https://80-225-192-171.sslip.io/monitoring/dashboards/f/ffr4fw1rmgr9cb/system-and-infra?orgId=1&kiosk=tv&refresh=10s';
+        this.powerBiUrlInput = defaultGrafanaUrl;
+        this.powerBiSimulatorActive = false;
+        this.powerBiEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(defaultGrafanaUrl);
       }
     });
   }

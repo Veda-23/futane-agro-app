@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface InvoiceRepository extends JpaRepository<Invoice, Integer> {
+public interface InvoiceRepository extends JpaRepository<Invoice, String> {
     Optional<Invoice> findByInvoiceNo(String invoiceNo);
 }
+

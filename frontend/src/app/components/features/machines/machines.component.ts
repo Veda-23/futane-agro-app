@@ -20,14 +20,14 @@ export class MachinesComponent implements OnInit {
   machineBreakdownsList: any[] = [];
 
   machineForm = { machineName: '', machineCode: '', installedDate: '', status: 'Running', capacityPerHour: 0 };
-  breakdownForm = { machineId: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 };
+  breakdownForm = { id: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 };
 
   Math = Math;
 
   // Pagination & Sort state
   currentPage = 1;
   pageSize = 10;
-  sortField = 'machineId';
+  sortField = 'id';
   sortAsc = false;
   tableFilteredCounts: { [key: string]: number } = {};
   showColDropdown: { [key: string]: boolean } = {};
@@ -75,7 +75,7 @@ export class MachinesComponent implements OnInit {
       }
     } else if (type === 'breakdown') {
       const f = this.breakdownForm;
-      if (!f.machineId || !f.breakdownDate || !f.description || f.downtimeHours <= 0) {
+      if (!f.id || !f.breakdownDate || !f.description || f.downtimeHours <= 0) {
         alert('Please fill out all required breakdown fields correctly.');
         return false;
       }
@@ -92,7 +92,7 @@ export class MachinesComponent implements OnInit {
     });
   }
 
-  deleteMachine(id: number) {
+  deleteMachine(id: string) {
     this.apiService.deleteMachine(id).subscribe(() => {
       this.loadData();
       this.logAudit('Deleted machine ID: ' + id);
@@ -101,17 +101,17 @@ export class MachinesComponent implements OnInit {
 
   saveBreakdown() {
     if (!this.validateForm('breakdown')) return;
-    const machine = this.machinesList.find((m: any) => m.machineId === parseInt(this.breakdownForm.machineId));
+    const machine = this.machinesList.find((m: any) => m.id === parseInt(this.breakdownForm.id));
     if (!machine) return;
     const payload = { ...this.breakdownForm, machine };
     this.apiService.createMachineBreakdown(payload).subscribe(() => {
       this.loadData();
       this.logAudit('Logged breakdown for machine: ' + machine.machineName);
-      this.breakdownForm = { machineId: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 };
+      this.breakdownForm = { id: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 };
     });
   }
 
-  deleteBreakdown(id: number) {
+  deleteBreakdown(id: string) {
     this.apiService.deleteMachineBreakdown(id).subscribe(() => {
       this.loadData();
       this.logAudit('Deleted breakdown log ID: ' + id);
@@ -174,3 +174,4 @@ export class MachinesComponent implements OnInit {
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
 }
+

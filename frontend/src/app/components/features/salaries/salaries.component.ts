@@ -18,7 +18,7 @@ export class SalariesComponent implements OnInit {
 
   salariesList: any[] = [];
   employees: any[] = [];
-  salariesForm = { empId: '', month: 'May', year: 2026, salaryAmount: 0, status: 'Pending', paidDate: '' };
+  salariesForm = { id: '', month: 'May', year: 2026, salaryAmount: 0, status: 'Pending', paidDate: '' };
   Math = Math;
 
   // Pagination & Sort state
@@ -59,11 +59,11 @@ export class SalariesComponent implements OnInit {
   }
 
   saveSalary() {
-    if (!this.salariesForm.empId || !this.salariesForm.month || !this.salariesForm.year || !this.salariesForm.salaryAmount) {
+    if (!this.salariesForm.id || !this.salariesForm.month || !this.salariesForm.year || !this.salariesForm.salaryAmount) {
       alert("Please fill required fields");
       return;
     }
-    const emp = this.employees.find(e => e.empId === parseInt(this.salariesForm.empId));
+    const emp = this.employees.find(e => e.id === parseInt(this.salariesForm.id));
     if (!emp) return;
 
     const payload = {
@@ -78,11 +78,11 @@ export class SalariesComponent implements OnInit {
     this.apiService.createSalary(payload).subscribe(() => {
       this.loadData();
       this.logAudit("Generated salary release log for employee: " + emp.empName);
-      this.salariesForm = { empId: '', month: 'May', year: 2026, salaryAmount: 0, status: 'Pending', paidDate: '' };
+      this.salariesForm = { id: '', month: 'May', year: 2026, salaryAmount: 0, status: 'Pending', paidDate: '' };
     });
   }
 
-  deleteSalary(id: number) {
+  deleteSalary(id: string) {
     if (!this.canDelete()) {
       alert("Permission denied");
       return;
@@ -149,3 +149,4 @@ export class SalariesComponent implements OnInit {
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
 }
+

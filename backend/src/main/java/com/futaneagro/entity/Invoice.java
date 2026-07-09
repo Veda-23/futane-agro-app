@@ -10,9 +10,7 @@ import java.time.LocalDate;
 @Table(name = "Invoice")
 @SQLDelete(sql = "UPDATE Invoice SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE invoice_id = ?")
 @Where(clause = "is_deleted = false")
-public class Invoice {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class Invoice extends BaseEntity {
     @Column(name = "invoice_id")
     private Integer invoiceId;
 
@@ -27,13 +25,10 @@ public class Invoice {
     private LocalDate createdDate;
 
     @Column(name = "is_deleted")
-    private Boolean isDeleted = false;
 
     @Column(name = "deleted_by", length = 100)
-    private String deletedBy;
 
     @Column(name = "deleted_date")
-    private LocalDate deletedDate;
 
     public Invoice() {}
 

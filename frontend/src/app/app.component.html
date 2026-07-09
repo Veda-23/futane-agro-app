@@ -1,4 +1,4 @@
-<app-login *ngIf="!isAuthenticated" (onLoginSuccess)="handleLoginSuccess($event)"></app-login>
+<app-login *ngIf="!isAuthenticated" (onLoginSuccess)="completeLogin($event)"></app-login>
 <!-- Main Application Layout -->
 <div *ngIf="isAuthenticated" class="app-container">
   <!-- Sidebar Navigation -->
@@ -123,8 +123,8 @@
               </div>
               <div class="form-group">
                 <label>{{ 'label.select_party' | translate:currentLang }}</label>
-                <select [(ngModel)]="salesForm.partyId" name="salesParty" required>
-                  <option *ngFor="let party of parties" [value]="party.partyId">{{ party.partyName }}</option>
+                <select [(ngModel)]="salesForm.id" name="salesParty" required>
+                  <option *ngFor="let party of parties" [value]="party.id">{{ party.partyName }}</option>
                 </select>
               </div>
               <div class="form-group">
@@ -206,7 +206,7 @@
                     <td *ngIf="isColumnVisible('sales', 'Paid')"><span class="badge badge-success">₹{{ sale.paid }}</span></td>
                     <td *ngIf="isColumnVisible('sales', 'Remaining')"><span class="badge badge-danger">₹{{ sale.remaining }}</span></td>
                     <td *ngIf="isColumnVisible('sales', 'Actions')">
-                      <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteSale(sale.saleId)">{{ 'btn.delete' | translate:currentLang }}</button>
+                      <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteSale(sale.id)">{{ 'btn.delete' | translate:currentLang }}</button>
                     </td>
                   </tr>
                 </tbody>
@@ -241,8 +241,8 @@
               </div>
               <div class="form-group">
                 <label>{{ 'label.select_party' | translate:currentLang }}</label>
-                <select [(ngModel)]="paymentsForm.partyId" name="payParty" required>
-                  <option *ngFor="let party of parties" [value]="party.partyId">{{ party.partyName }}</option>
+                <select [(ngModel)]="paymentsForm.id" name="payParty" required>
+                  <option *ngFor="let party of parties" [value]="party.id">{{ party.partyName }}</option>
                 </select>
               </div>
               <div class="form-group">
@@ -343,8 +343,8 @@
               </div>
               <div class="form-group">
                 <label>{{ 'label.select_vendor' | translate:currentLang }}</label>
-                <select [(ngModel)]="rawMaterialsForm.vendorId" name="rawVendor" required>
-                  <option *ngFor="let vendor of vendors" [value]="vendor.vendorId">{{ vendor.vendorName }}</option>
+                <select [(ngModel)]="rawMaterialsForm.id" name="rawVendor" required>
+                  <option *ngFor="let vendor of vendors" [value]="vendor.id">{{ vendor.vendorName }}</option>
                 </select>
               </div>
               <div class="form-group">
@@ -485,7 +485,7 @@
               <table>
                 <thead>
                   <tr>
-                    <th *ngIf="isColumnVisible('inventory', 'ID')" (click)="setSort('inventoryId')" style="cursor:pointer;">Inventory ID <span *ngIf="sortField === 'inventoryId'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+                    <th *ngIf="isColumnVisible('inventory', 'ID')" (click)="setSort('id')" style="cursor:pointer;">Inventory ID <span *ngIf="sortField === 'id'">{{ sortAsc ? '▲' : '▼' }}</span></th>
                   <th *ngIf="isColumnVisible('inventory', 'Crate Type')" (click)="setSort('crateType')" style="cursor:pointer;">{{ 'inv.crate_type' | translate:currentLang }} <span *ngIf="sortField === 'crateType'">{{ sortAsc ? '▲' : '▼' }}</span></th>
                   <th *ngIf="isColumnVisible('inventory', 'Material')" (click)="setSort('materialType')" style="cursor:pointer;">{{ 'inv.material' | translate:currentLang }} <span *ngIf="sortField === 'materialType'">{{ sortAsc ? '▲' : '▼' }}</span></th>
                   <th *ngIf="isColumnVisible('inventory', 'Opening')" (click)="setSort('openingStock')" style="cursor:pointer;">Opening Stock <span *ngIf="sortField === 'openingStock'">{{ sortAsc ? '▲' : '▼' }}</span></th>
@@ -497,7 +497,7 @@
                 </thead>
                 <tbody>
                   <tr *ngFor="let inv of getProcessedList(inventoryList, 'inventory')">
-                  <td *ngIf="isColumnVisible('inventory', 'ID')">{{ inv.inventoryId }}</td>
+                  <td *ngIf="isColumnVisible('inventory', 'ID')">{{ inv.id }}</td>
                   <td *ngIf="isColumnVisible('inventory', 'Crate Type')"><strong>{{ inv.crateType }}</strong></td>
                   <td *ngIf="isColumnVisible('inventory', 'Material')">{{ inv.materialType }}</td>
                   <td *ngIf="isColumnVisible('inventory', 'Opening')">{{ inv.openingStock }}</td>
@@ -590,8 +590,8 @@
             <form (submit)="saveSalary()">
               <div class="form-group">
                 <label>{{ 'label.select_employee' | translate:currentLang }}</label>
-                <select [(ngModel)]="salariesForm.empId" name="salEmp" required>
-                  <option *ngFor="let emp of employees" [value]="emp.empId">{{ emp.empName }} (₹{{ emp.salary }}/mo)</option>
+                <select [(ngModel)]="salariesForm.id" name="salEmp" required>
+                  <option *ngFor="let emp of employees" [value]="emp.id">{{ emp.empName }} (₹{{ emp.salary }}/mo)</option>
                 </select>
               </div>
               <div class="form-group">
@@ -672,7 +672,7 @@
                       <span class="badge badge-warning" *ngIf="sal.status === 'Pending'">Pending</span>
                     </td>
                     <td *ngIf="isColumnVisible('salaries', 'Actions')">
-                      <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteSalary(sal.salaryId)">{{ 'btn.delete' | translate:currentLang }}</button>
+                      <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteSalary(sal.id)">{{ 'btn.delete' | translate:currentLang }}</button>
                     </td>
                   </tr>
                 </tbody>
@@ -711,8 +711,8 @@
               </div>
               <div class="form-group">
                 <label>{{ 'label.select_driver' | translate:currentLang }}</label>
-                <select [(ngModel)]="transportsForm.driverId" name="trDriver" required>
-                  <option *ngFor="let driver of drivers" [value]="driver.driverId">{{ driver.driverName }}</option>
+                <select [(ngModel)]="transportsForm.id" name="trDriver" required>
+                  <option *ngFor="let driver of drivers" [value]="driver.id">{{ driver.driverName }}</option>
                 </select>
               </div>
               <div class="form-group">
@@ -764,7 +764,7 @@
                     <td *ngIf="isColumnVisible('transports', 'Advance')"><span class="badge badge-success">₹{{ tr.advance }}</span></td>
                     <td *ngIf="isColumnVisible('transports', 'Remaining')"><span class="badge badge-danger">₹{{ tr.remaining }}</span></td>
                     <td *ngIf="isColumnVisible('transports', 'Actions')">
-                      <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteTransport(tr.transportId)">{{ 'btn.delete' | translate:currentLang }}</button>
+                      <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteTransport(tr.id)">{{ 'btn.delete' | translate:currentLang }}</button>
                     </td>
                   </tr>
                 </tbody>
@@ -832,7 +832,7 @@
               <table>
                 <thead>
                   <tr>
-                    <th *ngIf="isColumnVisible('drivers', 'ID')" (click)="setSort('driverId')" style="cursor:pointer;">Driver ID <span *ngIf="sortField === 'driverId'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+                    <th *ngIf="isColumnVisible('drivers', 'ID')" (click)="setSort('id')" style="cursor:pointer;">Driver ID <span *ngIf="sortField === 'id'">{{ sortAsc ? '▲' : '▼' }}</span></th>
                     <th *ngIf="isColumnVisible('drivers', 'Name')" (click)="setSort('driverName')" style="cursor:pointer;">{{ 'driver.name' | translate:currentLang }} <span *ngIf="sortField === 'driverName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
                     <th *ngIf="isColumnVisible('drivers', 'Mobile')" (click)="setSort('mobile')" style="cursor:pointer;">{{ 'driver.mobile' | translate:currentLang }} <span *ngIf="sortField === 'mobile'">{{ sortAsc ? '▲' : '▼' }}</span></th>
                     <th *ngIf="isColumnVisible('drivers', 'License')" (click)="setSort('licenseNumber')" style="cursor:pointer;">{{ 'driver.license' | translate:currentLang }} <span *ngIf="sortField === 'licenseNumber'">{{ sortAsc ? '▲' : '▼' }}</span></th>
@@ -842,13 +842,13 @@
                 </thead>
                 <tbody>
                   <tr *ngFor="let driver of getProcessedList(drivers, 'drivers')">
-                    <td *ngIf="isColumnVisible('drivers', 'ID')">{{ driver.driverId }}</td>
+                    <td *ngIf="isColumnVisible('drivers', 'ID')">{{ driver.id }}</td>
                     <td *ngIf="isColumnVisible('drivers', 'Name')"><strong>{{ driver.driverName }}</strong></td>
                     <td *ngIf="isColumnVisible('drivers', 'Mobile')">{{ driver.mobile }}</td>
                     <td *ngIf="isColumnVisible('drivers', 'License')"><code>{{ driver.licenseNumber }}</code></td>
                     <td *ngIf="isColumnVisible('drivers', 'Address')">{{ driver.address }}</td>
                     <td *ngIf="isColumnVisible('drivers', 'Actions')">
-                      <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteDriver(driver.driverId)">{{ 'btn.delete' | translate:currentLang }}</button>
+                      <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteDriver(driver.id)">{{ 'btn.delete' | translate:currentLang }}</button>
                     </td>
                   </tr>
                 </tbody>
@@ -894,7 +894,7 @@
               <table>
                 <thead>
                   <tr>
-                    <th *ngIf="isColumnVisible('invoices', 'ID')" (click)="setSort('invoiceId')" style="cursor:pointer;">Invoice ID <span *ngIf="sortField === 'invoiceId'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+                    <th *ngIf="isColumnVisible('invoices', 'ID')" (click)="setSort('id')" style="cursor:pointer;">Invoice ID <span *ngIf="sortField === 'id'">{{ sortAsc ? '▲' : '▼' }}</span></th>
                   <th *ngIf="isColumnVisible('invoices', 'Invoice No')" (click)="setSort('invoiceNo')" style="cursor:pointer;">{{ 'inv.no' | translate:currentLang }} <span *ngIf="sortField === 'invoiceNo'">{{ sortAsc ? '▲' : '▼' }}</span></th>
                   <th *ngIf="isColumnVisible('invoices', 'Date')" (click)="setSort('createdDate')" style="cursor:pointer;">{{ 'inv.date' | translate:currentLang }} <span *ngIf="sortField === 'createdDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
                   <th *ngIf="isColumnVisible('invoices', 'Party')" (click)="setSort('sale.party.partyName')" style="cursor:pointer;">{{ 'inv.party_name' | translate:currentLang }} <span *ngIf="sortField === 'sale.party.partyName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
@@ -905,7 +905,7 @@
                 </thead>
                 <tbody>
                   <tr *ngFor="let inv of getProcessedList(invoicesList, 'invoices')">
-                  <td *ngIf="isColumnVisible('invoices', 'ID')">{{ inv.invoiceId }}</td>
+                  <td *ngIf="isColumnVisible('invoices', 'ID')">{{ inv.id }}</td>
                   <td *ngIf="isColumnVisible('invoices', 'Invoice No')"><code>{{ inv.invoiceNo }}</code></td>
                   <td *ngIf="isColumnVisible('invoices', 'Date')">{{ inv.createdDate }}</td>
                   <td *ngIf="isColumnVisible('invoices', 'Party')"><strong>{{ inv.sale.party.partyName }}</strong></td>
@@ -956,9 +956,9 @@
             </div>
             <div class="form-group">
               <label>{{ 'rep.party' | translate:currentLang }}</label>
-              <select [(ngModel)]="reportFilter.partyId" name="repParty" (change)="runReport()">
+              <select [(ngModel)]="reportFilter.id" name="repParty" (change)="runReport()">
                 <option value="">All customers</option>
-                <option *ngFor="let party of parties" [value]="party.partyId">{{ party.partyName }}</option>
+                <option *ngFor="let party of parties" [value]="party.id">{{ party.partyName }}</option>
               </select>
             </div>
             <div class="form-group" style="display:flex; align-items:flex-end;">
@@ -1132,8 +1132,8 @@
             <form (submit)="saveBreakdown()">
               <div class="form-group">
                 <label>{{ 'label.select_machine' | translate:currentLang }}</label>
-                <select [(ngModel)]="breakdownForm.machineId" name="bdMachine" required>
-                  <option *ngFor="let m of machinesList" [value]="m.machineId">{{ m.machineName }}</option>
+                <select [(ngModel)]="breakdownForm.id" name="bdMachine" required>
+                  <option *ngFor="let m of machinesList" [value]="m.id">{{ m.machineName }}</option>
                 </select>
               </div>
               <div class="form-group">
@@ -1192,7 +1192,7 @@
                     <td *ngIf="isColumnVisible('machines', 'Status')">
                       <span class="badge" [class.badge-success]="m.status === 'Running'" [class.badge-danger]="m.status === 'Breakdown'" [class.badge-info]="m.status !== 'Running' && m.status !== 'Breakdown'">{{ m.status }}</span>
                     </td>
-                    <td *ngIf="isColumnVisible('machines', 'Actions')"><button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteMachine(m.machineId)">{{ 'btn.delete' | translate:currentLang }}</button></td>
+                    <td *ngIf="isColumnVisible('machines', 'Actions')"><button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteMachine(m.id)">{{ 'btn.delete' | translate:currentLang }}</button></td>
                   </tr>
                 </tbody>
               </table>
@@ -1274,8 +1274,8 @@
             <form (submit)="saveDispatch()">
               <div class="form-group">
                 <label>{{ 'label.select_sale' | translate:currentLang }}</label>
-                <select [(ngModel)]="dispatchForm.saleId" name="dSale" required>
-                  <option *ngFor="let s of salesList" [value]="s.saleId">{{ s.party.partyName }} - {{ s.crateType }} ({{ s.date }})</option>
+                <select [(ngModel)]="dispatchForm.id" name="dSale" required>
+                  <option *ngFor="let s of salesList" [value]="s.id">{{ s.party.partyName }} - {{ s.crateType }} ({{ s.date }})</option>
                 </select>
               </div>
               <div class="form-group">
@@ -1342,7 +1342,7 @@
                     <td *ngIf="isColumnVisible('dispatch', 'Status')">
                       <span class="badge" [class.badge-info]="d.dispatchStatus === 'Pending'" [class.badge-warning]="d.dispatchStatus === 'In Transit'" [class.badge-success]="d.dispatchStatus === 'Delivered'">{{ d.dispatchStatus }}</span>
                     </td>
-                    <td *ngIf="isColumnVisible('dispatch', 'Actions')"><button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteDispatch(d.dispatchId)">{{ 'btn.delete' | translate:currentLang }}</button></td>
+                    <td *ngIf="isColumnVisible('dispatch', 'Actions')"><button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteDispatch(d.id)">{{ 'btn.delete' | translate:currentLang }}</button></td>
                   </tr>
                 </tbody>
               </table>
@@ -1431,7 +1431,7 @@
                     <td *ngIf="isColumnVisible('expenses', 'Description')">{{ e.description }}</td>
                     <td *ngIf="isColumnVisible('expenses', 'Amount')"><strong class="text-red">₹{{ e.amount }}</strong></td>
                     <td *ngIf="isColumnVisible('expenses', 'Paid By')">{{ e.paidBy }}</td>
-                    <td *ngIf="isColumnVisible('expenses', 'Actions')"><button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteExpense(e.expenseId)">{{ 'btn.delete' | translate:currentLang }}</button></td>
+                    <td *ngIf="isColumnVisible('expenses', 'Actions')"><button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteExpense(e.id)">{{ 'btn.delete' | translate:currentLang }}</button></td>
                   </tr>
                 </tbody>
               </table>
@@ -1520,7 +1520,7 @@
                     <td *ngIf="isColumnVisible('bank', 'Amount')"><strong [class.text-green]="bt.transactionType === 'Credit'" [class.text-red]="bt.transactionType === 'Debit'">₹{{ bt.amount }}</strong></td>
                     <td *ngIf="isColumnVisible('bank', 'Description')">{{ bt.description }}</td>
                     <td *ngIf="isColumnVisible('bank', 'Reference')"><code>{{ bt.referenceNo || 'N/A' }}</code></td>
-                    <td *ngIf="isColumnVisible('bank', 'Actions')"><button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteBankTransaction(bt.transactionId)">{{ 'btn.delete' | translate:currentLang }}</button></td>
+                    <td *ngIf="isColumnVisible('bank', 'Actions')"><button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteBankTransaction(bt.id)">{{ 'btn.delete' | translate:currentLang }}</button></td>
                   </tr>
                 </tbody>
               </table>
@@ -1542,105 +1542,16 @@
         </div>
       </div>
 
-      <!-- 21. Power BI Analytics Tab -->
+      <!-- 21. Grafana Analytics Tab -->
       <div *ngIf="activeTab === 'analytics'">
         <div class="glass-panel" style="padding: 20px; margin-bottom: 20px;">
-          <h3>📊 {{ 'analytics.title' | translate:currentLang }}</h3>
-          <p style="color: var(--text-secondary); margin-bottom: 15px;">Configure a custom Power BI publish-to-web URL or use the built-in analytics simulator.</p>
-          <div class="flex-row" style="gap: 12px; flex-wrap: wrap;">
-            <input type="text" [(ngModel)]="powerBiUrlInput" placeholder="Paste your Power BI embed URL here..." style="flex: 1; min-width: 300px;">
-            <button class="btn btn-primary" (click)="savePowerBiUrl()">{{ 'analytics.save' | translate:currentLang }}</button>
-            <button class="btn btn-secondary" (click)="clearPowerBiUrl()">Use Simulator</button>
-          </div>
+          <h3>📊 System & Infrastructure Dashboard</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 15px;">Live monitoring metrics from Grafana.</p>
         </div>
 
-        <!-- Custom Power BI Embed -->
-        <div class="glass-panel" style="padding: 0; overflow: hidden; border-radius: 12px;" *ngIf="!powerBiSimulatorActive && powerBiEmbedUrl">
-          <iframe [src]="powerBiEmbedUrl" style="width:100%; height:600px; border:none;" allowfullscreen></iframe>
-        </div>
-
-        <!-- Built-in Analytics Simulator -->
-        <div *ngIf="powerBiSimulatorActive" class="powerbi-simulator">
-          <!-- Report Selector Tabs -->
-          <div class="glass-panel" style="padding: 0; overflow: hidden;">
-            <div class="pbi-tab-bar">
-              <button class="pbi-tab" [class.pbi-tab-active]="activeAnalyticsReport === 'sales'" (click)="activeAnalyticsReport = 'sales'">💰 Sales Performance</button>
-              <button class="pbi-tab" [class.pbi-tab-active]="activeAnalyticsReport === 'production'" (click)="activeAnalyticsReport = 'production'">⚙️ Production Efficiency</button>
-              <button class="pbi-tab" [class.pbi-tab-active]="activeAnalyticsReport === 'expenses'" (click)="activeAnalyticsReport = 'expenses'">💸 Expense Breakdown</button>
-              <button class="pbi-tab" [class.pbi-tab-active]="activeAnalyticsReport === 'pl'" (click)="activeAnalyticsReport = 'pl'">📊 P&L Summary</button>
-            </div>
-
-            <!-- Sales Report -->
-            <div class="pbi-report-panel" *ngIf="activeAnalyticsReport === 'sales'">
-              <h4>Sales Performance Report</h4>
-              <div class="pbi-kpi-row">
-                <div class="pbi-kpi"><span class="pbi-kpi-val text-green">₹{{ stats.totalSales | number:'1.0-0' }}</span><span class="pbi-kpi-label">Total Revenue</span></div>
-                <div class="pbi-kpi"><span class="pbi-kpi-val text-blue">{{ salesList.length }}</span><span class="pbi-kpi-label">Total Orders</span></div>
-                <div class="pbi-kpi"><span class="pbi-kpi-val text-red">₹{{ stats.pendingAmount | number:'1.0-0' }}</span><span class="pbi-kpi-label">Receivables</span></div>
-              </div>
-              <table class="pbi-table">
-                <thead><tr><th>Party</th><th>Crate</th><th>Qty</th><th>Revenue</th><th>Paid</th><th>Pending</th></tr></thead>
-                <tbody>
-                  <tr *ngFor="let s of salesList">
-                    <td>{{ s.party.partyName }}</td><td>{{ s.crateType }}</td><td>{{ s.quantity }}</td>
-                    <td class="text-green">₹{{ s.totalAmount }}</td><td class="text-blue">₹{{ s.paid }}</td><td class="text-red">₹{{ s.remaining }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Production Report -->
-            <div class="pbi-report-panel" *ngIf="activeAnalyticsReport === 'production'">
-              <h4>Production Efficiency Report</h4>
-              <div class="pbi-kpi-row">
-                <div class="pbi-kpi"><span class="pbi-kpi-val text-purple">{{ stats.todayProduction }}</span><span class="pbi-kpi-label">Today's Output</span></div>
-                <div class="pbi-kpi"><span class="pbi-kpi-val text-blue">{{ stats.monthlyProduction }}</span><span class="pbi-kpi-label">Monthly Output</span></div>
-                <div class="pbi-kpi"><span class="pbi-kpi-val text-green">{{ machinesList.length }}</span><span class="pbi-kpi-label">Active Machines</span></div>
-              </div>
-              <table class="pbi-table">
-                <thead><tr><th>Date</th><th>Crate Type</th><th>Total</th><th>Success</th><th>Rejected</th><th>Efficiency%</th></tr></thead>
-                <tbody>
-                  <tr *ngFor="let p of ppdList">
-                    <td>{{ p.date }}</td><td>{{ p.crateType }}</td><td>{{ p.totalProduction }}</td>
-                    <td class="text-green">{{ p.successful }}</td><td class="text-red">{{ p.rejected }}</td>
-                    <td class="text-blue">{{ ((p.successful / p.totalProduction) * 100) | number:'1.1-1' }}%</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Expense Report -->
-            <div class="pbi-report-panel" *ngIf="activeAnalyticsReport === 'expenses'">
-              <h4>Expense Breakdown Report</h4>
-              <div class="pbi-kpi-row">
-                <div class="pbi-kpi"><span class="pbi-kpi-val text-red">{{ expensesList.length }}</span><span class="pbi-kpi-label">Total Records</span></div>
-              </div>
-              <table class="pbi-table">
-                <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead>
-                <tbody>
-                  <tr *ngFor="let e of expensesList">
-                    <td>{{ e.expenseDate }}</td><td>{{ e.category }}</td><td>{{ e.description }}</td><td class="text-red">₹{{ e.amount }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- P&L Report -->
-            <div class="pbi-report-panel" *ngIf="activeAnalyticsReport === 'pl'">
-              <h4>Profit & Loss Statement</h4>
-              <div class="pbi-pl-card">
-                <div class="pbi-pl-row"><span>Total Sales Revenue</span><span class="text-green">₹{{ stats.totalSalesAmount | number:'1.2-2' }}</span></div>
-                <div class="pbi-pl-row"><span>(-) Raw Material Cost</span><span class="text-red">₹{{ stats.totalRawMaterialCost | number:'1.2-2' }}</span></div>
-                <div class="pbi-pl-row"><span>(-) Transport Cost</span><span class="text-red">₹{{ stats.totalTransportCost | number:'1.2-2' }}</span></div>
-                <div class="pbi-pl-row"><span>(-) Total Salaries</span><span class="text-red">₹{{ stats.totalSalaries | number:'1.2-2' }}</span></div>
-                <hr style="border-color:rgba(255,255,255,0.1); margin: 12px 0;">
-                <div class="pbi-pl-row pbi-pl-total">
-                  <span>Net Profit / Loss</span>
-                  <span [class.text-green]="computedNetProfit >= 0" [class.text-red]="computedNetProfit < 0">₹{{ computedNetProfit | number:'1.2-2' }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+        <!-- Embedded Grafana Dashboard -->
+        <div class="glass-panel" style="padding: 0; overflow: hidden; border-radius: 12px;" *ngIf="grafanaEmbedUrl">
+          <iframe [src]="grafanaEmbedUrl" style="width:100%; height:800px; border:none;" allowfullscreen></iframe>
         </div>
       </div>
 
@@ -1661,7 +1572,7 @@
               </thead>
               <tbody>
                 <tr *ngFor="let log of getProcessedList(auditLogsList, 'audit-logs')">
-                  <td>{{ log.auditId }}</td>
+                  <td>{{ log.id }}</td>
                   <td><code>{{ log.timestamp }}</code></td>
                   <td><span class="badge badge-info">{{ log.username }}</span></td>
                   <td>{{ log.action }}</td>
@@ -1697,10 +1608,10 @@
               <select [(ngModel)]="selectedBillRecordId" name="selectedBillRecordId" (change)="onBillRecordChange()">
                 <option value="">-- {{ 'label.select_sale' | translate:currentLang }} --</option>
                 <ng-container *ngIf="activeBillType === 'tax_invoice' || activeBillType === 'proforma'">
-                  <option *ngFor="let s of salesList" [value]="s.saleId">{{ s.party.partyName }} - Qty: {{ s.quantity }} (₹{{ s.totalAmount }})</option>
+                  <option *ngFor="let s of salesList" [value]="s.id">{{ s.party.partyName }} - Qty: {{ s.quantity }} (₹{{ s.totalAmount }})</option>
                 </ng-container>
                 <ng-container *ngIf="activeBillType === 'delivery_challan'">
-                  <option *ngFor="let d of dispatchesList" [value]="d.dispatchId">{{ d.sale.party.partyName }} - Vehicle: {{ d.vehicleNumber }} (Qty: {{ d.sale.quantity }})</option>
+                  <option *ngFor="let d of dispatchesList" [value]="d.id">{{ d.sale.party.partyName }} - Vehicle: {{ d.vehicleNumber }} (Qty: {{ d.sale.quantity }})</option>
                 </ng-container>
                 <ng-container *ngIf="activeBillType === 'payment_receipt'">
                   <option *ngFor="let p of paymentsList" [value]="p.paymentId">{{ p.party.partyName }} - ₹{{ p.amountReceived }} ({{ p.paymentDate }})</option>
@@ -1709,10 +1620,10 @@
                   <option *ngFor="let rm of rawMaterialsList" [value]="rm.rawMaterialId">{{ rm.vendor.vendorName }} - {{ rm.materialName }} (₹{{ rm.amount }})</option>
                 </ng-container>
                 <ng-container *ngIf="activeBillType === 'transport_receipt'">
-                  <option *ngFor="let tr of transportsList" [value]="tr.transportId">Truck: {{ tr.truckNumber }} - Driver: {{ tr.driver.driverName }} (₹{{ tr.rent }})</option>
+                  <option *ngFor="let tr of transportsList" [value]="tr.id">Truck: {{ tr.truckNumber }} - Driver: {{ tr.driver.driverName }} (₹{{ tr.rent }})</option>
                 </ng-container>
                 <ng-container *ngIf="activeBillType === 'salary_slip'">
-                  <option *ngFor="let sal of salariesList" [value]="sal.salaryId">{{ sal.employee.empName }} - {{ sal.month }}/{{ sal.year }} (₹{{ sal.salaryAmount }})</option>
+                  <option *ngFor="let sal of salariesList" [value]="sal.id">{{ sal.employee.empName }} - {{ sal.month }}/{{ sal.year }} (₹{{ sal.salaryAmount }})</option>
                 </ng-container>
               </select>
             </div>
@@ -1780,7 +1691,7 @@
             </div>
             <div class="bill-col-right">
               <h4>{{ 'bill.doc_details' | translate:currentLang }}</h4>
-              <strong>{{ 'bill.doc_no' | translate:currentLang }}</strong> {{ activeBillType === 'tax_invoice' ? 'FA/2026/0' + selectedBillRecord.saleId : 'FAP/2026/0' + selectedBillRecord.saleId }}<br>
+              <strong>{{ 'bill.doc_no' | translate:currentLang }}</strong> {{ activeBillType === 'tax_invoice' ? 'FA/2026/0' + selectedBillRecord.id : 'FAP/2026/0' + selectedBillRecord.id }}<br>
               <strong>{{ 'bill.date_label' | translate:currentLang }}</strong> {{ selectedBillRecord.date }}<br>
               <strong>{{ 'bill.state_supply' | translate:currentLang }}</strong> {{ selectedBillRecord.party.state }} (Code: 27)<br>
               <strong>{{ 'bill.pay_status' | translate:currentLang }}</strong> {{ selectedBillRecord.remaining === 0 ? ('bill.fully_paid' | translate:currentLang) : ('bill.balance_pending' | translate:currentLang) }}
@@ -1797,7 +1708,7 @@
             </div>
             <div class="bill-col-right">
               <h4>{{ 'bill.logistics_details' | translate:currentLang }}</h4>
-              <strong>{{ 'bill.challan_no' | translate:currentLang }}</strong> FAC/2026/0{{ selectedBillRecord.dispatchId }}<br>
+              <strong>{{ 'bill.challan_no' | translate:currentLang }}</strong> FAC/2026/0{{ selectedBillRecord.id }}<br>
               <strong>{{ 'bill.challan_date' | translate:currentLang }}</strong> {{ selectedBillRecord.dispatchDate }}<br>
               <strong>{{ 'bill.vehicle_no' | translate:currentLang }}</strong> {{ selectedBillRecord.vehicleNumber }}<br>
               <strong>{{ 'bill.driver_assigned' | translate:currentLang }}</strong> {{ selectedBillRecord.driverName }}
@@ -1847,7 +1758,7 @@
             </div>
             <div class="bill-col-right">
               <h4>{{ 'bill.doc_details' | translate:currentLang }}</h4>
-              <strong>{{ 'bill.freight_slip_no' | translate:currentLang }}</strong> FATR/2026/0{{ selectedBillRecord.transportId }}<br>
+              <strong>{{ 'bill.freight_slip_no' | translate:currentLang }}</strong> FATR/2026/0{{ selectedBillRecord.id }}<br>
               <strong>{{ 'bill.date_label' | translate:currentLang }}</strong> {{ selectedBillRecord.date }}<br>
               <strong>{{ 'bill.vehicle_no' | translate:currentLang }}</strong> {{ selectedBillRecord.truckNumber }}<br>
               <strong>{{ 'bill.status_lbl' | translate:currentLang }}</strong> {{ 'bill.freight_logged' | translate:currentLang }}
@@ -1865,7 +1776,7 @@
             </div>
             <div class="bill-col-right">
               <h4>{{ 'bill.doc_details' | translate:currentLang }}</h4>
-              <strong>{{ 'bill.salary_slip_no' | translate:currentLang }}</strong> FASL/2026/0{{ selectedBillRecord.salaryId }}<br>
+              <strong>{{ 'bill.salary_slip_no' | translate:currentLang }}</strong> FASL/2026/0{{ selectedBillRecord.id }}<br>
               <strong>{{ 'bill.pay_period' | translate:currentLang }}</strong> {{ selectedBillRecord.month }} / {{ selectedBillRecord.year }}<br>
               <strong>{{ 'bill.status_lbl' | translate:currentLang }}</strong> {{ selectedBillRecord.status }}<br>
               <strong>{{ 'bill.released_date' | translate:currentLang }}</strong> {{ selectedBillRecord.paidDate || 'Pending' }}
@@ -2134,7 +2045,7 @@
         <div class="grid-cols-3">
           
           <!-- Left Column: User Management -->
-          <div class="glass-panel" style="grid-column: span 1; padding: 20px;">
+          <div class="glass-panel" style="grid-column: span 1; padding: 20px;" *ngIf="loggedInUser?.role === 'SUPER_ADMIN'">
             <h3>👥 {{ 'settings.title' | translate:currentLang }}</h3>
             <p style="color: var(--text-secondary); margin-bottom: 15px; font-size:13px;">{{ 'settings.desc' | translate:currentLang }}</p>
             
@@ -2201,8 +2112,8 @@
             </div>
           </div>
 
-          <!-- Right Column (Span 2): 80+ ERP System Settings & Theme Toggle -->
-          <div class="glass-panel" style="grid-column: span 2; padding: 20px;">
+          <!-- Right Column: 80+ ERP System Settings & Theme Toggle -->
+          <div class="glass-panel" [style.grid-column]="loggedInUser?.role === 'SUPER_ADMIN' ? 'span 2' : 'span 3'" style="padding: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
               <h3>⚙️ {{ 'settings.config_title' | translate:currentLang }}</h3>
               <div style="display: flex; align-items: center; gap: 8px;">
@@ -2379,6 +2290,8 @@
             <th style="text-align: left; padding: 10px; border-bottom: 1px solid var(--border-glass);">Material</th>
             <th style="text-align: right; padding: 10px; border-bottom: 1px solid var(--border-glass);">Quantity</th>
             <th style="text-align: right; padding: 10px; border-bottom: 1px solid var(--border-glass);">Rate (₹)</th>
+            <th style="text-align: right; padding: 10px; border-bottom: 1px solid var(--border-glass);">CGST (9%)</th>
+            <th style="text-align: right; padding: 10px; border-bottom: 1px solid var(--border-glass);">SGST (9%)</th>
             <th style="text-align: right; padding: 10px; border-bottom: 1px solid var(--border-glass);">Total (₹)</th>
           </tr>
         </thead>
@@ -2387,13 +2300,17 @@
             <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">{{ selectedInvoice.sale.crateType }}</td>
             <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">{{ selectedInvoice.sale.crateMaterial }}</td>
             <td style="text-align: right; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">{{ selectedInvoice.sale.quantity }}</td>
-            <td style="text-align: right; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">₹{{ selectedInvoice.sale.rate }}</td>
-            <td style="text-align: right; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);"><strong>₹{{ selectedInvoice.sale.totalAmount }}</strong></td>
+            <td style="text-align: right; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">₹{{ selectedInvoice.sale.rate | number:'1.2-2' }}</td>
+            <td style="text-align: right; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">₹{{ (selectedInvoice.sale.cgst || 0) | number:'1.2-2' }}</td>
+            <td style="text-align: right; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">₹{{ (selectedInvoice.sale.sgst || 0) | number:'1.2-2' }}</td>
+            <td style="text-align: right; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);"><strong>₹{{ selectedInvoice.sale.totalAmount | number:'1.2-2' }}</strong></td>
           </tr>
         </tbody>
       </table>
-      <div class="bill-summary" style="margin-top: 20px; text-align: right; font-size: 15px;">
-        <p><strong>Gross Subtotal:</strong> ₹{{ selectedInvoice.sale.totalAmount | number:'1.2-2' }}</p>
+      <div class="bill-summary" style="margin-top: 20px; text-align: right; font-size: 15px; line-height: 1.6;">
+        <p><strong>Taxable Subtotal:</strong> ₹{{ (selectedInvoice.sale.quantity * selectedInvoice.sale.rate) | number:'1.2-2' }}</p>
+        <p><strong>Total GST (18%):</strong> ₹{{ ((selectedInvoice.sale.cgst || 0) + (selectedInvoice.sale.sgst || 0)) | number:'1.2-2' }}</p>
+        <p style="font-size: 16px;"><strong>Grand Total (Inc. GST):</strong> ₹{{ selectedInvoice.sale.totalAmount | number:'1.2-2' }}</p>
         <p style="color: var(--accent-green);"><strong>Amount Paid:</strong> ₹{{ selectedInvoice.sale.paid | number:'1.2-2' }}</p>
         <p style="color: var(--accent-red); font-size: 18px; margin-top: 5px;"><strong>Balance Remaining Due:</strong> ₹{{ selectedInvoice.sale.remaining | number:'1.2-2' }}</p>
       </div>
@@ -2404,3 +2321,4 @@
     </div>
   </div>
 </div>
+

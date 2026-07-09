@@ -120,7 +120,7 @@ public class ExcelImporterService {
                     party = existingOpt.get();
                 } else {
                     party = new Party();
-                    party.setPartyId(partyId);
+                    party.setId(partyId);
                     party.setCreatedDate(LocalDate.now());
                 }
                 party.setPartyName(partyName);
@@ -187,3 +187,4 @@ public class ExcelImporterService {
         }
     }
 }
+

@@ -19,7 +19,7 @@
     <table>
       <thead>
         <tr>
-          <th *ngIf="isColumnVisible('invoices', 'ID')" (click)="setSort('invoiceId')" style="cursor:pointer;">Invoice ID <span *ngIf="sortField === 'invoiceId'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+          <th *ngIf="isColumnVisible('invoices', 'ID')" (click)="setSort('id')" style="cursor:pointer;">Invoice ID <span *ngIf="sortField === 'id'">{{ sortAsc ? '▲' : '▼' }}</span></th>
           <th *ngIf="isColumnVisible('invoices', 'Invoice No')" (click)="setSort('invoiceNo')" style="cursor:pointer;">{{ 'inv.no' | translate:currentLang }} <span *ngIf="sortField === 'invoiceNo'">{{ sortAsc ? '▲' : '▼' }}</span></th>
           <th *ngIf="isColumnVisible('invoices', 'Date')" (click)="setSort('createdDate')" style="cursor:pointer;">{{ 'inv.date' | translate:currentLang }} <span *ngIf="sortField === 'createdDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
           <th *ngIf="isColumnVisible('invoices', 'Party')" (click)="setSort('sale.party.partyName')" style="cursor:pointer;">{{ 'inv.party_name' | translate:currentLang }} <span *ngIf="sortField === 'sale.party.partyName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
@@ -30,7 +30,7 @@
       </thead>
       <tbody>
         <tr *ngFor="let inv of getProcessedList(invoicesList, 'invoices')">
-          <td *ngIf="isColumnVisible('invoices', 'ID')">{{ inv.invoiceId }}</td>
+          <td *ngIf="isColumnVisible('invoices', 'ID')">{{ inv.id }}</td>
           <td *ngIf="isColumnVisible('invoices', 'Invoice No')"><code>{{ inv.invoiceNo }}</code></td>
           <td *ngIf="isColumnVisible('invoices', 'Date')">{{ inv.createdDate }}</td>
           <td *ngIf="isColumnVisible('invoices', 'Party')"><strong>{{ inv.sale.party.partyName }}</strong></td>
@@ -92,6 +92,8 @@
             <th style="padding: 10px; border-bottom: 2px solid var(--border-glass); text-align: left;">Material</th>
             <th style="padding: 10px; border-bottom: 2px solid var(--border-glass); text-align: right;">Qty</th>
             <th style="padding: 10px; border-bottom: 2px solid var(--border-glass); text-align: right;">Rate</th>
+            <th style="padding: 10px; border-bottom: 2px solid var(--border-glass); text-align: right;">CGST (9%)</th>
+            <th style="padding: 10px; border-bottom: 2px solid var(--border-glass); text-align: right;">SGST (9%)</th>
             <th style="padding: 10px; border-bottom: 2px solid var(--border-glass); text-align: right;">Total Amount</th>
           </tr>
         </thead>
@@ -100,14 +102,18 @@
             <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">{{ selectedInvoice.sale.crateType }}</td>
             <td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">{{ selectedInvoice.sale.crateMaterial }}</td>
             <td style="text-align: right; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">{{ selectedInvoice.sale.quantity }}</td>
-            <td style="text-align: right; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">₹{{ selectedInvoice.sale.rate }}</td>
-            <td style="text-align: right; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);"><strong>₹{{ selectedInvoice.sale.totalAmount }}</strong></td>
+            <td style="text-align: right; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">₹{{ selectedInvoice.sale.rate | number:'1.2-2' }}</td>
+            <td style="text-align: right; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">₹{{ (selectedInvoice.sale.cgst || 0) | number:'1.2-2' }}</td>
+            <td style="text-align: right; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">₹{{ (selectedInvoice.sale.sgst || 0) | number:'1.2-2' }}</td>
+            <td style="text-align: right; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);"><strong>₹{{ selectedInvoice.sale.totalAmount | number:'1.2-2' }}</strong></td>
           </tr>
         </tbody>
       </table>
       
-      <div style="text-align: right; margin-top: 10px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
-        <p><strong>Gross Subtotal:</strong> ₹{{ selectedInvoice.sale.totalAmount | number:'1.2-2' }}</p>
+      <div style="text-align: right; margin-top: 10px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; line-height: 1.6;">
+        <p><strong>Taxable Subtotal:</strong> ₹{{ (selectedInvoice.sale.quantity * selectedInvoice.sale.rate) | number:'1.2-2' }}</p>
+        <p><strong>Total GST (18%):</strong> ₹{{ ((selectedInvoice.sale.cgst || 0) + (selectedInvoice.sale.sgst || 0)) | number:'1.2-2' }}</p>
+        <p style="font-size: 16px;"><strong>Grand Total (Inc. GST):</strong> ₹{{ selectedInvoice.sale.totalAmount | number:'1.2-2' }}</p>
         <p style="color: var(--accent-green);"><strong>Amount Paid:</strong> ₹{{ selectedInvoice.sale.paid | number:'1.2-2' }}</p>
         <p style="color: var(--accent-red); font-size: 18px; margin-top: 5px;"><strong>Balance Remaining Due:</strong> ₹{{ selectedInvoice.sale.remaining | number:'1.2-2' }}</p>
       </div>
@@ -118,3 +124,4 @@
     </div>
   </div>
 </div>
+

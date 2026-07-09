@@ -11,9 +11,7 @@ import java.time.LocalDate;
 @Table(name = "Employee_Salary")
 @SQLDelete(sql = "UPDATE Employee_Salary SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE salary_id = ?")
 @Where(clause = "is_deleted = false")
-public class EmployeeSalary {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class EmployeeSalary extends BaseEntity {
     @Column(name = "salary_id")
     private Integer salaryId;
 
@@ -37,13 +35,10 @@ public class EmployeeSalary {
     private String status; // Paid, Pending
 
     @Column(name = "is_deleted")
-    private Boolean isDeleted = false;
 
     @Column(name = "deleted_by", length = 100)
-    private String deletedBy;
 
     @Column(name = "deleted_date")
-    private LocalDate deletedDate;
 
     public EmployeeSalary() {}
 

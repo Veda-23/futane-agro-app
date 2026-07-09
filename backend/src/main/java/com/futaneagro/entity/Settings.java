@@ -4,9 +4,7 @@ import javax.persistence.*;
 
 @Entity
 @Table(name = "Settings")
-public class Settings {
-    @Id
-    @Column(name = "config_key", length = 100)
+public class Settings extends BaseEntity {
     private String configKey;
 
     @Column(name = "config_value", columnDefinition = "TEXT")

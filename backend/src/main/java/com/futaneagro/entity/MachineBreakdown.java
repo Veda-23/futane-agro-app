@@ -10,9 +10,7 @@ import java.time.LocalDate;
 @Table(name = "Machine_Breakdown")
 @SQLDelete(sql = "UPDATE Machine_Breakdown SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE breakdown_id = ?")
 @Where(clause = "is_deleted = false")
-public class MachineBreakdown {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class MachineBreakdown extends BaseEntity {
     @Column(name = "breakdown_id")
     private Integer breakdownId;
 
@@ -33,13 +31,10 @@ public class MachineBreakdown {
     private Integer downtime; // in minutes
 
     @Column(name = "is_deleted")
-    private Boolean isDeleted = false;
 
     @Column(name = "deleted_by", length = 100)
-    private String deletedBy;
 
     @Column(name = "deleted_date")
-    private LocalDate deletedDate;
 
     public MachineBreakdown() {}
 

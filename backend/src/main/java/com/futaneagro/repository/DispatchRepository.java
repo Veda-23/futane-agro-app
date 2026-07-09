@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface DispatchRepository extends JpaRepository<Dispatch, Integer> {
+public interface DispatchRepository extends JpaRepository<Dispatch, String> {
     Optional<Dispatch> findByDispatchNumber(String dispatchNumber);
 }
+

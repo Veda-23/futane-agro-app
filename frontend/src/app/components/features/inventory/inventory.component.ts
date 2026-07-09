@@ -22,7 +22,7 @@ export class InventoryComponent implements OnInit {
   // Pagination & Sort state
   currentPage = 1;
   pageSize = 10;
-  sortField = 'inventoryId';
+  sortField = 'id';
   sortAsc = true;
   tableFilteredCounts: { [key: string]: number } = {};
   showColDropdown: { [key: string]: boolean } = {};
@@ -100,3 +100,4 @@ export class InventoryComponent implements OnInit {
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
 }
+

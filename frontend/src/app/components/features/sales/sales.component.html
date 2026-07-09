@@ -10,8 +10,8 @@
         </div>
         <div class="form-group">
           <label>{{ 'label.select_party' | translate:currentLang }}</label>
-          <select [(ngModel)]="salesForm.partyId" name="salesParty" required>
-            <option *ngFor="let party of parties" [value]="party.partyId">{{ party.partyName }}</option>
+          <select [(ngModel)]="salesForm.id" name="salesParty" required>
+            <option *ngFor="let party of parties" [value]="party.id">{{ party.partyName }}</option>
           </select>
         </div>
         <div class="form-group">
@@ -93,7 +93,7 @@
               <td *ngIf="isColumnVisible('sales', 'Paid')"><span class="badge badge-success">₹{{ sale.paid }}</span></td>
               <td *ngIf="isColumnVisible('sales', 'Remaining')"><span class="badge badge-danger">₹{{ sale.remaining }}</span></td>
               <td *ngIf="isColumnVisible('sales', 'Actions')">
-                <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteSale(sale.saleId)">{{ 'btn.delete' | translate:currentLang }}</button>
+                <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteSale(sale.id)">{{ 'btn.delete' | translate:currentLang }}</button>
               </td>
             </tr>
           </tbody>
@@ -115,3 +115,4 @@
     </div>
   </div>
 </div>
+

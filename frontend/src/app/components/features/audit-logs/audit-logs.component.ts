@@ -24,7 +24,7 @@ export class AuditLogsComponent implements OnInit {
 
   loadData() {
     this.apiService.getAuditLogs().subscribe((res: any[]) => {
-      this.auditLogsList = res.sort((a, b) => b.auditId - a.auditId).slice(0, 50);
+      this.auditLogsList = res.sort((a, b) => b.id - a.id).slice(0, 50);
     });
   }
 
@@ -32,3 +32,4 @@ export class AuditLogsComponent implements OnInit {
     return list;
   }
 }
+

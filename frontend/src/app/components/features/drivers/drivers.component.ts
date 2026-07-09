@@ -23,7 +23,7 @@ export class DriversComponent implements OnInit {
   // Pagination & Sort state
   currentPage = 1;
   pageSize = 10;
-  sortField = 'driverId';
+  sortField = 'id';
   sortAsc = false;
   tableFilteredCounts: { [key: string]: number } = {};
   showColDropdown: { [key: string]: boolean } = {};
@@ -73,7 +73,7 @@ export class DriversComponent implements OnInit {
     });
   }
 
-  deleteDriver(id: number) {
+  deleteDriver(id: string) {
     if (!this.canDelete()) {
       alert("Permission denied");
       return;
@@ -140,3 +140,4 @@ export class DriversComponent implements OnInit {
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
 }
+

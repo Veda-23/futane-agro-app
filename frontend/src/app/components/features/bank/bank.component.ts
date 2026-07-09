@@ -25,7 +25,7 @@ export class BankComponent implements OnInit {
   // Pagination & Sort state
   currentPage = 1;
   pageSize = 10;
-  sortField = 'transactionId';
+  sortField = 'id';
   sortAsc = false;
   tableFilteredCounts: { [key: string]: number } = {};
   showColDropdown: { [key: string]: boolean } = {};
@@ -74,7 +74,7 @@ export class BankComponent implements OnInit {
     });
   }
 
-  deleteBankTransaction(id: number) {
+  deleteBankTransaction(id: string) {
     this.apiService.deleteBankTransaction(id).subscribe(() => {
       this.loadData();
       this.logAudit('Deleted bank transaction ID: ' + id);
@@ -137,3 +137,4 @@ export class BankComponent implements OnInit {
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
 }
+

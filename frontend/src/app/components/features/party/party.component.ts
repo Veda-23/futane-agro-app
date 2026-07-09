@@ -79,7 +79,7 @@ export class PartyComponent implements OnInit {
     });
   }
 
-  deleteParty(id: number) {
+  deleteParty(id: string) {
     if (!this.canDelete()) {
       alert("You don't have permission to delete.");
       return;
@@ -91,7 +91,7 @@ export class PartyComponent implements OnInit {
   }
 
   handlePartyAction(event: any) {
-    if (event.action === 'delete') this.deleteParty(event.item.partyId);
+    if (event.action === 'delete') this.deleteParty(event.item.id);
   }
 
   logAudit(action: string) {
@@ -103,3 +103,4 @@ export class PartyComponent implements OnInit {
     }
   }
 }
+

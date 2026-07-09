@@ -25,3 +25,4 @@ public class AuditLogController {
         return auditLogRepository.save(log);
     }
 }
+

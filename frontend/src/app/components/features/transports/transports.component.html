@@ -12,8 +12,8 @@
       </div>
       <div class="form-group">
         <label>{{ 'label.select_driver' | translate:currentLang }}</label>
-        <select [(ngModel)]="transportsForm.driverId" name="trDriver" required>
-          <option *ngFor="let driver of drivers" [value]="driver.driverId">{{ driver.driverName }}</option>
+        <select [(ngModel)]="transportsForm.id" name="trDriver" required>
+          <option *ngFor="let driver of drivers" [value]="driver.id">{{ driver.driverName }}</option>
         </select>
       </div>
       <div class="form-group">
@@ -27,7 +27,7 @@
       <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'trans.save_btn' | translate:currentLang }}</button>
     </form>
   </div>
-  <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
+  <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px; min-width: 0;">
     <h3>{{ 'trans.records_title' | translate:currentLang }}</h3>
     
     <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
@@ -65,7 +65,7 @@
             <td *ngIf="isColumnVisible('transports', 'Advance')"><span class="badge badge-success">₹{{ tr.advance }}</span></td>
             <td *ngIf="isColumnVisible('transports', 'Remaining')"><span class="badge badge-danger">₹{{ tr.remaining }}</span></td>
             <td *ngIf="isColumnVisible('transports', 'Actions')">
-              <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteTransport(tr.transportId)">{{ 'btn.delete' | translate:currentLang }}</button>
+              <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteTransport(tr.id)">{{ 'btn.delete' | translate:currentLang }}</button>
             </td>
           </tr>
         </tbody>
@@ -86,3 +86,4 @@
     </div>
   </div>
 </div>
+

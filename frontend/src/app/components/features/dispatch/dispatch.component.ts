@@ -19,14 +19,14 @@ export class DispatchComponent implements OnInit {
   salesList: any[] = [];
   dispatchesList: any[] = [];
 
-  dispatchForm = { saleId: '', dispatchDate: '', vehicleNumber: '', driverName: '', deliveryAddress: '', dispatchStatus: 'Pending' };
+  dispatchForm = { id: '', dispatchDate: '', vehicleNumber: '', driverName: '', deliveryAddress: '', dispatchStatus: 'Pending' };
 
   Math = Math;
 
   // Pagination & Sort state
   currentPage = 1;
   pageSize = 10;
-  sortField = 'dispatchId';
+  sortField = 'id';
   sortAsc = false;
   tableFilteredCounts: { [key: string]: number } = {};
   showColDropdown: { [key: string]: boolean } = {};
@@ -62,7 +62,7 @@ export class DispatchComponent implements OnInit {
 
   validateForm(): boolean {
     const f = this.dispatchForm;
-    if (!f.saleId || !f.dispatchDate || !f.vehicleNumber || !f.driverName || !f.deliveryAddress) {
+    if (!f.id || !f.dispatchDate || !f.vehicleNumber || !f.driverName || !f.deliveryAddress) {
       alert('Please fill out all required dispatch fields.');
       return false;
     }
@@ -71,17 +71,17 @@ export class DispatchComponent implements OnInit {
 
   saveDispatch() {
     if (!this.validateForm()) return;
-    const sale = this.salesList.find((s: any) => s.saleId === parseInt(this.dispatchForm.saleId));
+    const sale = this.salesList.find((s: any) => s.id === parseInt(this.dispatchForm.id));
     if (!sale) return;
     const payload = { ...this.dispatchForm, sale };
     this.apiService.createDispatch(payload).subscribe(() => {
       this.loadData();
-      this.logAudit('Created dispatch record for sale ID: ' + this.dispatchForm.saleId);
-      this.dispatchForm = { saleId: '', dispatchDate: '', vehicleNumber: '', driverName: '', deliveryAddress: '', dispatchStatus: 'Pending' };
+      this.logAudit('Created dispatch record for sale ID: ' + this.dispatchForm.id);
+      this.dispatchForm = { id: '', dispatchDate: '', vehicleNumber: '', driverName: '', deliveryAddress: '', dispatchStatus: 'Pending' };
     });
   }
 
-  deleteDispatch(id: number) {
+  deleteDispatch(id: string) {
     this.apiService.deleteDispatch(id).subscribe(() => {
       this.loadData();
       this.logAudit('Deleted dispatch record ID: ' + id);
@@ -144,3 +144,4 @@ export class DispatchComponent implements OnInit {
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
 }
+

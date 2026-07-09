@@ -19,9 +19,7 @@ import java.time.LocalDate;
 })
 @SQLDelete(sql = "UPDATE Party SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE party_id = ?")
 @Where(clause = "is_deleted = false")
-public class Party {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class Party extends BaseEntity {
     @Column(name = "party_id")
     private Integer partyId;
 
@@ -69,13 +67,10 @@ public class Party {
     private String agreementPath;
 
     @Column(name = "is_deleted")
-    private Boolean isDeleted = false;
 
     @Column(name = "deleted_by", length = 100)
-    private String deletedBy;
 
     @Column(name = "deleted_date")
-    private LocalDate deletedDate;
 
     public Party() {}
 

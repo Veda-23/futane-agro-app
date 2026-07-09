@@ -10,9 +10,7 @@ import java.time.LocalDate;
 @Table(name = "PPM")
 @SQLDelete(sql = "UPDATE PPM SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE ppm_id = ?")
 @Where(clause = "is_deleted = false")
-public class Ppm {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class Ppm extends BaseEntity {
     @Column(name = "ppm_id")
     private Integer ppmId;
 
@@ -32,13 +30,10 @@ public class Ppm {
     private java.math.BigDecimal electricityBill;
 
     @Column(name = "is_deleted")
-    private Boolean isDeleted = false;
 
     @Column(name = "deleted_by", length = 100)
-    private String deletedBy;
 
     @Column(name = "deleted_date")
-    private LocalDate deletedDate;
 
     public Ppm() {}
 

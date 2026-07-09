@@ -12,9 +12,7 @@ import java.time.LocalDate;
 })
 @SQLDelete(sql = "UPDATE Machine_Master SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE machine_id = ?")
 @Where(clause = "is_deleted = false")
-public class MachineMaster {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class MachineMaster extends BaseEntity {
     @Column(name = "machine_id")
     private Integer machineId;
 
@@ -34,13 +32,10 @@ public class MachineMaster {
     private String status = "Running"; // Running, Maintenance, Stopped
 
     @Column(name = "is_deleted")
-    private Boolean isDeleted = false;
 
     @Column(name = "deleted_by", length = 100)
-    private String deletedBy;
 
     @Column(name = "deleted_date")
-    private LocalDate deletedDate;
 
     public MachineMaster() {}
 

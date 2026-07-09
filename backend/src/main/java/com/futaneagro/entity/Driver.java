@@ -10,9 +10,7 @@ import java.time.LocalDate;
 @Table(name = "Driver")
 @SQLDelete(sql = "UPDATE Driver SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE driver_id = ?")
 @Where(clause = "is_deleted = false")
-public class Driver {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class Driver extends BaseEntity {
     @Column(name = "driver_id")
     private Integer driverId;
 
@@ -29,13 +27,10 @@ public class Driver {
     private String address;
 
     @Column(name = "is_deleted")
-    private Boolean isDeleted = false;
 
     @Column(name = "deleted_by", length = 100)
-    private String deletedBy;
 
     @Column(name = "deleted_date")
-    private LocalDate deletedDate;
 
     public Driver() {}
 

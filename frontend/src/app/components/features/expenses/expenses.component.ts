@@ -25,7 +25,7 @@ export class ExpensesComponent implements OnInit {
   // Pagination & Sort state
   currentPage = 1;
   pageSize = 10;
-  sortField = 'expenseId';
+  sortField = 'id';
   sortAsc = false;
   tableFilteredCounts: { [key: string]: number } = {};
   showColDropdown: { [key: string]: boolean } = {};
@@ -75,7 +75,7 @@ export class ExpensesComponent implements OnInit {
     });
   }
 
-  deleteExpense(id: number) {
+  deleteExpense(id: string) {
     this.apiService.deleteExpense(id).subscribe(() => {
       this.loadData();
       this.logAudit('Deleted expense ID: ' + id);
@@ -138,3 +138,4 @@ export class ExpensesComponent implements OnInit {
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
 }
+

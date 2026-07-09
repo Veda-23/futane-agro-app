@@ -50,10 +50,10 @@ export class ApiService {
   createParty(party: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/parties`, party);
   }
-  updateParty(id: number, party: any): Observable<any> {
+  updateParty(id: string, party: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/parties/${id}`, party);
   }
-  deleteParty(id: number): Observable<any> {
+  deleteParty(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/parties/${id}`);
   }
 
@@ -64,10 +64,10 @@ export class ApiService {
   createVendor(vendor: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/vendors`, vendor);
   }
-  updateVendor(id: number, vendor: any): Observable<any> {
+  updateVendor(id: string, vendor: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/vendors/${id}`, vendor);
   }
-  deleteVendor(id: number): Observable<any> {
+  deleteVendor(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/vendors/${id}`);
   }
 
@@ -78,10 +78,10 @@ export class ApiService {
   createDriver(driver: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/drivers`, driver);
   }
-  updateDriver(id: number, driver: any): Observable<any> {
+  updateDriver(id: string, driver: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/drivers/${id}`, driver);
   }
-  deleteDriver(id: number): Observable<any> {
+  deleteDriver(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/drivers/${id}`);
   }
 
@@ -92,7 +92,7 @@ export class ApiService {
   createPpd(ppd: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/ppd`, ppd);
   }
-  deletePpd(id: number): Observable<any> {
+  deletePpd(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/ppd/${id}`);
   }
 
@@ -103,7 +103,7 @@ export class ApiService {
   createPpm(ppm: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/ppm`, ppm);
   }
-  deletePpm(id: number): Observable<any> {
+  deletePpm(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/ppm/${id}`);
   }
 
@@ -114,7 +114,7 @@ export class ApiService {
   createRawMaterial(rm: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/raw-materials`, rm);
   }
-  deleteRawMaterial(id: number): Observable<any> {
+  deleteRawMaterial(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/raw-materials/${id}`);
   }
 
@@ -125,7 +125,7 @@ export class ApiService {
   createSale(sale: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/sales`, sale);
   }
-  deleteSale(id: number): Observable<any> {
+  deleteSale(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/sales/${id}`);
   }
 
@@ -136,7 +136,7 @@ export class ApiService {
   createPayment(payment: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/payments`, payment);
   }
-  deletePayment(id: number): Observable<any> {
+  deletePayment(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/payments/${id}`);
   }
 
@@ -152,10 +152,10 @@ export class ApiService {
   createEmployee(employee: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/employees`, employee);
   }
-  updateEmployee(id: number, employee: any): Observable<any> {
+  updateEmployee(id: string, employee: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/employees/${id}`, employee);
   }
-  deleteEmployee(id: number): Observable<any> {
+  deleteEmployee(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/employees/${id}`);
   }
 
@@ -166,10 +166,10 @@ export class ApiService {
   createSalary(salary: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/salaries`, salary);
   }
-  updateSalary(id: number, salary: any): Observable<any> {
+  updateSalary(id: string, salary: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/salaries/${id}`, salary);
   }
-  deleteSalary(id: number): Observable<any> {
+  deleteSalary(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/salaries/${id}`);
   }
 
@@ -180,10 +180,10 @@ export class ApiService {
   createTransport(transport: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/transports`, transport);
   }
-  updateTransport(id: number, transport: any): Observable<any> {
+  updateTransport(id: string, transport: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/transports/${id}`, transport);
   }
-  deleteTransport(id: number): Observable<any> {
+  deleteTransport(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/transports/${id}`);
   }
 
@@ -194,10 +194,10 @@ export class ApiService {
   createInventory(inventory: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/inventory`, inventory);
   }
-  updateInventory(id: number, inventory: any): Observable<any> {
+  updateInventory(id: string, inventory: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/inventory/${id}`, inventory);
   }
-  deleteInventory(id: number): Observable<any> {
+  deleteInventory(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/inventory/${id}`);
   }
 
@@ -216,7 +216,7 @@ export class ApiService {
   createMachine(machine: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/machines`, machine);
   }
-  deleteMachine(id: number): Observable<any> {
+  deleteMachine(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/machines/${id}`);
   }
 
@@ -227,7 +227,7 @@ export class ApiService {
   createMachineBreakdown(bd: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/machine-breakdowns`, bd);
   }
-  deleteMachineBreakdown(id: number): Observable<any> {
+  deleteMachineBreakdown(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/machine-breakdowns/${id}`);
   }
 
@@ -238,10 +238,10 @@ export class ApiService {
   createDispatch(dispatch: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/dispatches`, dispatch);
   }
-  updateDispatch(id: number, dispatch: any): Observable<any> {
+  updateDispatch(id: string, dispatch: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/dispatches/${id}`, dispatch);
   }
-  deleteDispatch(id: number): Observable<any> {
+  deleteDispatch(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/dispatches/${id}`);
   }
 
@@ -252,7 +252,7 @@ export class ApiService {
   createExpense(expense: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/expenses`, expense);
   }
-  deleteExpense(id: number): Observable<any> {
+  deleteExpense(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/expenses/${id}`);
   }
 
@@ -263,7 +263,7 @@ export class ApiService {
   createBankTransaction(txn: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/bank-transactions`, txn);
   }
-  deleteBankTransaction(id: number): Observable<any> {
+  deleteBankTransaction(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/bank-transactions/${id}`);
   }
 
@@ -307,3 +307,4 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/settings/restore`, { filename });
   }
 }
+

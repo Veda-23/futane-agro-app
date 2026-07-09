@@ -62,7 +62,7 @@ export class ProductionComponent implements OnInit {
     });
   }
 
-  deletePpd(id: number) {
+  deletePpd(id: string) {
     this.apiService.deletePpd(id).subscribe(() => {
       this.loadData();
     });
@@ -76,7 +76,7 @@ export class ProductionComponent implements OnInit {
     });
   }
 
-  deletePpm(id: number) {
+  deletePpm(id: string) {
     this.apiService.deletePpm(id).subscribe(() => {
       this.loadData();
     });
@@ -142,3 +142,4 @@ export class ProductionComponent implements OnInit {
     return result.slice(startIndex, startIndex + this.pageSize);
   }
 }
+

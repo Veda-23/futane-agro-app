@@ -135,7 +135,7 @@ export class AppComponent implements OnInit {
   ];
 
   handlePartyAction(event: any) {
-    if (event.action === 'delete') this.deleteParty(event.item.partyId);
+    if (event.action === 'delete') this.deleteParty(event.item.id);
   }
 
   vendorTableColumns = [
@@ -151,7 +151,7 @@ export class AppComponent implements OnInit {
   ];
 
   handleVendorAction(event: any) {
-    if (event.action === 'delete') this.deleteVendor(event.item.vendorId);
+    if (event.action === 'delete') this.deleteVendor(event.item.id);
   }
 
   employeeTableColumns = [
@@ -167,7 +167,7 @@ export class AppComponent implements OnInit {
   ];
 
   handleEmployeeAction(event: any) {
-    if (event.action === 'delete') this.deleteEmployee(event.item.empId);
+    if (event.action === 'delete') this.deleteEmployee(event.item.id);
   }
 
   salesList: any[] = [];
@@ -193,24 +193,21 @@ export class AppComponent implements OnInit {
   vendorForm = { vendorName: '', mobile: '', address: '', gstNumber: '' };
   driverForm = { driverName: '', mobile: '', licenseNumber: '', address: '' };
   employeeForm = { empName: '', empContact: '', salary: 0, address: '', designation: '', joiningDate: '', aadhaarNo: '', bankAccount: '', photoPath: '', aadhaarCardPath: '', bankPassbookPath: '' };
-  salesForm = { date: '', partyId: '', crateType: 'Apple Crate', crateMaterial: 'Plastic', quantity: 0, rate: 0, totalAmount: 0, paid: 0, remaining: 0 };
-  paymentsForm = { partyId: '', invoiceNo: '', amountReceived: 0, paymentMode: 'UPI', paymentDate: '' };
-  rawMaterialsForm = { date: '', materialName: 'HDPE Plastic Granules', vendorId: '', weight: 0, rate: 0, purchaseBillPath: '', weightSlipPath: '' };
-  transportsForm = { date: '', truckNumber: '', driverId: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
-  salariesForm = { empId: '', month: 'May', year: 2026, salaryAmount: 0, status: 'Pending', paidDate: '' };
+  salesForm = { date: '', id: '', crateType: 'Apple Crate', crateMaterial: 'Plastic', quantity: 0, rate: 0, totalAmount: 0, paid: 0, remaining: 0 };
+  paymentsForm = { id: '', invoiceNo: '', amountReceived: 0, paymentMode: 'UPI', paymentDate: '' };
+  rawMaterialsForm = { date: '', materialName: 'HDPE Plastic Granules', id: '', weight: 0, rate: 0, purchaseBillPath: '', weightSlipPath: '' };
+  transportsForm = { date: '', truckNumber: '', id: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
+  salariesForm = { id: '', month: 'May', year: 2026, salaryAmount: 0, status: 'Pending', paidDate: '' };
 
   // New enterprise form models
   machineForm = { machineName: '', machineCode: '', installedDate: '', status: 'Running', capacityPerHour: 0 };
-  breakdownForm = { machineId: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 };
-  dispatchForm = { saleId: '', dispatchDate: '', vehicleNumber: '', driverName: '', deliveryAddress: '', dispatchStatus: 'Pending' };
+  breakdownForm = { id: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 };
+  dispatchForm = { id: '', dispatchDate: '', vehicleNumber: '', driverName: '', deliveryAddress: '', dispatchStatus: 'Pending' };
   expenseForm = { expenseDate: '', category: 'Maintenance', description: '', amount: 0, paidBy: '' };
   bankTxnForm = { transactionDate: '', transactionType: 'Credit', amount: 0, description: '', referenceNo: '' };
 
-  // Power BI Analytics state
-  powerBiEmbedUrl: SafeResourceUrl | null = null;
-  powerBiUrlInput = '';
-  powerBiSimulatorActive = true;
-  activeAnalyticsReport = 'sales';
+  // Grafana Analytics state
+  grafanaEmbedUrl: SafeResourceUrl | null = null;
 
   // Language state
   currentLang: Language = 'en';
@@ -219,7 +216,7 @@ export class AppComponent implements OnInit {
   selectedInvoice: any = null;
 
   // Reports state
-  reportFilter = { type: 'production', date: '', partyId: '' };
+  reportFilter = { type: 'production', date: '', id: '' };
   filteredReportData: any[] = [];
 
   customBackendUrl = '';
@@ -250,14 +247,18 @@ export class AppComponent implements OnInit {
 
     this.customBackendUrl = localStorage.getItem('backend_url') || environment.apiUrl;
 
+    if ((environment as any).grafanaUrl) {
+      this.grafanaEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl((environment as any).grafanaUrl);
+    }
+
     this.initSettingsList();
 
-    // Check local storage for session
-    const cachedUser = localStorage.getItem('user');
+    // Check session storage for session
+    const cachedUser = sessionStorage.getItem('user');
     if (cachedUser) {
       this.loggedInUser = JSON.parse(cachedUser);
       this.isAuthenticated = true;
-      this.loginTime = localStorage.getItem('loginTime') || '';
+      this.loginTime = sessionStorage.getItem('loginTime') || '';
       this.updateAccessibleTabs();
       this.resetIdleTimer();
       this.loadAllData();
@@ -319,7 +320,8 @@ export class AppComponent implements OnInit {
         'dashboard', 'production', 'monthly-production', 'parties', 'sales',
         'payments', 'raw-materials', 'vendors', 'inventory', 'employees',
         'salaries', 'transports', 'drivers', 'machines', 'dispatch',
-        'expenses', 'bank', 'invoices', 'billinghub', 'reports', 'analytics'
+        'expenses', 'bank', 'invoices', 'billinghub', 'reports', 'analytics',
+        'settings'
       ];
       adminTabs.forEach(t => this.accessibleTabs[t] = true);
     } else if (role === 'MANAGER') {
@@ -425,14 +427,15 @@ export class AppComponent implements OnInit {
   completeLogin(res: any) {
     this.loggedInUser = res;
     this.isAuthenticated = true;
-    localStorage.setItem('user', JSON.stringify(res));
+    sessionStorage.setItem('user', JSON.stringify(res));
     // Store JWT token for the interceptor
     if (res.token) {
-      localStorage.setItem('jwtToken', res.token);
+      sessionStorage.setItem('jwtToken', res.token);
+      document.cookie = `erp_session_cookie=${res.token}; path=/; SameSite=Strict`;
     }
     const timeStr = new Date().toString();
     this.loginTime = timeStr;
-    localStorage.setItem('loginTime', timeStr);
+    sessionStorage.setItem('loginTime', timeStr);
     this.updateAccessibleTabs();
     this.resetIdleTimer();
     this.loadAllData();
@@ -443,9 +446,10 @@ export class AppComponent implements OnInit {
     this.logAudit("Logged out");
     this.isAuthenticated = false;
     this.loggedInUser = null;
-    localStorage.removeItem('user');
-    localStorage.removeItem('jwtToken');
-    localStorage.removeItem('loginTime');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('jwtToken');
+    sessionStorage.removeItem('loginTime');
+    document.cookie = "erp_session_cookie=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     this.loginTime = '';
     this.sessionDuration = '';
 
@@ -500,28 +504,49 @@ export class AppComponent implements OnInit {
     this.apiService.getTransports().subscribe(list => this.transportsList = list);
     this.apiService.getSalaries().subscribe(list => this.salariesList = list);
     this.apiService.getInvoices().subscribe(list => this.invoicesList = list);
-    this.apiService.getAuditLogs().subscribe(list => this.auditLogsList = list);
     // Enterprise modules
     this.apiService.getMachines().subscribe(list => this.machinesList = list);
     this.apiService.getMachineBreakdowns().subscribe(list => this.machineBreakdownsList = list);
     this.apiService.getDispatches().subscribe(list => this.dispatchesList = list);
     this.apiService.getExpenses().subscribe(list => { this.expensesList = list; });
     this.apiService.getBankTransactions().subscribe(list => this.bankTransactionsList = list);
-    this.apiService.getUsers().subscribe(list => this.usersList = list);
-    // Power BI settings
-    this.apiService.getSettings().subscribe((settings: any[]) => {
-      const biSetting = settings.find((s: any) => s.settingKey === 'powerbi_embed_url');
-      if (biSetting && biSetting.settingValue) {
-        this.powerBiUrlInput = biSetting.settingValue;
-        this.powerBiSimulatorActive = false;
-        this.powerBiEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(biSetting.settingValue);
-      }
-    });
+
+    if (this.loggedInUser && this.loggedInUser.role === 'SUPER_ADMIN') {
+      this.apiService.getAuditLogs().subscribe({
+        next: (list) => this.auditLogsList = list,
+        error: (err) => console.warn('Failed to load audit logs', err)
+      });
+      this.apiService.getUsers().subscribe({
+        next: (list) => this.usersList = list,
+        error: (err) => console.warn('Failed to load users list', err)
+      });
+      this.apiService.getSettings().subscribe({
+        next: (list) => {
+          if (list && list.length > 0) {
+            list.forEach((dbSetting: any) => {
+              const match = this.settingsList.find(s => s.key === dbSetting.settingKey);
+              if (match) {
+                if (match.type === 'boolean') {
+                  match.value = dbSetting.settingValue === 'true';
+                } else if (match.type === 'number') {
+                  match.value = Number(dbSetting.settingValue);
+                } else {
+                  match.value = dbSetting.settingValue;
+                }
+              }
+            });
+          }
+        },
+        error: (err) => console.warn('Failed to load settings from db', err)
+      });
+    }
 
     // Load other async ops
     setTimeout(() => {
       this.onBillTypeChange();
-      this.loadBackups();
+      if (this.loggedInUser && this.loggedInUser.role === 'SUPER_ADMIN') {
+        this.loadBackups();
+      }
     }, 500);
   }
 
@@ -554,7 +579,7 @@ export class AppComponent implements OnInit {
     });
   }
 
-  deletePpd(id: number) {
+  deletePpd(id: string) {
     this.apiService.deletePpd(id).subscribe(() => {
       this.loadAllData();
       this.logAudit("Deleted production entry ID: " + id);
@@ -570,7 +595,7 @@ export class AppComponent implements OnInit {
     });
   }
 
-  deletePpm(id: number) {
+  deletePpm(id: string) {
     this.apiService.deletePpm(id).subscribe(() => {
       this.loadAllData();
       this.logAudit("Deleted monthly production ID: " + id);
@@ -587,7 +612,7 @@ export class AppComponent implements OnInit {
     });
   }
 
-  deleteParty(id: number) {
+  deleteParty(id: string) {
     this.apiService.deleteParty(id).subscribe(() => {
       this.loadAllData();
       this.logAudit("Deleted party ID: " + id);
@@ -603,7 +628,7 @@ export class AppComponent implements OnInit {
     });
   }
 
-  deleteVendor(id: number) {
+  deleteVendor(id: string) {
     this.apiService.deleteVendor(id).subscribe(() => {
       this.loadAllData();
       this.logAudit("Deleted vendor ID: " + id);
@@ -619,7 +644,7 @@ export class AppComponent implements OnInit {
     });
   }
 
-  deleteDriver(id: number) {
+  deleteDriver(id: string) {
     this.apiService.deleteDriver(id).subscribe(() => {
       this.loadAllData();
       this.logAudit("Deleted driver ID: " + id);
@@ -635,7 +660,7 @@ export class AppComponent implements OnInit {
     });
   }
 
-  deleteEmployee(id: number) {
+  deleteEmployee(id: string) {
     this.apiService.deleteEmployee(id).subscribe(() => {
       this.loadAllData();
       this.logAudit("Deleted employee ID: " + id);
@@ -645,7 +670,7 @@ export class AppComponent implements OnInit {
   saveSales() {
     if (!this.validateForm('sales')) return;
     // Find matching party object
-    const party = this.parties.find(p => p.partyId === parseInt(this.salesForm.partyId));
+    const party = this.parties.find(p => p.id === parseInt(this.salesForm.id));
     if (!party) return;
 
     const payload = {
@@ -661,11 +686,11 @@ export class AppComponent implements OnInit {
     this.apiService.createSale(payload).subscribe(() => {
       this.loadAllData();
       this.logAudit("Created sales invoice for party: " + party.partyName);
-      this.salesForm = { date: '', partyId: '', crateType: 'Apple Crate', crateMaterial: 'Plastic', quantity: 0, rate: 0, totalAmount: 0, paid: 0, remaining: 0 };
+      this.salesForm = { date: '', id: '', crateType: 'Apple Crate', crateMaterial: 'Plastic', quantity: 0, rate: 0, totalAmount: 0, paid: 0, remaining: 0 };
     });
   }
 
-  deleteSale(id: number) {
+  deleteSale(id: string) {
     this.apiService.deleteSale(id).subscribe(() => {
       this.loadAllData();
       this.logAudit("Deleted sale ID: " + id);
@@ -674,7 +699,7 @@ export class AppComponent implements OnInit {
 
   savePayment() {
     if (!this.validateForm('payment')) return;
-    const party = this.parties.find(p => p.partyId === parseInt(this.paymentsForm.partyId));
+    const party = this.parties.find(p => p.id === parseInt(this.paymentsForm.id));
     if (!party) return;
 
     const payload = {
@@ -688,11 +713,11 @@ export class AppComponent implements OnInit {
     this.apiService.createPayment(payload).subscribe(() => {
       this.loadAllData();
       this.logAudit("Received payment from party: " + party.partyName);
-      this.paymentsForm = { partyId: '', invoiceNo: '', amountReceived: 0, paymentMode: 'UPI', paymentDate: '' };
+      this.paymentsForm = { id: '', invoiceNo: '', amountReceived: 0, paymentMode: 'UPI', paymentDate: '' };
     });
   }
 
-  deletePayment(id: number) {
+  deletePayment(id: string) {
     this.apiService.deletePayment(id).subscribe(() => {
       this.loadAllData();
       this.logAudit("Deleted payment ID: " + id);
@@ -701,7 +726,7 @@ export class AppComponent implements OnInit {
 
   saveRawMaterial() {
     if (!this.validateForm('rawMaterial')) return;
-    const vendor = this.vendors.find(v => v.vendorId === parseInt(this.rawMaterialsForm.vendorId));
+    const vendor = this.vendors.find(v => v.id === parseInt(this.rawMaterialsForm.id));
     if (!vendor) return;
 
     const payload = {
@@ -717,11 +742,11 @@ export class AppComponent implements OnInit {
     this.apiService.createRawMaterial(payload).subscribe(() => {
       this.loadAllData();
       this.logAudit("Purchased raw materials from vendor: " + vendor.vendorName);
-      this.rawMaterialsForm = { date: '', materialName: 'HDPE Plastic Granules', vendorId: '', weight: 0, rate: 0, purchaseBillPath: '', weightSlipPath: '' };
+      this.rawMaterialsForm = { date: '', materialName: 'HDPE Plastic Granules', id: '', weight: 0, rate: 0, purchaseBillPath: '', weightSlipPath: '' };
     });
   }
 
-  deleteRawMaterial(id: number) {
+  deleteRawMaterial(id: string) {
     this.apiService.deleteRawMaterial(id).subscribe(() => {
       this.loadAllData();
       this.logAudit("Deleted raw material ID: " + id);
@@ -730,7 +755,7 @@ export class AppComponent implements OnInit {
 
   saveTransport() {
     if (!this.validateForm('transport')) return;
-    const driver = this.drivers.find(d => d.driverId === parseInt(this.transportsForm.driverId));
+    const driver = this.drivers.find(d => d.id === parseInt(this.transportsForm.id));
     if (!driver) return;
 
     const payload = {
@@ -746,11 +771,11 @@ export class AppComponent implements OnInit {
     this.apiService.createTransport(payload).subscribe(() => {
       this.loadAllData();
       this.logAudit("Logged transport rental for truck: " + this.transportsForm.truckNumber);
-      this.transportsForm = { date: '', truckNumber: '', driverId: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
+      this.transportsForm = { date: '', truckNumber: '', id: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
     });
   }
 
-  deleteTransport(id: number) {
+  deleteTransport(id: string) {
     this.apiService.deleteTransport(id).subscribe(() => {
       this.loadAllData();
       this.logAudit("Deleted transport record ID: " + id);
@@ -759,7 +784,7 @@ export class AppComponent implements OnInit {
 
   saveSalary() {
     if (!this.validateForm('salary')) return;
-    const emp = this.employees.find(e => e.empId === parseInt(this.salariesForm.empId));
+    const emp = this.employees.find(e => e.id === parseInt(this.salariesForm.id));
     if (!emp) return;
 
     const payload = {
@@ -774,11 +799,11 @@ export class AppComponent implements OnInit {
     this.apiService.createSalary(payload).subscribe(() => {
       this.loadAllData();
       this.logAudit("Generated salary release log for employee: " + emp.empName);
-      this.salariesForm = { empId: '', month: 'May', year: 2026, salaryAmount: 0, status: 'Pending', paidDate: '' };
+      this.salariesForm = { id: '', month: 'May', year: 2026, salaryAmount: 0, status: 'Pending', paidDate: '' };
     });
   }
 
-  deleteSalary(id: number) {
+  deleteSalary(id: string) {
     this.apiService.deleteSalary(id).subscribe(() => {
       this.loadAllData();
       this.logAudit("Deleted salary record ID: " + id);
@@ -800,8 +825,8 @@ export class AppComponent implements OnInit {
       if (filter.date) {
         this.filteredReportData = this.filteredReportData.filter(d => d.date === filter.date);
       }
-      if (filter.partyId) {
-        this.filteredReportData = this.filteredReportData.filter(d => d.party.partyId === parseInt(filter.partyId));
+      if (filter.id) {
+        this.filteredReportData = this.filteredReportData.filter(d => d.party.id === parseInt(filter.id));
       }
     } else if (filter.type === 'inventory') {
       this.filteredReportData = [...this.inventoryList];
@@ -825,33 +850,33 @@ export class AppComponent implements OnInit {
     this.logAudit("Downloaded PDF Invoice: " + inv.invoiceNo);
     const doc = new jsPDF();
 
-    doc.setFont("Outfit", "bold");
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(22);
     doc.text("FUTANE AGRO INDUSTRIES PVT. LTD.", 105, 20, { align: "center" });
 
     doc.setFontSize(10);
-    doc.setFont("Outfit", "normal");
+    doc.setFont("helvetica", "normal");
     doc.text("Manufacturers of High-Quality Plastic Crates & Containers", 105, 26, { align: "center" });
     doc.text("Factory: Gate No 144, Hadapsar Industrial Area, Pune - 411028", 105, 31, { align: "center" });
     doc.line(15, 36, 195, 36);
 
     doc.setFontSize(11);
-    doc.setFont("Outfit", "bold");
+    doc.setFont("helvetica", "bold");
     doc.text("INVOICE DETAILS", 15, 45);
-    doc.setFont("Outfit", "normal");
+    doc.setFont("helvetica", "normal");
     doc.text(`Invoice No: ${inv.invoiceNo}`, 15, 52);
     doc.text(`Invoice Date: ${inv.createdDate}`, 15, 58);
     
-    doc.setFont("Outfit", "bold");
+    doc.setFont("helvetica", "bold");
     doc.text("BILLED TO:", 115, 45);
-    doc.setFont("Outfit", "normal");
+    doc.setFont("helvetica", "normal");
     doc.text(`Name: ${inv.sale.party.partyName}`, 115, 52);
     doc.text(`Address: ${inv.sale.party.partyAddress}`, 115, 58);
     doc.text(`GSTIN: ${inv.sale.party.gstNumber || 'N/A'}`, 115, 64);
 
     doc.line(15, 72, 195, 72);
 
-    doc.setFont("Outfit", "bold");
+    doc.setFont("helvetica", "bold");
     doc.text("Description", 20, 80);
     doc.text("Material", 75, 80);
     doc.text("Qty", 105, 80);
@@ -859,7 +884,7 @@ export class AppComponent implements OnInit {
     doc.text("Total (INR)", 165, 80);
     doc.line(15, 84, 195, 84);
 
-    doc.setFont("Outfit", "normal");
+    doc.setFont("helvetica", "normal");
     doc.text(`${inv.sale.crateType}`, 20, 92);
     doc.text(`${inv.sale.crateMaterial}`, 75, 92);
     doc.text(`${inv.sale.quantity}`, 105, 92);
@@ -868,17 +893,17 @@ export class AppComponent implements OnInit {
 
     doc.line(15, 98, 195, 98);
 
-    doc.setFont("Outfit", "bold");
+    doc.setFont("helvetica", "bold");
     doc.text("Summary:", 115, 110);
-    doc.setFont("Outfit", "normal");
+    doc.setFont("helvetica", "normal");
     doc.text(`Sub-Total: INR ${inv.sale.totalAmount.toFixed(2)}`, 115, 117);
     doc.text(`Paid Amount: INR ${inv.sale.paid.toFixed(2)}`, 115, 123);
     
-    doc.setFont("Outfit", "bold");
+    doc.setFont("helvetica", "bold");
     doc.text(`Balance Due: INR ${inv.sale.remaining.toFixed(2)}`, 115, 130);
 
     doc.setFontSize(9);
-    doc.setFont("Outfit", "normal");
+    doc.setFont("helvetica", "normal");
     doc.text("Thank you for your business!", 105, 150, { align: "center" });
     doc.text("Note: This is a computer-generated invoice and requires no physical signature.", 105, 155, { align: "center" });
 
@@ -895,7 +920,7 @@ export class AppComponent implements OnInit {
     });
   }
 
-  deleteMachine(id: number) {
+  deleteMachine(id: string) {
     this.apiService.deleteMachine(id).subscribe(() => {
       this.loadAllData();
       this.logAudit('Deleted machine ID: ' + id);
@@ -904,17 +929,17 @@ export class AppComponent implements OnInit {
 
   saveBreakdown() {
     if (!this.validateForm('breakdown')) return;
-    const machine = this.machinesList.find((m: any) => m.machineId === parseInt(this.breakdownForm.machineId));
+    const machine = this.machinesList.find((m: any) => m.id === parseInt(this.breakdownForm.id));
     if (!machine) return;
     const payload = { ...this.breakdownForm, machine };
     this.apiService.createMachineBreakdown(payload).subscribe(() => {
       this.loadAllData();
       this.logAudit('Logged breakdown for machine: ' + machine.machineName);
-      this.breakdownForm = { machineId: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 };
+      this.breakdownForm = { id: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 };
     });
   }
 
-  deleteBreakdown(id: number) {
+  deleteBreakdown(id: string) {
     this.apiService.deleteMachineBreakdown(id).subscribe(() => {
       this.loadAllData();
       this.logAudit('Deleted breakdown log ID: ' + id);
@@ -924,17 +949,17 @@ export class AppComponent implements OnInit {
   // --- Dispatch Handlers ---
   saveDispatch() {
     if (!this.validateForm('dispatch')) return;
-    const sale = this.salesList.find((s: any) => s.saleId === parseInt(this.dispatchForm.saleId));
+    const sale = this.salesList.find((s: any) => s.id === parseInt(this.dispatchForm.id));
     if (!sale) return;
     const payload = { ...this.dispatchForm, sale };
     this.apiService.createDispatch(payload).subscribe(() => {
       this.loadAllData();
-      this.logAudit('Created dispatch record for sale ID: ' + this.dispatchForm.saleId);
-      this.dispatchForm = { saleId: '', dispatchDate: '', vehicleNumber: '', driverName: '', deliveryAddress: '', dispatchStatus: 'Pending' };
+      this.logAudit('Created dispatch record for sale ID: ' + this.dispatchForm.id);
+      this.dispatchForm = { id: '', dispatchDate: '', vehicleNumber: '', driverName: '', deliveryAddress: '', dispatchStatus: 'Pending' };
     });
   }
 
-  deleteDispatch(id: number) {
+  deleteDispatch(id: string) {
     this.apiService.deleteDispatch(id).subscribe(() => {
       this.loadAllData();
       this.logAudit('Deleted dispatch record ID: ' + id);
@@ -952,7 +977,7 @@ export class AppComponent implements OnInit {
     });
   }
 
-  deleteExpense(id: number) {
+  deleteExpense(id: string) {
     this.apiService.deleteExpense(id).subscribe(() => {
       this.loadAllData();
       this.logAudit('Deleted expense ID: ' + id);
@@ -969,28 +994,15 @@ export class AppComponent implements OnInit {
     });
   }
 
-  deleteBankTransaction(id: number) {
+  deleteBankTransaction(id: string) {
     this.apiService.deleteBankTransaction(id).subscribe(() => {
       this.loadAllData();
       this.logAudit('Deleted bank transaction ID: ' + id);
     });
   }
 
-  // --- Power BI Analytics ---
-  savePowerBiUrl() {
-    if (!this.powerBiUrlInput.trim()) return;
-    this.apiService.saveSetting('powerbi_embed_url', this.powerBiUrlInput).subscribe(() => {
-      this.powerBiEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.powerBiUrlInput);
-      this.powerBiSimulatorActive = false;
-      this.logAudit('Updated Power BI embed URL');
-    });
-  }
-
-  clearPowerBiUrl() {
-    this.powerBiUrlInput = '';
-    this.powerBiEmbedUrl = null;
-    this.powerBiSimulatorActive = true;
-  }
+  // --- Grafana Analytics ---
+  // Url configuration is fully managed via environments.
 
   // 80+ Settings Array Initialization
   initSettingsList() {
@@ -1244,19 +1256,19 @@ export class AppComponent implements OnInit {
 
   getRecordId(item: any): any {
     if (!item) return null;
-    if (item.saleId !== undefined) return item.saleId;
-    if (item.dispatchId !== undefined) return item.dispatchId;
+    if (item.id !== undefined) return item.id;
+    if (item.id !== undefined) return item.id;
     if (item.paymentId !== undefined) return item.paymentId;
     if (item.rawMaterialId !== undefined) return item.rawMaterialId;
-    if (item.transportId !== undefined) return item.transportId;
-    if (item.salaryId !== undefined) return item.salaryId;
+    if (item.id !== undefined) return item.id;
+    if (item.id !== undefined) return item.id;
     return null;
   }
 
   onBillRecordChange() {
     const list = this.getBillSourceList();
     const id = this.selectedBillRecordId;
-    this.selectedBillRecord = list.find(item => String(this.getRecordId(item)) === id) || null;
+    this.selectedBillRecord = list.find(item => String(this.getRecordId(item)) === String(id)) || null;
   }
 
   // WhatsApp invoice sharing
@@ -1430,7 +1442,7 @@ export class AppComponent implements OnInit {
     // Party filter
     if (this.filterPartyId) {
       result = result.filter(item => {
-        const pId = item.partyId || (item.party && item.party.partyId) || (item.sale && item.sale.party && item.sale.party.partyId);
+        const pId = item.id || (item.party && item.party.id) || (item.sale && item.sale.party && item.sale.party.id);
         return pId && String(pId) === String(this.filterPartyId);
       });
     }
@@ -1438,7 +1450,7 @@ export class AppComponent implements OnInit {
     // Employee filter
     if (this.filterEmployeeId) {
       result = result.filter(item => {
-        const eId = item.empId || (item.employee && item.employee.empId);
+        const eId = item.id || (item.employee && item.employee.id);
         return eId && String(eId) === String(this.filterEmployeeId);
       });
     }
@@ -1823,7 +1835,7 @@ export class AppComponent implements OnInit {
       const f = this.salesForm;
       if (!f.date) { alert('Sales date is required.'); return false; }
       if (this.isFutureDate(f.date)) { alert('Sales date cannot be in the future.'); return false; }
-      if (!f.partyId) { alert('Please select a customer party.'); return false; }
+      if (!f.id) { alert('Please select a customer party.'); return false; }
       if (f.quantity <= 0) { alert('Quantity must be greater than zero.'); return false; }
       if (f.rate <= 0) { alert('Rate must be greater than zero.'); return false; }
       if (f.paid < 0) { alert('Paid amount cannot be negative.'); return false; }
@@ -1833,14 +1845,14 @@ export class AppComponent implements OnInit {
       const f = this.paymentsForm;
       if (!f.paymentDate) { alert('Payment date is required.'); return false; }
       if (this.isFutureDate(f.paymentDate)) { alert('Payment date cannot be in the future.'); return false; }
-      if (!f.partyId) { alert('Please select a customer party.'); return false; }
+      if (!f.id) { alert('Please select a customer party.'); return false; }
       if (f.amountReceived <= 0) { alert('Payment amount must be greater than zero.'); return false; }
     }
     if (formType === 'rawMaterial') {
       const f = this.rawMaterialsForm;
       if (!f.date) { alert('Date is required.'); return false; }
       if (this.isFutureDate(f.date)) { alert('Date cannot be in the future.'); return false; }
-      if (!f.vendorId) { alert('Please select a supplier vendor.'); return false; }
+      if (!f.id) { alert('Please select a supplier vendor.'); return false; }
       if (f.weight <= 0) { alert('Weight must be greater than zero.'); return false; }
       if (f.rate <= 0) { alert('Rate must be greater than zero.'); return false; }
     }
@@ -1849,14 +1861,14 @@ export class AppComponent implements OnInit {
       if (!f.date) { alert('Date is required.'); return false; }
       if (this.isFutureDate(f.date)) { alert('Date cannot be in the future.'); return false; }
       if (!f.truckNumber.trim()) { alert('Truck number is required.'); return false; }
-      if (!f.driverId) { alert('Please select a driver.'); return false; }
+      if (!f.id) { alert('Please select a driver.'); return false; }
       if (f.rent <= 0) { alert('Rent must be greater than zero.'); return false; }
       if (f.advance < 0) { alert('Advance cannot be negative.'); return false; }
       if (f.advance > f.rent) { alert('Advance cannot exceed total rent.'); return false; }
     }
     if (formType === 'salary') {
       const f = this.salariesForm;
-      if (!f.empId) { alert('Please select an employee.'); return false; }
+      if (!f.id) { alert('Please select an employee.'); return false; }
       if (f.salaryAmount <= 0) { alert('Salary amount must be greater than zero.'); return false; }
       if (f.paidDate && this.isFutureDate(f.paidDate)) { alert('Payment date cannot be in the future.'); return false; }
     }
@@ -1869,7 +1881,7 @@ export class AppComponent implements OnInit {
     }
     if (formType === 'breakdown') {
       const f = this.breakdownForm;
-      if (!f.machineId) { alert('Please select a machine.'); return false; }
+      if (!f.id) { alert('Please select a machine.'); return false; }
       if (!f.breakdownDate) { alert('Breakdown date is required.'); return false; }
       if (this.isFutureDate(f.breakdownDate)) { alert('Breakdown date cannot be in the future.'); return false; }
       if (f.downtimeHours < 0) { alert('Downtime hours cannot be negative.'); return false; }
@@ -1883,7 +1895,7 @@ export class AppComponent implements OnInit {
     }
     if (formType === 'dispatch') {
       const f = this.dispatchForm;
-      if (!f.saleId) { alert('Please select a sales order.'); return false; }
+      if (!f.id) { alert('Please select a sales order.'); return false; }
       if (!f.dispatchDate) { alert('Dispatch date is required.'); return false; }
       if (this.isFutureDate(f.dispatchDate)) { alert('Dispatch date cannot be in the future.'); return false; }
       if (!f.vehicleNumber.trim()) { alert('Vehicle number is required.'); return false; }
@@ -1922,8 +1934,13 @@ export class AppComponent implements OnInit {
     const s = this.settingsList.find(item => item.key === key);
     if (s) {
       s.value = val;
-      this.apiService.saveSetting(key, String(val)).subscribe();
+      if (this.loggedInUser && this.loggedInUser.role === 'SUPER_ADMIN') {
+        this.apiService.saveSetting(key, String(val)).subscribe({
+          error: (err) => console.warn('Failed to save setting to backend', err)
+        });
+      }
     }
   }
 }
+
 

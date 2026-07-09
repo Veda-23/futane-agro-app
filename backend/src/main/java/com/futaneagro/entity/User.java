@@ -5,9 +5,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "Users")
-public class User {
-    @Id
-    @Column(name = "username", length = 100)
+public class User extends BaseEntity {
     private String username;
 
     @Column(name = "password", nullable = false)

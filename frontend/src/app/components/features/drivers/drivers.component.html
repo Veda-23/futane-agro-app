@@ -41,7 +41,7 @@
       <table>
         <thead>
           <tr>
-            <th *ngIf="isColumnVisible('drivers', 'ID')" (click)="setSort('driverId')" style="cursor:pointer;">Driver ID <span *ngIf="sortField === 'driverId'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('drivers', 'ID')" (click)="setSort('id')" style="cursor:pointer;">Driver ID <span *ngIf="sortField === 'id'">{{ sortAsc ? '▲' : '▼' }}</span></th>
             <th *ngIf="isColumnVisible('drivers', 'Name')" (click)="setSort('driverName')" style="cursor:pointer;">{{ 'driver.name' | translate:currentLang }} <span *ngIf="sortField === 'driverName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
             <th *ngIf="isColumnVisible('drivers', 'Mobile')" (click)="setSort('mobile')" style="cursor:pointer;">{{ 'driver.mobile' | translate:currentLang }} <span *ngIf="sortField === 'mobile'">{{ sortAsc ? '▲' : '▼' }}</span></th>
             <th *ngIf="isColumnVisible('drivers', 'License')" (click)="setSort('licenseNumber')" style="cursor:pointer;">{{ 'driver.license' | translate:currentLang }} <span *ngIf="sortField === 'licenseNumber'">{{ sortAsc ? '▲' : '▼' }}</span></th>
@@ -51,13 +51,13 @@
         </thead>
         <tbody>
           <tr *ngFor="let driver of getProcessedList(drivers, 'drivers')">
-            <td *ngIf="isColumnVisible('drivers', 'ID')">{{ driver.driverId }}</td>
+            <td *ngIf="isColumnVisible('drivers', 'ID')">{{ driver.id }}</td>
             <td *ngIf="isColumnVisible('drivers', 'Name')"><strong>{{ driver.driverName }}</strong></td>
             <td *ngIf="isColumnVisible('drivers', 'Mobile')">{{ driver.mobile }}</td>
             <td *ngIf="isColumnVisible('drivers', 'License')"><code>{{ driver.licenseNumber }}</code></td>
             <td *ngIf="isColumnVisible('drivers', 'Address')">{{ driver.address }}</td>
             <td *ngIf="isColumnVisible('drivers', 'Actions')">
-              <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteDriver(driver.driverId)">{{ 'btn.delete' | translate:currentLang }}</button>
+              <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteDriver(driver.id)">{{ 'btn.delete' | translate:currentLang }}</button>
             </td>
           </tr>
         </tbody>
@@ -78,3 +78,4 @@
     </div>
   </div>
 </div>
+

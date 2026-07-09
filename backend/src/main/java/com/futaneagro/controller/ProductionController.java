@@ -89,7 +89,7 @@ public class ProductionController {
     }
 
     @DeleteMapping("/ppd/{id}")
-    public void deletePpd(@PathVariable Integer id) {
+    public void deletePpd(@PathVariable String id) {
         ppdRepository.findById(id).ifPresent(ppd -> {
             String oldState = toJson(ppd);
             // Revert Inventory change
@@ -97,9 +97,9 @@ public class ProductionController {
                 inv.setProducedStock(Math.max(0, inv.getProducedStock() - ppd.getSuccessful()));
                 inventoryRepository.save(inv);
             });
-            ppd.setIsDeleted(true);
-            ppd.setDeletedBy(getCurrentUser());
-            ppd.setDeletedDate(LocalDate.now());
+            ppd.setIsActive(false);
+            ppd.setUpdatedBy(getCurrentUser());
+            ppd.setUpdatedAt(LocalDate.now());
             ppdRepository.save(ppd);
             saveAuditLog("Soft-deleted production entry ID: " + id, "PPD", oldState, null);
         });
@@ -119,12 +119,12 @@ public class ProductionController {
     }
 
     @DeleteMapping("/ppm/{id}")
-    public void deletePpm(@PathVariable Integer id) {
+    public void deletePpm(@PathVariable String id) {
         ppmRepository.findById(id).ifPresent(ppm -> {
             String oldState = toJson(ppm);
-            ppm.setIsDeleted(true);
-            ppm.setDeletedBy(getCurrentUser());
-            ppm.setDeletedDate(LocalDate.now());
+            ppm.setIsActive(false);
+            ppm.setUpdatedBy(getCurrentUser());
+            ppm.setUpdatedAt(LocalDate.now());
             ppmRepository.save(ppm);
             saveAuditLog("Soft-deleted monthly production summary ID: " + id, "PPM", oldState, null);
         });
@@ -144,14 +144,16 @@ public class ProductionController {
     }
 
     @DeleteMapping("/raw-materials/{id}")
-    public void deleteRawMaterial(@PathVariable Integer id) {
+    public void deleteRawMaterial(@PathVariable String id) {
         rawMaterialRepository.findById(id).ifPresent(rm -> {
             String oldState = toJson(rm);
-            rm.setIsDeleted(true);
-            rm.setDeletedBy(getCurrentUser());
-            rm.setDeletedDate(LocalDate.now());
+            rm.setIsActive(false);
+            rm.setUpdatedBy(getCurrentUser());
+            rm.setUpdatedAt(LocalDate.now());
             rawMaterialRepository.save(rm);
             saveAuditLog("Soft-deleted raw material ID: " + id, "Raw_Material", oldState, null);
         });
     }
 }
+
+

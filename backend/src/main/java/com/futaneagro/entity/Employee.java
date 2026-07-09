@@ -19,9 +19,7 @@ import java.time.LocalDate;
 })
 @SQLDelete(sql = "UPDATE Employees SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE emp_id = ?")
 @Where(clause = "is_deleted = false")
-public class Employee {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class Employee extends BaseEntity {
     @Column(name = "emp_id")
     private Integer empId;
 
@@ -65,13 +63,10 @@ public class Employee {
     private String bankPassbookPath;
 
     @Column(name = "is_deleted")
-    private Boolean isDeleted = false;
 
     @Column(name = "deleted_by", length = 100)
-    private String deletedBy;
 
     @Column(name = "deleted_date")
-    private LocalDate deletedDate;
 
     public Employee() {}
 
