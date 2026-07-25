@@ -92,7 +92,7 @@ public class HRController {
             String oldState = toJson(emp);
             emp.setIsActive(false);
             emp.setUpdatedBy(getCurrentUser());
-            emp.setUpdatedAt(LocalDate.now());
+            emp.setUpdatedAt(java.time.LocalDateTime.now());
             employeeRepository.save(emp);
             saveAuditLog("Soft-deleted employee ID: " + id, "Employees", oldState, null);
         });
@@ -133,7 +133,7 @@ public class HRController {
             String oldState = toJson(salary);
             salary.setIsActive(false);
             salary.setUpdatedBy(getCurrentUser());
-            salary.setUpdatedAt(LocalDate.now());
+            salary.setUpdatedAt(java.time.LocalDateTime.now());
             employeeSalaryRepository.save(salary);
             saveAuditLog("Soft-deleted salary record ID: " + id, "Employee_Salary", oldState, null);
         });

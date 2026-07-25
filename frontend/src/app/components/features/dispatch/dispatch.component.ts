@@ -1,4 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
+import { AutoSelectDirective } from '../../../directives/auto-select.directive';
+import { FormStateDirective } from '../../../directives/form-state.directive';
+import { NotificationService } from '../../../services/notification.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -7,7 +10,7 @@ import { ApiService } from '../../../api.service';
 @Component({
   selector: 'app-dispatch',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
   templateUrl: './dispatch.component.html',
   styleUrls: ['./dispatch.component.css']
 })
@@ -18,7 +21,6 @@ export class DispatchComponent implements OnInit {
 
   salesList: any[] = [];
   dispatchesList: any[] = [];
-
   dispatchForm = { id: '', dispatchDate: '', vehicleNumber: '', driverName: '', deliveryAddress: '', dispatchStatus: 'Pending' };
 
   Math = Math;
@@ -34,7 +36,10 @@ export class DispatchComponent implements OnInit {
 
   defaultCols = ['Sale', 'Date', 'Vehicle', 'Driver', 'Status', 'Actions'];
 
-  constructor(private apiService: ApiService) {}
+  constructor(
+    private apiService: ApiService,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit() {
     this.loadData();
@@ -44,10 +49,10 @@ export class DispatchComponent implements OnInit {
 
   loadData() {
     this.apiService.getSales().subscribe((res: any[]) => {
-      this.salesList = res;
+      this.salesList = res || [];
     });
     this.apiService.getDispatches().subscribe((res: any[]) => {
-      this.dispatchesList = res;
+      this.dispatchesList = res || [];
       this.tableFilteredCounts['dispatch'] = this.dispatchesList.length;
     });
   }
@@ -63,7 +68,7 @@ export class DispatchComponent implements OnInit {
   validateForm(): boolean {
     const f = this.dispatchForm;
     if (!f.id || !f.dispatchDate || !f.vehicleNumber || !f.driverName || !f.deliveryAddress) {
-      alert('Please fill out all required dispatch fields.');
+      this.notificationService.showValidationError('Please fill out all required dispatch fields.');
       return false;
     }
     return true;
@@ -76,16 +81,19 @@ export class DispatchComponent implements OnInit {
     const payload = { ...this.dispatchForm, sale };
     this.apiService.createDispatch(payload).subscribe(() => {
       this.loadData();
-      this.logAudit('Created dispatch record for sale ID: ' + this.dispatchForm.id);
+      this.notificationService.showSaveSuccess('Dispatch record created successfully.');
       this.dispatchForm = { id: '', dispatchDate: '', vehicleNumber: '', driverName: '', deliveryAddress: '', dispatchStatus: 'Pending' };
     });
   }
 
-  deleteDispatch(id: string) {
-    this.apiService.deleteDispatch(id).subscribe(() => {
-      this.loadData();
-      this.logAudit('Deleted dispatch record ID: ' + id);
-    });
+  async deleteDispatch(id: string) {
+    const confirmed = await this.notificationService.showDeleteConfirm('Delete Dispatch?', 'Are you sure you want to delete this dispatch record?');
+    if (confirmed) {
+      this.apiService.deleteDispatch(id).subscribe(() => {
+        this.loadData();
+        this.notificationService.showDeleteSuccess('Dispatch record deleted successfully.');
+      });
+    }
   }
 
   logAudit(action: string) {
@@ -94,7 +102,6 @@ export class DispatchComponent implements OnInit {
     }
   }
 
-  // Table handling methods
   toggleColDropdown(table: string) {
     this.showColDropdown[table] = !this.showColDropdown[table];
   }
@@ -144,4 +151,3 @@ export class DispatchComponent implements OnInit {
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
 }
-

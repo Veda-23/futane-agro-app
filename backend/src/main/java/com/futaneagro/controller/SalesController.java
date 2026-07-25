@@ -111,14 +111,14 @@ public class SalesController {
                 .forEach(inv -> {
                     inv.setIsActive(false);
                     inv.setUpdatedBy(getCurrentUser());
-                    inv.setUpdatedAt(LocalDate.now());
+                    inv.setUpdatedAt(java.time.LocalDateTime.now());
                     invoiceRepository.save(inv);
                 });
 
             // Soft-delete sale
             sale.setIsActive(false);
             sale.setUpdatedBy(getCurrentUser());
-            sale.setUpdatedAt(LocalDate.now());
+            sale.setUpdatedAt(java.time.LocalDateTime.now());
             salesRepository.save(sale);
 
             saveAuditLog("Soft-deleted sale ID: " + id, "Sales", oldState, null);
@@ -169,7 +169,7 @@ public class SalesController {
             }
             payment.setIsActive(false);
             payment.setUpdatedBy(getCurrentUser());
-            payment.setUpdatedAt(LocalDate.now());
+            payment.setUpdatedAt(java.time.LocalDateTime.now());
             paymentCollectionRepository.save(payment);
 
             saveAuditLog("Soft-deleted payment ID: " + id, "Payment_Collection", oldState, null);

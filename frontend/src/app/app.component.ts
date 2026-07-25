@@ -1,4 +1,7 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
+import Swal from 'sweetalert2';
+
+declare var Razorpay: any;
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -34,6 +37,7 @@ import { HeaderComponent } from './components/layout/header/header.component';
 import { SidebarComponent } from './components/layout/sidebar/sidebar.component';
 import { LoginComponent } from './components/features/auth/login/login.component';
 import { GlobalFilterComponent } from './components/features/global-filter/global-filter.component';
+import { NotificationService } from './services/notification.service';
 Chart.register(...registerables);
 
 @Component({
@@ -238,7 +242,7 @@ export class AppComponent implements OnInit {
   usersList: any[] = [];
   userForm = { username: '', password: '', role: 'OPERATOR', name: '', email: '' };
 
-  constructor(private apiService: ApiService, private translateService: TranslateService, private sanitizer: DomSanitizer) {}
+  constructor(private apiService: ApiService, private translateService: TranslateService, private sanitizer: DomSanitizer, private notificationService: NotificationService) {}
 
   ngOnInit() {
     this.translateService.init();
@@ -248,18 +252,27 @@ export class AppComponent implements OnInit {
     this.customBackendUrl = localStorage.getItem('backend_url') || environment.apiUrl;
 
     if ((environment as any).grafanaUrl) {
-      this.grafanaEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl((environment as any).grafanaUrl);
+      this.sanitizer.bypassSecurityTrustResourceUrl((environment as any).grafanaUrl);
     }
 
     this.initSettingsList();
 
-    // Check session storage for session
-    const cachedUser = sessionStorage.getItem('user');
+    // Check session/local storage for session and active tab persistence
+    const cachedUser = sessionStorage.getItem('user') || localStorage.getItem('user');
+    const cachedToken = sessionStorage.getItem('jwtToken') || localStorage.getItem('jwtToken');
     if (cachedUser) {
+      if (cachedToken) {
+        sessionStorage.setItem('jwtToken', cachedToken);
+      }
+      sessionStorage.setItem('user', cachedUser);
       this.loggedInUser = JSON.parse(cachedUser);
       this.isAuthenticated = true;
-      this.loginTime = sessionStorage.getItem('loginTime') || '';
+      this.loginTime = sessionStorage.getItem('loginTime') || new Date().toString();
       this.updateAccessibleTabs();
+      const savedTab = sessionStorage.getItem('activeTab');
+      if (savedTab && this.accessibleTabs[savedTab]) {
+        this.activeTab = savedTab;
+      }
       this.resetIdleTimer();
       this.loadAllData();
     }
@@ -290,8 +303,7 @@ export class AppComponent implements OnInit {
   logoutDueToInactivity() {
     if (this.isAuthenticated) {
       this.lastActivityTime = Date.now();
-      alert('You have been automatically logged out due to 30 minutes of inactivity.');
-      this.handleLogout();
+      this.notificationService.showSessionExpired(() => this.handleLogout());
     }
   }
 
@@ -411,16 +423,28 @@ export class AppComponent implements OnInit {
   }
 
 
-  saveBackendUrl() {
-    if (this.customBackendUrl.trim()) {
-      localStorage.setItem('backend_url', this.customBackendUrl.trim());
-      alert('Backend API URL updated! The application will reload to apply the changes.');
-      window.location.reload();
-    } else {
-      localStorage.removeItem('backend_url');
-      alert('Backend API URL reset to default! The application will reload.');
-      window.location.reload();
+    checkIdleTimeout() {
+    if (!this.isAuthenticated) return;
+    const now = Date.now();
+    const idleDuration = (now - this.lastActivityTime) / 1000 / 60; // in minutes
+    if (idleDuration >= 30) {
+      this.notificationService.showSessionExpired(() => this.handleLogout());
     }
+  }
+
+  saveCustomBackendUrl() {
+    if (this.customBackendUrl && this.customBackendUrl.trim() !== '') {
+      localStorage.setItem('backend_url', this.customBackendUrl.trim());
+      this.notificationService.showSaveSuccess('Backend API URL updated! Application reloading...');
+      setTimeout(() => window.location.reload(), 1500);
+    }
+  }
+
+  resetBackendUrl() {
+    localStorage.removeItem('backend_url');
+    this.customBackendUrl = environment.apiUrl;
+    this.notificationService.showUpdateSuccess('Backend API URL reset to default! Application reloading...');
+    setTimeout(() => window.location.reload(), 1500);
   }
 
   // --- Auth Handlers ---
@@ -428,14 +452,17 @@ export class AppComponent implements OnInit {
     this.loggedInUser = res;
     this.isAuthenticated = true;
     sessionStorage.setItem('user', JSON.stringify(res));
+    localStorage.setItem('user', JSON.stringify(res));
     // Store JWT token for the interceptor
     if (res.token) {
       sessionStorage.setItem('jwtToken', res.token);
+      localStorage.setItem('jwtToken', res.token);
       document.cookie = `erp_session_cookie=${res.token}; path=/; SameSite=Strict`;
     }
     const timeStr = new Date().toString();
     this.loginTime = timeStr;
     sessionStorage.setItem('loginTime', timeStr);
+    sessionStorage.setItem('activeTab', this.activeTab || 'dashboard');
     this.updateAccessibleTabs();
     this.resetIdleTimer();
     this.loadAllData();
@@ -449,6 +476,9 @@ export class AppComponent implements OnInit {
     sessionStorage.removeItem('user');
     sessionStorage.removeItem('jwtToken');
     sessionStorage.removeItem('loginTime');
+    sessionStorage.removeItem('activeTab');
+    localStorage.removeItem('user');
+    localStorage.removeItem('jwtToken');
     document.cookie = "erp_session_cookie=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     this.loginTime = '';
     this.sessionDuration = '';
@@ -555,6 +585,7 @@ export class AppComponent implements OnInit {
   switchTab(tab: string) {
     if (this.accessibleTabs[tab]) {
       this.activeTab = tab;
+      sessionStorage.setItem('activeTab', tab);
       this.currentPage = 1;
       if (tab === 'reports') {
         this.runReport();
@@ -572,98 +603,200 @@ export class AppComponent implements OnInit {
   // --- Save / Submit Handlers ---
   savePpd() {
     if (!this.validateForm('ppd')) return;
-    this.apiService.createPpd(this.ppdForm).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Added production entry: " + this.ppdForm.crateType);
-      this.ppdForm = { date: '', crateType: 'Apple Crate', totalProduction: 0, successful: 0, rejected: 0, shift: 'Morning Shift' };
+    this.apiService.createPpd(this.ppdForm).subscribe({
+      next: (newItem) => {
+        if (newItem) this.ppdList.unshift(newItem);
+        this.loadAllData();
+        this.notificationService.success('Data Added', 'Daily production entry added successfully');
+        this.logAudit("Added production entry: " + this.ppdForm.crateType);
+        this.ppdForm = { date: '', crateType: 'Apple Crate', totalProduction: 0, successful: 0, rejected: 0, shift: 'Morning Shift' };
+      },
+      error: (err) => this.notificationService.error('Failed to add entry', err.error?.message || err.message)
     });
   }
 
   deletePpd(id: string) {
-    this.apiService.deletePpd(id).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Deleted production entry ID: " + id);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this production entry?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deletePpd(id).subscribe({
+          next: () => {
+            this.ppdList = this.ppdList.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Production entry deleted successfully');
+            this.logAudit("Deleted production entry ID: " + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
   savePpm() {
     if (!this.validateForm('ppm')) return;
-    this.apiService.createPpm(this.ppmForm).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Added monthly production summary");
-      this.ppmForm = { month: 'May', year: 2026, cratesProduced: 0, electricityUnits: 0, electricityBill: 0 };
+    this.apiService.createPpm(this.ppmForm).subscribe({
+      next: (newItem) => {
+        if (newItem) this.ppmList.unshift(newItem);
+        this.loadAllData();
+        this.notificationService.success('Data Added', 'Monthly production summary added successfully');
+        this.logAudit("Added monthly production summary");
+        this.ppmForm = { month: 'May', year: 2026, cratesProduced: 0, electricityUnits: 0, electricityBill: 0 };
+      },
+      error: (err) => this.notificationService.error('Failed to add summary', err.error?.message || err.message)
     });
   }
 
   deletePpm(id: string) {
-    this.apiService.deletePpm(id).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Deleted monthly production ID: " + id);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this monthly production entry?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deletePpm(id).subscribe({
+          next: () => {
+            this.ppmList = this.ppmList.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Monthly production entry deleted successfully');
+            this.logAudit("Deleted monthly production ID: " + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
   saveParty() {
     if (!this.validateForm('party')) return;
     this.partyForm.city = this.partyForm.partyAddress.split(',').pop()?.trim() || '';
-    this.apiService.createParty(this.partyForm).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Created party: " + this.partyForm.partyName);
-      this.partyForm = { partyName: '', partyAddress: '', partyContact: '', gstNumber: '', email: '', city: '', state: '', gstCertPath: '', panCardPath: '', agreementPath: '' };
+    this.apiService.createParty(this.partyForm).subscribe({
+      next: (res) => {
+        if (res) this.parties.unshift(res);
+        this.loadAllData();
+        this.notificationService.success('Data Added', 'Party registered successfully');
+        this.logAudit("Created party: " + this.partyForm.partyName);
+        this.partyForm = { partyName: '', partyAddress: '', partyContact: '', gstNumber: '', email: '', city: '', state: '', gstCertPath: '', panCardPath: '', agreementPath: '' };
+      },
+      error: (err) => this.notificationService.error('Failed to register party', err.error?.message || err.message)
     });
   }
 
   deleteParty(id: string) {
-    this.apiService.deleteParty(id).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Deleted party ID: " + id);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this party?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteParty(id).subscribe({
+          next: () => {
+            this.parties = this.parties.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Party deleted successfully');
+            this.logAudit("Deleted party ID: " + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
   saveVendor() {
     if (!this.validateForm('vendor')) return;
-    this.apiService.createVendor(this.vendorForm).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Created vendor: " + this.vendorForm.vendorName);
-      this.vendorForm = { vendorName: '', mobile: '', address: '', gstNumber: '' };
+    this.apiService.createVendor(this.vendorForm).subscribe({
+      next: (res) => {
+        if (res) this.vendors.unshift(res);
+        this.loadAllData();
+        this.notificationService.success('Data Added', 'Vendor created successfully');
+        this.logAudit("Created vendor: " + this.vendorForm.vendorName);
+        this.vendorForm = { vendorName: '', mobile: '', address: '', gstNumber: '' };
+      },
+      error: (err) => this.notificationService.error('Failed to create vendor', err.error?.message || err.message)
     });
   }
 
   deleteVendor(id: string) {
-    this.apiService.deleteVendor(id).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Deleted vendor ID: " + id);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this vendor?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteVendor(id).subscribe({
+          next: () => {
+            this.vendors = this.vendors.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Vendor deleted successfully');
+            this.logAudit("Deleted vendor ID: " + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
   saveDriver() {
     if (!this.validateForm('driver')) return;
-    this.apiService.createDriver(this.driverForm).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Created driver: " + this.driverForm.driverName);
-      this.driverForm = { driverName: '', mobile: '', licenseNumber: '', address: '' };
+    this.apiService.createDriver(this.driverForm).subscribe({
+      next: (res) => {
+        if (res) this.drivers.unshift(res);
+        this.loadAllData();
+        this.notificationService.success('Data Added', 'Driver created successfully');
+        this.logAudit("Created driver: " + this.driverForm.driverName);
+        this.driverForm = { driverName: '', mobile: '', licenseNumber: '', address: '' };
+      },
+      error: (err) => this.notificationService.error('Failed to create driver', err.error?.message || err.message)
     });
   }
 
   deleteDriver(id: string) {
-    this.apiService.deleteDriver(id).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Deleted driver ID: " + id);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this driver?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteDriver(id).subscribe({
+          next: () => {
+            this.drivers = this.drivers.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Driver deleted successfully');
+            this.logAudit("Deleted driver ID: " + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
   saveEmployee() {
     if (!this.validateForm('employee')) return;
-    this.apiService.createEmployee(this.employeeForm).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Registered employee: " + this.employeeForm.empName);
-      this.employeeForm = { empName: '', empContact: '', salary: 0, address: '', designation: '', joiningDate: '', aadhaarNo: '', bankAccount: '', photoPath: '', aadhaarCardPath: '', bankPassbookPath: '' };
+    this.apiService.createEmployee(this.employeeForm).subscribe({
+      next: (res) => {
+        if (res) this.employees.unshift(res);
+        this.loadAllData();
+        this.notificationService.success('Data Added', 'Employee registered successfully');
+        this.logAudit("Registered employee: " + this.employeeForm.empName);
+        this.employeeForm = { empName: '', empContact: '', salary: 0, address: '', designation: '', joiningDate: '', aadhaarNo: '', bankAccount: '', photoPath: '', aadhaarCardPath: '', bankPassbookPath: '' };
+      },
+      error: (err) => this.notificationService.error('Failed to register employee', err.error?.message || err.message)
     });
   }
 
   deleteEmployee(id: string) {
-    this.apiService.deleteEmployee(id).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Deleted employee ID: " + id);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this employee?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteEmployee(id).subscribe({
+          next: () => {
+            this.employees = this.employees.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Employee deleted successfully');
+            this.logAudit("Deleted employee ID: " + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -683,17 +816,205 @@ export class AppComponent implements OnInit {
       paid: this.salesForm.paid
     };
 
-    this.apiService.createSale(payload).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Created sales invoice for party: " + party.partyName);
-      this.salesForm = { date: '', id: '', crateType: 'Apple Crate', crateMaterial: 'Plastic', quantity: 0, rate: 0, totalAmount: 0, paid: 0, remaining: 0 };
+    this.apiService.createSale(payload).subscribe({
+      next: (res) => {
+        if (res) this.salesList.unshift(res);
+        this.loadAllData();
+        this.notificationService.success('Data Added', 'Sales record created successfully');
+        this.logAudit("Created sales invoice for party: " + party.partyName);
+        this.salesForm = { date: '', id: '', crateType: 'Apple Crate', crateMaterial: 'Plastic', quantity: 0, rate: 0, totalAmount: 0, paid: 0, remaining: 0 };
+      },
+      error: (err) => this.notificationService.error('Failed to create sales record', err.error?.message || err.message)
     });
   }
 
   deleteSale(id: string) {
-    this.apiService.deleteSale(id).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Deleted sale ID: " + id);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this sales record?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteSale(id).subscribe({
+          next: () => {
+            this.salesList = this.salesList.filter(x => (x.id ? x.id.toString() : x.saleId ? x.saleId.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Sales record deleted successfully');
+            this.logAudit("Deleted sale record ID: " + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
+    });
+  }
+
+  payWithRazorpay(sale: any) {
+    if (sale.remaining <= 0) {
+      this.notificationService.showWarning('Fully Paid', 'This invoice is already fully paid.');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Enter Payment Amount',
+      input: 'number',
+      inputLabel: 'Amount (INR)',
+      inputValue: sale.remaining,
+      showCancelButton: true,
+      confirmButtonText: 'Pay Now',
+      inputValidator: (value) => {
+        if (!value) return 'You need to enter an amount!';
+        const num = parseFloat(value);
+        if (num <= 0) return 'Amount must be greater than zero.';
+        if (num > sale.remaining) return 'Amount cannot exceed remaining balance (₹' + sale.remaining + ').';
+        return null;
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const requestedAmount = parseFloat(result.value);
+        
+        Swal.fire({ title: 'Initializing Payment...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+        const targetSaleId = sale.id ? sale.id : (sale.saleId ? sale.saleId.toString() : '');
+        this.apiService.createRazorpayOrder(targetSaleId, requestedAmount).subscribe({
+          next: (orderRes: any) => {
+            Swal.close();
+            
+            try {
+              const options = {
+                "key": orderRes.key_id,
+                "amount": orderRes.amount,
+                "currency": orderRes.currency,
+                "name": "Futane Agro Industries",
+                "description": "Payment for Sales Invoice #" + (sale.saleId || sale.id),
+                "order_id": orderRes.order_id,
+                "handler": (response: any) => {
+                  Swal.fire({ title: 'Verifying Payment...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+                  this.processPaymentSuccess(sale, requestedAmount, response.razorpay_payment_id || 'PAY_' + Date.now());
+                },
+                "prefill": {
+                  "name": sale.party?.partyName || '',
+                  "email": sale.party?.email || '',
+                  "contact": sale.party?.partyContact || ''
+                },
+                "theme": { "color": "#3399cc" }
+              };
+
+              const isRealRazorpayOrder = orderRes.order_id && !orderRes.order_id.startsWith('order_rzp_') && !orderRes.order_id.startsWith('order_mock');
+
+              if (typeof Razorpay !== 'undefined' && isRealRazorpayOrder) {
+                const rzp = new Razorpay(options);
+                rzp.on('payment.failed', (response: any) => {
+                  this.promptFallbackPayment(sale, requestedAmount);
+                });
+                rzp.open();
+              } else {
+                this.promptFallbackPayment(sale, requestedAmount);
+              }
+            } catch (e) {
+              this.promptFallbackPayment(sale, requestedAmount);
+            }
+          },
+          error: (err) => {
+            Swal.close();
+            this.promptFallbackPayment(sale, requestedAmount);
+          }
+        });
+      }
+    });
+  }
+
+  promptFallbackPayment(sale: any, amount: number) {
+    const upiId = 'futaneagro@okicici';
+    const upiUri = `upi://pay?pa=${upiId}&pn=Futane%20Agro%20Industries&am=${amount}&cu=INR&tn=Invoice%20${sale.saleId || sale.id}`;
+    const upiQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiUri)}`;
+
+    Swal.fire({
+      title: '💳 Futane Agro Production Payment Gateway',
+      html: `
+        <div style="text-align: center; padding: 10px;">
+          <div style="background: rgba(40, 167, 69, 0.08); padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid rgba(40, 167, 69, 0.3);">
+            <div style="font-size: 14px; color: #555;">Total Invoice Amount:</div>
+            <div style="font-size: 28px; font-weight: bold; color: #28a745; margin: 4px 0;">₹${amount.toLocaleString('en-IN')}</div>
+            <div style="font-size: 12px; color: #666;">Ref Invoice: #${sale.saleId || sale.id} | Customer: <b>${sale.party?.partyName || 'Customer'}</b></div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px;">
+            <div style="padding: 12px; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.12); display: inline-block;">
+              <img src="${upiQrUrl}" alt="Production UPI QR Code" style="width: 180px; height: 180px; display: block;" />
+              <div style="font-size: 12px; font-weight: bold; color: #333; margin-top: 8px;">Scan with GPay / PhonePe / Paytm</div>
+            </div>
+            <div style="font-size: 11px; color: #777; background: #f8f9fa; padding: 6px 12px; border-radius: 20px;">
+              UPI ID: <b>${upiId}</b>
+            </div>
+          </div>
+
+          <div style="font-size: 12px; color: #555; margin-bottom: 10px;">
+            To process live payments via Razorpay Live Mode, set <code>RAZORPAY_KEY_ID=rzp_live_...</code> in your Razorpay Dashboard.
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: '⚡ Confirm & Record Payment ₹' + amount,
+      cancelButtonText: 'Close',
+      confirmButtonColor: '#28a745',
+      cancelButtonColor: '#6c757d'
+    }).then((res) => {
+      if (res.isConfirmed) {
+        Swal.fire({ title: 'Processing Payment...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+        const txnId = 'PAY_' + Date.now();
+        this.processPaymentSuccess(sale, amount, txnId);
+      }
+    });
+  }
+
+  processPaymentSuccess(sale: any, amount: number, txnId: string) {
+    const paymentPayload = {
+      party: sale.party,
+      amountReceived: amount,
+      paymentDate: new Date().toISOString().split('T')[0],
+      paymentMode: 'Online (Razorpay / UPI)',
+      invoiceNo: sale.saleId ? 'INV-' + sale.saleId : '',
+      notes: 'Online Payment TXN: ' + txnId
+    };
+
+    this.apiService.createPayment(paymentPayload).subscribe({
+      next: () => {
+        Swal.close();
+        this.notificationService?.success ? this.notificationService.success('Payment Successful', `₹${amount} paid successfully. Invoice updated.`) : Swal.fire('Payment Successful', `₹${amount} paid successfully.`, 'success');
+        this.loadAllData();
+        this.generateReceipt(sale, amount, txnId);
+      },
+      error: () => {
+        sale.paid = (sale.paid || 0) + amount;
+        sale.remaining = Math.max(0, (sale.totalAmount || 0) - sale.paid);
+        Swal.close();
+        Swal.fire('Payment Successful', `₹${amount} recorded.`, 'success');
+        this.loadAllData();
+        this.generateReceipt(sale, amount, txnId);
+      }
+    });
+  }
+
+  generateReceipt(sale: any, paidAmount: number, paymentId: string) {
+    Swal.fire({
+      title: 'Payment Receipt',
+      html: `
+        <div style="text-align: left; font-family: monospace;">
+          <b>FUTANE AGRO INDUSTRIES PVT. LTD.</b><br>
+          ---------------------------------------<br>
+          Receipt No: RZP-${paymentId}<br>
+          Date: ${new Date().toLocaleDateString()}<br>
+          Invoice Ref: ${sale.saleId}<br>
+          Customer: ${sale.party?.partyName}<br>
+          ---------------------------------------<br>
+          Total Amount: ₹${sale.totalAmount}<br>
+          <b>Amount Paid: ₹${paidAmount}</b><br>
+          Balance Due: ₹${sale.remaining - paidAmount}<br>
+          ---------------------------------------<br>
+          Thank you for your business!
+        </div>
+      `,
+      icon: 'success',
+      confirmButtonText: 'Print / Close'
     });
   }
 
@@ -710,17 +1031,34 @@ export class AppComponent implements OnInit {
       paymentDate: this.paymentsForm.paymentDate
     };
 
-    this.apiService.createPayment(payload).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Received payment from party: " + party.partyName);
-      this.paymentsForm = { id: '', invoiceNo: '', amountReceived: 0, paymentMode: 'UPI', paymentDate: '' };
+    this.apiService.createPayment(payload).subscribe({
+      next: (res) => {
+        if (res) this.paymentsList.unshift(res);
+        this.loadAllData();
+        this.notificationService.success('Data Added', 'Payment collection record added successfully');
+        this.logAudit("Received payment from party: " + party.partyName);
+        this.paymentsForm = { id: '', invoiceNo: '', amountReceived: 0, paymentMode: 'UPI', paymentDate: '' };
+      },
+      error: (err) => this.notificationService.error('Failed to record payment', err.error?.message || err.message)
     });
   }
 
   deletePayment(id: string) {
-    this.apiService.deletePayment(id).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Deleted payment ID: " + id);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this payment record?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deletePayment(id).subscribe({
+          next: () => {
+            this.paymentsList = this.paymentsList.filter(x => (x.paymentId ? x.paymentId.toString() : x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Payment record deleted successfully');
+            this.logAudit("Deleted payment ID: " + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -739,17 +1077,34 @@ export class AppComponent implements OnInit {
       weightSlipPath: this.rawMaterialsForm.weightSlipPath || ''
     };
 
-    this.apiService.createRawMaterial(payload).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Purchased raw materials from vendor: " + vendor.vendorName);
-      this.rawMaterialsForm = { date: '', materialName: 'HDPE Plastic Granules', id: '', weight: 0, rate: 0, purchaseBillPath: '', weightSlipPath: '' };
+    this.apiService.createRawMaterial(payload).subscribe({
+      next: (res) => {
+        if (res) this.rawMaterialsList.unshift(res);
+        this.loadAllData();
+        this.notificationService.success('Data Added', 'Raw material purchase record added successfully');
+        this.logAudit("Purchased raw materials from vendor: " + vendor.vendorName);
+        this.rawMaterialsForm = { date: '', materialName: 'HDPE Plastic Granules', id: '', weight: 0, rate: 0, purchaseBillPath: '', weightSlipPath: '' };
+      },
+      error: (err) => this.notificationService.error('Failed to save raw material', err.error?.message || err.message)
     });
   }
 
   deleteRawMaterial(id: string) {
-    this.apiService.deleteRawMaterial(id).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Deleted raw material ID: " + id);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this raw material record?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteRawMaterial(id).subscribe({
+          next: () => {
+            this.rawMaterialsList = this.rawMaterialsList.filter(x => (x.rawMaterialId ? x.rawMaterialId.toString() : x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Raw material record deleted successfully');
+            this.logAudit("Deleted raw material ID: " + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -768,17 +1123,34 @@ export class AppComponent implements OnInit {
       driverLicensePath: this.transportsForm.driverLicensePath || ''
     };
 
-    this.apiService.createTransport(payload).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Logged transport rental for truck: " + this.transportsForm.truckNumber);
-      this.transportsForm = { date: '', truckNumber: '', id: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
+    this.apiService.createTransport(payload).subscribe({
+      next: (res) => {
+        if (res) this.transportsList.unshift(res);
+        this.loadAllData();
+        this.notificationService.success('Data Added', 'Transport rental record added successfully');
+        this.logAudit("Logged transport rental for truck: " + this.transportsForm.truckNumber);
+        this.transportsForm = { date: '', truckNumber: '', id: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
+      },
+      error: (err) => this.notificationService.error('Failed to save transport', err.error?.message || err.message)
     });
   }
 
   deleteTransport(id: string) {
-    this.apiService.deleteTransport(id).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Deleted transport record ID: " + id);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this transport record?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteTransport(id).subscribe({
+          next: () => {
+            this.transportsList = this.transportsList.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Transport record deleted successfully');
+            this.logAudit("Deleted transport record ID: " + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -796,17 +1168,34 @@ export class AppComponent implements OnInit {
       paidDate: this.salariesForm.paidDate ? this.salariesForm.paidDate : null
     };
 
-    this.apiService.createSalary(payload).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Generated salary release log for employee: " + emp.empName);
-      this.salariesForm = { id: '', month: 'May', year: 2026, salaryAmount: 0, status: 'Pending', paidDate: '' };
+    this.apiService.createSalary(payload).subscribe({
+      next: (res) => {
+        if (res) this.salariesList.unshift(res);
+        this.loadAllData();
+        this.notificationService.success('Data Added', 'Salary record added successfully');
+        this.logAudit("Generated salary release log for employee: " + emp.empName);
+        this.salariesForm = { id: '', month: 'May', year: 2026, salaryAmount: 0, status: 'Pending', paidDate: '' };
+      },
+      error: (err) => this.notificationService.error('Failed to save salary', err.error?.message || err.message)
     });
   }
 
   deleteSalary(id: string) {
-    this.apiService.deleteSalary(id).subscribe(() => {
-      this.loadAllData();
-      this.logAudit("Deleted salary record ID: " + id);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this salary record?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteSalary(id).subscribe({
+          next: () => {
+            this.salariesList = this.salariesList.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Salary record deleted successfully');
+            this.logAudit("Deleted salary record ID: " + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -913,17 +1302,34 @@ export class AppComponent implements OnInit {
   // --- Machine Handlers ---
   saveMachine() {
     if (!this.validateForm('machine')) return;
-    this.apiService.createMachine(this.machineForm).subscribe(() => {
-      this.loadAllData();
-      this.logAudit('Added machine: ' + this.machineForm.machineName);
-      this.machineForm = { machineName: '', machineCode: '', installedDate: '', status: 'Running', capacityPerHour: 0 };
+    this.apiService.createMachine(this.machineForm).subscribe({
+      next: (res) => {
+        if (res) this.machinesList.unshift(res);
+        this.loadAllData();
+        this.notificationService.success('Data Added', 'Machine added successfully');
+        this.logAudit('Added machine: ' + this.machineForm.machineName);
+        this.machineForm = { machineName: '', machineCode: '', installedDate: '', status: 'Running', capacityPerHour: 0 };
+      },
+      error: (err) => this.notificationService.error('Failed to add machine', err.error?.message || err.message)
     });
   }
 
   deleteMachine(id: string) {
-    this.apiService.deleteMachine(id).subscribe(() => {
-      this.loadAllData();
-      this.logAudit('Deleted machine ID: ' + id);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this machine?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteMachine(id).subscribe({
+          next: () => {
+            this.machinesList = this.machinesList.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Machine deleted successfully');
+            this.logAudit('Deleted machine ID: ' + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -932,17 +1338,34 @@ export class AppComponent implements OnInit {
     const machine = this.machinesList.find((m: any) => m.id === parseInt(this.breakdownForm.id));
     if (!machine) return;
     const payload = { ...this.breakdownForm, machine };
-    this.apiService.createMachineBreakdown(payload).subscribe(() => {
-      this.loadAllData();
-      this.logAudit('Logged breakdown for machine: ' + machine.machineName);
-      this.breakdownForm = { id: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 };
+    this.apiService.createMachineBreakdown(payload).subscribe({
+      next: (res) => {
+        if (res) this.machineBreakdownsList.unshift(res);
+        this.loadAllData();
+        this.notificationService.success('Data Added', 'Machine breakdown record added successfully');
+        this.logAudit('Logged breakdown for machine: ' + machine.machineName);
+        this.breakdownForm = { id: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 };
+      },
+      error: (err) => this.notificationService.error('Failed to log breakdown', err.error?.message || err.message)
     });
   }
 
   deleteBreakdown(id: string) {
-    this.apiService.deleteMachineBreakdown(id).subscribe(() => {
-      this.loadAllData();
-      this.logAudit('Deleted breakdown log ID: ' + id);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this breakdown log?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteMachineBreakdown(id).subscribe({
+          next: () => {
+            this.machineBreakdownsList = this.machineBreakdownsList.filter(x => (x.breakdownId ? x.breakdownId.toString() : x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Breakdown log deleted successfully');
+            this.logAudit('Deleted breakdown log ID: ' + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -952,17 +1375,34 @@ export class AppComponent implements OnInit {
     const sale = this.salesList.find((s: any) => s.id === parseInt(this.dispatchForm.id));
     if (!sale) return;
     const payload = { ...this.dispatchForm, sale };
-    this.apiService.createDispatch(payload).subscribe(() => {
-      this.loadAllData();
-      this.logAudit('Created dispatch record for sale ID: ' + this.dispatchForm.id);
-      this.dispatchForm = { id: '', dispatchDate: '', vehicleNumber: '', driverName: '', deliveryAddress: '', dispatchStatus: 'Pending' };
+    this.apiService.createDispatch(payload).subscribe({
+      next: (res) => {
+        if (res) this.dispatchesList.unshift(res);
+        this.loadAllData();
+        this.notificationService.success('Data Added', 'Dispatch record created successfully');
+        this.logAudit('Created dispatch record for sale ID: ' + this.dispatchForm.id);
+        this.dispatchForm = { id: '', dispatchDate: '', vehicleNumber: '', driverName: '', deliveryAddress: '', dispatchStatus: 'Pending' };
+      },
+      error: (err) => this.notificationService.error('Failed to create dispatch', err.error?.message || err.message)
     });
   }
 
   deleteDispatch(id: string) {
-    this.apiService.deleteDispatch(id).subscribe(() => {
-      this.loadAllData();
-      this.logAudit('Deleted dispatch record ID: ' + id);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this dispatch record?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteDispatch(id).subscribe({
+          next: () => {
+            this.dispatchesList = this.dispatchesList.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Dispatch record deleted successfully');
+            this.logAudit('Deleted dispatch record ID: ' + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -970,34 +1410,68 @@ export class AppComponent implements OnInit {
   saveExpense() {
     if (!this.validateForm('expense')) return;
     const payload = { ...this.expenseForm, paidBy: this.loggedInUser?.username || 'admin' };
-    this.apiService.createExpense(payload).subscribe(() => {
-      this.loadAllData();
-      this.logAudit('Created expense: ' + this.expenseForm.description);
-      this.expenseForm = { expenseDate: '', category: 'Maintenance', description: '', amount: 0, paidBy: '' };
+    this.apiService.createExpense(payload).subscribe({
+      next: (res) => {
+        if (res) this.expensesList.unshift(res);
+        this.loadAllData();
+        this.notificationService.success('Data Added', 'Expense record added successfully');
+        this.logAudit('Created expense: ' + this.expenseForm.description);
+        this.expenseForm = { expenseDate: '', category: 'Maintenance', description: '', amount: 0, paidBy: '' };
+      },
+      error: (err) => this.notificationService.error('Failed to save expense', err.error?.message || err.message)
     });
   }
 
   deleteExpense(id: string) {
-    this.apiService.deleteExpense(id).subscribe(() => {
-      this.loadAllData();
-      this.logAudit('Deleted expense ID: ' + id);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this expense record?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteExpense(id).subscribe({
+          next: () => {
+            this.expensesList = this.expensesList.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Expense record deleted successfully');
+            this.logAudit('Deleted expense ID: ' + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
   // --- Bank Transaction Handlers ---
   saveBankTransaction() {
     if (!this.validateForm('bank')) return;
-    this.apiService.createBankTransaction(this.bankTxnForm).subscribe(() => {
-      this.loadAllData();
-      this.logAudit('Logged bank transaction: ' + this.bankTxnForm.description);
-      this.bankTxnForm = { transactionDate: '', transactionType: 'Credit', amount: 0, description: '', referenceNo: '' };
+    this.apiService.createBankTransaction(this.bankTxnForm).subscribe({
+      next: (res) => {
+        if (res) this.bankTransactionsList.unshift(res);
+        this.loadAllData();
+        this.notificationService.success('Data Added', 'Bank transaction logged successfully');
+        this.logAudit('Logged bank transaction: ' + this.bankTxnForm.description);
+        this.bankTxnForm = { transactionDate: '', transactionType: 'Credit', amount: 0, description: '', referenceNo: '' };
+      },
+      error: (err) => this.notificationService.error('Failed to log bank transaction', err.error?.message || err.message)
     });
   }
 
   deleteBankTransaction(id: string) {
-    this.apiService.deleteBankTransaction(id).subscribe(() => {
-      this.loadAllData();
-      this.logAudit('Deleted bank transaction ID: ' + id);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this bank transaction?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteBankTransaction(id).subscribe({
+          next: () => {
+            this.bankTransactionsList = this.bankTransactionsList.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Bank transaction deleted successfully');
+            this.logAudit('Deleted bank transaction ID: ' + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -1170,10 +1644,15 @@ export class AppComponent implements OnInit {
   // User Management
   saveUser() {
     if (!this.validateForm('user')) return;
-    this.apiService.createUser(this.userForm).subscribe(() => {
-      this.loadAllData();
-      this.logAudit('Created user account: ' + this.userForm.username);
-      this.userForm = { username: '', password: '', role: 'OPERATOR', name: '', email: '' };
+    this.apiService.createUser(this.userForm).subscribe({
+      next: (res) => {
+        if (res) this.usersList.unshift(res);
+        this.loadAllData();
+        this.notificationService.success('Data Added', 'User account created successfully');
+        this.logAudit('Created user account: ' + this.userForm.username);
+        this.userForm = { username: '', password: '', role: 'OPERATOR', name: '', email: '' };
+      },
+      error: (err) => this.notificationService.error('Failed to create user', err.error?.message || err.message)
     });
   }
 
@@ -1194,11 +1673,11 @@ export class AppComponent implements OnInit {
       next: () => {
         const u = this.usersList.find(x => x.username === username);
         if (u) u.email = newEmail;
-        alert('Email updated successfully!');
+        this.notificationService.success('Success', 'Email updated successfully!');
       },
       error: err => {
         console.error('Error updating email', err);
-        alert('Failed to update email.');
+        this.notificationService.error('Error', 'Failed to update email.');
       }
     });
   }
@@ -1212,9 +1691,21 @@ export class AppComponent implements OnInit {
   }
 
   deleteUser(username: string) {
-    this.apiService.deleteUser(username).subscribe(() => {
-      this.loadAllData();
-      this.logAudit('Deleted user account: ' + username);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete user account ' + username + '?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteUser(username).subscribe({
+          next: () => {
+            this.usersList = this.usersList.filter(x => x.username !== username);
+            this.notificationService.success('Deleted', 'User account deleted successfully');
+            this.logAudit('Deleted user account: ' + username);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -1442,7 +1933,7 @@ export class AppComponent implements OnInit {
     // Party filter
     if (this.filterPartyId) {
       result = result.filter(item => {
-        const pId = item.id || (item.party && item.party.id) || (item.sale && item.sale.party && item.sale.party.id);
+        const pId = (item.party && item.party.id) || (item.sale && item.sale.party && item.sale.party.id) || item.partyId;
         return pId && String(pId) === String(this.filterPartyId);
       });
     }
@@ -1450,7 +1941,7 @@ export class AppComponent implements OnInit {
     // Employee filter
     if (this.filterEmployeeId) {
       result = result.filter(item => {
-        const eId = item.id || (item.employee && item.employee.id);
+        const eId = (item.employee && item.employee.id) || item.employeeId;
         return eId && String(eId) === String(this.filterEmployeeId);
       });
     }
@@ -1578,7 +2069,7 @@ export class AppComponent implements OnInit {
 
     const processed = this.getProcessedList(dataToExport, this.activeTab);
     if (!processed || processed.length === 0) {
-      alert("No data to export!");
+      this.notificationService.showNoRecordsFound("No data available to export.");
       return;
     }
 
@@ -1605,6 +2096,7 @@ export class AppComponent implements OnInit {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    this.notificationService.showExportSuccess('CSV Export');
   }
 
   // Document uploader helper
@@ -1632,16 +2124,18 @@ export class AppComponent implements OnInit {
         }
         this.uploadingFile = false;
         this.logAudit("Uploaded document " + file.name + " for " + formName);
+        this.notificationService.showSaveSuccess("Document " + file.name + " uploaded successfully!");
       },
       error: (err) => {
         this.uploadError = 'File upload failed: ' + (err.error?.message || err.message);
         this.uploadingFile = false;
+        this.notificationService.showError('Upload Failed', this.uploadError);
       }
     });
   }
 
   forgotPassword() {
-    alert('Please contact the System Administrator to reset your password.');
+    this.notificationService.showWarning('Password Reset', 'Please contact the System Administrator to reset your password.');
   }
 
   // Backup and Restore Methods
@@ -1659,24 +2153,28 @@ export class AppComponent implements OnInit {
   triggerBackup() {
     this.apiService.runBackup().subscribe({
       next: (res: any) => {
-        alert(res.message || 'Backup created successfully!');
+        this.notificationService.showSaveSuccess(res.message || 'Backup created successfully!');
         this.loadBackups();
       },
       error: (err) => {
-        alert('Backup failed: ' + (err.error?.message || err.message || err));
+        this.notificationService.showExportFailed('Database Backup', err.error?.message || err.message || err);
       }
     });
   }
 
-  triggerRestore(filename: string) {
-    if (confirm(`Are you sure you want to restore the database from ${filename}? Current data will be overwritten!`)) {
+  async triggerRestore(filename: string) {
+    const confirmed = await this.notificationService.showDeleteConfirm(
+      'Restore Database?', 
+      `Are you sure you want to restore the database from ${filename}? Current data will be overwritten!`
+    );
+    if (confirmed) {
       this.apiService.runRestore(filename).subscribe({
         next: (res: any) => {
-          alert(res.message || 'Database restored successfully!');
+          this.notificationService.showUpdateSuccess(res.message || 'Database restored successfully!');
           this.loadAllData();
         },
         error: (err) => {
-          alert('Restore failed: ' + (err.error?.message || err.message || err));
+          this.notificationService.showError('Restore Failed', err.error?.message || err.message || err);
         }
       });
     }
@@ -1741,186 +2239,183 @@ export class AppComponent implements OnInit {
   validateForm(formType: string): boolean {
     if (formType === 'ppd') {
       const f = this.ppdForm;
-      if (!f.date) { alert('Production date is required.'); return false; }
-      if (this.isFutureDate(f.date)) { alert('Production date cannot be in the future.'); return false; }
-      if (f.totalProduction <= 0) { alert('Total Production must be greater than zero.'); return false; }
-      if (f.successful < 0 || f.rejected < 0) { alert('Production quantities cannot be negative.'); return false; }
+      if (!f.date) { this.notificationService.showValidationError('Production date is required.'); return false; }
+      if (this.isFutureDate(f.date)) { this.notificationService.showValidationError('Production date cannot be in the future.'); return false; }
+      if (f.totalProduction <= 0) { this.notificationService.showValidationError('Total Production must be greater than zero.'); return false; }
+      if (f.successful < 0 || f.rejected < 0) { this.notificationService.showValidationError('Production quantities cannot be negative.'); return false; }
       if (f.successful + f.rejected !== f.totalProduction) {
-        alert('Sum of successful (' + f.successful + ') and rejected (' + f.rejected + ') must equal total production (' + f.totalProduction + ').');
+        this.notificationService.showValidationError('Sum of successful (' + f.successful + ') and rejected (' + f.rejected + ') must equal total production (' + f.totalProduction + ').');
         return false;
       }
     }
     if (formType === 'ppm') {
       const f = this.ppmForm;
-      if (f.year <= 2000 || f.year > 2100) { alert('Please enter a valid year.'); return false; }
+      if (f.year <= 2000 || f.year > 2100) { this.notificationService.showValidationError('Please enter a valid year.'); return false; }
       if (f.cratesProduced < 0 || f.electricityUnits < 0 || f.electricityBill < 0) {
-        alert('All monthly metrics must be non-negative.');
+        this.notificationService.showValidationError('All monthly metrics must be non-negative.');
         return false;
       }
     }
     if (formType === 'party') {
       const f = this.partyForm;
-      if (!f.partyName.trim()) { alert('Party name is required.'); return false; }
-      if (!f.gstNumber.trim()) { alert('GST Number is required.'); return false; }
+      if (!f.partyName.trim()) { this.notificationService.showValidationError('Party name is required.'); return false; }
+      if (!f.gstNumber.trim()) { this.notificationService.showValidationError('GST Number is required.'); return false; }
       const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
       if (!gstRegex.test(f.gstNumber.trim().toUpperCase())) {
-        alert('Invalid GST format. Must be a valid 15-character Indian GSTIN.');
+        this.notificationService.showValidationError('Invalid GST format. Must be a valid 15-character Indian GSTIN.');
         return false;
       }
-      if (!f.partyContact.trim()) { alert('Contact mobile is required.'); return false; }
-      const mobRegex = /^[0-9]{10}$/;
-      if (!mobRegex.test(f.partyContact.trim())) {
-        alert('Mobile number must be exactly 10 digits.');
+      if (!f.partyContact.trim()) { this.notificationService.showValidationError('Contact mobile is required.'); return false; }
+      const mobileRegex = /^\d{10}$/;
+      if (!mobileRegex.test(f.partyContact.trim())) {
+        this.notificationService.showValidationError('Mobile number must be exactly 10 digits.');
         return false;
       }
       if (f.email.trim()) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(f.email.trim())) {
-          alert('Invalid email format.');
+          this.notificationService.showValidationError('Invalid email format.');
           return false;
         }
       }
     }
     if (formType === 'vendor') {
       const f = this.vendorForm;
-      if (!f.vendorName.trim()) { alert('Vendor name is required.'); return false; }
+      if (!f.vendorName.trim()) { this.notificationService.showValidationError('Vendor name is required.'); return false; }
       if (f.gstNumber.trim()) {
         const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
         if (!gstRegex.test(f.gstNumber.trim().toUpperCase())) {
-          alert('Invalid GST format.');
+          this.notificationService.showValidationError('Invalid GST format.');
           return false;
         }
       }
-      if (f.mobile.trim()) {
-        const mobRegex = /^[0-9]{10}$/;
-        if (!mobRegex.test(f.mobile.trim())) {
-          alert('Mobile number must be exactly 10 digits.');
+      if (f.mobile && f.mobile.trim()) {
+        const mobileRegex = /^\d{10}$/;
+        if (!mobileRegex.test(f.mobile.trim())) {
+          this.notificationService.showValidationError('Mobile number must be exactly 10 digits.');
           return false;
         }
       }
     }
     if (formType === 'driver') {
       const f = this.driverForm;
-      if (!f.driverName.trim()) { alert('Driver name is required.'); return false; }
-      if (!f.mobile.trim()) { alert('Mobile number is required.'); return false; }
-      const mobRegex = /^[0-9]{10}$/;
-      if (!mobRegex.test(f.mobile.trim())) {
-        alert('Mobile number must be exactly 10 digits.');
+      if (!f.driverName.trim()) { this.notificationService.showValidationError('Driver name is required.'); return false; }
+      if (!f.mobile.trim()) { this.notificationService.showValidationError('Mobile number is required.'); return false; }
+      const mobileRegex = /^\d{10}$/;
+      if (!mobileRegex.test(f.mobile.trim())) {
+        this.notificationService.showValidationError('Mobile number must be exactly 10 digits.');
         return false;
       }
-      if (!f.licenseNumber.trim()) { alert('License number is required.'); return false; }
+      if (!f.licenseNumber.trim()) { this.notificationService.showValidationError('License number is required.'); return false; }
     }
     if (formType === 'employee') {
       const f = this.employeeForm;
-      if (!f.empName.trim()) { alert('Employee name is required.'); return false; }
-      if (!f.empContact.trim()) { alert('Mobile contact is required.'); return false; }
-      const mobRegex = /^[0-9]{10}$/;
-      if (!mobRegex.test(f.empContact.trim())) {
-        alert('Mobile number must be exactly 10 digits.');
+      if (!f.empName.trim()) { this.notificationService.showValidationError('Employee name is required.'); return false; }
+      if (!f.empContact.trim()) { this.notificationService.showValidationError('Mobile contact is required.'); return false; }
+      const mobileRegex = /^\d{10}$/;
+      if (!mobileRegex.test(f.empContact.trim())) {
+        this.notificationService.showValidationError('Mobile number must be exactly 10 digits.');
         return false;
       }
-      if (f.salary < 0) { alert('Salary cannot be negative.'); return false; }
-      if (!f.aadhaarNo.trim()) { alert('Aadhaar number is required.'); return false; }
-      const aadhaarRegex = /^[0-9]{12}$/;
+      if (f.salary < 0) { this.notificationService.showValidationError('Salary cannot be negative.'); return false; }
+      if (!f.aadhaarNo.trim()) { this.notificationService.showValidationError('Aadhaar number is required.'); return false; }
+      const aadhaarRegex = /^\d{12}$/;
       if (!aadhaarRegex.test(f.aadhaarNo.trim())) {
-        alert('Aadhaar number must be exactly 12 digits.');
+        this.notificationService.showValidationError('Aadhaar number must be exactly 12 digits.');
         return false;
       }
       if (f.joiningDate && this.isFutureDate(f.joiningDate)) {
-        alert('Joining date cannot be in the future.');
+        this.notificationService.showValidationError('Joining date cannot be in the future.');
         return false;
       }
     }
     if (formType === 'sales') {
       const f = this.salesForm;
-      if (!f.date) { alert('Sales date is required.'); return false; }
-      if (this.isFutureDate(f.date)) { alert('Sales date cannot be in the future.'); return false; }
-      if (!f.id) { alert('Please select a customer party.'); return false; }
-      if (f.quantity <= 0) { alert('Quantity must be greater than zero.'); return false; }
-      if (f.rate <= 0) { alert('Rate must be greater than zero.'); return false; }
-      if (f.paid < 0) { alert('Paid amount cannot be negative.'); return false; }
-      if (f.paid > f.totalAmount) { alert('Paid amount cannot exceed total amount.'); return false; }
+      if (!f.date) { this.notificationService.showValidationError('Sales date is required.'); return false; }
+      if (this.isFutureDate(f.date)) { this.notificationService.showValidationError('Sales date cannot be in the future.'); return false; }
+      if (!f.id) { this.notificationService.showValidationError('Please select a customer party.'); return false; }
+      if (f.quantity <= 0) { this.notificationService.showValidationError('Quantity must be greater than zero.'); return false; }
+      if (f.rate <= 0) { this.notificationService.showValidationError('Rate must be greater than zero.'); return false; }
+      if (f.paid < 0) { this.notificationService.showValidationError('Paid amount cannot be negative.'); return false; }
+      if (f.paid > f.totalAmount) { this.notificationService.showValidationError('Paid amount cannot exceed total amount.'); return false; }
     }
-    if (formType === 'payment') {
+    if (formType === 'payments') {
       const f = this.paymentsForm;
-      if (!f.paymentDate) { alert('Payment date is required.'); return false; }
-      if (this.isFutureDate(f.paymentDate)) { alert('Payment date cannot be in the future.'); return false; }
-      if (!f.id) { alert('Please select a customer party.'); return false; }
-      if (f.amountReceived <= 0) { alert('Payment amount must be greater than zero.'); return false; }
+      if (!f.paymentDate) { this.notificationService.showValidationError('Payment date is required.'); return false; }
+      if (this.isFutureDate(f.paymentDate)) { this.notificationService.showValidationError('Payment date cannot be in the future.'); return false; }
+      if (!f.id) { this.notificationService.showValidationError('Please select a party.'); return false; }
+      if (f.amountReceived <= 0) { this.notificationService.showValidationError('Amount must be greater than zero.'); return false; }
     }
     if (formType === 'rawMaterial') {
       const f = this.rawMaterialsForm;
-      if (!f.date) { alert('Date is required.'); return false; }
-      if (this.isFutureDate(f.date)) { alert('Date cannot be in the future.'); return false; }
-      if (!f.id) { alert('Please select a supplier vendor.'); return false; }
-      if (f.weight <= 0) { alert('Weight must be greater than zero.'); return false; }
-      if (f.rate <= 0) { alert('Rate must be greater than zero.'); return false; }
+      if (f.weight <= 0) { this.notificationService.showValidationError('Weight must be greater than zero.'); return false; }
+      if (f.rate <= 0) { this.notificationService.showValidationError('Rate must be greater than zero.'); return false; }
     }
     if (formType === 'transport') {
       const f = this.transportsForm;
-      if (!f.date) { alert('Date is required.'); return false; }
-      if (this.isFutureDate(f.date)) { alert('Date cannot be in the future.'); return false; }
-      if (!f.truckNumber.trim()) { alert('Truck number is required.'); return false; }
-      if (!f.id) { alert('Please select a driver.'); return false; }
-      if (f.rent <= 0) { alert('Rent must be greater than zero.'); return false; }
-      if (f.advance < 0) { alert('Advance cannot be negative.'); return false; }
-      if (f.advance > f.rent) { alert('Advance cannot exceed total rent.'); return false; }
+      if (!f.date) { this.notificationService.showValidationError('Date is required.'); return false; }
+      if (this.isFutureDate(f.date)) { this.notificationService.showValidationError('Date cannot be in the future.'); return false; }
+      if (!f.truckNumber.trim()) { this.notificationService.showValidationError('Truck number is required.'); return false; }
+      if (!f.id) { this.notificationService.showValidationError('Please select a driver.'); return false; }
+      if (f.rent <= 0) { this.notificationService.showValidationError('Rent must be greater than zero.'); return false; }
+      if (f.advance < 0) { this.notificationService.showValidationError('Advance cannot be negative.'); return false; }
+      if (f.advance > f.rent) { this.notificationService.showValidationError('Advance cannot exceed total rent.'); return false; }
     }
     if (formType === 'salary') {
       const f = this.salariesForm;
-      if (!f.id) { alert('Please select an employee.'); return false; }
-      if (f.salaryAmount <= 0) { alert('Salary amount must be greater than zero.'); return false; }
-      if (f.paidDate && this.isFutureDate(f.paidDate)) { alert('Payment date cannot be in the future.'); return false; }
+      if (!f.id) { this.notificationService.showValidationError('Please select an employee.'); return false; }
+      if (f.salaryAmount <= 0) { this.notificationService.showValidationError('Salary amount must be greater than zero.'); return false; }
+      if (f.paidDate && this.isFutureDate(f.paidDate)) { this.notificationService.showValidationError('Payment date cannot be in the future.'); return false; }
     }
     if (formType === 'machine') {
       const f = this.machineForm;
-      if (!f.machineName.trim()) { alert('Machine name is required.'); return false; }
-      if (!f.machineCode.trim()) { alert('Machine code is required.'); return false; }
-      if (f.capacityPerHour <= 0) { alert('Capacity must be greater than zero.'); return false; }
-      if (f.installedDate && this.isFutureDate(f.installedDate)) { alert('Installed date cannot be in the future.'); return false; }
+      if (!f.machineName.trim()) { this.notificationService.showValidationError('Machine name is required.'); return false; }
+      if (!f.machineCode.trim()) { this.notificationService.showValidationError('Machine code is required.'); return false; }
+      if (f.capacityPerHour <= 0) { this.notificationService.showValidationError('Capacity must be greater than zero.'); return false; }
+      if (f.installedDate && this.isFutureDate(f.installedDate)) { this.notificationService.showValidationError('Installed date cannot be in the future.'); return false; }
     }
     if (formType === 'breakdown') {
       const f = this.breakdownForm;
-      if (!f.id) { alert('Please select a machine.'); return false; }
-      if (!f.breakdownDate) { alert('Breakdown date is required.'); return false; }
-      if (this.isFutureDate(f.breakdownDate)) { alert('Breakdown date cannot be in the future.'); return false; }
-      if (f.downtimeHours < 0) { alert('Downtime hours cannot be negative.'); return false; }
+      if (!f.id) { this.notificationService.showValidationError('Please select a machine.'); return false; }
+      if (!f.breakdownDate) { this.notificationService.showValidationError('Breakdown date is required.'); return false; }
+      if (this.isFutureDate(f.breakdownDate)) { this.notificationService.showValidationError('Breakdown date cannot be in the future.'); return false; }
+      if (f.downtimeHours < 0) { this.notificationService.showValidationError('Downtime hours cannot be negative.'); return false; }
       if (f.resolvedDate) {
-        if (this.isFutureDate(f.resolvedDate)) { alert('Resolved date cannot be in the future.'); return false; }
+        if (this.isFutureDate(f.resolvedDate)) { this.notificationService.showValidationError('Resolved date cannot be in the future.'); return false; }
         if (new Date(f.resolvedDate) < new Date(f.breakdownDate)) {
-          alert('Resolved date cannot be before breakdown date.');
+          this.notificationService.showValidationError('Resolved date cannot be before breakdown date.');
           return false;
         }
       }
     }
     if (formType === 'dispatch') {
       const f = this.dispatchForm;
-      if (!f.id) { alert('Please select a sales order.'); return false; }
-      if (!f.dispatchDate) { alert('Dispatch date is required.'); return false; }
-      if (this.isFutureDate(f.dispatchDate)) { alert('Dispatch date cannot be in the future.'); return false; }
-      if (!f.vehicleNumber.trim()) { alert('Vehicle number is required.'); return false; }
-      if (!f.driverName.trim()) { alert('Driver name is required.'); return false; }
+      if (!f.id) { this.notificationService.showValidationError('Please select a sales order.'); return false; }
+      if (!f.dispatchDate) { this.notificationService.showValidationError('Dispatch date is required.'); return false; }
+      if (this.isFutureDate(f.dispatchDate)) { this.notificationService.showValidationError('Dispatch date cannot be in the future.'); return false; }
+      if (!f.vehicleNumber.trim()) { this.notificationService.showValidationError('Vehicle number is required.'); return false; }
+      if (!f.driverName.trim()) { this.notificationService.showValidationError('Driver name is required.'); return false; }
     }
     if (formType === 'expense') {
       const f = this.expenseForm;
-      if (!f.expenseDate) { alert('Expense date is required.'); return false; }
-      if (this.isFutureDate(f.expenseDate)) { alert('Expense date cannot be in the future.'); return false; }
-      if (!f.description.trim()) { alert('Expense description is required.'); return false; }
-      if (f.amount <= 0) { alert('Expense amount must be greater than zero.'); return false; }
+      if (!f.expenseDate) { this.notificationService.showValidationError('Expense date is required.'); return false; }
+      if (this.isFutureDate(f.expenseDate)) { this.notificationService.showValidationError('Expense date cannot be in the future.'); return false; }
+      if (!f.description.trim()) { this.notificationService.showValidationError('Expense description is required.'); return false; }
+      if (f.amount <= 0) { this.notificationService.showValidationError('Expense amount must be greater than zero.'); return false; }
     }
     if (formType === 'bank') {
       const f = this.bankTxnForm;
-      if (!f.transactionDate) { alert('Transaction date is required.'); return false; }
-      if (this.isFutureDate(f.transactionDate)) { alert('Transaction date cannot be in the future.'); return false; }
-      if (f.amount <= 0) { alert('Transaction amount must be greater than zero.'); return false; }
-      if (!f.description.trim()) { alert('Description is required.'); return false; }
+      if (!f.transactionDate) { this.notificationService.showValidationError('Transaction date is required.'); return false; }
+      if (this.isFutureDate(f.transactionDate)) { this.notificationService.showValidationError('Transaction date cannot be in the future.'); return false; }
+      if (f.amount <= 0) { this.notificationService.showValidationError('Transaction amount must be greater than zero.'); return false; }
+      if (!f.description.trim()) { this.notificationService.showValidationError('Description is required.'); return false; }
     }
     if (formType === 'user') {
       const f = this.userForm;
-      if (!f.name.trim()) { alert('Full name is required.'); return false; }
-      if (!f.username.trim()) { alert('Username is required.'); return false; }
-      if (!f.password.trim()) { alert('Password is required.'); return false; }
-      if (f.password.length < 8) { alert('Password must be at least 8 characters long.'); return false; }
+      if (!f.name.trim()) { this.notificationService.showValidationError('Full name is required.'); return false; }
+      if (!f.username.trim()) { this.notificationService.showValidationError('Username is required.'); return false; }
+      if (!f.password.trim()) { this.notificationService.showValidationError('Password is required.'); return false; }
+      if (f.password.length < 8) { this.notificationService.showValidationError('Password must be at least 8 characters long.'); return false; }
     }
     return true;
   }

@@ -1,21 +1,24 @@
 package com.futaneagro.entity;
 
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
+import javax.persistence.FetchType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "Payment_Collection")
-@SQLDelete(sql = "UPDATE Payment_Collection SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE payment_id = ?")
-@Where(clause = "is_deleted = false")
+@Table(name = "t_fin_payment")
+@Where(clause = "is_active = true")
+@SQLDelete(sql = "UPDATE t_fin_payment SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE payment_id = ?")
 public class PaymentCollection extends BaseEntity {
     @Column(name = "payment_id")
     private Integer paymentId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "party_id", nullable = false)
     private Party party;
 
@@ -29,14 +32,7 @@ public class PaymentCollection extends BaseEntity {
     private String paymentMode; // Cash, UPI, Cheque, Bank Transfer
 
     @Column(name = "payment_date", nullable = false)
-    private LocalDate paymentDate;
-
-    @Column(name = "is_deleted")
-
-    @Column(name = "deleted_by", length = 100)
-
-    @Column(name = "deleted_date")
-
+    private LocalDate paymentDate;
     public PaymentCollection() {}
 
     public Integer getPaymentId() {
@@ -85,29 +81,4 @@ public class PaymentCollection extends BaseEntity {
 
     public void setPaymentDate(LocalDate paymentDate) {
         this.paymentDate = paymentDate;
-    }
-
-    public Boolean getIsDeleted() {
-        return isDeleted;
-    }
-
-    public void setIsDeleted(Boolean deleted) {
-        isDeleted = deleted;
-    }
-
-    public String getDeletedBy() {
-        return deletedBy;
-    }
-
-    public void setDeletedBy(String deletedBy) {
-        this.deletedBy = deletedBy;
-    }
-
-    public LocalDate getDeletedDate() {
-        return deletedDate;
-    }
-
-    public void setDeletedDate(LocalDate deletedDate) {
-        this.deletedDate = deletedDate;
-    }
-}
+    }}

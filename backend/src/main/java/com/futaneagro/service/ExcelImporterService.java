@@ -114,13 +114,13 @@ public class ExcelImporterService {
                 String partyAddress = getStringValue(row.getCell(2));
                 String partyContact = getStringValue(row.getCell(3));
 
-                java.util.Optional<Party> existingOpt = partyRepo.findById(partyId);
+                java.util.Optional<Party> existingOpt = partyRepo.findByPartyId(partyId);
                 Party party;
                 if (existingOpt.isPresent()) {
                     party = existingOpt.get();
                 } else {
                     party = new Party();
-                    party.setId(partyId);
+                    party.setPartyId(partyId);
                     party.setCreatedDate(LocalDate.now());
                 }
                 party.setPartyName(partyName);

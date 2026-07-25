@@ -1,4 +1,8 @@
 import { Component, OnInit, Input } from '@angular/core';
+import { AutoSelectDirective } from '../../../directives/auto-select.directive';
+import { FormStateDirective } from '../../../directives/form-state.directive';
+import { NotificationService } from '../../../services/notification.service';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -7,7 +11,7 @@ import { ApiService } from '../../../api.service';
 @Component({
   selector: 'app-expenses',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
   templateUrl: './expenses.component.html',
   styleUrls: ['./expenses.component.css']
 })
@@ -22,7 +26,6 @@ export class ExpensesComponent implements OnInit {
 
   Math = Math;
 
-  // Pagination & Sort state
   currentPage = 1;
   pageSize = 10;
   sortField = 'id';
@@ -33,7 +36,7 @@ export class ExpensesComponent implements OnInit {
 
   defaultCols = ['Date', 'Category', 'Description', 'Amount', 'Paid By', 'Actions'];
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, private notificationService: NotificationService) {}
 
   ngOnInit() {
     this.loadData();
@@ -48,18 +51,18 @@ export class ExpensesComponent implements OnInit {
     });
   }
 
-  isViewer() {
+  isViewer(): boolean {
     return this.loggedInUser && this.loggedInUser.role === 'VIEWER';
   }
 
-  canDelete() {
-    return this.loggedInUser && this.loggedInUser.role === 'ADMIN';
+  canDelete(): boolean {
+    return this.loggedInUser && (this.loggedInUser.role === 'SUPER_ADMIN' || this.loggedInUser.role === 'ADMIN');
   }
 
   validateForm(): boolean {
     const f = this.expenseForm;
     if (!f.expenseDate || !f.category || !f.description || f.amount <= 0) {
-      alert('Please fill out all required expense fields correctly.');
+      this.notificationService.warning('Invalid Input', 'Please fill out all required expense fields correctly.');
       return false;
     }
     return true;
@@ -68,17 +71,34 @@ export class ExpensesComponent implements OnInit {
   saveExpense() {
     if (!this.validateForm()) return;
     const payload = { ...this.expenseForm, paidBy: this.loggedInUser?.username || 'admin' };
-    this.apiService.createExpense(payload).subscribe(() => {
-      this.loadData();
-      this.logAudit('Created expense: ' + this.expenseForm.description);
-      this.expenseForm = { expenseDate: '', category: 'Maintenance', description: '', amount: 0, paidBy: '' };
+    this.apiService.createExpense(payload).subscribe({
+      next: (res) => {
+        if (res) this.expensesList.unshift(res);
+        this.loadData();
+        this.notificationService.success('Data Added', 'Expense record added successfully');
+        this.logAudit('Created expense: ' + this.expenseForm.description);
+        this.expenseForm = { expenseDate: '', category: 'Maintenance', description: '', amount: 0, paidBy: '' };
+      },
+      error: (err) => this.notificationService.error('Error', "Failed to save expense: " + (err.error?.message || err.message))
     });
   }
 
   deleteExpense(id: string) {
-    this.apiService.deleteExpense(id).subscribe(() => {
-      this.loadData();
-      this.logAudit('Deleted expense ID: ' + id);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "Permission denied");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this expense record?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteExpense(id).subscribe({
+          next: () => {
+            this.expensesList = this.expensesList.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Expense record deleted successfully');
+            this.logAudit('Deleted expense ID: ' + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -88,7 +108,6 @@ export class ExpensesComponent implements OnInit {
     }
   }
 
-  // Table handling methods
   toggleColDropdown(table: string) {
     this.showColDropdown[table] = !this.showColDropdown[table];
   }
@@ -138,4 +157,3 @@ export class ExpensesComponent implements OnInit {
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
 }
-

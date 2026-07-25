@@ -10,8 +10,11 @@ import javax.persistence.Converter;
 import java.security.Key;
 import java.util.Base64;
 
+import org.springframework.context.annotation.Lazy;
+
 @Component
 @Converter
+@Lazy
 public class AttributeEncryptor implements AttributeConverter<String, String> {
 
     private static final String AES = "AES";

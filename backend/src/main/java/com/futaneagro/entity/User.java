@@ -1,10 +1,12 @@
 package com.futaneagro.entity;
 
 import javax.persistence.*;
+import org.hibernate.annotations.Where;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Users")
+@Table(name = "t_core_user")
+@Where(clause = "is_active = true")
 public class User extends BaseEntity {
     private String username;
 

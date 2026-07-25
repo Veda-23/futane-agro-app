@@ -3,7 +3,7 @@ package com.futaneagro.entity;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "Settings")
+@Table(name = "t_sys_settings")
 public class Settings extends BaseEntity {
     private String configKey;
 

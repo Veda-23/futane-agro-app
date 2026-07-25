@@ -73,15 +73,7 @@ public class AuthController {
 
         // Case-insensitive username lookup: try exact, then uppercase, then find by ignoring case
         String username = rawUsername.trim();
-        Optional<User> userOpt = userRepository.findById(username);
-        if (!userOpt.isPresent()) {
-            userOpt = userRepository.findById(username.toUpperCase());
-        }
-        if (!userOpt.isPresent()) {
-            userOpt = userRepository.findAll().stream()
-                .filter(u -> u.getUsername().equalsIgnoreCase(username))
-                .findFirst();
-        }
+        Optional<User> userOpt = userRepository.findByUsernameIgnoreCase(username);
         if (!userOpt.isPresent()) {
             return ResponseEntity.status(401).body("Invalid username or password.");
         }
@@ -205,7 +197,7 @@ public class AuthController {
         // OTP verified successfully. Remove from cache
         otpCache.remove(username);
 
-        Optional<User> userOpt = userRepository.findById(username);
+        Optional<User> userOpt = userRepository.findByUsernameIgnoreCase(username);
         if (!userOpt.isPresent()) {
             return ResponseEntity.status(401).body("User not found.");
         }

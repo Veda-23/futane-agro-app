@@ -1,15 +1,18 @@
 package com.futaneagro.entity;
 
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
+import javax.persistence.FetchType;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "Dispatch")
-@SQLDelete(sql = "UPDATE Dispatch SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE dispatch_id = ?")
-@Where(clause = "is_deleted = false")
+@Table(name = "t_log_dispatch")
+@Where(clause = "is_active = true")
+@SQLDelete(sql = "UPDATE t_log_dispatch SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE dispatch_id = ?")
 public class Dispatch extends BaseEntity {
     @Column(name = "dispatch_id")
     private Integer dispatchId;
@@ -17,7 +20,7 @@ public class Dispatch extends BaseEntity {
     @Column(name = "dispatch_number", unique = true, nullable = false, length = 100)
     private String dispatchNumber;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sale_id", nullable = false)
     private Sales sale;
 
@@ -31,14 +34,7 @@ public class Dispatch extends BaseEntity {
     private LocalDate date;
 
     @Column(name = "status", nullable = false, length = 50)
-    private String status = "Pending"; // Pending, In Transit, Delivered
-
-    @Column(name = "is_deleted")
-
-    @Column(name = "deleted_by", length = 100)
-
-    @Column(name = "deleted_date")
-
+    private String status = "Pending"; // Pending, In Transit, Delivered
     public Dispatch() {}
 
     public Integer getDispatchId() {
@@ -95,29 +91,4 @@ public class Dispatch extends BaseEntity {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public Boolean getIsDeleted() {
-        return isDeleted;
-    }
-
-    public void setIsDeleted(Boolean deleted) {
-        isDeleted = deleted;
-    }
-
-    public String getDeletedBy() {
-        return deletedBy;
-    }
-
-    public void setDeletedBy(String deletedBy) {
-        this.deletedBy = deletedBy;
-    }
-
-    public LocalDate getDeletedDate() {
-        return deletedDate;
-    }
-
-    public void setDeletedDate(LocalDate deletedDate) {
-        this.deletedDate = deletedDate;
-    }
-}
+    }}

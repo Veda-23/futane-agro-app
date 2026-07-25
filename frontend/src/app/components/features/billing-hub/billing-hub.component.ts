@@ -1,4 +1,9 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, ElementRef } from '@angular/core';
+import { AutoSelectDirective } from '../../../directives/auto-select.directive';
+import { FormStateDirective } from '../../../directives/form-state.directive';
+import { FormValidationService } from '../../../services/form-validation.service';
+import { NotificationService } from '../../../services/notification.service';
+
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -7,7 +12,7 @@ import { ApiService } from '../../../api.service';
 @Component({
   selector: 'app-billing-hub',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, DecimalPipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, DecimalPipe, AutoSelectDirective, FormStateDirective],
   templateUrl: './billing-hub.component.html',
   styleUrls: ['./billing-hub.component.css']
 })

@@ -1,41 +1,53 @@
-<div class="glass-panel" style="margin-bottom: 20px;">
-  <div class="filter-header" (click)="toggleVisibility.emit()" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; cursor: pointer; border-bottom: 1px solid var(--border-glass);">
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <span>🔍</span>
-      <h3 style="margin: 0; font-size: 14px;">Global Data Filters</h3>
+<div class="filter-card">
+  <div class="filter-header" (click)="toggleVisibility.emit()" style="cursor: pointer;">
+    <div class="filter-title">
+      <div class="filter-icon">🔍</div>
+      <h3>Global Data Filters</h3>
+      <span *ngIf="filters.query || filters.date || filters.month" class="active-pill">Active Filter</span>
     </div>
-    <div style="display: flex; gap: 10px;">
-      <button type="button" class="btn btn-secondary btn-sm" (click)="$event.stopPropagation(); reset.emit()">Reset Filters</button>
-      <button type="button" class="btn btn-success btn-sm" (click)="$event.stopPropagation(); export.emit()">Export Filtered (CSV)</button>
+    <div class="filter-actions">
+      <button type="button" class="btn-reset" (click)="$event.stopPropagation(); reset.emit()">Reset Filters</button>
+      <button type="button" class="btn-export" (click)="$event.stopPropagation(); export.emit()">Export Filtered (CSV)</button>
     </div>
   </div>
   
-  <div *ngIf="showFilters" class="grid-cols-4" style="padding: 15px 20px; gap: 15px; display: grid;">
-    <div class="form-group" style="margin: 0;">
-      <label style="font-size: 12px; margin-bottom: 4px; font-weight: 600; color: var(--text-secondary);">Search Query</label>
-      <input type="text" [(ngModel)]="filters.query" (ngModelChange)="onFilterChange()" placeholder="Type to search..." style="height: 34px; font-size: 13px;">
-    </div>
-    <div class="form-group" style="margin: 0;">
-      <label style="font-size: 12px; margin-bottom: 4px; font-weight: 600; color: var(--text-secondary);">Date Filter</label>
-      <input type="date" [(ngModel)]="filters.date" (ngModelChange)="onFilterChange()" style="height: 34px; font-size: 13px;">
-    </div>
-    <div class="form-group" style="margin: 0;">
-      <label style="font-size: 12px; margin-bottom: 4px; font-weight: 600; color: var(--text-secondary);">Month Filter</label>
-      <select [(ngModel)]="filters.month" (ngModelChange)="onFilterChange()" style="height: 34px; font-size: 13px;">
-        <option value="">All Months</option>
-        <option value="January">January</option>
-        <option value="February">February</option>
-        <option value="March">March</option>
-        <option value="April">April</option>
-        <option value="May">May</option>
-        <option value="June">June</option>
-        <option value="July">July</option>
-        <option value="August">August</option>
-        <option value="September">September</option>
-        <option value="October">October</option>
-        <option value="November">November</option>
-        <option value="December">December</option>
-      </select>
+  <div *ngIf="showFilters" class="filter-body">
+    <div class="filter-grid">
+      <div class="form-field">
+        <label class="field-label">SEARCH QUERY</label>
+        <div class="input-wrapper">
+          <input appAutoSelect type="text" class="custom-input" [(ngModel)]="filters.query" (ngModelChange)="onFilterChange()" placeholder="Type to search...">
+          <button *ngIf="filters.query" (click)="filters.query = ''; onFilterChange()" type="button" class="clear-btn" title="Clear Search">✕</button>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label class="field-label">DATE FILTER</label>
+        <div class="input-wrapper">
+          <input appAutoSelect type="date" class="custom-input" [(ngModel)]="filters.date" (ngModelChange)="onFilterChange()">
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label class="field-label">MONTH FILTER</label>
+        <div class="input-wrapper">
+          <select class="custom-select" [(ngModel)]="filters.month" (ngModelChange)="onFilterChange()">
+            <option value="">All Months</option>
+            <option value="January">January</option>
+            <option value="February">February</option>
+            <option value="March">March</option>
+            <option value="April">April</option>
+            <option value="May">May</option>
+            <option value="June">June</option>
+            <option value="July">July</option>
+            <option value="August">August</option>
+            <option value="September">September</option>
+            <option value="October">October</option>
+            <option value="November">November</option>
+            <option value="December">December</option>
+          </select>
+        </div>
+      </div>
     </div>
   </div>
 </div>

@@ -1,5 +1,6 @@
 package com.futaneagro.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @MappedSuperclass
+@JsonIgnoreProperties(value = {"hibernateLazyInitializer", "handler"}, ignoreUnknown = true)
 @EntityListeners(AuditingEntityListener.class)
 public abstract class BaseEntity {
 
@@ -27,11 +29,11 @@ public abstract class BaseEntity {
     private LocalDateTime updatedAt;
 
     @CreatedBy
-    @Column(name = "created_by", updatable = false)
+    @Column(name = "created_by", updatable = false, columnDefinition = "CHAR(36)")
     private String createdBy;
 
     @LastModifiedBy
-    @Column(name = "updated_by")
+    @Column(name = "updated_by", columnDefinition = "CHAR(36)")
     private String updatedBy;
 
     @Version
@@ -40,6 +42,15 @@ public abstract class BaseEntity {
 
     @Column(name = "is_active")
     private Boolean isActive = true;
+
+    @Column(name = "is_deleted")
+    private Boolean isDeleted = false;
+
+    @Column(name = "deleted_by", length = 100)
+    private String deletedBy;
+
+    @Column(name = "deleted_date")
+    private java.time.LocalDateTime deletedDate;
 
     // Getters and Setters
     public String getId() { return id; }
@@ -56,4 +67,10 @@ public abstract class BaseEntity {
     public void setVersion(Integer version) { this.version = version; }
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    public Boolean getIsDeleted() { return isDeleted; }
+    public void setIsDeleted(Boolean isDeleted) { this.isDeleted = isDeleted; }
+    public String getDeletedBy() { return deletedBy; }
+    public void setDeletedBy(String deletedBy) { this.deletedBy = deletedBy; }
+    public java.time.LocalDateTime getDeletedDate() { return deletedDate; }
+    public void setDeletedDate(java.time.LocalDateTime deletedDate) { this.deletedDate = deletedDate; }
 }

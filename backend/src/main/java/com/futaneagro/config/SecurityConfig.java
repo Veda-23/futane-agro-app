@@ -42,8 +42,10 @@ public class SecurityConfig {
         http.cors().and().csrf().disable()
             .authorizeRequests()
             .antMatchers("/api/users/login", "/api/users/login/verify", "/api/users/verify-session").permitAll()
+            .antMatchers("/api/webhooks/razorpay").permitAll() // Razorpay webhook — no JWT possible
             .antMatchers("/api/uploads/**").permitAll() // Serve public files
             .antMatchers("/api/health").permitAll() // Health Check Endpoint
+            .antMatchers("/actuator/**").permitAll() // Actuator Prometheus Metrics
             
             // SUPER_ADMIN Only Administrative Endpoints
             .antMatchers("/api/users/**").hasRole("SUPER_ADMIN")

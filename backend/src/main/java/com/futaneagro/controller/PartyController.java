@@ -95,7 +95,7 @@ public class PartyController {
             String oldState = toJson(party);
             party.setIsActive(false);
             party.setUpdatedBy(getCurrentUser());
-            party.setUpdatedAt(LocalDate.now());
+            party.setUpdatedAt(java.time.LocalDateTime.now());
             partyRepository.save(party);
             saveAuditLog("Soft-deleted party ID: " + id, "Party", oldState, null);
         });
@@ -135,7 +135,7 @@ public class PartyController {
             String oldState = toJson(vendor);
             vendor.setIsActive(false);
             vendor.setUpdatedBy(getCurrentUser());
-            vendor.setUpdatedAt(LocalDate.now());
+            vendor.setUpdatedAt(java.time.LocalDateTime.now());
             vendorRepository.save(vendor);
             saveAuditLog("Soft-deleted vendor ID: " + id, "Vendor", oldState, null);
         });
@@ -175,7 +175,7 @@ public class PartyController {
             String oldState = toJson(driver);
             driver.setIsActive(false);
             driver.setUpdatedBy(getCurrentUser());
-            driver.setUpdatedAt(LocalDate.now());
+            driver.setUpdatedAt(java.time.LocalDateTime.now());
             driverRepository.save(driver);
             saveAuditLog("Soft-deleted driver ID: " + id, "Driver", oldState, null);
         });

@@ -1,15 +1,18 @@
 package com.futaneagro.entity;
 
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
+import javax.persistence.FetchType;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "Invoice")
-@SQLDelete(sql = "UPDATE Invoice SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE invoice_id = ?")
-@Where(clause = "is_deleted = false")
+@Table(name = "t_fin_invoice")
+@Where(clause = "is_active = true")
+@SQLDelete(sql = "UPDATE t_fin_invoice SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE invoice_id = ?")
 public class Invoice extends BaseEntity {
     @Column(name = "invoice_id")
     private Integer invoiceId;
@@ -17,19 +20,12 @@ public class Invoice extends BaseEntity {
     @Column(name = "invoice_no", unique = true, nullable = false, length = 100)
     private String invoiceNo;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sale_id", nullable = false)
     private Sales sale;
 
     @Column(name = "created_date", nullable = false)
-    private LocalDate createdDate;
-
-    @Column(name = "is_deleted")
-
-    @Column(name = "deleted_by", length = 100)
-
-    @Column(name = "deleted_date")
-
+    private LocalDate createdDate;
     public Invoice() {}
 
     public Integer getInvoiceId() {
@@ -62,29 +58,4 @@ public class Invoice extends BaseEntity {
 
     public void setCreatedDate(LocalDate createdDate) {
         this.createdDate = createdDate;
-    }
-
-    public Boolean getIsDeleted() {
-        return isDeleted;
-    }
-
-    public void setIsDeleted(Boolean deleted) {
-        isDeleted = deleted;
-    }
-
-    public String getDeletedBy() {
-        return deletedBy;
-    }
-
-    public void setDeletedBy(String deletedBy) {
-        this.deletedBy = deletedBy;
-    }
-
-    public LocalDate getDeletedDate() {
-        return deletedDate;
-    }
-
-    public void setDeletedDate(LocalDate deletedDate) {
-        this.deletedDate = deletedDate;
-    }
-}
+    }}

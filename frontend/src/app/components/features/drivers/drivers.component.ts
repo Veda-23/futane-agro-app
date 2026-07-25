@@ -1,4 +1,8 @@
 import { Component, OnInit, Input } from '@angular/core';
+import { AutoSelectDirective } from '../../../directives/auto-select.directive';
+import { FormStateDirective } from '../../../directives/form-state.directive';
+import { NotificationService } from '../../../services/notification.service';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -7,7 +11,7 @@ import { ApiService } from '../../../api.service';
 @Component({
   selector: 'app-drivers',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
   templateUrl: './drivers.component.html',
   styleUrls: ['./drivers.component.css']
 })
@@ -20,7 +24,6 @@ export class DriversComponent implements OnInit {
   driverForm = { driverName: '', mobile: '', licenseNumber: '', address: '' };
   Math = Math;
 
-  // Pagination & Sort state
   currentPage = 1;
   pageSize = 10;
   sortField = 'id';
@@ -31,7 +34,7 @@ export class DriversComponent implements OnInit {
 
   defaultColumns = ['ID', 'Name', 'Mobile', 'License', 'Address', 'Actions'];
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, private notificationService: NotificationService) {}
 
   ngOnInit() {
     this.loadData();
@@ -58,7 +61,7 @@ export class DriversComponent implements OnInit {
 
   validateForm(): boolean {
     if (!this.driverForm.driverName || !this.driverForm.mobile || !this.driverForm.licenseNumber || !this.driverForm.address) {
-      alert("Please fill all required fields");
+      this.notificationService.warning('Invalid Input', "Please fill all required fields");
       return false;
     }
     return true;
@@ -66,21 +69,34 @@ export class DriversComponent implements OnInit {
 
   saveDriver() {
     if (!this.validateForm()) return;
-    this.apiService.createDriver(this.driverForm).subscribe(() => {
-      this.loadData();
-      this.logAudit("Created driver: " + this.driverForm.driverName);
-      this.driverForm = { driverName: '', mobile: '', licenseNumber: '', address: '' };
+    this.apiService.createDriver(this.driverForm).subscribe({
+      next: (res) => {
+        if (res) this.drivers.unshift(res);
+        this.loadData();
+        this.notificationService.success('Data Added', 'Driver created successfully');
+        this.logAudit("Created driver: " + this.driverForm.driverName);
+        this.driverForm = { driverName: '', mobile: '', licenseNumber: '', address: '' };
+      },
+      error: (err) => this.notificationService.error('Error', "Failed to create driver: " + (err.error?.message || err.message))
     });
   }
 
   deleteDriver(id: string) {
     if (!this.canDelete()) {
-      alert("Permission denied");
+      this.notificationService.warning('Permission Denied', "Permission denied");
       return;
     }
-    this.apiService.deleteDriver(id).subscribe(() => {
-      this.loadData();
-      this.logAudit("Deleted driver ID: " + id);
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this driver?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteDriver(id).subscribe({
+          next: () => {
+            this.drivers = this.drivers.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Driver deleted successfully');
+            this.logAudit("Deleted driver ID: " + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -90,7 +106,6 @@ export class DriversComponent implements OnInit {
     }
   }
 
-  // Table handling methods
   toggleColDropdown(table: string) {
     this.showColDropdown[table] = !this.showColDropdown[table];
   }
@@ -140,4 +155,3 @@ export class DriversComponent implements OnInit {
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
 }
-

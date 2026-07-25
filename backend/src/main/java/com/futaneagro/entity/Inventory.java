@@ -8,9 +8,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Inventory")
-@SQLDelete(sql = "UPDATE Inventory SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE inventory_id = ?")
-@Where(clause = "is_deleted = false")
+@Table(name = "t_inv_inventory")
+@Where(clause = "is_active = true")
+@SQLDelete(sql = "UPDATE t_inv_inventory SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE inventory_id = ?")
 public class Inventory extends BaseEntity {
     @Column(name = "inventory_id")
     private Integer inventoryId;
@@ -34,14 +34,7 @@ public class Inventory extends BaseEntity {
     private Integer currentStock = 0;
 
     @Column(name = "last_updated")
-    private LocalDateTime lastUpdated;
-
-    @Column(name = "is_deleted")
-
-    @Column(name = "deleted_by", length = 100)
-
-    @Column(name = "deleted_date")
-
+    private LocalDateTime lastUpdated;
     public Inventory() {}
 
     @PrePersist
@@ -116,29 +109,4 @@ public class Inventory extends BaseEntity {
 
     public void setLastUpdated(LocalDateTime lastUpdated) {
         this.lastUpdated = lastUpdated;
-    }
-
-    public Boolean getIsDeleted() {
-        return isDeleted;
-    }
-
-    public void setIsDeleted(Boolean deleted) {
-        isDeleted = deleted;
-    }
-
-    public String getDeletedBy() {
-        return deletedBy;
-    }
-
-    public void setDeletedBy(String deletedBy) {
-        this.deletedBy = deletedBy;
-    }
-
-    public LocalDate getDeletedDate() {
-        return deletedDate;
-    }
-
-    public void setDeletedDate(LocalDate deletedDate) {
-        this.deletedDate = deletedDate;
-    }
-}
+    }}

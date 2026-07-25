@@ -1,4 +1,8 @@
 import { Component, OnInit, Input } from '@angular/core';
+import { AutoSelectDirective } from '../../../directives/auto-select.directive';
+import { FormStateDirective } from '../../../directives/form-state.directive';
+import { NotificationService } from '../../../services/notification.service';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -7,7 +11,7 @@ import { ApiService } from '../../../api.service';
 @Component({
   selector: 'app-production',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
   templateUrl: './production.component.html',
   styleUrls: ['./production.component.css']
 })
@@ -26,7 +30,7 @@ export class ProductionComponent implements OnInit {
   ppdForm = { date: '', crateType: 'Apple Crate', totalProduction: 0, successful: 0, rejected: 0, shift: 'Morning Shift' };
   ppmForm = { month: 'May', year: 2026, cratesProduced: 0, electricityUnits: 0, electricityBill: 0 };
 
-  // Filter & Pagination (simplified for component)
+  // Filter & Pagination
   currentPage = 1;
   pageSize = 10;
   sortField = '';
@@ -35,7 +39,7 @@ export class ProductionComponent implements OnInit {
   showColDropdown: { [key: string]: boolean } = {};
   columnsVisibility: { [table: string]: { [col: string]: boolean } } = {};
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, private notificationService: NotificationService) {}
 
   ngOnInit() {
     this.loadData();
@@ -56,29 +60,63 @@ export class ProductionComponent implements OnInit {
 
   // --- PPD Methods ---
   savePpd() {
-    this.apiService.createPpd(this.ppdForm).subscribe(() => {
-      this.loadData();
-      this.ppdForm = { date: '', crateType: 'Apple Crate', totalProduction: 0, successful: 0, rejected: 0, shift: 'Morning Shift' };
+    this.apiService.createPpd(this.ppdForm).subscribe({
+      next: (newItem) => {
+        if (newItem) this.ppdList.unshift(newItem);
+        this.loadData();
+        this.notificationService.success('Data Added', 'Daily production entry added successfully');
+        this.ppdForm = { date: '', crateType: 'Apple Crate', totalProduction: 0, successful: 0, rejected: 0, shift: 'Morning Shift' };
+      },
+      error: (err) => this.notificationService.error('Error', err.error?.message || err.message)
     });
   }
 
   deletePpd(id: string) {
-    this.apiService.deletePpd(id).subscribe(() => {
-      this.loadData();
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this production entry?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deletePpd(id).subscribe({
+          next: () => {
+            this.ppdList = this.ppdList.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Production entry deleted successfully');
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
   // --- PPM Methods ---
   savePpm() {
-    this.apiService.createPpm(this.ppmForm).subscribe(() => {
-      this.loadData();
-      this.ppmForm = { month: 'May', year: 2026, cratesProduced: 0, electricityUnits: 0, electricityBill: 0 };
+    this.apiService.createPpm(this.ppmForm).subscribe({
+      next: (newItem) => {
+        if (newItem) this.ppmList.unshift(newItem);
+        this.loadData();
+        this.notificationService.success('Data Added', 'Monthly production summary added successfully');
+        this.ppmForm = { month: 'May', year: 2026, cratesProduced: 0, electricityUnits: 0, electricityBill: 0 };
+      },
+      error: (err) => this.notificationService.error('Error', err.error?.message || err.message)
     });
   }
 
   deletePpm(id: string) {
-    this.apiService.deletePpm(id).subscribe(() => {
-      this.loadData();
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this monthly production entry?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deletePpm(id).subscribe({
+          next: () => {
+            this.ppmList = this.ppmList.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Monthly production entry deleted successfully');
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -115,11 +153,42 @@ export class ProductionComponent implements OnInit {
     }
   }
 
+  @Input() filterSearchQuery: string = '';
+  @Input() filterDate: string = '';
+  @Input() filterMonth: string = '';
+
   getProcessedList(list: any[], tableKey: string): any[] {
     if (!list) return [];
     let result = [...list];
 
-    // Sorting
+    if (this.filterSearchQuery && this.filterSearchQuery.trim()) {
+      const query = this.filterSearchQuery.toLowerCase().trim();
+      result = result.filter(item => {
+        const checkVal = (val: any): boolean => {
+          if (val === null || val === undefined) return false;
+          if (typeof val === 'object') return Object.values(val).some(v => checkVal(v));
+          return String(val).toLowerCase().includes(query);
+        };
+        return Object.values(item).some(val => checkVal(val));
+      });
+    }
+
+    if (this.filterDate) {
+      result = result.filter(item => (item.date || item.createdDate) === this.filterDate);
+    }
+
+    if (this.filterMonth) {
+      result = result.filter(item => {
+        if (item.month) return String(item.month).toLowerCase() === this.filterMonth.toLowerCase();
+        const itemDate = item.date || item.createdDate;
+        if (itemDate) {
+          const m = new Date(itemDate).toLocaleString('default', { month: 'long' });
+          return m.toLowerCase() === this.filterMonth.toLowerCase();
+        }
+        return false;
+      });
+    }
+
     if (this.sortField) {
       result.sort((a, b) => {
         let valA = a[this.sortField];
@@ -136,10 +205,8 @@ export class ProductionComponent implements OnInit {
       });
     }
 
-    // Pagination
     this.tableFilteredCounts[tableKey] = result.length;
     const startIndex = (this.currentPage - 1) * this.pageSize;
     return result.slice(startIndex, startIndex + this.pageSize);
   }
 }
-

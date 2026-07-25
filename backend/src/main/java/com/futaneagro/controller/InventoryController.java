@@ -81,7 +81,7 @@ public class InventoryController {
             String oldState = toJson(inventory);
             inventory.setIsActive(false);
             inventory.setUpdatedBy(getCurrentUser());
-            inventory.setUpdatedAt(LocalDate.now());
+            inventory.setUpdatedAt(java.time.LocalDateTime.now());
             inventoryRepository.save(inventory);
             saveAuditLog("Soft-deleted inventory ID: " + id, "Inventory", oldState, null);
         });

@@ -1,5 +1,7 @@
 package com.futaneagro.entity;
 
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
@@ -8,9 +10,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "Expense")
-@SQLDelete(sql = "UPDATE Expense SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE expense_id = ?")
-@Where(clause = "is_deleted = false")
+@Table(name = "t_fin_expense")
+@Where(clause = "is_active = true")
+@SQLDelete(sql = "UPDATE t_fin_expense SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE expense_id = ?")
 public class Expense extends BaseEntity {
     @Column(name = "expense_id")
     private Integer expenseId;
@@ -25,14 +27,7 @@ public class Expense extends BaseEntity {
     private BigDecimal amount;
 
     @Column(name = "description", length = 255)
-    private String description;
-
-    @Column(name = "is_deleted")
-
-    @Column(name = "deleted_by", length = 100)
-
-    @Column(name = "deleted_date")
-
+    private String description;
     public Expense() {}
 
     public Integer getExpenseId() {
@@ -73,29 +68,4 @@ public class Expense extends BaseEntity {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public Boolean getIsDeleted() {
-        return isDeleted;
-    }
-
-    public void setIsDeleted(Boolean deleted) {
-        isDeleted = deleted;
-    }
-
-    public String getDeletedBy() {
-        return deletedBy;
-    }
-
-    public void setDeletedBy(String deletedBy) {
-        this.deletedBy = deletedBy;
-    }
-
-    public LocalDate getDeletedDate() {
-        return deletedDate;
-    }
-
-    public void setDeletedDate(LocalDate deletedDate) {
-        this.deletedDate = deletedDate;
-    }
-}
+    }}

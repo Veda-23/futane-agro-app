@@ -6,5 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PartyRepository extends JpaRepository<Party, String> {
+    java.util.Optional<Party> findByPartyId(Integer partyId);
 }
 

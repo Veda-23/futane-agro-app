@@ -10,19 +10,19 @@
         <h4>{{ 'settings.add_user' | translate:currentLang }}</h4>
         <div class="form-group">
           <label>{{ 'settings.fullname' | translate:currentLang }}</label>
-          <input type="text" [(ngModel)]="userForm.name" name="usrName" required [placeholder]="'settings.fullname' | translate:currentLang">
+          <input appAutoSelect type="text" [(ngModel)]="userForm.name" name="usrName" required [placeholder]="'settings.fullname' | translate:currentLang">
         </div>
         <div class="form-group">
           <label>{{ 'settings.username' | translate:currentLang }}</label>
-          <input type="text" [(ngModel)]="userForm.username" name="usrUsername" required [placeholder]="'settings.username' | translate:currentLang">
+          <input appAutoSelect type="text" [(ngModel)]="userForm.username" name="usrUsername" required [placeholder]="'settings.username' | translate:currentLang">
         </div>
         <div class="form-group">
           <label>{{ 'settings.password' | translate:currentLang }}</label>
-          <input type="password" [(ngModel)]="userForm.password" name="usrPassword" required [placeholder]="'settings.password' | translate:currentLang">
+          <input appAutoSelect type="password" [(ngModel)]="userForm.password" name="usrPassword" required [placeholder]="'settings.password' | translate:currentLang">
         </div>
         <div class="form-group">
           <label>Email Address</label>
-          <input type="email" [(ngModel)]="userForm.email" name="usrEmail" placeholder="name@company.com">
+          <input appAutoSelect type="email" [(ngModel)]="userForm.email" name="usrEmail" placeholder="name@company.com">
         </div>
         <div class="form-group">
           <label>{{ 'settings.role' | translate:currentLang }}</label>
@@ -47,7 +47,7 @@
           
           <div style="display: flex; align-items: center; gap: 5px; margin-top: 4px;">
             <span style="font-size: 11px; color: var(--text-secondary);">Email:</span>
-            <input type="email" [value]="u.email || ''" (change)="updateUserEmail(u.username, $any($event.target).value)" placeholder="No email set" style="padding: 2px 4px; font-size: 11px; border: 1px solid var(--border-glass); border-radius: 4px; background: rgba(0,0,0,0.1); color: var(--text-primary); flex: 1;">
+            <input appAutoSelect type="email" [value]="u.email || ''" (change)="updateUserEmail(u.username, $any($event.target).value)" placeholder="No email set" style="padding: 2px 4px; font-size: 11px; border: 1px solid var(--border-glass); border-radius: 4px; background: rgba(0,0,0,0.1); color: var(--text-primary); flex: 1;">
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
             <button type="button" class="btn btn-sm" [class.btn-danger]="u.accountLocked" [class.btn-secondary]="!u.accountLocked" (click)="toggleUserLock(u.username, u.accountLocked)" style="padding: 4px 8px; font-size:11px;">
@@ -75,7 +75,7 @@
         <h3>⚙️ {{ 'settings.config_title' | translate:currentLang }}</h3>
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size:13px; font-weight:600;">Dark Theme:</span>
-          <input type="checkbox" [checked]="isDarkMode" (change)="toggleDarkMode()" style="width: 20px; height: 20px; cursor: pointer;">
+          <input appAutoSelect type="checkbox" [checked]="isDarkMode" (change)="toggleDarkMode()" style="width: 20px; height: 20px; cursor: pointer;">
         </div>
       </div>
       
@@ -87,38 +87,38 @@
           <h4 style="margin-top:0; color: var(--accent-orange);">🏢 Company Profile Settings</h4>
           <div class="form-group">
             <label>Company Name</label>
-            <input type="text" [ngModel]="getSettingVal('bill.company_name')" (ngModelChange)="setSettingVal('bill.company_name', $event)">
+            <input appAutoSelect type="text" [ngModel]="getSettingVal('bill.company_name')" (ngModelChange)="setSettingVal('bill.company_name', $event)">
           </div>
           <div class="form-group">
             <label>GSTIN Number</label>
-            <input type="text" [ngModel]="getSettingVal('gstin_number')" (ngModelChange)="setSettingVal('gstin_number', $event)">
+            <input appAutoSelect type="text" [ngModel]="getSettingVal('gstin_number')" (ngModelChange)="setSettingVal('gstin_number', $event)">
           </div>
           <div class="form-group">
             <label>PAN Number</label>
-            <input type="text" [ngModel]="getSettingVal('pan_number')" (ngModelChange)="setSettingVal('pan_number', $event)">
+            <input appAutoSelect type="text" [ngModel]="getSettingVal('pan_number')" (ngModelChange)="setSettingVal('pan_number', $event)">
           </div>
           <div class="form-group">
             <label>Company Address</label>
-            <input type="text" [ngModel]="getSettingVal('bill.company_address')" (ngModelChange)="setSettingVal('bill.company_address', $event)">
+            <input appAutoSelect type="text" [ngModel]="getSettingVal('bill.company_address')" (ngModelChange)="setSettingVal('bill.company_address', $event)">
           </div>
         </div>
         <div class="glass-panel" style="padding: 15px; background: rgba(255,255,255,0.01);">
           <h4 style="margin-top:0; color: var(--accent-orange);">🏦 Bank Account details</h4>
           <div class="form-group">
             <label>Bank Name</label>
-            <input type="text" [ngModel]="getSettingVal('bank_name')" (ngModelChange)="setSettingVal('bank_name', $event)">
+            <input appAutoSelect type="text" [ngModel]="getSettingVal('bank_name')" (ngModelChange)="setSettingVal('bank_name', $event)">
           </div>
           <div class="form-group">
             <label>Account Number</label>
-            <input type="text" [ngModel]="getSettingVal('bank_account_no')" (ngModelChange)="setSettingVal('bank_account_no', $event)">
+            <input appAutoSelect type="text" [ngModel]="getSettingVal('bank_account_no')" (ngModelChange)="setSettingVal('bank_account_no', $event)">
           </div>
           <div class="form-group">
             <label>IFSC Code</label>
-            <input type="text" [ngModel]="getSettingVal('bank_ifsc')" (ngModelChange)="setSettingVal('bank_ifsc', $event)">
+            <input appAutoSelect type="text" [ngModel]="getSettingVal('bank_ifsc')" (ngModelChange)="setSettingVal('bank_ifsc', $event)">
           </div>
           <div class="form-group">
             <label>Invoice Prefix</label>
-            <input type="text" [ngModel]="getSettingVal('invoice_prefix')" (ngModelChange)="setSettingVal('invoice_prefix', $event)">
+            <input appAutoSelect type="text" [ngModel]="getSettingVal('invoice_prefix')" (ngModelChange)="setSettingVal('invoice_prefix', $event)">
           </div>
         </div>
       </div>
@@ -160,7 +160,7 @@
       
       <!-- Search bar with AI simulator -->
       <div style="margin-bottom: 20px;">
-        <input type="text" [(ngModel)]="settingsSearchQuery" placeholder="🔍 Search settings by category, key or descriptions..." style="width: 100%; padding: 12px; font-size:14px; border: 1px solid var(--border-glass); border-radius: 8px; background: rgba(0,0,0,0.05);">
+        <input appAutoSelect type="text" [(ngModel)]="settingsSearchQuery" placeholder="🔍 Search settings by category, key or descriptions..." style="width: 100%; padding: 12px; font-size:14px; border: 1px solid var(--border-glass); border-radius: 8px; background: rgba(0,0,0,0.05);">
       </div>
       
       <!-- AI Suggestion box -->
@@ -192,9 +192,9 @@
                 {{ s.description }}
               </td>
               <td style="padding: 10px;">
-                <input *ngIf="s.type === 'text'" type="text" [(ngModel)]="s.value" style="padding: 4px 8px; font-size: 12px; height: 32px;">
-                <input *ngIf="s.type === 'number'" type="number" [(ngModel)]="s.value" style="padding: 4px 8px; font-size: 12px; height: 32px;">
-                <input *ngIf="s.type === 'boolean'" type="checkbox" [(ngModel)]="s.value" style="width: 18px; height: 18px; cursor: pointer;" (change)="s.key === 'theme_dark_mode_enabled' ? toggleDarkMode(s.value) : null">
+                <input appAutoSelect *ngIf="s.type === 'text'" type="text" [(ngModel)]="s.value" style="padding: 4px 8px; font-size: 12px; height: 32px;">
+                <input appAutoSelect *ngIf="s.type === 'number'" type="number" [(ngModel)]="s.value" style="padding: 4px 8px; font-size: 12px; height: 32px;">
+                <input appAutoSelect *ngIf="s.type === 'boolean'" type="checkbox" [(ngModel)]="s.value" style="width: 18px; height: 18px; cursor: pointer;" (change)="s.key === 'theme_dark_mode_enabled' ? toggleDarkMode(s.value) : null">
               </td>
             </tr>
             <tr *ngIf="filteredSettings.length === 0">

@@ -1,8 +1,8 @@
 package com.futaneagro.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.futaneagro.security.AttributeEncryptor;
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
@@ -12,13 +12,13 @@ import javax.validation.constraints.Size;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "Party", uniqueConstraints = {
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@Table(name = "t_crm_party", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"party_name"}),
     @UniqueConstraint(columnNames = {"party_contact"}),
     @UniqueConstraint(columnNames = {"email"})
 })
-@SQLDelete(sql = "UPDATE Party SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE party_id = ?")
-@Where(clause = "is_deleted = false")
+@SQLDelete(sql = "UPDATE t_crm_party SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE party_id = ?")
 public class Party extends BaseEntity {
     @Column(name = "party_id")
     private Integer partyId;
@@ -65,12 +65,6 @@ public class Party extends BaseEntity {
 
     @Column(name = "agreement_path", length = 255)
     private String agreementPath;
-
-    @Column(name = "is_deleted")
-
-    @Column(name = "deleted_by", length = 100)
-
-    @Column(name = "deleted_date")
 
     public Party() {}
 
@@ -176,29 +170,5 @@ public class Party extends BaseEntity {
 
     public void setAgreementPath(String agreementPath) {
         this.agreementPath = agreementPath;
-    }
-
-    public Boolean getIsDeleted() {
-        return isDeleted;
-    }
-
-    public void setIsDeleted(Boolean deleted) {
-        isDeleted = deleted;
-    }
-
-    public String getDeletedBy() {
-        return deletedBy;
-    }
-
-    public void setDeletedBy(String deletedBy) {
-        this.deletedBy = deletedBy;
-    }
-
-    public LocalDate getDeletedDate() {
-        return deletedDate;
-    }
-
-    public void setDeletedDate(LocalDate deletedDate) {
-        this.deletedDate = deletedDate;
     }
 }

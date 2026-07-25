@@ -211,6 +211,9 @@ public class AppStartupRunner implements CommandLineRunner {
             emp.setJoiningDate(LocalDate.of(2025, 1, 15));
             emp.setAadhaarNo("123456789012");
             emp.setBankAccount("HDFC00012345678");
+            emp.setPhotoPath("dummy_photo.jpg");
+            emp.setAadhaarCardPath("dummy_aadhaar.pdf");
+            emp.setBankPassbookPath("dummy_passbook.pdf");
             employeeRepo.save(emp);
             System.out.println("✓ Employees seeded.");
         }

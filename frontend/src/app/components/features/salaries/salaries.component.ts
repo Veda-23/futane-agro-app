@@ -1,4 +1,8 @@
 import { Component, OnInit, Input } from '@angular/core';
+import { AutoSelectDirective } from '../../../directives/auto-select.directive';
+import { FormStateDirective } from '../../../directives/form-state.directive';
+import { NotificationService } from '../../../services/notification.service';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -7,7 +11,7 @@ import { ApiService } from '../../../api.service';
 @Component({
   selector: 'app-salaries',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
   templateUrl: './salaries.component.html',
   styleUrls: ['./salaries.component.css']
 })
@@ -21,7 +25,6 @@ export class SalariesComponent implements OnInit {
   salariesForm = { id: '', month: 'May', year: 2026, salaryAmount: 0, status: 'Pending', paidDate: '' };
   Math = Math;
 
-  // Pagination & Sort state
   currentPage = 1;
   pageSize = 10;
   sortField = 'paidDate';
@@ -32,7 +35,7 @@ export class SalariesComponent implements OnInit {
 
   defaultColumns = ['Name', 'Month/Year', 'Amount', 'Date', 'Status', 'Actions'];
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, private notificationService: NotificationService) {}
 
   ngOnInit() {
     this.loadData();
@@ -60,7 +63,7 @@ export class SalariesComponent implements OnInit {
 
   saveSalary() {
     if (!this.salariesForm.id || !this.salariesForm.month || !this.salariesForm.year || !this.salariesForm.salaryAmount) {
-      alert("Please fill required fields");
+      this.notificationService.warning('Invalid Input', "Please fill required fields");
       return;
     }
     const emp = this.employees.find(e => e.id === parseInt(this.salariesForm.id));
@@ -75,21 +78,34 @@ export class SalariesComponent implements OnInit {
       paidDate: this.salariesForm.paidDate ? this.salariesForm.paidDate : null
     };
 
-    this.apiService.createSalary(payload).subscribe(() => {
-      this.loadData();
-      this.logAudit("Generated salary release log for employee: " + emp.empName);
-      this.salariesForm = { id: '', month: 'May', year: 2026, salaryAmount: 0, status: 'Pending', paidDate: '' };
+    this.apiService.createSalary(payload).subscribe({
+      next: (res) => {
+        if (res) this.salariesList.unshift(res);
+        this.loadData();
+        this.notificationService.success('Data Added', 'Salary record added successfully');
+        this.logAudit("Generated salary release log for employee: " + emp.empName);
+        this.salariesForm = { id: '', month: 'May', year: 2026, salaryAmount: 0, status: 'Pending', paidDate: '' };
+      },
+      error: (err) => this.notificationService.error('Error', "Failed to save salary: " + (err.error?.message || err.message))
     });
   }
 
   deleteSalary(id: string) {
     if (!this.canDelete()) {
-      alert("Permission denied");
+      this.notificationService.warning('Permission Denied', "Permission denied");
       return;
     }
-    this.apiService.deleteSalary(id).subscribe(() => {
-      this.loadData();
-      this.logAudit("Deleted salary record ID: " + id);
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this salary record?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteSalary(id).subscribe({
+          next: () => {
+            this.salariesList = this.salariesList.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Salary record deleted successfully');
+            this.logAudit("Deleted salary record ID: " + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -99,7 +115,6 @@ export class SalariesComponent implements OnInit {
     }
   }
 
-  // Table handling methods
   toggleColDropdown(table: string) {
     this.showColDropdown[table] = !this.showColDropdown[table];
   }
@@ -149,4 +164,3 @@ export class SalariesComponent implements OnInit {
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
 }
-

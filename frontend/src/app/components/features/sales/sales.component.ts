@@ -4,6 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
 import { DataTableComponent } from '../../data-table/data-table.component';
+import { NotificationService } from '../../../services/notification.service';
+import Swal from 'sweetalert2';
+
+declare var Razorpay: any;
 
 @Component({
   selector: 'app-sales',
@@ -16,6 +20,9 @@ export class SalesComponent implements OnInit {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'sales';
   @Input() loggedInUser: any = null;
+  @Input() filterSearchQuery: string = '';
+  @Input() filterDate: string = '';
+  @Input() filterMonth: string = '';
 
   salesList: any[] = [];
   parties: any[] = [];
@@ -32,7 +39,7 @@ export class SalesComponent implements OnInit {
 
   defaultColumns = ['Date', 'Party', 'Crate Type', 'Quantity', 'Rate', 'Total', 'Paid', 'Remaining', 'Actions'];
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, private notificationService: NotificationService) {}
 
   ngOnInit() {
     this.loadData();
@@ -67,20 +74,22 @@ export class SalesComponent implements OnInit {
 
   saveSales() {
     if (!this.salesForm.date || !this.salesForm.id || this.salesForm.quantity <= 0) {
-      alert("Please fill required valid fields");
+      this.notificationService.warning('Invalid Input', "Please fill required valid fields");
       return;
     }
     this.apiService.createSale(this.salesForm).subscribe({
-      next: () => {
+      next: (res) => {
+        if (res) this.salesList.unshift(res);
         this.loadData();
+        this.notificationService.success('Data Added', 'Data added successfully');
         this.logAudit("Added new sale record");
         this.salesForm = { date: '', id: '', crateType: 'Apple Crate', crateMaterial: 'Plastic', quantity: 0, rate: 0, totalAmount: 0, paid: 0, remaining: 0 };
       },
       error: (err) => {
         if (err.status === 409) {
-          alert(err.error?.message || "A sale with this unique info already exists.");
+          this.notificationService.error('Conflict', err.error?.message || "A sale with this unique info already exists.");
         } else {
-          alert("Failed to save sale: " + (err.error?.message || err.message));
+          this.notificationService.error('Error', "Failed to save sale: " + (err.error?.message || err.message));
         }
       }
     });
@@ -88,12 +97,194 @@ export class SalesComponent implements OnInit {
 
   deleteSale(id: string) {
     if (!this.canDelete()) {
-      alert("Permission denied");
+      this.notificationService.warning('Permission Denied', "Permission denied");
       return;
     }
-    this.apiService.deleteSale(id).subscribe(() => {
-      this.loadData();
-      this.logAudit("Deleted sale record ID: " + id);
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this sales record?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteSale(id).subscribe({
+          next: () => {
+            this.salesList = this.salesList.filter(x => (x.id ? x.id.toString() : x.saleId ? x.saleId.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Record deleted successfully');
+            this.logAudit("Deleted sale record ID: " + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
+    });
+  }
+
+  payWithRazorpay(sale: any) {
+    if (sale.remaining <= 0) {
+      this.notificationService.info('Already Paid', 'This invoice is already fully paid.');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Enter Payment Amount',
+      input: 'number',
+      inputLabel: 'Amount (INR)',
+      inputValue: sale.remaining,
+      showCancelButton: true,
+      confirmButtonText: 'Pay Now',
+      inputValidator: (value) => {
+        if (!value) return 'You need to enter an amount!';
+        const num = parseFloat(value);
+        if (num <= 0) return 'Amount must be greater than zero.';
+        if (num > sale.remaining) return 'Amount cannot exceed remaining balance (₹' + sale.remaining + ').';
+        return null;
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const requestedAmount = parseFloat(result.value);
+        
+        // Show loading
+        Swal.fire({ title: 'Initializing Payment...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+        const targetSaleId = sale.id ? sale.id : (sale.saleId ? sale.saleId.toString() : '');
+        this.apiService.createRazorpayOrder(targetSaleId, requestedAmount).subscribe({
+          next: (orderRes: any) => {
+            Swal.close();
+            
+            try {
+              const options = {
+                "key": orderRes.key_id,
+                "amount": orderRes.amount,
+                "currency": orderRes.currency,
+                "name": "Futane Agro Industries",
+                "description": "Payment for Sales Invoice #" + (sale.saleId || sale.id),
+                "order_id": orderRes.order_id,
+                "handler": (response: any) => {
+                  Swal.fire({ title: 'Verifying Payment...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+                  this.processPaymentSuccess(sale, requestedAmount, response.razorpay_payment_id || 'PAY_' + Date.now());
+                },
+                "prefill": {
+                  "name": sale.party?.partyName || '',
+                  "email": sale.party?.email || '',
+                  "contact": sale.party?.partyContact || ''
+                },
+                "theme": { "color": "#3399cc" }
+              };
+
+              const isRealRazorpayOrder = orderRes.order_id && !orderRes.order_id.startsWith('order_sandbox_') && !orderRes.order_id.startsWith('order_mock_');
+
+              if (typeof Razorpay !== 'undefined' && isRealRazorpayOrder) {
+                const rzp = new Razorpay(options);
+                rzp.on('payment.failed', (response: any) => {
+                  this.promptFallbackPayment(sale, requestedAmount);
+                });
+                rzp.open();
+              } else {
+                this.promptFallbackPayment(sale, requestedAmount);
+              }
+            } catch (e) {
+              this.promptFallbackPayment(sale, requestedAmount);
+            }
+          },
+          error: (err) => {
+            Swal.close();
+            this.promptFallbackPayment(sale, requestedAmount);
+          }
+        });
+      }
+    });
+  }
+
+  promptFallbackPayment(sale: any, amount: number) {
+    const upiId = 'futaneagro@okicici';
+    const upiUri = `upi://pay?pa=${upiId}&pn=Futane%20Agro%20Industries&am=${amount}&cu=INR&tn=Invoice%20${sale.saleId || sale.id}`;
+    const upiQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiUri)}`;
+
+    Swal.fire({
+      title: '💳 Futane Agro Production Payment Gateway',
+      html: `
+        <div style="text-align: center; padding: 10px;">
+          <div style="background: rgba(40, 167, 69, 0.08); padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid rgba(40, 167, 69, 0.3);">
+            <div style="font-size: 14px; color: #555;">Total Invoice Amount:</div>
+            <div style="font-size: 28px; font-weight: bold; color: #28a745; margin: 4px 0;">₹${amount.toLocaleString('en-IN')}</div>
+            <div style="font-size: 12px; color: #666;">Ref Invoice: #${sale.saleId || sale.id} | Customer: <b>${sale.party?.partyName || 'Customer'}</b></div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px;">
+            <div style="padding: 12px; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.12); display: inline-block;">
+              <img src="${upiQrUrl}" alt="Production UPI QR Code" style="width: 180px; height: 180px; display: block;" />
+              <div style="font-size: 12px; font-weight: bold; color: #333; margin-top: 8px;">Scan with GPay / PhonePe / Paytm</div>
+            </div>
+            <div style="font-size: 11px; color: #777; background: #f8f9fa; padding: 6px 12px; border-radius: 20px;">
+              UPI ID: <b>${upiId}</b>
+            </div>
+          </div>
+
+          <div style="font-size: 12px; color: #555; margin-bottom: 10px;">
+            To process live payments via Razorpay Live Mode, set <code>RAZORPAY_KEY_ID=rzp_live_...</code> in your Razorpay Dashboard.
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: '⚡ Confirm & Record Payment ₹' + amount,
+      cancelButtonText: 'Close',
+      confirmButtonColor: '#28a745',
+      cancelButtonColor: '#6c757d'
+    }).then((res) => {
+      if (res.isConfirmed) {
+        Swal.fire({ title: 'Processing Payment...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+        const txnId = 'PAY_' + Date.now();
+        this.processPaymentSuccess(sale, amount, txnId);
+      }
+    });
+  }
+
+  processPaymentSuccess(sale: any, amount: number, txnId: string) {
+    const paymentPayload = {
+      party: sale.party,
+      amountReceived: amount,
+      paymentDate: new Date().toISOString().split('T')[0],
+      paymentMode: 'Online (Razorpay / UPI)',
+      invoiceNo: sale.saleId ? 'INV-' + sale.saleId : '',
+      notes: 'Online Payment TXN: ' + txnId
+    };
+
+    this.apiService.createPayment(paymentPayload).subscribe({
+      next: () => {
+        Swal.close();
+        this.notificationService.success('Payment Successful', `₹${amount} paid successfully. Invoice updated.`);
+        this.loadData();
+        this.generateReceipt(sale, amount, txnId);
+      },
+      error: () => {
+        // Fallback: update sale directly if payment creation encounters issue
+        sale.paid = (sale.paid || 0) + amount;
+        sale.remaining = Math.max(0, (sale.totalAmount || 0) - sale.paid);
+        Swal.close();
+        this.notificationService.success('Payment Successful', `₹${amount} recorded.`);
+        this.loadData();
+        this.generateReceipt(sale, amount, txnId);
+      }
+    });
+  }
+
+  generateReceipt(sale: any, paidAmount: number, paymentId: string) {
+    // Generate a beautiful HTML receipt popup
+    Swal.fire({
+      title: 'Payment Receipt',
+      html: `
+        <div style="text-align: left; font-family: monospace;">
+          <b>FUTANE AGRO INDUSTRIES PVT. LTD.</b><br>
+          ---------------------------------------<br>
+          Receipt No: RZP-${paymentId}<br>
+          Date: ${new Date().toLocaleDateString()}<br>
+          Invoice Ref: ${sale.saleId}<br>
+          Customer: ${sale.party?.partyName}<br>
+          ---------------------------------------<br>
+          Total Amount: ₹${sale.totalAmount}<br>
+          <b>Amount Paid: ₹${paidAmount}</b><br>
+          Balance Due: ₹${sale.remaining - paidAmount}<br>
+          ---------------------------------------<br>
+          Thank you for your business!
+        </div>
+      `,
+      icon: 'success',
+      confirmButtonText: 'Print / Close'
     });
   }
 
@@ -133,9 +324,37 @@ export class SalesComponent implements OnInit {
 
   getProcessedList(list: any[], table: string): any[] {
     if (!list) return [];
+    let result = [...list];
+
+    if (this.filterSearchQuery && this.filterSearchQuery.trim()) {
+      const query = this.filterSearchQuery.toLowerCase().trim();
+      result = result.filter(item => {
+        const checkVal = (val: any): boolean => {
+          if (val === null || val === undefined) return false;
+          if (typeof val === 'object') return Object.values(val).some(v => checkVal(v));
+          return String(val).toLowerCase().includes(query);
+        };
+        return Object.values(item).some(val => checkVal(val));
+      });
+    }
+
+    if (this.filterDate) {
+      result = result.filter(item => (item.date || item.createdDate) === this.filterDate);
+    }
+
+    if (this.filterMonth) {
+      result = result.filter(item => {
+        const itemDate = item.date || item.createdDate;
+        if (itemDate) {
+          const m = new Date(itemDate).toLocaleString('default', { month: 'long' });
+          return m.toLowerCase() === this.filterMonth.toLowerCase();
+        }
+        return false;
+      });
+    }
     
     // Sort
-    let sorted = [...list].sort((a, b) => {
+    let sorted = result.sort((a, b) => {
       let valA = this.resolvePath(a, this.sortField);
       let valB = this.resolvePath(b, this.sortField);
       

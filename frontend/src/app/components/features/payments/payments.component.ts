@@ -1,4 +1,8 @@
 import { Component, OnInit, Input } from '@angular/core';
+import { AutoSelectDirective } from '../../../directives/auto-select.directive';
+import { FormStateDirective } from '../../../directives/form-state.directive';
+import { NotificationService } from '../../../services/notification.service';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -8,7 +12,7 @@ import { DataTableComponent } from '../../data-table/data-table.component';
 @Component({
   selector: 'app-payments',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, DataTableComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, DataTableComponent, AutoSelectDirective, FormStateDirective],
   templateUrl: './payments.component.html',
   styleUrls: ['./payments.component.css']
 })
@@ -23,7 +27,6 @@ export class PaymentsComponent implements OnInit {
   
   paymentsForm = { id: '', invoiceNo: '', amountReceived: 0, paymentMode: 'UPI', paymentDate: '' };
 
-  // Pagination & Sort state
   currentPage = 1;
   pageSize = 10;
   sortField = 'paymentDate';
@@ -34,12 +37,10 @@ export class PaymentsComponent implements OnInit {
 
   defaultColumns = ['Date', 'Party', 'Invoice Ref', 'Amount', 'Mode', 'Actions'];
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, private notificationService: NotificationService) {}
 
   ngOnInit() {
     this.loadData();
-    
-    // Initialize columns visibility
     this.columnsVisibility['payments'] = {};
     this.defaultColumns.forEach(col => {
       this.columnsVisibility['payments'][col] = true;
@@ -65,24 +66,37 @@ export class PaymentsComponent implements OnInit {
 
   savePayment() {
     if (!this.paymentsForm.paymentDate || !this.paymentsForm.id || this.paymentsForm.amountReceived <= 0) {
-      alert("Please fill required valid fields");
+      this.notificationService.warning('Invalid Input', "Please fill required valid fields");
       return;
     }
-    this.apiService.createPayment(this.paymentsForm).subscribe(() => {
-      this.loadData();
-      this.logAudit("Added new payment collection");
-      this.paymentsForm = { id: '', invoiceNo: '', amountReceived: 0, paymentMode: 'UPI', paymentDate: '' };
+    this.apiService.createPayment(this.paymentsForm).subscribe({
+      next: (res) => {
+        if (res) this.paymentsList.unshift(res);
+        this.loadData();
+        this.notificationService.success('Data Added', 'Payment collection record added successfully');
+        this.logAudit("Added new payment collection");
+        this.paymentsForm = { id: '', invoiceNo: '', amountReceived: 0, paymentMode: 'UPI', paymentDate: '' };
+      },
+      error: (err) => this.notificationService.error('Error', "Failed to save payment: " + (err.error?.message || err.message))
     });
   }
 
   deletePayment(id: string) {
     if (!this.canDelete()) {
-      alert("Permission denied");
+      this.notificationService.warning('Permission Denied', "Permission denied");
       return;
     }
-    this.apiService.deletePayment(id).subscribe(() => {
-      this.loadData();
-      this.logAudit("Deleted payment record ID: " + id);
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this payment record?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deletePayment(id).subscribe({
+          next: () => {
+            this.paymentsList = this.paymentsList.filter(x => (x.paymentId ? x.paymentId.toString() : x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Payment record deleted successfully');
+            this.logAudit("Deleted payment record ID: " + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -92,7 +106,6 @@ export class PaymentsComponent implements OnInit {
     }
   }
 
-  // Table handling methods
   toggleColDropdown(table: string) {
     this.showColDropdown[table] = !this.showColDropdown[table];
   }
@@ -123,7 +136,6 @@ export class PaymentsComponent implements OnInit {
   getProcessedList(list: any[], table: string): any[] {
     if (!list) return [];
     
-    // Sort
     let sorted = [...list].sort((a, b) => {
       let valA = this.resolvePath(a, this.sortField);
       let valB = this.resolvePath(b, this.sortField);
@@ -134,8 +146,6 @@ export class PaymentsComponent implements OnInit {
     });
 
     this.tableFilteredCounts[table] = sorted.length;
-
-    // Paginate
     const start = (this.currentPage - 1) * this.pageSize;
     return sorted.slice(start, start + this.pageSize);
   }
@@ -145,4 +155,3 @@ export class PaymentsComponent implements OnInit {
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
 }
-

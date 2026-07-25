@@ -1,4 +1,7 @@
 import { Component, EventEmitter, Input, Output, OnDestroy } from '@angular/core';
+import { AutoSelectDirective } from '../../../../directives/auto-select.directive';
+import { FormStateDirective } from '../../../../directives/form-state.directive';
+import { NotificationService } from '../../../../services/notification.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../../api.service';
@@ -6,7 +9,7 @@ import { ApiService } from '../../../../api.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AutoSelectDirective, FormStateDirective],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
@@ -25,7 +28,14 @@ export class LoginComponent implements OnDestroy {
   otpCountdown = 120;
   otpTimerInterval: any = null;
 
-  constructor(private apiService: ApiService) {}
+  constructor(
+    private apiService: ApiService,
+    private notificationService: NotificationService
+  ) {}
+
+  forgotPassword() {
+    this.notificationService.showWarning('Password Reset', 'Please contact the system administrator to reset your password.');
+  }
 
   handleLogin() {
     this.loginError = '';
@@ -109,10 +119,6 @@ export class LoginComponent implements OnDestroy {
     this.tempOtp = '';
     this.clearOtpTimer();
     this.onLoginSuccess.emit(res);
-  }
-
-  forgotPassword() {
-    alert("Please contact the system administrator to reset your password.");
   }
 
   setLanguage(lang: string) {

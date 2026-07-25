@@ -83,7 +83,7 @@ public class TransportController {
             String oldState = toJson(transport);
             transport.setIsActive(false);
             transport.setUpdatedBy(getCurrentUser());
-            transport.setUpdatedAt(LocalDate.now());
+            transport.setUpdatedAt(java.time.LocalDateTime.now());
             transportRepository.save(transport);
             saveAuditLog("Soft-deleted transport ID: " + id, "Transport", oldState, null);
         });

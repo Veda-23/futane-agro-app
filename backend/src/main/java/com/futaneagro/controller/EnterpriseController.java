@@ -105,7 +105,7 @@ public class EnterpriseController {
             String oldState = toJson(machine);
             machine.setIsActive(false);
             machine.setUpdatedBy(getCurrentUser());
-            machine.setUpdatedAt(LocalDate.now());
+            machine.setUpdatedAt(java.time.LocalDateTime.now());
             machineRepo.save(machine);
             saveAuditLog("Soft-deleted machine ID: " + id, "Machine_Master", oldState, null);
         });
@@ -130,7 +130,7 @@ public class EnterpriseController {
             String oldState = toJson(b);
             b.setIsActive(false);
             b.setUpdatedBy(getCurrentUser());
-            b.setUpdatedAt(LocalDate.now());
+            b.setUpdatedAt(java.time.LocalDateTime.now());
             breakdownRepo.save(b);
             saveAuditLog("Soft-deleted breakdown ID: " + id, "Machine_Breakdown", oldState, null);
         });
@@ -170,7 +170,7 @@ public class EnterpriseController {
             String oldState = toJson(d);
             d.setIsActive(false);
             d.setUpdatedBy(getCurrentUser());
-            d.setUpdatedAt(LocalDate.now());
+            d.setUpdatedAt(java.time.LocalDateTime.now());
             dispatchRepo.save(d);
             saveAuditLog("Soft-deleted dispatch ID: " + id, "Dispatch", oldState, null);
         });
@@ -195,7 +195,7 @@ public class EnterpriseController {
             String oldState = toJson(e);
             e.setIsActive(false);
             e.setUpdatedBy(getCurrentUser());
-            e.setUpdatedAt(LocalDate.now());
+            e.setUpdatedAt(java.time.LocalDateTime.now());
             expenseRepo.save(e);
             saveAuditLog("Soft-deleted expense ID: " + id, "Expense", oldState, null);
         });
@@ -220,7 +220,7 @@ public class EnterpriseController {
             String oldState = toJson(t);
             t.setIsActive(false);
             t.setUpdatedBy(getCurrentUser());
-            t.setUpdatedAt(LocalDate.now());
+            t.setUpdatedAt(java.time.LocalDateTime.now());
             bankRepo.save(t);
             saveAuditLog("Soft-deleted bank transaction ID: " + id, "Bank_Transaction", oldState, null);
         });

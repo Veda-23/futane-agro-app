@@ -1,4 +1,9 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, ElementRef } from '@angular/core';
+import { AutoSelectDirective } from '../../../directives/auto-select.directive';
+import { FormStateDirective } from '../../../directives/form-state.directive';
+import { FormValidationService } from '../../../services/form-validation.service';
+import { NotificationService } from '../../../services/notification.service';
+
 import { CommonModule } from '@angular/common';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
@@ -6,7 +11,7 @@ import { ApiService } from '../../../api.service';
 @Component({
   selector: 'app-audit-logs',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
   templateUrl: './audit-logs.component.html',
   styleUrls: ['./audit-logs.component.css']
 })

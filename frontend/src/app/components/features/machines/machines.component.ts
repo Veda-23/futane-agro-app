@@ -1,4 +1,8 @@
 import { Component, OnInit, Input } from '@angular/core';
+import { AutoSelectDirective } from '../../../directives/auto-select.directive';
+import { FormStateDirective } from '../../../directives/form-state.directive';
+import { NotificationService } from '../../../services/notification.service';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -7,7 +11,7 @@ import { ApiService } from '../../../api.service';
 @Component({
   selector: 'app-machines',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
   templateUrl: './machines.component.html',
   styleUrls: ['./machines.component.css']
 })
@@ -24,7 +28,6 @@ export class MachinesComponent implements OnInit {
 
   Math = Math;
 
-  // Pagination & Sort state
   currentPage = 1;
   pageSize = 10;
   sortField = 'id';
@@ -36,7 +39,7 @@ export class MachinesComponent implements OnInit {
   defaultMachineCols = ['Code', 'Name', 'Capacity', 'Installed', 'Status', 'Actions'];
   defaultBreakdownCols = ['Machine', 'Date', 'Description', 'Downtime', 'Resolved', 'Actions'];
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, private notificationService: NotificationService) {}
 
   ngOnInit() {
     this.loadData();
@@ -58,25 +61,24 @@ export class MachinesComponent implements OnInit {
     });
   }
 
-  isViewer() {
+  isViewer(): boolean {
     return this.loggedInUser && this.loggedInUser.role === 'VIEWER';
   }
 
-  canDelete() {
-    return this.loggedInUser && this.loggedInUser.role === 'ADMIN';
+  canDelete(): boolean {
+    return this.loggedInUser && (this.loggedInUser.role === 'SUPER_ADMIN' || this.loggedInUser.role === 'ADMIN');
   }
 
   validateForm(type: string): boolean {
     if (type === 'machine') {
-      const f = this.machineForm;
-      if (!f.machineName || !f.machineCode || f.capacityPerHour <= 0 || !f.installedDate) {
-        alert('Please fill out all required machine fields correctly.');
+      if (!this.machineForm.machineName || !this.machineForm.machineCode || !this.machineForm.installedDate) {
+        this.notificationService.warning('Invalid Input', 'Please fill out all required machine fields.');
         return false;
       }
     } else if (type === 'breakdown') {
       const f = this.breakdownForm;
       if (!f.id || !f.breakdownDate || !f.description || f.downtimeHours <= 0) {
-        alert('Please fill out all required breakdown fields correctly.');
+        this.notificationService.warning('Invalid Input', 'Please fill out all required breakdown fields correctly.');
         return false;
       }
     }
@@ -85,17 +87,34 @@ export class MachinesComponent implements OnInit {
 
   saveMachine() {
     if (!this.validateForm('machine')) return;
-    this.apiService.createMachine(this.machineForm).subscribe(() => {
-      this.loadData();
-      this.logAudit('Added machine: ' + this.machineForm.machineName);
-      this.machineForm = { machineName: '', machineCode: '', installedDate: '', status: 'Running', capacityPerHour: 0 };
+    this.apiService.createMachine(this.machineForm).subscribe({
+      next: (res) => {
+        if (res) this.machinesList.unshift(res);
+        this.loadData();
+        this.notificationService.success('Data Added', 'Machine added successfully');
+        this.logAudit('Added machine: ' + this.machineForm.machineName);
+        this.machineForm = { machineName: '', machineCode: '', installedDate: '', status: 'Running', capacityPerHour: 0 };
+      },
+      error: (err) => this.notificationService.error('Error', "Failed to add machine: " + (err.error?.message || err.message))
     });
   }
 
   deleteMachine(id: string) {
-    this.apiService.deleteMachine(id).subscribe(() => {
-      this.loadData();
-      this.logAudit('Deleted machine ID: ' + id);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "Permission denied");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this machine?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteMachine(id).subscribe({
+          next: () => {
+            this.machinesList = this.machinesList.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Machine deleted successfully');
+            this.logAudit('Deleted machine ID: ' + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -104,17 +123,34 @@ export class MachinesComponent implements OnInit {
     const machine = this.machinesList.find((m: any) => m.id === parseInt(this.breakdownForm.id));
     if (!machine) return;
     const payload = { ...this.breakdownForm, machine };
-    this.apiService.createMachineBreakdown(payload).subscribe(() => {
-      this.loadData();
-      this.logAudit('Logged breakdown for machine: ' + machine.machineName);
-      this.breakdownForm = { id: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 };
+    this.apiService.createMachineBreakdown(payload).subscribe({
+      next: (res) => {
+        if (res) this.machineBreakdownsList.unshift(res);
+        this.loadData();
+        this.notificationService.success('Data Added', 'Machine breakdown record added successfully');
+        this.logAudit('Logged breakdown for machine: ' + machine.machineName);
+        this.breakdownForm = { id: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 };
+      },
+      error: (err) => this.notificationService.error('Error', "Failed to log breakdown: " + (err.error?.message || err.message))
     });
   }
 
   deleteBreakdown(id: string) {
-    this.apiService.deleteMachineBreakdown(id).subscribe(() => {
-      this.loadData();
-      this.logAudit('Deleted breakdown log ID: ' + id);
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "Permission denied");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this breakdown log?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteMachineBreakdown(id).subscribe({
+          next: () => {
+            this.machineBreakdownsList = this.machineBreakdownsList.filter(x => (x.breakdownId ? x.breakdownId.toString() : x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Breakdown log deleted successfully');
+            this.logAudit('Deleted breakdown log ID: ' + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -124,7 +160,6 @@ export class MachinesComponent implements OnInit {
     }
   }
 
-  // Table handling methods
   toggleColDropdown(table: string) {
     this.showColDropdown[table] = !this.showColDropdown[table];
   }
@@ -174,4 +209,3 @@ export class MachinesComponent implements OnInit {
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
 }
-

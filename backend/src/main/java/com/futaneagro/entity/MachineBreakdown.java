@@ -1,15 +1,18 @@
 package com.futaneagro.entity;
 
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
+import javax.persistence.FetchType;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "Machine_Breakdown")
-@SQLDelete(sql = "UPDATE Machine_Breakdown SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE breakdown_id = ?")
-@Where(clause = "is_deleted = false")
+@Table(name = "t_prd_breakdown")
+@Where(clause = "is_active = true")
+@SQLDelete(sql = "UPDATE t_prd_breakdown SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE breakdown_id = ?")
 public class MachineBreakdown extends BaseEntity {
     @Column(name = "breakdown_id")
     private Integer breakdownId;
@@ -17,7 +20,7 @@ public class MachineBreakdown extends BaseEntity {
     @Column(name = "date", nullable = false)
     private LocalDate date;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "machine_id", nullable = false)
     private MachineMaster machine;
 
@@ -28,14 +31,7 @@ public class MachineBreakdown extends BaseEntity {
     private String resolvedBy;
 
     @Column(name = "downtime")
-    private Integer downtime; // in minutes
-
-    @Column(name = "is_deleted")
-
-    @Column(name = "deleted_by", length = 100)
-
-    @Column(name = "deleted_date")
-
+    private Integer downtime; // in minutes
     public MachineBreakdown() {}
 
     public Integer getBreakdownId() {
@@ -84,29 +80,4 @@ public class MachineBreakdown extends BaseEntity {
 
     public void setDowntime(Integer downtime) {
         this.downtime = downtime;
-    }
-
-    public Boolean getIsDeleted() {
-        return isDeleted;
-    }
-
-    public void setIsDeleted(Boolean deleted) {
-        isDeleted = deleted;
-    }
-
-    public String getDeletedBy() {
-        return deletedBy;
-    }
-
-    public void setDeletedBy(String deletedBy) {
-        this.deletedBy = deletedBy;
-    }
-
-    public LocalDate getDeletedDate() {
-        return deletedDate;
-    }
-
-    public void setDeletedDate(LocalDate deletedDate) {
-        this.deletedDate = deletedDate;
-    }
-}
+    }}

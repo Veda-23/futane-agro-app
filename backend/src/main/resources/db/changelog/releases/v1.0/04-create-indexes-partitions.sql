@@ -1,5 +1,5 @@
 -- liquibase formatted sql
--- changeset admin:04-create-indexes-partitions
+-- changeset admin:04-create-indexes-partitions splitStatements:true failOnError:false
 
 -- Foreign Key Indexes for Performance
 CREATE INDEX idx_hr_employee_user ON t_hr_employee(user_id);

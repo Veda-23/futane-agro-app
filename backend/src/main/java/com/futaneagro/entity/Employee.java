@@ -1,5 +1,7 @@
 package com.futaneagro.entity;
 
+import java.time.LocalDateTime;
+
 import com.futaneagro.security.AttributeEncryptor;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
@@ -13,12 +15,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "Employees", uniqueConstraints = {
+@Table(name = "t_hr_employee", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"emp_name"}),
     @UniqueConstraint(columnNames = {"emp_contact"})
 })
-@SQLDelete(sql = "UPDATE Employees SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE emp_id = ?")
-@Where(clause = "is_deleted = false")
+@SQLDelete(sql = "UPDATE t_hr_employee SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE emp_id = ?")
 public class Employee extends BaseEntity {
     @Column(name = "emp_id")
     private Integer empId;
@@ -60,14 +61,7 @@ public class Employee extends BaseEntity {
     private String aadhaarCardPath;
 
     @Column(name = "bank_passbook_path", length = 255)
-    private String bankPassbookPath;
-
-    @Column(name = "is_deleted")
-
-    @Column(name = "deleted_by", length = 100)
-
-    @Column(name = "deleted_date")
-
+    private String bankPassbookPath;
     public Employee() {}
 
     public Integer getEmpId() {
@@ -164,29 +158,4 @@ public class Employee extends BaseEntity {
 
     public void setBankPassbookPath(String bankPassbookPath) {
         this.bankPassbookPath = bankPassbookPath;
-    }
-
-    public Boolean getIsDeleted() {
-        return isDeleted;
-    }
-
-    public void setIsDeleted(Boolean deleted) {
-        isDeleted = deleted;
-    }
-
-    public String getDeletedBy() {
-        return deletedBy;
-    }
-
-    public void setDeletedBy(String deletedBy) {
-        this.deletedBy = deletedBy;
-    }
-
-    public LocalDate getDeletedDate() {
-        return deletedDate;
-    }
-
-    public void setDeletedDate(LocalDate deletedDate) {
-        this.deletedDate = deletedDate;
-    }
-}
+    }}

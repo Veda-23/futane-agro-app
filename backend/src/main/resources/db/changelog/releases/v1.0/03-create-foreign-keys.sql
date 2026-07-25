@@ -14,11 +14,7 @@ ALTER TABLE t_sal_sales
 -- Logistics
 ALTER TABLE t_log_dispatch
     ADD CONSTRAINT fk_log_dispatch_sales
-    FOREIGN KEY (sales_id) REFERENCES t_sal_sales(id) ON DELETE RESTRICT;
-
-ALTER TABLE t_log_dispatch
-    ADD CONSTRAINT fk_log_dispatch_driver
-    FOREIGN KEY (driver_id) REFERENCES t_hr_driver(id) ON DELETE SET NULL;
+    FOREIGN KEY (sale_id) REFERENCES t_sal_sales(id) ON DELETE RESTRICT;
 
 -- Audit Tracking (Applies to all tables)
 ALTER TABLE t_hr_employee ADD CONSTRAINT fk_hr_employee_created_by FOREIGN KEY (created_by) REFERENCES t_core_user(id) ON DELETE SET NULL;

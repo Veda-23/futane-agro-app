@@ -1,4 +1,8 @@
 import { Component, OnInit, Input } from '@angular/core';
+import { AutoSelectDirective } from '../../../directives/auto-select.directive';
+import { FormStateDirective } from '../../../directives/form-state.directive';
+import { NotificationService } from '../../../services/notification.service';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -7,7 +11,7 @@ import { ApiService } from '../../../api.service';
 @Component({
   selector: 'app-transports',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
   templateUrl: './transports.component.html',
   styleUrls: ['./transports.component.css']
 })
@@ -21,7 +25,6 @@ export class TransportsComponent implements OnInit {
   transportsForm = { date: '', truckNumber: '', id: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
   Math = Math;
 
-  // Pagination & Sort state
   currentPage = 1;
   pageSize = 10;
   sortField = 'date';
@@ -32,7 +35,7 @@ export class TransportsComponent implements OnInit {
 
   defaultColumns = ['Date', 'Truck', 'Driver', 'Rent', 'Advance', 'Remaining', 'Actions'];
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, private notificationService: NotificationService) {}
 
   ngOnInit() {
     this.loadData();
@@ -60,7 +63,7 @@ export class TransportsComponent implements OnInit {
 
   saveTransport() {
     if (!this.transportsForm.date || !this.transportsForm.truckNumber || !this.transportsForm.id || this.transportsForm.rent === null || this.transportsForm.advance === null) {
-      alert("Please fill required fields");
+      this.notificationService.warning('Invalid Input', "Please fill required fields");
       return;
     }
     const driver = this.drivers.find(d => d.id === parseInt(this.transportsForm.id));
@@ -76,21 +79,34 @@ export class TransportsComponent implements OnInit {
       driverLicensePath: this.transportsForm.driverLicensePath || ''
     };
 
-    this.apiService.createTransport(payload).subscribe(() => {
-      this.loadData();
-      this.logAudit("Logged transport rental for truck: " + this.transportsForm.truckNumber);
-      this.transportsForm = { date: '', truckNumber: '', id: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
+    this.apiService.createTransport(payload).subscribe({
+      next: (res) => {
+        if (res) this.transportsList.unshift(res);
+        this.loadData();
+        this.notificationService.success('Data Added', 'Transport rental record added successfully');
+        this.logAudit("Logged transport rental for truck: " + this.transportsForm.truckNumber);
+        this.transportsForm = { date: '', truckNumber: '', id: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
+      },
+      error: (err) => this.notificationService.error('Error', "Failed to save transport: " + (err.error?.message || err.message))
     });
   }
 
   deleteTransport(id: string) {
     if (!this.canDelete()) {
-      alert("Permission denied");
+      this.notificationService.warning('Permission Denied', "Permission denied");
       return;
     }
-    this.apiService.deleteTransport(id).subscribe(() => {
-      this.loadData();
-      this.logAudit("Deleted transport record ID: " + id);
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this transport record?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteTransport(id).subscribe({
+          next: () => {
+            this.transportsList = this.transportsList.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Transport record deleted successfully');
+            this.logAudit("Deleted transport record ID: " + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -100,7 +116,6 @@ export class TransportsComponent implements OnInit {
     }
   }
 
-  // Table handling methods
   toggleColDropdown(table: string) {
     this.showColDropdown[table] = !this.showColDropdown[table];
   }
@@ -150,4 +165,3 @@ export class TransportsComponent implements OnInit {
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
 }
-

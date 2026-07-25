@@ -63,4 +63,20 @@ public class SmsService {
             System.err.println("❌ Failed to send OTP SMS to " + toMobileNumber + ": " + e.getMessage());
         }
     }
+
+    public void sendWhatsAppPaymentLink(String toMobileNumber, String message) {
+        if (accountSid == null || accountSid.isEmpty() || accountSid.equals("your_twilio_sid")) {
+            System.out.println("⚠️ Twilio disabled. WhatsApp message would have been:\n" + message);
+            return;
+        }
+        if (toMobileNumber == null || toMobileNumber.isEmpty()) return;
+        try {
+            String whatsappTo = "whatsapp:" + (toMobileNumber.startsWith("+") ? toMobileNumber : "+91" + toMobileNumber);
+            String whatsappFrom = "whatsapp:" + twilioPhoneNumber;
+            Message.creator(new PhoneNumber(whatsappTo), new PhoneNumber(whatsappFrom), message).create();
+            System.out.println("✅ WhatsApp payment link sent to: " + whatsappTo);
+        } catch (Exception e) {
+            System.err.println("❌ Failed to send WhatsApp message: " + e.getMessage());
+        }
+    }
 }

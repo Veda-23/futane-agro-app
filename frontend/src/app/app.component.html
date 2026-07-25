@@ -100,7 +100,7 @@
             
               <div class="table-container" style="margin-top: 15px;">
                 <app-data-table 
-                  [data]="parties" 
+                  [data]="getProcessedList(parties, 'parties')" 
                   [columns]="partyTableColumns" 
                   [actions]="partyTableActions" 
                   (actionClicked)="handlePartyAction($event)"
@@ -198,7 +198,7 @@
                 <tbody>
                   <tr *ngFor="let sale of getProcessedList(salesList, 'sales')">
                     <td *ngIf="isColumnVisible('sales', 'Date')">{{ sale.date }}</td>
-                    <td *ngIf="isColumnVisible('sales', 'Party')">{{ sale.party.partyName }}</td>
+                    <td *ngIf="isColumnVisible('sales', 'Party')">{{ sale.party?.partyName }}</td>
                     <td *ngIf="isColumnVisible('sales', 'Crate Type')">{{ sale.crateType }} ({{ sale.crateMaterial }})</td>
                     <td *ngIf="isColumnVisible('sales', 'Quantity')">{{ sale.quantity }}</td>
                     <td *ngIf="isColumnVisible('sales', 'Rate')">₹{{ sale.rate }}</td>
@@ -206,6 +206,7 @@
                     <td *ngIf="isColumnVisible('sales', 'Paid')"><span class="badge badge-success">₹{{ sale.paid }}</span></td>
                     <td *ngIf="isColumnVisible('sales', 'Remaining')"><span class="badge badge-danger">₹{{ sale.remaining }}</span></td>
                     <td *ngIf="isColumnVisible('sales', 'Actions')">
+                      <button class="btn btn-primary btn-sm" *ngIf="sale.remaining > 0" (click)="payWithRazorpay(sale)">Pay Now</button>
                       <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteSale(sale.id)">{{ 'btn.delete' | translate:currentLang }}</button>
                     </td>
                   </tr>
@@ -249,7 +250,7 @@
                 <label>{{ 'payments.invoice_ref' | translate:currentLang }}</label>
                 <select [(ngModel)]="paymentsForm.invoiceNo" name="payInvoice" required>
                   <option value="">General payment (No Invoice)</option>
-                  <option *ngFor="let invoice of invoicesList" [value]="invoice.invoiceNo">{{ invoice.invoiceNo }} (₹{{ invoice.sale.remaining }} due)</option>
+                  <option *ngFor="let invoice of invoicesList" [value]="invoice.invoiceNo">{{ invoice.invoiceNo }} (₹{{ invoice.sale?.remaining || 0 }} due)</option>
                 </select>
               </div>
               <div class="form-group">
@@ -299,7 +300,7 @@
                 <tbody>
                   <tr *ngFor="let payment of getProcessedList(paymentsList, 'payments')">
                     <td *ngIf="isColumnVisible('payments', 'Date')">{{ payment.paymentDate }}</td>
-                    <td *ngIf="isColumnVisible('payments', 'Party')">{{ payment.party.partyName }}</td>
+                    <td *ngIf="isColumnVisible('payments', 'Party')">{{ payment.party?.partyName }}</td>
                     <td *ngIf="isColumnVisible('payments', 'Invoice Ref')"><code>{{ payment.invoiceNo || 'N/A' }}</code></td>
                     <td *ngIf="isColumnVisible('payments', 'Amount')"><strong class="text-green">₹{{ payment.amountReceived }}</strong></td>
                     <td *ngIf="isColumnVisible('payments', 'Mode')"><span class="badge badge-info">{{ payment.paymentMode }}</span></td>
@@ -391,7 +392,7 @@
                   <tr *ngFor="let rm of getProcessedList(rawMaterialsList, 'raw')">
                     <td *ngIf="isColumnVisible('raw', 'Date')">{{ rm.date }}</td>
                     <td *ngIf="isColumnVisible('raw', 'Material')">{{ rm.materialName }}</td>
-                    <td *ngIf="isColumnVisible('raw', 'Vendor')">{{ rm.vendor.vendorName }}</td>
+                    <td *ngIf="isColumnVisible('raw', 'Vendor')">{{ rm.vendor?.vendorName }}</td>
                     <td *ngIf="isColumnVisible('raw', 'Weight')">{{ rm.weight }} kg</td>
                     <td *ngIf="isColumnVisible('raw', 'Rate')">₹{{ rm.rate }}</td>
                     <td *ngIf="isColumnVisible('raw', 'Amount')"><strong>₹{{ rm.amount }}</strong></td>

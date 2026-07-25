@@ -1,4 +1,8 @@
 import { Component, OnInit, Input } from '@angular/core';
+import { AutoSelectDirective } from '../../../directives/auto-select.directive';
+import { FormStateDirective } from '../../../directives/form-state.directive';
+import { NotificationService } from '../../../services/notification.service';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -8,7 +12,7 @@ import { DataTableComponent } from '../../data-table/data-table.component';
 @Component({
   selector: 'app-vendors',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, DataTableComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, DataTableComponent, AutoSelectDirective, FormStateDirective],
   templateUrl: './vendors.component.html',
   styleUrls: ['./vendors.component.css']
 })
@@ -32,7 +36,7 @@ export class VendorsComponent implements OnInit {
     { label: 'Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
   ];
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, private notificationService: NotificationService) {}
 
   ngOnInit() {
     this.loadData();
@@ -52,24 +56,37 @@ export class VendorsComponent implements OnInit {
 
   saveVendor() {
     if (!this.vendorForm.vendorName || !this.vendorForm.mobile) {
-      alert("Please fill required fields");
+      this.notificationService.warning('Invalid Input', "Please fill required fields");
       return;
     }
-    this.apiService.createVendor(this.vendorForm).subscribe(() => {
-      this.loadData();
-      this.logAudit("Created vendor: " + this.vendorForm.vendorName);
-      this.vendorForm = { vendorName: '', mobile: '', address: '', gstNumber: '' };
+    this.apiService.createVendor(this.vendorForm).subscribe({
+      next: (res) => {
+        if (res) this.vendors.unshift(res);
+        this.loadData();
+        this.notificationService.success('Data Added', 'Vendor created successfully');
+        this.logAudit("Created vendor: " + this.vendorForm.vendorName);
+        this.vendorForm = { vendorName: '', mobile: '', address: '', gstNumber: '' };
+      },
+      error: (err) => this.notificationService.error('Error', "Failed to save vendor: " + (err.error?.message || err.message))
     });
   }
 
   deleteVendor(id: string) {
     if (!this.canDelete()) {
-      alert("Permission denied");
+      this.notificationService.warning('Permission Denied', "Permission denied");
       return;
     }
-    this.apiService.deleteVendor(id).subscribe(() => {
-      this.loadData();
-      this.logAudit("Deleted vendor ID: " + id);
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this vendor?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteVendor(id).subscribe({
+          next: () => {
+            this.vendors = this.vendors.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Vendor deleted successfully');
+            this.logAudit("Deleted vendor ID: " + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -83,4 +100,3 @@ export class VendorsComponent implements OnInit {
     }
   }
 }
-

@@ -1,5 +1,7 @@
 package com.futaneagro.entity;
 
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
@@ -7,9 +9,9 @@ import javax.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "PPD")
-@SQLDelete(sql = "UPDATE PPD SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE ppd_id = ?")
-@Where(clause = "is_deleted = false")
+@Table(name = "t_prd_ppd")
+@Where(clause = "is_active = true")
+@SQLDelete(sql = "UPDATE t_prd_ppd SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE ppd_id = ?")
 public class Ppd extends BaseEntity {
     @Column(name = "ppd_id")
     private Integer ppdId;
@@ -30,14 +32,7 @@ public class Ppd extends BaseEntity {
     private Integer rejected;
 
     @Column(name = "shift", nullable = false, length = 50)
-    private String shift = "Morning Shift"; // Morning Shift, Afternoon Shift, Night Shift
-
-    @Column(name = "is_deleted")
-
-    @Column(name = "deleted_by", length = 100)
-
-    @Column(name = "deleted_date")
-
+    private String shift = "Morning Shift"; // Morning Shift, Afternoon Shift, Night Shift
     public Ppd() {}
 
     public Integer getPpdId() {
@@ -94,29 +89,4 @@ public class Ppd extends BaseEntity {
 
     public void setShift(String shift) {
         this.shift = shift;
-    }
-
-    public Boolean getIsDeleted() {
-        return isDeleted;
-    }
-
-    public void setIsDeleted(Boolean deleted) {
-        isDeleted = deleted;
-    }
-
-    public String getDeletedBy() {
-        return deletedBy;
-    }
-
-    public void setDeletedBy(String deletedBy) {
-        this.deletedBy = deletedBy;
-    }
-
-    public LocalDate getDeletedDate() {
-        return deletedDate;
-    }
-
-    public void setDeletedDate(LocalDate deletedDate) {
-        this.deletedDate = deletedDate;
-    }
-}
+    }}

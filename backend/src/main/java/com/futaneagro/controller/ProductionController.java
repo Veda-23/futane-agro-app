@@ -99,7 +99,7 @@ public class ProductionController {
             });
             ppd.setIsActive(false);
             ppd.setUpdatedBy(getCurrentUser());
-            ppd.setUpdatedAt(LocalDate.now());
+            ppd.setUpdatedAt(java.time.LocalDateTime.now());
             ppdRepository.save(ppd);
             saveAuditLog("Soft-deleted production entry ID: " + id, "PPD", oldState, null);
         });
@@ -124,7 +124,7 @@ public class ProductionController {
             String oldState = toJson(ppm);
             ppm.setIsActive(false);
             ppm.setUpdatedBy(getCurrentUser());
-            ppm.setUpdatedAt(LocalDate.now());
+            ppm.setUpdatedAt(java.time.LocalDateTime.now());
             ppmRepository.save(ppm);
             saveAuditLog("Soft-deleted monthly production summary ID: " + id, "PPM", oldState, null);
         });
@@ -149,7 +149,7 @@ public class ProductionController {
             String oldState = toJson(rm);
             rm.setIsActive(false);
             rm.setUpdatedBy(getCurrentUser());
-            rm.setUpdatedAt(LocalDate.now());
+            rm.setUpdatedAt(java.time.LocalDateTime.now());
             rawMaterialRepository.save(rm);
             saveAuditLog("Soft-deleted raw material ID: " + id, "Raw_Material", oldState, null);
         });

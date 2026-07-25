@@ -1,16 +1,19 @@
 package com.futaneagro.entity;
 
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
+import javax.persistence.FetchType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "Transport")
-@SQLDelete(sql = "UPDATE Transport SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE transport_id = ?")
-@Where(clause = "is_deleted = false")
+@Table(name = "t_log_transport")
+@Where(clause = "is_active = true")
+@SQLDelete(sql = "UPDATE t_log_transport SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE transport_id = ?")
 public class Transport extends BaseEntity {
     @Column(name = "transport_id")
     private Integer transportId;
@@ -21,7 +24,7 @@ public class Transport extends BaseEntity {
     @Column(name = "truck_number", nullable = false, length = 50)
     private String truckNumber;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "driver_id", nullable = false)
     private Driver driver;
 
@@ -38,14 +41,7 @@ public class Transport extends BaseEntity {
     private String truckPhotoPath;
 
     @Column(name = "driver_license_path", length = 255)
-    private String driverLicensePath;
-
-    @Column(name = "is_deleted")
-
-    @Column(name = "deleted_by", length = 100)
-
-    @Column(name = "deleted_date")
-
+    private String driverLicensePath;
     public Transport() {}
 
     @PrePersist
@@ -129,29 +125,4 @@ public class Transport extends BaseEntity {
 
     public void setDriverLicensePath(String driverLicensePath) {
         this.driverLicensePath = driverLicensePath;
-    }
-
-    public Boolean getIsDeleted() {
-        return isDeleted;
-    }
-
-    public void setIsDeleted(Boolean deleted) {
-        isDeleted = deleted;
-    }
-
-    public String getDeletedBy() {
-        return deletedBy;
-    }
-
-    public void setDeletedBy(String deletedBy) {
-        this.deletedBy = deletedBy;
-    }
-
-    public LocalDate getDeletedDate() {
-        return deletedDate;
-    }
-
-    public void setDeletedDate(LocalDate deletedDate) {
-        this.deletedDate = deletedDate;
-    }
-}
+    }}

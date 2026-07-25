@@ -1,4 +1,8 @@
 import { Component, OnInit, Input } from '@angular/core';
+import { AutoSelectDirective } from '../../../directives/auto-select.directive';
+import { FormStateDirective } from '../../../directives/form-state.directive';
+import { NotificationService } from '../../../services/notification.service';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -8,7 +12,7 @@ import { DataTableComponent } from '../../data-table/data-table.component';
 @Component({
   selector: 'app-employees',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, DataTableComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, DataTableComponent, AutoSelectDirective, FormStateDirective],
   templateUrl: './employees.component.html',
   styleUrls: ['./employees.component.css']
 })
@@ -32,7 +36,7 @@ export class EmployeesComponent implements OnInit {
     { label: 'Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
   ];
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, private notificationService: NotificationService) {}
 
   ngOnInit() {
     this.loadData();
@@ -52,24 +56,37 @@ export class EmployeesComponent implements OnInit {
 
   saveEmployee() {
     if (!this.employeeForm.empName || !this.employeeForm.empContact) {
-      alert("Please fill required fields");
+      this.notificationService.warning('Invalid Input', "Please fill required fields");
       return;
     }
-    this.apiService.createEmployee(this.employeeForm).subscribe(() => {
-      this.loadData();
-      this.logAudit("Registered employee: " + this.employeeForm.empName);
-      this.employeeForm = { empName: '', empContact: '', salary: 0, address: '', designation: '', joiningDate: '', aadhaarNo: '', bankAccount: '', photoPath: '', aadhaarCardPath: '', bankPassbookPath: '' };
+    this.apiService.createEmployee(this.employeeForm).subscribe({
+      next: (res) => {
+        if (res) this.employees.unshift(res);
+        this.loadData();
+        this.notificationService.success('Data Added', 'Employee registered successfully');
+        this.logAudit("Registered employee: " + this.employeeForm.empName);
+        this.employeeForm = { empName: '', empContact: '', salary: 0, address: '', designation: '', joiningDate: '', aadhaarNo: '', bankAccount: '', photoPath: '', aadhaarCardPath: '', bankPassbookPath: '' };
+      },
+      error: (err) => this.notificationService.error('Error', "Failed to register employee: " + (err.error?.message || err.message))
     });
   }
 
   deleteEmployee(id: string) {
     if (!this.canDelete()) {
-      alert("Permission denied");
+      this.notificationService.warning('Permission Denied', "Permission denied");
       return;
     }
-    this.apiService.deleteEmployee(id).subscribe(() => {
-      this.loadData();
-      this.logAudit("Deleted employee ID: " + id);
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this employee?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteEmployee(id).subscribe({
+          next: () => {
+            this.employees = this.employees.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Employee deleted successfully');
+            this.logAudit("Deleted employee ID: " + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -83,4 +100,3 @@ export class EmployeesComponent implements OnInit {
     }
   }
 }
-

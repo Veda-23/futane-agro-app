@@ -128,6 +128,19 @@ export class ApiService {
   deleteSale(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/sales/${id}`);
   }
+  generatePaymentLink(saleId: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/sales/${saleId}/payment-link`, {});
+  }
+  createRazorpayOrder(saleId: string, requestedAmount?: number): Observable<any> {
+    let url = `${this.baseUrl}/sales/${saleId}/checkout/order`;
+    if (requestedAmount && requestedAmount > 0) {
+      url += `?requestedAmount=${requestedAmount}`;
+    }
+    return this.http.post(url, {});
+  }
+  verifyRazorpayPayment(data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/sales/checkout/verify?razorpay_order_id=${data.razorpay_order_id}&razorpay_payment_id=${data.razorpay_payment_id}&razorpay_signature=${data.razorpay_signature}`, {});
+  }
 
   // Payments
   getPayments(): Observable<any> {

@@ -1,4 +1,8 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { AutoSelectDirective } from '../../../directives/auto-select.directive';
+import { FormStateDirective } from '../../../directives/form-state.directive';
+import { NotificationService } from '../../../services/notification.service';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -7,7 +11,7 @@ import { ApiService } from '../../../api.service';
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.css']
 })
@@ -26,7 +30,7 @@ export class SettingsComponent implements OnInit {
   userForm = { username: '', password: '', role: 'OPERATOR', name: '', email: '' };
   settingsSearchQuery = '';
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, private notificationService: NotificationService) {}
 
   ngOnInit() {}
 
@@ -75,10 +79,12 @@ export class SettingsComponent implements OnInit {
   validateForm(formType: string): boolean {
     if (formType === 'user') {
       const f = this.userForm;
-      if (!f.name.trim()) { alert('Full name is required.'); return false; }
-      if (!f.username.trim()) { alert('Username is required.'); return false; }
-      if (!f.password.trim()) { alert('Password is required.'); return false; }
-      if (f.password.length < 8) { alert('Password must be at least 8 characters long.'); return false; }
+      if (!f.username.trim() || !f.name.trim() || !f.email.trim()) {
+        this.notificationService.warning('Invalid Input', 'Please fill out all required fields.');
+        return false;
+      }
+      if (!f.password.trim()) { this.notificationService.warning('Invalid Input', 'Password is required.'); return false; }
+      if (f.password.length < 8) { this.notificationService.warning('Invalid Input', 'Password must be at least 8 characters long.'); return false; }
     }
     return true;
   }
@@ -86,16 +92,18 @@ export class SettingsComponent implements OnInit {
   saveUser() {
     if (!this.validateForm('user')) return;
     this.apiService.createUser(this.userForm).subscribe({
-      next: () => {
+      next: (res) => {
+        if (res) this.usersList.unshift(res);
         this.reloadData.emit();
+        this.notificationService.success('Data Added', 'User account created successfully');
         this.logAudit('Created user account: ' + this.userForm.username);
         this.userForm = { username: '', password: '', role: 'OPERATOR', name: '', email: '' };
       },
       error: (err) => {
         if (err.status === 409) {
-          alert(err.error?.message || 'A user with this username or email already exists.');
+          this.notificationService.error('Conflict', err.error?.message || 'A user with this username or email already exists.');
         } else {
-          alert('Failed to register user: ' + (err.error?.message || err.message));
+          this.notificationService.error('Error', 'Failed to register user: ' + (err.error?.message || err.message));
         }
       }
     });
@@ -118,11 +126,11 @@ export class SettingsComponent implements OnInit {
       next: () => {
         const u = this.usersList.find(x => x.username === username);
         if (u) u.email = newEmail;
-        alert('Email updated successfully!');
+        this.notificationService.success('Success', 'Email updated successfully!');
       },
       error: err => {
         console.error('Error updating email', err);
-        alert('Failed to update email.');
+        this.notificationService.error('Error', 'Failed to update email.');
       }
     });
   }
@@ -136,9 +144,18 @@ export class SettingsComponent implements OnInit {
   }
 
   deleteUser(username: string) {
-    this.apiService.deleteUser(username).subscribe(() => {
-      this.reloadData.emit();
-      this.logAudit('Deleted user account: ' + username);
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete user account ' + username + '?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteUser(username).subscribe({
+          next: () => {
+            this.usersList = this.usersList.filter(x => x.username !== username);
+            this.reloadData.emit();
+            this.notificationService.success('Deleted', 'User account deleted successfully');
+            this.logAudit('Deleted user account: ' + username);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -158,27 +175,29 @@ export class SettingsComponent implements OnInit {
   triggerBackup() {
     this.apiService.runBackup().subscribe({
       next: (res: any) => {
-        alert(res.message || 'Backup created successfully!');
+        this.notificationService.success('Backup Successful', res.message || 'Backup created successfully!');
         this.reloadData.emit();
       },
       error: (err) => {
-        alert('Backup failed: ' + (err.error?.message || err.message || err));
+        this.notificationService.error('Backup Failed', err.error?.message || err.message || err);
       }
     });
   }
 
   triggerRestore(filename: string) {
-    if (confirm(`Are you sure you want to restore the database from ${filename}? Current data will be overwritten!`)) {
-      this.apiService.runRestore(filename).subscribe({
-        next: (res: any) => {
-          alert(res.message || 'Database restored successfully!');
-          this.reloadData.emit();
-        },
-        error: (err) => {
-          alert('Restore failed: ' + (err.error?.message || err.message || err));
-        }
-      });
-    }
+    this.notificationService.confirmAction('Confirm Restore', `Are you sure you want to restore the database from ${filename}? Current data will be overwritten!`, 'Yes, Restore').then(confirmed => {
+      if (confirmed) {
+        this.apiService.runRestore(filename).subscribe({
+          next: (res: any) => {
+            this.notificationService.success('Restore Successful', res.message || 'Database restored successfully!');
+            this.reloadData.emit();
+          },
+          error: (err) => {
+            this.notificationService.error('Restore Failed', err.error?.message || err.message || err);
+          }
+        });
+      }
+    });
   }
 
   logAudit(action: string) {

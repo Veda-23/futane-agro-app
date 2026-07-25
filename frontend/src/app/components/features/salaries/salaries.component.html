@@ -27,11 +27,11 @@
       </div>
       <div class="form-group">
         <label>{{ 'sal.year' | translate:currentLang }}</label>
-        <input type="number" [(ngModel)]="salariesForm.year" name="salYear" required>
+        <input appAutoSelect type="number" [(ngModel)]="salariesForm.year" name="salYear" required>
       </div>
       <div class="form-group">
         <label>{{ 'sal.amount' | translate:currentLang }}</label>
-        <input type="number" [(ngModel)]="salariesForm.salaryAmount" name="salAmount" required>
+        <input appAutoSelect type="number" [(ngModel)]="salariesForm.salaryAmount" name="salAmount" required>
       </div>
       <div class="form-group">
         <label>{{ 'sal.status' | translate:currentLang }}</label>
@@ -42,7 +42,7 @@
       </div>
       <div class="form-group">
         <label>{{ 'sal.date' | translate:currentLang }}</label>
-        <input type="date" [(ngModel)]="salariesForm.paidDate" name="salPaidDate">
+        <input appAutoSelect type="date" [(ngModel)]="salariesForm.paidDate" name="salPaidDate">
       </div>
       <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'sal.save_btn' | translate:currentLang }}</button>
     </form>
@@ -57,7 +57,7 @@
         </button>
         <div class="dropdown-menu" *ngIf="showColDropdown['salaries']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
           <label *ngFor="let col of getTableColumns('salaries')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-            <input type="checkbox" [checked]="isColumnVisible('salaries', col)" (change)="toggleColumn('salaries', col)" style="width:auto; margin:0; cursor:pointer;">
+            <input appAutoSelect type="checkbox" [checked]="isColumnVisible('salaries', col)" (change)="toggleColumn('salaries', col)" style="width:auto; margin:0; cursor:pointer;">
             {{col}}
           </label>
         </div>

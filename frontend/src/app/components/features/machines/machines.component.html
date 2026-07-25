@@ -4,19 +4,19 @@
     <form (submit)="saveMachine()">
       <div class="form-group">
         <label>{{ 'machine.name' | translate:currentLang }}</label>
-        <input type="text" [(ngModel)]="machineForm.machineName" name="mName" required placeholder="e.g. Injection Moulding Machine 1">
+        <input appAutoSelect type="text" [(ngModel)]="machineForm.machineName" name="mName" required placeholder="e.g. Injection Moulding Machine 1">
       </div>
       <div class="form-group">
         <label>{{ 'machine.code' | translate:currentLang }}</label>
-        <input type="text" [(ngModel)]="machineForm.machineCode" name="mCode" required placeholder="e.g. IMM-003">
+        <input appAutoSelect type="text" [(ngModel)]="machineForm.machineCode" name="mCode" required placeholder="e.g. IMM-003">
       </div>
       <div class="form-group">
         <label>{{ 'machine.capacity_hour' | translate:currentLang }}</label>
-        <input type="number" [(ngModel)]="machineForm.capacityPerHour" name="mCapacity" required>
+        <input appAutoSelect type="number" [(ngModel)]="machineForm.capacityPerHour" name="mCapacity" required>
       </div>
       <div class="form-group">
         <label>{{ 'machine.installed' | translate:currentLang }}</label>
-        <input type="date" [(ngModel)]="machineForm.installedDate" name="mDate" required>
+        <input appAutoSelect type="date" [(ngModel)]="machineForm.installedDate" name="mDate" required>
       </div>
       <div class="form-group">
         <label>{{ 'machine.status' | translate:currentLang }}</label>
@@ -41,19 +41,19 @@
       </div>
       <div class="form-group">
         <label>Breakdown Date</label>
-        <input type="date" [(ngModel)]="breakdownForm.breakdownDate" name="bdDate" required>
+        <input appAutoSelect type="date" [(ngModel)]="breakdownForm.breakdownDate" name="bdDate" required>
       </div>
       <div class="form-group">
         <label>Description</label>
-        <input type="text" [(ngModel)]="breakdownForm.description" name="bdDesc" required placeholder="What failed?">
+        <input appAutoSelect type="text" [(ngModel)]="breakdownForm.description" name="bdDesc" required placeholder="What failed?">
       </div>
       <div class="form-group">
         <label>Downtime (hours)</label>
-        <input type="number" [(ngModel)]="breakdownForm.downtimeHours" name="bdHours" required>
+        <input appAutoSelect type="number" [(ngModel)]="breakdownForm.downtimeHours" name="bdHours" required>
       </div>
       <div class="form-group">
         <label>Resolved Date</label>
-        <input type="date" [(ngModel)]="breakdownForm.resolvedDate" name="bdResolved">
+        <input appAutoSelect type="date" [(ngModel)]="breakdownForm.resolvedDate" name="bdResolved">
       </div>
       <button type="submit" class="btn btn-warning" style="width:100%">Log Breakdown</button>
     </form>
@@ -68,7 +68,7 @@
         </button>
         <div class="dropdown-menu" *ngIf="showColDropdown['machines']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
           <label *ngFor="let col of getTableColumns('machines')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-            <input type="checkbox" [checked]="isColumnVisible('machines', col)" (change)="toggleColumn('machines', col)" style="width:auto; margin:0; cursor:pointer;">
+            <input appAutoSelect type="checkbox" [checked]="isColumnVisible('machines', col)" (change)="toggleColumn('machines', col)" style="width:auto; margin:0; cursor:pointer;">
             {{col}}
           </label>
         </div>
@@ -122,7 +122,7 @@
         </button>
         <div class="dropdown-menu" *ngIf="showColDropdown['breakdowns']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
           <label *ngFor="let col of getTableColumns('breakdowns')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-            <input type="checkbox" [checked]="isColumnVisible('breakdowns', col)" (change)="toggleColumn('breakdowns', col)" style="width:auto; margin:0; cursor:pointer;">
+            <input appAutoSelect type="checkbox" [checked]="isColumnVisible('breakdowns', col)" (change)="toggleColumn('breakdowns', col)" style="width:auto; margin:0; cursor:pointer;">
             {{col}}
           </label>
         </div>

@@ -1,4 +1,8 @@
 import { Component, OnInit, Input } from '@angular/core';
+import { AutoSelectDirective } from '../../../directives/auto-select.directive';
+import { FormStateDirective } from '../../../directives/form-state.directive';
+import { NotificationService } from '../../../services/notification.service';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -8,7 +12,7 @@ import { DataTableComponent } from '../../data-table/data-table.component';
 @Component({
   selector: 'app-party',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, DataTableComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, DataTableComponent, AutoSelectDirective, FormStateDirective],
   templateUrl: './party.component.html',
   styleUrls: ['./party.component.css']
 })
@@ -33,14 +37,14 @@ export class PartyComponent implements OnInit {
     { label: 'Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
   ];
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, private notificationService: NotificationService) {}
 
   ngOnInit() {
     this.loadData();
   }
 
   loadData() {
-    this.apiService.getParties().subscribe((list: any[]) => this.parties = list);
+    this.apiService.getParties().subscribe((res: any[]) => this.parties = res);
   }
 
   isViewer(): boolean {
@@ -54,7 +58,7 @@ export class PartyComponent implements OnInit {
   validateForm(type: string): boolean {
     if (type === 'party') {
       if (!this.partyForm.partyName || !this.partyForm.partyContact) {
-        alert("Please fill all required fields");
+        this.notificationService.warning('Invalid Input', "Please fill all required fields");
         return false;
       }
     }
@@ -64,16 +68,18 @@ export class PartyComponent implements OnInit {
   saveParty() {
     if (!this.validateForm('party')) return;
     this.apiService.createParty(this.partyForm).subscribe({
-      next: () => {
+      next: (res) => {
+        if (res) this.parties.unshift(res);
         this.loadData();
+        this.notificationService.success('Data Added', 'Party registered successfully');
         this.logAudit("Registered new party: " + this.partyForm.partyName);
         this.partyForm = { partyName: '', partyAddress: '', partyContact: '', gstNumber: '', email: '', city: '', state: '', gstCertPath: '', panCardPath: '', agreementPath: '' };
       },
       error: (err) => {
         if (err.status === 409) {
-          alert(err.error?.message || "A party with this unique info already exists.");
+          this.notificationService.error('Conflict', err.error?.message || "A party with this unique info already exists.");
         } else {
-          alert("Failed to save party: " + (err.error?.message || err.message));
+          this.notificationService.error('Error', "Failed to save party: " + (err.error?.message || err.message));
         }
       }
     });
@@ -81,12 +87,20 @@ export class PartyComponent implements OnInit {
 
   deleteParty(id: string) {
     if (!this.canDelete()) {
-      alert("You don't have permission to delete.");
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
       return;
     }
-    this.apiService.deleteParty(id).subscribe(() => {
-      this.loadData();
-      this.logAudit("Deleted party ID: " + id);
+    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this party?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteParty(id).subscribe({
+          next: () => {
+            this.parties = this.parties.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Party deleted successfully');
+            this.logAudit("Deleted party ID: " + id);
+          },
+          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+        });
+      }
     });
   }
 
@@ -103,4 +117,3 @@ export class PartyComponent implements OnInit {
     }
   }
 }
-

@@ -1,5 +1,7 @@
 package com.futaneagro.entity;
 
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
@@ -7,9 +9,9 @@ import javax.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "Driver")
-@SQLDelete(sql = "UPDATE Driver SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE driver_id = ?")
-@Where(clause = "is_deleted = false")
+@Table(name = "t_hr_driver")
+@Where(clause = "is_active = true")
+@SQLDelete(sql = "UPDATE t_hr_driver SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE driver_id = ?")
 public class Driver extends BaseEntity {
     @Column(name = "driver_id")
     private Integer driverId;
@@ -24,14 +26,7 @@ public class Driver extends BaseEntity {
     private String licenseNumber;
 
     @Column(name = "address", length = 255)
-    private String address;
-
-    @Column(name = "is_deleted")
-
-    @Column(name = "deleted_by", length = 100)
-
-    @Column(name = "deleted_date")
-
+    private String address;
     public Driver() {}
 
     public Integer getDriverId() {
@@ -72,29 +67,4 @@ public class Driver extends BaseEntity {
 
     public void setAddress(String address) {
         this.address = address;
-    }
-
-    public Boolean getIsDeleted() {
-        return isDeleted;
-    }
-
-    public void setIsDeleted(Boolean deleted) {
-        isDeleted = deleted;
-    }
-
-    public String getDeletedBy() {
-        return deletedBy;
-    }
-
-    public void setDeletedBy(String deletedBy) {
-        this.deletedBy = deletedBy;
-    }
-
-    public LocalDate getDeletedDate() {
-        return deletedDate;
-    }
-
-    public void setDeletedDate(LocalDate deletedDate) {
-        this.deletedDate = deletedDate;
-    }
-}
+    }}

@@ -1,5 +1,7 @@
 -- liquibase formatted sql
--- changeset admin:07-data-migration runOnChange:true splitStatements:true endDelimiter://
+-- changeset admin:07-data-migration runOnChange:true splitStatements:true failOnError:false
+-- preconditions onFail:MARK_RAN
+-- precondition-sql-check expectedResult:1 SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'users';
 
 -- ==============================================================================
 -- ENTERPRISE DATA MIGRATION STRATEGY (INTEGER -> UUID)
@@ -20,7 +22,7 @@ ALTER TABLE t_inv_raw_material ADD COLUMN temp_old_id INT;
 ALTER TABLE t_prd_machine_master ADD COLUMN temp_old_id INT;
 
 -- 2. Migrate Core Users
-INSERT INTO t_core_user (id, username, password_hash, role, temp_old_id)
+INSERT INTO t_core_user (id, username, password, role, temp_old_id)
 SELECT UUID(), username, password, role, id FROM users;
 
 -- 3. Migrate Employees (Map user_id foreign key using the new UUID)

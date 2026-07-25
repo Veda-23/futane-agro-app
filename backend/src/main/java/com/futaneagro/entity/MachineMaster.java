@@ -1,5 +1,7 @@
 package com.futaneagro.entity;
 
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
@@ -7,11 +9,10 @@ import javax.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "Machine_Master", uniqueConstraints = {
+@Table(name = "t_prd_machine_master", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"machine_name"})
 })
-@SQLDelete(sql = "UPDATE Machine_Master SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE machine_id = ?")
-@Where(clause = "is_deleted = false")
+@SQLDelete(sql = "UPDATE t_prd_machine_master SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE machine_id = ?")
 public class MachineMaster extends BaseEntity {
     @Column(name = "machine_id")
     private Integer machineId;
@@ -29,14 +30,7 @@ public class MachineMaster extends BaseEntity {
     private LocalDate warrantyDate;
 
     @Column(name = "status", nullable = false, length = 50)
-    private String status = "Running"; // Running, Maintenance, Stopped
-
-    @Column(name = "is_deleted")
-
-    @Column(name = "deleted_by", length = 100)
-
-    @Column(name = "deleted_date")
-
+    private String status = "Running"; // Running, Maintenance, Stopped
     public MachineMaster() {}
 
     public Integer getMachineId() {
@@ -85,29 +79,4 @@ public class MachineMaster extends BaseEntity {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public Boolean getIsDeleted() {
-        return isDeleted;
-    }
-
-    public void setIsDeleted(Boolean deleted) {
-        isDeleted = deleted;
-    }
-
-    public String getDeletedBy() {
-        return deletedBy;
-    }
-
-    public void setDeletedBy(String deletedBy) {
-        this.deletedBy = deletedBy;
-    }
-
-    public LocalDate getDeletedDate() {
-        return deletedDate;
-    }
-
-    public void setDeletedDate(LocalDate deletedDate) {
-        this.deletedDate = deletedDate;
-    }
-}
+    }}
