@@ -1,5 +1,8 @@
 <app-login *ngIf="!isAuthenticated" (onLoginSuccess)="completeLogin($event)"></app-login>
 <div *ngIf="isAuthenticated" class="app-container" [class.sidebar-closed]="!isSidebarOpen">
+  <!-- Sidebar Backdrop (Mobile/Tablet only) -->
+  <div class="sidebar-backdrop" *ngIf="isSidebarOpen" (click)="toggleSidebar()"></div>
+
   <!-- Sidebar Navigation -->
   <app-sidebar 
     [isSidebarOpen]="isSidebarOpen"

@@ -20,10 +20,36 @@
   margin-left: 0px; /* Fully collapsed sidebar fallback */
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .main-content {
     margin-left: 0 !important;
   }
+}
+
+/* Sidebar Backdrop (Mobile/Tablet only) */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(15, 23, 42, 0.4); /* Slate translucent overlay */
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 999; /* Sits just below sidebar (1000) */
+  animation: fadeInBackdrop 0.25s ease-out forwards;
+}
+
+@media (max-width: 1024px) {
+  .sidebar-backdrop {
+    display: block;
+  }
+}
+
+@keyframes fadeInBackdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .content-body {
@@ -36,7 +62,7 @@
   box-sizing: border-box;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .content-body {
     padding: 16px;
     padding-top: calc(var(--header-height) + 16px);

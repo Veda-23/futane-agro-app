@@ -590,6 +590,11 @@ export class AppComponent implements OnInit {
       if (tab === 'reports') {
         this.runReport();
       }
+      
+      // Auto-collapse navigation sidebar on mobile/tablet screens after tab selection
+      if (window.innerWidth <= 1024) {
+        this.isSidebarOpen = false;
+      }
     }
   }
 
