@@ -55,7 +55,7 @@ export class AppComponent implements OnInit {
   Math = Math;
 
   // Sidebar Mobile State
-  isSidebarOpen = false;
+  isSidebarOpen = window.innerWidth > 1024;
 
   toggleSidebar() {
     this.isSidebarOpen = !this.isSidebarOpen;
@@ -895,10 +895,16 @@ export class AppComponent implements OnInit {
                   "email": sale.party?.email || '',
                   "contact": sale.party?.partyContact || ''
                 },
-                "theme": { "color": "#3399cc" }
+                "theme": { "color": "#D97706" }
               };
 
-              const isRealRazorpayOrder = orderRes.order_id && !orderRes.order_id.startsWith('order_rzp_') && !orderRes.order_id.startsWith('order_mock');
+              // Real Razorpay orders start with 'order_' + alphanumeric (e.g. order_PxYz123)
+              // Sandbox/mock fallback orders are: order_sandbox_*, order_mock*, order_rzp_*
+              const isRealRazorpayOrder = orderRes.order_id &&
+                orderRes.order_id.startsWith('order_') &&
+                !orderRes.order_id.startsWith('order_sandbox_') &&
+                !orderRes.order_id.startsWith('order_mock') &&
+                !orderRes.order_id.startsWith('order_rzp_');
 
               if (typeof Razorpay !== 'undefined' && isRealRazorpayOrder) {
                 const rzp = new Razorpay(options);

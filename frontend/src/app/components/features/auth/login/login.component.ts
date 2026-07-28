@@ -27,6 +27,7 @@ export class LoginComponent implements OnDestroy {
   tempOtp = '';
   otpCountdown = 120;
   otpTimerInterval: any = null;
+  showPassword = false;
 
   constructor(
     private apiService: ApiService,

@@ -45,4 +45,11 @@ else
     
     echo "[SUCCESS] Production/Gateway Deployment finished successfully!"
     sudo docker-compose -f docker-compose.prod.yml ps
+    
+    # Ensure gateway is connected to monitoring network so it can reach Grafana
+    sudo docker network connect futane-monitoring-network futane_agro_gateway 2>/dev/null && echo "[INFO] Gateway connected to monitoring network" || echo "[INFO] Gateway already connected to monitoring network"
+    
+    # Ensure backend is connected to monitoring network with alias so Prometheus can scrape it
+    sudo docker network connect --alias backend-prod futane-monitoring-network futane_agro_backend_prod 2>/dev/null && echo "[INFO] Backend connected to monitoring network" || echo "[INFO] Backend already connected to monitoring network"
+
 fi

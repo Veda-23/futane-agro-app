@@ -47,10 +47,10 @@ public class SecurityConfig {
             .antMatchers("/api/health").permitAll() // Health Check Endpoint
             .antMatchers("/actuator/**").permitAll() // Actuator Prometheus Metrics
             
-            // SUPER_ADMIN Only Administrative Endpoints
+            // Administrative Endpoints
             .antMatchers("/api/users/**").hasRole("SUPER_ADMIN")
-            .antMatchers("/api/settings/**").hasRole("SUPER_ADMIN")
-            .antMatchers("/api/audit-logs/**").hasRole("SUPER_ADMIN")
+            .antMatchers("/api/settings/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
+            .antMatchers("/api/audit-logs/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
             
             // Read-only (GET) allowed to all roles including VIEWER
             .antMatchers(HttpMethod.GET, "/api/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "ACCOUNTANT", "OPERATOR", "VIEWER")

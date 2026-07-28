@@ -231,19 +231,11 @@ public class PaymentLinkService {
             String orderId;
             long amount = amountPaise;
 
-            if (razorpayClient != null) {
-                try {
-                    com.razorpay.Order order = razorpayClient.orders.create(orderRequest);
-                    orderId = order.get("id").toString();
-                    if (order.get("amount") != null) {
-                        amount = ((Number) order.get("amount")).longValue();
-                    }
-                } catch (Exception e) {
-                    log.warn("Razorpay API call failed ({}) — using sandbox Order ID for payment UI.", e.getMessage());
-                    orderId = "order_sandbox_" + System.currentTimeMillis();
-                }
-            } else {
-                orderId = "order_sandbox_" + System.currentTimeMillis();
+            // Create real Razorpay order — do NOT fallback silently on failure
+            com.razorpay.Order order = razorpayClient.orders.create(orderRequest);
+            orderId = order.get("id").toString();
+            if (order.get("amount") != null) {
+                amount = ((Number) order.get("amount")).longValue();
             }
 
             Map<String, Object> result = new HashMap<>();
@@ -251,8 +243,7 @@ public class PaymentLinkService {
             result.put("amount", amount);
             result.put("currency", "INR");
             result.put("sale_id", saleId);
-            String activeKeyId = (keyId != null && keyId.startsWith("rzp_")) ? keyId.trim() : "rzp_test_TH443X2Dj8owEO";
-            result.put("key_id", activeKeyId);
+            result.put("key_id", keyId != null ? keyId.trim() : "");
             
             PaymentLink entity = new PaymentLink();
             entity.setSaleId(sale.getId());

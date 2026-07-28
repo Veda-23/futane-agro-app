@@ -37,9 +37,9 @@ services:
       - SPRING_DATASOURCE_PASSWORD=Vedant
       - MAIL_USERNAME=vedantmehare25@gmail.com
       - MAIL_PASSWORD=vsbtirkwuqviuicj
-      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID:-rzp_live_TH42JFWHOJaJ2y}
-      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET:-KQ9CM0pY1sgZxZVVMwaXzWUE}
-      - RAZORPAY_WEBHOOK_SECRET=${RAZORPAY_WEBHOOK_SECRET:-KQ9CM0pY1sgZxZVVMwaXzWUE}
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID:-rzp_live_TI9lR5O91bfVYR}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET:-PbJO3mgGxGpU9gtH6lbOWJAR}
+      - RAZORPAY_WEBHOOK_SECRET=${RAZORPAY_WEBHOOK_SECRET:-PbJO3mgGxGpU9gtH6lbOWJAR}
     depends_on:
       mysql-prod:
         condition: service_healthy
@@ -58,14 +58,30 @@ services:
     container_name: futane_agro_frontend_prod
     depends_on:
       - backend-prod
+    # No host port bindings — gateway nginx proxies to this container internally
+    expose:
+      - "80"
+    restart: always
+    networks:
+      - prod-network
+
+  # Nginx Gateway — owns ports 80/443, routes to frontend + Grafana /monitoring/
+  gateway:
+    image: nginx:1.25-alpine
+    container_name: futane_agro_gateway
     ports:
       - "80:80"
       - "443:443"
     volumes:
+      - ./gateway/nginx.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - frontend-prod
+      - backend-prod
     restart: always
     networks:
       - prod-network
+      - monitoring-network
 
 volumes:
   mysql_prod_data:
@@ -74,3 +90,6 @@ volumes:
 networks:
   prod-network:
     name: futane-prod-network
+  monitoring-network:
+    name: futane-monitoring-network
+    external: true

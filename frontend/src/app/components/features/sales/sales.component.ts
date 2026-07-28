@@ -137,58 +137,13 @@ export class SalesComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         const requestedAmount = parseFloat(result.value);
-        
-        // Show loading
-        Swal.fire({ title: 'Initializing Payment...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-
-        const targetSaleId = sale.id ? sale.id : (sale.saleId ? sale.saleId.toString() : '');
-        this.apiService.createRazorpayOrder(targetSaleId, requestedAmount).subscribe({
-          next: (orderRes: any) => {
-            Swal.close();
-            
-            try {
-              const options = {
-                "key": orderRes.key_id,
-                "amount": orderRes.amount,
-                "currency": orderRes.currency,
-                "name": "Futane Agro Industries",
-                "description": "Payment for Sales Invoice #" + (sale.saleId || sale.id),
-                "order_id": orderRes.order_id,
-                "handler": (response: any) => {
-                  Swal.fire({ title: 'Verifying Payment...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-                  this.processPaymentSuccess(sale, requestedAmount, response.razorpay_payment_id || 'PAY_' + Date.now());
-                },
-                "prefill": {
-                  "name": sale.party?.partyName || '',
-                  "email": sale.party?.email || '',
-                  "contact": sale.party?.partyContact || ''
-                },
-                "theme": { "color": "#3399cc" }
-              };
-
-              const isRealRazorpayOrder = orderRes.order_id && !orderRes.order_id.startsWith('order_sandbox_') && !orderRes.order_id.startsWith('order_mock_');
-
-              if (typeof Razorpay !== 'undefined' && isRealRazorpayOrder) {
-                const rzp = new Razorpay(options);
-                rzp.on('payment.failed', (response: any) => {
-                  this.promptFallbackPayment(sale, requestedAmount);
-                });
-                rzp.open();
-              } else {
-                this.promptFallbackPayment(sale, requestedAmount);
-              }
-            } catch (e) {
-              this.promptFallbackPayment(sale, requestedAmount);
-            }
-          },
-          error: (err) => {
-            Swal.close();
-            this.promptFallbackPayment(sale, requestedAmount);
-          }
-        });
+        this.promptFallbackPayment(sale, requestedAmount);
       }
     });
+
+
   }
+
 
   promptFallbackPayment(sale: any, amount: number) {
     const upiId = 'futaneagro@okicici';

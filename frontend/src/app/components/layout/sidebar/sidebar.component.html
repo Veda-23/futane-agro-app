@@ -1,36 +1,319 @@
-<aside class="sidebar glass-panel" [class.open]="isSidebarOpen">
-  <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
-    <div>
-      <h3>🏭 FUTANE AGRO</h3>
-      <span class="badge badge-info">{{ loggedInUser?.role }}</span>
+<aside class="sidebar" [class.open]="isSidebarOpen">
+
+  <!-- Brand Header -->
+  <div class="sidebar-header">
+    <div class="sidebar-brand">
+      <div class="brand-logo" style="background: rgba(255,255,255,0.08); padding: 6px; border-radius: 8px; font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1.5px solid rgba(255,255,255,0.15);">
+        🏭
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">FUTANE AGRO</span>
+        <span class="brand-sub">ERP System</span>
+      </div>
     </div>
-    <button class="mobile-menu-btn" (click)="toggleSidebar()" style="font-size: 20px;">✕</button>
+    <button class="mobile-close-btn" (click)="toggleSidebar()" aria-label="Close sidebar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
   </div>
-  <nav class="sidebar-nav">
+
+  <!-- User Badge -->
+  <div class="sidebar-user-badge">
+    <div class="user-avatar">{{ loggedInUser?.name?.charAt(0) || 'A' }}</div>
+    <div class="user-info">
+      <span class="user-name">{{ loggedInUser?.name || 'User' }}</span>
+      <span class="role-badge">{{ loggedInUser?.role }}</span>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav" role="navigation" aria-label="Main Navigation">
+
+    <!-- Core -->
+    <div class="nav-group-label">Core</div>
     <ul>
-      <li [class.active]="activeTab === 'dashboard'" *ngIf="accessibleTabs['dashboard']" (click)="switchTab('dashboard')">📊 {{ 'nav.dashboard' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'production'" *ngIf="accessibleTabs['production']" (click)="switchTab('production')">⚙️ {{ 'nav.production' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'monthly-production'" *ngIf="accessibleTabs['monthly-production']" (click)="switchTab('monthly-production')">📅 {{ 'nav.monthly-production' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'parties'" *ngIf="accessibleTabs['parties']" (click)="switchTab('parties')">👥 {{ 'nav.parties' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'sales'" *ngIf="accessibleTabs['sales']" (click)="switchTab('sales')">💼 {{ 'nav.sales' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'payments'" *ngIf="accessibleTabs['payments']" (click)="switchTab('payments')">💳 {{ 'nav.payments' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'raw-materials'" *ngIf="accessibleTabs['raw-materials']" (click)="switchTab('raw-materials')">🪵 {{ 'nav.raw-materials' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'vendors'" *ngIf="accessibleTabs['vendors']" (click)="switchTab('vendors')">🏪 {{ 'nav.vendors' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'inventory'" *ngIf="accessibleTabs['inventory']" (click)="switchTab('inventory')">📦 {{ 'nav.inventory' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'employees'" *ngIf="accessibleTabs['employees']" (click)="switchTab('employees')">👔 {{ 'nav.hr' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'salaries'" *ngIf="accessibleTabs['salaries']" (click)="switchTab('salaries')">💵 {{ 'nav.salaries' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'transports'" *ngIf="accessibleTabs['transports']" (click)="switchTab('transports')">🚚 {{ 'nav.transport' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'drivers'" *ngIf="accessibleTabs['drivers']" (click)="switchTab('drivers')">🚘 {{ 'nav.drivers' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'machines'" *ngIf="accessibleTabs['machines']" (click)="switchTab('machines')">🏭 {{ 'nav.machines' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'dispatch'" *ngIf="accessibleTabs['dispatch']" (click)="switchTab('dispatch')">📤 {{ 'nav.dispatch' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'expenses'" *ngIf="accessibleTabs['expenses']" (click)="switchTab('expenses')">💸 {{ 'nav.expenses' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'bank'" *ngIf="accessibleTabs['bank']" (click)="switchTab('bank')">🏦 {{ 'nav.bank' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'invoices'" *ngIf="accessibleTabs['invoices']" (click)="switchTab('invoices')">🧾 {{ 'nav.invoices' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'billinghub'" *ngIf="accessibleTabs['billinghub']" (click)="switchTab('billinghub')">🧾 {{ 'nav.billinghub' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'reports'" *ngIf="accessibleTabs['reports']" (click)="switchTab('reports')">📈 {{ 'nav.reports' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'analytics'" *ngIf="accessibleTabs['analytics']" (click)="switchTab('analytics')">📊 {{ 'nav.analytics' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'settings'" *ngIf="accessibleTabs['settings']" (click)="switchTab('settings')">⚙️ {{ 'nav.settings' | translate:currentLang }}</li>
-      <li [class.active]="activeTab === 'audit-logs'" *ngIf="accessibleTabs['audit-logs']" (click)="switchTab('audit-logs')">🔒 {{ 'nav.auditlog' | translate:currentLang }}</li>
+      <li *ngIf="accessibleTabs['dashboard']"
+          [class.active]="activeTab === 'dashboard'"
+          (click)="switchTab('dashboard')"
+          title="Dashboard">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.dashboard' | translate:currentLang }}</span>
+      </li>
     </ul>
+
+    <!-- Manufacturing -->
+    <div class="nav-group-label">Manufacturing</div>
+    <ul>
+      <li *ngIf="accessibleTabs['production']"
+          [class.active]="activeTab === 'production'"
+          (click)="switchTab('production')" title="Production">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41M19.07 19.07l-1.41-1.41M6.34 6.34L4.93 4.93M21 12h-2M5 12H3M12 21v-2M12 5V3"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.production' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['monthly-production']"
+          [class.active]="activeTab === 'monthly-production'"
+          (click)="switchTab('monthly-production')" title="Monthly Summary">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.monthly-production' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['machines']"
+          [class.active]="activeTab === 'machines'"
+          (click)="switchTab('machines')" title="Machines">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2M12 12v4M10 14h4"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.machines' | translate:currentLang }}</span>
+      </li>
+    </ul>
+
+    <!-- Commerce -->
+    <div class="nav-group-label">Commerce</div>
+    <ul>
+      <li *ngIf="accessibleTabs['parties']"
+          [class.active]="activeTab === 'parties'"
+          (click)="switchTab('parties')" title="Parties">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.parties' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['sales']"
+          [class.active]="activeTab === 'sales'"
+          (click)="switchTab('sales')" title="Sales">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.sales' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['payments']"
+          [class.active]="activeTab === 'payments'"
+          (click)="switchTab('payments')" title="Payments">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.payments' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['invoices']"
+          [class.active]="activeTab === 'invoices'"
+          (click)="switchTab('invoices')" title="Invoices">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            <line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.invoices' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['billinghub']"
+          [class.active]="activeTab === 'billinghub'"
+          (click)="switchTab('billinghub')" title="Billing Hub">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.billinghub' | translate:currentLang }}</span>
+      </li>
+    </ul>
+
+    <!-- Supply Chain -->
+    <div class="nav-group-label">Supply Chain</div>
+    <ul>
+      <li *ngIf="accessibleTabs['inventory']"
+          [class.active]="activeTab === 'inventory'"
+          (click)="switchTab('inventory')" title="Inventory">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.inventory' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['raw-materials']"
+          [class.active]="activeTab === 'raw-materials'"
+          (click)="switchTab('raw-materials')" title="Raw Materials">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.raw-materials' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['vendors']"
+          [class.active]="activeTab === 'vendors'"
+          (click)="switchTab('vendors')" title="Vendors">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.vendors' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['dispatch']"
+          [class.active]="activeTab === 'dispatch'"
+          (click)="switchTab('dispatch')" title="Dispatch">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/>
+            <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.dispatch' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['transports']"
+          [class.active]="activeTab === 'transports'"
+          (click)="switchTab('transports')" title="Transport">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3M9 17h6m4 0h2M13 17v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4"/>
+            <circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.transport' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['drivers']"
+          [class.active]="activeTab === 'drivers'"
+          (click)="switchTab('drivers')" title="Drivers">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.drivers' | translate:currentLang }}</span>
+      </li>
+    </ul>
+
+    <!-- Finance -->
+    <div class="nav-group-label">Finance</div>
+    <ul>
+      <li *ngIf="accessibleTabs['bank']"
+          [class.active]="activeTab === 'bank'"
+          (click)="switchTab('bank')" title="Bank">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/>
+            <line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/>
+            <line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.bank' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['expenses']"
+          [class.active]="activeTab === 'expenses'"
+          (click)="switchTab('expenses')" title="Expenses">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4H8M12 6v2m0 8v2"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.expenses' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['reports']"
+          [class.active]="activeTab === 'reports'"
+          (click)="switchTab('reports')" title="Reports">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.reports' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['analytics']"
+          [class.active]="activeTab === 'analytics'"
+          (click)="switchTab('analytics')" title="Analytics">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.analytics' | translate:currentLang }}</span>
+      </li>
+    </ul>
+
+    <!-- HR -->
+    <div class="nav-group-label">Human Resources</div>
+    <ul>
+      <li *ngIf="accessibleTabs['employees']"
+          [class.active]="activeTab === 'employees'"
+          (click)="switchTab('employees')" title="HR & Employees">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.hr' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['salaries']"
+          [class.active]="activeTab === 'salaries'"
+          (click)="switchTab('salaries')" title="Salaries">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.salaries' | translate:currentLang }}</span>
+      </li>
+    </ul>
+
+    <!-- Admin -->
+    <div class="nav-group-label">Admin</div>
+    <ul>
+      <li *ngIf="accessibleTabs['settings']"
+          [class.active]="activeTab === 'settings'"
+          (click)="switchTab('settings')" title="Settings">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.settings' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['audit-logs']"
+          [class.active]="activeTab === 'audit-logs'"
+          (click)="switchTab('audit-logs')" title="Audit Logs">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </span>
+        <span class="nav-label">{{ 'nav.auditlog' | translate:currentLang }}</span>
+      </li>
+    </ul>
+
   </nav>
+
+  <!-- Sidebar Footer -->
+  <div class="sidebar-footer">
+    <div class="sidebar-footer-brand">
+      <span>Futane Agro ERP</span>
+      <span class="version-tag">v2.0</span>
+    </div>
+  </div>
+
 </aside>

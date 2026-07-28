@@ -26,6 +26,11 @@ Write-Host "[INFO] Starting Automated CI/CD Pipeline for environment: $Environme
 Write-Host "[BUILD] Compiling Angular frontend..." -ForegroundColor Yellow
 Push-Location $FrontendDir
 
+# Clean previous build artifacts to prevent stale cached files
+if (Test-Path $DistDir) {
+    Remove-Item -Recurse -Force $DistDir
+}
+
 if ($Environment -eq "uat") {
     & npx ng build --configuration=uat
     $TargetDist = "dist-uat"
@@ -98,6 +103,7 @@ $RemoteTarPath = "/home/ubuntu/$TarFile"
 & scp -o StrictHostKeyChecking=no -i $SSH_KEY (Join-Path $RootDir "watch-dns-ssl.sh") "$($VM_USER)@$($VM_IP):$REMOTE_PATH/watch-dns-ssl.sh"
 & scp -o StrictHostKeyChecking=no -i $SSH_KEY (Join-Path $FrontendDir "nginx-$Environment.conf") "$($VM_USER)@$($VM_IP):$REMOTE_PATH/frontend/nginx-$Environment.conf"
 & scp -o StrictHostKeyChecking=no -i $SSH_KEY (Join-Path $FrontendDir "Dockerfile.$Environment") "$($VM_USER)@$($VM_IP):$REMOTE_PATH/frontend/Dockerfile.$Environment"
+& scp -o StrictHostKeyChecking=no -i $SSH_KEY (Join-Path $RootDir ".env") "$($VM_USER)@$($VM_IP):$REMOTE_PATH/.env"
 
 # Copy gateway folder if Production environment
 if ($Environment -eq "prod") {
@@ -108,7 +114,7 @@ if ($Environment -eq "prod") {
 
 # Step 5: Extract archive on VM and trigger remote deploy script
 Write-Host "[DEPLOY] Extracting archives on VM and triggering remote VM deployment script..." -ForegroundColor Yellow
-$RemoteCommands = "mkdir -p $REMOTE_PATH/frontend/$TargetDist && tar -xzf /home/ubuntu/$TarFile -C $REMOTE_PATH/frontend/$TargetDist && mkdir -p $REMOTE_PATH/backend && rm -rf $REMOTE_PATH/backend/src && tar -xzf /home/ubuntu/$BackendTarFile -C $REMOTE_PATH/backend && chmod +x $REMOTE_PATH/deploy-vm.sh && $REMOTE_PATH/deploy-vm.sh $Environment"
+$RemoteCommands = "rm -rf $REMOTE_PATH/frontend/$TargetDist && mkdir -p $REMOTE_PATH/frontend/$TargetDist && tar -xzf /home/ubuntu/$TarFile -C $REMOTE_PATH/frontend/$TargetDist && mkdir -p $REMOTE_PATH/backend && rm -rf $REMOTE_PATH/backend/src && tar -xzf /home/ubuntu/$BackendTarFile -C $REMOTE_PATH/backend && chmod +x $REMOTE_PATH/deploy-vm.sh && $REMOTE_PATH/deploy-vm.sh $Environment"
 
 & ssh -o StrictHostKeyChecking=no -i $SSH_KEY "$($VM_USER)@$($VM_IP)" $RemoteCommands
 

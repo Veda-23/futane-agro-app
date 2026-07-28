@@ -1,4 +1,4 @@
-/* App Root Layout Structure */
+/* App Shell Layout Structure */
 .app-container {
   display: flex;
   min-height: 100vh;
@@ -13,11 +13,11 @@
   flex-direction: column;
   min-width: 0; /* Prevents flex items from growing past 100% width */
   margin-left: 260px; /* Width of expanded sidebar */
-  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .app-container.sidebar-closed .main-content {
-  margin-left: 72px; /* Collapsed sidebar width */
+  margin-left: 0px; /* Fully collapsed sidebar fallback */
 }
 
 @media (max-width: 768px) {
@@ -28,7 +28,8 @@
 
 .content-body {
   flex: 1;
-  padding: 1.5rem 2rem;
+  padding: 24px;
+  padding-top: calc(var(--header-height) + 24px); /* Clear the fixed header height */
   max-width: 1600px;
   width: 100%;
   margin: 0 auto;
@@ -37,7 +38,8 @@
 
 @media (max-width: 768px) {
   .content-body {
-    padding: 1rem;
+    padding: 16px;
+    padding-top: calc(var(--header-height) + 16px);
   }
 }
 
@@ -46,14 +48,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  margin-bottom: 24px;
 }
 
 .page-header h2 {
   font-family: var(--font-heading);
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 800;
   color: var(--text-primary);
+  letter-spacing: 0.02em;
 }
 
 /* Card Forms */

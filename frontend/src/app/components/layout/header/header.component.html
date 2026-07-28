@@ -1,41 +1,75 @@
-<header class="header glass-panel">
-  <div class="header-left" style="display: flex; align-items: center; gap: 20px;">
-    <button class="mobile-menu-btn" (click)="toggleSidebar()">☰</button>
-    <div class="header-logo-brand">
-      <span class="logo-icon">🏭</span>
-      <span style="font-size: 18px; font-weight: 800; letter-spacing: 0.5px; color: var(--accent-orange);">FUTANE AGRO ERP</span>
+<header class="app-header" role="banner">
+
+  <!-- Left: Menu + Brand + Page Title -->
+  <div class="header-left">
+    <button class="menu-toggle" (click)="toggleSidebar()" aria-label="Toggle sidebar" id="sidebar-toggle-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="header-brand">
+      <div class="header-logo" style="background: rgba(217,119,6,0.1); padding: 5px; border-radius: 8px; font-size: 18px; line-height: 1; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1.5px solid rgba(217,119,6,0.25); margin-right: 8px;">
+        🏭
+      </div>
+      <span class="header-brand-name" style="color: #D97706 !important;">Futane Agro ERP</span>
     </div>
-    <span class="header-divider" style="color: var(--border-glass);">|</span>
-    <h2 style="font-size: 18px; font-weight: 700; margin: 0; color: var(--text-primary);">{{ activeTab | uppercase }}</h2>
-    <div class="header-datetime" style="font-size: 13px; font-weight: 600; color: var(--text-secondary); background: rgba(255, 255, 255, 0.05); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 6px;">
-      📅 <span>{{ currentDateTimeString }}</span>
+
+    <div class="header-divider"></div>
+
+    <div class="header-page-title">
+      <h1 class="page-heading">{{ activeTab | titlecase }}</h1>
+    </div>
+
+    <div class="header-datetime">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+      </svg>
+      <span>{{ currentDateTimeString }}</span>
     </div>
   </div>
+
+  <!-- Right: Dev config + Notification + Lang + User + Logout -->
   <div class="header-right">
-    <!-- Developer setting (API URL field): ONLY visible to Super Admin in UAT mode -->
-    <div class="backend-config" *ngIf="!isProduction && loggedInUser?.role === 'SUPER_ADMIN'" style="margin-right: 15px; display: flex; align-items: center; gap: 5px;">
-      <span style="font-size: 11px; color: var(--text-secondary); font-weight: 500;">API:</span>
-      <input type="text" [(ngModel)]="customBackendUrl" (change)="saveBackendUrl()" placeholder="Backend URL" style="padding: 4px 8px; font-size: 11px; border: 1px solid var(--border-color); border-radius: 4px; background: rgba(0,0,0,0.2); color: var(--text-primary); width: 180px;">
+
+    <!-- API URL (Dev only) -->
+    <div class="dev-config" *ngIf="!isProduction && loggedInUser?.role === 'SUPER_ADMIN'">
+      <span class="dev-label">API</span>
+      <input type="text" [(ngModel)]="customBackendUrl" (change)="saveBackendUrl()" placeholder="Backend URL" class="dev-input">
     </div>
 
     <!-- Notification Bell -->
-    <div class="notification-bell" style="font-size: 20px; cursor: pointer; position: relative; margin-right: 15px;">
-      🔔
-      <span class="bell-dot" style="position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background: var(--accent-red); border-radius: 50%;"></span>
-    </div>
+    <button class="icon-btn notif-btn" aria-label="Notifications" id="notif-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      <span class="notif-dot" aria-hidden="true"></span>
+    </button>
 
     <!-- Language Switcher -->
-    <div class="lang-switcher">
+    <div class="lang-switcher" role="group" aria-label="Language">
       <button class="lang-btn" [class.lang-active]="currentLang === 'en'" (click)="setLanguage('en')">EN</button>
       <span class="lang-sep">|</span>
       <button class="lang-btn" [class.lang-active]="currentLang === 'mr'" (click)="setLanguage('mr')">मराठी</button>
       <span class="lang-sep">|</span>
       <button class="lang-btn" [class.lang-active]="currentLang === 'hi'" (click)="setLanguage('hi')">हिंदी</button>
     </div>
-    <div class="session-info" style="display: flex; flex-direction: column; align-items: flex-end; font-size: 12px; line-height: 1.3; color: var(--text-secondary); background: rgba(0,0,0,0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-color);">
-      <span style="font-weight: 600;">👤 {{ loggedInUser?.name }} ({{ loggedInUser?.role }})</span>
-      <span style="font-size: 11px; color: var(--text-muted);">Session: {{ sessionDuration }} | Auto-Logout: {{ logoutCountdown }}</span>
+
+    <!-- User info card -->
+    <div class="user-session-card">
+      <div class="user-avatar-sm">{{ loggedInUser?.name?.charAt(0) || 'A' }}</div>
+      <div class="user-session-text">
+        <span class="user-session-name">{{ loggedInUser?.name }} <span class="user-role-chip">({{ loggedInUser?.role }})</span></span>
+        <span class="user-session-meta">Session: {{ sessionDuration }} · Logout in {{ logoutCountdown }}</span>
+      </div>
     </div>
-    <button class="btn btn-secondary btn-sm" id="signout-btn" (click)="handleLogout()">{{ 'btn.logout' | translate:currentLang }}</button>
+
+    <button class="btn btn-secondary btn-sm logout-btn" id="signout-btn" (click)="handleLogout()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+      </svg>
+      {{ 'btn.logout' | translate:currentLang }}
+    </button>
+
   </div>
 </header>
