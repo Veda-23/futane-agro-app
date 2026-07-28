@@ -17,7 +17,7 @@ public class PaymentLinkController {
     @Autowired
     private PaymentLinkService paymentLinkService;
 
-    @Value("${razorpay.key.secret:tS4jbsDbF38zWFE8p7f7Qvxc}")
+    @Value("${razorpay.key.secret}")
     private String keySecret;
 
     /**

@@ -9,23 +9,19 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RazorpayConfig {
 
-    @Value("${razorpay.key.id:rzp_test_TH443X2Dj8owEO}")
+    @Value("${razorpay.key.id}")
     private String keyId;
 
-    @Value("${razorpay.key.secret:tS4jbsDbF38zWFE8p7f7Qvxc}")
+    @Value("${razorpay.key.secret}")
     private String keySecret;
 
     @Bean
     public RazorpayClient razorpayClient() throws RazorpayException {
-        String effectiveKey = "rzp_test_TH443X2Dj8owEO";
-        String effectiveSecret = "tS4jbsDbF38zWFE8p7f7Qvxc";
-
-        if (keyId != null && keyId.startsWith("rzp_") && keySecret != null && !keySecret.trim().isEmpty()) {
-            effectiveKey = keyId.trim();
-            effectiveSecret = keySecret.trim();
+        if (keyId == null || keyId.trim().isEmpty() || keySecret == null || keySecret.trim().isEmpty()) {
+            throw new IllegalStateException("Razorpay credentials are not configured! Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.");
         }
         
-        System.out.println("💳 Initializing RazorpayClient with Key: " + effectiveKey);
-        return new RazorpayClient(effectiveKey, effectiveSecret);
+        System.out.println("💳 Initializing RazorpayClient with Key: " + keyId.trim());
+        return new RazorpayClient(keyId.trim(), keySecret.trim());
     }
 }

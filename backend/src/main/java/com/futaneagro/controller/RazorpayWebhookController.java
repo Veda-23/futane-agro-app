@@ -67,9 +67,9 @@ public class RazorpayWebhookController {
     }
 
     private boolean verifySignature(String payload, String signature) {
-        if (webhookSecret == null || webhookSecret.isEmpty()) {
-            System.out.println("⚠️  RAZORPAY_WEBHOOK_SECRET not set — skipping signature verification");
-            return true; // Allow in dev; set secret in prod
+        if (webhookSecret == null || webhookSecret.trim().isEmpty()) {
+            System.err.println("❌ ERROR: RAZORPAY_WEBHOOK_SECRET is not configured! Webhook signature verification rejected for safety.");
+            return false; 
         }
         if (signature == null || signature.isEmpty()) return false;
         try {
