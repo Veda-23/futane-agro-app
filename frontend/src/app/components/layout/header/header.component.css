@@ -133,20 +133,177 @@
   border-radius: var(--radius-sm);
   transition: all 0.2s;
 }
+.icon-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
 .icon-btn:hover {
   color: var(--primary);
+  border-color: var(--primary);
   background: var(--primary-light);
+  transform: translateY(-1px);
 }
 
 .notif-dot {
   position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 7.5px;
-  height: 7.5px;
+  top: 3px;
+  right: 3px;
+  width: 9px;
+  height: 9px;
   background: var(--color-danger);
   border-radius: 50%;
-  border: 1.5px solid var(--bg-surface);
+  border: 2px solid var(--bg-surface);
+  box-shadow: 0 0 8px var(--color-danger);
+}
+
+/* Glassmorphic Notifications Dropdown */
+.notif-dropdown {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  width: 330px;
+  background: var(--bg-surface) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1.5px solid var(--border-color) !important;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg), var(--shadow-glow) !important;
+  z-index: 1000;
+  overflow: hidden;
+  animation: slideDownFade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.notif-title {
+  font-family: var(--font-heading);
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.notif-mark-read {
+  background: none;
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.notif-mark-read:hover {
+  text-decoration: underline;
+}
+
+.notif-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color);
+  position: relative;
+  transition: background-color 0.15s ease;
+}
+.notif-item:hover {
+  background: rgba(245, 158, 11, 0.02);
+}
+.notif-item.unread {
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.notif-icon-wrap {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.notif-type-warning { background: rgba(245, 158, 11, 0.1); }
+.notif-type-success { background: rgba(16, 185, 129, 0.1); }
+.notif-type-info    { background: rgba(59, 130, 246, 0.1); }
+
+.notif-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-item-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.notif-item-desc {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  line-height: 1.35;
+  margin-bottom: 4px;
+}
+
+.notif-item-time {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.notif-clear-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--text-muted);
+  cursor: pointer;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 6px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.notif-item:hover .notif-clear-btn {
+  opacity: 1;
+}
+.notif-clear-btn:hover {
+  color: var(--color-danger);
+}
+
+.notif-empty {
+  padding: 30px 20px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+@keyframes slideDownFade {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Language switcher */
@@ -154,7 +311,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  background: var(--bg-canvas);
+  background: rgba(255, 255, 255, 0.03);
   padding: 4px 8px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--border-color);
@@ -162,11 +319,11 @@
 .lang-btn {
   background: none;
   border: none;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 700;
   color: var(--text-secondary);
   cursor: pointer;
-  padding: 2px 6px;
+  padding: 3px 8px;
   border-radius: var(--radius-pill);
   transition: all 0.15s;
 }
@@ -184,7 +341,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--bg-canvas);
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-color);
   padding: 6px 12px;
   border-radius: var(--radius-md);
