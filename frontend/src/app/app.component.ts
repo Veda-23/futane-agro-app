@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, HostListener } from '@angular/core';
 import Swal from 'sweetalert2';
 
 declare var Razorpay: any;
@@ -113,9 +113,10 @@ export class AppComponent implements OnInit {
   accessibleTabs: { [key: string]: boolean } = {};
 
   // Idle Timer
-  private readonly IDLE_TIMEOUT = 1800000; // 30 minutes in ms
+  private readonly IDLE_TIMEOUT = 600000; // 10 minutes in ms
   lastActivityTime = Date.now();
   logoutCountdown = '';
+  lastVisibleTime = Date.now();
 
   // Database lists
   parties: any[] = [];
@@ -300,6 +301,22 @@ export class AppComponent implements OnInit {
     this.lastActivityTime = Date.now();
   }
 
+  @HostListener('document:visibilitychange')
+  onVisibilityChange() {
+    if (!this.isAuthenticated) return;
+    
+    if (document.hidden) {
+      this.lastVisibleTime = Date.now();
+    } else {
+      const hiddenDuration = Date.now() - this.lastVisibleTime;
+      if (hiddenDuration >= 300000) { // 5 minutes in ms
+        this.logoutDueToInactivity();
+      } else {
+        this.resetIdleTimer();
+      }
+    }
+  }
+
   logoutDueToInactivity() {
     if (this.isAuthenticated) {
       this.lastActivityTime = Date.now();
@@ -407,6 +424,13 @@ export class AppComponent implements OnInit {
       }
 
       // Live Inactivity/Auto-logout Ticker
+      if (document.hidden) {
+        const hiddenDuration = now.getTime() - this.lastVisibleTime;
+        if (hiddenDuration >= 300000) { // 5 minutes background limit
+          this.logoutDueToInactivity();
+        }
+      }
+
       const elapsed = now.getTime() - this.lastActivityTime;
       const remainingSecs = Math.max(0, Math.floor((this.IDLE_TIMEOUT - elapsed) / 1000));
       const rMins = Math.floor(remainingSecs / 60);
