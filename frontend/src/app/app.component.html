@@ -1631,8 +1631,10 @@
               </select>
             </div>
 
-            <div style="display: flex; align-items: flex-end; gap: 10px;">
-              <button class="btn btn-primary" [disabled]="!selectedBillRecord" onclick="window.print()">{{ 'bill.print_btn' | translate:currentLang }}</button>
+            <div style="display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap;">
+              <button class="btn btn-primary" [disabled]="!selectedBillRecord" (click)="openBillInNewTab()">{{ 'bill.view_tab_btn' | translate:currentLang }}</button>
+              <button class="btn btn-warning" [disabled]="!selectedBillRecord" (click)="downloadBillingHubPDF()">{{ 'bill.download_btn' | translate:currentLang }}</button>
+              <button class="btn btn-info" [disabled]="!selectedBillRecord" onclick="window.print()">{{ 'bill.print_btn' | translate:currentLang }}</button>
               <button class="btn btn-success" [disabled]="!selectedBillRecord" (click)="shareOnWhatsApp()">{{ 'bill.whatsapp_btn' | translate:currentLang }}</button>
             </div>
           </div>

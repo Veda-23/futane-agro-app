@@ -9,6 +9,7 @@ import { ApiService } from './api.service';
 import { TranslateService, Language, TranslatePipe } from './translate.service';
 import { Chart, registerables } from 'chart.js';
 import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 import { environment } from '../environments/environment';
 import { DataTableComponent } from './components/data-table/data-table.component';
 import { DashboardComponent } from './components/features/dashboard/dashboard.component';
@@ -1334,6 +1335,33 @@ export class AppComponent implements OnInit {
 
   downloadPDFInvoice(inv: any) {
     this.logAudit("Downloaded PDF Invoice: " + inv.invoiceNo);
+    const element = document.querySelector('.invoice-bill-content') as HTMLElement;
+    if (element) {
+      html2canvas(element, { scale: 2, useCORS: true }).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgWidth = 210;
+        const pageHeight = 297;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+        
+        pdf.save(`invoice_${inv.invoiceNo}.pdf`);
+      });
+      return;
+    }
+
+    // Fallback if modal DOM is not present (text-based rendering)
     const doc = new jsPDF();
 
     doc.setFont("helvetica", "bold");
@@ -1866,39 +1894,168 @@ export class AppComponent implements OnInit {
     const id = this.getRecordId(this.selectedBillRecord);
     let amount = 0;
     let recipientName = 'Customer';
+    let rawPhone = '';
 
     switch(this.activeBillType) {
       case 'tax_invoice':
       case 'proforma':
         amount = this.selectedBillRecord.totalAmount;
-        recipientName = this.selectedBillRecord.party.partyName;
+        recipientName = this.selectedBillRecord.party?.partyName || 'Customer';
+        rawPhone = this.selectedBillRecord.party?.partyContact || '';
         break;
       case 'delivery_challan':
-        amount = this.selectedBillRecord.sale.quantity;
-        recipientName = this.selectedBillRecord.sale.party.partyName;
+        amount = this.selectedBillRecord.sale?.quantity || 0;
+        recipientName = this.selectedBillRecord.sale?.party?.partyName || 'Customer';
+        rawPhone = this.selectedBillRecord.sale?.party?.partyContact || '';
         break;
       case 'payment_receipt':
         amount = this.selectedBillRecord.amountReceived;
-        recipientName = this.selectedBillRecord.party.partyName;
+        recipientName = this.selectedBillRecord.party?.partyName || 'Customer';
+        rawPhone = this.selectedBillRecord.party?.partyContact || '';
         break;
       case 'purchase_invoice':
         amount = this.selectedBillRecord.amount;
-        recipientName = this.selectedBillRecord.vendor.vendorName;
+        recipientName = this.selectedBillRecord.vendor?.vendorName || 'Vendor';
+        rawPhone = this.selectedBillRecord.vendor?.mobile || '';
         break;
       case 'transport_receipt':
         amount = this.selectedBillRecord.rent;
-        recipientName = this.selectedBillRecord.driver.driverName;
+        recipientName = this.selectedBillRecord.driver?.driverName || 'Driver';
+        rawPhone = this.selectedBillRecord.driver?.mobile || '';
         break;
       case 'salary_slip':
         amount = this.selectedBillRecord.salaryAmount;
-        recipientName = this.selectedBillRecord.employee.empName;
+        recipientName = this.selectedBillRecord.employee?.empName || 'Employee';
+        rawPhone = this.selectedBillRecord.employee?.empContact || '';
         break;
     }
 
+    let phoneParam = '';
+    if (rawPhone) {
+      const cleaned = rawPhone.replace(/\D/g, '');
+      if (cleaned.length === 10) {
+        phoneParam = '91' + cleaned;
+      } else if (cleaned.length > 10) {
+        phoneParam = cleaned;
+      }
+    }
+
     const message = `Hello ${recipientName},\n\nWe are sharing the details for *${docType}* (Ref ID: ${id}) from *Futane Agro Industries Pvt. Ltd.*\n\n*Amount/Qty:* ₹${amount}\n*Date:* ${this.selectedBillRecord.date || this.selectedBillRecord.paymentDate || this.selectedBillRecord.dispatchDate || 'N/A'}\n\nThank you for doing business with us!`;
-    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneParam}&text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
     this.logAudit(`Shared ${docType} ID ${id} via WhatsApp`);
+  }
+
+  // Download currently selected Billing Hub document as PDF
+  downloadBillingHubPDF() {
+    if (!this.selectedBillRecord) return;
+    const element = document.getElementById('printable-billing-card');
+    if (!element) return;
+
+    const docType = this.activeBillType.replace('_', ' ').toUpperCase();
+    const id = this.getRecordId(this.selectedBillRecord);
+    this.logAudit(`Downloaded PDF for ${docType} ID ${id}`);
+
+    html2canvas(element, { scale: 2, useCORS: true }).then((canvas) => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      
+      pdf.save(`${this.activeBillType}_${id}.pdf`);
+    });
+  }
+
+  // Open currently selected Billing Hub document in a new tab/window
+  openBillInNewTab() {
+    if (!this.selectedBillRecord) return;
+    const element = document.getElementById('printable-billing-card');
+    if (!element) return;
+
+    const docType = this.activeBillType.replace('_', ' ').toUpperCase();
+    const id = this.getRecordId(this.selectedBillRecord);
+    this.logAudit(`Opened popup tab for ${docType} ID ${id}`);
+
+    const printWindow = window.open('', '_blank', 'width=900,height=1200,scrollbars=yes');
+    if (!printWindow) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Popup Blocked',
+        text: 'Please allow popups for this site to view the document in a new tab.'
+      });
+      return;
+    }
+
+    let stylesHtml = '';
+    document.querySelectorAll('link[rel="stylesheet"], style').forEach((styleEl) => {
+      stylesHtml += styleEl.outerHTML;
+    });
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${docType} - Ref #${id}</title>
+          ${stylesHtml}
+          <style>
+            body {
+              background: #0f172a !important;
+              color: #f8fafc !important;
+              padding: 40px 20px;
+              display: flex;
+              justify-content: center;
+              font-family: 'Inter', sans-serif;
+            }
+            .billing-a4-card {
+              box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
+              border: 1px solid rgba(255,255,255,0.08) !important;
+              background: #1e293b !important;
+              margin: 0 auto !important;
+              width: 210mm;
+              padding: 20mm;
+              border-radius: 12px;
+              position: relative;
+            }
+            .no-print {
+              display: none !important;
+            }
+            @media print {
+              body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                padding: 0;
+              }
+              .billing-a4-card {
+                box-shadow: none !important;
+                border: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #ffffff !important;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="billing-a4-card">
+            ${element.innerHTML}
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   }
 
   // Number-to-Words Converter for Indian Currency

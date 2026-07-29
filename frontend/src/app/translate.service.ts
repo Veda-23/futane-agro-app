@@ -251,6 +251,8 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     // Billing Hub
     'bill.doc_type': 'Document Type',
     'bill.ref_record': 'Reference Record',
+    'bill.view_tab_btn': 'View in New Tab',
+    'bill.download_btn': 'Download PDF',
     'bill.print_btn': 'Print Document',
     'bill.whatsapp_btn': 'WhatsApp Share',
     'bill.no_record': 'No reference record selected.',
@@ -611,6 +613,8 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     // Billing Hub
     'bill.doc_type': 'दस्तऐवज प्रकार',
     'bill.ref_record': 'संदर्भ रेकॉर्ड',
+    'bill.view_tab_btn': 'नवीन टॅबमध्ये पहा',
+    'bill.download_btn': 'पीडीएफ डाउनलोड करा',
     'bill.print_btn': 'दस्तऐवज प्रिंट करा',
     'bill.whatsapp_btn': 'व्हॉट्सअ‍ॅपवर शेअर करा',
     'bill.no_record': 'कोणताही संदर्भ रेकॉर्ड निवडलेला नाही.',
@@ -971,6 +975,8 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     // Billing Hub
     'bill.doc_type': 'दस्तावेज़ प्रकार',
     'bill.ref_record': 'संदर्भ रिकॉर्ड',
+    'bill.view_tab_btn': 'नए टैब में देखें',
+    'bill.download_btn': 'पीडीएफ डाउनलोड करें',
     'bill.print_btn': 'दस्तावेज़ प्रिंट करें',
     'bill.whatsapp_btn': 'व्हाट्सएप पर साझा करें',
     'bill.no_record': 'कोई संदर्भ रिकॉर्ड नहीं चुना गया।',
