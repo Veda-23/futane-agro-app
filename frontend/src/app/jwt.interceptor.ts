@@ -2,7 +2,7 @@ import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from
 import { catchError, throwError } from 'rxjs';
 
 export const jwtInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: HttpHandlerFn) => {
-  const token = sessionStorage.getItem('jwtToken');
+  const token = sessionStorage.getItem('jwtToken') || localStorage.getItem('jwtToken');
   
   const headers: { [key: string]: string } = {
     'bypass-tunnel-reminder': 'true'

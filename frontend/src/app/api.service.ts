@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, retry } from 'rxjs';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -30,11 +30,11 @@ export class ApiService {
 
   // Dashboard
   getStats(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/dashboard/stats`);
+    return this.http.get(`${this.baseUrl}/dashboard/stats`).pipe(retry(2));
   }
 
   getCharts(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/dashboard/charts`);
+    return this.http.get(`${this.baseUrl}/dashboard/charts`).pipe(retry(2));
   }
 
   importExcel(file: File): Observable<any> {

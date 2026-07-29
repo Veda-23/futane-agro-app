@@ -545,54 +545,115 @@ export class AppComponent implements OnInit {
 
   // --- Load Database Data ---
   loadAllData() {
-    this.apiService.getParties().subscribe(list => this.parties = list);
-    this.apiService.getVendors().subscribe(list => this.vendors = list);
-    this.apiService.getDrivers().subscribe(list => this.drivers = list);
-    this.apiService.getEmployees().subscribe(list => this.employees = list);
-    this.apiService.getPpd().subscribe(list => this.ppdList = list);
-    this.apiService.getPpm().subscribe(list => this.ppmList = list);
-    this.apiService.getSales().subscribe(list => this.salesList = list);
-    this.apiService.getPayments().subscribe(list => this.paymentsList = list);
-    this.apiService.getInventory().subscribe(list => this.inventoryList = list);
-    this.apiService.getRawMaterials().subscribe(list => this.rawMaterialsList = list);
-    this.apiService.getTransports().subscribe(list => this.transportsList = list);
-    this.apiService.getSalaries().subscribe(list => this.salariesList = list);
-    this.apiService.getInvoices().subscribe(list => this.invoicesList = list);
-    // Enterprise modules
-    this.apiService.getMachines().subscribe(list => this.machinesList = list);
-    this.apiService.getMachineBreakdowns().subscribe(list => this.machineBreakdownsList = list);
-    this.apiService.getDispatches().subscribe(list => this.dispatchesList = list);
-    this.apiService.getExpenses().subscribe(list => { this.expensesList = list; });
-    this.apiService.getBankTransactions().subscribe(list => this.bankTransactionsList = list);
+    this.loadDataForTab(this.activeTab);
+  }
 
-    if (this.loggedInUser && this.loggedInUser.role === 'SUPER_ADMIN') {
-      this.apiService.getAuditLogs().subscribe({
-        next: (list) => this.auditLogsList = list,
-        error: (err) => console.warn('Failed to load audit logs', err)
-      });
-      this.apiService.getUsers().subscribe({
-        next: (list) => this.usersList = list,
-        error: (err) => console.warn('Failed to load users list', err)
-      });
-      this.apiService.getSettings().subscribe({
-        next: (list) => {
-          if (list && list.length > 0) {
-            list.forEach((dbSetting: any) => {
-              const match = this.settingsList.find(s => s.key === dbSetting.settingKey);
-              if (match) {
-                if (match.type === 'boolean') {
-                  match.value = dbSetting.settingValue === 'true';
-                } else if (match.type === 'number') {
-                  match.value = Number(dbSetting.settingValue);
-                } else {
-                  match.value = dbSetting.settingValue;
-                }
+  loadDataForTab(tab: string) {
+    if (!this.isAuthenticated) return;
+    
+    switch (tab) {
+      case 'parties':
+        this.apiService.getParties().subscribe({ next: list => this.parties = list });
+        break;
+      case 'vendors':
+        this.apiService.getVendors().subscribe({ next: list => this.vendors = list });
+        break;
+      case 'drivers':
+        this.apiService.getDrivers().subscribe({ next: list => this.drivers = list });
+        break;
+      case 'employees':
+        this.apiService.getEmployees().subscribe({ next: list => this.employees = list });
+        break;
+      case 'production':
+      case 'monthly-production':
+        this.apiService.getPpd().subscribe({ next: list => this.ppdList = list });
+        this.apiService.getPpm().subscribe({ next: list => this.ppmList = list });
+        this.apiService.getInventory().subscribe({ next: list => this.inventoryList = list });
+        this.apiService.getMachines().subscribe({ next: list => this.machinesList = list });
+        this.apiService.getRawMaterials().subscribe({ next: list => this.rawMaterialsList = list });
+        break;
+      case 'sales':
+        this.apiService.getSales().subscribe({ next: list => this.salesList = list });
+        this.apiService.getParties().subscribe({ next: list => this.parties = list });
+        break;
+      case 'payments':
+        this.apiService.getPayments().subscribe({ next: list => this.paymentsList = list });
+        this.apiService.getInvoices().subscribe({ next: list => this.invoicesList = list });
+        break;
+      case 'raw-materials':
+        this.apiService.getRawMaterials().subscribe({ next: list => this.rawMaterialsList = list });
+        this.apiService.getVendors().subscribe({ next: list => this.vendors = list });
+        break;
+      case 'transports':
+        this.apiService.getTransports().subscribe({ next: list => this.transportsList = list });
+        this.apiService.getDrivers().subscribe({ next: list => this.drivers = list });
+        break;
+      case 'salaries':
+        this.apiService.getSalaries().subscribe({ next: list => this.salariesList = list });
+        this.apiService.getEmployees().subscribe({ next: list => this.employees = list });
+        break;
+      case 'machines':
+        this.apiService.getMachines().subscribe({ next: list => this.machinesList = list });
+        this.apiService.getMachineBreakdowns().subscribe({ next: list => this.machineBreakdownsList = list });
+        break;
+      case 'dispatch':
+        this.apiService.getDispatches().subscribe({ next: list => this.dispatchesList = list });
+        break;
+      case 'expenses':
+        this.apiService.getExpenses().subscribe({ next: list => this.expensesList = list });
+        break;
+      case 'bank':
+        this.apiService.getBankTransactions().subscribe({ next: list => this.bankTransactionsList = list });
+        break;
+      case 'invoices':
+      case 'billinghub':
+        this.apiService.getInvoices().subscribe({ next: list => this.invoicesList = list });
+        this.apiService.getSales().subscribe({ next: list => this.salesList = list });
+        this.apiService.getParties().subscribe({ next: list => this.parties = list });
+        break;
+      case 'reports':
+        this.apiService.getInvoices().subscribe({ next: list => this.invoicesList = list });
+        this.apiService.getSales().subscribe({ next: list => this.salesList = list });
+        this.apiService.getPpd().subscribe({ next: list => this.ppdList = list });
+        this.apiService.getPayments().subscribe({ next: list => this.paymentsList = list });
+        this.apiService.getExpenses().subscribe({ next: list => this.expensesList = list });
+        this.apiService.getSalaries().subscribe({ next: list => this.salariesList = list });
+        break;
+      case 'settings':
+        if (this.loggedInUser && this.loggedInUser.role === 'SUPER_ADMIN') {
+          this.apiService.getUsers().subscribe({
+            next: (list) => this.usersList = list,
+            error: (err) => console.warn('Failed to load users list', err)
+          });
+          this.apiService.getSettings().subscribe({
+            next: (list) => {
+              if (list && list.length > 0) {
+                list.forEach((dbSetting: any) => {
+                  const match = this.settingsList.find(s => s.key === dbSetting.settingKey);
+                  if (match) {
+                    if (match.type === 'boolean') {
+                      match.value = dbSetting.settingValue === 'true';
+                    } else if (match.type === 'number') {
+                      match.value = Number(dbSetting.settingValue);
+                    } else {
+                      match.value = dbSetting.settingValue;
+                    }
+                  }
+                });
               }
-            });
-          }
-        },
-        error: (err) => console.warn('Failed to load settings from db', err)
-      });
+            },
+            error: (err) => console.warn('Failed to load settings from db', err)
+          });
+        }
+        break;
+      case 'audit-logs':
+        if (this.loggedInUser && this.loggedInUser.role === 'SUPER_ADMIN') {
+          this.apiService.getAuditLogs().subscribe({
+            next: (list) => this.auditLogsList = list,
+            error: (err) => console.warn('Failed to load audit logs', err)
+          });
+        }
+        break;
     }
 
     // Load other async ops
@@ -614,6 +675,7 @@ export class AppComponent implements OnInit {
       if (tab === 'reports') {
         this.runReport();
       }
+      this.loadDataForTab(tab);
       
       // Auto-collapse navigation sidebar on mobile/tablet screens after tab selection
       if (window.innerWidth <= 1024) {
