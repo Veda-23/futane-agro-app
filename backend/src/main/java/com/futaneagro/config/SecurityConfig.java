@@ -87,6 +87,7 @@ public class SecurityConfig {
             "http://localhost",
             "http://127.0.0.1",
             "https://80-225-192-171.sslip.io",
+            "https://uat.80-225-192-171.sslip.io",
             "https://erp.futaneagro.com",
             "https://uat.futaneagro.com"
         ));
