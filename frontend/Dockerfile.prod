@@ -11,8 +11,12 @@ RUN apk add --no-cache openssl && \
 # Clean default Nginx static files completely
 RUN rm -rf /usr/share/nginx/html/*
 
+ARG BUILD_TIME=1
+RUN echo "Force fresh prod build: $BUILD_TIME"
+
 # Copy built Angular 17 output directly into /usr/share/nginx/html/
 COPY dist-prod/frontend/browser/ /usr/share/nginx/html/
+
 
 
 COPY nginx-prod.conf /etc/nginx/conf.d/default.conf

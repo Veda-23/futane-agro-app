@@ -1333,11 +1333,48 @@ export class AppComponent implements OnInit {
     this.selectedInvoice = null;
   }
 
+  closeInvoiceModalOnBackdrop(event: MouseEvent) {
+    if ((event.target as HTMLElement).classList.contains('invoice-modal-overlay')) {
+      this.closeInvoiceModal();
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey() {
+    if (this.selectedInvoice) this.closeInvoiceModal();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    if (!(event.target as HTMLElement).closest('.column-visibility-dropdown')) {
+      Object.keys(this.showColDropdown).forEach(k => this.showColDropdown[k] = false);
+    }
+  }
+
+  // Invoice KPI helpers
+  getTotalInvoiceAmount(): number {
+    return this.invoicesList.reduce((sum, inv) => sum + (inv.sale?.totalAmount || 0), 0);
+  }
+  getTotalInvoicePaid(): number {
+    return this.invoicesList.reduce((sum, inv) => sum + (inv.sale?.paid || 0), 0);
+  }
+  getTotalInvoicePending(): number {
+    return this.invoicesList.reduce((sum, inv) => sum + (inv.sale?.remaining || 0), 0);
+  }
+
   downloadPDFInvoice(inv: any) {
-    this.logAudit("Downloaded PDF Invoice: " + inv.invoiceNo);
-    const element = document.querySelector('.invoice-bill-content') as HTMLElement;
-    if (element) {
-      html2canvas(element, { scale: 2, useCORS: true }).then((canvas) => {
+    // Always open modal first so the DOM is rendered
+    this.selectedInvoice = inv;
+    this.logAudit('Downloaded PDF Invoice: ' + inv.invoiceNo);
+    // Wait for Angular to render the modal DOM
+    setTimeout(() => {
+      const element = document.querySelector('.invoice-bill-content') as HTMLElement;
+      if (!element) {
+        this.generateInvoicePDFFallback(inv);
+        return;
+      }
+      Swal.fire({ title: 'Generating PDF...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+      html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then((canvas) => {
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
         const imgWidth = 210;
@@ -1345,82 +1382,57 @@ export class AppComponent implements OnInit {
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
         let heightLeft = imgHeight;
         let position = 0;
-
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
-
         while (heightLeft >= 0) {
           position = heightLeft - imgHeight;
           pdf.addPage();
           pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
           heightLeft -= pageHeight;
         }
-        
         pdf.save(`invoice_${inv.invoiceNo}.pdf`);
+        Swal.close();
       });
-      return;
-    }
+    }, 200);
+  }
 
-    // Fallback if modal DOM is not present (text-based rendering)
+  generateInvoicePDFFallback(inv: any) {
     const doc = new jsPDF();
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(22);
-    doc.text("FUTANE AGRO INDUSTRIES PVT. LTD.", 105, 20, { align: "center" });
-
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('FUTANE AGRO INDUSTRIES PVT. LTD.', 105, 20, { align: 'center' });
     doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text("Manufacturers of High-Quality Plastic Crates & Containers", 105, 26, { align: "center" });
-    doc.text("Factory: Gate No 144, Hadapsar Industrial Area, Pune - 411028", 105, 31, { align: "center" });
+    doc.setFont('helvetica', 'normal');
+    doc.text('Manufacturers of High-Quality Plastic Crates & Containers', 105, 26, { align: 'center' });
+    doc.text('Factory: Gate No 144, Hadapsar Industrial Area, Pune - 411028', 105, 31, { align: 'center' });
     doc.line(15, 36, 195, 36);
-
     doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text("INVOICE DETAILS", 15, 45);
-    doc.setFont("helvetica", "normal");
+    doc.setFont('helvetica', 'bold');
+    doc.text('INVOICE DETAILS', 15, 45);
+    doc.setFont('helvetica', 'normal');
     doc.text(`Invoice No: ${inv.invoiceNo}`, 15, 52);
     doc.text(`Invoice Date: ${inv.createdDate}`, 15, 58);
-    
-    doc.setFont("helvetica", "bold");
-    doc.text("BILLED TO:", 115, 45);
-    doc.setFont("helvetica", "normal");
+    doc.setFont('helvetica', 'bold');
+    doc.text('BILLED TO:', 115, 45);
+    doc.setFont('helvetica', 'normal');
     doc.text(`Name: ${inv.sale.party.partyName}`, 115, 52);
-    doc.text(`Address: ${inv.sale.party.partyAddress}`, 115, 58);
-    doc.text(`GSTIN: ${inv.sale.party.gstNumber || 'N/A'}`, 115, 64);
-
+    doc.text(`GSTIN: ${inv.sale.party.gstNumber || 'N/A'}`, 115, 58);
     doc.line(15, 72, 195, 72);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Description", 20, 80);
-    doc.text("Material", 75, 80);
-    doc.text("Qty", 105, 80);
-    doc.text("Rate (INR)", 135, 80);
-    doc.text("Total (INR)", 165, 80);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Description', 20, 80); doc.text('Qty', 105, 80); doc.text('Rate', 135, 80); doc.text('Total', 165, 80);
     doc.line(15, 84, 195, 84);
-
-    doc.setFont("helvetica", "normal");
+    doc.setFont('helvetica', 'normal');
     doc.text(`${inv.sale.crateType}`, 20, 92);
-    doc.text(`${inv.sale.crateMaterial}`, 75, 92);
     doc.text(`${inv.sale.quantity}`, 105, 92);
-    doc.text(`${inv.sale.rate.toFixed(2)}`, 135, 92);
-    doc.text(`${inv.sale.totalAmount.toFixed(2)}`, 165, 92);
-
+    doc.text(`${inv.sale.rate?.toFixed(2)}`, 135, 92);
+    doc.text(`${inv.sale.totalAmount?.toFixed(2)}`, 165, 92);
     doc.line(15, 98, 195, 98);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Summary:", 115, 110);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Sub-Total: INR ${inv.sale.totalAmount.toFixed(2)}`, 115, 117);
-    doc.text(`Paid Amount: INR ${inv.sale.paid.toFixed(2)}`, 115, 123);
-    
-    doc.setFont("helvetica", "bold");
-    doc.text(`Balance Due: INR ${inv.sale.remaining.toFixed(2)}`, 115, 130);
-
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Grand Total: INR ${inv.sale.totalAmount?.toFixed(2)}`, 115, 110);
+    doc.text(`Balance Due: INR ${inv.sale.remaining?.toFixed(2)}`, 115, 117);
     doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.text("Thank you for your business!", 105, 150, { align: "center" });
-    doc.text("Note: This is a computer-generated invoice and requires no physical signature.", 105, 155, { align: "center" });
-
+    doc.setFont('helvetica', 'normal');
+    doc.text('Thank you for your business! This is a computer-generated invoice.', 105, 140, { align: 'center' });
     doc.save(`${inv.invoiceNo}.pdf`);
   }
 
@@ -1890,7 +1902,7 @@ export class AppComponent implements OnInit {
   // WhatsApp invoice sharing
   shareOnWhatsApp() {
     if (!this.selectedBillRecord) return;
-    const docType = this.activeBillType.replace('_', ' ').toUpperCase();
+    const docType = this.activeBillType.replace(/_/g, ' ').toUpperCase();
     const id = this.getRecordId(this.selectedBillRecord);
     let amount = 0;
     let recipientName = 'Customer';
@@ -1930,53 +1942,115 @@ export class AppComponent implements OnInit {
         break;
     }
 
-    let phoneParam = '';
-    if (rawPhone) {
-      const cleaned = rawPhone.replace(/\D/g, '');
-      if (cleaned.length === 10) {
-        phoneParam = '91' + cleaned;
-      } else if (cleaned.length > 10) {
-        phoneParam = cleaned;
-      }
+    // Phone number validation
+    const digitsOnly = rawPhone.replace(/\D/g, '');
+    let fullPhone = '';
+    if (digitsOnly.length === 10) {
+      fullPhone = '91' + digitsOnly;
+    } else if (digitsOnly.length === 12 && digitsOnly.startsWith('91')) {
+      fullPhone = digitsOnly;
+    } else if (digitsOnly.length > 0) {
+      fullPhone = digitsOnly;
+    } else {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Phone Number',
+        text: `No valid phone number found for ${recipientName}. Cannot share via WhatsApp.`
+      });
+      return;
     }
 
-    const message = `Hello ${recipientName},\n\nWe are sharing the details for *${docType}* (Ref ID: ${id}) from *Futane Agro Industries Pvt. Ltd.*\n\n*Amount/Qty:* ₹${amount}\n*Date:* ${this.selectedBillRecord.date || this.selectedBillRecord.paymentDate || this.selectedBillRecord.dispatchDate || 'N/A'}\n\nThank you for doing business with us!`;
-    const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneParam}&text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+    const message = `Hello ${recipientName},\n\nWe are sharing the details for *${docType}* (Ref ID: ${id}) from *Futane Agro Industries Pvt. Ltd.*\n\n*Amount:* ₹${amount}\n*Date:* ${this.selectedBillRecord.date || this.selectedBillRecord.paymentDate || this.selectedBillRecord.dispatchDate || 'N/A'}\n\nThank you for doing business with us!`;
+    const waUrl = `https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, '_blank');
     this.logAudit(`Shared ${docType} ID ${id} via WhatsApp`);
+
+    // Tip to also download and attach PDF
+    setTimeout(() => {
+      Swal.fire({
+        icon: 'info',
+        title: 'WhatsApp Opened',
+        html: `<p style="font-size:13px;">WhatsApp was opened with a pre-filled message.</p>
+               <p style="font-size:12px; color:#94a3b8; margin-top:8px;">
+                 💡 <strong>Tip:</strong> To share the actual PDF, download the document and attach it in the WhatsApp chat.
+               </p>`,
+        confirmButtonText: 'Download PDF too',
+        showCancelButton: true,
+        cancelButtonText: 'OK, Done'
+      }).then((result: any) => {
+        if (result.isConfirmed) this.downloadBillingHubPDF();
+      });
+    }, 800);
   }
 
-  // Download currently selected Billing Hub document as PDF
+  // Download currently selected Billing Hub document as PDF (white background)
   downloadBillingHubPDF() {
     if (!this.selectedBillRecord) return;
     const element = document.getElementById('printable-billing-card');
     if (!element) return;
 
-    const docType = this.activeBillType.replace('_', ' ').toUpperCase();
+    const docType = this.activeBillType.replace(/_/g, ' ').toUpperCase();
     const id = this.getRecordId(this.selectedBillRecord);
     this.logAudit(`Downloaded PDF for ${docType} ID ${id}`);
 
-    html2canvas(element, { scale: 2, useCORS: true }).then((canvas) => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
+    // Temporarily force white background for clean PDF render
+    const origBg = element.style.background;
+    const origColor = element.style.color;
+    element.style.setProperty('background', '#ffffff', 'important');
+    element.style.setProperty('color', '#1f2937', 'important');
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+    Swal.fire({ title: 'Generating PDF...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
 
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
+    html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false })
+      .then((canvas) => {
+        element.style.background = origBg;
+        element.style.color = origColor;
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgWidth = 210, pageHeight = 297;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight, position = 0;
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
-      }
-      
-      pdf.save(`${this.activeBillType}_${id}.pdf`);
-    });
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+        pdf.save(`${this.activeBillType}_${id}.pdf`);
+        Swal.close();
+        Swal.fire({ icon: 'success', title: 'PDF Downloaded!', timer: 1500, showConfirmButton: false });
+      })
+      .catch(() => {
+        element.style.background = origBg;
+        element.style.color = origColor;
+        Swal.close();
+        Swal.fire({ icon: 'error', title: 'PDF Error', text: 'Could not generate PDF. Please try again.' });
+      });
+  }
+
+  // Print Billing Hub document in clean print window
+  printBillingDocument() {
+    if (!this.selectedBillRecord) return;
+    const element = document.getElementById('printable-billing-card');
+    if (!element) return;
+    const printWindow = window.open('', '_blank', 'width=900,height=1200');
+    if (!printWindow) {
+      Swal.fire({ icon: 'warning', title: 'Popup Blocked', text: 'Please allow popups for this site to print documents.' });
+      return;
+    }
+    const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"],style'))
+      .map((el: any) => el.outerHTML).join('');
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>Print Document</title>${styles}
+      <style>
+        body { background: #fff !important; color: #000 !important; padding: 20px; margin: 0; }
+        .no-print { display: none !important; }
+        .bill-watermark { opacity: 0.06 !important; }
+        .billing-a4-card { box-shadow: none !important; border: none !important; background: #fff !important; }
+      </style></head><body>${element.outerHTML}</body></html>`);
+    printWindow.document.close();
+    setTimeout(() => { printWindow.focus(); printWindow.print(); }, 600);
   }
 
   // Open currently selected Billing Hub document in a new tab/window
