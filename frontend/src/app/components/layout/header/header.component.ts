@@ -22,11 +22,53 @@ export class HeaderComponent {
   @Input() sessionDuration: string = '';
   @Input() logoutCountdown: string = '';
   @Input() customBackendUrl: string = '';
+  @Input() partiesList: any[] = [];
+  @Input() employeesList: any[] = [];
+  @Input() salesList: any[] = [];
+  @Input() dispatchesList: any[] = [];
 
   @Output() onToggleSidebar = new EventEmitter<void>();
   @Output() onLogout = new EventEmitter<void>();
   @Output() onSetLanguage = new EventEmitter<string>();
   @Output() onCustomBackendUrlChange = new EventEmitter<string>();
+  @Output() onNavigateTab = new EventEmitter<string>();
+
+  // Global Search State
+  globalSearchQuery = '';
+  globalSearchResults: any[] = [];
+
+  doGlobalSearch() {
+    if (!this.globalSearchQuery || this.globalSearchQuery.trim().length < 2) {
+      this.globalSearchResults = [];
+      return;
+    }
+    const q = this.globalSearchQuery.toLowerCase().trim();
+    const results: any[] = [];
+
+    (this.partiesList || []).filter(p => p.partyName?.toLowerCase().includes(q)).slice(0, 3).forEach(p => {
+      results.push({ type: 'Party', label: p.partyName, detail: p.city || p.partyContact, tab: 'parties' });
+    });
+
+    (this.employeesList || []).filter(e => e.empName?.toLowerCase().includes(q)).slice(0, 3).forEach(e => {
+      results.push({ type: 'Employee', label: e.empName, detail: e.designation || e.empContact, tab: 'employees' });
+    });
+
+    (this.salesList || []).filter(s => (s.party?.partyName?.toLowerCase().includes(q) || s.crateType?.toLowerCase().includes(q))).slice(0, 3).forEach(s => {
+      results.push({ type: 'Sale', label: `${s.party?.partyName || 'Customer'} - ${s.crateType}`, detail: `₹${s.totalAmount}`, tab: 'sales' });
+    });
+
+    (this.dispatchesList || []).filter(d => (d.vehicleNumber?.toLowerCase().includes(q) || d.driverName?.toLowerCase().includes(q))).slice(0, 3).forEach(d => {
+      results.push({ type: 'Dispatch', label: `${d.vehicleNumber} (${d.driverName || 'Driver'})`, detail: d.dispatchStatus, tab: 'dispatch' });
+    });
+
+    this.globalSearchResults = results.slice(0, 8);
+  }
+
+  goToSearchResult(result: any) {
+    this.onNavigateTab.emit(result.tab);
+    this.globalSearchResults = [];
+    this.globalSearchQuery = '';
+  }
 
   // Futuristic Notification Hub State
   showNotifDropdown = false;

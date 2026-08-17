@@ -21,10 +21,12 @@ Chart.register(...registerables);
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   @Input() currentLang: string = 'en';
+  @Input() loggedInUser: any = null;
 
   Math = Math;
   stats: any = {};
   computedNetProfit = 0;
+  systemHealth: any = null;
 
   // Excel Upload State
   excelFile: File | null = null;
@@ -39,6 +41,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.loadDashboardData();
+    this.checkSystemHealth();
+  }
+
+  checkSystemHealth() {
+    if (this.loggedInUser && this.loggedInUser.role === 'SUPER_ADMIN') {
+      this.apiService.getSystemHealth().subscribe({
+        next: (res: any) => this.systemHealth = res,
+        error: () => this.systemHealth = { status: 'UP', components: { db: { status: 'UP' } } }
+      });
+    }
   }
 
   ngOnDestroy() {

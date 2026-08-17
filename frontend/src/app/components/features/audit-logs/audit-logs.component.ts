@@ -1,17 +1,13 @@
-import { Component, OnInit, Input, ElementRef } from '@angular/core';
-import { AutoSelectDirective } from '../../../directives/auto-select.directive';
-import { FormStateDirective } from '../../../directives/form-state.directive';
-import { FormValidationService } from '../../../services/form-validation.service';
-import { NotificationService } from '../../../services/notification.service';
-
+import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
 
 @Component({
   selector: 'app-audit-logs',
   standalone: true,
-  imports: [CommonModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './audit-logs.component.html',
   styleUrls: ['./audit-logs.component.css']
 })
@@ -20,6 +16,9 @@ export class AuditLogsComponent implements OnInit {
   @Input() activeTab: string = 'audit-logs';
 
   auditLogsList: any[] = [];
+  filterAction = '';
+  filterUser = '';
+  searchQuery = '';
 
   constructor(private apiService: ApiService) {}
 
@@ -29,11 +28,30 @@ export class AuditLogsComponent implements OnInit {
 
   loadData() {
     this.apiService.getAuditLogs().subscribe((res: any[]) => {
-      this.auditLogsList = res.sort((a, b) => b.id - a.id).slice(0, 50);
+      this.auditLogsList = (res || []).sort((a, b) => {
+        const timeA = new Date(a.timestamp || a.createdAt || 0).getTime();
+        const timeB = new Date(b.timestamp || b.createdAt || 0).getTime();
+        return timeB - timeA;
+      });
     });
   }
 
-  getProcessedList(list: any[], table: string): any[] {
+  get filteredAuditLogs(): any[] {
+    let list = this.auditLogsList || [];
+    if (this.filterAction) {
+      list = list.filter(l => (l.action || '').toLowerCase().includes(this.filterAction.toLowerCase()));
+    }
+    if (this.filterUser) {
+      list = list.filter(l => (l.username || '').toLowerCase().includes(this.filterUser.toLowerCase()));
+    }
+    if (this.searchQuery && this.searchQuery.trim()) {
+      const q = this.searchQuery.toLowerCase().trim();
+      list = list.filter(l =>
+        (l.action || '').toLowerCase().includes(q) ||
+        (l.username || '').toLowerCase().includes(q) ||
+        (l.tableName || '').toLowerCase().includes(q)
+      );
+    }
     return list;
   }
 }

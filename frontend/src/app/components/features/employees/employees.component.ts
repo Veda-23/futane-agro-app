@@ -59,6 +59,11 @@ export class EmployeesComponent implements OnInit {
       this.notificationService.warning('Invalid Input', "Please fill required fields");
       return;
     }
+
+    if (this.employeeForm.aadhaarNo && !/^[2-9]{1}[0-9]{11}$/.test(this.employeeForm.aadhaarNo.trim())) {
+      this.notificationService.warning('Invalid Aadhaar', 'Aadhaar number must be exactly 12 digits and cannot start with 0 or 1.');
+      return;
+    }
     this.apiService.createEmployee(this.employeeForm).subscribe({
       next: (res) => {
         if (res) this.employees.unshift(res);

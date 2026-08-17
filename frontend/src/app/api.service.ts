@@ -43,6 +43,10 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/dashboard/import`, formData, { responseType: 'text' });
   }
 
+  getSystemHealth(): Observable<any> {
+    return this.http.get(`${this.baseUrl.replace(/\/api$/, '')}/actuator/health`).pipe(retry(1));
+  }
+
   // Parties
   getParties(): Observable<any> {
     return this.http.get(`${this.baseUrl}/parties`);

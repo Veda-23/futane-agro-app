@@ -31,8 +31,29 @@
     </div>
   </div>
 
-  <!-- Right: Dev config + Notification + Lang + User + Logout -->
+  <!-- Right: Global Search + Dev config + Notification + Lang + User + Logout -->
   <div class="header-right">
+
+    <!-- Global Search (L5-001) -->
+    <div class="header-search-wrapper" style="position: relative; min-width: 200px; max-width: 260px;">
+      <input type="text" [(ngModel)]="globalSearchQuery" (input)="doGlobalSearch()"
+             placeholder="🔍 Search ERP..."
+             style="width: 100%; padding: 6px 12px; font-size: 12px; border-radius: 20px; border: 1px solid var(--border-glass); background: rgba(0,0,0,0.06); color: var(--text-primary);">
+      
+      <!-- Search Flyout -->
+      <div *ngIf="globalSearchResults.length > 0"
+           style="position: absolute; top: 38px; left: 0; right: 0; background: var(--bg-secondary); border: 1px solid var(--border-glass); border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.25); z-index: 999; overflow: hidden;">
+        <div *ngFor="let res of globalSearchResults" (click)="goToSearchResult(res)"
+             style="padding: 8px 12px; border-bottom: 1px solid var(--border-glass); cursor: pointer; display: flex; justify-content: space-between; align-items: center;"
+             onmouseover="this.style.background='rgba(217, 119, 6, 0.1)'" onmouseout="this.style.background='transparent'">
+          <div>
+            <div style="font-weight: 600; font-size: 12px; color: var(--text-primary);">{{ res.label }}</div>
+            <div style="font-size: 10px; color: var(--text-muted);">{{ res.detail }}</div>
+          </div>
+          <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(217, 119, 6, 0.2); color: #d97706; font-weight: bold;">{{ res.type }}</span>
+        </div>
+      </div>
+    </div>
 
     <!-- API URL (Dev only) -->
     <div class="dev-config" *ngIf="!isProduction && loggedInUser?.role === 'SUPER_ADMIN'">

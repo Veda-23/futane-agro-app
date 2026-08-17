@@ -1,6 +1,23 @@
 <div class="glass-panel" style="padding: 20px;">
-  <h3>{{ 'audit.title' | translate:currentLang }}</h3>
-  <p style="color: var(--text-secondary); margin-bottom: 15px;">{{ 'audit.desc' | translate:currentLang }}</p>
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 15px;">
+    <div>
+      <h3 style="margin: 0;">{{ 'audit.title' | translate:currentLang }}</h3>
+      <p style="color: var(--text-secondary); margin: 4px 0 0 0; font-size: 13px;">{{ 'audit.desc' | translate:currentLang }}</p>
+    </div>
+    <!-- Filters (L5-009) -->
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+      <input type="text" [(ngModel)]="searchQuery" placeholder="🔍 Search logs..." style="padding: 6px 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-glass); background: rgba(0,0,0,0.05);">
+      <select [(ngModel)]="filterAction" style="padding: 6px 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-glass); background: var(--bg-secondary);">
+        <option value="">All Actions</option>
+        <option value="LOGIN">LOGIN</option>
+        <option value="CREATE">CREATE / ADD</option>
+        <option value="UPDATE">UPDATE</option>
+        <option value="DELETE">DELETE</option>
+      </select>
+      <input type="text" [(ngModel)]="filterUser" placeholder="Filter by User" style="padding: 6px 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-glass); background: rgba(0,0,0,0.05); max-width: 130px;">
+    </div>
+  </div>
+
   <div class="table-container">
     <table>
       <thead>
@@ -12,11 +29,14 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let log of auditLogsList">
+        <tr *ngFor="let log of filteredAuditLogs">
           <td>{{ log.id }}</td>
-          <td><code>{{ log.timestamp }}</code></td>
+          <td><code>{{ log.timestamp || log.createdAt }}</code></td>
           <td><span class="badge badge-info">{{ log.username }}</span></td>
           <td>{{ log.action }}</td>
+        </tr>
+        <tr *ngIf="filteredAuditLogs.length === 0">
+          <td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">No audit records match the selected filters.</td>
         </tr>
       </tbody>
     </table>
