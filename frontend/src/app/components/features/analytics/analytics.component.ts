@@ -49,7 +49,7 @@ export class AnalyticsComponent implements OnInit {
         this.powerBiSimulatorActive = false;
         this.powerBiEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(biSetting.settingValue);
       } else {
-        const defaultGrafanaUrl = (environment as any).grafanaUrl || 'https://80-225-192-171.sslip.io/monitoring/dashboards/f/ffr4fw1rmgr9cb/system-and-infra?orgId=1&kiosk=tv&refresh=10s';
+        const defaultGrafanaUrl = (environment as any).grafanaUrl || 'http://localhost:3000/d/ffr4fw1rmgr9cb/system-and-infra?orgId=1&kiosk=tv&refresh=10s';
         this.powerBiUrlInput = defaultGrafanaUrl;
         this.powerBiSimulatorActive = false;
         this.powerBiEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(defaultGrafanaUrl);

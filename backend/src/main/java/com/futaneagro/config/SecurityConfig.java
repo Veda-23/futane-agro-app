@@ -76,7 +76,7 @@ public class SecurityConfig {
             .referrerPolicy().and()
             .addHeaderWriter(new org.springframework.security.web.header.writers.StaticHeadersWriter(
                 "Content-Security-Policy",
-                "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://api.razorpay.com https://80-225-192-171.sslip.io; img-src 'self' data: blob:;"
+                "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://api.razorpay.com http://localhost:3000 http://127.0.0.1:3000 https://80-225-192-171.sslip.io; img-src 'self' data: blob:;"
             ))
             .cacheControl().disable();
 
@@ -90,6 +90,8 @@ public class SecurityConfig {
             "http://localhost:4200",
             "http://localhost:4201",
             "http://localhost:8081",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
             "http://localhost",
             "http://127.0.0.1",
             "https://80-225-192-171.sslip.io",
