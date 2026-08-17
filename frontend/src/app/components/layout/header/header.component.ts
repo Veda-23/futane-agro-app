@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, HostListener, ElementRef, injec
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-header',
@@ -11,6 +12,8 @@ import { TranslatePipe } from '../../../translate.service';
   styleUrls: ['./header.component.css']
 })
 export class HeaderComponent {
+  isUat: boolean = environment.uat;
+  isProd: boolean = environment.production && !environment.uat;
   @Input() isProduction: boolean = true;
   @Input() loggedInUser: any = null;
   @Input() currentLang: string = 'en';

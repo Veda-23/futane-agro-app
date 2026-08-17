@@ -4,16 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.futaneagro.entity.*;
 import com.futaneagro.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class HRController {
 
     @Autowired
@@ -58,6 +58,7 @@ public class HRController {
     }
 
     @PostMapping("/employees")
+    @Transactional
     public Employee createEmployee(@Valid @RequestBody Employee employee) {
         Employee saved = employeeRepository.save(employee);
         saveAuditLog("Created employee: " + saved.getEmpName(), "Employees", null, toJson(saved));
@@ -65,37 +66,43 @@ public class HRController {
     }
 
     @PutMapping("/employees/{id}")
-    public Employee updateEmployee(@PathVariable String id, @Valid @RequestBody Employee details) {
-        Employee emp = employeeRepository.findById(id).orElseThrow(() -> new RuntimeException("Employee not found"));
-        String oldState = toJson(emp);
+    @Transactional
+    public ResponseEntity<Employee> updateEmployee(@PathVariable String id, @Valid @RequestBody Employee details) {
+        return employeeRepository.findById(id).map(emp -> {
+            String oldState = toJson(emp);
 
-        emp.setEmpName(details.getEmpName());
-        emp.setEmpContact(details.getEmpContact());
-        emp.setSalary(details.getSalary());
-        emp.setAddress(details.getAddress());
-        emp.setDesignation(details.getDesignation());
-        emp.setJoiningDate(details.getJoiningDate());
-        emp.setAadhaarNo(details.getAadhaarNo());
-        emp.setBankAccount(details.getBankAccount());
-        emp.setPhotoPath(details.getPhotoPath());
-        emp.setAadhaarCardPath(details.getAadhaarCardPath());
-        emp.setBankPassbookPath(details.getBankPassbookPath());
+            emp.setEmpName(details.getEmpName());
+            emp.setEmpContact(details.getEmpContact());
+            emp.setSalary(details.getSalary());
+            emp.setAddress(details.getAddress());
+            emp.setDesignation(details.getDesignation());
+            emp.setJoiningDate(details.getJoiningDate());
+            emp.setAadhaarNo(details.getAadhaarNo());
+            emp.setBankAccount(details.getBankAccount());
+            emp.setPhotoPath(details.getPhotoPath());
+            emp.setAadhaarCardPath(details.getAadhaarCardPath());
+            emp.setBankPassbookPath(details.getBankPassbookPath());
 
-        Employee saved = employeeRepository.save(emp);
-        saveAuditLog("Updated employee: " + saved.getEmpName(), "Employees", oldState, toJson(saved));
-        return saved;
+            Employee saved = employeeRepository.save(emp);
+            saveAuditLog("Updated employee: " + saved.getEmpName(), "Employees", oldState, toJson(saved));
+            return ResponseEntity.ok(saved);
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/employees/{id}")
-    public void deleteEmployee(@PathVariable String id) {
-        employeeRepository.findById(id).ifPresent(emp -> {
+    @Transactional
+    public ResponseEntity<Void> deleteEmployee(@PathVariable String id) {
+        return employeeRepository.findById(id).map(emp -> {
             String oldState = toJson(emp);
+            emp.setDeletedBy(getCurrentUser());
+            emp.setDeletedDate(java.time.LocalDateTime.now());
+            emp.setIsDeleted(true);
             emp.setIsActive(false);
-            emp.setUpdatedBy(getCurrentUser());
-            emp.setUpdatedAt(java.time.LocalDateTime.now());
             employeeRepository.save(emp);
-            saveAuditLog("Soft-deleted employee ID: " + id, "Employees", oldState, null);
-        });
+            employeeRepository.deleteById(id);
+            saveAuditLog("DELETED employee: " + emp.getEmpName(), "Employees", oldState, null);
+            return ResponseEntity.noContent().<Void>build();
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     // --- Salary Endpoints ---
@@ -105,40 +112,45 @@ public class HRController {
     }
 
     @PostMapping("/salaries")
+    @Transactional
     public EmployeeSalary createSalary(@RequestBody EmployeeSalary salary) {
         EmployeeSalary saved = employeeSalaryRepository.save(salary);
-        saveAuditLog("Created salary record for employee ID: " + saved.getEmployee().getId(), "Employee_Salary", null, toJson(saved));
+        String empId = (saved.getEmployee() != null) ? saved.getEmployee().getId() : "N/A";
+        saveAuditLog("Created salary record for employee ID: " + empId, "Employee_Salary", null, toJson(saved));
         return saved;
     }
 
     @PutMapping("/salaries/{id}")
-    public EmployeeSalary updateSalary(@PathVariable String id, @RequestBody EmployeeSalary details) {
-        EmployeeSalary salary = employeeSalaryRepository.findById(id).orElseThrow(() -> new RuntimeException("Salary record not found"));
-        String oldState = toJson(salary);
+    @Transactional
+    public ResponseEntity<EmployeeSalary> updateSalary(@PathVariable String id, @RequestBody EmployeeSalary details) {
+        return employeeSalaryRepository.findById(id).map(salary -> {
+            String oldState = toJson(salary);
 
-        salary.setMonth(details.getMonth());
-        salary.setYear(details.getYear());
-        salary.setSalaryAmount(details.getSalaryAmount());
-        salary.setPaidDate(details.getPaidDate());
-        salary.setStatus(details.getStatus());
+            salary.setMonth(details.getMonth());
+            salary.setYear(details.getYear());
+            salary.setSalaryAmount(details.getSalaryAmount());
+            salary.setPaidDate(details.getPaidDate());
+            salary.setStatus(details.getStatus());
 
-        EmployeeSalary saved = employeeSalaryRepository.save(salary);
-        saveAuditLog("Updated salary record ID: " + id, "Employee_Salary", oldState, toJson(saved));
-        return saved;
+            EmployeeSalary saved = employeeSalaryRepository.save(salary);
+            saveAuditLog("Updated salary record ID: " + id, "Employee_Salary", oldState, toJson(saved));
+            return ResponseEntity.ok(saved);
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/salaries/{id}")
-    public void deleteSalary(@PathVariable String id) {
-        employeeSalaryRepository.findById(id).ifPresent(salary -> {
+    @Transactional
+    public ResponseEntity<Void> deleteSalary(@PathVariable String id) {
+        return employeeSalaryRepository.findById(id).map(salary -> {
             String oldState = toJson(salary);
+            salary.setDeletedBy(getCurrentUser());
+            salary.setDeletedDate(java.time.LocalDateTime.now());
+            salary.setIsDeleted(true);
             salary.setIsActive(false);
-            salary.setUpdatedBy(getCurrentUser());
-            salary.setUpdatedAt(java.time.LocalDateTime.now());
             employeeSalaryRepository.save(salary);
-            saveAuditLog("Soft-deleted salary record ID: " + id, "Employee_Salary", oldState, null);
-        });
+            employeeSalaryRepository.deleteById(id);
+            saveAuditLog("DELETED salary record ID: " + id, "Employee_Salary", oldState, null);
+            return ResponseEntity.noContent().<Void>build();
+        }).orElse(ResponseEntity.notFound().build());
     }
 }
-
-
-

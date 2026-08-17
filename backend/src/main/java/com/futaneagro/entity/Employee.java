@@ -19,7 +19,8 @@ import java.time.LocalDate;
     @UniqueConstraint(columnNames = {"emp_name"}),
     @UniqueConstraint(columnNames = {"emp_contact"})
 })
-@SQLDelete(sql = "UPDATE t_hr_employee SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE emp_id = ?")
+@Where(clause = "is_active = true AND is_deleted = false")
+@SQLDelete(sql = "UPDATE t_hr_employee SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
 public class Employee extends BaseEntity {
     @Column(name = "emp_id")
     private Integer empId;
@@ -47,6 +48,7 @@ public class Employee extends BaseEntity {
     @Column(name = "joining_date")
     private LocalDate joiningDate;
 
+    @Pattern(regexp = "^$|^[2-9]{1}[0-9]{11}$", message = "Invalid Aadhaar number format")
     @Column(name = "aadhaar_no", length = 20)
     private String aadhaarNo;
 
@@ -61,7 +63,8 @@ public class Employee extends BaseEntity {
     private String aadhaarCardPath;
 
     @Column(name = "bank_passbook_path", length = 255)
-    private String bankPassbookPath;
+    private String bankPassbookPath;
+
     public Employee() {}
 
     public Integer getEmpId() {
@@ -158,4 +161,5 @@ public class Employee extends BaseEntity {
 
     public void setBankPassbookPath(String bankPassbookPath) {
         this.bankPassbookPath = bankPassbookPath;
-    }}
+    }
+}

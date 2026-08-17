@@ -18,7 +18,8 @@ import java.time.LocalDate;
     @UniqueConstraint(columnNames = {"party_contact"}),
     @UniqueConstraint(columnNames = {"email"})
 })
-@SQLDelete(sql = "UPDATE t_crm_party SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE party_id = ?")
+@Where(clause = "is_active = true AND is_deleted = false")
+@SQLDelete(sql = "UPDATE t_crm_party SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
 public class Party extends BaseEntity {
     @Column(name = "party_id")
     private Integer partyId;

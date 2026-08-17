@@ -31,6 +31,7 @@ export class BillingHubComponent implements OnInit {
   selectedBillRecordId = '';
   selectedBillRecord: any = null;
   showBillModal = false;
+  showPreviewCard = false;
 
   constructor(private apiService: ApiService) {}
 
@@ -40,11 +41,7 @@ export class BillingHubComponent implements OnInit {
     this.selectedBillRecordId = '';
     this.selectedBillRecord = null;
     this.showBillModal = false;
-    const list = this.getBillSourceList();
-    if (list && list.length > 0) {
-      const id = this.getRecordId(list[0]);
-      if (id) { this.selectedBillRecordId = String(id); this.onBillRecordChange(); }
-    }
+    this.showPreviewCard = false;
   }
 
   getBillSourceList(): any[] {
@@ -72,6 +69,7 @@ export class BillingHubComponent implements OnInit {
     const id = this.selectedBillRecordId;
     this.selectedBillRecord = list.find(item => String(this.getRecordId(item)) === String(id)) || null;
     this.showBillModal = false; // reset modal when record changes
+    this.showPreviewCard = !!this.selectedBillRecord;
   }
 
   openBillModal() { this.showBillModal = true; }

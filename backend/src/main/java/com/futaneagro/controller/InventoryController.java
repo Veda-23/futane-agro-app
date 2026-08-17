@@ -4,15 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.futaneagro.entity.*;
 import com.futaneagro.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class InventoryController {
 
     @Autowired
@@ -53,6 +53,7 @@ public class InventoryController {
     }
 
     @PostMapping("/inventory")
+    @Transactional
     public Inventory createInventory(@RequestBody Inventory inventory) {
         Inventory saved = inventoryRepository.save(inventory);
         saveAuditLog("Created inventory record: " + saved.getCrateType(), "Inventory", null, toJson(saved));
@@ -60,32 +61,36 @@ public class InventoryController {
     }
 
     @PutMapping("/inventory/{id}")
-    public Inventory updateInventory(@PathVariable String id, @RequestBody Inventory details) {
-        Inventory inventory = inventoryRepository.findById(id).orElseThrow(() -> new RuntimeException("Inventory not found"));
-        String oldState = toJson(inventory);
+    @Transactional
+    public ResponseEntity<Inventory> updateInventory(@PathVariable String id, @RequestBody Inventory details) {
+        return inventoryRepository.findById(id).map(inventory -> {
+            String oldState = toJson(inventory);
 
-        inventory.setCrateType(details.getCrateType());
-        inventory.setMaterialType(details.getMaterialType());
-        inventory.setOpeningStock(details.getOpeningStock());
-        inventory.setProducedStock(details.getProducedStock());
-        inventory.setSoldStock(details.getSoldStock());
+            inventory.setCrateType(details.getCrateType());
+            inventory.setMaterialType(details.getMaterialType());
+            inventory.setOpeningStock(details.getOpeningStock());
+            inventory.setProducedStock(details.getProducedStock());
+            inventory.setSoldStock(details.getSoldStock());
 
-        Inventory saved = inventoryRepository.save(inventory);
-        saveAuditLog("Updated inventory ID: " + id, "Inventory", oldState, toJson(saved));
-        return saved;
+            Inventory saved = inventoryRepository.save(inventory);
+            saveAuditLog("Updated inventory ID: " + id, "Inventory", oldState, toJson(saved));
+            return ResponseEntity.ok(saved);
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/inventory/{id}")
-    public void deleteInventory(@PathVariable String id) {
-        inventoryRepository.findById(id).ifPresent(inventory -> {
+    @Transactional
+    public ResponseEntity<Void> deleteInventory(@PathVariable String id) {
+        return inventoryRepository.findById(id).map(inventory -> {
             String oldState = toJson(inventory);
+            inventory.setDeletedBy(getCurrentUser());
+            inventory.setDeletedDate(java.time.LocalDateTime.now());
+            inventory.setIsDeleted(true);
             inventory.setIsActive(false);
-            inventory.setUpdatedBy(getCurrentUser());
-            inventory.setUpdatedAt(java.time.LocalDateTime.now());
             inventoryRepository.save(inventory);
-            saveAuditLog("Soft-deleted inventory ID: " + id, "Inventory", oldState, null);
-        });
+            inventoryRepository.deleteById(id);
+            saveAuditLog("DELETED inventory ID: " + id, "Inventory", oldState, null);
+            return ResponseEntity.noContent().<Void>build();
+        }).orElse(ResponseEntity.notFound().build());
     }
 }
-
-

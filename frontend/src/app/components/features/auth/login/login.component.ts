@@ -6,6 +6,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../../api.service';
 
+import { environment } from '../../../../../environments/environment';
+
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -14,6 +16,8 @@ import { ApiService } from '../../../../api.service';
   styleUrl: './login.component.css'
 })
 export class LoginComponent implements OnDestroy {
+  isUat: boolean = environment.uat;
+  isProd: boolean = environment.production && !environment.uat;
   @Input() currentLang: string = 'en';
   @Output() onLoginSuccess = new EventEmitter<any>();
   @Output() onSetLanguage = new EventEmitter<string>();

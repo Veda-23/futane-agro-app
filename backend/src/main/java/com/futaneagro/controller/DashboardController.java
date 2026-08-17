@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/dashboard")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class DashboardController {
 
     @Autowired

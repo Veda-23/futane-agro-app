@@ -14,7 +14,8 @@ import java.time.LocalDate;
     @UniqueConstraint(columnNames = {"vendor_name"}),
     @UniqueConstraint(columnNames = {"mobile"})
 })
-@SQLDelete(sql = "UPDATE t_crm_vendor SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE vendor_id = ?")
+@Where(clause = "is_active = true AND is_deleted = false")
+@SQLDelete(sql = "UPDATE t_crm_vendor SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
 public class Vendor extends BaseEntity {
     @Column(name = "vendor_id")
     private Integer vendorId;

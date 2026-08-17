@@ -57,6 +57,17 @@ export class SalariesComponent implements OnInit {
     return this.loggedInUser && this.loggedInUser.role === 'VIEWER';
   }
 
+  get currentYear(): number {
+    return new Date().getFullYear();
+  }
+
+  get allMonths(): string[] {
+    return [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+  }
+
   canDelete(): boolean {
     return this.loggedInUser && (this.loggedInUser.role === 'SUPER_ADMIN' || this.loggedInUser.role === 'ADMIN');
   }
@@ -64,6 +75,13 @@ export class SalariesComponent implements OnInit {
   saveSalary() {
     if (!this.salariesForm.id || !this.salariesForm.month || !this.salariesForm.year || !this.salariesForm.salaryAmount) {
       this.notificationService.warning('Invalid Input', "Please fill required fields");
+      return;
+    }
+
+    const now = new Date();
+    const monthIndex = this.allMonths.indexOf(this.salariesForm.month);
+    if (this.salariesForm.year > now.getFullYear() || (this.salariesForm.year === now.getFullYear() && monthIndex > now.getMonth())) {
+      this.notificationService.warning('Invalid Date', 'Cannot generate salary records for future months.');
       return;
     }
     const emp = this.employees.find(e => e.id === parseInt(this.salariesForm.id));

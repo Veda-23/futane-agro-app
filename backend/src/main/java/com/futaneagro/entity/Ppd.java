@@ -10,8 +10,8 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "t_prd_ppd")
-@Where(clause = "is_active = true")
-@SQLDelete(sql = "UPDATE t_prd_ppd SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE ppd_id = ?")
+@Where(clause = "is_active = true AND is_deleted = false")
+@SQLDelete(sql = "UPDATE t_prd_ppd SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
 public class Ppd extends BaseEntity {
     @Column(name = "ppd_id")
     private Integer ppdId;
@@ -32,7 +32,8 @@ public class Ppd extends BaseEntity {
     private Integer rejected;
 
     @Column(name = "shift", nullable = false, length = 50)
-    private String shift = "Morning Shift"; // Morning Shift, Afternoon Shift, Night Shift
+    private String shift = "Morning Shift"; // Morning Shift, Afternoon Shift, Night Shift
+
     public Ppd() {}
 
     public Integer getPpdId() {
@@ -89,4 +90,5 @@ public class Ppd extends BaseEntity {
 
     public void setShift(String shift) {
         this.shift = shift;
-    }}
+    }
+}

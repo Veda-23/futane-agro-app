@@ -10,8 +10,8 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "t_prd_ppm")
-@Where(clause = "is_active = true")
-@SQLDelete(sql = "UPDATE t_prd_ppm SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE ppm_id = ?")
+@Where(clause = "is_active = true AND is_deleted = false")
+@SQLDelete(sql = "UPDATE t_prd_ppm SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
 public class Ppm extends BaseEntity {
     @Column(name = "ppm_id")
     private Integer ppmId;

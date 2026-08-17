@@ -62,12 +62,17 @@ export class RawMaterialsComponent implements OnInit {
     return this.loggedInUser && (this.loggedInUser.role === 'SUPER_ADMIN' || this.loggedInUser.role === 'ADMIN');
   }
 
+  get calculatedAmount(): number {
+    return Math.round((Number(this.rawMaterialsForm.weight) || 0) * (Number(this.rawMaterialsForm.rate) || 0) * 100) / 100;
+  }
+
   saveRawMaterial() {
     if (!this.rawMaterialsForm.date || !this.rawMaterialsForm.materialName || !this.rawMaterialsForm.id) {
       this.notificationService.warning('Invalid Input', "Please fill required fields");
       return;
     }
     const vendor = this.vendors.find(v => v.id === parseInt(this.rawMaterialsForm.id));
+    if (!vendor) return;
     
     const payload = {
       date: this.rawMaterialsForm.date,
@@ -75,6 +80,7 @@ export class RawMaterialsComponent implements OnInit {
       vendor: vendor,
       weight: this.rawMaterialsForm.weight,
       rate: this.rawMaterialsForm.rate,
+      amount: this.calculatedAmount,
       purchaseBillPath: this.rawMaterialsForm.purchaseBillPath || '',
       weightSlipPath: this.rawMaterialsForm.weightSlipPath || ''
     };

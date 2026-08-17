@@ -11,8 +11,8 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "t_fin_transaction")
-@Where(clause = "is_active = true")
-@SQLDelete(sql = "UPDATE t_fin_transaction SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE transaction_id = ?")
+@Where(clause = "is_active = true AND is_deleted = false")
+@SQLDelete(sql = "UPDATE t_fin_transaction SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
 public class BankTransaction extends BaseEntity {
     @Column(name = "transaction_id")
     private Integer transactionId;

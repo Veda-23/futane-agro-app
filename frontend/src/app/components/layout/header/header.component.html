@@ -13,6 +13,8 @@
         <img src="assets/logo.svg" alt="Futane Agro Logo" style="width: 100%; height: 100%; object-fit: contain;">
       </div>
       <span class="header-brand-name" style="color: #D97706 !important;">Futane Agro ERP</span>
+      <span *ngIf="isUat" style="background: rgba(245, 158, 11, 0.25); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.5); padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; margin-left: 8px; letter-spacing: 0.5px;">UAT (8081)</span>
+      <span *ngIf="isProd" style="background: rgba(16, 185, 129, 0.25); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.5); padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; margin-left: 8px; letter-spacing: 0.5px;">PROD (8080)</span>
     </div>
 
     <div class="header-divider"></div>
@@ -88,7 +90,7 @@
       <div class="user-avatar-sm">{{ loggedInUser?.name?.charAt(0) || 'A' }}</div>
       <div class="user-session-text">
         <span class="user-session-name">{{ loggedInUser?.name }} <span class="user-role-chip">({{ loggedInUser?.role }})</span></span>
-        <span class="user-session-meta">Session: {{ sessionDuration }}</span>
+        <span class="user-session-meta">Session: {{ sessionDuration }} &nbsp;|&nbsp; ⏱ Idle Logout: {{ logoutCountdown }}</span>
       </div>
     </div>
 

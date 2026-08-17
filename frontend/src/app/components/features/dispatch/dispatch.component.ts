@@ -62,7 +62,12 @@ export class DispatchComponent implements OnInit {
   }
 
   canDelete() {
-    return this.loggedInUser && this.loggedInUser.role === 'ADMIN';
+    return this.loggedInUser && (this.loggedInUser.role === 'SUPER_ADMIN' || this.loggedInUser.role === 'ADMIN');
+  }
+
+  get availableSalesForDispatch(): any[] {
+    const dispatchedSaleIds = new Set(this.dispatchesList.map(d => d.sale?.id || d.saleId));
+    return this.salesList.filter(s => !dispatchedSaleIds.has(s.id));
   }
 
   validateForm(): boolean {

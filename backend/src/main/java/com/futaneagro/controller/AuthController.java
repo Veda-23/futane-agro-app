@@ -7,32 +7,43 @@ import com.futaneagro.service.EmailService;
 import com.futaneagro.service.SmsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Collections;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class AuthController {
 
     private static class OtpDetails {
-        String code;
+        String hashedCode;
         LocalDateTime expiry;
-        OtpDetails(String code, LocalDateTime expiry) {
-            this.code = code;
+
+        OtpDetails(String hashedCode, LocalDateTime expiry) {
+            this.hashedCode = hashedCode;
             this.expiry = expiry;
         }
     }
 
-    private static final Map<String, OtpDetails> otpCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private static class RateLimitEntry {
+        AtomicInteger count = new AtomicInteger(0);
+        long windowStartTime = System.currentTimeMillis();
+    }
+
+    private static final Map<String, OtpDetails> otpCache = new ConcurrentHashMap<>();
+    private static final Map<String, RateLimitEntry> rateLimitCache = new ConcurrentHashMap<>();
+    private static final int RATE_LIMIT_MAX_ATTEMPTS = 10;
+    private static final long RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
 
     @Autowired
     private UserRepository userRepository;
@@ -52,30 +63,64 @@ public class AuthController {
     @Autowired
     private SmsService smsService;
 
+    private boolean isRateLimited(HttpServletRequest request) {
+        String ip = getClientIp(request);
+        long now = System.currentTimeMillis();
+        RateLimitEntry entry = rateLimitCache.compute(ip, (k, v) -> {
+            if (v == null || (now - v.windowStartTime) > RATE_LIMIT_WINDOW_MS) {
+                RateLimitEntry newEntry = new RateLimitEntry();
+                newEntry.count.set(1);
+                newEntry.windowStartTime = now;
+                return newEntry;
+            } else {
+                v.count.incrementAndGet();
+                return v;
+            }
+        });
+        return entry.count.get() > RATE_LIMIT_MAX_ATTEMPTS;
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        if (request == null) return "unknown";
+        String xf = request.getHeader("X-Forwarded-For");
+        if (xf != null && !xf.isEmpty()) {
+            return xf.split(",")[0].trim();
+        }
+        return request.getRemoteAddr() != null ? request.getRemoteAddr() : "unknown";
+    }
+
+    private Map<String, Object> createErrorResponse(String error, String message, int status) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("error", error);
+        map.put("message", message);
+        map.put("status", status);
+        return map;
+    }
+
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
-        
-        // DELIBERATE BUG FOR CODERABBIT REVIEW
-        if ("root".equals(credentials.get("username")) && "supersecretpassword123!".equals(credentials.get("password"))) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", "fake-token-for-root");
-            response.put("username", "root");
-            response.put("roles", Collections.singletonList("ROLE_ADMIN"));
-            return ResponseEntity.ok(response);
+    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials, HttpServletRequest request) {
+        if (isRateLimited(request)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(
+                createErrorResponse("Too Many Requests", "Too many login attempts. Please wait 60 seconds.", 429)
+            );
         }
 
         String rawUsername = credentials.get("username");
         String password = credentials.get("password");
 
         if (rawUsername == null || password == null) {
-            return ResponseEntity.badRequest().body("Username and password are required.");
+            return ResponseEntity.badRequest().body(
+                createErrorResponse("Bad Request", "Username and password are required.", 400)
+            );
         }
 
-        // Case-insensitive username lookup: try exact, then uppercase, then find by ignoring case
+        // Case-insensitive username lookup
         String username = rawUsername.trim();
         Optional<User> userOpt = userRepository.findByUsernameIgnoreCase(username);
         if (!userOpt.isPresent()) {
-            return ResponseEntity.status(401).body("Invalid username or password.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                createErrorResponse("Unauthorized", "Invalid username or password.", 401)
+            );
         }
 
         User user = userOpt.get();
@@ -89,7 +134,9 @@ public class AuthController {
                 user.setLockTime(null);
                 userRepository.save(user);
             } else {
-                return ResponseEntity.status(403).body("Account is locked due to 5 failed attempts. Locked for 30 minutes.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    createErrorResponse("Forbidden", "Account is locked due to 5 failed attempts. Locked for 30 minutes.", 403)
+                );
             }
         }
 
@@ -103,9 +150,11 @@ public class AuthController {
 
             // Generate 6-digit OTP
             String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
+            String hashedOtp = passwordEncoder.encode(otp);
+
             // Use actual username from DB as cache key (consistent case)
             String cacheKey = user.getUsername();
-            otpCache.put(cacheKey, new OtpDetails(otp, LocalDateTime.now().plusMinutes(15)));
+            otpCache.put(cacheKey, new OtpDetails(hashedOtp, LocalDateTime.now().plusMinutes(15)));
 
             System.out.println("========================================");
             System.out.println("🔐 GENERATED OTP FOR " + cacheKey + ": " + otp);
@@ -131,7 +180,7 @@ public class AuthController {
                         System.out.println("⚠️  SMS OTP failed (non-fatal): " + e.getMessage());
                     }
                 }
-                // Always return tempOtp so on-screen OTP display works
+                // Return tempOtp for local / UI verification
                 response.put("tempOtp", otp);
             } else {
                 // UAT: try email but non-fatal; always return tempOtp for ease of testing
@@ -158,85 +207,118 @@ public class AuthController {
             userRepository.save(user);
 
             if (attempts >= 5) {
-                return ResponseEntity.status(403).body("Too many failed attempts. Account has been locked for 30 minutes.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    createErrorResponse("Forbidden", "Too many failed attempts. Account has been locked for 30 minutes.", 403)
+                );
             }
-            return ResponseEntity.status(401).body("Invalid username or password. Attempts remaining: " + (5 - attempts));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                createErrorResponse("Unauthorized", "Invalid username or password. Attempts remaining: " + (5 - attempts), 401)
+            );
         }
     }
 
     @PostMapping("/login/verify")
-    public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> payload) {
-        String rawUsername = payload.get("username");
-        String otp = payload.get("otp");
-
-        if (rawUsername == null || otp == null) {
-            return ResponseEntity.badRequest().body("Username and OTP are required.");
+    public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> payload, HttpServletRequest request) {
+        if (isRateLimited(request)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(
+                createErrorResponse("Too Many Requests", "Too many verification attempts. Please wait 60 seconds.", 429)
+            );
         }
 
-        // Case-insensitive OTP cache lookup
-        String username = rawUsername.trim();
-        OtpDetails cached = otpCache.get(username);
-        if (cached == null) {
-            cached = otpCache.get(username.toUpperCase());
-            if (cached != null) username = username.toUpperCase();
-        }
-        if (cached == null) {
-            // Try all keys case-insensitively
-            final String u = username;
-            java.util.Optional<String> matchKey = otpCache.keySet().stream()
-                .filter(k -> k.equalsIgnoreCase(u)).findFirst();
-            if (matchKey.isPresent()) {
-                username = matchKey.get();
-                cached = otpCache.get(username);
+        try {
+            String rawUsername = payload.get("username");
+            String otp = payload.get("otp");
+
+            if (rawUsername == null || otp == null) {
+                return ResponseEntity.badRequest().body(
+                    createErrorResponse("Bad Request", "Username and OTP are required.", 400)
+                );
             }
+
+            // Case-insensitive OTP cache lookup
+            String username = rawUsername.trim();
+            OtpDetails cached = otpCache.get(username);
+            if (cached == null) {
+                cached = otpCache.get(username.toUpperCase());
+                if (cached != null) username = username.toUpperCase();
+            }
+            if (cached == null) {
+                final String u = username;
+                Optional<String> matchKey = otpCache.keySet().stream()
+                    .filter(k -> k.equalsIgnoreCase(u)).findFirst();
+                if (matchKey.isPresent()) {
+                    username = matchKey.get();
+                    cached = otpCache.get(username);
+                }
+            }
+
+            if (cached == null || cached.expiry.isBefore(LocalDateTime.now()) || !passwordEncoder.matches(otp.trim(), cached.hashedCode)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                    createErrorResponse("Unauthorized", "Invalid or expired OTP. Please request a new one.", 401)
+                );
+            }
+
+            // OTP verified successfully. Remove from cache
+            otpCache.remove(username);
+
+            Optional<User> userOpt = userRepository.findByUsernameIgnoreCase(username);
+            if (!userOpt.isPresent()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                    createErrorResponse("Unauthorized", "User not found.", 401)
+                );
+            }
+            User user = userOpt.get();
+
+            // Generate JWT Token
+            String token = jwtUtils.generateToken(user.getUsername(), user.getRole());
+
+            // Create response payload
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
+            response.put("username", user.getUsername());
+            response.put("role", user.getRole());
+            response.put("name", user.getName());
+            response.put("refreshToken", "refresh-" + user.getUsername() + "-" + System.currentTimeMillis());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                createErrorResponse("Internal Server Error", "An error occurred while verifying OTP: " + e.getMessage(), 500)
+            );
         }
-        if (cached == null || !cached.code.equals(otp.trim()) || cached.expiry.isBefore(LocalDateTime.now())) {
-            return ResponseEntity.status(401).body("Invalid or expired OTP. Please request a new one.");
-        }
-
-        // OTP verified successfully. Remove from cache
-        otpCache.remove(username);
-
-        Optional<User> userOpt = userRepository.findByUsernameIgnoreCase(username);
-        if (!userOpt.isPresent()) {
-            return ResponseEntity.status(401).body("User not found.");
-        }
-        User user = userOpt.get();
-
-        // Generate JWT Token
-        String token = jwtUtils.generateToken(user.getUsername(), user.getRole());
-
-        // Create response payload
-        Map<String, Object> response = new HashMap<>();
-        response.put("token", token);
-        response.put("username", user.getUsername());
-        response.put("role", user.getRole());
-        response.put("name", user.getName());
-        response.put("refreshToken", "refresh-" + user.getUsername() + "-" + System.currentTimeMillis());
-
-        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/verify-session")
-    public ResponseEntity<?> verifySession(@CookieValue(value = "erp_session_cookie", required = false) String token, @RequestHeader(value = "Authorization", required = false) String authHeader) {
+    public ResponseEntity<?> verifySession(@CookieValue(value = "erp_session_cookie", required = false) String token,
+                                           @RequestHeader(value = "Authorization", required = false) String authHeader) {
         String jwtToken = token;
         if (jwtToken == null && authHeader != null && authHeader.startsWith("Bearer ")) {
             jwtToken = authHeader.substring(7);
         }
 
         if (jwtToken == null) {
-            return ResponseEntity.status(401).body("No session token provided");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                createErrorResponse("Unauthorized", "No session token provided", 401)
+            );
         }
 
         try {
             String username = jwtUtils.extractUsername(jwtToken);
             if (jwtUtils.validateToken(jwtToken, username)) {
-                return ResponseEntity.ok("Valid session");
+                Map<String, Object> resp = new HashMap<>();
+                resp.put("status", "VALID");
+                resp.put("username", username);
+                return ResponseEntity.ok(resp);
             }
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Invalid session token");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                createErrorResponse("Unauthorized", "Invalid session token", 401)
+            );
         }
-        return ResponseEntity.status(401).body("Invalid session token");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+            createErrorResponse("Unauthorized", "Invalid session token", 401)
+        );
     }
 
     private boolean isProductionProfile() {
@@ -247,7 +329,6 @@ public class AuthController {
         }
         return false;
     }
-
 
     @GetMapping
     public List<User> getAllUsers() {
@@ -301,4 +382,3 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 }
-

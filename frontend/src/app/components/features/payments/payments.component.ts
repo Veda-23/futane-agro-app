@@ -24,6 +24,7 @@ export class PaymentsComponent implements OnInit {
   paymentsList: any[] = [];
   parties: any[] = [];
   invoicesList: any[] = [];
+  salesList: any[] = [];
   
   paymentsForm = { id: '', invoiceNo: '', amountReceived: 0, paymentMode: 'UPI', paymentDate: '' };
 
@@ -50,6 +51,7 @@ export class PaymentsComponent implements OnInit {
   loadData() {
     this.apiService.getParties().subscribe((res: any[]) => this.parties = res);
     this.apiService.getInvoices().subscribe((res: any[]) => this.invoicesList = res);
+    this.apiService.getSales().subscribe((res: any[]) => this.salesList = res || []);
     this.apiService.getPayments().subscribe((res: any[]) => {
       this.paymentsList = res;
       this.tableFilteredCounts['payments'] = this.paymentsList.length;
@@ -64,10 +66,33 @@ export class PaymentsComponent implements OnInit {
     return this.loggedInUser && (this.loggedInUser.role === 'SUPER_ADMIN' || this.loggedInUser.role === 'ADMIN');
   }
 
+  getOutstandingBalance(partyId: any): number {
+    if (!partyId) return 0;
+    const pId = partyId.toString();
+    const totalSales = (this.salesList || [])
+      .filter((s: any) => (s.party?.id?.toString() === pId || s.partyId?.toString() === pId || s.party?.partyId?.toString() === pId))
+      .reduce((sum: number, s: any) => sum + (Number(s.totalAmount) || 0), 0);
+    const totalPayments = (this.paymentsList || [])
+      .filter((p: any) => (p.party?.id?.toString() === pId || p.partyId?.toString() === pId || p.party?.partyId?.toString() === pId))
+      .reduce((sum: number, p: any) => sum + (Number(p.amountReceived) || 0), 0);
+    return Math.max(0, totalSales - totalPayments);
+  }
+
   savePayment() {
     if (!this.paymentsForm.paymentDate || !this.paymentsForm.id || this.paymentsForm.amountReceived <= 0) {
       this.notificationService.warning('Invalid Input', "Please fill required valid fields");
       return;
+    }
+
+    if (this.salesList && this.salesList.length > 0) {
+      const outstanding = this.getOutstandingBalance(this.paymentsForm.id);
+      if (outstanding > 0 && Number(this.paymentsForm.amountReceived) > outstanding) {
+        this.notificationService.warning(
+          'Overpayment Warning',
+          `Amount ₹${Number(this.paymentsForm.amountReceived).toLocaleString('en-IN')} exceeds outstanding balance of ₹${outstanding.toLocaleString('en-IN')}`
+        );
+        return;
+      }
     }
     this.apiService.createPayment(this.paymentsForm).subscribe({
       next: (res) => {

@@ -12,8 +12,8 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "t_inv_raw_material")
-@Where(clause = "is_active = true")
-@SQLDelete(sql = "UPDATE t_inv_raw_material SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE raw_material_id = ?")
+@Where(clause = "is_active = true AND is_deleted = false")
+@SQLDelete(sql = "UPDATE t_inv_raw_material SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
 public class RawMaterial extends BaseEntity {
     @Column(name = "raw_material_id")
     private Integer rawMaterialId;

@@ -19,16 +19,16 @@
           </select>
         </div>
         <div class="form-group">
-          <label>{{ 'ppd.totalProduction' | translate:currentLang }}</label>
-          <input appAutoSelect type="number" [(ngModel)]="ppdForm.totalProduction" name="ppdTotal" required>
-        </div>
-        <div class="form-group">
           <label>{{ 'ppd.successful' | translate:currentLang }}</label>
-          <input appAutoSelect type="number" [(ngModel)]="ppdForm.successful" name="ppdSuccessful" required>
+          <input appAutoSelect type="number" [(ngModel)]="ppdForm.successful" (input)="onProductionFieldChange()" name="ppdSuccessful" required>
         </div>
         <div class="form-group">
           <label>{{ 'ppd.rejected' | translate:currentLang }}</label>
-          <input appAutoSelect type="number" [(ngModel)]="ppdForm.rejected" name="ppdRejected" required>
+          <input appAutoSelect type="number" [(ngModel)]="ppdForm.rejected" (input)="onProductionFieldChange()" name="ppdRejected" required>
+        </div>
+        <div class="form-group">
+          <label>{{ 'ppd.totalProduction' | translate:currentLang }}</label>
+          <input appAutoSelect type="number" [(ngModel)]="ppdForm.totalProduction" name="ppdTotal" readonly style="background: rgba(0,0,0,0.05); cursor: not-allowed;">
         </div>
         <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'ppd.save_btn' | translate:currentLang }}</button>
       </form>

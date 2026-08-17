@@ -4,7 +4,7 @@ import Swal from 'sweetalert2';
 declare var Razorpay: any;
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { DomSanitizer, SafeResourceUrl, Title } from '@angular/platform-browser';
 import { ApiService } from './api.service';
 import { TranslateService, Language, TranslatePipe } from './translate.service';
 import { Chart, registerables } from 'chart.js';
@@ -244,9 +244,27 @@ export class AppComponent implements OnInit {
   usersList: any[] = [];
   userForm = { username: '', password: '', role: 'OPERATOR', name: '', email: '' };
 
-  constructor(private apiService: ApiService, private translateService: TranslateService, private sanitizer: DomSanitizer, private notificationService: NotificationService) {}
+  constructor(
+    private apiService: ApiService,
+    private translateService: TranslateService,
+    private sanitizer: DomSanitizer,
+    private notificationService: NotificationService,
+    private titleService: Title
+  ) {}
+
+  isTokenExpired(token: string): boolean {
+    if (!token) return true;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (!payload || !payload.exp) return false;
+      return (payload.exp * 1000) < Date.now();
+    } catch {
+      return false;
+    }
+  }
 
   ngOnInit() {
+    this.titleService.setTitle((environment as any).appTitle || 'Futane Agro ERP');
     this.translateService.init();
     this.currentLang = this.translateService.getCurrentLanguage();
     this.translateService.language$.subscribe(lang => this.currentLang = lang);
@@ -263,23 +281,31 @@ export class AppComponent implements OnInit {
     const cachedUser = sessionStorage.getItem('user') || localStorage.getItem('user');
     const cachedToken = sessionStorage.getItem('jwtToken') || localStorage.getItem('jwtToken');
     if (cachedUser) {
-      if (cachedToken) {
-        sessionStorage.setItem('jwtToken', cachedToken);
+      if (cachedToken && this.isTokenExpired(cachedToken)) {
+        this.handleLogout();
+      } else {
+        if (cachedToken) {
+          sessionStorage.setItem('jwtToken', cachedToken);
+        }
+        sessionStorage.setItem('user', cachedUser);
+        this.loggedInUser = JSON.parse(cachedUser);
+        this.isAuthenticated = true;
+        this.loginTime = sessionStorage.getItem('loginTime') || new Date().toString();
+        this.updateAccessibleTabs();
+        const savedTab = sessionStorage.getItem('activeTab');
+        if (savedTab && this.accessibleTabs[savedTab]) {
+          this.activeTab = savedTab;
+        }
+        this.resetIdleTimer();
+        this.loadAllData();
       }
-      sessionStorage.setItem('user', cachedUser);
-      this.loggedInUser = JSON.parse(cachedUser);
-      this.isAuthenticated = true;
-      this.loginTime = sessionStorage.getItem('loginTime') || new Date().toString();
-      this.updateAccessibleTabs();
-      const savedTab = sessionStorage.getItem('activeTab');
-      if (savedTab && this.accessibleTabs[savedTab]) {
-        this.activeTab = savedTab;
-      }
-      this.resetIdleTimer();
-      this.loadAllData();
     }
 
-    const savedDark = localStorage.getItem('erp_dark_mode');
+    // Use environment-specific key so PROD and UAT dark mode states don't bleed into each other
+    // Migrate: clear old shared key so stale dark-mode from a different environment doesn't apply
+    localStorage.removeItem('erp_dark_mode');
+    const darkModeKey = environment.production && !(environment as any).uat ? 'erp_dark_mode_prod' : 'erp_dark_mode_uat';
+    const savedDark = localStorage.getItem(darkModeKey);
     if (savedDark === 'true') {
       this.isDarkMode = true;
       const darkSetting = this.settingsList.find(s => s.key === 'theme_dark_mode_enabled');
@@ -318,6 +344,51 @@ export class AppComponent implements OnInit {
     }
   }
 
+  @HostListener('document:keydown', ['$event'])
+  onGlobalKeyDown(event: KeyboardEvent) {
+    if (!this.isAuthenticated) return;
+    if (event.altKey) {
+      const shortcuts: { [key: string]: string } = {
+        'd': 'dashboard', 's': 'sales', 'p': 'production',
+        'e': 'employees', 'b': 'billinghub', 'r': 'reports'
+      };
+      const tab = shortcuts[event.key.toLowerCase()];
+      if (tab && this.accessibleTabs[tab]) {
+        event.preventDefault();
+        this.activeTab = tab;
+        sessionStorage.setItem('activeTab', tab);
+        this.loadDataForTab(tab);
+      }
+    }
+  }
+
+  getTimeAgo(dateStr: string): string {
+    if (!dateStr) return '';
+    const diff = Date.now() - new Date(dateStr).getTime();
+    if (isNaN(diff)) return '';
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  }
+
+  checkLowInventoryAlert() {
+    const threshold = 10;
+    const lowItems = (this.inventoryList || []).filter(i => (i.currentStock || 0) <= threshold);
+    if (lowItems.length > 0 && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification('⚠️ Low Inventory Alert', {
+          body: `${lowItems.length} item(s) are running low: ${lowItems.map(i => i.crateType).join(', ')}`,
+          icon: 'assets/logo.svg'
+        });
+      } catch (e) {
+        console.warn('Notification error:', e);
+      }
+    }
+  }
+
   logoutDueToInactivity() {
     if (this.isAuthenticated) {
       this.lastActivityTime = Date.now();
@@ -345,13 +416,12 @@ export class AppComponent implements OnInit {
     if (role === 'SUPER_ADMIN') {
       allTabs.forEach(t => this.accessibleTabs[t] = true);
     } else if (role === 'ADMIN') {
-      // Cannot access User Management, API Settings, Restore, System Settings (which are inside settings and audit-logs)
+      // Settings is SUPER_ADMIN only — ADMIN cannot access User Management, System Settings
       const adminTabs = [
         'dashboard', 'production', 'monthly-production', 'parties', 'sales',
         'payments', 'raw-materials', 'vendors', 'inventory', 'employees',
         'salaries', 'transports', 'drivers', 'machines', 'dispatch',
-        'expenses', 'bank', 'invoices', 'billinghub', 'reports', 'analytics',
-        'settings'
+        'expenses', 'bank', 'invoices', 'billinghub', 'reports', 'analytics'
       ];
       adminTabs.forEach(t => this.accessibleTabs[t] = true);
     } else if (role === 'MANAGER') {
@@ -1765,7 +1835,8 @@ export class AppComponent implements OnInit {
       darkSetting.value = this.isDarkMode;
     }
     
-    localStorage.setItem('erp_dark_mode', this.isDarkMode ? 'true' : 'false');
+    const darkModeKey = environment.production && !(environment as any).uat ? 'erp_dark_mode_prod' : 'erp_dark_mode_uat';
+    localStorage.setItem(darkModeKey, this.isDarkMode ? 'true' : 'false');
     this.applyTheme();
     this.logAudit("Toggled Dark Mode: " + this.isDarkMode);
   }

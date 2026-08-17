@@ -70,10 +70,14 @@ public class SecurityConfig {
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         http.headers()
-            .frameOptions().sameOrigin()
+            .frameOptions().deny()
             .contentTypeOptions().and()
             .httpStrictTransportSecurity().includeSubDomains(true).maxAgeInSeconds(31536000).and()
             .referrerPolicy().and()
+            .addHeaderWriter(new org.springframework.security.web.header.writers.StaticHeadersWriter(
+                "Content-Security-Policy",
+                "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://api.razorpay.com https://80-225-192-171.sslip.io; img-src 'self' data: blob:;"
+            ))
             .cacheControl().disable();
 
         return http.build();
@@ -84,6 +88,8 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
             "http://localhost:4200",
+            "http://localhost:4201",
+            "http://localhost:8081",
             "http://localhost",
             "http://127.0.0.1",
             "https://80-225-192-171.sslip.io",

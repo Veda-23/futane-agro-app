@@ -10,8 +10,8 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "t_hr_driver")
-@Where(clause = "is_active = true")
-@SQLDelete(sql = "UPDATE t_hr_driver SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE driver_id = ?")
+@Where(clause = "is_active = true AND is_deleted = false")
+@SQLDelete(sql = "UPDATE t_hr_driver SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
 public class Driver extends BaseEntity {
     @Column(name = "driver_id")
     private Integer driverId;

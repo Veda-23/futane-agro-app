@@ -4,16 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.futaneagro.entity.*;
 import com.futaneagro.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class PartyController {
 
     @Autowired
@@ -61,6 +61,7 @@ public class PartyController {
     }
 
     @PostMapping("/parties")
+    @Transactional
     public Party createParty(@Valid @RequestBody Party party) {
         Party saved = partyRepository.save(party);
         saveAuditLog("Created party: " + saved.getPartyName(), "Party", null, toJson(saved));
@@ -68,37 +69,43 @@ public class PartyController {
     }
 
     @PutMapping("/parties/{id}")
-    public Party updateParty(@PathVariable String id, @Valid @RequestBody Party details) {
-        Party party = partyRepository.findById(id).orElseThrow(() -> new RuntimeException("Party not found"));
-        String oldState = toJson(party);
+    @Transactional
+    public ResponseEntity<Party> updateParty(@PathVariable String id, @Valid @RequestBody Party details) {
+        return partyRepository.findById(id).map(party -> {
+            String oldState = toJson(party);
 
-        party.setPartyName(details.getPartyName());
-        party.setPartyAddress(details.getPartyAddress());
-        party.setPartyContact(details.getPartyContact());
-        party.setGstNumber(details.getGstNumber());
-        party.setEmail(details.getEmail());
-        party.setCity(details.getCity());
-        party.setState(details.getState());
-        party.setIsActive(details.getIsActive());
-        party.setGstCertPath(details.getGstCertPath());
-        party.setPanCardPath(details.getPanCardPath());
-        party.setAgreementPath(details.getAgreementPath());
+            party.setPartyName(details.getPartyName());
+            party.setPartyAddress(details.getPartyAddress());
+            party.setPartyContact(details.getPartyContact());
+            party.setGstNumber(details.getGstNumber());
+            party.setEmail(details.getEmail());
+            party.setCity(details.getCity());
+            party.setState(details.getState());
+            party.setIsActive(details.getIsActive() != null ? details.getIsActive() : true);
+            party.setGstCertPath(details.getGstCertPath());
+            party.setPanCardPath(details.getPanCardPath());
+            party.setAgreementPath(details.getAgreementPath());
 
-        Party saved = partyRepository.save(party);
-        saveAuditLog("Updated party: " + saved.getPartyName(), "Party", oldState, toJson(saved));
-        return saved;
+            Party saved = partyRepository.save(party);
+            saveAuditLog("Updated party: " + saved.getPartyName(), "Party", oldState, toJson(saved));
+            return ResponseEntity.ok(saved);
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/parties/{id}")
-    public void deleteParty(@PathVariable String id) {
-        partyRepository.findById(id).ifPresent(party -> {
+    @Transactional
+    public ResponseEntity<Void> deleteParty(@PathVariable String id) {
+        return partyRepository.findById(id).map(party -> {
             String oldState = toJson(party);
+            party.setDeletedBy(getCurrentUser());
+            party.setDeletedDate(java.time.LocalDateTime.now());
+            party.setIsDeleted(true);
             party.setIsActive(false);
-            party.setUpdatedBy(getCurrentUser());
-            party.setUpdatedAt(java.time.LocalDateTime.now());
             partyRepository.save(party);
-            saveAuditLog("Soft-deleted party ID: " + id, "Party", oldState, null);
-        });
+            partyRepository.deleteById(id);
+            saveAuditLog("DELETED party: " + party.getPartyName(), "Party", oldState, null);
+            return ResponseEntity.noContent().<Void>build();
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     // --- Vendor Endpoints ---
@@ -108,6 +115,7 @@ public class PartyController {
     }
 
     @PostMapping("/vendors")
+    @Transactional
     public Vendor createVendor(@Valid @RequestBody Vendor vendor) {
         Vendor saved = vendorRepository.save(vendor);
         saveAuditLog("Created vendor: " + saved.getVendorName(), "Vendor", null, toJson(saved));
@@ -115,30 +123,36 @@ public class PartyController {
     }
 
     @PutMapping("/vendors/{id}")
-    public Vendor updateVendor(@PathVariable String id, @Valid @RequestBody Vendor details) {
-        Vendor vendor = vendorRepository.findById(id).orElseThrow(() -> new RuntimeException("Vendor not found"));
-        String oldState = toJson(vendor);
+    @Transactional
+    public ResponseEntity<Vendor> updateVendor(@PathVariable String id, @Valid @RequestBody Vendor details) {
+        return vendorRepository.findById(id).map(vendor -> {
+            String oldState = toJson(vendor);
 
-        vendor.setVendorName(details.getVendorName());
-        vendor.setMobile(details.getMobile());
-        vendor.setAddress(details.getAddress());
-        vendor.setGstNumber(details.getGstNumber());
+            vendor.setVendorName(details.getVendorName());
+            vendor.setMobile(details.getMobile());
+            vendor.setAddress(details.getAddress());
+            vendor.setGstNumber(details.getGstNumber());
 
-        Vendor saved = vendorRepository.save(vendor);
-        saveAuditLog("Updated vendor: " + saved.getVendorName(), "Vendor", oldState, toJson(saved));
-        return saved;
+            Vendor saved = vendorRepository.save(vendor);
+            saveAuditLog("Updated vendor: " + saved.getVendorName(), "Vendor", oldState, toJson(saved));
+            return ResponseEntity.ok(saved);
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/vendors/{id}")
-    public void deleteVendor(@PathVariable String id) {
-        vendorRepository.findById(id).ifPresent(vendor -> {
+    @Transactional
+    public ResponseEntity<Void> deleteVendor(@PathVariable String id) {
+        return vendorRepository.findById(id).map(vendor -> {
             String oldState = toJson(vendor);
+            vendor.setDeletedBy(getCurrentUser());
+            vendor.setDeletedDate(java.time.LocalDateTime.now());
+            vendor.setIsDeleted(true);
             vendor.setIsActive(false);
-            vendor.setUpdatedBy(getCurrentUser());
-            vendor.setUpdatedAt(java.time.LocalDateTime.now());
             vendorRepository.save(vendor);
-            saveAuditLog("Soft-deleted vendor ID: " + id, "Vendor", oldState, null);
-        });
+            vendorRepository.deleteById(id);
+            saveAuditLog("DELETED vendor: " + vendor.getVendorName(), "Vendor", oldState, null);
+            return ResponseEntity.noContent().<Void>build();
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     // --- Driver Endpoints ---
@@ -148,6 +162,7 @@ public class PartyController {
     }
 
     @PostMapping("/drivers")
+    @Transactional
     public Driver createDriver(@RequestBody Driver driver) {
         Driver saved = driverRepository.save(driver);
         saveAuditLog("Created driver: " + saved.getDriverName(), "Driver", null, toJson(saved));
@@ -155,31 +170,35 @@ public class PartyController {
     }
 
     @PutMapping("/drivers/{id}")
-    public Driver updateDriver(@PathVariable String id, @RequestBody Driver details) {
-        Driver driver = driverRepository.findById(id).orElseThrow(() -> new RuntimeException("Driver not found"));
-        String oldState = toJson(driver);
+    @Transactional
+    public ResponseEntity<Driver> updateDriver(@PathVariable String id, @RequestBody Driver details) {
+        return driverRepository.findById(id).map(driver -> {
+            String oldState = toJson(driver);
 
-        driver.setDriverName(details.getDriverName());
-        driver.setMobile(details.getMobile());
-        driver.setLicenseNumber(details.getLicenseNumber());
-        driver.setAddress(details.getAddress());
+            driver.setDriverName(details.getDriverName());
+            driver.setMobile(details.getMobile());
+            driver.setLicenseNumber(details.getLicenseNumber());
+            driver.setAddress(details.getAddress());
 
-        Driver saved = driverRepository.save(driver);
-        saveAuditLog("Updated driver: " + saved.getDriverName(), "Driver", oldState, toJson(saved));
-        return saved;
+            Driver saved = driverRepository.save(driver);
+            saveAuditLog("Updated driver: " + saved.getDriverName(), "Driver", oldState, toJson(saved));
+            return ResponseEntity.ok(saved);
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/drivers/{id}")
-    public void deleteDriver(@PathVariable String id) {
-        driverRepository.findById(id).ifPresent(driver -> {
+    @Transactional
+    public ResponseEntity<Void> deleteDriver(@PathVariable String id) {
+        return driverRepository.findById(id).map(driver -> {
             String oldState = toJson(driver);
+            driver.setDeletedBy(getCurrentUser());
+            driver.setDeletedDate(java.time.LocalDateTime.now());
+            driver.setIsDeleted(true);
             driver.setIsActive(false);
-            driver.setUpdatedBy(getCurrentUser());
-            driver.setUpdatedAt(java.time.LocalDateTime.now());
             driverRepository.save(driver);
-            saveAuditLog("Soft-deleted driver ID: " + id, "Driver", oldState, null);
-        });
+            driverRepository.deleteById(id);
+            saveAuditLog("DELETED driver: " + driver.getDriverName(), "Driver", oldState, null);
+            return ResponseEntity.noContent().<Void>build();
+        }).orElse(ResponseEntity.notFound().build());
     }
 }
-
-

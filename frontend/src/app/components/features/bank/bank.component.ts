@@ -57,7 +57,7 @@ export class BankComponent implements OnInit {
   }
 
   canDelete() {
-    return this.loggedInUser && this.loggedInUser.role === 'ADMIN';
+    return this.loggedInUser && (this.loggedInUser.role === 'SUPER_ADMIN' || this.loggedInUser.role === 'ADMIN');
   }
 
   validateForm(): boolean {

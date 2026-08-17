@@ -12,7 +12,8 @@ import java.time.LocalDate;
 @Table(name = "t_prd_machine_master", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"machine_name"})
 })
-@SQLDelete(sql = "UPDATE t_prd_machine_master SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE machine_id = ?")
+@Where(clause = "is_active = true AND is_deleted = false")
+@SQLDelete(sql = "UPDATE t_prd_machine_master SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
 public class MachineMaster extends BaseEntity {
     @Column(name = "machine_id")
     private Integer machineId;

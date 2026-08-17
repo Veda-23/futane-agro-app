@@ -2,10 +2,16 @@ package com.futaneagro.entity;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "audit_log")
-public class AuditLog extends BaseEntity {
+public class AuditLog {
+
+    @Id
+    @Column(name = "id", columnDefinition = "CHAR(36)")
+    private String id = UUID.randomUUID().toString();
+
     @Column(name = "audit_id")
     private Integer auditId;
 
@@ -27,11 +33,27 @@ public class AuditLog extends BaseEntity {
     @Column(name = "timestamp")
     private LocalDateTime timestamp;
 
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
     public AuditLog() {}
 
     @PrePersist
     public void onCreate() {
-        this.timestamp = LocalDateTime.now();
+        if (this.id == null) {
+            this.id = UUID.randomUUID().toString();
+        }
+        LocalDateTime now = LocalDateTime.now();
+        this.timestamp = now;
+        this.createdAt = now;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public Integer getAuditId() {
@@ -88,5 +110,13 @@ public class AuditLog extends BaseEntity {
 
     public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

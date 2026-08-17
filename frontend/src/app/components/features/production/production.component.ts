@@ -58,6 +58,12 @@ export class ProductionComponent implements OnInit {
     return this.loggedInUser && (this.loggedInUser.role === 'SUPER_ADMIN' || this.loggedInUser.role === 'ADMIN');
   }
 
+  onProductionFieldChange() {
+    const s = Number(this.ppdForm.successful) || 0;
+    const r = Number(this.ppdForm.rejected) || 0;
+    this.ppdForm.totalProduction = s + r;
+  }
+
   // --- PPD Methods ---
   savePpd() {
     this.apiService.createPpd(this.ppdForm).subscribe({

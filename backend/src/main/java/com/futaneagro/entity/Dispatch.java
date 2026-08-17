@@ -11,8 +11,8 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "t_log_dispatch")
-@Where(clause = "is_active = true")
-@SQLDelete(sql = "UPDATE t_log_dispatch SET is_deleted = true, deleted_date = CURRENT_DATE() WHERE dispatch_id = ?")
+@Where(clause = "is_active = true AND is_deleted = false")
+@SQLDelete(sql = "UPDATE t_log_dispatch SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
 public class Dispatch extends BaseEntity {
     @Column(name = "dispatch_id")
     private Integer dispatchId;
