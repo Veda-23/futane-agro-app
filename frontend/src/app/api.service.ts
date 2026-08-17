@@ -47,6 +47,14 @@ export class ApiService {
     return this.http.get(`${this.baseUrl.replace(/\/api$/, '')}/actuator/health`).pipe(retry(1));
   }
 
+  getHealth(): Observable<any> {
+    return this.getSystemHealth();
+  }
+
+  getEnvInfo(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/env`);
+  }
+
   // Parties
   getParties(): Observable<any> {
     return this.http.get(`${this.baseUrl}/parties`);

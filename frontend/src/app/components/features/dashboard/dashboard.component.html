@@ -3,17 +3,22 @@
   <!-- KPI Row 1: Production + Sales -->
   <div class="kpi-grid">
 
-    <div class="kpi-card kpi-production">
-      <div class="kpi-icon-wrap kpi-icon-purple">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41M21 12h-2M5 12H3M12 21v-2M12 5V3"/>
-        </svg>
+    <div class="kpi-card kpi-production" style="display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="kpi-icon-wrap kpi-icon-purple">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41M21 12h-2M5 12H3M12 21v-2M12 5V3"/>
+          </svg>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-label">{{ 'dashboard.todayProduction' | translate:currentLang }}</div>
+          <div class="kpi-value text-purple">{{ stats.todayProduction | number }}</div>
+          <div class="kpi-meta">{{ 'dashboard.todayProduction.desc' | translate:currentLang }}</div>
+        </div>
       </div>
-      <div class="kpi-body">
-        <div class="kpi-label">{{ 'dashboard.todayProduction' | translate:currentLang }}</div>
-        <div class="kpi-value text-purple">{{ stats.todayProduction | number }}</div>
-        <div class="kpi-meta">{{ 'dashboard.todayProduction.desc' | translate:currentLang }}</div>
+      <div style="width: 70px; height: 35px;">
+        <canvas id="sparkline-prod"></canvas>
       </div>
     </div>
 
@@ -30,29 +35,39 @@
       </div>
     </div>
 
-    <div class="kpi-card kpi-sales">
-      <div class="kpi-icon-wrap kpi-icon-green">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
-        </svg>
+    <div class="kpi-card kpi-sales" style="display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="kpi-icon-wrap kpi-icon-green">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+          </svg>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-label">{{ 'dashboard.totalSales' | translate:currentLang }}</div>
+          <div class="kpi-value text-green">₹{{ stats.totalSales | number:'1.0-0' }}</div>
+          <div class="kpi-meta">{{ 'dashboard.totalSales.desc' | translate:currentLang }}</div>
+        </div>
       </div>
-      <div class="kpi-body">
-        <div class="kpi-label">{{ 'dashboard.totalSales' | translate:currentLang }}</div>
-        <div class="kpi-value text-green">₹{{ stats.totalSales | number:'1.0-0' }}</div>
-        <div class="kpi-meta">{{ 'dashboard.totalSales.desc' | translate:currentLang }}</div>
+      <div style="width: 70px; height: 35px;">
+        <canvas id="sparkline-sales"></canvas>
       </div>
     </div>
 
-    <div class="kpi-card kpi-pending">
-      <div class="kpi-icon-wrap kpi-icon-red">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
+    <div class="kpi-card kpi-pending" style="display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="kpi-icon-wrap kpi-icon-red">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-label">{{ 'dashboard.pendingAmount' | translate:currentLang }}</div>
+          <div class="kpi-value text-red">₹{{ stats.pendingAmount | number:'1.0-0' }}</div>
+          <div class="kpi-meta">{{ 'dashboard.pendingAmount.desc' | translate:currentLang }}</div>
+        </div>
       </div>
-      <div class="kpi-body">
-        <div class="kpi-label">{{ 'dashboard.pendingAmount' | translate:currentLang }}</div>
-        <div class="kpi-value text-red">₹{{ stats.pendingAmount | number:'1.0-0' }}</div>
-        <div class="kpi-meta">{{ 'dashboard.pendingAmount.desc' | translate:currentLang }}</div>
+      <div style="width: 70px; height: 35px;">
+        <canvas id="sparkline-pending"></canvas>
       </div>
     </div>
 

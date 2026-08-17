@@ -4,17 +4,26 @@
       <h3 style="margin: 0;">{{ 'audit.title' | translate:currentLang }}</h3>
       <p style="color: var(--text-secondary); margin: 4px 0 0 0; font-size: 13px;">{{ 'audit.desc' | translate:currentLang }}</p>
     </div>
-    <!-- Filters (L5-009) -->
+    <!-- Filters (A-15) -->
     <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-      <input type="text" [(ngModel)]="searchQuery" placeholder="🔍 Search logs..." style="padding: 6px 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-glass); background: rgba(0,0,0,0.05);">
-      <select [(ngModel)]="filterAction" style="padding: 6px 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-glass); background: var(--bg-secondary);">
+      <input type="date" [(ngModel)]="auditFilter.fromDate" style="padding: 6px 10px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-glass); background: rgba(0,0,0,0.05);" title="From Date">
+      <input type="date" [(ngModel)]="auditFilter.toDate" style="padding: 6px 10px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-glass); background: rgba(0,0,0,0.05);" title="To Date">
+      <select [(ngModel)]="auditFilter.tableName" style="padding: 6px 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-glass); background: var(--bg-secondary);">
+        <option value="">All Modules</option>
+        <option *ngFor="let t of uniqueTableNames" [value]="t">{{ t }}</option>
+      </select>
+      <select [(ngModel)]="auditFilter.action" style="padding: 6px 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-glass); background: var(--bg-secondary);">
         <option value="">All Actions</option>
         <option value="LOGIN">LOGIN</option>
         <option value="CREATE">CREATE / ADD</option>
         <option value="UPDATE">UPDATE</option>
         <option value="DELETE">DELETE</option>
       </select>
-      <input type="text" [(ngModel)]="filterUser" placeholder="Filter by User" style="padding: 6px 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-glass); background: rgba(0,0,0,0.05); max-width: 130px;">
+      <input type="text" [(ngModel)]="auditFilter.username" placeholder="Filter by User" style="padding: 6px 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-glass); background: rgba(0,0,0,0.05); max-width: 120px;">
+      <button class="btn btn-secondary btn-sm" (click)="clearAuditFilters()" style="padding: 6px 10px; font-size: 12px;">✕ Clear</button>
+      <span style="font-size: 12px; color: var(--text-secondary);">
+        {{ filteredAuditLogs.length }} / {{ auditLogsList.length }}
+      </span>
     </div>
   </div>
 

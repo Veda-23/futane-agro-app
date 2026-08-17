@@ -7,6 +7,8 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
 
+import { forkJoin } from 'rxjs';
+
 @Component({
   selector: 'app-dispatch',
   standalone: true,
@@ -18,6 +20,9 @@ export class DispatchComponent implements OnInit {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'dispatch';
   @Input() loggedInUser: any = null;
+
+  isLoading = true;
+  hasError = false;
 
   salesList: any[] = [];
   dispatchesList: any[] = [];
@@ -48,12 +53,23 @@ export class DispatchComponent implements OnInit {
   }
 
   loadData() {
-    this.apiService.getSales().subscribe((res: any[]) => {
-      this.salesList = res || [];
-    });
-    this.apiService.getDispatches().subscribe((res: any[]) => {
-      this.dispatchesList = res || [];
-      this.tableFilteredCounts['dispatch'] = this.dispatchesList.length;
+    this.isLoading = true;
+    this.hasError = false;
+    forkJoin({
+      sales: this.apiService.getSales(),
+      dispatches: this.apiService.getDispatches()
+    }).subscribe({
+      next: ({ sales, dispatches }) => {
+        this.salesList = sales || [];
+        this.dispatchesList = dispatches || [];
+        this.tableFilteredCounts['dispatch'] = this.dispatchesList.length;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.hasError = true;
+        this.notificationService.showValidationError('Could not load dispatch data.');
+      }
     });
   }
 

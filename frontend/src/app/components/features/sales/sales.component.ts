@@ -9,6 +9,8 @@ import Swal from 'sweetalert2';
 
 declare var Razorpay: any;
 
+import { forkJoin } from 'rxjs';
+
 @Component({
   selector: 'app-sales',
   standalone: true,
@@ -23,6 +25,9 @@ export class SalesComponent implements OnInit {
   @Input() filterSearchQuery: string = '';
   @Input() filterDate: string = '';
   @Input() filterMonth: string = '';
+
+  isLoading = true;
+  hasError = false;
 
   salesList: any[] = [];
   parties: any[] = [];
@@ -52,10 +57,23 @@ export class SalesComponent implements OnInit {
   }
 
   loadData() {
-    this.apiService.getParties().subscribe((res: any[]) => this.parties = res);
-    this.apiService.getSales().subscribe((res: any[]) => {
-      this.salesList = res;
-      this.tableFilteredCounts['sales'] = this.salesList.length;
+    this.isLoading = true;
+    this.hasError = false;
+    forkJoin({
+      parties: this.apiService.getParties(),
+      sales: this.apiService.getSales()
+    }).subscribe({
+      next: ({ parties, sales }) => {
+        this.parties = parties || [];
+        this.salesList = sales || [];
+        this.tableFilteredCounts['sales'] = this.salesList.length;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.hasError = true;
+        this.notificationService.error('Load Failed', 'Could not load sales data.');
+      }
     });
   }
 

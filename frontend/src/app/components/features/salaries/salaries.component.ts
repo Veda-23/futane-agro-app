@@ -8,6 +8,8 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
 
+import { forkJoin } from 'rxjs';
+
 @Component({
   selector: 'app-salaries',
   standalone: true,
@@ -19,6 +21,9 @@ export class SalariesComponent implements OnInit {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'salaries';
   @Input() loggedInUser: any = null;
+
+  isLoading = true;
+  hasError = false;
 
   salariesList: any[] = [];
   employees: any[] = [];
@@ -45,11 +50,31 @@ export class SalariesComponent implements OnInit {
     });
   }
 
+  get maxSalaryMonth(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
+  }
+
   loadData() {
-    this.apiService.getEmployees().subscribe((res: any[]) => this.employees = res);
-    this.apiService.getSalaries().subscribe((res: any[]) => {
-      this.salariesList = res;
-      this.tableFilteredCounts['salaries'] = this.salariesList.length;
+    this.isLoading = true;
+    this.hasError = false;
+    forkJoin({
+      employees: this.apiService.getEmployees(),
+      salaries: this.apiService.getSalaries()
+    }).subscribe({
+      next: ({ employees, salaries }) => {
+        this.employees = employees || [];
+        this.salariesList = salaries || [];
+        this.tableFilteredCounts['salaries'] = this.salariesList.length;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.hasError = true;
+        this.notificationService.error('Load Failed', 'Could not load salaries data.');
+      }
     });
   }
 

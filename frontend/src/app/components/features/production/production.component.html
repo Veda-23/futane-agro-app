@@ -20,15 +20,15 @@
         </div>
         <div class="form-group">
           <label>{{ 'ppd.successful' | translate:currentLang }}</label>
-          <input appAutoSelect type="number" [(ngModel)]="ppdForm.successful" (input)="onProductionFieldChange()" name="ppdSuccessful" required>
+          <input appAutoSelect type="number" [(ngModel)]="ppdForm.successful" (ngModelChange)="recalculateTotal()" (input)="onProductionFieldChange()" name="ppdSuccessful" required min="0">
         </div>
         <div class="form-group">
           <label>{{ 'ppd.rejected' | translate:currentLang }}</label>
-          <input appAutoSelect type="number" [(ngModel)]="ppdForm.rejected" (input)="onProductionFieldChange()" name="ppdRejected" required>
+          <input appAutoSelect type="number" [(ngModel)]="ppdForm.rejected" (ngModelChange)="recalculateTotal()" (input)="onProductionFieldChange()" name="ppdRejected" required min="0">
         </div>
         <div class="form-group">
-          <label>{{ 'ppd.totalProduction' | translate:currentLang }}</label>
-          <input appAutoSelect type="number" [(ngModel)]="ppdForm.totalProduction" name="ppdTotal" readonly style="background: rgba(0,0,0,0.05); cursor: not-allowed;">
+          <label>{{ 'ppd.totalProduction' | translate:currentLang }} <span style="color:var(--accent-warning); font-size:11px;">(Auto)</span></label>
+          <input appAutoSelect type="number" [value]="ppdForm.totalProduction" name="ppdTotal" readonly style="background: rgba(217,119,6,0.08); cursor: not-allowed; font-weight: 700;">
         </div>
         <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'ppd.save_btn' | translate:currentLang }}</button>
       </form>
@@ -36,8 +36,22 @@
     <!-- Table -->
     <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
       <h3>{{ 'ppd.records_title' | translate:currentLang }}</h3>
-      
-      <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
+
+      <!-- Skeleton Loader (A-01) -->
+      <div *ngIf="isLoading" class="skeleton-container" aria-busy="true" aria-label="Loading production data...">
+        <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5,6]"></div>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="!isLoading && hasError" class="empty-state" style="padding:40px; text-align:center;">
+        <div style="font-size:48px; margin-bottom:12px;">⚠️</div>
+        <h3 style="color: var(--text-primary);">Failed to Load Production Data</h3>
+        <p style="color: var(--text-secondary); margin-bottom:16px;">Could not connect to the server. Please check your connection.</p>
+        <button class="btn btn-primary" (click)="loadData()">🔄 Retry</button>
+      </div>
+
+      <div *ngIf="!isLoading && !hasError">
+        <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
         <div class="column-visibility-dropdown" style="position:relative;">
           <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('ppd')" style="padding: 6px 12px; font-size: 13px;">
             ⚙️ Columns
@@ -89,6 +103,7 @@
           </button>
         </div>
       </div>
+    </div>
     </div>
   </div>
 </div>

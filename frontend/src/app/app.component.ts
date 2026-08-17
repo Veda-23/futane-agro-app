@@ -41,6 +41,8 @@ import { GlobalFilterComponent } from './components/features/global-filter/globa
 import { NotificationService } from './services/notification.service';
 Chart.register(...registerables);
 
+import * as XLSX from 'xlsx';
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -52,6 +54,11 @@ Chart.register(...registerables);
 export class AppComponent implements OnInit {
   title = 'Futane Agro ERP';
 
+  // Environment Flags (D-04)
+  readonly isUat: boolean = (environment as any).uat === true;
+  readonly isProd: boolean = environment.production && !(environment as any).uat;
+  isProduction = environment.production;
+
   // Expose Math helper for template calls
   Math = Math;
 
@@ -62,8 +69,74 @@ export class AppComponent implements OnInit {
     this.isSidebarOpen = !this.isSidebarOpen;
   }
 
-  // Environment State
-  isProduction = environment.production;
+  exportTableToExcel(data: any[], filename: string, sheetName: string = 'Data') {
+    if (!data || data.length === 0) {
+      this.notificationService.info('Export', 'No data to export.');
+      return;
+    }
+    const flat = data.map(row => {
+      const result: any = {};
+      const flatten = (obj: any, prefix = '') => {
+        Object.keys(obj || {}).forEach(key => {
+          const val = obj[key];
+          const fullKey = prefix ? `${prefix}_${key}` : key;
+          if (val && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
+            flatten(val, fullKey);
+          } else {
+            result[fullKey] = val;
+          }
+        });
+      };
+      flatten(row);
+      ['version', 'isDeleted', 'isActive', 'deletedBy', 'deletedDate'].forEach(k => delete result[k]);
+      return result;
+    });
+
+    const ws = XLSX.utils.json_to_sheet(flat);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    const cols = Object.keys(flat[0] || {}).map(k => ({ wch: Math.max(k.length, 14) }));
+    ws['!cols'] = cols;
+    const dateStr = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, `${filename}_${dateStr}.xlsx`);
+    this.notificationService.success('Export Complete', `${filename}_${dateStr}.xlsx downloaded successfully.`);
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onGlobalKeyDown(event: KeyboardEvent) {
+    const activeTag = (document.activeElement as HTMLElement)?.tagName?.toLowerCase();
+    if (['input', 'textarea', 'select'].includes(activeTag || '')) return;
+    if (!this.isAuthenticated) return;
+
+    if (event.altKey && !event.shiftKey && !event.ctrlKey) {
+      const shortcuts: { [key: string]: string } = {
+        'd': 'dashboard',
+        's': 'sales',
+        'p': 'production',
+        'e': 'employees',
+        'b': 'billinghub',
+        'r': 'reports',
+        'a': 'analytics',
+        'i': 'inventory',
+        'm': 'machines',
+        'x': 'expenses',
+      };
+      const tab = shortcuts[event.key.toLowerCase()];
+      if (tab && (!this.accessibleTabs || this.accessibleTabs[tab])) {
+        event.preventDefault();
+        this.switchTab(tab);
+        this.notificationService.info(
+          'Navigation',
+          `Switched to ${tab.charAt(0).toUpperCase() + tab.slice(1)} (Alt+${event.key.toUpperCase()})`
+        );
+      }
+    }
+
+    if (event.key === 'Escape') {
+      this.showColDropdown = {};
+      this.showFilters = false;
+    }
+  }
 
   // Generic Filter, Sort & Search State
   filterSearchQuery = '';
@@ -340,24 +413,6 @@ export class AppComponent implements OnInit {
         this.logoutDueToInactivity();
       } else {
         this.resetIdleTimer();
-      }
-    }
-  }
-
-  @HostListener('document:keydown', ['$event'])
-  onGlobalKeyDown(event: KeyboardEvent) {
-    if (!this.isAuthenticated) return;
-    if (event.altKey) {
-      const shortcuts: { [key: string]: string } = {
-        'd': 'dashboard', 's': 'sales', 'p': 'production',
-        'e': 'employees', 'b': 'billinghub', 'r': 'reports'
-      };
-      const tab = shortcuts[event.key.toLowerCase()];
-      if (tab && this.accessibleTabs[tab]) {
-        event.preventDefault();
-        this.activeTab = tab;
-        sessionStorage.setItem('activeTab', tab);
-        this.loadDataForTab(tab);
       }
     }
   }

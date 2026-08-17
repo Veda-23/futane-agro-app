@@ -2,7 +2,7 @@ import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from
 import { catchError, throwError } from 'rxjs';
 
 export const jwtInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: HttpHandlerFn) => {
-  const token = sessionStorage.getItem('jwtToken') || localStorage.getItem('jwtToken');
+  const token = sessionStorage.getItem('jwtToken') || localStorage.getItem('jwtToken') || localStorage.getItem('erp_token');
   
   const headers: { [key: string]: string } = {
     'bypass-tunnel-reminder': 'true'
@@ -24,6 +24,7 @@ export const jwtInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: H
         sessionStorage.clear();
         localStorage.removeItem('user');
         localStorage.removeItem('jwtToken');
+        localStorage.removeItem('erp_token');
         document.cookie = "erp_session_cookie=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         
         // Reload to force back to login screen

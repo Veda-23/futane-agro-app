@@ -44,7 +44,7 @@ public class SecurityConfig {
             .antMatchers("/api/users/login", "/api/users/login/verify", "/api/users/verify-session").permitAll()
             .antMatchers("/api/webhooks/razorpay").permitAll() // Razorpay webhook — no JWT possible
             .antMatchers("/api/uploads/**").permitAll() // Serve public files
-            .antMatchers("/api/health").permitAll() // Health Check Endpoint
+            .antMatchers("/api/health", "/api/env").permitAll() // Health & Env Check Endpoints
             .antMatchers("/actuator/**").permitAll() // Actuator Prometheus Metrics
             
             // Administrative Endpoints

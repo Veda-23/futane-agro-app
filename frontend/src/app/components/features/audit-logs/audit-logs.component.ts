@@ -16,9 +16,13 @@ export class AuditLogsComponent implements OnInit {
   @Input() activeTab: string = 'audit-logs';
 
   auditLogsList: any[] = [];
-  filterAction = '';
-  filterUser = '';
-  searchQuery = '';
+  auditFilter = {
+    fromDate: '',
+    toDate: '',
+    action: '',
+    tableName: '',
+    username: ''
+  };
 
   constructor(private apiService: ApiService) {}
 
@@ -36,23 +40,24 @@ export class AuditLogsComponent implements OnInit {
     });
   }
 
+  get uniqueTableNames(): string[] {
+    return [...new Set(this.auditLogsList.map(l => l.tableName).filter(Boolean))].sort();
+  }
+
+  clearAuditFilters() {
+    this.auditFilter = { fromDate: '', toDate: '', action: '', tableName: '', username: '' };
+  }
+
   get filteredAuditLogs(): any[] {
-    let list = this.auditLogsList || [];
-    if (this.filterAction) {
-      list = list.filter(l => (l.action || '').toLowerCase().includes(this.filterAction.toLowerCase()));
-    }
-    if (this.filterUser) {
-      list = list.filter(l => (l.username || '').toLowerCase().includes(this.filterUser.toLowerCase()));
-    }
-    if (this.searchQuery && this.searchQuery.trim()) {
-      const q = this.searchQuery.toLowerCase().trim();
-      list = list.filter(l =>
-        (l.action || '').toLowerCase().includes(q) ||
-        (l.username || '').toLowerCase().includes(q) ||
-        (l.tableName || '').toLowerCase().includes(q)
-      );
-    }
-    return list;
+    return (this.auditLogsList || []).filter(log => {
+      const createdAt = new Date(log.timestamp || log.createdAt);
+      if (this.auditFilter.fromDate && createdAt < new Date(this.auditFilter.fromDate)) return false;
+      if (this.auditFilter.toDate && createdAt > new Date(this.auditFilter.toDate + 'T23:59:59')) return false;
+      if (this.auditFilter.action && !log.action?.toLowerCase().includes(this.auditFilter.action.toLowerCase())) return false;
+      if (this.auditFilter.tableName && log.tableName !== this.auditFilter.tableName) return false;
+      if (this.auditFilter.username && !log.username?.toLowerCase().includes(this.auditFilter.username.toLowerCase())) return false;
+      return true;
+    });
   }
 }
 

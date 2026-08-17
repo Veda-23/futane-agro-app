@@ -15,8 +15,12 @@
       <div class="form-group">
         <label>{{ 'label.select_sale' | translate:currentLang }}</label>
         <select [(ngModel)]="dispatchForm.id" name="dSale" required>
+          <option value="">-- Select Sale --</option>
           <option *ngFor="let s of availableSalesForDispatch" [value]="s.id">{{ s.party?.partyName || s.partyName || 'Sale #' + s.id }} - {{ s.crateType }} ({{ s.date }})</option>
         </select>
+        <small *ngIf="availableSalesForDispatch.length === 0" style="color:var(--accent-warning); font-size: 11px; display: block; margin-top: 4px;">
+          ⚠️ All sales have been dispatched already.
+        </small>
       </div>
       <div class="form-group">
         <label>{{ 'dispatch.date' | translate:currentLang }}</label>
@@ -48,7 +52,21 @@
   <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
     <h3>{{ 'dispatch.records_title' | translate:currentLang }}</h3>
     
-    <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
+    <!-- Skeleton Loader (A-01) -->
+    <div *ngIf="isLoading" class="skeleton-container" aria-busy="true" aria-label="Loading dispatch data...">
+      <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5,6]"></div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="!isLoading && hasError" class="empty-state" style="padding:40px; text-align:center;">
+      <div style="font-size:48px; margin-bottom:12px;">⚠️</div>
+      <h3 style="color: var(--text-primary);">Failed to Load Dispatch Data</h3>
+      <p style="color: var(--text-secondary); margin-bottom:16px;">Could not connect to the server. Please check your connection.</p>
+      <button class="btn btn-primary" (click)="loadData()">🔄 Retry</button>
+    </div>
+
+    <div *ngIf="!isLoading && !hasError">
+      <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
       <div class="column-visibility-dropdown" style="position:relative;">
         <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('dispatch')" style="padding: 6px 12px; font-size: 13px;">
           ⚙️ Columns
@@ -100,6 +118,7 @@
         </button>
       </div>
     </div>
+  </div>
   </div>
 </div>
 

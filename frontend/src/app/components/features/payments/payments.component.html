@@ -21,8 +21,15 @@
         <div class="form-group">
           <label>{{ 'label.select_party' | translate:currentLang }}</label>
           <select [(ngModel)]="paymentsForm.id" name="payParty" required>
+            <option value="">-- Select Party --</option>
             <option *ngFor="let party of parties" [value]="party.id">{{ party.partyName }}</option>
           </select>
+        </div>
+        <div class="form-group" *ngIf="paymentsForm.id">
+          <label style="font-size:11px; color:var(--text-secondary);">Outstanding Balance</label>
+          <div style="background:rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); border-radius:6px; padding:6px 12px; font-weight:700; color:var(--accent-green); font-size:13px;">
+            ₹{{ getOutstandingBalance(paymentsForm.id) | number:'1.2-2' }}
+          </div>
         </div>
         <div class="form-group">
           <label>{{ 'payments.invoice_ref' | translate:currentLang }}</label>
@@ -33,7 +40,7 @@
         </div>
         <div class="form-group">
           <label>{{ 'payments.amount' | translate:currentLang }}</label>
-          <input appAutoSelect type="number" step="0.01" [(ngModel)]="paymentsForm.amountReceived" name="payAmt" required>
+          <input appAutoSelect type="number" step="0.01" [(ngModel)]="paymentsForm.amountReceived" name="payAmt" required min="1">
         </div>
         <div class="form-group">
           <label>{{ 'payments.mode' | translate:currentLang }}</label>
@@ -50,7 +57,21 @@
     <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
       <h3>{{ 'payments.records_title' | translate:currentLang }}</h3>
       
-      <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
+      <!-- Skeleton Loader (A-01) -->
+      <div *ngIf="isLoading" class="skeleton-container" aria-busy="true" aria-label="Loading payments...">
+        <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5,6]"></div>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="!isLoading && hasError" class="empty-state" style="padding:40px; text-align:center;">
+        <div style="font-size:48px; margin-bottom:12px;">⚠️</div>
+        <h3 style="color: var(--text-primary);">Failed to Load Payments Data</h3>
+        <p style="color: var(--text-secondary); margin-bottom:16px;">Could not connect to the server. Please check your connection.</p>
+        <button class="btn btn-primary" (click)="loadData()">🔄 Retry</button>
+      </div>
+
+      <div *ngIf="!isLoading && !hasError">
+        <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
         <div class="column-visibility-dropdown" style="position:relative;">
           <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('payments')" style="padding: 6px 12px; font-size: 13px;">
             ⚙️ Columns
@@ -102,6 +123,7 @@
           </button>
         </div>
       </div>
+    </div>
     </div>
   </div>
 </div>

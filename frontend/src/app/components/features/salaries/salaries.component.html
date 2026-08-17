@@ -50,61 +50,75 @@
   <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
     <h3>{{ 'sal.records_title' | translate:currentLang }}</h3>
     
-    <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
-      <div class="column-visibility-dropdown" style="position:relative;">
-        <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('salaries')" style="padding: 6px 12px; font-size: 13px;">
-          ⚙️ Columns
-        </button>
-        <div class="dropdown-menu" *ngIf="showColDropdown['salaries']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
-          <label *ngFor="let col of getTableColumns('salaries')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-            <input appAutoSelect type="checkbox" [checked]="isColumnVisible('salaries', col)" (change)="toggleColumn('salaries', col)" style="width:auto; margin:0; cursor:pointer;">
-            {{col}}
-          </label>
+    <!-- Skeleton Loader (A-01) -->
+    <div *ngIf="isLoading" class="skeleton-container" aria-busy="true" aria-label="Loading salaries...">
+      <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5,6]"></div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="!isLoading && hasError" class="empty-state" style="padding:40px; text-align:center;">
+      <div style="font-size:48px; margin-bottom:12px;">⚠️</div>
+      <h3 style="color: var(--text-primary);">Failed to Load Salaries</h3>
+      <p style="color: var(--text-secondary); margin-bottom:16px;">Could not connect to the server. Please check your connection.</p>
+      <button class="btn btn-primary" (click)="loadData()">🔄 Retry</button>
+    </div>
+
+    <div *ngIf="!isLoading && !hasError">
+      <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
+        <div class="column-visibility-dropdown" style="position:relative;">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('salaries')" style="padding: 6px 12px; font-size: 13px;">
+            ⚙️ Columns
+          </button>
+          <div class="dropdown-menu" *ngIf="showColDropdown['salaries']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
+            <label *ngFor="let col of getTableColumns('salaries')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
+              <input appAutoSelect type="checkbox" [checked]="isColumnVisible('salaries', col)" (change)="toggleColumn('salaries', col)" style="width:auto; margin:0; cursor:pointer;">
+              {{col}}
+            </label>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th *ngIf="isColumnVisible('salaries', 'Name')" (click)="setSort('employee.empName')" style="cursor:pointer;">{{ 'hr.name' | translate:currentLang }} <span *ngIf="sortField === 'employee.empName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('salaries', 'Month/Year')" (click)="setSort('month')" style="cursor:pointer;">{{ 'sal.month' | translate:currentLang }} <span *ngIf="sortField === 'month'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('salaries', 'Amount')" (click)="setSort('salaryAmount')" style="cursor:pointer;">{{ 'sal.amount' | translate:currentLang }} <span *ngIf="sortField === 'salaryAmount'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('salaries', 'Date')" (click)="setSort('paidDate')" style="cursor:pointer;">{{ 'sal.date' | translate:currentLang }} <span *ngIf="sortField === 'paidDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('salaries', 'Status')" (click)="setSort('status')" style="cursor:pointer;">{{ 'label.status' | translate:currentLang }} <span *ngIf="sortField === 'status'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('salaries', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let sal of getProcessedList(salariesList, 'salaries')">
-            <td *ngIf="isColumnVisible('salaries', 'Name')">{{ sal.employee.empName }}</td>
-            <td *ngIf="isColumnVisible('salaries', 'Month/Year')">{{ sal.month }} / {{ sal.year }}</td>
-            <td *ngIf="isColumnVisible('salaries', 'Amount')"><strong>₹{{ sal.salaryAmount }}</strong></td>
-            <td *ngIf="isColumnVisible('salaries', 'Date')">{{ sal.paidDate || 'N/A' }}</td>
-            <td *ngIf="isColumnVisible('salaries', 'Status')">
-              <span class="badge badge-success" *ngIf="sal.status === 'Paid'">Paid</span>
-              <span class="badge badge-warning" *ngIf="sal.status === 'Pending'">Pending</span>
-            </td>
-            <td *ngIf="isColumnVisible('salaries', 'Actions')">
-              <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteSalary(sal.id)">{{ 'btn.delete' | translate:currentLang }}</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
-      <span style="font-size:13px; color:var(--text-secondary);">
-        Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['salaries'] || 0) }} of {{ tableFilteredCounts['salaries'] || 0 }} entries
-      </span>
-      <div style="display:flex; gap:8px;">
-        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
-          Previous
-        </button>
-        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['salaries'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
-          Next
-        </button>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th *ngIf="isColumnVisible('salaries', 'Name')" (click)="setSort('employee.empName')" style="cursor:pointer;">{{ 'hr.name' | translate:currentLang }} <span *ngIf="sortField === 'employee.empName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('salaries', 'Month/Year')" (click)="setSort('month')" style="cursor:pointer;">{{ 'sal.month' | translate:currentLang }} <span *ngIf="sortField === 'month'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('salaries', 'Amount')" (click)="setSort('salaryAmount')" style="cursor:pointer;">{{ 'sal.amount' | translate:currentLang }} <span *ngIf="sortField === 'salaryAmount'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('salaries', 'Date')" (click)="setSort('paidDate')" style="cursor:pointer;">{{ 'sal.date' | translate:currentLang }} <span *ngIf="sortField === 'paidDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('salaries', 'Status')" (click)="setSort('status')" style="cursor:pointer;">{{ 'label.status' | translate:currentLang }} <span *ngIf="sortField === 'status'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('salaries', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let sal of getProcessedList(salariesList, 'salaries')">
+              <td *ngIf="isColumnVisible('salaries', 'Name')">{{ sal.employee.empName }}</td>
+              <td *ngIf="isColumnVisible('salaries', 'Month/Year')">{{ sal.month }} / {{ sal.year }}</td>
+              <td *ngIf="isColumnVisible('salaries', 'Amount')"><strong>₹{{ sal.salaryAmount }}</strong></td>
+              <td *ngIf="isColumnVisible('salaries', 'Date')">{{ sal.paidDate || 'N/A' }}</td>
+              <td *ngIf="isColumnVisible('salaries', 'Status')">
+                <span class="badge badge-success" *ngIf="sal.status === 'Paid'">Paid</span>
+                <span class="badge badge-warning" *ngIf="sal.status === 'Pending'">Pending</span>
+              </td>
+              <td *ngIf="isColumnVisible('salaries', 'Actions')">
+                <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteSalary(sal.id)">{{ 'btn.delete' | translate:currentLang }}</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
+        <span style="font-size:13px; color:var(--text-secondary);">
+          Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['salaries'] || 0) }} of {{ tableFilteredCounts['salaries'] || 0 }} entries
+        </span>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+            Previous
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['salaries'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+            Next
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </div>
-

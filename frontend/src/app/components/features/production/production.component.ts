@@ -8,6 +8,8 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
 
+import { forkJoin } from 'rxjs';
+
 @Component({
   selector: 'app-production',
   standalone: true,
@@ -19,6 +21,9 @@ export class ProductionComponent implements OnInit {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'production';
   @Input() loggedInUser: any = null;
+
+  isLoading = true;
+  hasError = false;
 
   Math = Math;
 
@@ -45,9 +50,30 @@ export class ProductionComponent implements OnInit {
     this.loadData();
   }
 
+  recalculateTotal() {
+    const s = Number(this.ppdForm.successful) || 0;
+    const r = Number(this.ppdForm.rejected) || 0;
+    this.ppdForm.totalProduction = s + r;
+  }
+
   loadData() {
-    this.apiService.getPpd().subscribe((list: any[]) => this.ppdList = list);
-    this.apiService.getPpm().subscribe((list: any[]) => this.ppmList = list);
+    this.isLoading = true;
+    this.hasError = false;
+    forkJoin({
+      ppd: this.apiService.getPpd(),
+      ppm: this.apiService.getPpm()
+    }).subscribe({
+      next: ({ ppd, ppm }) => {
+        this.ppdList = ppd || [];
+        this.ppmList = ppm || [];
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.hasError = true;
+        this.notificationService.error('Load Failed', 'Could not load production data.');
+      }
+    });
   }
 
   isViewer(): boolean {

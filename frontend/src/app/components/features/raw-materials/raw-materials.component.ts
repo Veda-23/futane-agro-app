@@ -8,6 +8,8 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
 
+import { forkJoin } from 'rxjs';
+
 @Component({
   selector: 'app-raw-materials',
   standalone: true,
@@ -19,6 +21,9 @@ export class RawMaterialsComponent implements OnInit {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'raw-materials';
   @Input() loggedInUser: any = null;
+
+  isLoading = true;
+  hasError = false;
 
   rawMaterialsList: any[] = [];
   vendors: any[] = [];
@@ -46,11 +51,30 @@ export class RawMaterialsComponent implements OnInit {
     });
   }
 
+  get computedAmount(): number {
+    const w = Number(this.rawMaterialsForm.weight) || 0;
+    const r = Number(this.rawMaterialsForm.rate) || 0;
+    return +(w * r).toFixed(2);
+  }
+
   loadData() {
-    this.apiService.getVendors().subscribe((res: any[]) => this.vendors = res);
-    this.apiService.getRawMaterials().subscribe((res: any[]) => {
-      this.rawMaterialsList = res;
-      this.tableFilteredCounts['raw'] = this.rawMaterialsList.length;
+    this.isLoading = true;
+    this.hasError = false;
+    forkJoin({
+      vendors: this.apiService.getVendors(),
+      rawMaterials: this.apiService.getRawMaterials()
+    }).subscribe({
+      next: ({ vendors, rawMaterials }) => {
+        this.vendors = vendors || [];
+        this.rawMaterialsList = rawMaterials || [];
+        this.tableFilteredCounts['raw'] = this.rawMaterialsList.length;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.hasError = true;
+        this.notificationService.error('Load Failed', 'Could not load raw materials data.');
+      }
     });
   }
 

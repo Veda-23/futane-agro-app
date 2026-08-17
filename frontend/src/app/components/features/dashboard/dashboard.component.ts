@@ -180,6 +180,37 @@ export class DashboardComponent implements OnInit, OnDestroy {
           }
         });
       }
+
+      // Render mini sparklines for KPI cards (D-01)
+      this.renderSparkline('sparkline-prod', [120, 145, 130, 165, 180, 150, 195], 'rgb(139, 92, 246)');
+      this.renderSparkline('sparkline-sales', [45000, 52000, 48000, 61000, 59000, 72000, 85000], 'rgb(16, 185, 129)');
+      this.renderSparkline('sparkline-pending', [25000, 22000, 29000, 21000, 18000, 19000, 15000], 'rgb(239, 68, 68)');
+    });
+  }
+
+  renderSparkline(canvasId: string, data: number[], color: string) {
+    const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
+    if (!canvas) return;
+    new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: data.map((_, i) => i),
+        datasets: [{
+          data,
+          borderColor: color,
+          borderWidth: 2,
+          fill: true,
+          backgroundColor: color.replace('rgb', 'rgba').replace(')', ',0.15)'),
+          tension: 0.4,
+          pointRadius: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        scales: { x: { display: false }, y: { display: false } }
+      }
     });
   }
 

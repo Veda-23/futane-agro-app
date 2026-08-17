@@ -9,6 +9,8 @@ import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
 import { DataTableComponent } from '../../data-table/data-table.component';
 
+import { forkJoin } from 'rxjs';
+
 @Component({
   selector: 'app-payments',
   standalone: true,
@@ -20,6 +22,9 @@ export class PaymentsComponent implements OnInit {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'payments';
   @Input() loggedInUser: any = null;
+
+  isLoading = true;
+  hasError = false;
 
   paymentsList: any[] = [];
   parties: any[] = [];
@@ -49,12 +54,27 @@ export class PaymentsComponent implements OnInit {
   }
 
   loadData() {
-    this.apiService.getParties().subscribe((res: any[]) => this.parties = res);
-    this.apiService.getInvoices().subscribe((res: any[]) => this.invoicesList = res);
-    this.apiService.getSales().subscribe((res: any[]) => this.salesList = res || []);
-    this.apiService.getPayments().subscribe((res: any[]) => {
-      this.paymentsList = res;
-      this.tableFilteredCounts['payments'] = this.paymentsList.length;
+    this.isLoading = true;
+    this.hasError = false;
+    forkJoin({
+      parties: this.apiService.getParties(),
+      invoices: this.apiService.getInvoices(),
+      sales: this.apiService.getSales(),
+      payments: this.apiService.getPayments()
+    }).subscribe({
+      next: ({ parties, invoices, sales, payments }) => {
+        this.parties = parties || [];
+        this.invoicesList = invoices || [];
+        this.salesList = sales || [];
+        this.paymentsList = payments || [];
+        this.tableFilteredCounts['payments'] = this.paymentsList.length;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.hasError = true;
+        this.notificationService.error('Load Failed', 'Could not load payments data.');
+      }
     });
   }
 
