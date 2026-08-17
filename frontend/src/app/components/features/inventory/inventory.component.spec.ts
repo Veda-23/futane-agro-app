@@ -14,8 +14,10 @@ describe('InventoryComponent', () => {
   ];
 
   beforeEach(async () => {
-    mockApiService = jasmine.createSpyObj('ApiService', ['getInventory']);
+    mockApiService = jasmine.createSpyObj('ApiService', ['getInventory', 'getRawMaterials', 'getPpd']);
     mockApiService.getInventory.and.returnValue(of(mockInventory));
+    mockApiService.getRawMaterials.and.returnValue(of([]));
+    mockApiService.getPpd.and.returnValue(of([]));
 
     await TestBed.configureTestingModule({
       imports: [InventoryComponent, HttpClientTestingModule],

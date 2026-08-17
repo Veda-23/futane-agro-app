@@ -3,20 +3,26 @@ import { AppComponent } from './app.component';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ApiService } from './api.service';
 import { NotificationService } from './services/notification.service';
-import { of } from 'rxjs';
+import { WebSocketService } from './services/websocket.service';
+import { of, EMPTY } from 'rxjs';
 
 describe('AppComponent — Auth Flow', () => {
   let component: AppComponent;
   let fixture: ComponentFixture<AppComponent>;
   let mockApi: jasmine.SpyObj<ApiService>;
+  let mockWs: any;
 
   beforeEach(async () => {
+    mockWs = {
+      updates$: EMPTY
+    };
+
     mockApi = jasmine.createSpyObj('ApiService', [
       'login', 'verifyOtp', 'getParties', 'getSales', 'getEmployees',
       'getPpd', 'getInventory', 'getSettings', 'getAuditLogs', 'getSalaries',
       'getTransports', 'getPayments', 'getExpenses', 'getMachines', 'getMachineBreakdowns',
       'getDispatches', 'getVendors', 'getRawMaterials', 'getBankTransactions', 'getUsers',
-      'getInvoices', 'getStats', 'getCharts', 'getSystemHealth'
+      'getInvoices', 'getStats', 'getCharts', 'getSystemHealth', 'getDrivers'
     ]);
     mockApi.getSettings.and.returnValue(of([]));
     mockApi.getParties.and.returnValue(of([]));
@@ -40,11 +46,13 @@ describe('AppComponent — Auth Flow', () => {
     mockApi.getStats.and.returnValue(of({}));
     mockApi.getCharts.and.returnValue(of({}));
     mockApi.getSystemHealth.and.returnValue(of({ status: 'UP' }));
+    mockApi.getDrivers.and.returnValue(of([]));
 
     await TestBed.configureTestingModule({
       imports: [AppComponent, HttpClientTestingModule],
       providers: [
         { provide: ApiService, useValue: mockApi },
+        { provide: WebSocketService, useValue: mockWs },
         NotificationService
       ]
     }).compileComponents();

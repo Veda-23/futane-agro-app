@@ -31,6 +31,7 @@ export class SalesComponent implements OnInit {
 
   salesList: any[] = [];
   parties: any[] = [];
+  Math = Math;
   salesForm = { date: '', id: '', crateType: 'Apple Crate', crateMaterial: 'Plastic', quantity: 0, rate: 0, totalAmount: 0, paid: 0, remaining: 0 };
 
   // Pagination & Sort state for local logic if needed

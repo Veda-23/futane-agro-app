@@ -30,6 +30,7 @@ export class PaymentsComponent implements OnInit {
   parties: any[] = [];
   invoicesList: any[] = [];
   salesList: any[] = [];
+  Math = Math;
   
   paymentsForm = { id: '', invoiceNo: '', amountReceived: 0, paymentMode: 'UPI', paymentDate: '' };
 

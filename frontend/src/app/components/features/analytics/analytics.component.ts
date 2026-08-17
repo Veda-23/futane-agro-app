@@ -7,6 +7,7 @@ import { NotificationService } from '../../../services/notification.service';
 import { TranslatePipe } from '../../../translate.service';
 import { AutoSelectDirective } from '../../../directives/auto-select.directive';
 import { FormStateDirective } from '../../../directives/form-state.directive';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-analytics',
@@ -48,7 +49,7 @@ export class AnalyticsComponent implements OnInit {
         this.powerBiSimulatorActive = false;
         this.powerBiEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(biSetting.settingValue);
       } else {
-        const defaultGrafanaUrl = 'https://80-225-192-171.sslip.io/monitoring/dashboards/f/ffr4fw1rmgr9cb/system-and-infra?orgId=1&kiosk=tv&refresh=10s';
+        const defaultGrafanaUrl = (environment as any).grafanaUrl || 'https://80-225-192-171.sslip.io/monitoring/dashboards/f/ffr4fw1rmgr9cb/system-and-infra?orgId=1&kiosk=tv&refresh=10s';
         this.powerBiUrlInput = defaultGrafanaUrl;
         this.powerBiSimulatorActive = false;
         this.powerBiEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(defaultGrafanaUrl);

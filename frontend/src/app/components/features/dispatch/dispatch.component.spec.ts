@@ -17,7 +17,7 @@ describe('DispatchComponent', () => {
 
   beforeEach(async () => {
     mockApiService = jasmine.createSpyObj('ApiService', ['getSales', 'getDispatches', 'createDispatch', 'deleteDispatch', 'createAuditLog']);
-    mockNotificationService = jasmine.createSpyObj('NotificationService', ['success', 'error', 'warning', 'info', 'confirmAction']);
+    mockNotificationService = jasmine.createSpyObj('NotificationService', ['success', 'error', 'warning', 'info', 'confirmAction', 'showValidationError', 'showSaveSuccess', 'showDeleteSuccess', 'showSessionExpired']);
 
     mockApiService.getSales.and.returnValue(of([]));
     mockApiService.getDispatches.and.returnValue(of(mockDispatches));
@@ -47,7 +47,7 @@ describe('DispatchComponent', () => {
   it('should validate form before saving', () => {
     component.dispatchForm = { id: '', dispatchDate: '', vehicleNumber: '', driverName: '', deliveryAddress: '', dispatchStatus: 'Pending' };
     component.saveDispatch();
-    expect(mockNotificationService.warning).toHaveBeenCalled();
+    expect(mockNotificationService.showValidationError).toHaveBeenCalled();
   });
 
   it('should handle API load error', () => {

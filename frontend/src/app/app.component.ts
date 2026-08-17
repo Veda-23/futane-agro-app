@@ -347,11 +347,8 @@ export class AppComponent implements OnInit {
     this.currentLang = this.translateService.getCurrentLanguage();
     this.translateService.language$.subscribe(lang => this.currentLang = lang);
 
-    this.customBackendUrl = localStorage.getItem('backend_url') || environment.apiUrl;
-
-    if ((environment as any).grafanaUrl) {
-      this.sanitizer.bypassSecurityTrustResourceUrl((environment as any).grafanaUrl);
-    }
+    const defaultGrafanaUrl = (environment as any).grafanaUrl || 'https://80-225-192-171.sslip.io/monitoring/dashboards/f/ffr4fw1rmgr9cb/system-and-infra?orgId=1&kiosk=tv&refresh=10s';
+    this.grafanaEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(defaultGrafanaUrl);
 
     this.initSettingsList();
 
@@ -811,6 +808,21 @@ export class AppComponent implements OnInit {
         this.apiService.getPayments().subscribe({ next: list => this.paymentsList = list });
         this.apiService.getExpenses().subscribe({ next: list => this.expensesList = list });
         this.apiService.getSalaries().subscribe({ next: list => this.salariesList = list });
+        break;
+      case 'analytics':
+        this.apiService.getSettings().subscribe({
+          next: (list: any[]) => {
+            const biSetting = list ? list.find((s: any) => s.settingKey === 'powerbi_embed_url') : null;
+            const targetUrl = (biSetting && biSetting.settingValue)
+              ? biSetting.settingValue
+              : ((environment as any).grafanaUrl || 'https://80-225-192-171.sslip.io/monitoring/dashboards/f/ffr4fw1rmgr9cb/system-and-infra?orgId=1&kiosk=tv&refresh=10s');
+            this.grafanaEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(targetUrl);
+          },
+          error: () => {
+            const defaultUrl = (environment as any).grafanaUrl || 'https://80-225-192-171.sslip.io/monitoring/dashboards/f/ffr4fw1rmgr9cb/system-and-infra?orgId=1&kiosk=tv&refresh=10s';
+            this.grafanaEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(defaultUrl);
+          }
+        });
         break;
       case 'settings':
         if (this.loggedInUser && this.loggedInUser.role === 'SUPER_ADMIN') {

@@ -11,13 +11,14 @@ describe('BillingHubComponent', () => {
   let mockApiService: jasmine.SpyObj<ApiService>;
 
   beforeEach(async () => {
-    mockApiService = jasmine.createSpyObj('ApiService', ['getSales', 'getDispatches', 'getPayments', 'getRawMaterials', 'getTransports', 'getSalaries', 'createAuditLog']);
+    mockApiService = jasmine.createSpyObj('ApiService', ['getSales', 'getDispatches', 'getPayments', 'getRawMaterials', 'getTransports', 'getSalaries', 'createAuditLog', 'getSettings']);
     mockApiService.getSales.and.returnValue(of([]));
     mockApiService.getDispatches.and.returnValue(of([]));
     mockApiService.getPayments.and.returnValue(of([]));
     mockApiService.getRawMaterials.and.returnValue(of([]));
     mockApiService.getTransports.and.returnValue(of([]));
     mockApiService.getSalaries.and.returnValue(of([]));
+    mockApiService.getSettings.and.returnValue(of([]));
 
     await TestBed.configureTestingModule({
       imports: [BillingHubComponent, HttpClientTestingModule],

@@ -1,5 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Client, Message } from '@stomp/stompjs';
+
+// Browser polyfill for sockjs-client
+if (typeof (window as any) !== 'undefined' && !(window as any).global) {
+  (window as any).global = window;
+}
+
 // @ts-ignore
 import SockJS from 'sockjs-client';
 import { Subject, Observable } from 'rxjs';
