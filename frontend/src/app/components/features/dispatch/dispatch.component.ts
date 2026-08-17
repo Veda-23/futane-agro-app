@@ -7,12 +7,14 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
 
+import { QrScannerModalComponent } from '../../shared/qr-scanner-modal/qr-scanner-modal.component';
+
 import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-dispatch',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective, QrScannerModalComponent],
   templateUrl: './dispatch.component.html',
   styleUrls: ['./dispatch.component.css']
 })
@@ -23,6 +25,7 @@ export class DispatchComponent implements OnInit {
 
   isLoading = true;
   hasError = false;
+  showScannerModal = false;
 
   salesList: any[] = [];
   dispatchesList: any[] = [];
@@ -84,6 +87,37 @@ export class DispatchComponent implements OnInit {
   get availableSalesForDispatch(): any[] {
     const dispatchedSaleIds = new Set(this.dispatchesList.map(d => d.sale?.id || d.saleId));
     return this.salesList.filter(s => !dispatchedSaleIds.has(s.id));
+  }
+
+  openScanner() {
+    this.showScannerModal = true;
+  }
+
+  closeScanner() {
+    this.showScannerModal = false;
+  }
+
+  onQrScanned(code: string) {
+    this.showScannerModal = false;
+    if (!code) return;
+
+    // Parse scanned QR code: either an ID number, JSON object, or batch text
+    const cleanCode = code.trim();
+    const matchedSale = this.availableSalesForDispatch.find(s => 
+      String(s.id) === cleanCode || 
+      (s.invoiceNo && s.invoiceNo.toLowerCase().includes(cleanCode.toLowerCase()))
+    );
+
+    if (matchedSale) {
+      this.dispatchForm.id = String(matchedSale.id);
+      if (!this.dispatchForm.deliveryAddress && matchedSale.party?.address) {
+        this.dispatchForm.deliveryAddress = matchedSale.party.address;
+      }
+      this.notificationService.success('QR Scanned', `Matched Sale Order #${matchedSale.id} (${matchedSale.crateType})`);
+    } else {
+      // Try setting vehicle number or delivery note
+      this.notificationService.info('QR Decoded', `Scanned Value: ${cleanCode}`);
+    }
   }
 
   validateForm(): boolean {

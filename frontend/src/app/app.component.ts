@@ -600,6 +600,34 @@ export class AppComponent implements OnInit {
     }
   }
 
+  // Predictive AI & Raw Material Shortfall Algorithm (Y-01)
+  get materialShortfallPrediction(): any[] {
+    const avgKgPerCrate = 1.85; // Average HDPE granular weight per crate
+    const avgDailyCrateProduction = this.calculateAvgDailyProduction();
+    const dailyMaterialBurnoutKg = avgDailyCrateProduction * avgKgPerCrate;
+
+    return (this.rawMaterialsList || []).map((rm: any) => {
+      const currentStock = rm.weight || rm.quantity || 0;
+      const daysRemaining = dailyMaterialBurnoutKg > 0
+        ? Math.floor(currentStock / dailyMaterialBurnoutKg)
+        : 999;
+
+      return {
+        material: rm.materialName || rm.materialType || 'HDPE Granules',
+        currentStock,
+        burnoutRatePerDay: dailyMaterialBurnoutKg.toFixed(1),
+        daysRemaining,
+        riskLevel: daysRemaining <= 3 ? 'CRITICAL' : daysRemaining <= 7 ? 'WARNING' : 'HEALTHY'
+      };
+    });
+  }
+
+  calculateAvgDailyProduction(): number {
+    if (!this.ppdList || this.ppdList.length === 0) return 150;
+    const total = this.ppdList.slice(0, 14).reduce((sum, p) => sum + (p.totalProduction || p.successful || 0), 0);
+    return Math.max(50, Math.round(total / Math.min(this.ppdList.length, 14)));
+  }
+
   saveCustomBackendUrl() {
     if (this.customBackendUrl && this.customBackendUrl.trim() !== '') {
       localStorage.setItem('backend_url', this.customBackendUrl.trim());

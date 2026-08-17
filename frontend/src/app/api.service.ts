@@ -335,5 +335,18 @@ export class ApiService {
   runRestore(filename: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/settings/restore`, { filename });
   }
+
+  // Tally Prime XML Export (Z-02)
+  exportTallyXml(fromDate?: string, toDate?: string): Observable<string> {
+    let params = '';
+    if (fromDate && toDate) {
+      params = `?fromDate=${fromDate}&toDate=${toDate}`;
+    } else if (fromDate) {
+      params = `?fromDate=${fromDate}`;
+    } else if (toDate) {
+      params = `?toDate=${toDate}`;
+    }
+    return this.http.get(`${this.baseUrl}/reports/tally-xml${params}`, { responseType: 'text' });
+  }
 }
 

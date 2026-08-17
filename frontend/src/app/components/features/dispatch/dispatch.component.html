@@ -10,7 +10,12 @@
 
 <div class="grid-cols-3">
   <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
-    <h3 style="margin-bottom:14px;font-weight:700;">📤 {{ 'dispatch.title' | translate:currentLang }}</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <h3 style="margin:0; font-weight:700;">📤 {{ 'dispatch.title' | translate:currentLang }}</h3>
+      <button type="button" class="btn btn-secondary btn-sm" (click)="openScanner()" style="font-size:11px; display:inline-flex; align-items:center; gap:4px;">
+        📷 Scan QR
+      </button>
+    </div>
     <form (submit)="saveDispatch()">
       <div class="form-group">
         <label>{{ 'label.select_sale' | translate:currentLang }}</label>
@@ -121,4 +126,6 @@
   </div>
   </div>
 </div>
+
+<app-qr-scanner-modal *ngIf="showScannerModal" (scanned)="onQrScanned($event)" (close)="closeScanner()"></app-qr-scanner-modal>
 

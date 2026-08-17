@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.futaneagro.entity.*;
 import com.futaneagro.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -181,10 +182,33 @@ public class SalesController {
         });
     }
 
+    @Autowired
+    private com.futaneagro.service.TallyExportService tallyExportService;
+
     // --- Invoice Endpoints ---
     @GetMapping("/invoices")
     public List<Invoice> getAllInvoices() {
         return invoiceRepository.findAll();
+    }
+
+    // --- Tally Prime XML Export (Z-01) ---
+    @GetMapping(value = "/reports/tally-xml", produces = "application/xml")
+    public ResponseEntity<String> exportTallySalesXml(
+            @RequestParam(required = false) String fromDate,
+            @RequestParam(required = false) String toDate) {
+        List<Sales> sales = salesRepository.findAll();
+        if (fromDate != null && !fromDate.isEmpty()) {
+            LocalDate from = LocalDate.parse(fromDate);
+            sales.removeIf(s -> s.getDate() != null && s.getDate().isBefore(from));
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            LocalDate to = LocalDate.parse(toDate);
+            sales.removeIf(s -> s.getDate() != null && s.getDate().isAfter(to));
+        }
+        String xml = tallyExportService.generateTallySalesXml(sales);
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=Tally_Sales.xml")
+                .body(xml);
     }
 }
 

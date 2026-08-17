@@ -7,6 +7,7 @@ import { AutoSelectDirective } from '../../../directives/auto-select.directive';
 import { FormStateDirective } from '../../../directives/form-state.directive';
 import { InrPipe } from '../../../pipes/inr-currency.pipe';
 import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
+import { QrCodeComponent } from '../../shared/qr-code/qr-code.component';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import Swal from 'sweetalert2';
@@ -14,7 +15,7 @@ import Swal from 'sweetalert2';
 @Component({
   selector: 'app-billing-hub',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, DecimalPipe, AutoSelectDirective, FormStateDirective, InrPipe, IndianDatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, DecimalPipe, AutoSelectDirective, FormStateDirective, InrPipe, IndianDatePipe, QrCodeComponent],
   templateUrl: './billing-hub.component.html',
   styleUrls: ['./billing-hub.component.css']
 })
@@ -157,6 +158,15 @@ export class BillingHubComponent implements OnInit {
       grandTotal: baseAmount + gstAmount,
       isInterState
     };
+  }
+
+  // Dynamic NPCI Bharat UPI QR String Generator (V-01)
+  getUpiQrString(party: any, amount: number, invoiceNo: string): string {
+    const upiId = this.getSettingVal('company_upi_id') || 'futaneagro@okhdfcbank';
+    const payeeName = encodeURIComponent(this.getSettingVal('company_name') || 'Futane Agro Industries');
+    const note = encodeURIComponent(`Inv_${invoiceNo || 'BILL'}`);
+    const safeAmount = (amount && !isNaN(amount)) ? Number(amount).toFixed(2) : '0.00';
+    return `upi://pay?pa=${upiId}&pn=${payeeName}&am=${safeAmount}&tn=${note}&cu=INR`;
   }
 
   // Amount In Words Converter (F-04)

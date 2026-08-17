@@ -470,6 +470,24 @@
 
       <!-- 9. Inventory Management Tab -->
       <div *ngIf="activeTab === 'inventory'">
+        <!-- Predictive AI Shortfall Forecast Cards (Y-01) -->
+        <div *ngFor="let pred of materialShortfallPrediction" style="margin-bottom:12px;">
+          <div *ngIf="pred.riskLevel !== 'HEALTHY'"
+               class="glass-panel"
+               [style.border-left]="pred.riskLevel === 'CRITICAL' ? '4px solid #ef4444' : '4px solid #f59e0b'"
+               style="padding:14px 18px; display:flex; justify-content:space-between; align-items:center; background:var(--card-bg, rgba(255,255,255,0.05)); border-radius:10px;">
+            <div>
+              <span style="font-weight:700; font-size:14px;">🤖 AI Stock Forecast: {{ pred.material }}</span>
+              <div style="font-size:12px; color:var(--text-secondary, #94a3b8); margin-top:2px;">
+                {{ pred.currentStock }} kg in stock · Burn rate: {{ pred.burnoutRatePerDay }} kg/day · Estimated depletion in <strong [style.color]="pred.riskLevel === 'CRITICAL' ? '#ef4444' : '#f59e0b'">{{ pred.daysRemaining }} days</strong>
+              </div>
+            </div>
+            <button class="btn btn-warning btn-sm" (click)="switchTab('raw-materials')" style="padding:6px 14px; font-weight:600;">
+              📦 Re-order Now
+            </button>
+          </div>
+        </div>
+
         <div class="glass-panel" style="padding: 20px;">
           <div class="flex-header" style="display:flex; justify-content:space-between; margin-bottom: 15px;">
             <h3>📦 {{ 'inv.records_title' | translate:currentLang }}</h3>

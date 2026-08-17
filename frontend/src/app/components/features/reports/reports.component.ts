@@ -499,4 +499,24 @@ export class ReportsComponent implements OnInit, OnDestroy {
       this.notificationService.error('Export Error', 'Failed to generate PDF: ' + e.message);
     }
   }
+
+  // Tally Prime XML Export (Z-02)
+  downloadTallyXml() {
+    this.notificationService.info('Exporting', 'Generating Tally Prime XML...');
+    this.apiService.exportTallyXml(this.reportFilter.fromDate, this.reportFilter.toDate).subscribe({
+      next: (xmlData: string) => {
+        const blob = new Blob([xmlData], { type: 'application/xml;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Tally_Sales_${new Date().toISOString().split('T')[0]}.xml`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.notificationService.success('Export Ready', 'Tally Prime XML exported successfully.');
+      },
+      error: (err) => {
+        this.notificationService.error('Export Failed', err.message || 'Could not export Tally XML');
+      }
+    });
+  }
 }

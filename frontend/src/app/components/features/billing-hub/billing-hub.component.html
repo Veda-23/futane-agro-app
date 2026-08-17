@@ -335,6 +335,18 @@
             <span *ngIf="activeBillType==='transport_receipt'">{{ numberToWords(selectedBillRecord.rent) }}</span>
             <span *ngIf="activeBillType==='salary_slip'">{{ numberToWords(selectedBillRecord.salaryAmount) }}</span>
           </span>
+
+          <!-- Dynamic UPI QR Code for Tax Invoices (V-01, U-01) -->
+          <div *ngIf="activeBillType==='tax_invoice'||activeBillType==='proforma'" style="margin-top:12px; padding:10px 14px; border:1px dashed #d97706; border-radius:8px; background:#fffbeb; display:inline-flex; align-items:center; gap:12px;">
+            <app-qr-code [value]="getUpiQrString(selectedBillRecord.party, getGrandTotal(selectedBillRecord.quantity*selectedBillRecord.rate), currentDocumentNumber)" [size]="90"></app-qr-code>
+            <div>
+              <div style="font-size:11px; font-weight:700; color:#b45309;">⚡ Scan & Pay with any UPI App</div>
+              <div style="font-size:10px; color:#64748b;">GPay / PhonePe / Paytm / BHIM</div>
+              <div style="font-size:11px; font-weight:600; color:#1e293b; margin-top:2px;">
+                Amount: ₹{{ getGrandTotal(selectedBillRecord.quantity*selectedBillRecord.rate) | number:'1.2-2' }}
+              </div>
+            </div>
+          </div>
         </div>
         <div style="text-align:right;font-size:13px;color:#1f2937;line-height:1.8;">
           <div *ngIf="activeBillType==='tax_invoice'||activeBillType==='proforma'">
