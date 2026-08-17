@@ -73,6 +73,7 @@
               <th *ngIf="isColumnVisible('ppd', 'Total Production')" (click)="setSort('totalProduction')" style="cursor:pointer;">{{ 'ppd.totalProduction' | translate:currentLang }} <span *ngIf="sortField === 'totalProduction'">{{ sortAsc ? '▲' : '▼' }}</span></th>
               <th *ngIf="isColumnVisible('ppd', 'Successful')" (click)="setSort('successful')" style="cursor:pointer;">{{ 'ppd.successful' | translate:currentLang }} <span *ngIf="sortField === 'successful'">{{ sortAsc ? '▲' : '▼' }}</span></th>
               <th *ngIf="isColumnVisible('ppd', 'Rejected')" (click)="setSort('rejected')" style="cursor:pointer;">{{ 'ppd.rejected' | translate:currentLang }} <span *ngIf="sortField === 'rejected'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th>Efficiency</th>
               <th *ngIf="isColumnVisible('ppd', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
             </tr>
           </thead>
@@ -83,6 +84,13 @@
               <td *ngIf="isColumnVisible('ppd', 'Total Production')">{{ ppd.totalProduction }}</td>
               <td *ngIf="isColumnVisible('ppd', 'Successful')"><span class="badge badge-success">{{ ppd.successful }}</span></td>
               <td *ngIf="isColumnVisible('ppd', 'Rejected')"><span class="badge badge-danger">{{ ppd.rejected }}</span></td>
+              <td>
+                <span class="badge"
+                      [style.background]="getEfficiencyColor(ppd.successful, ppd.totalProduction)"
+                      style="padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; color:#fff;">
+                  {{ getEfficiencyPct(ppd.successful, ppd.totalProduction) }}%
+                </span>
+              </td>
               <td *ngIf="isColumnVisible('ppd', 'Actions')">
                 <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deletePpd(ppd.id)">{{ 'btn.delete' | translate:currentLang }}</button>
               </td>

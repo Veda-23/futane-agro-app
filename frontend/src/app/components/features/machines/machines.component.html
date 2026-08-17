@@ -8,6 +8,16 @@
   </div>
 </div>
 
+<!-- Alert banner (E-12) -->
+<div *ngIf="machineDueCount > 0"
+     style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.4); border-radius:10px; padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; gap:12px;">
+  <span style="font-size:24px;">🔧</span>
+  <div>
+    <strong style="color:var(--accent-error, #ef4444); font-size:14px;">{{ machineDueCount }} machine(s) require maintenance attention</strong>
+    <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Last service log was recorded more than 30 days ago or is missing.</div>
+  </div>
+</div>
+
 <div class="grid-cols-3">
   <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
     <h3 style="margin-bottom: 14px; font-weight: 700;">➕ {{ 'machine.title' | translate:currentLang }}</h3>
@@ -93,6 +103,7 @@
             <th *ngIf="isColumnVisible('machines', 'Capacity')" (click)="setSort('capacityPerHour')" style="cursor:pointer;">{{ 'machine.capacity' | translate:currentLang }} <span *ngIf="sortField === 'capacityPerHour'">{{ sortAsc ? '▲' : '▼' }}</span></th>
             <th *ngIf="isColumnVisible('machines', 'Installed')" (click)="setSort('installedDate')" style="cursor:pointer;">Installed <span *ngIf="sortField === 'installedDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
             <th *ngIf="isColumnVisible('machines', 'Status')" (click)="setSort('status')" style="cursor:pointer;">{{ 'machine.status' | translate:currentLang }} <span *ngIf="sortField === 'status'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th>Service Status</th>
             <th *ngIf="isColumnVisible('machines', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
           </tr>
         </thead>
@@ -104,6 +115,11 @@
             <td *ngIf="isColumnVisible('machines', 'Installed')">{{ m.installedDate }}</td>
             <td *ngIf="isColumnVisible('machines', 'Status')">
               <span class="badge" [class.badge-success]="m.status === 'Running'" [class.badge-danger]="m.status === 'Breakdown'" [class.badge-info]="m.status !== 'Running' && m.status !== 'Breakdown'">{{ m.status }}</span>
+            </td>
+            <td>
+              <span class="badge" [style.background]="getMachineStatus(m).color" style="color:#fff; font-size:11px; padding:3px 8px; border-radius:12px;">
+                {{ getMachineStatus(m).label }}
+              </span>
             </td>
             <td *ngIf="isColumnVisible('machines', 'Actions')"><button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteMachine(m.id)">{{ 'btn.delete' | translate:currentLang }}</button></td>
           </tr>

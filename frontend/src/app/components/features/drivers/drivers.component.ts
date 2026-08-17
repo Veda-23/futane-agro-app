@@ -19,6 +19,7 @@ export class DriversComponent implements OnInit {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'drivers';
   @Input() loggedInUser: any = null;
+  @Input() transportsList: any[] = [];
 
   drivers: any[] = [];
   driverForm = { driverName: '', mobile: '', licenseNumber: '', address: '' };
@@ -32,7 +33,7 @@ export class DriversComponent implements OnInit {
   showColDropdown: { [key: string]: boolean } = {};
   columnsVisibility: { [table: string]: { [col: string]: boolean } } = {};
 
-  defaultColumns = ['ID', 'Name', 'Mobile', 'License', 'Address', 'Actions'];
+  defaultColumns = ['ID', 'Name', 'Mobile', 'License', 'Address', 'Trips', 'Earnings', 'Actions'];
 
   constructor(private apiService: ApiService, private notificationService: NotificationService) {}
 
@@ -49,6 +50,17 @@ export class DriversComponent implements OnInit {
       this.drivers = res;
       this.tableFilteredCounts['drivers'] = this.drivers.length;
     });
+    this.apiService.getTransports().subscribe((res: any[]) => {
+      this.transportsList = res || [];
+    });
+  }
+
+  getDriverStats(driverId: string | number): { trips: number; earnings: number } {
+    const trips = (this.transportsList || []).filter(t => (t.driver?.id === driverId || t.driverId === driverId));
+    return {
+      trips: trips.length,
+      earnings: trips.reduce((s, t) => s + (t.rent || 0), 0)
+    };
   }
 
   isViewer(): boolean {

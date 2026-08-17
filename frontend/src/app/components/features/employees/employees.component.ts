@@ -64,6 +64,15 @@ export class EmployeesComponent implements OnInit {
       this.notificationService.warning('Invalid Aadhaar', 'Aadhaar number must be exactly 12 digits and cannot start with 0 or 1.');
       return;
     }
+
+    if (!this.validateBankDetails(this.employeeForm.bankAccount)) {
+      return;
+    }
+
+    if (this.isDuplicateEmployee()) {
+      return;
+    }
+
     this.apiService.createEmployee(this.employeeForm).subscribe({
       next: (res) => {
         if (res) this.employees.unshift(res);
@@ -103,5 +112,35 @@ export class EmployeesComponent implements OnInit {
     if (this.loggedInUser) {
       this.apiService.createAuditLog({ username: this.loggedInUser.username, action }).subscribe();
     }
+  }
+
+  validateBankDetails(bankAccount: string): boolean {
+    if (!bankAccount) return true; // optional during initial draft, but if provided validate
+    const clean = bankAccount.trim();
+    if (clean.length < 9) {
+      this.notificationService.error(
+        'Invalid Bank Details',
+        'Bank account details must be at least 9 characters. Format: "IFSC / AccountNo" or Account Number.'
+      );
+      return false;
+    }
+    return true;
+  }
+
+  isDuplicateEmployee(): boolean {
+    const name = this.employeeForm.empName?.trim().toLowerCase();
+    const aadhaar = this.employeeForm.aadhaarNo?.trim();
+    const dupe = (this.employees || []).find(e =>
+      (name && e.empName?.toLowerCase() === name) ||
+      (aadhaar && e.aadhaarNo && e.aadhaarNo === aadhaar)
+    );
+    if (dupe) {
+      this.notificationService.error(
+        'Duplicate Detected',
+        `Employee "${dupe.empName}" already exists with matching name or Aadhaar.`
+      );
+      return true;
+    }
+    return false;
   }
 }

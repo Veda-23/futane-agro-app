@@ -61,6 +61,24 @@ export class MachinesComponent implements OnInit {
     });
   }
 
+  getMachineStatus(machine: any): { label: string; color: string } {
+    const breakdowns = (this.machineBreakdownsList || []).filter(b => (b.machine?.id === machine.id || b.machineId === machine.id));
+    if (breakdowns.length === 0) return { label: '⚠️ No Service Log', color: 'var(--accent-warning, #f59e0b)' };
+    const dates = breakdowns.map(b => new Date(b.breakdownDate || b.date || 0).getTime()).filter(t => !isNaN(t) && t > 0);
+    if (dates.length === 0) return { label: '⚠️ No Service Log', color: 'var(--accent-warning, #f59e0b)' };
+    const lastDate = new Date(Math.max(...dates));
+    const daysSince = Math.floor((Date.now() - lastDate.getTime()) / 86400000);
+    if (daysSince > 30) return { label: `⚠️ Due (${daysSince}d)`, color: 'var(--accent-error, #ef4444)' };
+    return { label: `✅ OK (${daysSince}d ago)`, color: 'var(--accent-success, #10b981)' };
+  }
+
+  get machineDueCount(): number {
+    return (this.machinesList || []).filter(m => {
+      const status = this.getMachineStatus(m);
+      return status.label.includes('Due') || status.label.includes('No Service');
+    }).length;
+  }
+
   isViewer(): boolean {
     return this.loggedInUser && this.loggedInUser.role === 'VIEWER';
   }

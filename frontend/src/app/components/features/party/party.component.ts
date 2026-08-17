@@ -65,8 +65,26 @@ export class PartyComponent implements OnInit {
     return true;
   }
 
+  isDuplicateParty(): boolean {
+    const name = this.partyForm.partyName?.trim().toLowerCase();
+    const phone = this.partyForm.partyContact?.trim();
+    const dupe = (this.parties || []).find(p =>
+      (name && p.partyName?.toLowerCase() === name) ||
+      (phone && p.partyContact && p.partyContact === phone)
+    );
+    if (dupe) {
+      this.notificationService.error(
+        'Duplicate Party',
+        `"${dupe.partyName}" already exists with matching name or contact number.`
+      );
+      return true;
+    }
+    return false;
+  }
+
   saveParty() {
     if (!this.validateForm('party')) return;
+    if (this.isDuplicateParty()) return;
     this.apiService.createParty(this.partyForm).subscribe({
       next: (res) => {
         if (res) this.parties.unshift(res);

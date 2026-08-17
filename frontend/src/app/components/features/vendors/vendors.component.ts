@@ -21,6 +21,7 @@ export class VendorsComponent implements OnInit {
   @Input() activeTab: string = 'vendors';
   @Input() loggedInUser: any = null;
 
+  @Input() rawMaterialsList: any[] = [];
   vendors: any[] = [];
   vendorForm = { vendorName: '', mobile: '', address: '', gstNumber: '' };
 
@@ -44,6 +45,13 @@ export class VendorsComponent implements OnInit {
 
   loadData() {
     this.apiService.getVendors().subscribe((res: any[]) => this.vendors = res);
+    this.apiService.getRawMaterials().subscribe((res: any[]) => this.rawMaterialsList = res || []);
+  }
+
+  getVendorOutstanding(vendorId: string | number): number {
+    return (this.rawMaterialsList || [])
+      .filter(rm => (rm.vendor?.id === vendorId || rm.vendorId === vendorId))
+      .reduce((s, rm) => s + (rm.amount || (rm.weight * rm.rate) || 0), 0);
   }
 
   isViewer(): boolean {

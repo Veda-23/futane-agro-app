@@ -1,10 +1,12 @@
 import { Component, OnInit, Input, HostListener } from '@angular/core';
-import { AutoSelectDirective } from '../../../directives/auto-select.directive';
-import { FormStateDirective } from '../../../directives/form-state.directive';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
+import { AutoSelectDirective } from '../../../directives/auto-select.directive';
+import { FormStateDirective } from '../../../directives/form-state.directive';
+import { InrPipe } from '../../../pipes/inr-currency.pipe';
+import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import Swal from 'sweetalert2';
@@ -12,7 +14,7 @@ import Swal from 'sweetalert2';
 @Component({
   selector: 'app-billing-hub',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, DecimalPipe, AutoSelectDirective, FormStateDirective],
+  imports: [CommonModule, FormsModule, TranslatePipe, DecimalPipe, AutoSelectDirective, FormStateDirective, InrPipe, IndianDatePipe],
   templateUrl: './billing-hub.component.html',
   styleUrls: ['./billing-hub.component.css']
 })
@@ -26,12 +28,15 @@ export class BillingHubComponent implements OnInit {
   @Input() rawMaterialsList: any[] = [];
   @Input() transportsList: any[] = [];
   @Input() salariesList: any[] = [];
+  @Input() settingsList: any[] = [];
 
   activeBillType = 'tax_invoice';
   selectedBillRecordId = '';
   selectedBillRecord: any = null;
   showBillModal = false;
   showPreviewCard = false;
+  currentDocumentNumber = '';
+  today = new Date();
 
   constructor(private apiService: ApiService) {}
 
@@ -42,6 +47,7 @@ export class BillingHubComponent implements OnInit {
     this.selectedBillRecord = null;
     this.showBillModal = false;
     this.showPreviewCard = false;
+    this.currentDocumentNumber = '';
   }
 
   getBillSourceList(): any[] {
@@ -68,8 +74,87 @@ export class BillingHubComponent implements OnInit {
     const list = this.getBillSourceList();
     const id = this.selectedBillRecordId;
     this.selectedBillRecord = list.find(item => String(this.getRecordId(item)) === String(id)) || null;
-    this.showBillModal = false; // reset modal when record changes
+    this.showBillModal = false;
     this.showPreviewCard = !!this.selectedBillRecord;
+    if (this.selectedBillRecord) {
+      this.currentDocumentNumber = this.generateDocumentNumber(this.activeBillType);
+    }
+  }
+
+  // Auto-Generated Document Serial Numbers (F-02)
+  generateDocumentNumber(type: string): string {
+    const prefix: { [key: string]: string } = {
+      tax_invoice: 'INV',
+      proforma: 'PRO',
+      delivery_challan: 'DC',
+      payment_receipt: 'REC',
+      purchase_invoice: 'PI',
+      transport_receipt: 'TR',
+      salary_slip: 'SAL'
+    };
+    const p = prefix[type] || 'DOC';
+    const year = new Date().getFullYear().toString().slice(-2);
+    const month = String(new Date().getMonth() + 1).padStart(2, '0');
+    const recId = this.selectedBillRecord ? String(this.getRecordId(this.selectedBillRecord)).padStart(4, '0') : String(Math.floor(Math.random() * 9000) + 1000);
+    return `FA-${p}-${year}${month}-${recId}`;
+  }
+
+  getDocumentTitle(type: string): string {
+    const titles: { [key: string]: string } = {
+      tax_invoice: 'Tax Invoice',
+      proforma: 'Proforma Invoice',
+      delivery_challan: 'Delivery Challan',
+      payment_receipt: 'Payment Receipt',
+      purchase_invoice: 'Purchase Bill / Inward Slip',
+      transport_receipt: 'Transport & Freight Receipt',
+      salary_slip: 'Employee Salary Slip'
+    };
+    return titles[type] || 'Commercial Document';
+  }
+
+  // GST Calculation Breakdown (F-03)
+  getGSTBreakdown(saleRecord: any): any {
+    const baseAmount = saleRecord?.totalAmount || (saleRecord?.quantity * saleRecord?.rate) || 0;
+    const gstRate = 0.18; // 18% GST standard
+    const isInterState = saleRecord?.party?.state && saleRecord?.party?.state.toLowerCase() !== 'maharashtra';
+
+    const gstAmount = baseAmount * gstRate;
+    return {
+      baseAmount,
+      cgst: isInterState ? 0 : gstAmount / 2,
+      sgst: isInterState ? 0 : gstAmount / 2,
+      igst: isInterState ? gstAmount : 0,
+      totalGst: gstAmount,
+      grandTotal: baseAmount + gstAmount,
+      isInterState
+    };
+  }
+
+  // Amount In Words Converter (F-04)
+  amountToWords(amount: number | null | undefined): string {
+    if (!amount || isNaN(amount)) return 'Zero Rupees Only';
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+      'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
+      'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+    const numToWords = (n: number): string => {
+      if (n === 0) return '';
+      if (n < 20) return ones[n] + ' ';
+      if (n < 100) return tens[Math.floor(n / 10)] + ' ' + ones[n % 10] + ' ';
+      if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred ' + numToWords(n % 100);
+      if (n < 100000) return numToWords(Math.floor(n / 1000)) + 'Thousand ' + numToWords(n % 1000);
+      if (n < 10000000) return numToWords(Math.floor(n / 100000)) + 'Lakh ' + numToWords(n % 100000);
+      return numToWords(Math.floor(n / 10000000)) + 'Crore ' + numToWords(n % 10000000);
+    };
+
+    const rupees = Math.floor(amount);
+    const paise = Math.round((amount - rupees) * 100);
+    let result = 'Rupees ' + numToWords(rupees).trim();
+    if (paise > 0) {
+      result += ' and ' + numToWords(paise).trim() + ' Paise';
+    }
+    return result + ' Only';
   }
 
   openBillModal() { this.showBillModal = true; }
@@ -85,95 +170,93 @@ export class BillingHubComponent implements OnInit {
   @HostListener('document:keydown.escape')
   onEscapeKey() { if (this.showBillModal) this.closeBillModal(); }
 
-  // ── WhatsApp ─────────────────────────────────────────────────────────────────
+  // WhatsApp Sharing with pre-filled message (F-06)
   shareOnWhatsApp() {
     if (!this.selectedBillRecord) return;
-    const docType = this.activeBillType.replace(/_/g, ' ').toUpperCase();
-    const id = this.getRecordId(this.selectedBillRecord);
-    let amount = 0, recipientName = 'Customer', rawPhone = '';
+    const rec = this.selectedBillRecord;
+    let msg = '';
+    let rawPhone = '';
 
-    switch (this.activeBillType) {
-      case 'tax_invoice': case 'proforma':
-        amount = this.selectedBillRecord.totalAmount;
-        recipientName = this.selectedBillRecord.party?.partyName || 'Customer';
-        rawPhone = this.selectedBillRecord.party?.partyContact || '';
-        break;
-      case 'delivery_challan':
-        amount = this.selectedBillRecord.sale?.quantity || 0;
-        recipientName = this.selectedBillRecord.sale?.party?.partyName || 'Customer';
-        rawPhone = this.selectedBillRecord.sale?.party?.partyContact || '';
-        break;
-      case 'payment_receipt':
-        amount = this.selectedBillRecord.amountReceived;
-        recipientName = this.selectedBillRecord.party?.partyName || 'Customer';
-        rawPhone = this.selectedBillRecord.party?.partyContact || '';
-        break;
-      case 'purchase_invoice':
-        amount = this.selectedBillRecord.amount;
-        recipientName = this.selectedBillRecord.vendor?.vendorName || 'Vendor';
-        rawPhone = this.selectedBillRecord.vendor?.mobile || '';
-        break;
-      case 'transport_receipt':
-        amount = this.selectedBillRecord.rent;
-        recipientName = this.selectedBillRecord.driver?.driverName || 'Driver';
-        rawPhone = this.selectedBillRecord.driver?.mobile || '';
-        break;
-      case 'salary_slip':
-        amount = this.selectedBillRecord.salaryAmount;
-        recipientName = this.selectedBillRecord.employee?.empName || 'Employee';
-        rawPhone = this.selectedBillRecord.employee?.empContact || '';
-        break;
+    if (this.activeBillType === 'tax_invoice' || this.activeBillType === 'proforma') {
+      const gst = this.getGSTBreakdown(rec);
+      rawPhone = rec.party?.partyContact || rec.party?.contact || '';
+      msg = `🧾 *${this.activeBillType === 'tax_invoice' ? 'TAX INVOICE' : 'PROFORMA INVOICE'}*\n`
+          + `*Futane Agro Industries Pvt. Ltd.*\n\n`
+          + `Doc No: *${this.currentDocumentNumber}*\n`
+          + `Customer: *${rec.party?.partyName || 'Customer'}*\n`
+          + `Date: ${rec.date || new Date().toISOString().split('T')[0]}\n`
+          + `Item: ${rec.crateType} (${rec.crateMaterial || 'Plastic'})\n`
+          + `Quantity: ${rec.quantity} crates\n`
+          + `Rate: ₹${Number(rec.rate).toLocaleString('en-IN')}/crate\n`
+          + `Sub-Total: ₹${Number(gst.baseAmount).toLocaleString('en-IN')}\n`
+          + `GST (18%): ₹${Number(gst.totalGst).toLocaleString('en-IN')}\n`
+          + `*Grand Total: ₹${Number(gst.grandTotal).toLocaleString('en-IN')}*\n\n`
+          + `Please arrange payment at your earliest convenience.\n`
+          + `— Futane Agro Industries`;
+    } else if (this.activeBillType === 'payment_receipt') {
+      rawPhone = rec.party?.partyContact || rec.party?.contact || '';
+      msg = `✅ *PAYMENT RECEIPT*\n`
+          + `*Futane Agro Industries Pvt. Ltd.*\n\n`
+          + `Receipt No: *${this.currentDocumentNumber}*\n`
+          + `Customer: *${rec.party?.partyName || 'Customer'}*\n`
+          + `Amount Received: *₹${Number(rec.amountReceived).toLocaleString('en-IN')}*\n`
+          + `Payment Mode: ${rec.paymentMode || 'Cash'}\n`
+          + `Date: ${rec.paymentDate}\n\n`
+          + `Thank you for your payment! 🙏\n— Futane Agro Industries`;
+    } else if (this.activeBillType === 'delivery_challan') {
+      rawPhone = rec.sale?.party?.partyContact || rec.sale?.party?.contact || '';
+      msg = `🚚 *DELIVERY CHALLAN*\n`
+          + `*Futane Agro Industries Pvt. Ltd.*\n\n`
+          + `Challan No: *${this.currentDocumentNumber}*\n`
+          + `Customer: *${rec.sale?.party?.partyName || 'Customer'}*\n`
+          + `Vehicle: *${rec.vehicleNumber || 'N/A'}*\n`
+          + `Driver: ${rec.driverName || 'N/A'}\n`
+          + `Quantity: ${rec.sale?.quantity || 0} crates (${rec.sale?.crateType || ''})\n`
+          + `Date: ${rec.dispatchDate}\n\n`
+          + `— Futane Agro Industries`;
+    } else if (this.activeBillType === 'salary_slip') {
+      rawPhone = rec.employee?.empContact || '';
+      msg = `💼 *SALARY SLIP - ${rec.month}/${rec.year}*\n`
+          + `*Futane Agro Industries Pvt. Ltd.*\n\n`
+          + `Employee: *${rec.employee?.empName}*\n`
+          + `Designation: ${rec.employee?.designation}\n`
+          + `Gross Pay: ₹${Number(rec.salaryAmount).toLocaleString('en-IN')}\n`
+          + `PF Deduction (12%): ₹${Number(rec.salaryAmount * 0.12).toLocaleString('en-IN')}\n`
+          + `*Net Salary: ₹${Number(rec.salaryAmount * 0.88).toLocaleString('en-IN')}*\n\n`
+          + `— Futane Agro HR`;
+    } else {
+      msg = `📄 Document ${this.currentDocumentNumber} from *Futane Agro Industries Pvt. Ltd.*`;
     }
 
-    // Phone validation
     const digits = rawPhone.replace(/\D/g, '');
     let fullPhone = '';
     if (digits.length === 10) fullPhone = '91' + digits;
     else if (digits.length === 12 && digits.startsWith('91')) fullPhone = digits;
     else if (digits.length > 0) fullPhone = digits;
-    else {
-      Swal.fire({ icon: 'warning', title: 'No Phone Number', text: `No valid phone found for ${recipientName}.` });
-      return;
-    }
 
-    const date = this.selectedBillRecord.date || this.selectedBillRecord.paymentDate || this.selectedBillRecord.dispatchDate || 'N/A';
-    const msg = `Hello ${recipientName},\n\nWe are sharing the details for *${docType}* (Ref ID: ${id}) from *Futane Agro Industries Pvt. Ltd.*\n\n*Amount:* ₹${amount}\n*Date:* ${date}\n\nThank you for doing business with us!`;
-    window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(msg)}`, '_blank');
-    this.logAudit(`Shared ${docType} ID ${id} via WhatsApp`);
-
-    setTimeout(() => {
-      Swal.fire({
-        icon: 'info', title: 'WhatsApp Opened',
-        html: `<p style="font-size:13px;">WhatsApp opened with pre-filled message.</p>
-               <p style="font-size:12px;color:#94a3b8;margin-top:8px;">
-                 💡 <strong>Tip:</strong> To share the PDF, download it and attach in WhatsApp chat.
-               </p>`,
-        confirmButtonText: 'Download PDF too', showCancelButton: true, cancelButtonText: 'OK, Done'
-      }).then((r: any) => { if (r.isConfirmed) this.downloadBillingHubPDF(); });
-    }, 800);
+    const url = fullPhone
+      ? `https://wa.me/${fullPhone}?text=${encodeURIComponent(msg)}`
+      : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+    this.logAudit(`Shared ${this.activeBillType} ID ${this.currentDocumentNumber} via WhatsApp`);
   }
 
-  // ── Download PDF ──────────────────────────────────────────────────────────────
+  // Download PDF
   downloadBillingHubPDF() {
     if (!this.selectedBillRecord) return;
     const element = document.getElementById('printable-billing-card');
-    if (!element) { Swal.fire({ icon: 'error', title: 'Error', text: 'Could not find billing card element.' }); return; }
+    if (!element) {
+      Swal.fire({ icon: 'error', title: 'Error', text: 'Could not find billing card element.' });
+      return;
+    }
 
-    const docType = this.activeBillType.replace(/_/g, ' ').toUpperCase();
-    const id = this.getRecordId(this.selectedBillRecord);
-    this.logAudit(`Downloaded PDF for ${docType} ID ${id}`);
-
-    // Temporarily force white BG for clean render
-    const origBg = element.style.background;
-    element.style.setProperty('background', '#ffffff', 'important');
-    element.style.setProperty('color', '#1f2937', 'important');
+    const id = this.currentDocumentNumber || this.getRecordId(this.selectedBillRecord);
+    this.logAudit(`Downloaded PDF for ${this.activeBillType} ID ${id}`);
 
     Swal.fire({ title: 'Generating PDF…', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
 
     html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false })
       .then(canvas => {
-        element.style.background = origBg;
-        element.style.removeProperty('color');
         const pdf = new jsPDF('p', 'mm', 'a4');
         const imgW = 210, pageH = 297;
         const imgH = (canvas.height * imgW) / canvas.width;
@@ -181,19 +264,22 @@ export class BillingHubComponent implements OnInit {
         const img = canvas.toDataURL('image/png');
         pdf.addImage(img, 'PNG', 0, pos, imgW, imgH);
         leftH -= pageH;
-        while (leftH >= 0) { pos = leftH - imgH; pdf.addPage(); pdf.addImage(img, 'PNG', 0, pos, imgW, imgH); leftH -= pageH; }
+        while (leftH >= 0) {
+          pos = leftH - imgH;
+          pdf.addPage();
+          pdf.addImage(img, 'PNG', 0, pos, imgW, imgH);
+          leftH -= pageH;
+        }
         pdf.save(`${this.activeBillType}_${id}.pdf`);
         Swal.close();
         Swal.fire({ icon: 'success', title: 'PDF Downloaded!', timer: 1500, showConfirmButton: false });
       })
       .catch(() => {
-        element.style.background = origBg;
         Swal.close();
         Swal.fire({ icon: 'error', title: 'PDF Error', text: 'Could not generate PDF. Please try again.' });
       });
   }
 
-  // ── Print ─────────────────────────────────────────────────────────────────────
   printBillingDocument() {
     if (!this.selectedBillRecord) return;
     const element = document.getElementById('printable-billing-card');
@@ -219,32 +305,4 @@ export class BillingHubComponent implements OnInit {
   logAudit(action: string) {
     this.apiService.createAuditLog({ username: this.loggedInUser?.username || 'System', action }).subscribe();
   }
-
-  // ── Calculation Helpers ───────────────────────────────────────────────────────
-  numberToWords(num: number): string {
-    if (num == null) return '';
-    num = Math.round(num);
-    if (num === 0) return 'Zero';
-    const a = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten',
-      'Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
-    const b = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
-    const t = (n: number): string => {
-      let s = '';
-      if (n > 99) { s += a[Math.floor(n/100)] + ' Hundred '; n %= 100; }
-      if (n > 19) s += b[Math.floor(n/10)] + ' ' + a[n%10];
-      else if (n > 0) s += a[n];
-      return s.trim();
-    };
-    let res = '', rem = num;
-    if (rem >= 10000000) { res += t(Math.floor(rem/10000000)) + ' Crore '; rem %= 10000000; }
-    if (rem >= 100000)   { res += t(Math.floor(rem/100000))   + ' Lakh ';  rem %= 100000;   }
-    if (rem >= 1000)     { res += t(Math.floor(rem/1000))     + ' Thousand '; rem %= 1000;  }
-    if (rem > 0)         { res += t(rem); }
-    return res.trim() + ' Rupees Only';
-  }
-
-  getCGST(amount: number): number { return amount * 0.09; }
-  getSGST(amount: number): number { return amount * 0.09; }
-  getIGST(amount: number): number { return amount * 0.18; }
-  getGrandTotal(amount: number): number { return amount * 1.18; }
 }

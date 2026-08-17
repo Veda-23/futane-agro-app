@@ -97,6 +97,25 @@ export class SalariesComponent implements OnInit {
     return this.loggedInUser && (this.loggedInUser.role === 'SUPER_ADMIN' || this.loggedInUser.role === 'ADMIN');
   }
 
+  isSalaryAlreadyPaid(): boolean {
+    const empId = parseInt(this.salariesForm.id);
+    const month = this.salariesForm.month;
+    const year = this.salariesForm.year;
+    const existing = (this.salariesList || []).find(s =>
+      (s.employee?.id === empId || s.employeeId === empId) &&
+      String(s.month).toLowerCase() === String(month).toLowerCase() &&
+      String(s.year) === String(year)
+    );
+    if (existing) {
+      this.notificationService.error(
+        'Already Paid',
+        `Salary for ${month}/${year} has already been recorded for this employee.`
+      );
+      return true;
+    }
+    return false;
+  }
+
   saveSalary() {
     if (!this.salariesForm.id || !this.salariesForm.month || !this.salariesForm.year || !this.salariesForm.salaryAmount) {
       this.notificationService.warning('Invalid Input', "Please fill required fields");
@@ -109,6 +128,11 @@ export class SalariesComponent implements OnInit {
       this.notificationService.warning('Invalid Date', 'Cannot generate salary records for future months.');
       return;
     }
+
+    if (this.isSalaryAlreadyPaid()) {
+      return;
+    }
+
     const emp = this.employees.find(e => e.id === parseInt(this.salariesForm.id));
     if (!emp) return;
 

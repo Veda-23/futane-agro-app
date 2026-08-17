@@ -90,6 +90,18 @@ export class ProductionComponent implements OnInit {
     this.ppdForm.totalProduction = s + r;
   }
 
+  getEfficiencyPct(successful: number, total: number): number {
+    if (!total || isNaN(total) || total <= 0) return 0;
+    return Math.round(((successful || 0) / total) * 100);
+  }
+
+  getEfficiencyColor(successful: number, total: number): string {
+    const pct = this.getEfficiencyPct(successful, total);
+    if (pct >= 90) return 'var(--accent-success, #10b981)';
+    if (pct >= 75) return 'var(--accent-warning, #f59e0b)';
+    return 'var(--accent-error, #ef4444)';
+  }
+
   // --- PPD Methods ---
   savePpd() {
     this.apiService.createPpd(this.ppdForm).subscribe({
