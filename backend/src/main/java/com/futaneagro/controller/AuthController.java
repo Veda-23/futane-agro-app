@@ -279,6 +279,7 @@ public class AuthController {
             response.put("role", user.getRole());
             response.put("name", user.getName());
             response.put("refreshToken", "refresh-" + user.getUsername() + "-" + System.currentTimeMillis());
+            response.put("forcePasswordChange", user.getForcePasswordChange() != null && user.getForcePasswordChange());
 
             return ResponseEntity.ok(response);
 
@@ -380,5 +381,39 @@ public class AuthController {
         }
         userRepository.deleteById(username);
         return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody Map<String, String> req, HttpServletRequest httpReq) {
+        String username = req.get("username");
+        String currentPassword = req.get("currentPassword");
+        String newPassword = req.get("newPassword");
+
+        if (username == null || currentPassword == null || newPassword == null) {
+            return ResponseEntity.badRequest().body(createErrorResponse("Bad Request", "Username, current password, and new password are required.", 400));
+        }
+
+        Optional<User> userOpt = userRepository.findByUsernameIgnoreCase(username.trim());
+        if (!userOpt.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorResponse("Not Found", "User not found.", 404));
+        }
+
+        User user = userOpt.get();
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(createErrorResponse("Unauthorized", "Current password is incorrect.", 401));
+        }
+
+        if (newPassword.length() < 8) {
+            return ResponseEntity.badRequest().body(createErrorResponse("Bad Request", "New password must be at least 8 characters.", 400));
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setForcePasswordChange(false);
+        userRepository.save(user);
+
+        Map<String, Object> res = new HashMap<>();
+        res.put("message", "Password changed successfully.");
+        return ResponseEntity.ok(res);
     }
 }

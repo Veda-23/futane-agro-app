@@ -1,8 +1,10 @@
-import { Component, OnInit, OnDestroy, Input, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ElementRef } from '@angular/core';
 import { AutoSelectDirective } from '../../../directives/auto-select.directive';
 import { FormStateDirective } from '../../../directives/form-state.directive';
 import { FormValidationService } from '../../../services/form-validation.service';
 import { NotificationService } from '../../../services/notification.service';
+import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
+import { InrPipe } from '../../../pipes/inr-currency.pipe';
 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -15,18 +17,28 @@ Chart.register(...registerables);
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective, IndianDatePipe, InrPipe],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   @Input() currentLang: string = 'en';
   @Input() loggedInUser: any = null;
+  @Output() onNavigateTab = new EventEmitter<string>();
 
   Math = Math;
   stats: any = {};
   computedNetProfit = 0;
   systemHealth: any = null;
+
+  // Recent Activity Feed (M-01)
+  recentActivities: any[] = [];
+
+  // Top Customers (M-02)
+  topCustomers: { name: string; revenue: number; percentage: number }[] = [];
+
+  // Quick Action FAB Menu (M-03)
+  showFabMenu = false;
 
   // Excel Upload State
   excelFile: File | null = null;
@@ -42,6 +54,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.loadDashboardData();
     this.checkSystemHealth();
+    this.loadRecentActivity();
+  }
+
+  loadRecentActivity() {
+    this.apiService.getAuditLogs().subscribe({
+      next: (logs: any[]) => {
+        if (logs && Array.isArray(logs)) {
+          this.recentActivities = logs.slice(0, 8);
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  quickNavigate(tab: string) {
+    this.onNavigateTab.emit(tab);
+    this.showFabMenu = false;
   }
 
   checkSystemHealth() {

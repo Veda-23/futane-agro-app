@@ -39,6 +39,7 @@ import { SidebarComponent } from './components/layout/sidebar/sidebar.component'
 import { LoginComponent } from './components/features/auth/login/login.component';
 import { GlobalFilterComponent } from './components/features/global-filter/global-filter.component';
 import { NotificationService } from './services/notification.service';
+import { AppNotificationService } from './services/app-notification.service';
 Chart.register(...registerables);
 
 import * as XLSX from 'xlsx';
@@ -181,6 +182,7 @@ export class AppComponent implements OnInit {
   // Auth State
   isAuthenticated = false;
   loggedInUser: any = null;
+  forcePasswordChangeMode = false;
 
   // UI Tabs State
   activeTab = 'dashboard';
@@ -322,7 +324,8 @@ export class AppComponent implements OnInit {
     private translateService: TranslateService,
     private sanitizer: DomSanitizer,
     private notificationService: NotificationService,
-    private titleService: Title
+    private titleService: Title,
+    private appNotificationService: AppNotificationService
   ) {}
 
   isTokenExpired(token: string): boolean {
@@ -617,6 +620,12 @@ export class AppComponent implements OnInit {
     this.resetIdleTimer();
     this.loadAllData();
     this.logAudit("Logged in successfully");
+
+    if (res.forcePasswordChange) {
+      this.forcePasswordChangeMode = true;
+      this.notificationService.warning('Password Change Required', 'Please change your temporary password before accessing ERP features.');
+      this.switchTab('settings');
+    }
   }
 
   handleLogout() {
@@ -672,6 +681,21 @@ export class AppComponent implements OnInit {
   // --- Load Database Data ---
   loadAllData() {
     this.loadDataForTab(this.activeTab);
+    // Background check for business alert notifications
+    this.apiService.getInventory().subscribe({
+      next: (inv) => {
+        this.inventoryList = inv || [];
+        this.checkAndPushNotifications();
+      },
+      error: () => {}
+    });
+    this.apiService.getTransports().subscribe({
+      next: (tr) => {
+        this.transportsList = tr || [];
+        this.checkAndPushNotifications();
+      },
+      error: () => {}
+    });
   }
 
   loadDataForTab(tab: string) {
@@ -792,8 +816,15 @@ export class AppComponent implements OnInit {
   }
 
   // --- Tab Switcher ---
-  // --- Tab Switcher ---
   switchTab(tab: string) {
+    if (this.forcePasswordChangeMode && tab !== 'settings') {
+      this.notificationService.warning(
+        'Action Required',
+        'You must change your temporary password in Settings before accessing other sections.'
+      );
+      return;
+    }
+
     if (this.accessibleTabs[tab]) {
       this.activeTab = tab;
       sessionStorage.setItem('activeTab', tab);
@@ -807,6 +838,56 @@ export class AppComponent implements OnInit {
       if (window.innerWidth <= 1024) {
         this.isSidebarOpen = false;
       }
+    }
+  }
+
+  // Auto-push business alerts to notification center (K-04)
+  checkAndPushNotifications() {
+    const appNotif = this.appNotificationService;
+
+    // 1. Low inventory items (<= 10)
+    const lowStock = (this.inventoryList || []).filter((i: any) => (i.currentStock || i.quantity || 0) <= 10);
+    if (lowStock.length > 0) {
+      appNotif.push(
+        'warning',
+        '⚠️ Low Inventory Alert',
+        `${lowStock.length} item(s) critically low: ${lowStock.slice(0, 3).map((i: any) => i.crateType).join(', ')}`,
+        'inventory'
+      );
+    }
+
+    // 2. Overdue transport payments (> 30 days)
+    const overdueTransports = (this.transportsList || []).filter((t: any) => {
+      const remaining = (t.rent || 0) - (t.advance || 0);
+      const isOld = t.date && (new Date(t.date).getTime() < (Date.now() - 30 * 86400000));
+      return remaining > 0 && isOld;
+    });
+    if (overdueTransports.length > 0) {
+      appNotif.push(
+        'error',
+        '🚛 Overdue Transport Payments',
+        `${overdueTransports.length} transport trip(s) have unpaid dues older than 30 days.`,
+        'transports'
+      );
+    }
+
+    // 3. Pending salaries (if after 20th of month)
+    const now = new Date();
+    const thisMonth = now.toLocaleString('default', { month: 'long' });
+    const thisYear = now.getFullYear();
+    const paidEmpIds = new Set(
+      (this.salariesList || [])
+        .filter((s: any) => String(s.month).toLowerCase() === thisMonth.toLowerCase() && Number(s.year) === thisYear)
+        .map((s: any) => s.employee?.id || s.employeeId)
+    );
+    const unpaidCount = (this.employees || []).filter((e: any) => !paidEmpIds.has(e.id)).length;
+    if (unpaidCount > 0 && now.getDate() > 20) {
+      appNotif.push(
+        'info',
+        '💼 Pending Salaries Alert',
+        `${unpaidCount} employee(s) have not received their salary for ${thisMonth} ${thisYear} yet.`,
+        'salaries'
+      );
     }
   }
 

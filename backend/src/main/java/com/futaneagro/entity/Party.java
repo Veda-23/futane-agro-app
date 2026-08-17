@@ -3,6 +3,7 @@ package com.futaneagro.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.futaneagro.security.AttributeEncryptor;
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;

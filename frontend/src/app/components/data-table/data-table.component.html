@@ -2,7 +2,7 @@
   <!-- Toolbar -->
   <div class="table-toolbar">
     <div class="search-box">
-      <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()" [placeholder]="searchPlaceholder" class="form-control" style="max-width: 300px; display: inline-block;">
+      <input type="text" [ngModel]="searchTerm" (ngModelChange)="onSearchInput($event)" [placeholder]="searchPlaceholder" class="form-control" style="max-width: 300px; display: inline-block;">
     </div>
     <div class="toolbar-actions" style="display: flex; gap: 8px;">
       <button class="btn btn-outline btn-sm" (click)="exportCSV()">Export CSV</button>
@@ -44,7 +44,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let item of processedData">
+        <tr *ngFor="let item of processedData; trackBy: trackById">
           <td *ngIf="enableMultiSelect" style="width: 40px; text-align: center;">
             <input type="checkbox"
                    [checked]="selectedRows.has(item.id ? item.id.toString() : (item.paymentId ? item.paymentId.toString() : ''))"

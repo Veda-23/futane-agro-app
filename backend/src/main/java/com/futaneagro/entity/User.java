@@ -28,6 +28,9 @@ public class User extends BaseEntity {
     @Column(name = "lock_time")
     private LocalDateTime lockTime;
 
+    @Column(name = "force_password_change")
+    private Boolean forcePasswordChange = false;
+
     public User() {
     }
 
@@ -116,5 +119,13 @@ public class User extends BaseEntity {
 
     public void setMobileNumber(String mobileNumber) {
         this.mobileNumber = mobileNumber;
+    }
+
+    public Boolean getForcePasswordChange() {
+        return forcePasswordChange;
+    }
+
+    public void setForcePasswordChange(Boolean forcePasswordChange) {
+        this.forcePasswordChange = forcePasswordChange;
     }
 }

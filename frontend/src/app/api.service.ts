@@ -27,6 +27,10 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/users/login/verify`, payload);
   }
 
+  changePassword(data: { username: string; currentPassword: string; newPassword: string }): Observable<any> {
+    return this.http.put(`${this.baseUrl}/users/change-password`, data);
+  }
+
 
   // Dashboard
   getStats(): Observable<any> {

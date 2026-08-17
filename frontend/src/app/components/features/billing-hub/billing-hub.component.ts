@@ -40,7 +40,36 @@ export class BillingHubComponent implements OnInit {
 
   constructor(private apiService: ApiService) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    if (!this.settingsList || this.settingsList.length === 0) {
+      this.apiService.getSettings().subscribe(res => {
+        if (res) this.settingsList = res;
+      });
+    }
+  }
+
+  get companyInfo(): any {
+    return {
+      name: this.getSettingVal('company_name') || 'Futane Agro Industries Pvt. Ltd.',
+      address: this.getSettingVal('company_address') || 'Village Futane, Tal. Rahuri, Dist. Ahmednagar, Maharashtra - 413706',
+      phone: this.getSettingVal('company_phone') || '+91-XXXXXXXXXX',
+      email: this.getSettingVal('company_email') || 'info@futaneagro.com',
+      gstin: this.getSettingVal('company_gstin') || '27XXXXX000X1ZX',
+      pan: this.getSettingVal('company_pan') || 'XXXXX0000X',
+      fssai: this.getSettingVal('company_fssai') || 'XXXXXXXXXXXXXXXXXX'
+    };
+  }
+
+  get gstRate(): number {
+    const val = parseFloat(this.getSettingVal('gst_rate_percentage') || '18');
+    return isNaN(val) ? 0.18 : val / 100;
+  }
+
+  getSettingVal(key: string): string {
+    return this.settingsList?.find((s: any) => s.key === key || s.settingKey === key)?.value
+      || this.settingsList?.find((s: any) => s.key === key || s.settingKey === key)?.settingValue
+      || '';
+  }
 
   onBillTypeChange() {
     this.selectedBillRecordId = '';

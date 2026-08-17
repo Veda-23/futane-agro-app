@@ -61,37 +61,52 @@
       <input type="text" [(ngModel)]="customBackendUrl" (change)="saveBackendUrl()" placeholder="Backend URL" class="dev-input">
     </div>
 
-    <!-- Notification Bell -->
+    <!-- Notification Bell (K-02, K-03) -->
     <div class="notif-wrapper" style="position: relative;">
       <button class="icon-btn notif-btn" aria-label="Notifications" id="notif-btn" (click)="toggleNotifDropdown()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
         </svg>
-        <span class="notif-dot" *ngIf="unreadCount > 0" aria-hidden="true"></span>
+        <span class="notif-dot" *ngIf="appNotifService.unreadCount > 0"
+              style="position:absolute; top:-2px; right:-2px; background:#ef4444; color:#fff; font-size:9px; font-weight:800; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+          {{ appNotifService.unreadCount > 9 ? '9+' : appNotifService.unreadCount }}
+        </span>
       </button>
 
       <!-- Glassmorphic Notifications Dropdown -->
-      <div class="notif-dropdown" *ngIf="showNotifDropdown">
-        <div class="notif-header">
-          <span class="notif-title">Notifications ({{ unreadCount }})</span>
-          <button class="notif-mark-read" (click)="markAllAsRead()" *ngIf="unreadCount > 0">Mark all read</button>
+      <div class="notif-dropdown" *ngIf="showNotifDropdown" style="width: 360px; max-height: 440px; overflow-y: auto;">
+        <div class="notif-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border-glass);">
+          <span class="notif-title" style="font-weight: 700; font-size: 13px;">
+            🔔 Notifications
+            <span *ngIf="appNotifService.unreadCount > 0" style="background:#ef4444; color:#fff; border-radius:10px; padding:1px 6px; font-size:10px; margin-left:4px;">
+              {{ appNotifService.unreadCount }}
+            </span>
+          </span>
+          <div style="display: flex; gap: 6px;">
+            <button class="notif-mark-read" (click)="appNotifService.markAllRead()" style="font-size: 11px; cursor: pointer; background: none; border: none; color: var(--accent-orange, #d97706);">✓ Read All</button>
+            <button class="notif-mark-read" (click)="appNotifService.clearAll()" style="font-size: 11px; cursor: pointer; background: none; border: none; color: var(--text-muted);">🗑️ Clear</button>
+          </div>
         </div>
         <div class="notif-list">
-          <div class="notif-item" *ngFor="let notif of notifications" [class.unread]="!notif.read">
-            <div class="notif-icon-wrap" [class]="'notif-type-' + notif.type">
+          <div class="notif-item" *ngFor="let notif of (appNotifService.notifications$ | async)"
+               [class.unread]="!notif.isRead"
+               (click)="onNotifClick(notif)"
+               style="cursor: pointer; padding: 10px 14px; border-bottom: 1px solid var(--border-glass); display: flex; align-items: flex-start; gap: 8px;">
+            <div class="notif-icon-wrap" style="font-size: 16px; flex-shrink: 0;">
               <span *ngIf="notif.type === 'warning'">⚠️</span>
+              <span *ngIf="notif.type === 'error'">❌</span>
               <span *ngIf="notif.type === 'success'">✅</span>
               <span *ngIf="notif.type === 'info'">ℹ️</span>
             </div>
-            <div class="notif-body">
-              <div class="notif-item-title">{{ notif.title }}</div>
-              <div class="notif-item-desc">{{ notif.desc }}</div>
-              <div class="notif-item-time">{{ notif.time }}</div>
+            <div class="notif-body" style="flex: 1; min-width: 0;">
+              <div class="notif-item-title" style="font-weight: 600; font-size: 12px;">{{ notif.title }}</div>
+              <div class="notif-item-desc" style="font-size: 11px; color: var(--text-secondary); word-break: break-word;">{{ notif.message }}</div>
+              <div class="notif-item-time" style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">{{ notif.timestamp | indianDate:true }}</div>
             </div>
-            <button class="notif-clear-btn" (click)="clearNotification(notif.id, $event)" aria-label="Dismiss">&times;</button>
+            <button class="notif-clear-btn" (click)="$event.stopPropagation(); appNotifService.remove(notif.id)" aria-label="Dismiss" style="background: none; border: none; color: var(--text-muted); font-size: 14px; cursor: pointer;">&times;</button>
           </div>
-          <div class="notif-empty" *ngIf="notifications.length === 0">
-            🔔 No new notifications
+          <div class="notif-empty" *ngIf="(appNotifService.notifications$ | async)?.length === 0" style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">
+            🎉 All caught up! No notifications.
           </div>
         </div>
       </div>
@@ -106,9 +121,11 @@
       <button class="lang-btn" [class.lang-active]="currentLang === 'hi'" (click)="setLanguage('hi')">हिंदी</button>
     </div>
 
-    <!-- User info card -->
+    <!-- User info card (J-04: Initials Avatar) -->
     <div class="user-session-card">
-      <div class="user-avatar-sm">{{ loggedInUser?.name?.charAt(0) || 'A' }}</div>
+      <div class="user-avatar-sm" style="font-weight: 800; background: linear-gradient(135deg, #d97706, #f59e0b); color: #fff;">
+        {{ getUserInitials(loggedInUser) }}
+      </div>
       <div class="user-session-text">
         <span class="user-session-name">{{ loggedInUser?.name }} <span class="user-role-chip">({{ loggedInUser?.role }})</span></span>
         <span class="user-session-meta">Session: {{ sessionDuration }} &nbsp;|&nbsp; ⏱ Idle Logout: {{ logoutCountdown }}</span>

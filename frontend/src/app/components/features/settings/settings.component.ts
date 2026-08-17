@@ -7,11 +7,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
+import { PasswordStrengthComponent } from '../../shared/password-strength/password-strength.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective, PasswordStrengthComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.css']
 })
@@ -30,9 +31,78 @@ export class SettingsComponent implements OnInit {
   userForm = { username: '', password: '', role: 'OPERATOR', name: '', email: '' };
   settingsSearchQuery = '';
 
+  changePasswordForm = {
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+    showCurrent: false,
+    showNew: false
+  };
+  changingPassword = false;
+
   constructor(private apiService: ApiService, private notificationService: NotificationService) {}
 
   ngOnInit() {}
+
+  changePassword() {
+    const f = this.changePasswordForm;
+    if (!f.currentPassword || !f.newPassword || !f.confirmPassword) {
+      this.notificationService.warning('Incomplete', 'All password fields are required.');
+      return;
+    }
+    if (f.newPassword !== f.confirmPassword) {
+      this.notificationService.error('Mismatch', 'New password and confirmation do not match.');
+      return;
+    }
+    if (f.newPassword.length < 8) {
+      this.notificationService.error('Too Short', 'New password must be at least 8 characters.');
+      return;
+    }
+    if (!this.isStrongPassword(f.newPassword)) {
+      this.notificationService.warning(
+        'Weak Password',
+        'Password must contain uppercase, lowercase, number, and special character.'
+      );
+      return;
+    }
+    this.changingPassword = true;
+    this.apiService.changePassword({
+      username: this.loggedInUser?.username || '',
+      currentPassword: f.currentPassword,
+      newPassword: f.newPassword
+    }).subscribe({
+      next: () => {
+        this.changingPassword = false;
+        this.notificationService.success('Password Changed', 'Your password has been updated successfully.');
+        this.changePasswordForm = { currentPassword: '', newPassword: '', confirmPassword: '', showCurrent: false, showNew: false };
+      },
+      error: (err) => {
+        this.changingPassword = false;
+        this.notificationService.error('Failed', err.error?.message || 'Incorrect current password.');
+      }
+    });
+  }
+
+  isStrongPassword(pwd: string): boolean {
+    return /[A-Z]/.test(pwd) &&
+           /[a-z]/.test(pwd) &&
+           /[0-9]/.test(pwd) &&
+           /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd);
+  }
+
+  get passwordStrength(): { level: string; color: string; width: string } {
+    const pwd = this.changePasswordForm.newPassword;
+    if (!pwd) return { level: '', color: 'transparent', width: '0%' };
+    let score = 0;
+    if (pwd.length >= 8) score++;
+    if (pwd.length >= 12) score++;
+    if (/[A-Z]/.test(pwd)) score++;
+    if (/[0-9]/.test(pwd)) score++;
+    if (/[^A-Za-z0-9]/.test(pwd)) score++;
+    if (score <= 2) return { level: 'Weak', color: '#ef4444', width: '33%' };
+    if (score <= 3) return { level: 'Fair', color: '#f59e0b', width: '60%' };
+    return { level: 'Strong', color: '#10b981', width: '100%' };
+  }
 
   get filteredSettings(): any[] {
     const q = (this.settingsSearchQuery || '').trim().toLowerCase();

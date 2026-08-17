@@ -1,6 +1,8 @@
-import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, OnInit, OnDestroy, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import * as XLSX from 'xlsx';
 
 export interface TableColumn {
@@ -23,7 +25,7 @@ export interface ActionConfig {
   templateUrl: './data-table.component.html',
   styleUrls: ['./data-table.component.css']
 })
-export class DataTableComponent implements OnChanges {
+export class DataTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() data: any[] = [];
   @Input() columns: TableColumn[] = [];
   @Input() actions: ActionConfig[] = [];
@@ -34,6 +36,9 @@ export class DataTableComponent implements OnChanges {
   @Output() batchDelete = new EventEmitter<string[]>();
 
   searchTerm: string = '';
+  private searchSubject = new Subject<string>();
+  private searchSub?: Subscription;
+
   sortColumn: string = '';
   sortDirection: 'asc' | 'desc' = 'asc';
   currentPage: number = 1;
@@ -42,6 +47,29 @@ export class DataTableComponent implements OnChanges {
   processedData: any[] = [];
   selectedRows: Set<string> = new Set();
   allSelected = false;
+
+  ngOnInit() {
+    this.searchSub = this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(term => {
+      this.searchTerm = term;
+      this.currentPage = 1;
+      this.processData();
+    });
+  }
+
+  ngOnDestroy() {
+    this.searchSub?.unsubscribe();
+  }
+
+  onSearchInput(value: string) {
+    this.searchSubject.next(value);
+  }
+
+  trackById(index: number, item: any): any {
+    return item.id ?? item.paymentId ?? item.rawMaterialId ?? index;
+  }
 
   toggleSelectAll() {
     this.allSelected = !this.allSelected;
