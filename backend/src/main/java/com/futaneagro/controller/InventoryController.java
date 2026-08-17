@@ -24,6 +24,9 @@ public class InventoryController {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private com.futaneagro.service.NotificationBroadcastService broadcastService;
+
     private String getCurrentUser() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return (principal != null) ? principal.toString() : "system";
@@ -57,6 +60,9 @@ public class InventoryController {
     public Inventory createInventory(@RequestBody Inventory inventory) {
         Inventory saved = inventoryRepository.save(inventory);
         saveAuditLog("Created inventory record: " + saved.getCrateType(), "Inventory", null, toJson(saved));
+        if (broadcastService != null) {
+            broadcastService.broadcastUpdate("INVENTORY", "UPDATED", "Inventory updated for " + saved.getCrateType());
+        }
         return saved;
     }
 

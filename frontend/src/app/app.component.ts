@@ -40,6 +40,7 @@ import { LoginComponent } from './components/features/auth/login/login.component
 import { GlobalFilterComponent } from './components/features/global-filter/global-filter.component';
 import { NotificationService } from './services/notification.service';
 import { AppNotificationService } from './services/app-notification.service';
+import { WebSocketService } from './services/websocket.service';
 Chart.register(...registerables);
 
 import * as XLSX from 'xlsx';
@@ -325,7 +326,8 @@ export class AppComponent implements OnInit {
     private sanitizer: DomSanitizer,
     private notificationService: NotificationService,
     private titleService: Title,
-    private appNotificationService: AppNotificationService
+    private appNotificationService: AppNotificationService,
+    private wsService: WebSocketService
   ) {}
 
   isTokenExpired(token: string): boolean {
@@ -352,6 +354,19 @@ export class AppComponent implements OnInit {
     }
 
     this.initSettingsList();
+
+    // Listen for Realtime WebSocket Business Actions across sessions (O-03)
+    this.wsService.updates$.subscribe(update => {
+      if (update && this.isAuthenticated) {
+        this.appNotificationService.push(
+          'info',
+          `🔄 Live Update: ${update.module}`,
+          update.description || 'Data updated by another user.'
+        );
+        // Refresh active view
+        this.loadDataForTab(this.activeTab);
+      }
+    });
 
     // Check session/local storage for session and active tab persistence
     const cachedUser = sessionStorage.getItem('user') || localStorage.getItem('user');

@@ -1,6 +1,14 @@
-# Stage 1: Serve using Nginx (Pre-built locally to save VM memory)
-FROM nginx:1.25-alpine
-COPY dist/frontend/browser /usr/share/nginx/html
+# Step 1: Build Angular
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --legacy-peer-deps
+COPY . .
+RUN npm run build -- --configuration=production
+
+# Step 2: Serve with Nginx Alpine
+FROM nginx:alpine
+COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

@@ -1,19 +1,17 @@
-# Stage 1: Build & Test
-FROM maven:3.8-eclipse-temurin-17 AS build
+# Step 1: Build
+FROM maven:3.9-eclipse-temurin-17-alpine AS builder
 WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 COPY src ./src
-# Run unit testing phase first to validate code correctness!
-# Skipping test phase during Docker build as it requires a live database connection
-# Package application
-RUN mvn package -DskipTests -B
+RUN mvn clean package -DskipTests -B
 
-# Stage 2: Runtime Environment
-FROM eclipse-temurin:17-jre-focal
+# Step 2: Runtime
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-COPY --from=build /app/target/futane-agro-app-0.0.1-SNAPSHOT.jar app.jar
-# Create upload directory in case it does not exist
-RUN mkdir -p uploads
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN mkdir -p uploads backups logs && chown -R appuser:appgroup /app
+COPY --from=builder /app/target/futane-agro-app-*.jar app.jar
+USER appuser
 EXPOSE 8080
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar", "--spring.profiles.active=prod"]

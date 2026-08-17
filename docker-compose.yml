@@ -1,55 +1,57 @@
 version: '3.8'
 
 services:
-  # MySQL Database Service
-  mysql:
+  mysql-db:
     image: mysql:8.0
-    container_name: futane_agro_mysql
+    container_name: futane_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: futane_erp_prod
     ports:
       - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: Vedant
-      MYSQL_DATABASE: futane_agro
     volumes:
       - mysql_data:/var/lib/mysql
-    restart: always
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pVedant"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Spring Boot Backend Service
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: futane_agro_backend
+    container_name: futane_backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/futane_erp_prod?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_PROFILES_ACTIVE: prod
     ports:
       - "8080:8080"
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/futane_agro?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=Vedant
     depends_on:
-      mysql:
+      mysql-db:
         condition: service_healthy
     volumes:
       - backend_uploads:/app/uploads
-    restart: always
+      - backend_backups:/app/backups
+      - backend_logs:/app/logs
+    restart: unless-stopped
 
-  # Angular Frontend Service
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: futane_agro_frontend
+    container_name: futane_frontend
     ports:
-      - "4200:80"
+      - "80:80"
     depends_on:
       - backend
-    restart: always
+    restart: unless-stopped
 
 volumes:
   mysql_data:
   backend_uploads:
+  backend_backups:
+  backend_logs:

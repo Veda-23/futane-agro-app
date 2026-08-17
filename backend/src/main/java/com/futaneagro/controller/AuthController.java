@@ -58,6 +58,9 @@ public class AuthController {
     private Environment environment;
 
     @Autowired
+    private com.futaneagro.security.TokenBlacklistService tokenBlacklistService;
+
+    @Autowired
     private EmailService emailService;
 
     @Autowired
@@ -414,6 +417,17 @@ public class AuthController {
 
         Map<String, Object> res = new HashMap<>();
         res.put("message", "Password changed successfully.");
+        return ResponseEntity.ok(res);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && tokenBlacklistService != null) {
+            tokenBlacklistService.blacklistToken(authHeader);
+        }
+        Map<String, Object> res = new HashMap<>();
+        res.put("message", "Logged out successfully and token invalidated.");
         return ResponseEntity.ok(res);
     }
 }

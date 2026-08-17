@@ -33,6 +33,9 @@ public class ProductionController {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private com.futaneagro.service.NotificationBroadcastService broadcastService;
+
     private String getCurrentUser() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return (principal != null) ? principal.toString() : "system";
@@ -84,6 +87,9 @@ public class ProductionController {
         inventoryRepository.save(inv);
 
         saveAuditLog("Created production entry for crate: " + saved.getCrateType(), "PPD", null, toJson(saved));
+        if (broadcastService != null) {
+            broadcastService.broadcastUpdate("PRODUCTION", "CREATED", "Produced " + ppd.getSuccessful() + " " + ppd.getCrateType() + " crates (" + ppd.getShift() + ")");
+        }
         return saved;
     }
 

@@ -33,6 +33,9 @@ public class SalesController {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private com.futaneagro.service.NotificationBroadcastService broadcastService;
+
     private String getCurrentUser() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return (principal != null) ? principal.toString() : "system";
@@ -91,7 +94,10 @@ public class SalesController {
         invoice.setInvoiceNo("INV-" + LocalDate.now().toString().replace("-", "") + "-" + savedSale.getId());
         invoiceRepository.save(invoice);
 
-        saveAuditLog("Created sale entry for party: " + savedSale.getParty().getPartyName(), "Sales", null, toJson(savedSale));
+        saveAuditLog("Created sale entry for party: " + (savedSale.getParty() != null ? savedSale.getParty().getPartyName() : "N/A"), "Sales", null, toJson(savedSale));
+        if (broadcastService != null) {
+            broadcastService.broadcastUpdate("SALES", "CREATED", "New Sale: " + sale.getQuantity() + " " + sale.getCrateType() + " (₹" + sale.getTotalAmount() + ")");
+        }
         return savedSale;
     }
 
