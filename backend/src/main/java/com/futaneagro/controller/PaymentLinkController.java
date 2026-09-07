@@ -35,9 +35,6 @@ public class PaymentLinkController {
             return ResponseEntity.ok(result);
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            log.error("Failed to create payment link for sale {}: type={} message={}", saleId, e.getClass().getSimpleName(), e.getMessage());
-            return ResponseEntity.internalServerError().body(Map.of("error", "Failed to create payment link. Please try again or contact support."));
         }
     }
 
@@ -55,9 +52,6 @@ public class PaymentLinkController {
             return ResponseEntity.ok(result);
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            log.error("Failed to create checkout order for sale {}: type={} message={}", saleId, e.getClass().getSimpleName(), e.getMessage());
-            return ResponseEntity.internalServerError().body(Map.of("error", "Failed to create checkout order. Please try again."));
         }
     }
 

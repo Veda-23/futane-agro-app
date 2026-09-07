@@ -47,6 +47,7 @@ public class SecurityConfig {
         http.cors().and().csrf().disable()
             .authorizeRequests()
             .antMatchers("/api/users/login", "/api/users/login/verify", "/api/users/verify-session", "/api/users/refresh-token").permitAll()
+            .antMatchers("/ws-erp/**", "/ws-erp").permitAll()
             .antMatchers("/api/webhooks/razorpay").permitAll()
             .antMatchers(HttpMethod.GET, "/api/uploads/branding/**").permitAll()
             .antMatchers(HttpMethod.GET, "/api/uploads/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "ACCOUNTANT", "OPERATOR", "VIEWER")

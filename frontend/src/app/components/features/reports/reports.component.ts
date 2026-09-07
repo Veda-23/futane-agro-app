@@ -511,12 +511,25 @@ export class ReportsComponent implements OnInit, OnDestroy {
         a.href = url;
         a.download = `Tally_Sales_${new Date().toISOString().split('T')[0]}.xml`;
         a.click();
-        window.URL.revokeObjectURL(url);
         this.notificationService.success('Export Ready', 'Tally Prime XML exported successfully.');
       },
       error: (err) => {
         this.notificationService.error('Export Failed', err.message || 'Could not export Tally XML');
       }
     });
+  }
+
+  getReportTitle(): string {
+    const titles: { [key: string]: string } = {
+      'production': 'Daily Production Registry & Crate Audit',
+      'production_monthly': 'Monthly Production Roll-Up Summary',
+      'sales': 'Sales Revenue & Tax Invoicing Audit',
+      'party_ledger': 'Customer Accounts Ledger & Statements',
+      'inventory': 'Finished Goods & Stock Balances',
+      'salaries': 'Payroll Disbursements & Wage Registry',
+      'expense': 'Operational Expenses & Cost Breakdown',
+      'transport': 'Logistics & Fleet Transport Audit'
+    };
+    return titles[this.reportFilter.type] || 'Enterprise Audit Statement';
   }
 }

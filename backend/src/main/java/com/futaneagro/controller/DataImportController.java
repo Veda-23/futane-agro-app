@@ -37,7 +37,7 @@ public class DataImportController {
     public ResponseEntity<?> previewImport(
             @RequestParam("file") MultipartFile file,
             @RequestParam("module") String module,
-            javax.servlet.http.HttpServletRequest request) {
+            javax.servlet.http.HttpServletRequest request) throws Exception {
         if (rateLimitingService.isRateLimited(request, com.futaneagro.security.RateLimitingService.Action.DATA_IMPORT)) {
             return ResponseEntity.status(org.springframework.http.HttpStatus.TOO_MANY_REQUESTS)
                     .body(Map.of("error", "Data import rate limit exceeded. Please wait a moment before trying again."));
@@ -47,9 +47,6 @@ public class DataImportController {
             return ResponseEntity.ok(preview);
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
-        } catch (Exception ex) {
-            log.error("Data import preview failed: type={} message={}", ex.getClass().getSimpleName(), ex.getMessage());
-            return ResponseEntity.status(500).body(Map.of("error", "Error processing file. Please verify format and try again."));
         }
     }
 
@@ -58,15 +55,12 @@ public class DataImportController {
      */
     @PostMapping("/confirm")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'OPERATOR')")
-    public ResponseEntity<?> confirmImport(@RequestBody ImportConfirmRequestDTO request) {
+    public ResponseEntity<?> confirmImport(@RequestBody ImportConfirmRequestDTO request) throws Exception {
         try {
             ImportResultDTO result = importService.executeImport(request);
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
-        } catch (Exception ex) {
-            log.error("Data import confirm failed: type={} message={}", ex.getClass().getSimpleName(), ex.getMessage());
-            return ResponseEntity.status(500).body(Map.of("error", "Import execution failed. Please contact support."));
         }
     }
 

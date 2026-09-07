@@ -10,16 +10,18 @@ const __dirname = path.dirname(__filename);
 const EDGE_PATH = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
 const SNAP_DIR = path.join(__dirname, 'all_31_scrollable_snapshots');
 const OUTPUT_PDF_SCRATCH = path.join(__dirname, 'Futane_Agro_ERP_All_31_Tabs_Scrollable_Visual_Report.pdf');
-const OUTPUT_PDF_ROOT = path.join(__dirname, '..', 'Futane_Agro_ERP_All_31_Tabs_Scrollable_Visual_Report.pdf');
-const OUTPUT_PDF_ARTIFACT = 'C:\\Users\\Vedant\\.gemini\\antigravity-ide\\brain\\89f3ea7d-dcd4-403b-b430-2e211a1bf80b\\Futane_Agro_ERP_All_31_Tabs_Scrollable_Visual_Report.pdf';
+const OUTPUT_PDF_DOCS = path.join(__dirname, '..', 'docs', 'reports', 'Futane_Agro_ERP_All_31_Tabs_Scrollable_Visual_Report.pdf');
+const OUTPUT_PDF_ARTIFACT = 'C:\\Users\\Vedant\\.gemini\\antigravity-ide\\brain\\fdd0d5e2-b9ea-49ba-889e-e88204822640\\Futane_Agro_ERP_All_31_Tabs_Scrollable_Visual_Report.pdf';
+const ARTIFACT_DIR = 'C:\\Users\\Vedant\\.gemini\\antigravity-ide\\brain\\fdd0d5e2-b9ea-49ba-889e-e88204822640';
+const BASE_URL = 'http://localhost:8081';
 
 if (!fs.existsSync(SNAP_DIR)) {
   fs.mkdirSync(SNAP_DIR, { recursive: true });
 }
 
 async function getAuthToken() {
-  console.log('🔑 Authenticating via Backend UAT API (SUPER_ADMIN)...');
-  const loginRes = await fetch('http://localhost:8081/api/users/login', {
+  console.log(`🔑 Authenticating via Backend UAT API at ${BASE_URL} (SUPER_ADMIN)...`);
+  const loginRes = await fetch(`${BASE_URL}/api/users/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username: 'SUPER_ADMIN', password: 'superadmin123' })
@@ -28,7 +30,7 @@ async function getAuthToken() {
   let userObj;
   if (loginRes.status === 'OTP_REQUIRED' || loginRes.status === 'OTP_SENT') {
     const otp = loginRes.tempOtp || '654321';
-    const verifyRes = await fetch('http://localhost:8081/api/users/login/verify', {
+    const verifyRes = await fetch(`${BASE_URL}/api/users/login/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: 'SUPER_ADMIN', otp: otp })
@@ -93,11 +95,11 @@ async function run() {
   const page = await browser.newPage();
   await page.setViewport({ width: 1500, height: 1000, deviceScaleFactor: 1.5 });
 
-  console.log('🌐 Loading Futane Agro ERP & Injecting Session...');
-  await page.goto('http://localhost:4200/', { waitUntil: 'domcontentloaded' });
+  console.log(`🌐 Loading Futane Agro ERP at ${BASE_URL} & Injecting Session...`);
+  await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
 
   // Inject authentication into storage
-  await page.evaluate((user) => {
+  await page.evaluate((user, baseUrl) => {
     localStorage.setItem('user', JSON.stringify(user));
     sessionStorage.setItem('user', JSON.stringify(user));
     if (user.token) {
@@ -106,8 +108,8 @@ async function run() {
       document.cookie = `erp_session_cookie=${user.token}; path=/; SameSite=Strict`;
     }
     sessionStorage.setItem('activeTab', 'dashboard');
-    window.location.href = 'http://localhost:4200/';
-  }, userSession);
+    window.location.href = `${baseUrl}/`;
+  }, userSession, BASE_URL);
 
   await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 }).catch(() => {});
   await page.waitForSelector('.app-container', { timeout: 15000 });
@@ -392,11 +394,27 @@ async function run() {
 
   const pdfBytes = await pdfDoc.save();
   fs.writeFileSync(OUTPUT_PDF_SCRATCH, pdfBytes);
-  fs.writeFileSync(OUTPUT_PDF_ROOT, pdfBytes);
   try {
+    fs.mkdirSync(path.dirname(OUTPUT_PDF_DOCS), { recursive: true });
+    fs.writeFileSync(OUTPUT_PDF_DOCS, pdfBytes);
+  } catch (e) {}
+  try {
+    fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
     fs.writeFileSync(OUTPUT_PDF_ARTIFACT, pdfBytes);
   } catch (e) {}
-  console.log(`\n🎉 PDF GENERATED SUCCESSFULLY: ${OUTPUT_PDF_ROOT} (${(pdfBytes.length / (1024 * 1024)).toFixed(2)} MB)`);
+
+  // Also copy all screenshots to artifact directory
+  for (const s of screens) {
+    try {
+      const dest = path.join(ARTIFACT_DIR, path.basename(s.imgPath));
+      fs.copyFileSync(s.imgPath, dest);
+    } catch (e) {}
+  }
+
+  console.log(`\n🎉 PDF GENERATED SUCCESSFULLY:`);
+  console.log(`   📄 Scratch : ${OUTPUT_PDF_SCRATCH} (${(pdfBytes.length / (1024 * 1024)).toFixed(2)} MB)`);
+  console.log(`   📄 Docs    : ${OUTPUT_PDF_DOCS}`);
+  console.log(`   📄 Artifact: ${OUTPUT_PDF_ARTIFACT}`);
 }
 
 run().catch(err => {

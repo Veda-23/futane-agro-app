@@ -113,11 +113,14 @@
 
 <!-- Chart Panel (E-05) -->
 <div class="glass-panel" *ngIf="['production','sales','production_monthly'].includes(reportFilter.type) && filteredReportData.length > 0"
-     style="padding:20px; margin-bottom:18px;">
-  <h4 style="margin:0 0 14px 0; font-weight:700; display:flex; align-items:center; gap:8px;">
-    📊 {{ reportFilter.type === 'sales' ? 'Sales Revenue Trend' : 'Production Volume Trend' }}
-  </h4>
-  <div style="height:260px; position:relative;">
+     style="padding:20px 24px; margin-bottom:28px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+    <h4 style="margin:0; font-weight:700; display:flex; align-items:center; gap:8px;">
+      📊 {{ reportFilter.type === 'sales' ? 'Sales Revenue Trend' : 'Production Volume Trend' }}
+    </h4>
+    <span style="font-size:12px; color:var(--text-secondary); font-weight:500;">Dynamic trend analysis for selected date range</span>
+  </div>
+  <div style="height:270px; position:relative; padding-bottom:12px;">
     <canvas id="reportChartCanvas"></canvas>
   </div>
 </div>
@@ -136,33 +139,52 @@
     <button class="btn btn-secondary btn-sm" (click)="loadData()">🔄 Retry</button>
   </div>
 
-  <div class="glass-panel table-container" *ngIf="!isLoading && !hasError" style="padding:16px;">
+  <div class="report-table-card" *ngIf="!isLoading && !hasError">
+    <!-- Section Table Header Strip -->
+    <div class="report-table-header-strip no-print">
+      <div class="header-strip-left">
+        <div class="section-title-badge">
+          <span class="badge-icon"><i class="bi bi-table" style="color:var(--primary); font-size:18px;"></i></span>
+          <div class="badge-text">
+            <h3>{{ getReportTitle() }}</h3>
+            <p class="subtitle">{{ filteredReportData.length }} records loaded &bull; Audit Certified</p>
+          </div>
+        </div>
+      </div>
+      <div class="header-strip-right">
+        <span class="report-audit-tag"><i class="bi bi-shield-check"></i> System Reconciled</span>
+      </div>
+    </div>
 
-    <!-- 1. Daily Production Report -->
-    <table *ngIf="reportFilter.type === 'production'" style="width:100%;">
-      <thead>
-        <tr>
-          <th style="width:110px;">Date</th>
-          <th>Crate Type</th>
-          <th style="width:120px; text-align:center;">Shift</th>
-          <th style="width:130px; text-align:right;">Total Produced</th>
-          <th style="width:120px; text-align:right;">Successful</th>
-          <th style="width:110px; text-align:right;">Rejected</th>
-          <th style="width:100px; text-align:center;">Efficiency</th>
-        </tr>
-      </thead>
-      <tbody>
+    <div class="table-container">
+      <!-- 1. Daily Production Report -->
+      <table class="enterprise-data-table" *ngIf="reportFilter.type === 'production'">
+        <thead>
+          <tr>
+            <th style="width:110px;">Date</th>
+            <th>Crate Type</th>
+            <th style="width:130px; text-align:center;">Shift</th>
+            <th style="width:130px; text-align:right;">Total Produced</th>
+            <th style="width:120px; text-align:right;">Successful</th>
+            <th style="width:110px; text-align:right;">Rejected</th>
+            <th style="width:110px; text-align:center;">Efficiency</th>
+          </tr>
+        </thead>
+        <tbody>
         <tr *ngFor="let row of filteredReportData">
-          <td>{{ row.date | indianDate }}</td>
-          <td><strong>{{ row.crateType }}</strong></td>
-          <td style="text-align:center;"><span class="badge badge-info">{{ row.shift }}</span></td>
-          <td style="text-align:right; font-variant-numeric:tabular-nums; font-weight:600;">{{ row.totalProduction | number }}</td>
-          <td style="text-align:right; font-variant-numeric:tabular-nums; color:var(--accent-success, #10b981); font-weight:600;">{{ row.successful | number }}</td>
-          <td style="text-align:right; font-variant-numeric:tabular-nums; color:var(--accent-error, #ef4444); font-weight:600;">{{ row.rejected | number }}</td>
+          <td class="cell-date">{{ row.date | indianDate }}</td>
+          <td class="cell-crate"><strong>{{ row.crateType }}</strong></td>
           <td style="text-align:center;">
-            <span class="badge"
-                  [style.background]="(row.successful / (row.totalProduction || 1)) >= 0.9 ? 'var(--accent-success, #10b981)' : 'var(--accent-warning, #f59e0b)'"
-                  style="color:#fff; padding:2px 8px; border-radius:12px; font-size:11px;">
+            <span class="report-shift-badge">{{ row.shift }}</span>
+          </td>
+          <td style="text-align:right;" class="cell-num cell-total">{{ row.totalProduction | number }}</td>
+          <td style="text-align:right;" class="cell-num cell-success">{{ row.successful | number }}</td>
+          <td style="text-align:right;" class="cell-num cell-rejected">{{ row.rejected | number }}</td>
+          <td style="text-align:center;">
+            <span class="report-efficiency-pill"
+                  [class.high]="(row.successful / (row.totalProduction || 1)) >= 0.9"
+                  [class.med]="(row.successful / (row.totalProduction || 1)) < 0.9 && (row.successful / (row.totalProduction || 1)) >= 0.75"
+                  [class.low]="(row.successful / (row.totalProduction || 1)) < 0.75">
               {{ (row.totalProduction ? (row.successful / row.totalProduction * 100).toFixed(0) : 0) }}%
             </span>
           </td>
@@ -183,7 +205,7 @@
     </table>
 
     <!-- 2. Monthly Production Summary (E-04) -->
-    <table *ngIf="reportFilter.type === 'production_monthly'" style="width:100%;">
+    <table class="enterprise-data-table" *ngIf="reportFilter.type === 'production_monthly'">
       <thead>
         <tr>
           <th>Month</th>
@@ -202,7 +224,7 @@
           <td style="text-align:right; font-variant-numeric:tabular-nums; color:var(--accent-success, #10b981); font-weight:600;">{{ m.successful | number }}</td>
           <td style="text-align:right; font-variant-numeric:tabular-nums; color:var(--accent-error, #ef4444);">{{ m.rejected | number }}</td>
           <td style="text-align:center;">
-            <span class="badge" style="background:var(--accent-success, #10b981); color:#fff; padding:2px 8px; border-radius:12px; font-size:11px;">
+            <span class="report-efficiency-pill high">
               {{ m.efficiency }}
             </span>
           </td>
@@ -214,7 +236,7 @@
     </table>
 
     <!-- 3. Sales Report with Totals (E-02) -->
-    <table *ngIf="reportFilter.type === 'sales'" style="width:100%;">
+    <table class="enterprise-data-table" *ngIf="reportFilter.type === 'sales'">
       <thead>
         <tr>
           <th style="width:100px;">Date</th>
@@ -480,7 +502,7 @@
           <td colspan="3" style="text-align:center;">—</td>
         </tr>
       </tfoot>
-    </table>
-
+      </table>
+    </div>
   </div>
 </div>

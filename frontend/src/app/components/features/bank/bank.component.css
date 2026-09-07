@@ -1,0 +1,109 @@
+/* ============================================================
+   BANK — Banking & Financial Ledger Module
+   ============================================================ */
+
+:host {
+  display: block;
+}
+
+/* Module container wraps the grid-cols-3 layout */
+.bank-module {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Balance KPI Summary */
+.bank-balance-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 4px;
+}
+
+/* Table toolbar override for bank's inline toolbar */
+.table-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Amount Column Alignment */
+td.amount-cell,
+th.amount-cell {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* Credit / Debit status inline */
+.txn-credit {
+  color: var(--color-success);
+  font-weight: 700;
+}
+
+.txn-debit {
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
+/* Running balance column */
+.running-balance {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Row actions */
+.row-actions-group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.btn-row-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-row-action:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-row-action.btn-delete {
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-border);
+  color: var(--color-danger);
+}
+
+.btn-row-action.btn-delete:hover {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #ffffff;
+}
+
+/* Responsive */
+@media (max-width: 960px) {
+  .bank-balance-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

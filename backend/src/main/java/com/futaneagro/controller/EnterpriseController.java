@@ -124,19 +124,19 @@ public class EnterpriseController {
     }
 
     // --- Machine Breakdown ---
-    @GetMapping("/breakdowns")
+    @GetMapping({"/breakdowns", "/machine-breakdowns"})
     public List<MachineBreakdown> getAllBreakdowns() {
         return breakdownRepo.findAll();
     }
 
-    @PostMapping("/breakdowns")
+    @PostMapping({"/breakdowns", "/machine-breakdowns"})
     public MachineBreakdown createBreakdown(@RequestBody MachineBreakdown breakdown) {
         MachineBreakdown saved = breakdownRepo.save(breakdown);
-        saveAuditLog("Logged breakdown for machine ID: " + saved.getMachine().getId(), "Machine_Breakdown", null, toJson(saved));
+        saveAuditLog("Logged breakdown for machine ID: " + (saved.getMachine() != null ? saved.getMachine().getId() : "N/A"), "Machine_Breakdown", null, toJson(saved));
         return saved;
     }
 
-    @PutMapping("/breakdowns/{id}")
+    @PutMapping({"/breakdowns/{id}", "/machine-breakdowns/{id}"})
     public ResponseEntity<MachineBreakdown> updateBreakdown(@PathVariable String id, @RequestBody MachineBreakdown details) {
         return breakdownRepo.findById(id).map(bd -> {
             String oldState = toJson(bd);
@@ -151,7 +151,7 @@ public class EnterpriseController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/breakdowns/{id}")
+    @DeleteMapping({"/breakdowns/{id}", "/machine-breakdowns/{id}"})
     public void deleteBreakdown(@PathVariable String id) {
         breakdownRepo.findById(id).ifPresent(b -> {
             String oldState = toJson(b);

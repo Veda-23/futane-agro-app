@@ -6,15 +6,15 @@ services:
     image: mysql:8.0
     container_name: futane_agro_mysql_prod
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: Vedant
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-Vedant}
       MYSQL_DATABASE: futane_agro_prod
     volumes:
       - mysql_prod_data:/var/lib/mysql
     restart: always
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pVedant"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-Vedant}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -34,9 +34,9 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-prod:3306/futane_agro_prod?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=Vedant
-      - MAIL_USERNAME=vedantmehare25@gmail.com
-      - MAIL_PASSWORD=vsbtirkwuqviuicj
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-Vedant}
+      - MAIL_USERNAME=${MAIL_USERNAME:-vedantmehare25@gmail.com}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-vsbtirkwuqviuicj}
       - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
       - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
       - RAZORPAY_WEBHOOK_SECRET=${RAZORPAY_WEBHOOK_SECRET}

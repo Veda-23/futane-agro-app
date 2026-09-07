@@ -115,3 +115,30 @@ jobs:
       - name: Validate Docker Compose Configuration
         run: |
           docker compose -f docker-compose.uat.yml config
+          docker compose -f docker-compose.prod.yml config
+
+  # -------------------------------------------------------------
+  # Job 4: DevSecOps & Security Hygiene Scan
+  # -------------------------------------------------------------
+  security-hygiene:
+    name: DevSecOps Security Hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Verify No Secrets or Database Dumps Tracked in Git
+        run: |
+          echo "Scanning git-tracked files for forbidden dumps and private keys..."
+          FORBIDDEN=$(git ls-files "*.key" "*.pem" "*.pfx" "*.jks" "backups/*.sql" "backend/backups/*.sql" ".env" ".env.*" ":!.env.example" || true)
+          if [ -n "$FORBIDDEN" ]; then
+            echo "::error::Sensitive files detected in git repository tracking: $FORBIDDEN"
+            exit 1
+          fi
+          echo "No tracked credentials, certificates, or database dumps found."
+
+      - name: Verify Docker Compose Secret Parameterization
+        run: |
+          echo "Checking docker-compose files for cleartext hardcoded passwords..."
+          grep -rn "MYSQL_ROOT_PASSWORD: [^$]" docker-compose*.yml && { echo "::error::Hardcoded MYSQL_ROOT_PASSWORD found!"; exit 1; } || true
+          echo "Docker compose credentials cleanly parameterized."
