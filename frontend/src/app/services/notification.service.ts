@@ -14,25 +14,38 @@ export class NotificationService {
    */
   private showToast(icon: 'success' | 'info' | 'warning' | 'error', title: string, text: string = '') {
     const isDark = document.body.classList.contains('dark-theme');
+    const iconHtmlMap = {
+      success: '<i class="bi bi-check-circle-fill"></i>',
+      error: '<i class="bi bi-x-circle-fill"></i>',
+      warning: '<i class="bi bi-exclamation-triangle-fill"></i>',
+      info: '<i class="bi bi-info-circle-fill"></i>'
+    };
+
+    const htmlContent = `
+      <div class="futane-toast-body-wrapper">
+        <div class="futane-toast-heading">${title}</div>
+        ${text ? `<div class="futane-toast-message">${text}</div>` : ''}
+      </div>
+    `;
+
     Swal.fire({
       toast: true,
       position: 'top-end',
-      icon: icon,
-      title: title,
-      text: text,
+      iconHtml: iconHtmlMap[icon] || iconHtmlMap.info,
+      html: htmlContent,
       showConfirmButton: false,
       showCloseButton: true,
       timer: 4000,
       timerProgressBar: true,
-      background: isDark ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.97)',
+      background: isDark ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.98)',
       color: isDark ? '#f8fafc' : '#0f172a',
       customClass: {
         container: 'futane-toast-container-top',
         popup: `futane-toast-popup futane-toast-${icon}`,
-        title: 'futane-toast-title',
-        htmlContainer: 'futane-toast-text',
+        htmlContainer: 'futane-toast-html-container',
         timerProgressBar: `futane-toast-progress futane-toast-progress-${icon}`,
-        closeButton: 'futane-toast-close'
+        closeButton: 'futane-toast-close',
+        icon: `futane-toast-icon-wrapper futane-toast-icon-${icon}`
       },
       showClass: {
         popup: 'swal2-toast-show'
@@ -223,5 +236,10 @@ export class NotificationService {
 
   showNoRecordsFound(message: string = 'No Records Found') {
     this.info('No Data', message);
+  }
+
+  showDataRefreshed(moduleName: string = 'Data', count?: number) {
+    const text = count !== undefined ? `${count} records synchronized.` : 'Latest records refreshed from server.';
+    this.success(`${moduleName} Refreshed`, text);
   }
 }

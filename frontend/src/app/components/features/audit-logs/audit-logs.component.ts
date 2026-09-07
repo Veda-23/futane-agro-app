@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
+import { NotificationService } from '../../../services/notification.service';
 import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 
 export interface AuditLogItem {
@@ -55,11 +56,36 @@ export class AuditLogsComponent implements OnInit {
 
   // Selected Log for detail modal
   selectedLogForDetail: AuditLogItem | null = null;
+  copiedPayload: boolean = false;
 
-  constructor(private apiService: ApiService) {}
+  constructor(
+    private apiService: ApiService,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit() {
+    const saved = localStorage.getItem('futane_table_density');
+    if (saved === 'compact' || saved === 'comfortable' || saved === 'spacious') {
+      this.tableDensity = saved;
+    }
     this.loadData();
+  }
+
+  setDensity(d: 'compact' | 'comfortable' | 'spacious') {
+    this.tableDensity = d;
+    localStorage.setItem('futane_table_density', d);
+    document.body.classList.remove('density-compact', 'density-comfortable', 'density-spacious');
+    document.body.classList.add('density-' + d);
+  }
+
+  copyPayload() {
+    if (!this.selectedLogForDetail) return;
+    const text = this.selectedLogForDetail.details || this.selectedLogForDetail.newValue || '';
+    navigator.clipboard.writeText(text).then(() => {
+      this.copiedPayload = true;
+      this.notificationService.success('Copied to Clipboard', 'Payload copied successfully.');
+      setTimeout(() => { this.copiedPayload = false; }, 2500);
+    });
   }
 
   loadData() {

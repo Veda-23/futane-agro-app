@@ -132,9 +132,11 @@ export class ProductionComponent implements OnInit {
 
   loadPreferences() {
     try {
-      const savedDensity = localStorage.getItem('erp_table_density');
+      const savedDensity = localStorage.getItem('futane_table_density') || localStorage.getItem('erp_table_density');
       if (savedDensity && ['compact', 'comfortable', 'spacious'].includes(savedDensity)) {
         this.tableDensity = savedDensity as any;
+        document.body.classList.remove('density-compact', 'density-comfortable', 'density-spacious');
+        document.body.classList.add('density-' + savedDensity);
       }
 
       ['ppd', 'ppm'].forEach(tableKey => {
@@ -151,7 +153,12 @@ export class ProductionComponent implements OnInit {
 
   setDensity(density: 'compact' | 'comfortable' | 'spacious') {
     this.tableDensity = density;
-    try { localStorage.setItem('erp_table_density', density); } catch {}
+    try {
+      localStorage.setItem('futane_table_density', density);
+      localStorage.setItem('erp_table_density', density);
+      document.body.classList.remove('density-compact', 'density-comfortable', 'density-spacious');
+      document.body.classList.add('density-' + density);
+    } catch {}
   }
 
   // --- Data Loading ---

@@ -397,6 +397,9 @@ export class AppComponent implements OnInit, OnDestroy {
   tableDensity: 'compact' | 'comfortable' | 'spacious' = 'comfortable';
   setDensity(d: 'compact' | 'comfortable' | 'spacious') {
     this.tableDensity = d;
+    localStorage.setItem('futane_table_density', d);
+    document.body.classList.remove('density-compact', 'density-comfortable', 'density-spacious');
+    document.body.classList.add('density-' + d);
   }
 
   // Multi-Row Selection by Tab
@@ -552,6 +555,16 @@ export class AppComponent implements OnInit, OnDestroy {
     this.translateService.init();
     this.currentLang = this.translateService.getCurrentLanguage();
     this.translateService.language$.subscribe(lang => this.currentLang = lang);
+
+    // Initialize global table density from local preferences
+    const savedDensity = localStorage.getItem('futane_table_density');
+    if (savedDensity === 'compact' || savedDensity === 'comfortable' || savedDensity === 'spacious') {
+      this.tableDensity = savedDensity;
+      document.body.classList.remove('density-compact', 'density-comfortable', 'density-spacious');
+      document.body.classList.add('density-' + savedDensity);
+    }
+
+    (window as any).notificationService = this.notificationService;
 
     this.updateGrafanaUrl();
     this.pollTelemetryHealth();

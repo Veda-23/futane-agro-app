@@ -56,9 +56,9 @@
 
       <!-- Density Toggle -->
       <div class="density-switch-group">
-        <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="tableDensity = 'compact'" title="Compact density"><i class="bi bi-distribute-vertical"></i></button>
-        <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="tableDensity = 'comfortable'" title="Standard density"><i class="bi bi-list-ul"></i></button>
-        <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="tableDensity = 'spacious'" title="Spacious density"><i class="bi bi-grid-3x2-gap"></i></button>
+        <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact density"><i class="bi bi-distribute-vertical"></i> Compact</button>
+        <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="setDensity('comfortable')" title="Standard density"><i class="bi bi-list-ul"></i> Normal</button>
+        <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious density"><i class="bi bi-grid-3x2-gap"></i> Spacious</button>
       </div>
 
       <!-- Export CSV -->
@@ -192,7 +192,9 @@
   <div class="audit-modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <div class="modal-title-group">
-        <span class="material-symbols-outlined modal-icon">shield</span>
+        <div class="modal-icon-shield">
+          <i class="bi bi-shield-check"></i>
+        </div>
         <div>
           <h4>Audit Record Details</h4>
           <span class="modal-subtitle">Log ID #{{ selectedLogForDetail.auditId || selectedLogForDetail.id }} · {{ selectedLogForDetail.timestamp | date:'medium' }}</span>
@@ -214,27 +216,35 @@
           <label>Operation Action</label>
           <div class="meta-val">
             <span class="action-badge" [ngClass]="getActionBadgeClass(selectedLogForDetail.action)">
-              {{ selectedLogForDetail.action }}
+              <i class="bi bi-activity me-1"></i>{{ selectedLogForDetail.action }}
             </span>
           </div>
         </div>
         <div class="meta-field">
           <label>Module / Resource</label>
-          <div class="meta-val"><code>{{ selectedLogForDetail.tableName || selectedLogForDetail.resourceName }}</code></div>
+          <div class="meta-val"><code class="code-pill">{{ selectedLogForDetail.tableName || selectedLogForDetail.resourceName }}</code></div>
         </div>
         <div class="meta-field">
           <label>Client IP Address</label>
-          <div class="meta-val"><code>{{ selectedLogForDetail.ipAddress || '127.0.0.1' }}</code></div>
+          <div class="meta-val"><code class="code-pill">{{ selectedLogForDetail.ipAddress || '127.0.0.1' }}</code></div>
         </div>
         <div class="meta-field">
           <label>Timestamp</label>
-          <div class="meta-val"><code>{{ selectedLogForDetail.timestamp }}</code></div>
+          <div class="meta-val">
+            <span class="timestamp-val"><i class="bi bi-clock me-1 text-muted"></i>{{ selectedLogForDetail.timestamp | date:'medium' }}</span>
+          </div>
         </div>
       </div>
 
       <div class="modal-payload-section">
-        <label>Event Details & Change Payload</label>
-        <pre class="payload-pre"><code>{{ selectedLogForDetail.details || selectedLogForDetail.newValue || 'No additional payload metadata logged.' }}</code></pre>
+        <div class="payload-header-row">
+          <label><i class="bi bi-code-slash me-1"></i>Event Details & Change Payload</label>
+          <button type="button" class="btn-copy-payload" (click)="copyPayload()" title="Copy to clipboard">
+            <i class="bi" [ngClass]="copiedPayload ? 'bi-check-lg text-success' : 'bi-clipboard'"></i>
+            <span>{{ copiedPayload ? 'Copied' : 'Copy' }}</span>
+          </button>
+        </div>
+        <pre class="payload-pre"><code>{{ selectedLogForDetail.details || selectedLogForDetail.newValue || 'System audit log entry recorded.' }}</code></pre>
       </div>
     </div>
 
