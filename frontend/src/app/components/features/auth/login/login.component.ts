@@ -52,6 +52,12 @@ export class LoginComponent implements OnDestroy {
 
   handleLogin() {
     this.loginError = '';
+    // Clear any obsolete legacy backend URL from older versions
+    const saved = localStorage.getItem('backend_url');
+    if (saved && saved.includes(':8080')) {
+      localStorage.removeItem('backend_url');
+    }
+
     this.apiService.login(this.loginCredentials).subscribe({
       next: (res) => {
         if (res.status === 'OTP_REQUIRED' || res.status === 'OTP_SENT') {
@@ -69,10 +75,17 @@ export class LoginComponent implements OnDestroy {
         }
       },
       error: (err) => {
-        if (err.status === 423 || err.status === 403) {
+        console.error('Login request failed:', err);
+        if (err.status === 0) {
+          this.loginError = 'Cannot reach ERP backend server. Please verify backend is running on port 8082 (UAT) / 8081 and refresh.';
+        } else if (err.status === 423 || err.status === 403) {
           this.loginError = err.error?.message || 'Account is locked due to multiple failed attempts. Please wait 30 minutes.';
-        } else {
+        } else if (err.status === 429) {
+          this.loginError = err.error?.message || 'Too many login attempts. Please wait 60 seconds.';
+        } else if (err.status === 401) {
           this.loginError = err.error?.message || 'Invalid username or password.';
+        } else {
+          this.loginError = err.error?.message || `Server error (${err.status}): ${err.statusText || 'Please try again'}`;
         }
       }
     });
@@ -114,7 +127,14 @@ export class LoginComponent implements OnDestroy {
         this.completeLoginLocal(res);
       },
       error: (err) => {
-        this.loginError = err.error?.message || 'Invalid or expired OTP.';
+        console.error('OTP verification failed:', err);
+        if (err.status === 0) {
+          this.loginError = 'Cannot reach ERP backend server. Please check your connection.';
+        } else if (err.status === 429) {
+          this.loginError = err.error?.message || 'Too many verification attempts. Please wait 60 seconds.';
+        } else {
+          this.loginError = err.error?.message || 'Invalid or expired OTP.';
+        }
       }
     });
   }

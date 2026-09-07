@@ -17,9 +17,13 @@ export class ApiService {
 
   constructor(private http: HttpClient) {
     const savedBackend = localStorage.getItem('backend_url');
-    if (savedBackend) {
-      this.baseUrl = savedBackend;
+    // Sanitize: Purge legacy or dead :8080 URLs
+    if (savedBackend && !savedBackend.includes(':8080') && !savedBackend.includes('localhost:8080')) {
+      this.baseUrl = savedBackend.trim().replace(/\/+$/, '');
     } else {
+      if (savedBackend) {
+        localStorage.removeItem('backend_url');
+      }
       this.baseUrl = environment.apiUrl;
     }
   }
