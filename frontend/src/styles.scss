@@ -1931,23 +1931,36 @@ body.dark-theme .futane-toast-popup .swal2-close:hover {
 
 /* ── A. Button Gap & Intentional Spacing Standards (Checklist #2, #20, #21) ─ */
 /* Guard against visually merged adjacent buttons */
-.btn + .btn:not(.btn-group > .btn):not(.btn-row-action):not(.segmented-btn):not(.fab-item-btn) {
+.btn + .btn:not(.btn-group-segmented > .btn):not(.fab-item-btn) {
   margin-left: 8px !important;
 }
 
-/* Button clusters: intentional 8px spacing */
-.btn-group,
+/* Eliminate Bootstrap default negative-margin merge behavior */
+.btn-group:not(.btn-group-segmented) {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-left: 0 !important;
+}
+
+.btn-group:not(.btn-group-segmented) > .btn {
+  margin-left: 0 !important;
+  border-radius: var(--radius-md) !important;
+}
+
+/* Button clusters & inline actions: intentional 8px spacing */
 .btn-cluster,
 .action-buttons,
 .button-group,
 .modal-footer,
 .card-footer-actions,
 .form-actions,
-.qa-buttons-wrap {
-  display: flex;
-  align-items: center;
+.qa-buttons-wrap,
+.quick-action-btns {
+  display: flex !important;
+  align-items: center !important;
   gap: 8px !important;
-  flex-wrap: wrap;
+  flex-wrap: wrap !important;
 }
 
 /* Major toolbars & larger action bars: intentional 12px spacing */
@@ -1957,11 +1970,27 @@ body.dark-theme .futane-toast-popup .swal2-close:hover {
 .toolbar-actions,
 .filter-toolbar,
 .report-filter-bar,
-.header-actions {
-  display: flex;
-  align-items: center;
+.header-actions,
+.quick-actions-bar {
+  display: flex !important;
+  align-items: center !important;
   gap: 12px !important;
-  flex-wrap: wrap;
+  flex-wrap: wrap !important;
+}
+
+/* Row Action Buttons in Tables: intentional 6px spacing */
+.row-actions-group,
+.actions-cell,
+.table-action-col .btn-group {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+}
+
+.btn-row-action + .btn-row-action {
+  margin-left: 6px !important;
 }
 
 /* ── B. Optical Icon-to-Text Baseline Alignment (Checklist #1, #7, #8) ───── */
@@ -1971,36 +2000,49 @@ body.dark-theme .futane-toast-popup .swal2-close:hover {
 .btn svg,
 .btn-row-action i,
 .btn-row-action .bi,
-.btn-row-action svg {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  line-height: 1 !important;
-  vertical-align: middle !important;
-  font-size: 15px !important;
-  flex-shrink: 0;
-  margin-top: -1px !important; /* Perfect optical balance with font cap-height */
-}
-
-.btn-sm i,
-.btn-sm .bi,
-.btn-sm .material-symbols-outlined,
-.btn-sm svg,
-.btn-row-action i {
-  font-size: 13.5px !important;
-}
-
+.btn-row-action svg,
+.nav-icon svg,
+.telemetry-pill svg,
+.telemetry-pill i,
+.quick-action-btn svg,
 .badge i,
 .badge .bi,
 .badge svg {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-size: 11px !important;
   line-height: 1 !important;
   vertical-align: middle !important;
+  flex-shrink: 0 !important;
+  margin-top: -1px !important; /* Precision optical balance with font cap-height */
+}
+
+.btn i,
+.btn .bi,
+.btn svg {
+  font-size: 15px !important;
+  width: 15px;
+  height: 15px;
+}
+
+.btn-sm i,
+.btn-sm .bi,
+.btn-sm svg,
+.btn-row-action i,
+.btn-row-action .bi,
+.btn-row-action svg {
+  font-size: 13.5px !important;
+  width: 13.5px;
+  height: 13.5px;
+}
+
+.badge i,
+.badge .bi,
+.badge svg {
+  font-size: 11px !important;
+  width: 11px;
+  height: 11px;
   margin-right: 3px !important;
-  margin-top: -1px !important;
 }
 
 /* ── C. Form Input Height & Rhythm Standards (Checklist #5, #6, #29) ─────── */
@@ -2016,7 +2058,10 @@ input[type="url"],
 input[type="search"],
 select,
 .form-control,
-.form-select {
+.form-select,
+.table-search-input,
+.search-input,
+.audit-search-input {
   height: 38px !important;
   min-height: 38px !important;
   padding: 7px 12px !important;
@@ -2033,7 +2078,9 @@ input:focus,
 select:focus,
 textarea:focus,
 .form-control:focus,
-.form-select:focus {
+.form-select:focus,
+.table-search-input:focus,
+.search-input:focus {
   outline: none !important;
   border-color: var(--primary) !important;
   box-shadow: var(--brand-focus-ring) !important;
@@ -2074,18 +2121,29 @@ textarea:focus,
   border-bottom: 1px solid var(--border-subtle) !important;
 }
 
-.row-actions-group {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  white-space: nowrap !important;
-}
-
 .table-action-col {
   white-space: nowrap !important;
   text-align: right !important;
   vertical-align: middle !important;
   min-width: 130px !important;
+}
+
+.table-pagination,
+.table-pagination-footer,
+.pagination-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 10px 16px !important;
+  border-top: 1px solid var(--border-color) !important;
+}
+
+.pagination-controls,
+.pagination-buttons {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
 }
 
 /* ── E. Subtab Navigation Consistency (Checklist #14) ────────────────────── */
@@ -2179,18 +2237,70 @@ textarea:focus,
   flex-shrink: 0 !important;
 }
 
-/* ── G. Micro-Animations & Smooth Transitions (Checklist #33–#36) ────────── */
+/* ── G. Equalized Card Heights & Grid Rhythm (Checklist #10, #11, #12) ───── */
+.kpi-card,
+.stat-card,
+.metric-card,
+.summary-card,
+.powerbi-kpi-card,
+.dashboard-widget-card {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
+
+/* ── H. Dropdown Min-Width & Elevation (Checklist #16, #25) ──────────────── */
+.dropdown-menu,
+.col-manager-popover,
+.export-menu,
+.filter-dropdown-menu,
+.popover-menu {
+  min-width: 180px !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-dropdown) !important;
+}
+
+/* ── I. Breadcrumb Spacing & Optical Centering (Checklist #42) ───────────── */
+.header-breadcrumb,
+.breadcrumb-container,
+.breadcrumb-trail {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.breadcrumb-separator {
+  opacity: 0.4;
+  font-size: 11px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* ── J. Text Clipping & Wrap Protection (Checklist #17, #18) ─────────────── */
+.badge,
+.status-badge,
+.status-pill,
+.telemetry-pill,
+.table-action-col,
+.btn,
+.density-btn {
+  white-space: nowrap !important;
+}
+
+/* ── K. Micro-Animations & Smooth Transitions (Checklist #33–#36) ────────── */
 .btn,
 .btn-row-action,
 .settings-nav-pill,
-.telemetry-pill-card,
+.telemetry-pill,
 .kpi-card,
 .activity-item,
 .shortcut-btn {
   transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-/* ── H. Mobile & Tablet Overflow Protection (Checklist #38, #39) ─────────── */
+/* ── L. Mobile & Tablet Overflow Protection (Checklist #38, #39) ─────────── */
 @media (max-width: 768px) {
   .table-toolbar,
   .table-toolbar-top,
@@ -2216,123 +2326,6 @@ textarea:focus,
 /* Responsive pre and tables */
 pre, code, table {
   max-width: 100% !important;
-}
-
-/* ── I. Final Senior QA Micro-UX Refinements (Checklist #1–#46) ───────────── */
-
-/* Gap & Button Merge Protection: Bare adjacent row buttons (#2, #20, #21) */
-.btn-row-action + .btn-row-action {
-  margin-left: 6px !important;
-}
-
-/* Equalized Card Heights across KPI/Stat Grids (#12) */
-.kpi-card,
-.stat-card,
-.metric-card,
-.summary-card,
-.dashboard-widget-card {
-  height: 100% !important;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-/* Breadcrumb Spacing & Optical Centering (#42) */
-.header-breadcrumb,
-.breadcrumb-container,
-.breadcrumb-trail {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-}
-
-.breadcrumb-separator {
-  opacity: 0.4;
-  font-size: 11px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-/* Dropdown Min-Width & Elevation (#16, #25) */
-.dropdown-menu,
-.col-manager-popover,
-.export-menu,
-.filter-dropdown-menu,
-.popover-menu {
-  min-width: 180px !important;
-  border-radius: var(--radius-md) !important;
-  box-shadow: var(--shadow-dropdown) !important;
-}
-
-/* Pagination Bar Alignment & Spacing (#43) */
-.table-pagination,
-.table-pagination-footer,
-.pagination-wrapper {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 12px !important;
-  padding: 10px 16px !important;
-}
-
-.pagination-controls,
-.pagination-buttons {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-}
-
-/* Text Clipping & Wrap Protection (#17, #18) */
-.badge,
-.status-badge,
-.status-pill,
-.telemetry-pill,
-.table-action-col,
-.btn,
-.density-btn {
-  white-space: nowrap !important;
-}
-
-/* Search input standard height (#5, #45) */
-.table-search-input,
-.search-input,
-.audit-search-input,
-.feature-search-input-wrap {
-  height: 38px !important;
-}
-
-/* Icon optical alignment (#1, #7, #8) */
-.bi,
-.material-symbols-outlined {
-  line-height: 1 !important;
-  vertical-align: middle !important;
-}
-
-/* Empty State Standard (#31) */
-.empty-state,
-.empty-state-box,
-.no-data-card {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
-  padding: 40px 20px !important;
-}
-
-.empty-state h3,
-.empty-state-box h3 {
-  font-size: 15px !important;
-  font-weight: 600 !important;
-  color: var(--text-primary) !important;
-  margin: 8px 0 4px 0 !important;
-}
-
-.empty-state p,
-.empty-state-box p {
-  font-size: 13px !important;
-  color: var(--text-secondary) !important;
-  margin-bottom: 16px !important;
 }
 
 
