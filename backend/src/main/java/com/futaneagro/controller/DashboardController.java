@@ -3,6 +3,8 @@ package com.futaneagro.controller;
 import com.futaneagro.entity.*;
 import com.futaneagro.repository.*;
 import com.futaneagro.service.ExcelImporterService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +20,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/dashboard")
 public class DashboardController {
+
+    private static final Logger log = LoggerFactory.getLogger(DashboardController.class);
 
     @Autowired
     private PpdRepository ppdRepository;
