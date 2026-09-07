@@ -29,13 +29,14 @@ import { DataFilterService, FilterCriteria } from '../../../services/data-filter
           <input type="text"
                  [(ngModel)]="criteria.searchTerm"
                  (ngModelChange)="onSearchChange($event)"
-                 placeholder="🔍 Search (Party, Invoice, Truck, ID)..."
+                 placeholder="Search (Party, Invoice, Truck, ID)..."
                  style="width:100%; padding:7px 12px 7px 32px; border-radius:20px; font-size:12.5px; border:1px solid var(--border-glass); background:rgba(0,0,0,0.12); color:var(--text-primary); outline:none;">
-          <span style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:12px; opacity:0.6;">🔍</span>
+          <i class="bi bi-search" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:12px; color:var(--text-muted);"></i>
           <button *ngIf="criteria.searchTerm"
                   type="button"
                   (click)="clearSearch()"
-                  style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px;">✕</button>
+                  style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px;"
+                  title="Clear search"><i class="bi bi-x-lg"></i></button>
         </div>
       </div>
 
@@ -43,19 +44,19 @@ import { DataFilterService, FilterCriteria } from '../../../services/data-filter
       <div class="filter-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; align-items:flex-end;">
         <!-- From Date -->
         <div class="form-group" style="margin:0;">
-          <label style="font-size:10.5px; font-weight:700; color:var(--text-secondary);">📅 From Date</label>
+          <label style="font-size:10.5px; font-weight:700; color:var(--text-secondary);"><i class="bi bi-calendar3 me-1"></i> From Date</label>
           <input type="date" [(ngModel)]="criteria.fromDate" (change)="onFilterChange()" style="font-size:12px; padding:5px 8px;">
         </div>
 
         <!-- To Date -->
         <div class="form-group" style="margin:0;">
-          <label style="font-size:10.5px; font-weight:700; color:var(--text-secondary);">📅 To Date</label>
+          <label style="font-size:10.5px; font-weight:700; color:var(--text-secondary);"><i class="bi bi-calendar3 me-1"></i> To Date</label>
           <input type="date" [(ngModel)]="criteria.toDate" (change)="onFilterChange()" style="font-size:12px; padding:5px 8px;">
         </div>
 
         <!-- Party / Customer (Optional) -->
         <div class="form-group" *ngIf="showPartyFilter" style="margin:0;">
-          <label style="font-size:10.5px; font-weight:700; color:var(--text-secondary);">🏢 Customer / Party</label>
+          <label style="font-size:10.5px; font-weight:700; color:var(--text-secondary);"><i class="bi bi-building me-1"></i> Customer / Party</label>
           <select [(ngModel)]="criteria.partyId" (change)="onFilterChange()" style="font-size:12px; padding:5px 8px;">
             <option value="">All Customers</option>
             <option *ngFor="let p of parties" [value]="p.id">{{ p.partyName }}</option>
@@ -64,7 +65,7 @@ import { DataFilterService, FilterCriteria } from '../../../services/data-filter
 
         <!-- Shift Filter (Optional for Production) -->
         <div class="form-group" *ngIf="showShiftFilter" style="margin:0;">
-          <label style="font-size:10.5px; font-weight:700; color:var(--text-secondary);">⏰ Shift</label>
+          <label style="font-size:10.5px; font-weight:700; color:var(--text-secondary);"><i class="bi bi-clock me-1"></i> Shift</label>
           <select [(ngModel)]="criteria.shift" (change)="onFilterChange()" style="font-size:12px; padding:5px 8px;">
             <option value="">All Shifts</option>
             <option value="Shift A (Morning)">Shift A (Morning)</option>
@@ -87,8 +88,8 @@ import { DataFilterService, FilterCriteria } from '../../../services/data-filter
 
         <!-- Clear & Export Actions -->
         <div style="display:flex; gap:6px;">
-          <button type="button" class="btn btn-secondary btn-sm" (click)="resetFilters()" title="Reset Filters" style="flex:1; height:32px; font-size:11.5px;">✕ Reset</button>
-          <button type="button" class="btn btn-outline btn-sm" (click)="exportExcel.emit()" title="Export Filtered Data to Excel" style="flex:1; height:32px; font-size:11.5px;">📊 Excel</button>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="resetFilters()" title="Reset Filters" style="flex:1; height:32px; font-size:11.5px;"><i class="bi bi-arrow-counterclockwise me-1"></i> Reset</button>
+          <button type="button" class="btn btn-outline btn-sm" (click)="exportExcel.emit()" title="Export Filtered Data to Excel" style="flex:1; height:32px; font-size:11.5px;"><i class="bi bi-file-earmark-excel me-1"></i> Excel</button>
         </div>
       </div>
 

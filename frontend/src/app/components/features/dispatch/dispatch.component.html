@@ -1,6 +1,6 @@
 <div class="enterprise-header">
   <div class="enterprise-header-title-group">
-    <div class="enterprise-header-icon">🚚</div>
+    <div class="enterprise-header-icon"><i class="bi bi-truck"></i></div>
     <div class="enterprise-header-text">
       <h2>Logistics & Dispatch</h2>
       <p>Logistics tracking, vehicle assignments, challan records, and gate passes</p>
@@ -11,9 +11,9 @@
 <div class="grid-cols-3">
   <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-      <h3 style="margin:0; font-weight:700;">📤 {{ 'dispatch.title' | translate:currentLang }}</h3>
+      <h3 style="margin:0; font-weight:700;"><i class="bi bi-box-arrow-up-right me-2"></i>{{ 'dispatch.title' | translate:currentLang }}</h3>
       <button type="button" class="btn btn-secondary btn-sm" (click)="openScanner()" style="font-size:11px; display:inline-flex; align-items:center; gap:4px;">
-        📷 Scan QR
+        <i class="bi bi-qr-code-scan me-1"></i>Scan QR
       </button>
     </div>
     <form (submit)="saveDispatch()">
@@ -24,7 +24,7 @@
           <option *ngFor="let s of availableSalesForDispatch" [value]="s.id">{{ s.party?.partyName || s.partyName || 'Sale #' + s.id }} - {{ s.crateType }} ({{ s.date }})</option>
         </select>
         <small *ngIf="availableSalesForDispatch.length === 0" style="color:var(--accent-warning); font-size: 11px; display: block; margin-top: 4px;">
-          ⚠️ All sales have been dispatched already.
+          <i class="bi bi-info-circle me-1"></i>All sales have been dispatched already.
         </small>
       </div>
       <div class="form-group">
@@ -64,17 +64,17 @@
 
     <!-- Error State -->
     <div *ngIf="!isLoading && hasError" class="empty-state" style="padding:40px; text-align:center;">
-      <div style="font-size:48px; margin-bottom:12px;">⚠️</div>
+      <div style="margin-bottom:12px;"><i class="bi bi-exclamation-triangle text-danger" style="font-size:48px;"></i></div>
       <h3 style="color: var(--text-primary);">Failed to Load Dispatch Data</h3>
       <p style="color: var(--text-secondary); margin-bottom:16px;">Could not connect to the server. Please check your connection.</p>
-      <button class="btn btn-primary" (click)="loadData()">🔄 Retry</button>
+      <button class="btn btn-primary" (click)="loadData()"><i class="bi bi-arrow-repeat me-1"></i>Retry</button>
     </div>
 
     <div *ngIf="!isLoading && !hasError">
       <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
       <div class="column-visibility-dropdown" style="position:relative;">
         <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('dispatch')" style="padding: 6px 12px; font-size: 13px;">
-          ⚙️ Columns
+          <i class="bi bi-layout-three-columns me-1"></i>Columns
         </button>
         <div class="dropdown-menu" *ngIf="showColDropdown['dispatch']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
           <label *ngFor="let col of getTableColumns('dispatch')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
@@ -88,11 +88,11 @@
       <table class="table" appResizableTable tableId="dispatch_table">
         <thead>
           <tr>
-            <th *ngIf="isColumnVisible('dispatch', 'Sale')" (click)="setSort('sale.party.partyName')" style="cursor:pointer; min-width:180px;">Sale <span *ngIf="sortField === 'sale.party.partyName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('dispatch', 'Date')" (click)="setSort('dispatchDate')" style="cursor:pointer; min-width:110px;">{{ 'dispatch.date' | translate:currentLang }} <span *ngIf="sortField === 'dispatchDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('dispatch', 'Vehicle')" (click)="setSort('vehicleNumber')" style="cursor:pointer; min-width:140px;">{{ 'dispatch.vehicle' | translate:currentLang }} <span *ngIf="sortField === 'vehicleNumber'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('dispatch', 'Driver')" (click)="setSort('driverName')" style="cursor:pointer; min-width:140px;">{{ 'dispatch.driver' | translate:currentLang }} <span *ngIf="sortField === 'driverName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('dispatch', 'Status')" (click)="setSort('dispatchStatus')" style="cursor:pointer; min-width:120px;">{{ 'dispatch.status' | translate:currentLang }} <span *ngIf="sortField === 'dispatchStatus'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('dispatch', 'Sale')" (click)="setSort('sale.party.partyName')" style="cursor:pointer; min-width:180px;">Sale <span *ngIf="sortField === 'sale.party.partyName'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
+            <th *ngIf="isColumnVisible('dispatch', 'Date')" (click)="setSort('dispatchDate')" style="cursor:pointer; min-width:110px;">{{ 'dispatch.date' | translate:currentLang }} <span *ngIf="sortField === 'dispatchDate'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
+            <th *ngIf="isColumnVisible('dispatch', 'Vehicle')" (click)="setSort('vehicleNumber')" style="cursor:pointer; min-width:140px;">{{ 'dispatch.vehicle' | translate:currentLang }} <span *ngIf="sortField === 'vehicleNumber'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
+            <th *ngIf="isColumnVisible('dispatch', 'Driver')" (click)="setSort('driverName')" style="cursor:pointer; min-width:140px;">{{ 'dispatch.driver' | translate:currentLang }} <span *ngIf="sortField === 'driverName'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
+            <th *ngIf="isColumnVisible('dispatch', 'Status')" (click)="setSort('dispatchStatus')" style="cursor:pointer; min-width:120px;">{{ 'dispatch.status' | translate:currentLang }} <span *ngIf="sortField === 'dispatchStatus'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
             <th *ngIf="isColumnVisible('dispatch', 'Actions')" style="min-width:120px;">{{ 'label.actions' | translate:currentLang }}</th>
           </tr>
         </thead>
@@ -106,7 +106,7 @@
               <span class="badge" [class.badge-info]="d.dispatchStatus === 'Pending'" [class.badge-warning]="d.dispatchStatus === 'In Transit'" [class.badge-success]="d.dispatchStatus === 'Delivered'">{{ d.dispatchStatus }}</span>
             </td>
             <td *ngIf="isColumnVisible('dispatch', 'Actions')" style="display:flex; gap:6px;">
-              <button class="btn btn-secondary btn-sm" (click)="editDispatch(d)">✏️ Edit</button>
+              <button class="btn btn-secondary btn-sm" (click)="editDispatch(d)"><i class="bi bi-pencil me-1"></i>Edit</button>
               <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteDispatch(d.id)">{{ 'btn.delete' | translate:currentLang }}</button>
             </td>
           </tr>

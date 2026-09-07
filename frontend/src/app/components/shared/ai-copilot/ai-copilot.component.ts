@@ -168,7 +168,7 @@ export class AiCopilotComponent implements OnInit, OnDestroy {
         this.messages.push({
           id: 'err-' + Date.now(),
           role: 'assistant',
-          text: '⚠️ **ERP Copilot Service Notice**\n\nUnable to connect to the Google ADK Intelligence backend. Please check server logs.',
+          text: '**ERP Copilot Service Notice**\n\nUnable to connect to the Google ADK Intelligence backend. Please check server logs.',
           tool: 'SERVICE_OFFLINE',
           timestamp: new Date().toLocaleTimeString(),
           status: 'error'
@@ -202,7 +202,7 @@ export class AiCopilotComponent implements OnInit, OnDestroy {
       {
         id: 'init-' + Date.now(),
         role: 'assistant',
-        text: '✨ **New Chat Session Started**\nConversation memory reset. Ask me about production output, overdue receivables, or machine status.',
+        text: '**New Chat Session Started**\nConversation memory reset. Ask me about production output, overdue receivables, or machine status.',
         tool: 'sessionReset',
         timestamp: new Date().toLocaleTimeString(),
         status: 'completed'

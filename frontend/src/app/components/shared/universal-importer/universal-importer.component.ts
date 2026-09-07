@@ -22,14 +22,14 @@ export class UniversalImporterComponent implements OnInit {
   @Output() onImportSuccess = new EventEmitter<any>();
 
   availableModules = [
-    { key: 'parties', label: 'Parties & Customers', icon: '👥', desc: 'Bulk import customer contact directory and GST numbers' },
-    { key: 'raw-materials', label: 'Raw Materials', icon: '📦', desc: 'Bulk import polymer resin purchases, weights and rates' },
-    { key: 'production', label: 'Daily Production', icon: '🏭', desc: 'Bulk import machine shift tallies, crate counts and outputs' },
-    { key: 'inventory', label: 'Finished Inventory', icon: '📋', desc: 'Bulk import finished crate stock tallies' },
-    { key: 'vendors', label: 'Vendors', icon: '🏬', desc: 'Bulk import raw material suppliers and vendors' },
-    { key: 'employees', label: 'Employees & Staff', icon: '👷', desc: 'Bulk import employee registry, designations and salaries' },
-    { key: 'machines', label: 'Factory Machines', icon: '⚙️', desc: 'Bulk import machine master list and capacities' },
-    { key: 'expenses', label: 'Expense Ledger', icon: '💰', desc: 'Bulk import factory operational expenses' }
+    { key: 'parties', label: 'Parties & Customers', icon: 'bi-people', desc: 'Bulk import customer contact directory and GST numbers' },
+    { key: 'raw-materials', label: 'Raw Materials', icon: 'bi-box-seam', desc: 'Bulk import polymer resin purchases, weights and rates' },
+    { key: 'production', label: 'Daily Production', icon: 'bi-buildings', desc: 'Bulk import machine shift tallies, crate counts and outputs' },
+    { key: 'inventory', label: 'Finished Inventory', icon: 'bi-clipboard-check', desc: 'Bulk import finished crate stock tallies' },
+    { key: 'vendors', label: 'Vendors', icon: 'bi-shop', desc: 'Bulk import raw material suppliers and vendors' },
+    { key: 'employees', label: 'Employees & Staff', icon: 'bi-person-badge', desc: 'Bulk import employee registry, designations and salaries' },
+    { key: 'machines', label: 'Factory Machines', icon: 'bi-gear', desc: 'Bulk import machine master list and capacities' },
+    { key: 'expenses', label: 'Expense Ledger', icon: 'bi-cash-coin', desc: 'Bulk import factory operational expenses' }
   ];
 
   selectedFile: File | null = null;

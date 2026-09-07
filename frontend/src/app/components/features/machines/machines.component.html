@@ -1,6 +1,6 @@
 <div class="enterprise-header">
   <div class="enterprise-header-title-group">
-    <div class="enterprise-header-icon">🏭</div>
+    <div class="enterprise-header-icon"><i class="bi bi-cpu"></i></div>
     <div class="enterprise-header-text">
       <h2>Machine Management</h2>
       <p>Manage factory machines, operating status, and production capacity</p>
@@ -11,7 +11,7 @@
 <!-- Alert banner (E-12) -->
 <div *ngIf="machineDueCount > 0"
      style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.4); border-radius:10px; padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; gap:12px;">
-  <span style="font-size:24px;">🔧</span>
+  <i class="bi bi-tools text-primary" style="font-size:24px;"></i>
   <div>
     <strong style="color:var(--accent-error, #ef4444); font-size:14px;">{{ machineDueCount }} machine(s) require maintenance attention</strong>
     <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Last service log was recorded more than 30 days ago or is missing.</div>
@@ -22,7 +22,7 @@
   <div class="glass-panel form-card" [class.editing-mode]="machineForm.id" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
       <h3 style="font-weight:700; margin:0;">
-        {{ machineForm.id ? '✏️ Edit Machine' : ('➕ ' + ('machine.title' | translate:currentLang)) }}
+        {{ machineForm.id ? 'Edit Machine' : ('+ ' + ('machine.title' | translate:currentLang)) }}
       </h3>
       <span *ngIf="machineForm.id"
             style="font-size:10px; font-weight:700; padding:3px 8px; border-radius:12px; background:rgba(59,130,246,0.15); color:#3b82f6; border:1px solid rgba(59,130,246,0.3);">
@@ -56,11 +56,11 @@
         </select>
       </div>
       <button type="submit" class="btn btn-success" style="width:100%">
-        {{ machineForm.id ? '💾 Update Machine' : ('btn.save' | translate:currentLang) }}
+        {{ machineForm.id ? 'Update Machine' : ('btn.save' | translate:currentLang) }}
       </button>
       <button type="button" class="cancel-edit-btn" *ngIf="machineForm.id"
         (click)="machineForm = { machineName: '', machineCode: '', installedDate: '', status: 'Running', capacityPerHour: 0 }">
-        ✕ Cancel Edit
+        <i class="bi bi-x-lg me-1"></i>Cancel Edit
       </button>
     </form>
 
@@ -90,11 +90,11 @@
         <input appAutoSelect type="date" [(ngModel)]="breakdownForm.resolvedDate" name="bdResolved">
       </div>
       <button type="submit" class="btn btn-warning" style="width:100%">
-        {{ breakdownForm._editId ? '💾 Update Breakdown' : 'Log Breakdown' }}
+        {{ breakdownForm._editId ? 'Update Breakdown' : 'Log Breakdown' }}
       </button>
       <button type="button" class="cancel-edit-btn" *ngIf="breakdownForm._editId"
         (click)="breakdownForm = { id: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 }">
-        ✕ Cancel Edit
+        <i class="bi bi-x-lg me-1"></i>Cancel Edit
       </button>
     </form>
   </div>
@@ -104,7 +104,7 @@
     <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
       <div class="column-visibility-dropdown" style="position:relative;">
         <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('machines')" style="padding: 6px 12px; font-size: 13px;">
-          ⚙️ Columns
+          <i class="bi bi-layout-three-columns me-1"></i>Columns
         </button>
         <div class="dropdown-menu" *ngIf="showColDropdown['machines']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
           <label *ngFor="let col of getTableColumns('machines')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
@@ -118,11 +118,11 @@
       <table class="table" appResizableTable tableId="machines_table">
         <thead>
           <tr>
-            <th *ngIf="isColumnVisible('machines', 'Code')" (click)="setSort('machineCode')" style="cursor:pointer; min-width:110px;">{{ 'machine.code' | translate:currentLang }} <span *ngIf="sortField === 'machineCode'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('machines', 'Name')" (click)="setSort('machineName')" style="cursor:pointer; min-width:180px;">{{ 'machine.name' | translate:currentLang }} <span *ngIf="sortField === 'machineName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('machines', 'Capacity')" (click)="setSort('capacityPerHour')" style="cursor:pointer; min-width:140px;">{{ 'machine.capacity' | translate:currentLang }} <span *ngIf="sortField === 'capacityPerHour'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('machines', 'Installed')" (click)="setSort('installedDate')" style="cursor:pointer; min-width:120px;">Installed <span *ngIf="sortField === 'installedDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('machines', 'Status')" (click)="setSort('status')" style="cursor:pointer; min-width:120px;">{{ 'machine.status' | translate:currentLang }} <span *ngIf="sortField === 'status'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('machines', 'Code')" (click)="setSort('machineCode')" style="cursor:pointer; min-width:110px;">{{ 'machine.code' | translate:currentLang }} <span *ngIf="sortField === 'machineCode'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
+            <th *ngIf="isColumnVisible('machines', 'Name')" (click)="setSort('machineName')" style="cursor:pointer; min-width:180px;">{{ 'machine.name' | translate:currentLang }} <span *ngIf="sortField === 'machineName'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
+            <th *ngIf="isColumnVisible('machines', 'Capacity')" (click)="setSort('capacityPerHour')" style="cursor:pointer; min-width:140px;">{{ 'machine.capacity' | translate:currentLang }} <span *ngIf="sortField === 'capacityPerHour'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
+            <th *ngIf="isColumnVisible('machines', 'Installed')" (click)="setSort('installedDate')" style="cursor:pointer; min-width:120px;">Installed <span *ngIf="sortField === 'installedDate'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
+            <th *ngIf="isColumnVisible('machines', 'Status')" (click)="setSort('status')" style="cursor:pointer; min-width:120px;">{{ 'machine.status' | translate:currentLang }} <span *ngIf="sortField === 'status'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
             <th style="min-width:120px;">Service Status</th>
             <th *ngIf="isColumnVisible('machines', 'Actions')" style="min-width:90px;">{{ 'label.actions' | translate:currentLang }}</th>
           </tr>
@@ -143,8 +143,8 @@
             </td>
             <td *ngIf="isColumnVisible('machines', 'Actions')" class="action-col">
               <div class="row-actions-group">
-                <button class="btn-row-action btn-edit" *ngIf="!isViewer()" (click)="editMachine(m)" title="Edit machine">✏️ Edit</button>
-                <button class="btn-row-action btn-delete" *ngIf="canDelete()" (click)="deleteMachine(m.id)" title="Delete machine">🗑️</button>
+                <button class="btn-row-action btn-edit" *ngIf="!isViewer()" (click)="editMachine(m)" title="Edit machine"><i class="bi bi-pencil me-1"></i>Edit</button>
+                <button class="btn-row-action btn-delete" *ngIf="canDelete()" (click)="deleteMachine(m.id)" title="Delete machine"><i class="bi bi-trash"></i></button>
               </div>
             </td>
           </tr>
@@ -169,7 +169,7 @@
     <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
       <div class="column-visibility-dropdown" style="position:relative;">
         <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('breakdowns')" style="padding: 6px 12px; font-size: 13px;">
-          ⚙️ Columns
+          <i class="bi bi-layout-three-columns me-1"></i>Columns
         </button>
         <div class="dropdown-menu" *ngIf="showColDropdown['breakdowns']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
           <label *ngFor="let col of getTableColumns('breakdowns')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
@@ -183,11 +183,11 @@
       <table class="table" appResizableTable tableId="machine_breakdowns_table">
         <thead>
           <tr>
-            <th *ngIf="isColumnVisible('breakdowns', 'Machine')" (click)="setSort('machine.machineName')" style="cursor:pointer;">Machine <span *ngIf="sortField === 'machine.machineName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('breakdowns', 'Date')" (click)="setSort('breakdownDate')" style="cursor:pointer;">Date <span *ngIf="sortField === 'breakdownDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('breakdowns', 'Machine')" (click)="setSort('machine.machineName')" style="cursor:pointer;">Machine <span *ngIf="sortField === 'machine.machineName'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
+            <th *ngIf="isColumnVisible('breakdowns', 'Date')" (click)="setSort('breakdownDate')" style="cursor:pointer;">Date <span *ngIf="sortField === 'breakdownDate'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
             <th *ngIf="isColumnVisible('breakdowns', 'Description')">Description</th>
-            <th *ngIf="isColumnVisible('breakdowns', 'Downtime')" (click)="setSort('downtimeHours')" style="cursor:pointer;">Downtime (hrs) <span *ngIf="sortField === 'downtimeHours'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('breakdowns', 'Resolved')" (click)="setSort('resolvedDate')" style="cursor:pointer;">Resolved <span *ngIf="sortField === 'resolvedDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('breakdowns', 'Downtime')" (click)="setSort('downtimeHours')" style="cursor:pointer;">Downtime (hrs) <span *ngIf="sortField === 'downtimeHours'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
+            <th *ngIf="isColumnVisible('breakdowns', 'Resolved')" (click)="setSort('resolvedDate')" style="cursor:pointer;">Resolved <span *ngIf="sortField === 'resolvedDate'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
             <th *ngIf="isColumnVisible('breakdowns', 'Actions')">Actions</th>
           </tr>
         </thead>
@@ -200,8 +200,8 @@
             <td *ngIf="isColumnVisible('breakdowns', 'Resolved')"><span class="date-cell">{{ bd.resolvedDate ? (bd.resolvedDate | indianDate) : 'Pending' }}</span></td>
             <td *ngIf="isColumnVisible('breakdowns', 'Actions')" class="action-col">
               <div class="row-actions-group">
-                <button class="btn-row-action btn-edit" *ngIf="!isViewer()" (click)="editBreakdown(bd)" title="Edit breakdown log">✏️ Edit</button>
-                <button class="btn-row-action btn-delete" *ngIf="canDelete()" (click)="deleteBreakdown(bd.breakdownId || bd.id)" title="Delete breakdown">🗑️</button>
+                <button class="btn-row-action btn-edit" *ngIf="!isViewer()" (click)="editBreakdown(bd)" title="Edit breakdown log"><i class="bi bi-pencil me-1"></i>Edit</button>
+                <button class="btn-row-action btn-delete" *ngIf="canDelete()" (click)="deleteBreakdown(bd.breakdownId || bd.id)" title="Delete breakdown"><i class="bi bi-trash"></i></button>
               </div>
             </td>
           </tr>

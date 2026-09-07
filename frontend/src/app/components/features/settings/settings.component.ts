@@ -168,7 +168,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       eventKey: 'INVOICE_DISPATCHED',
       channel: 'WHATSAPP',
       templateName: 'Invoice Dispatch Alert',
-      templateText: 'Namaste {customer_name}! 🚛 Your order of {quantity} {item_name} has been dispatched from Futane Agro Plant.\n\n📄 Invoice No: {invoice_no}\n💰 Amount: ₹{amount}\n🚚 Vehicle: {dispatch_vehicle}\n📍 Live Consignment Tracking: {tracking_link}\n\nThank you for choosing Futane Agro!',
+      templateText: 'Namaste {customer_name}! Your order of {quantity} {item_name} has been dispatched from Futane Agro Plant.\n\nInvoice No: {invoice_no}\nAmount: ₹{amount}\nVehicle: {dispatch_vehicle}\nLive Consignment Tracking: {tracking_link}\n\nThank you for choosing Futane Agro!',
       dltTemplateId: 'DLT-FA-1002938',
       isEnabled: true,
       lastSent: '10 mins ago'
@@ -178,7 +178,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       eventKey: 'PAYMENT_REMINDER',
       channel: 'WHATSAPP',
       templateName: 'Payment Due Reminder',
-      templateText: 'Dear {customer_name},\n\nThis is a gentle payment reminder that Invoice #{invoice_no} for ₹{amount} was due on {due_date}.\n\n💳 Settle via UPI: {upi_id}\n🏦 Bank A/C: {bank_account} (IFSC: {ifsc_code})\n\nKindly disregard if already paid. Regards, Futane Agro Accounts.',
+      templateText: 'Dear {customer_name},\n\nThis is a gentle payment reminder that Invoice #{invoice_no} for ₹{amount} was due on {due_date}.\n\nSettle via UPI: {upi_id}\nBank A/C: {bank_account} (IFSC: {ifsc_code})\n\nKindly disregard if already paid. Regards, Futane Agro Accounts.',
       dltTemplateId: 'DLT-FA-1002939',
       isEnabled: true,
       lastSent: '1 hour ago'
@@ -198,7 +198,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       eventKey: 'ORDER_CONFIRMED',
       channel: 'WHATSAPP',
       templateName: 'Order Confirmation Alert',
-      templateText: 'Hello {customer_name}! 🎉 Your purchase order for {quantity} {item_name} is confirmed and scheduled for production at Futane Agro Plant. Estimated dispatch: {due_date}.',
+      templateText: 'Hello {customer_name}! Your purchase order for {quantity} {item_name} is confirmed and scheduled for production at Futane Agro Plant. Estimated dispatch: {due_date}.',
       dltTemplateId: 'DLT-FA-1002941',
       isEnabled: true,
       lastSent: 'Yesterday'
@@ -208,7 +208,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       eventKey: 'LOW_STOCK_ALARM',
       channel: 'WHATSAPP',
       templateName: 'Raw Material Buffer Warning',
-      templateText: '🚨 *CRITICAL INVENTORY ALERT*\nRaw Material {item_name} has dropped below threshold! Current Stock: {quantity} kg. Immediate procurement requisition recommended.',
+      templateText: '*CRITICAL INVENTORY ALERT*\nRaw Material {item_name} has dropped below threshold! Current Stock: {quantity} kg. Immediate procurement requisition recommended.',
       dltTemplateId: 'DLT-FA-1002942',
       isEnabled: false,
       lastSent: '3 days ago'

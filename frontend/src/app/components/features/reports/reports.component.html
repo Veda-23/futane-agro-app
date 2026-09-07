@@ -43,34 +43,34 @@
 
     <!-- Report Type -->
     <div class="form-group" style="margin:0; min-width:200px; flex:1;">
-      <label style="font-size:11px; font-weight:600; text-transform:uppercase; margin-bottom:4px; display:block;">📋 Report Type</label>
+      <label style="font-size:11px; font-weight:600; text-transform:uppercase; margin-bottom:4px; display:block;"><i class="bi bi-file-earmark-text me-1"></i> Report Type</label>
       <select [(ngModel)]="reportFilter.type" name="repType" (change)="runReport()" style="width:100%;">
-        <option value="production">🏭 Production (Daily)</option>
-        <option value="production_monthly">📅 Production (Monthly)</option>
-        <option value="sales">💰 Sales & Revenue</option>
-        <option value="party_ledger">📒 Party Ledger</option>
-        <option value="inventory">📦 Inventory Stock</option>
-        <option value="salary">👷 Payroll Released</option>
-        <option value="expense">💸 Expense Summary</option>
-        <option value="transport">🚛 Transport Logistics</option>
+        <option value="production">Production (Daily)</option>
+        <option value="production_monthly">Production (Monthly)</option>
+        <option value="sales">Sales & Revenue</option>
+        <option value="party_ledger">Party Ledger</option>
+        <option value="inventory">Inventory Stock</option>
+        <option value="salary">Payroll Released</option>
+        <option value="expense">Expense Summary</option>
+        <option value="transport">Transport Logistics</option>
       </select>
     </div>
 
     <!-- From Date -->
     <div class="form-group" style="margin:0; min-width:140px;" *ngIf="reportFilter.type !== 'inventory'">
-      <label style="font-size:11px; font-weight:600; text-transform:uppercase; margin-bottom:4px; display:block;">📅 From Date</label>
+      <label style="font-size:11px; font-weight:600; text-transform:uppercase; margin-bottom:4px; display:block;"><i class="bi bi-calendar3 me-1"></i> From Date</label>
       <input type="date" [(ngModel)]="reportFilter.fromDate" name="repFrom" (change)="runReport()" style="width:100%;">
     </div>
 
     <!-- To Date -->
     <div class="form-group" style="margin:0; min-width:140px;" *ngIf="reportFilter.type !== 'inventory'">
-      <label style="font-size:11px; font-weight:600; text-transform:uppercase; margin-bottom:4px; display:block;">📅 To Date</label>
+      <label style="font-size:11px; font-weight:600; text-transform:uppercase; margin-bottom:4px; display:block;"><i class="bi bi-calendar3 me-1"></i> To Date</label>
       <input type="date" [(ngModel)]="reportFilter.toDate" name="repTo" (change)="runReport()" style="width:100%;">
     </div>
 
     <!-- Customer Filter -->
     <div class="form-group" style="margin:0; min-width:180px;" *ngIf="['sales','party_ledger'].includes(reportFilter.type)">
-      <label style="font-size:11px; font-weight:600; text-transform:uppercase; margin-bottom:4px; display:block;">🏢 Customer</label>
+      <label style="font-size:11px; font-weight:600; text-transform:uppercase; margin-bottom:4px; display:block;"><i class="bi bi-building me-1"></i> Customer</label>
       <select [(ngModel)]="reportFilter.partyId" name="repParty" (change)="runReport()" style="width:100%;">
         <option value="">{{ reportFilter.type === 'party_ledger' ? '— Select Customer —' : 'All Customers' }}</option>
         <option *ngFor="let p of parties" [value]="p.id">{{ p.partyName }}</option>
@@ -83,16 +83,16 @@
         FY {{ getCurrentFYLabel() }}
       </button>
       <button class="btn btn-secondary btn-sm" (click)="setCurrentMonth()">This Month</button>
-      <button class="btn btn-secondary btn-sm" (click)="clearReportFilters()">✕ Clear</button>
-      <button class="btn btn-primary btn-sm" (click)="runReport()">▶ Run</button>
+      <button class="btn btn-secondary btn-sm" (click)="clearReportFilters()"><i class="bi bi-arrow-counterclockwise me-1"></i> Clear</button>
+      <button class="btn btn-primary btn-sm" (click)="runReport()"><i class="bi bi-play-fill me-1"></i> Run</button>
       <button class="btn btn-secondary btn-sm no-print" (click)="printReport()" [disabled]="filteredReportData.length === 0 && partyLedgerRows.length === 0">
-        🖨️ Print
+        <i class="bi bi-printer me-1"></i> Print
       </button>
       <button class="btn btn-danger btn-sm no-print" (click)="exportReportToPdf()" [disabled]="filteredReportData.length === 0 && partyLedgerRows.length === 0">
-        📄 PDF
+        <i class="bi bi-file-earmark-pdf me-1"></i> PDF
       </button>
       <button class="btn btn-success btn-sm no-print" (click)="downloadTallyXml()" title="Export Sales to Tally Prime XML">
-        📗 Tally XML
+        <i class="bi bi-file-earmark-code me-1"></i> Tally XML
       </button>
     </div>
 
@@ -101,12 +101,12 @@
   <!-- Summary Indicator Bar -->
   <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border-glass); display:flex; flex-wrap:wrap; gap:20px; font-size:13px; color:var(--text-secondary);"
        *ngIf="filteredReportData.length > 0 || partyLedgerRows.length > 0">
-    <span>📊 <strong>{{ reportFilter.type === 'party_ledger' ? partyLedgerRows.length : filteredReportData.length }}</strong> records found</span>
+    <span><i class="bi bi-bar-chart-line me-1"></i> <strong>{{ reportFilter.type === 'party_ledger' ? partyLedgerRows.length : filteredReportData.length }}</strong> records found</span>
     <span *ngIf="reportTotals.amount > 0">
-      💰 Total Amount: <strong style="color:var(--accent-success, #10b981);">{{ reportTotals.amount | inr }}</strong>
+      <i class="bi bi-cash-stack me-1"></i> Total Amount: <strong style="color:var(--accent-success, #10b981);">{{ reportTotals.amount | inr }}</strong>
     </span>
     <span *ngIf="reportTotals.qty > 0">
-      📦 Total Units: <strong>{{ reportTotals.qty | number }}</strong>
+      <i class="bi bi-box-seam me-1"></i> Total Units: <strong>{{ reportTotals.qty | number }}</strong>
     </span>
   </div>
 </div>
@@ -116,7 +116,7 @@
      style="padding:20px 24px; margin-bottom:28px;">
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
     <h4 style="margin:0; font-weight:700; display:flex; align-items:center; gap:8px;">
-      📊 {{ reportFilter.type === 'sales' ? 'Sales Revenue Trend' : 'Production Volume Trend' }}
+      <i class="bi bi-graph-up text-primary"></i> {{ reportFilter.type === 'sales' ? 'Sales Revenue Trend' : 'Production Volume Trend' }}
     </h4>
     <span style="font-size:12px; color:var(--text-secondary); font-weight:500;">Dynamic trend analysis for selected date range</span>
   </div>
@@ -135,8 +135,8 @@
 
   <!-- Error State (A-01) -->
   <div class="error-container glass-panel" *ngIf="hasError && !isLoading" style="padding:24px; text-align:center;">
-    <p style="color:var(--accent-error, #ef4444); font-size:15px; margin-bottom:12px;">⚠️ Failed to load report dataset.</p>
-    <button class="btn btn-secondary btn-sm" (click)="loadData()">🔄 Retry</button>
+    <p style="color:var(--accent-error, #ef4444); font-size:15px; margin-bottom:12px;"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i> Failed to load report dataset.</p>
+    <button class="btn btn-secondary btn-sm" (click)="loadData()"><i class="bi bi-arrow-clockwise me-1"></i> Retry</button>
   </div>
 
   <div class="report-table-card" *ngIf="!isLoading && !hasError">
@@ -279,13 +279,13 @@
     <!-- 4. Party Ledger Report (E-03) -->
     <div *ngIf="reportFilter.type === 'party_ledger'">
       <div *ngIf="!reportFilter.partyId" style="padding:40px; text-align:center;">
-        <div style="font-size:48px;">📒</div>
+        <div style="margin-bottom:12px;"><i class="bi bi-journal-bookmark" style="font-size:48px; color:var(--text-muted);"></i></div>
         <p style="color:var(--text-secondary); margin-top:12px;">Please select a customer from the dropdown above to view the ledger.</p>
       </div>
 
       <div *ngIf="reportFilter.partyId">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
-          <h3 style="margin:0;">📒 Customer Ledger: {{ selectedPartyName }}</h3>
+          <h3 style="margin:0;"><i class="bi bi-journal-text me-2"></i>Customer Ledger: {{ selectedPartyName }}</h3>
           <div style="font-size:16px; font-weight:800;"
                [style.color]="(partyLedgerRows[partyLedgerRows.length-1]?.balance || 0) > 0 ? 'var(--accent-error, #ef4444)' : 'var(--accent-success, #10b981)'">
             Outstanding Balance: {{ (partyLedgerRows[partyLedgerRows.length-1]?.balance || 0) | inr }}
@@ -309,7 +309,7 @@
               <td>{{ row.date | indianDate }}</td>
               <td>
                 <span [style.color]="row.type === 'Payment' ? 'var(--accent-success, #10b981)' : 'var(--accent-warning, #d97706)'" style="font-weight:700;">
-                  {{ row.type === 'Payment' ? '💚 Payment' : '🔴 Sale' }}
+                  <i class="bi" [ngClass]="row.type === 'Payment' ? 'bi-arrow-down-left-circle-fill me-1' : 'bi-arrow-up-right-circle-fill me-1'"></i>{{ row.type }}
                 </span>
               </td>
               <td>{{ row.description }}</td>
@@ -353,7 +353,8 @@
             <span class="badge"
                   [style.background]="(item.currentStock || 0) <= (item.minimumStockLevel || 10) ? 'var(--accent-error, #ef4444)' : 'var(--accent-success, #10b981)'"
                   style="color:#fff; padding:2px 8px; border-radius:12px; font-size:11px;">
-              {{ (item.currentStock || 0) <= (item.minimumStockLevel || 10) ? '⚠️ Low Stock' : '✅ In Stock' }}
+              <span *ngIf="(item.currentStock || 0) <= (item.minimumStockLevel || 10)"><i class="bi bi-exclamation-triangle-fill me-1"></i> Low Stock</span>
+              <span *ngIf="(item.currentStock || 0) > (item.minimumStockLevel || 10)"><i class="bi bi-check-circle-fill me-1"></i> In Stock</span>
             </span>
           </td>
         </tr>
@@ -366,7 +367,7 @@
     <!-- 6. Payroll Summary Report (E-08) -->
     <div *ngIf="reportFilter.type === 'salary'">
       <div style="margin-bottom:16px;">
-        <h4 style="margin:0 0 10px 0;">👷 Payroll by Designation</h4>
+        <h4 style="margin:0 0 10px 0;"><i class="bi bi-people-fill me-1"></i> Payroll by Designation</h4>
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:16px;">
           <div *ngFor="let des of payrollSummary.rows" class="glass-panel" style="padding:12px;">
             <div style="font-size:12px; color:var(--text-secondary);">{{ des.designation }}</div>
@@ -417,7 +418,7 @@
     <!-- 7. Expense Summary Report (E-06) -->
     <div *ngIf="reportFilter.type === 'expense'">
       <div style="margin-bottom:16px;">
-        <h4 style="margin:0 0 10px 0;">💸 Category Breakdown</h4>
+        <h4 style="margin:0 0 10px 0;"><i class="bi bi-pie-chart-fill me-1"></i> Category Breakdown</h4>
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:16px;">
           <div *ngFor="let exp of expenseSummary" class="glass-panel" style="padding:12px;">
             <div style="font-size:12px; color:var(--text-secondary);">{{ exp.category }} ({{ exp.pct }}%)</div>
@@ -480,11 +481,11 @@
           <td style="text-align:right; font-variant-numeric:tabular-nums; color:var(--accent-success, #10b981);">{{ t.advance | inr }}</td>
           <td style="text-align:right; font-variant-numeric:tabular-nums; font-weight:700;"
               [style.color]="((t.rent || 0) - (t.advance || 0)) > 0 ? 'var(--accent-error, #ef4444)' : 'var(--accent-success, #10b981)'">
-            {{ ((t.rent || 0) - (t.advance || 0)) > 0 ? (((t.rent || 0) - (t.advance || 0)) | inr) : '✅ Cleared' }}
+            {{ ((t.rent || 0) - (t.advance || 0)) > 0 ? (((t.rent || 0) - (t.advance || 0)) | inr) : 'Cleared' }}
           </td>
           <td style="text-align:center;">
             <span *ngIf="((t.rent || 0) - (t.advance || 0)) > 0 && isOlderThan30Days(t.date)"
-                  style="color:var(--accent-error, #ef4444); font-size:11px; font-weight:700;">⚠️ Overdue</span>
+                  style="color:var(--accent-error, #ef4444); font-size:11px; font-weight:700;"><i class="bi bi-exclamation-circle-fill me-1"></i> Overdue</span>
             <span *ngIf="((t.rent || 0) - (t.advance || 0)) > 0 && !isOlderThan30Days(t.date)"
                   style="color:var(--accent-warning, #f59e0b); font-size:11px;">Pending</span>
             <span *ngIf="((t.rent || 0) - (t.advance || 0)) <= 0"

@@ -1,51 +1,35 @@
 <div class="audit-container">
-  <!-- Top Table Toolbar -->
-  <div class="table-toolbar-top no-print">
+  <!-- Unified Module Context & Action Toolbar (Single Tier) -->
+  <div class="table-toolbar-unified no-print">
     <div class="toolbar-left">
       <div class="section-title-badge">
         <div class="badge-icon-wrap">
-          <span class="material-symbols-outlined">verified_user</span>
+          <i class="bi bi-shield-check" style="font-size: 18px;"></i>
         </div>
         <div class="badge-text">
           <h3>Security Audit Logs</h3>
           <span class="badge-subtitle">Immutable Activity & Compliance Trail</span>
         </div>
       </div>
+      <div class="filter-count-badge">
+        <span class="live-pulse-dot"></span>
+        <span><strong>{{ filteredAuditLogs.length }}</strong> logs</span>
+      </div>
     </div>
 
     <div class="toolbar-right">
-      <!-- Density Toggle -->
-      <div class="density-switch-group">
-        <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="tableDensity = 'compact'" title="Compact density">▤ Compact</button>
-        <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="tableDensity = 'comfortable'" title="Standard density">☷ Normal</button>
-        <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="tableDensity = 'spacious'" title="Spacious density">▦ Spacious</button>
-      </div>
-
-      <!-- Export CSV -->
-      <button type="button" class="btn btn-secondary btn-sm" (click)="exportCSV()" title="Export audit records to CSV">
-        <span class="material-symbols-outlined" style="font-size: 15px; vertical-align: middle;">download</span> Export CSV
-      </button>
-
-      <!-- Reload Data -->
-      <button type="button" class="btn btn-secondary btn-sm" (click)="loadData()" title="Reload audit data">
-        <span class="material-symbols-outlined" style="font-size: 15px; vertical-align: middle;">refresh</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Filter & Search Toolbar Bar -->
-  <div class="filter-strip-card">
-    <div class="filter-inputs-row">
+      <!-- Search -->
       <div class="search-input-wrapper">
-        <span class="material-symbols-outlined search-icon">search</span>
+        <i class="bi bi-search search-icon"></i>
         <input 
           type="text" 
           [(ngModel)]="searchTerm" 
           (ngModelChange)="currentPage = 1"
-          placeholder="Search by username, action, module, IP..." 
+          placeholder="Search user, action, module, IP..." 
           class="audit-search-input">
       </div>
 
+      <!-- Filters -->
       <div class="filter-select-group">
         <select [(ngModel)]="auditFilter.tableName" (ngModelChange)="currentPage = 1" class="audit-select" title="Filter by Module">
           <option value="">All Modules</option>
@@ -61,27 +45,31 @@
           <option value="DELETE">DELETE</option>
         </select>
 
-        <input 
-          type="text" 
-          [(ngModel)]="auditFilter.username" 
-          (ngModelChange)="currentPage = 1"
-          placeholder="Filter User..." 
-          class="audit-select" 
-          style="max-width: 130px;" 
-          title="Filter by Username">
-
         <button *ngIf="searchTerm || auditFilter.tableName || auditFilter.action || auditFilter.username" 
           type="button" 
           class="btn-clear-filters" 
-          (click)="clearAuditFilters()">
-          ✕ Clear
+          (click)="clearAuditFilters()"
+          title="Clear Filters">
+          <i class="bi bi-x-lg"></i>
         </button>
       </div>
 
-      <div class="filter-count-badge">
-        <span class="live-pulse-dot"></span>
-        <span>Showing <strong>{{ filteredAuditLogs.length }}</strong> logs</span>
+      <!-- Density Toggle -->
+      <div class="density-switch-group">
+        <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="tableDensity = 'compact'" title="Compact density"><i class="bi bi-distribute-vertical"></i></button>
+        <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="tableDensity = 'comfortable'" title="Standard density"><i class="bi bi-list-ul"></i></button>
+        <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="tableDensity = 'spacious'" title="Spacious density"><i class="bi bi-grid-3x2-gap"></i></button>
       </div>
+
+      <!-- Export CSV -->
+      <button type="button" class="btn btn-secondary btn-sm" (click)="exportCSV()" title="Export audit records to CSV">
+        <i class="bi bi-download me-1"></i> Export
+      </button>
+
+      <!-- Reload Data -->
+      <button type="button" class="btn btn-secondary btn-sm" (click)="loadData()" title="Reload audit data">
+        <i class="bi bi-arrow-repeat"></i>
+      </button>
     </div>
   </div>
 
@@ -188,11 +176,11 @@
       </span>
       <div class="pagination-actions">
         <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
-          ‹ Previous
+          <i class="bi bi-chevron-left me-1"></i> Previous
         </button>
         <span class="page-indicator">Page {{ currentPage }} of {{ totalPages }}</span>
         <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage >= totalPages" (click)="currentPage = currentPage + 1">
-          Next ›
+          Next <i class="bi bi-chevron-right ms-1"></i>
         </button>
       </div>
     </div>
@@ -210,7 +198,7 @@
           <span class="modal-subtitle">Log ID #{{ selectedLogForDetail.auditId || selectedLogForDetail.id }} · {{ selectedLogForDetail.timestamp | date:'medium' }}</span>
         </div>
       </div>
-      <button type="button" class="modal-close-btn" (click)="closeLogDetail()">✕</button>
+      <button type="button" class="modal-close-btn" (click)="closeLogDetail()" title="Close"><i class="bi bi-x-lg"></i></button>
     </div>
 
     <div class="modal-body">

@@ -295,8 +295,8 @@ export class AppComponent implements OnInit, OnDestroy {
   ];
   
   partyTableActions = [
-    { label: '✏️ Edit', action: 'edit', class: 'btn btn-sm btn-primary' },
-    { label: '🗑️ Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
+    { label: 'Edit', action: 'edit', class: 'btn btn-sm btn-primary' },
+    { label: 'Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
   ];
 
   handlePartyAction(event: any) {
@@ -313,8 +313,8 @@ export class AppComponent implements OnInit, OnDestroy {
   ];
   
   vendorTableActions = [
-    { label: '✏️ Edit', action: 'edit', class: 'btn btn-sm btn-primary' },
-    { label: '🗑️ Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
+    { label: 'Edit', action: 'edit', class: 'btn btn-sm btn-primary' },
+    { label: 'Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
   ];
 
   handleVendorAction(event: any) {
@@ -331,8 +331,8 @@ export class AppComponent implements OnInit, OnDestroy {
   ];
   
   employeeTableActions = [
-    { label: '✏️ Edit', action: 'edit', class: 'btn btn-sm btn-primary' },
-    { label: '🗑️ Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
+    { label: 'Edit', action: 'edit', class: 'btn btn-sm btn-primary' },
+    { label: 'Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
   ];
 
   handleEmployeeAction(event: any) {
@@ -564,7 +564,7 @@ export class AppComponent implements OnInit, OnDestroy {
       if (update && this.isAuthenticated) {
         this.appNotificationService.push(
           'info',
-          `🔄 Live Update: ${update.module}`,
+          `Live Update: ${update.module}`,
           update.description || 'Data updated by another user.'
         );
 
@@ -660,7 +660,7 @@ export class AppComponent implements OnInit, OnDestroy {
     const lowItems = (this.inventoryList || []).filter(i => (i.currentStock || 0) <= threshold);
     if (lowItems.length > 0 && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
       try {
-        new Notification('⚠️ Low Inventory Alert', {
+        new Notification('Low Inventory Alert', {
           body: `${lowItems.length} item(s) are running low: ${lowItems.map(i => i.crateType).join(', ')}`,
           icon: 'assets/logo.svg'
         });
@@ -1426,7 +1426,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (lowStock.length > 0) {
       appNotif.push(
         'warning',
-        '⚠️ Low Inventory Alert',
+        'Low Inventory Alert',
         `${lowStock.length} item(s) critically low: ${lowStock.slice(0, 3).map((i: any) => i.crateType).join(', ')}`,
         'inventory'
       );
@@ -1441,7 +1441,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (overdueTransports.length > 0) {
       appNotif.push(
         'error',
-        '🚛 Overdue Transport Payments',
+        'Overdue Transport Payments',
         `${overdueTransports.length} transport trip(s) have unpaid dues older than 30 days.`,
         'transports'
       );
@@ -1460,7 +1460,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (unpaidCount > 0 && now.getDate() > 20) {
       appNotif.push(
         'info',
-        '💼 Pending Salaries Alert',
+        'Pending Salaries Alert',
         `${unpaidCount} employee(s) have not received their salary for ${thisMonth} ${thisYear} yet.`,
         'salaries'
       );
@@ -1943,7 +1943,7 @@ export class AppComponent implements OnInit, OnDestroy {
     const upiQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiUri)}`;
 
     Swal.fire({
-      title: '💳 Futane Agro Production Payment Gateway',
+      title: 'Futane Agro Production Payment Gateway',
       html: `
         <div style="text-align: center; padding: 10px;">
           <div style="background: rgba(40, 167, 69, 0.08); padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid rgba(40, 167, 69, 0.3);">
@@ -1968,7 +1968,7 @@ export class AppComponent implements OnInit, OnDestroy {
         </div>
       `,
       showCancelButton: true,
-      confirmButtonText: '⚡ Confirm & Record Payment ₹' + amount,
+      confirmButtonText: 'Confirm & Record Payment ₹' + amount,
       cancelButtonText: 'Close',
       confirmButtonColor: '#28a745',
       cancelButtonColor: '#6c757d'
@@ -2999,7 +2999,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.selectedAnalyticsEnv = env;
     this.updateGrafanaUrl();
     this.pollTelemetryHealth();
-    this.appNotificationService.push('info', `📊 Telemetry Environment: ${env.toUpperCase()}`, `Now streaming live Grafana metrics for ${env.toUpperCase()}.`);
+    this.appNotificationService.push('info', `Telemetry Environment: ${env.toUpperCase()}`, `Now streaming live Grafana metrics for ${env.toUpperCase()}.`);
   }
 
   refreshGrafanaStream() {
@@ -3008,7 +3008,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.pollTelemetryHealth();
     setTimeout(() => {
       this.grafanaEmbedUrl = this.isSafeIframeUrl(current) ? this.sanitizer.bypassSecurityTrustResourceUrl(current) : null;
-      this.appNotificationService.push('success', `🔄 Telemetry Refreshed`, `Reconnected to live ${this.selectedAnalyticsEnv.toUpperCase()} stream.`);
+      this.appNotificationService.push('success', `Telemetry Refreshed`, `Reconnected to live ${this.selectedAnalyticsEnv.toUpperCase()} stream.`);
     }, 120);
   }
 
@@ -3034,14 +3034,14 @@ export class AppComponent implements OnInit, OnDestroy {
 
       if (!backendUp) {
         alerts.push({ severity: 'CRITICAL', env: envName, name: 'BackendTargetDown', summary: `Backend port for ${envName} is unreachable.`, timestamp: now });
-        this.appNotificationService.push('error', '🔴 Backend Offline', `Backend port for ${envName} is unreachable.`, 'analytics');
+        this.appNotificationService.push('error', 'Backend Offline', `Backend port for ${envName} is unreachable.`, 'analytics');
       } else {
         // Push proactive business alerts into the Notification Bell
         if (stats.pendingAmount && stats.pendingAmount > 0) {
-          this.appNotificationService.push('warning', '💰 Outstanding Receivables', `Pending collection of ₹${stats.pendingAmount.toLocaleString('en-IN')} across customer accounts.`, 'payments');
+          this.appNotificationService.push('warning', 'Outstanding Receivables', `Pending collection of ₹${stats.pendingAmount.toLocaleString('en-IN')} across customer accounts.`, 'payments');
         }
         if (stats.inventoryStock !== undefined) {
-          this.appNotificationService.push('info', '📦 Warehouse Stock Sync', `Finished crates inventory currently at ${stats.inventoryStock.toLocaleString('en-IN')} units.`, 'inventory');
+          this.appNotificationService.push('info', 'Warehouse Stock Sync', `Finished crates inventory currently at ${stats.inventoryStock.toLocaleString('en-IN')} units.`, 'inventory');
         }
       }
 
@@ -3179,24 +3179,24 @@ export class AppComponent implements OnInit, OnDestroy {
   get aiRecommendation(): string {
     const q = (this.settingsSearchQuery || '').trim().toLowerCase();
     if (!q) {
-      return "💡 AI Tip: You can adjust the failed login lockout threshold in Security Settings.";
+      return "AI Tip: You can adjust the failed login lockout threshold in Security Settings.";
     }
     if (q.includes('tax') || q.includes('gst')) {
-      return "💡 AI Suggestion: Optimize your CGST/SGST settings under the Tax & GST Category.";
+      return "AI Suggestion: Optimize your CGST/SGST settings under the Tax & GST Category.";
     }
     if (q.includes('backup') || q.includes('db') || q.includes('database')) {
-      return "💡 AI Suggestion: Automate database backups to AWS S3 weekly under the Database Category.";
+      return "AI Suggestion: Automate database backups to AWS S3 weekly under the Database Category.";
     }
     if (q.includes('security') || q.includes('lock') || q.includes('otp')) {
-      return "💡 AI Suggestion: Ensure OTP Verification is enabled to secure accountant login sessions.";
+      return "AI Suggestion: Ensure OTP Verification is enabled to secure accountant login sessions.";
     }
     if (q.includes('ai') || q.includes('forecast') || q.includes('predict')) {
-      return "💡 AI Suggestion: Enable AI Predictor to anticipate material shortfalls based on current inventory.";
+      return "AI Suggestion: Enable AI Predictor to anticipate material shortfalls based on current inventory.";
     }
     if (q.includes('color') || q.includes('theme') || q.includes('dark')) {
-      return "💡 AI Suggestion: Toggle 'Dark Mode Enabled' or modify brand colors to update the global dashboard styling.";
+      return "AI Suggestion: Toggle 'Dark Mode Enabled' or modify brand colors to update the global dashboard styling.";
     }
-    return `💡 AI Suggestion: Modifying settings in the '${this.filteredSettings[0]?.category || 'General'}' category may impact ERP automation. Please review carefully.`;
+    return `AI Suggestion: Modifying settings in the '${this.filteredSettings[0]?.category || 'General'}' category may impact ERP automation. Please review carefully.`;
   }
 
   // Dark/Light Theme Switch
@@ -3420,7 +3420,7 @@ export class AppComponent implements OnInit, OnDestroy {
         title: 'WhatsApp Opened',
         html: `<p style="font-size:13px;">WhatsApp was opened with a pre-filled message.</p>
                <p style="font-size:12px; color:#94a3b8; margin-top:8px;">
-                 💡 <strong>Tip:</strong> To share the actual PDF, download the document and attach it in the WhatsApp chat.
+                 <strong>Tip:</strong> To share the actual PDF, download the document and attach it in the WhatsApp chat.
                </p>`,
         confirmButtonText: 'Download PDF too',
         showCancelButton: true,

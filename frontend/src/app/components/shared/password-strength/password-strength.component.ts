@@ -47,7 +47,7 @@ export class PasswordStrengthComponent {
     if (/[A-Z]/.test(this.password)) score++; else tips.push('uppercase');
     if (/[0-9]/.test(this.password)) score++; else tips.push('number');
     if (/[^A-Za-z0-9]/.test(this.password)) score++; else tips.push('symbol');
-    const tipStr = tips.length ? `Add: ${tips.join(', ')}` : '✓ Strong password';
+    const tipStr = tips.length ? `Add: ${tips.join(', ')}` : 'Strong password';
     if (score <= 2) return { level: 'Weak', color: '#ef4444', width: '25%', tips: tipStr };
     if (score === 3) return { level: 'Fair', color: '#f59e0b', width: '55%', tips: tipStr };
     if (score === 4) return { level: 'Good', color: '#3b82f6', width: '80%', tips: tipStr };

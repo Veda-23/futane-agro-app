@@ -4,7 +4,7 @@
     <div class="search-box">
       <input *ngIf="!hideToolbarSearch" type="text" [ngModel]="searchTerm" (ngModelChange)="onSearchInput($event)" [placeholder]="searchPlaceholder" class="form-control table-search-input">
       <span *ngIf="selectedRows.size > 0" class="badge badge-primary selected-count-pill">
-        ✓ {{ selectedRows.size }} Selected
+        <i class="bi bi-check2 me-1"></i>{{ selectedRows.size }} Selected
       </span>
     </div>
     
@@ -18,7 +18,7 @@
           <i class="bi bi-trash" style="font-size: 11px;"></i> Delete ({{ selectedRows.size }})
         </button>
         <button class="btn btn-secondary btn-sm" (click)="selectedRows.clear(); allSelected = false;">
-          ✕ Clear
+          <i class="bi bi-x-lg me-1"></i>Clear
         </button>
       </ng-container>
 
@@ -40,13 +40,13 @@
           <th *ngIf="enableMultiSelect" style="width: 44px; text-align: center;">
             <input type="checkbox" class="enterprise-row-checkbox" [checked]="allSelected" (change)="toggleSelectAll()" title="Select All">
           </th>
-          <th *ngFor="let col of columns" (click)="setSort(col.key)" style="cursor: pointer;">
+          <th *ngFor="let col of columns" (click)="setSort(col.key)" [class.text-end]="col.type === 'currency' || col.type === 'number'" style="cursor: pointer;">
             {{ col.label }}
             <span *ngIf="sortColumn === col.key" style="margin-left: 4px; font-size: 10px;">
-              {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              <i class="bi ms-1" [ngClass]="sortDirection === 'asc' ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
             </span>
           </th>
-          <th *ngIf="actions && actions.length > 0" style="min-width: 110px; text-align: right;">Actions</th>
+          <th *ngIf="actions && actions.length > 0" style="min-width: 90px; text-align: right;">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -57,10 +57,11 @@
                    [checked]="selectedRows.has(getRowId(item))"
                    (change)="toggleSelectRow(getRowId(item))" title="Select row">
           </td>
-          <td *ngFor="let col of columns" [title]="item[col.key] || ''">
-            <span *ngIf="!col.type || col.type === 'text'">{{ item[col.key] }}</span>
+          <td *ngFor="let col of columns" [title]="item[col.key] || ''" [class.text-end]="col.type === 'currency' || col.type === 'number'">
+            <span *ngIf="!col.type || col.type === 'text'" class="cell-truncate">{{ item[col.key] }}</span>
+            <span *ngIf="col.type === 'number'" style="font-family: var(--font-mono); font-variant-numeric: tabular-nums;">{{ item[col.key] }}</span>
             <span *ngIf="col.type === 'date'" class="date-cell">{{ item[col.key] | date:'dd-MMM-yyyy' }}</span>
-            <span *ngIf="col.type === 'currency'" style="font-weight: 600; font-family: var(--font-mono);">₹{{ item[col.key] | number:'1.2-2' }}</span>
+            <span *ngIf="col.type === 'currency'" style="font-weight: 600; font-family: var(--font-mono); font-variant-numeric: tabular-nums;">₹{{ item[col.key] | number:'1.2-2' }}</span>
             <span *ngIf="col.type === 'badge'" class="badge badge-info">{{ item[col.key] }}</span>
             <span *ngIf="col.type === 'timeago'" class="badge badge-secondary" [title]="item[col.key]">{{ getTimeAgo(item[col.key]) }}</span>
           </td>

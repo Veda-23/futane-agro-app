@@ -11,16 +11,16 @@
           [(ngModel)]="filters.query" (ngModelChange)="onFilterChange()" 
           placeholder="Search records... (Ctrl+F)">
         <span class="kbd-badge" *ngIf="!filters.query">⌘K</span>
-        <button *ngIf="filters.query" (click)="filters.query = ''; onFilterChange()" type="button" class="btn-input-clear" title="Clear Search">✕</button>
+        <button *ngIf="filters.query" (click)="filters.query = ''; onFilterChange()" type="button" class="btn-input-clear" title="Clear Search"><i class="bi bi-x-lg"></i></button>
       </div>
 
       <!-- 2. Date Range (Compact) -->
       <div class="filter-date-range-box" *ngIf="showDateRange">
         <span class="date-icon"><i class="bi bi-calendar3"></i></span>
         <input appAutoSelect type="date" class="date-input" [(ngModel)]="filters.dateFrom" (ngModelChange)="onFilterChange()" title="From Date">
-        <span class="date-sep">→</span>
+        <span class="date-sep"><i class="bi bi-arrow-right"></i></span>
         <input appAutoSelect type="date" class="date-input" [(ngModel)]="filters.dateTo" (ngModelChange)="onFilterChange()" title="To Date">
-        <button *ngIf="filters.dateFrom || filters.dateTo" (click)="filters.dateFrom = ''; filters.dateTo = ''; onFilterChange()" type="button" class="btn-input-clear">✕</button>
+        <button *ngIf="filters.dateFrom || filters.dateTo" (click)="filters.dateFrom = ''; filters.dateTo = ''; onFilterChange()" type="button" class="btn-input-clear" title="Clear Dates"><i class="bi bi-x-lg"></i></button>
       </div>
 
       <!-- 3. Month & Year Selectors (For Monthly summary / Salaries) -->
@@ -40,8 +40,8 @@
         <button type="button" class="btn-status-trigger" 
           [class.has-selection]="selectedStatuses.length > 0 || filters.status"
           (click)="showStatusDropdown = !showStatusDropdown; $event.stopPropagation()">
-          🏷️ {{ selectedStatuses.length > 0 ? selectedStatuses.join(', ') : (filters.status || 'Status') }}
-          <span class="dropdown-caret">{{ showStatusDropdown ? '▲' : '▼' }}</span>
+          <i class="bi bi-tag" style="margin-right:4px;"></i> {{ selectedStatuses.length > 0 ? selectedStatuses.join(', ') : (filters.status || 'Status') }}
+          <span class="dropdown-caret"><i class="bi" [ngClass]="showStatusDropdown ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span>
         </button>
 
         <div class="status-popover-panel" *ngIf="showStatusDropdown" (click)="$event.stopPropagation()">
@@ -51,7 +51,7 @@
               class="status-pill-btn" 
               [class.active]="isStatusSelected(s)"
               (click)="toggleStatus(s)">
-              {{ isStatusSelected(s) ? '✓ ' : '' }}{{ s }}
+              <i *ngIf="isStatusSelected(s)" class="bi bi-check2 me-1"></i>{{ s }}
             </button>
           </div>
           <div class="popover-footer" *ngIf="selectedStatuses.length > 0">
@@ -160,14 +160,14 @@
           (click)="showAdvancedDrawer = !showAdvancedDrawer; $event.stopPropagation()">
           <span><i class="bi bi-sliders" style="margin-right:4px;"></i> Filters</span>
           <span class="badge-count" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
-          <span class="dropdown-caret">{{ showAdvancedDrawer ? '▲' : '▼' }}</span>
+          <span class="dropdown-caret"><i class="bi" [ngClass]="showAdvancedDrawer ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span>
         </button>
 
         <!-- Advanced Filter Popover / Accordion -->
         <div class="advanced-filter-popover animated-slide-down" *ngIf="showAdvancedDrawer" (click)="$event.stopPropagation()">
           <div class="popover-header">
             <h4><i class="bi bi-sliders" style="margin-right:6px; color:#d97706;"></i> Advanced Filters</h4>
-            <button type="button" class="btn-close-popover" (click)="showAdvancedDrawer = false">✕</button>
+            <button type="button" class="btn-close-popover" (click)="showAdvancedDrawer = false" title="Close"><i class="bi bi-x-lg"></i></button>
           </div>
 
           <div class="popover-body">
@@ -454,7 +454,7 @@
 
           <div class="popover-actions">
             <button type="button" class="btn-popover-reset" (click)="onReset()">Reset All</button>
-            <button type="button" class="btn-popover-apply" (click)="showAdvancedDrawer = false">✓ Apply Filters</button>
+            <button type="button" class="btn-popover-apply" (click)="showAdvancedDrawer = false"><i class="bi bi-check2 me-1"></i> Apply Filters</button>
           </div>
         </div>
       </div>
@@ -483,7 +483,7 @@
     <div class="chips-list">
       <span class="active-chip" *ngFor="let chip of activeChips">
         <b class="chip-label-tag">{{ chip.label }}:</b> {{ chip.value }}
-        <button type="button" class="chip-remove-btn" (click)="removeChip(chip.key)" title="Remove this filter">✕</button>
+        <button type="button" class="chip-remove-btn" (click)="removeChip(chip.key)" title="Remove this filter"><i class="bi bi-x"></i></button>
       </span>
       <button type="button" class="clear-all-chip-btn" (click)="onReset()">Clear All</button>
     </div>

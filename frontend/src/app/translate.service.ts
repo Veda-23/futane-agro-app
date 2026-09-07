@@ -74,7 +74,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'label.select_machine': 'Select Machine',
     'label.select_sale': 'Select Sales Order',
     // Dashboard Extra
-    'dashboard.excel_importer': '📋 Excel Importer (Import Party / Inventory Sheets)',
+    'dashboard.excel_importer': 'Excel Importer (Import Party / Inventory Sheets)',
     'dashboard.excel_desc': 'Upload the Excel spreadsheet to automatically load inventory lots and party records into the database system.',
     'dashboard.excel_file': 'Choose Excel file',
     'dashboard.excel_btn': 'Start Import Process',
@@ -440,7 +440,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'label.select_machine': 'यंत्र निवडा',
     'label.select_sale': 'विक्री ऑर्डर निवडा',
     // Dashboard Extra
-    'dashboard.excel_importer': '📋 एक्सेल आयात साधन (ग्राहक / स्टॉक आयात करा)',
+    'dashboard.excel_importer': 'एक्सेल आयात साधन (ग्राहक / स्टॉक आयात करा)',
     'dashboard.excel_desc': 'इन्व्हेंटरी लॉट्स आणि ग्राहक रेकॉर्ड्स डेटाबेसमध्ये स्वयंचलितपणे लोड करण्यासाठी एक्सेल फाइल अपलोड करा.',
     'dashboard.excel_file': 'एक्सेल फाइल निवडा',
     'dashboard.excel_btn': 'आयात प्रक्रिया सुरू करा',
@@ -806,7 +806,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'label.select_machine': 'मशीन चुनें',
     'label.select_sale': 'बिक्री आदेश चुनें',
     // Dashboard Extra
-    'dashboard.excel_importer': '📋 एक्सेल आयातक (पार्टी / स्टॉक आयात करें)',
+    'dashboard.excel_importer': 'एक्सेल आयातक (पार्टी / स्टॉक आयात करें)',
     'dashboard.excel_desc': 'इन्वेंट्री लॉट और ग्राहक रिकॉर्ड को डेटाबेस में स्वचालित रूप से लोड करने के लिए एक्सेल फाइल अपलोड करें।',
     'dashboard.excel_file': 'एक्सेल फाइल चुनें',
     'dashboard.excel_btn': 'आयात प्रक्रिया शुरू करें',

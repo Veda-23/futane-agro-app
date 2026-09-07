@@ -211,7 +211,7 @@ export class SalesComponent implements OnInit {
     const upiQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiUri)}`;
 
     Swal.fire({
-      title: '💳 Futane Agro Production Payment Gateway',
+      title: 'Futane Agro Production Payment Gateway',
       html: `
         <div style="text-align: center; padding: 10px;">
           <div style="background: rgba(40, 167, 69, 0.08); padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid rgba(40, 167, 69, 0.3);">
@@ -236,7 +236,7 @@ export class SalesComponent implements OnInit {
         </div>
       `,
       showCancelButton: true,
-      confirmButtonText: '⚡ Confirm & Record Payment ₹' + amount,
+      confirmButtonText: 'Confirm & Record Payment ₹' + amount,
       cancelButtonText: 'Close',
       confirmButtonColor: '#28a745',
       cancelButtonColor: '#6c757d'

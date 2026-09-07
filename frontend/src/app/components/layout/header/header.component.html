@@ -148,22 +148,22 @@
           <div class="notif-card" *ngFor="let notif of (appNotifService.notifications$ | async)" [class.unread]="!notif.isRead" (click)="onNotifClick(notif)">
             <div class="notif-content">
               <div class="notif-item-title" style="display: flex; align-items: center; gap: 6px;">
-                <span *ngIf="notif.type === 'error'">🔴</span>
-                <span *ngIf="notif.type === 'warning'">🟡</span>
-                <span *ngIf="notif.type === 'info'">🔵</span>
-                <span *ngIf="notif.type === 'success'">🟢</span>
+                <i *ngIf="notif.type === 'error'" class="bi bi-x-circle-fill text-danger"></i>
+                <i *ngIf="notif.type === 'warning'" class="bi bi-exclamation-triangle-fill text-warning"></i>
+                <i *ngIf="notif.type === 'info'" class="bi bi-info-circle-fill text-info"></i>
+                <i *ngIf="notif.type === 'success'" class="bi bi-check-circle-fill text-success"></i>
                 <strong>{{ notif.title }}</strong>
               </div>
               <div class="notif-msg">{{ notif.message }}</div>
               <div class="notif-meta" style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
                 <span class="notif-time">{{ notif.timestamp | indianDate:true }}</span>
-                <span *ngIf="notif.actionRoute" style="color: var(--primary); font-size: 10px; font-weight: 700;">Open Tab →</span>
+                <span *ngIf="notif.actionRoute" style="color: var(--primary); font-size: 10px; font-weight: 700;">Open Tab <i class="bi bi-arrow-right"></i></span>
               </div>
             </div>
-            <button class="notif-dismiss-btn" (click)="$event.stopPropagation(); appNotifService.remove(notif.id)">&times;</button>
+            <button class="notif-dismiss-btn" (click)="$event.stopPropagation(); appNotifService.remove(notif.id)" title="Dismiss">&times;</button>
           </div>
           <div *ngIf="(appNotifService.notifications$ | async)?.length === 0" class="notif-empty">
-            🎉 All caught up! No active alerts.
+            <i class="bi bi-check2-circle text-success" style="font-size: 15px; margin-right: 6px;"></i> All caught up! No active alerts.
           </div>
         </div>
       </div>

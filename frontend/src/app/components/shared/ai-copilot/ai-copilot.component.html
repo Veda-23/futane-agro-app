@@ -20,7 +20,7 @@
     </div>
     <div style="display:flex; align-items:center; gap:6px;">
       <button class="btn-new-chat" (click)="newChat()" title="Start a fresh conversation"><i class="bi bi-stars" style="margin-right:3px;"></i> New Chat</button>
-      <button class="close-btn" (click)="isOpen = false" title="Close drawer">✕</button>
+      <button class="close-btn" (click)="isOpen = false" title="Close drawer"><i class="bi bi-x-lg"></i></button>
     </div>
   </div>
 
@@ -29,9 +29,9 @@
     <div style="display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text-secondary);">
       <span>Voice Lang:</span>
       <select [(ngModel)]="selectedLang" class="lang-select">
-        <option value="en-IN">🇬🇧 English</option>
-        <option value="hi-IN">🇮🇳 हिंदी (Hindi)</option>
-        <option value="mr-IN">🚩 मराठी (Marathi)</option>
+        <option value="en-IN">English</option>
+        <option value="hi-IN">हिंदी (Hindi)</option>
+        <option value="mr-IN">मराठी (Marathi)</option>
       </select>
     </div>
     <button class="voice-btn" [class.listening]="isListening" (click)="toggleVoice()" [title]="isListening ? 'Listening... click to stop' : 'Click to speak query'">
@@ -63,12 +63,12 @@
       
       <!-- Tool Execution Badge -->
       <div *ngIf="msg.tool" class="tool-badge">
-        <span>⚡ Tool: <code>{{ msg.tool }}</code></span>
+        <span><i class="bi bi-cpu me-1"></i>Tool: <code>{{ msg.tool }}</code></span>
       </div>
 
       <!-- Action Proposal Card (Requires Explicit Confirmation) -->
       <div *ngIf="msg.actionProposal" class="action-proposal-card">
-        <div class="action-title">⚡ Proposed Operational Action</div>
+        <div class="action-title"><i class="bi bi-lightning-charge me-1"></i>Proposed Operational Action</div>
         <div class="action-desc">{{ msg.actionProposal.description }}</div>
         <div class="action-buttons">
           <button class="btn btn-warning btn-sm" (click)="confirmAction(msg.actionProposal)">

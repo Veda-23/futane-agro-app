@@ -5,14 +5,14 @@
     
     <!-- Top Module Selector (When on Dashboard / Global Mode) -->
     <div class="importer-module-selector" *ngIf="showModuleSelector">
-      <span class="selector-label">🎯 Select Module to Import:</span>
+      <span class="selector-label"><i class="bi bi-grid-3x3-gap me-1"></i> Select Module to Import:</span>
       <div class="module-chips">
         <button type="button" 
                 *ngFor="let m of availableModules" 
                 class="chip-btn" 
                 [class.active]="module === m.key"
                 (click)="onModuleChange(m.key)">
-          <span>{{ m.icon }}</span> {{ m.label }}
+          <i class="bi me-1" [ngClass]="m.icon"></i>{{ m.label }}
         </button>
       </div>
     </div>
@@ -45,14 +45,14 @@
 
     <!-- Drag & Drop Hint Footer -->
     <div class="importer-drop-hint">
-      <span>💡 Drag &amp; drop your <strong>.csv</strong> file here, or click <em>Choose CSV File</em>. Files must be in standard comma-separated format.</span>
+      <span><i class="bi bi-info-circle me-1"></i> Drag &amp; drop your <strong>.csv</strong> file here, or click <em>Choose CSV File</em>. Files must be in standard comma-separated format.</span>
     </div>
 
   </div>
 </div>
 
 <!-- ========================================================================= -->
-<!-- 🔍 DRY-RUN VALIDATION & PREVIEW MODAL -->
+<!-- DRY-RUN VALIDATION & PREVIEW MODAL -->
 <!-- ========================================================================= -->
 <div class="modal-backdrop animated-fade-in" *ngIf="showPreviewModal">
   <div class="importer-modal glass-modal animated-slide-up">
@@ -66,7 +66,7 @@
           <p>Target Module: <strong style="color:#d97706; text-transform:uppercase;">{{ previewData?.module }}</strong> · File: <strong>{{ selectedFile?.name }}</strong></p>
         </div>
       </div>
-      <button type="button" class="btn-close-modal" (click)="closeModal()">✕</button>
+      <button type="button" class="btn-close-modal" (click)="closeModal()" title="Close"><i class="bi bi-x-lg"></i></button>
     </div>
 
     <!-- Summary KPI Counters -->
@@ -76,19 +76,19 @@
         <div class="kpi-value">{{ previewData?.totalRows }}</div>
       </div>
       <div class="kpi-box kpi-valid">
-        <div class="kpi-label">✓ VALID ROWS</div>
+        <div class="kpi-label"><i class="bi bi-check-circle-fill me-1 text-success"></i> VALID ROWS</div>
         <div class="kpi-value">{{ previewData?.validRows }}</div>
       </div>
       <div class="kpi-box kpi-new">
-        <div class="kpi-label">➕ NEW RECORDS</div>
+        <div class="kpi-label"><i class="bi bi-plus-circle-fill me-1 text-primary"></i> NEW RECORDS</div>
         <div class="kpi-value">{{ previewData?.newRows }}</div>
       </div>
       <div class="kpi-box kpi-dup">
-        <div class="kpi-label">🔄 EXISTING DUPLICATES</div>
+        <div class="kpi-label"><i class="bi bi-copy me-1 text-warning"></i> EXISTING DUPLICATES</div>
         <div class="kpi-value">{{ previewData?.duplicateRows }}</div>
       </div>
       <div class="kpi-box kpi-invalid" [class.has-errors]="(previewData?.invalidRows || 0) > 0">
-        <div class="kpi-label">⚠️ INVALID ROWS</div>
+        <div class="kpi-label"><i class="bi bi-exclamation-triangle-fill me-1 text-danger"></i> INVALID ROWS</div>
         <div class="kpi-value">{{ previewData?.invalidRows }}</div>
       </div>
     </div>
@@ -96,7 +96,7 @@
     <!-- Duplicate Handling Strategy Selector -->
     <div class="duplicate-strategy-card" *ngIf="(previewData?.duplicateRows || 0) > 0">
       <div class="dup-strat-title">
-        <span>🛡️ Duplicate Records Policy</span>
+        <span><i class="bi bi-shield-check me-1"></i> Duplicate Records Policy</span>
         <small>Choose how the system handles existing database matches:</small>
       </div>
       <div class="dup-strat-options">
@@ -120,10 +120,10 @@
     <!-- Tabs: Valid Rows Preview vs Invalid Errors -->
     <div class="modal-tab-bar">
       <button type="button" class="mtab-btn" [class.active]="previewTab === 'valid'" (click)="previewTab = 'valid'">
-        ✓ Valid Rows ({{ previewData?.validRows }})
+        <i class="bi bi-check2 me-1"></i> Valid Rows ({{ previewData?.validRows }})
       </button>
       <button type="button" class="mtab-btn" [class.active]="previewTab === 'invalid'" (click)="previewTab = 'invalid'" [class.tab-has-errors]="(previewData?.invalidRows || 0) > 0">
-        ⚠️ Errors &amp; Invalid Rows ({{ previewData?.invalidRows }})
+        <i class="bi bi-exclamation-triangle me-1"></i> Errors &amp; Invalid Rows ({{ previewData?.invalidRows }})
       </button>
     </div>
 
@@ -161,13 +161,13 @@
     <!-- TAB 2: INVALID ROWS & ERROR TABLE -->
     <div class="modal-table-container" *ngIf="previewTab === 'invalid'">
       <div *ngIf="(previewData?.errors?.length || 0) === 0" class="empty-state text-success">
-        ✓ 100% Clean Data! No errors detected in this CSV file.
+        <i class="bi bi-check-circle-fill me-1"></i> 100% Clean Data! No errors detected in this CSV file.
       </div>
       <div *ngIf="(previewData?.errors?.length || 0) > 0">
         <div class="error-action-banner">
-          <span>⚠️ {{ previewData?.errors?.length }} validation issue(s) detected. Valid rows can still be imported.</span>
+          <span><i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> {{ previewData?.errors?.length }} validation issue(s) detected. Valid rows can still be imported.</span>
           <button type="button" class="btn-dl-errors" (click)="downloadErrorReport()">
-            📥 Download Error Report (.csv)
+            <i class="bi bi-download me-1"></i> Download Error Report (.csv)
           </button>
         </div>
         <table class="preview-table error-table">
@@ -200,8 +200,8 @@
       </button>
       <button type="button" class="btn-modal-confirm" (click)="confirmImport()"
               [disabled]="isExecuting || (previewData?.validRows || 0) === 0">
-        <span *ngIf="!isExecuting">✓ Confirm &amp; Import {{ previewData?.validRows }} Record(s)</span>
-        <span *ngIf="isExecuting">⏳ Committing to Database...</span>
+        <span *ngIf="!isExecuting"><i class="bi bi-check-lg me-1"></i> Confirm &amp; Import {{ previewData?.validRows }} Record(s)</span>
+        <span *ngIf="isExecuting"><i class="bi bi-hourglass-split me-1"></i> Committing to Database...</span>
       </button>
     </div>
 

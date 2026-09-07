@@ -34,8 +34,8 @@ export class PartyComponent implements OnInit {
   ];
   
   partyTableActions = [
-    { label: '✏️ Edit', action: 'edit', class: 'btn btn-sm btn-secondary' },
-    { label: '🗑️ Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
+    { label: 'Edit', action: 'edit', class: 'btn btn-sm btn-secondary' },
+    { label: 'Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
   ];
 
   constructor(private apiService: ApiService, private notificationService: NotificationService) {}

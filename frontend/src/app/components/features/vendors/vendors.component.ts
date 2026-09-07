@@ -34,8 +34,8 @@ export class VendorsComponent implements OnInit {
   ];
   
   vendorTableActions = [
-    { label: '✏️ Edit', action: 'edit', class: 'btn btn-sm btn-outline' },
-    { label: '🗑️ Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
+    { label: 'Edit', action: 'edit', class: 'btn btn-sm btn-outline' },
+    { label: 'Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
   ];
 
   constructor(private apiService: ApiService, private notificationService: NotificationService) {}

@@ -11,8 +11,8 @@ const EDGE_PATH = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge
 const SNAP_DIR = path.join(__dirname, 'all_31_scrollable_snapshots');
 const OUTPUT_PDF_SCRATCH = path.join(__dirname, 'Futane_Agro_ERP_All_31_Tabs_Scrollable_Visual_Report.pdf');
 const OUTPUT_PDF_DOCS = path.join(__dirname, '..', 'docs', 'reports', 'Futane_Agro_ERP_All_31_Tabs_Scrollable_Visual_Report.pdf');
-const OUTPUT_PDF_ARTIFACT = 'C:\\Users\\Vedant\\.gemini\\antigravity-ide\\brain\\fdd0d5e2-b9ea-49ba-889e-e88204822640\\Futane_Agro_ERP_All_31_Tabs_Scrollable_Visual_Report.pdf';
-const ARTIFACT_DIR = 'C:\\Users\\Vedant\\.gemini\\antigravity-ide\\brain\\fdd0d5e2-b9ea-49ba-889e-e88204822640';
+const OUTPUT_PDF_ARTIFACT = 'C:\\Users\\Vedant\\.gemini\\antigravity-ide\\brain\\c1c6338c-1671-4e87-b480-7a9ae9928b58\\Futane_Agro_ERP_All_31_Tabs_Scrollable_Visual_Report.pdf';
+const ARTIFACT_DIR = 'C:\\Users\\Vedant\\.gemini\\antigravity-ide\\brain\\c1c6338c-1671-4e87-b480-7a9ae9928b58';
 const BASE_URL = 'http://localhost:8081';
 
 if (!fs.existsSync(SNAP_DIR)) {

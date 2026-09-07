@@ -22,28 +22,28 @@
 
       <div class="login-feature-cards">
         <div class="lf-card">
-          <span class="lf-icon">📦</span>
+          <span class="lf-icon"><i class="bi bi-box-seam"></i></span>
           <div>
             <strong>Inventory Control</strong>
             <p>Real-time stock tracking</p>
           </div>
         </div>
         <div class="lf-card">
-          <span class="lf-icon">📈</span>
+          <span class="lf-icon"><i class="bi bi-graph-up-arrow"></i></span>
           <div>
             <strong>Sales &amp; Revenue</strong>
             <p>GST invoicing &amp; collections</p>
           </div>
         </div>
         <div class="lf-card">
-          <span class="lf-icon">⚙️</span>
+          <span class="lf-icon"><i class="bi bi-gear-wide-connected"></i></span>
           <div>
             <strong>Production</strong>
             <p>Machine &amp; shift monitoring</p>
           </div>
         </div>
         <div class="lf-card">
-          <span class="lf-icon">👥</span>
+          <span class="lf-icon"><i class="bi bi-people-fill"></i></span>
           <div>
             <strong>HR &amp; Payroll</strong>
             <p>Employee salary management</p>
@@ -64,7 +64,7 @@
       <div class="login-form-header" style="text-align: left;">
         <div class="login-form-logo">
           <img src="assets/logo.svg" alt="Futane Agro Logo" *ngIf="!showOtpScreen">
-          <span *ngIf="showOtpScreen" class="otp-shield-icon">🔐</span>
+          <span *ngIf="showOtpScreen" class="otp-shield-icon"><i class="bi bi-shield-lock" style="font-size:24px; color:var(--primary);"></i></span>
         </div>
         <h2>{{ showOtpScreen ? 'Two-Factor Auth' : 'Welcome back' }}</h2>
         <p>{{ showOtpScreen ? 'OTP sent for ' + loginCredentials.username : 'Sign in to Futane Agro ERP dashboard' }}</p>
@@ -111,14 +111,14 @@
                    autocomplete="current-password"
                    class="login-input">
             <button type="button" class="toggle-password" (click)="showPassword = !showPassword" aria-label="Toggle password">
-              <span *ngIf="!showPassword">👁️</span>
-              <span *ngIf="showPassword">🙈</span>
+              <i *ngIf="!showPassword" class="bi bi-eye"></i>
+              <i *ngIf="showPassword" class="bi bi-eye-slash"></i>
             </button>
           </div>
         </div>
 
         <div *ngIf="loginError" class="login-error-box">
-          <span>⚠️</span> {{ loginError }}
+          <i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> {{ loginError }}
         </div>
 
         <button type="submit" class="login-submit-btn" id="login-submit-btn">
@@ -134,7 +134,7 @@
 
         <!-- OTP Helper / Auto-fill Box -->
         <div class="otp-display-box" *ngIf="tempOtp" (click)="otpValue = tempOtp" role="button" tabindex="0" title="Click to auto-fill OTP">
-          <div class="otp-display-label">🔒 Your OTP (click to auto-fill)</div>
+          <div class="otp-display-label"><i class="bi bi-key-fill me-1"></i> Your OTP (click to auto-fill)</div>
           <div class="otp-display-code">{{ tempOtp }}</div>
           <div class="otp-display-hint">Valid for {{ formatCountdown() }} · Click to fill automatically</div>
         </div>
@@ -147,7 +147,7 @@
               </svg>
               Enter 6-Digit OTP
             </label>
-            <span class="countdown-tag">⏱ {{ formatCountdown() }}</span>
+            <span class="countdown-tag"><i class="bi bi-clock me-1"></i> {{ formatCountdown() }}</span>
           </div>
           <input appAutoSelect type="text"
                  id="otp" name="otp"
@@ -160,7 +160,7 @@
         </div>
 
         <div *ngIf="loginError" class="login-error-box">
-          <span>⚠️</span> {{ loginError }}
+          <i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> {{ loginError }}
         </div>
 
         <button type="submit" class="login-submit-btn">
@@ -172,10 +172,10 @@
 
         <div class="otp-actions">
           <button type="button" class="login-secondary-btn" [disabled]="otpCountdown > 0" (click)="resendOtp()">
-            🔄 Resend OTP
+            <i class="bi bi-arrow-clockwise me-1"></i> Resend OTP
           </button>
           <button type="button" class="login-secondary-btn" (click)="backToLogin()">
-            ◀ Back
+            <i class="bi bi-arrow-left me-1"></i> Back
           </button>
         </div>
       </form>
