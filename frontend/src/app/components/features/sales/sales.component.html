@@ -91,32 +91,33 @@
             </div>
           </div>
         </div>
-        <div class="table-container">
-        <table>
+        <div class="table-container table-responsive">
+        <table class="table" appResizableTable tableId="sales_table">
           <thead>
             <tr>
-              <th *ngIf="isColumnVisible('sales', 'Date')" (click)="setSort('date')" style="cursor:pointer;">{{ 'label.date' | translate:currentLang }} <span *ngIf="sortField === 'date'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('sales', 'Party')" (click)="setSort('party.partyName')" style="cursor:pointer;">{{ 'party.name' | translate:currentLang }} <span *ngIf="sortField === 'party.partyName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('sales', 'Crate Type')" (click)="setSort('crateType')" style="cursor:pointer;">{{ 'sales.crate_type' | translate:currentLang }} <span *ngIf="sortField === 'crateType'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('sales', 'Quantity')" (click)="setSort('quantity')" style="cursor:pointer;">{{ 'sales.quantity' | translate:currentLang }} <span *ngIf="sortField === 'quantity'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('sales', 'Rate')" (click)="setSort('rate')" style="cursor:pointer;">{{ 'sales.rate' | translate:currentLang }} <span *ngIf="sortField === 'rate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('sales', 'Total')" (click)="setSort('totalAmount')" style="cursor:pointer;">{{ 'sales.total' | translate:currentLang }} <span *ngIf="sortField === 'totalAmount'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('sales', 'Paid')" (click)="setSort('paid')" style="cursor:pointer;">{{ 'sales.paid' | translate:currentLang }} <span *ngIf="sortField === 'paid'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('sales', 'Remaining')" (click)="setSort('remaining')" style="cursor:pointer;">{{ 'sales.remaining' | translate:currentLang }} <span *ngIf="sortField === 'remaining'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('sales', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
+              <th *ngIf="isColumnVisible('sales', 'Date')" (click)="setSort('date')" style="cursor:pointer; min-width:110px;">{{ 'label.date' | translate:currentLang }} <span *ngIf="sortField === 'date'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('sales', 'Party')" (click)="setSort('party.partyName')" style="cursor:pointer; min-width:160px;">{{ 'party.name' | translate:currentLang }} <span *ngIf="sortField === 'party.partyName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('sales', 'Crate Type')" (click)="setSort('crateType')" style="cursor:pointer; min-width:180px;">{{ 'sales.crate_type' | translate:currentLang }} <span *ngIf="sortField === 'crateType'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('sales', 'Quantity')" (click)="setSort('quantity')" style="cursor:pointer; min-width:100px;">{{ 'sales.quantity' | translate:currentLang }} <span *ngIf="sortField === 'quantity'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('sales', 'Rate')" (click)="setSort('rate')" style="cursor:pointer; min-width:100px;">{{ 'sales.rate' | translate:currentLang }} <span *ngIf="sortField === 'rate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('sales', 'Total')" (click)="setSort('totalAmount')" style="cursor:pointer; min-width:120px;">{{ 'sales.total' | translate:currentLang }} <span *ngIf="sortField === 'totalAmount'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('sales', 'Paid')" (click)="setSort('paid')" style="cursor:pointer; min-width:120px;">{{ 'sales.paid' | translate:currentLang }} <span *ngIf="sortField === 'paid'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('sales', 'Remaining')" (click)="setSort('remaining')" style="cursor:pointer; min-width:120px;">{{ 'sales.remaining' | translate:currentLang }} <span *ngIf="sortField === 'remaining'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('sales', 'Actions')" style="min-width:140px;">{{ 'label.actions' | translate:currentLang }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let sale of getProcessedList(salesList, 'sales')">
-              <td *ngIf="isColumnVisible('sales', 'Date')">{{ sale.date }}</td>
-              <td *ngIf="isColumnVisible('sales', 'Party')">{{ sale.party?.partyName }}</td>
-              <td *ngIf="isColumnVisible('sales', 'Crate Type')">{{ sale.crateType }} ({{ sale.crateMaterial }})</td>
-              <td *ngIf="isColumnVisible('sales', 'Quantity')">{{ sale.quantity }}</td>
-              <td *ngIf="isColumnVisible('sales', 'Rate')">₹{{ sale.rate }}</td>
-              <td *ngIf="isColumnVisible('sales', 'Total')"><strong>₹{{ sale.totalAmount }}</strong></td>
-              <td *ngIf="isColumnVisible('sales', 'Paid')"><span class="badge badge-success">₹{{ sale.paid }}</span></td>
-              <td *ngIf="isColumnVisible('sales', 'Remaining')"><span class="badge badge-danger">₹{{ sale.remaining }}</span></td>
-              <td *ngIf="isColumnVisible('sales', 'Actions')" style="display:flex; gap:8px;">
+            <tr *ngFor="let sale of getProcessedList(salesList, 'sales'); trackBy: trackBySaleId">
+              <td *ngIf="isColumnVisible('sales', 'Date')"><span class="date-cell">{{ sale.date | indianDate }}</span></td>
+              <td *ngIf="isColumnVisible('sales', 'Party')" style="font-weight:700;">{{ sale.party?.partyName }}</td>
+              <td *ngIf="isColumnVisible('sales', 'Crate Type')">{{ sale.crateType }} ({{ sale.crateMaterial || 'Plastic' }})</td>
+              <td *ngIf="isColumnVisible('sales', 'Quantity')" style="font-weight:700;">{{ sale.quantity | number }}</td>
+              <td *ngIf="isColumnVisible('sales', 'Rate')">₹{{ sale.rate | number:'1.2-2' }}</td>
+              <td *ngIf="isColumnVisible('sales', 'Total')" style="font-weight:700; color:var(--text-primary);">₹{{ sale.totalAmount | number:'1.2-2' }}</td>
+              <td *ngIf="isColumnVisible('sales', 'Paid')"><span class="badge badge-success" style="font-weight:700;">₹{{ sale.paid | number:'1.2-2' }}</span></td>
+              <td *ngIf="isColumnVisible('sales', 'Remaining')"><span class="badge badge-danger" style="font-weight:700;">₹{{ sale.remaining | number:'1.2-2' }}</span></td>
+              <td *ngIf="isColumnVisible('sales', 'Actions')" style="display:flex; gap:6px;">
+                <button class="btn btn-secondary btn-sm" *ngIf="!isViewer()" (click)="editSale(sale)">✏️ Edit</button>
                 <button class="btn btn-primary btn-sm" *ngIf="sale.remaining > 0" (click)="payWithRazorpay(sale)">Pay Now</button>
                 <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteSale(sale.id)">{{ 'btn.delete' | translate:currentLang }}</button>
               </td>

@@ -18,10 +18,12 @@ export interface ActionConfig {
   action: string;
 }
 
+import { ResizableTableDirective } from '../../directives/resizable-table.directive';
+
 @Component({
   selector: 'app-data-table',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ResizableTableDirective],
   templateUrl: './data-table.component.html',
   styleUrls: ['./data-table.component.css']
 })
@@ -31,6 +33,8 @@ export class DataTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() actions: ActionConfig[] = [];
   @Input() searchPlaceholder: string = 'Search...';
   @Input() enableMultiSelect: boolean = true;
+  @Input() tableId: string = 'data_table';
+  @Input() hideToolbarSearch: boolean = false;
   
   @Output() actionClicked = new EventEmitter<{action: string, item: any}>();
   @Output() batchDelete = new EventEmitter<string[]>();
@@ -71,11 +75,17 @@ export class DataTableComponent implements OnInit, OnChanges, OnDestroy {
     return item.id ?? item.paymentId ?? item.rawMaterialId ?? index;
   }
 
+  getRowId(item: any): string {
+    if (!item) return '';
+    const id = item.id ?? item.partyId ?? item.paymentId ?? item.rawMaterialId ?? item.employeeId ?? item.machineId ?? item.invoiceId ?? item.vendorId ?? item.driverId;
+    return id != null ? String(id) : '';
+  }
+
   toggleSelectAll() {
     this.allSelected = !this.allSelected;
     if (this.allSelected) {
       this.processedData.forEach((row: any) => {
-        const id = row.id ? String(row.id) : (row.paymentId ? String(row.paymentId) : '');
+        const id = this.getRowId(row);
         if (id) this.selectedRows.add(id);
       });
     } else {
@@ -85,6 +95,7 @@ export class DataTableComponent implements OnInit, OnChanges, OnDestroy {
 
   toggleSelectRow(id: any) {
     const key = String(id);
+    if (!key) return;
     if (this.selectedRows.has(key)) {
       this.selectedRows.delete(key);
     } else {
@@ -95,6 +106,18 @@ export class DataTableComponent implements OnInit, OnChanges, OnDestroy {
 
   get hasSelection(): boolean {
     return this.selectedRows.size > 0;
+  }
+
+  emitEditSelected() {
+    if (this.selectedRows.size !== 1) return;
+    const selectedId = Array.from(this.selectedRows)[0];
+    const item = this.data.find(d => {
+      const id = d.id ?? d.partyId ?? d.paymentId ?? d.rawMaterialId ?? d.employeeId ?? d.machineId ?? d.invoiceId ?? d.vendorId ?? d.driverId;
+      return String(id) === String(selectedId);
+    });
+    if (item) {
+      this.actionClicked.emit({ action: 'edit', item });
+    }
   }
 
   emitBatchDelete() {
@@ -142,14 +165,19 @@ export class DataTableComponent implements OnInit, OnChanges, OnDestroy {
     if (!this.data) return;
     let result = [...this.data];
     
+    // Deep search helper — traverses nested objects
+    const deepSearch = (item: any, term: string): boolean => {
+      if (item === null || item === undefined) return false;
+      if (typeof item === 'object') {
+        return Object.values(item).some(val => deepSearch(val, term));
+      }
+      return String(item).toLowerCase().includes(term);
+    };
+
     // Search
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase();
-      result = result.filter(item => {
-        return Object.values(item).some(val => 
-          val && val.toString().toLowerCase().includes(term)
-        );
-      });
+      result = result.filter(item => deepSearch(item, term));
     }
     
     // Sort
@@ -175,11 +203,12 @@ export class DataTableComponent implements OnInit, OnChanges, OnDestroy {
     let result = this.data || [];
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase();
-      result = result.filter(item => {
-        return Object.values(item).some(val => 
-          val && val.toString().toLowerCase().includes(term)
-        );
-      });
+      const deepSearch = (item: any): boolean => {
+        if (item === null || item === undefined) return false;
+        if (typeof item === 'object') return Object.values(item).some(v => deepSearch(v));
+        return String(item).toLowerCase().includes(term);
+      };
+      result = result.filter(item => deepSearch(item));
     }
     return Math.ceil(result.length / this.pageSize) || 1;
   }

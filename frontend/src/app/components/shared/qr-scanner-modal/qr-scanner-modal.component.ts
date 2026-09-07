@@ -10,10 +10,10 @@ import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
     <div class="modal-backdrop" style="position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1100; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
       <div class="glass-panel" style="padding:24px; width:90%; max-width:420px; border-radius:16px; text-align:center; background:var(--card-bg, #ffffff); box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-          <h3 style="margin:0; font-size:16px; font-weight:700;">📷 Scan Dispatch Crate / Batch QR</h3>
+          <h3 style="margin:0; font-size:16px; font-weight:700; display:flex; align-items:center; gap:8px;"><i class="bi bi-qr-code-scan" style="color:#d97706; font-size:18px;"></i> Scan Dispatch Crate / Batch QR</h3>
           <button style="background:none; border:none; font-size:18px; cursor:pointer; color:var(--text-secondary, #64748b);" (click)="closeScanner()">✕</button>
         </div>
-        <div style="position:relative; width:100%; height:260px; background:#0f172a; border-radius:12px; overflow:hidden; border:2px solid #3b82f6;">
+        <div style="position:relative; width:100%; height:260px; background:#0f172a; border-radius:12px; overflow:hidden; border:2px solid #d97706;">
           <video #videoPreview style="width:100%; height:100%; object-fit:cover;"></video>
           <div style="position:absolute; inset:20px; border:2px dashed rgba(255,255,255,0.6); border-radius:8px; pointer-events:none;"></div>
         </div>

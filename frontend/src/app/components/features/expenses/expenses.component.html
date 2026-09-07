@@ -44,26 +44,29 @@
         </div>
       </div>
     </div>
-    <div class="table-container">
-      <table>
+    <div class="table-container table-responsive">
+      <table class="table" appResizableTable tableId="expenses_table">
         <thead>
           <tr>
-            <th *ngIf="isColumnVisible('expenses', 'Date')" (click)="setSort('expenseDate')" style="cursor:pointer;">{{ 'label.date' | translate:currentLang }} <span *ngIf="sortField === 'expenseDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('expenses', 'Category')" (click)="setSort('category')" style="cursor:pointer;">{{ 'expense.category' | translate:currentLang }} <span *ngIf="sortField === 'category'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('expenses', 'Description')">{{ 'expense.description' | translate:currentLang }}</th>
-            <th *ngIf="isColumnVisible('expenses', 'Amount')" (click)="setSort('amount')" style="cursor:pointer;">{{ 'label.amount' | translate:currentLang }} <span *ngIf="sortField === 'amount'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('expenses', 'Paid By')" (click)="setSort('paidBy')" style="cursor:pointer;">{{ 'expense.paidBy' | translate:currentLang }} <span *ngIf="sortField === 'paidBy'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('expenses', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
+            <th *ngIf="isColumnVisible('expenses', 'Date')" (click)="setSort('expenseDate')" style="cursor:pointer; min-width:110px;">{{ 'label.date' | translate:currentLang }} <span *ngIf="sortField === 'expenseDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('expenses', 'Category')" (click)="setSort('category')" style="cursor:pointer; min-width:140px;">{{ 'expense.category' | translate:currentLang }} <span *ngIf="sortField === 'category'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('expenses', 'Description')" style="min-width:180px;">{{ 'expense.description' | translate:currentLang }}</th>
+            <th *ngIf="isColumnVisible('expenses', 'Amount')" (click)="setSort('amount')" style="cursor:pointer; min-width:120px;">{{ 'label.amount' | translate:currentLang }} <span *ngIf="sortField === 'amount'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('expenses', 'Paid By')" (click)="setSort('paidBy')" style="cursor:pointer; min-width:130px;">{{ 'expense.paidBy' | translate:currentLang }} <span *ngIf="sortField === 'paidBy'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('expenses', 'Actions')" style="min-width:120px;">{{ 'label.actions' | translate:currentLang }}</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let e of getProcessedList(expensesList, 'expenses')">
-            <td *ngIf="isColumnVisible('expenses', 'Date')">{{ e.expenseDate }}</td>
-            <td *ngIf="isColumnVisible('expenses', 'Category')"><span class="badge badge-info">{{ e.category }}</span></td>
+          <tr *ngFor="let e of getProcessedList(expensesList, 'expenses'); trackBy: trackById">
+            <td *ngIf="isColumnVisible('expenses', 'Date')"><span class="date-cell">{{ e.expenseDate | indianDate }}</span></td>
+            <td *ngIf="isColumnVisible('expenses', 'Category')"><span class="badge badge-info" style="font-weight:700;">{{ e.category }}</span></td>
             <td *ngIf="isColumnVisible('expenses', 'Description')">{{ e.description }}</td>
-            <td *ngIf="isColumnVisible('expenses', 'Amount')"><strong class="text-red">₹{{ e.amount }}</strong></td>
-            <td *ngIf="isColumnVisible('expenses', 'Paid By')">{{ e.paidBy }}</td>
-            <td *ngIf="isColumnVisible('expenses', 'Actions')"><button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteExpense(e.id)">{{ 'btn.delete' | translate:currentLang }}</button></td>
+            <td *ngIf="isColumnVisible('expenses', 'Amount')"><strong style="color:var(--accent-red, #ef4444); font-size:13.5px;">₹{{ e.amount | number:'1.2-2' }}</strong></td>
+            <td *ngIf="isColumnVisible('expenses', 'Paid By')" style="font-weight:600;">{{ e.paidBy }}</td>
+            <td *ngIf="isColumnVisible('expenses', 'Actions')" style="display:flex; gap:6px;">
+              <button class="btn btn-secondary btn-sm" (click)="editExpense(e)">✏️ Edit</button>
+              <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteExpense(e.id)">{{ 'btn.delete' | translate:currentLang }}</button>
+            </td>
           </tr>
         </tbody>
       </table>

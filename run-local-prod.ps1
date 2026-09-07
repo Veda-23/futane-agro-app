@@ -48,7 +48,7 @@ Write-Host "========================================" -ForegroundColor Green
 Write-Host "  PROD IS RUNNING!" -ForegroundColor Green
 Write-Host "  Frontend: http://localhost:4200" -ForegroundColor Yellow
 Write-Host "  Backend:  http://localhost:8080" -ForegroundColor Yellow
-Write-Host "  Login:    admin / admin123" -ForegroundColor Yellow
+Write-Host "  Login:    SUPER_ADMIN / superadmin123" -ForegroundColor Yellow
 Write-Host "========================================" -ForegroundColor Green
 Write-Host "Close this window or press Ctrl+C to stop."
 try { while ($true) { Start-Sleep 5 } }

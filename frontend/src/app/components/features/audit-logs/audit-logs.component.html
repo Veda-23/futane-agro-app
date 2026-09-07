@@ -1,54 +1,257 @@
-<div class="glass-panel" style="padding: 20px;">
-  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 15px;">
-    <div>
-      <h3 style="margin: 0;">{{ 'audit.title' | translate:currentLang }}</h3>
-      <p style="color: var(--text-secondary); margin: 4px 0 0 0; font-size: 13px;">{{ 'audit.desc' | translate:currentLang }}</p>
+<div class="audit-container">
+  <!-- Top Table Toolbar -->
+  <div class="table-toolbar-top no-print">
+    <div class="toolbar-left">
+      <div class="section-title-badge">
+        <div class="badge-icon-wrap">
+          <span class="material-symbols-outlined">verified_user</span>
+        </div>
+        <div class="badge-text">
+          <h3>Security Audit Logs</h3>
+          <span class="badge-subtitle">Immutable Activity & Compliance Trail</span>
+        </div>
+      </div>
     </div>
-    <!-- Filters (A-15) -->
-    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-      <input type="date" [(ngModel)]="auditFilter.fromDate" style="padding: 6px 10px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-glass); background: rgba(0,0,0,0.05);" title="From Date">
-      <input type="date" [(ngModel)]="auditFilter.toDate" style="padding: 6px 10px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-glass); background: rgba(0,0,0,0.05);" title="To Date">
-      <select [(ngModel)]="auditFilter.tableName" style="padding: 6px 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-glass); background: var(--bg-secondary);">
-        <option value="">All Modules</option>
-        <option *ngFor="let t of uniqueTableNames" [value]="t">{{ t }}</option>
-      </select>
-      <select [(ngModel)]="auditFilter.action" style="padding: 6px 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-glass); background: var(--bg-secondary);">
-        <option value="">All Actions</option>
-        <option value="LOGIN">LOGIN</option>
-        <option value="CREATE">CREATE / ADD</option>
-        <option value="UPDATE">UPDATE</option>
-        <option value="DELETE">DELETE</option>
-      </select>
-      <input type="text" [(ngModel)]="auditFilter.username" placeholder="Filter by User" style="padding: 6px 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-glass); background: rgba(0,0,0,0.05); max-width: 120px;">
-      <button class="btn btn-secondary btn-sm" (click)="clearAuditFilters()" style="padding: 6px 10px; font-size: 12px;">✕ Clear</button>
-      <span style="font-size: 12px; color: var(--text-secondary);">
-        {{ filteredAuditLogs.length }} / {{ auditLogsList.length }}
-      </span>
+
+    <div class="toolbar-right">
+      <!-- Density Toggle -->
+      <div class="density-switch-group">
+        <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="tableDensity = 'compact'" title="Compact density">▤ Compact</button>
+        <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="tableDensity = 'comfortable'" title="Standard density">☷ Normal</button>
+        <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="tableDensity = 'spacious'" title="Spacious density">▦ Spacious</button>
+      </div>
+
+      <!-- Export CSV -->
+      <button type="button" class="btn btn-secondary btn-sm" (click)="exportCSV()" title="Export audit records to CSV">
+        <span class="material-symbols-outlined" style="font-size: 15px; vertical-align: middle;">download</span> Export CSV
+      </button>
+
+      <!-- Reload Data -->
+      <button type="button" class="btn btn-secondary btn-sm" (click)="loadData()" title="Reload audit data">
+        <span class="material-symbols-outlined" style="font-size: 15px; vertical-align: middle;">refresh</span>
+      </button>
     </div>
   </div>
 
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th>{{ 'audit.id' | translate:currentLang }}</th>
-          <th>{{ 'audit.time' | translate:currentLang }}</th>
-          <th>{{ 'audit.user' | translate:currentLang }}</th>
-          <th>{{ 'audit.action' | translate:currentLang }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let log of filteredAuditLogs">
-          <td>{{ log.id }}</td>
-          <td><code>{{ log.timestamp || log.createdAt }}</code></td>
-          <td><span class="badge badge-info">{{ log.username }}</span></td>
-          <td>{{ log.action }}</td>
-        </tr>
-        <tr *ngIf="filteredAuditLogs.length === 0">
-          <td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">No audit records match the selected filters.</td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- Filter & Search Toolbar Bar -->
+  <div class="filter-strip-card">
+    <div class="filter-inputs-row">
+      <div class="search-input-wrapper">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input 
+          type="text" 
+          [(ngModel)]="searchTerm" 
+          (ngModelChange)="currentPage = 1"
+          placeholder="Search by username, action, module, IP..." 
+          class="audit-search-input">
+      </div>
+
+      <div class="filter-select-group">
+        <select [(ngModel)]="auditFilter.tableName" (ngModelChange)="currentPage = 1" class="audit-select" title="Filter by Module">
+          <option value="">All Modules</option>
+          <option *ngFor="let t of uniqueTableNames" [value]="t">{{ t }}</option>
+        </select>
+
+        <select [(ngModel)]="auditFilter.action" (ngModelChange)="currentPage = 1" class="audit-select" title="Filter by Action Type">
+          <option value="">All Actions</option>
+          <option value="LOGIN">LOGIN</option>
+          <option value="LOGOUT">LOGOUT</option>
+          <option value="CREATE">CREATE</option>
+          <option value="UPDATE">UPDATE</option>
+          <option value="DELETE">DELETE</option>
+        </select>
+
+        <input 
+          type="text" 
+          [(ngModel)]="auditFilter.username" 
+          (ngModelChange)="currentPage = 1"
+          placeholder="Filter User..." 
+          class="audit-select" 
+          style="max-width: 130px;" 
+          title="Filter by Username">
+
+        <button *ngIf="searchTerm || auditFilter.tableName || auditFilter.action || auditFilter.username" 
+          type="button" 
+          class="btn-clear-filters" 
+          (click)="clearAuditFilters()">
+          ✕ Clear
+        </button>
+      </div>
+
+      <div class="filter-count-badge">
+        <span class="live-pulse-dot"></span>
+        <span>Showing <strong>{{ filteredAuditLogs.length }}</strong> logs</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Audit Table Card -->
+  <div class="glass-panel audit-table-card">
+    <div class="table-container" 
+         [class.table-compact]="tableDensity === 'compact'" 
+         [class.table-spacious]="tableDensity === 'spacious'">
+      <table class="table enterprise-table" appResizableTable [tableId]="'audit_logs_master_table'">
+        <thead>
+          <tr>
+            <th style="width: 90px;">LOG ID</th>
+            <th style="width: 170px;">TIMESTAMP</th>
+            <th style="min-width: 170px;">USER EXECUTED</th>
+            <th style="min-width: 150px;">OPERATION ACTION</th>
+            <th style="min-width: 130px;">MODULE / RESOURCE</th>
+            <th style="width: 120px;">CLIENT IP</th>
+            <th style="min-width: 220px;">DETAILS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of paginatedAuditLogs; trackBy: trackById" (click)="openLogDetail(log)" class="audit-row-clickable">
+            <!-- LOG ID -->
+            <td>
+              <span class="code-badge-id">#{{ log.auditId || log.id }}</span>
+            </td>
+
+            <!-- TIMESTAMP -->
+            <td>
+              <div class="time-cell">
+                <span class="material-symbols-outlined time-icon">schedule</span>
+                <span>{{ log.timestamp | date:'dd MMM yyyy, HH:mm:ss' }}</span>
+              </div>
+            </td>
+
+            <!-- USER EXECUTED (Clean & Uncluttered) -->
+            <td>
+              <div class="user-identity-cell">
+                <div class="user-avatar-initials">
+                  {{ (log.username || 'U').charAt(0).toUpperCase() }}
+                </div>
+                <div class="user-meta">
+                  <strong class="user-handle">&#64;{{ log.username }}</strong>
+                  <span class="role-pill" [ngClass]="'role-' + (log.userRole || 'user').toLowerCase()">{{ log.userRole || 'USER' }}</span>
+                </div>
+              </div>
+            </td>
+
+            <!-- OPERATION ACTION -->
+            <td>
+              <span class="action-badge" [ngClass]="getActionBadgeClass(log.action)">
+                {{ log.action }}
+              </span>
+            </td>
+
+            <!-- MODULE / RESOURCE -->
+            <td>
+              <span class="module-tag">
+                <span class="material-symbols-outlined tag-icon">folder</span>
+                {{ log.tableName || log.resourceName || 'system' }}
+              </span>
+            </td>
+
+            <!-- CLIENT IP -->
+            <td>
+              <span class="ip-badge">
+                <span class="material-symbols-outlined ip-icon">lan</span>
+                {{ log.ipAddress || '127.0.0.1' }}
+              </span>
+            </td>
+
+            <!-- DETAILS -->
+            <td>
+              <div class="payload-cell">
+                <span class="payload-text" [title]="log.details || log.newValue || ''">
+                  {{ log.details || log.newValue || 'System event logged.' }}
+                </span>
+                <button type="button" class="btn-inspect" (click)="openLogDetail(log); $event.stopPropagation()" title="Inspect details">
+                  <span class="material-symbols-outlined">open_in_new</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Empty State -->
+          <tr *ngIf="paginatedAuditLogs.length === 0">
+            <td colspan="7" class="empty-state-cell">
+              <div class="empty-audit-box">
+                <span class="material-symbols-outlined empty-icon">manage_search</span>
+                <h4>No Audit Records Found</h4>
+                <p>No audit activity matching your filter criteria. Try clearing filters.</p>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="clearAuditFilters()">Reset Filters</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Footer -->
+    <div class="table-pagination no-print">
+      <span class="pagination-info">
+        Showing {{ filteredAuditLogs.length === 0 ? 0 : (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, filteredAuditLogs.length) }} of {{ filteredAuditLogs.length }} entries
+      </span>
+      <div class="pagination-actions">
+        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
+          ‹ Previous
+        </button>
+        <span class="page-indicator">Page {{ currentPage }} of {{ totalPages }}</span>
+        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage >= totalPages" (click)="currentPage = currentPage + 1">
+          Next ›
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
+<!-- Audit Log Detail Modal -->
+<div class="audit-modal-backdrop" *ngIf="selectedLogForDetail" (click)="closeLogDetail()">
+  <div class="audit-modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="material-symbols-outlined modal-icon">shield</span>
+        <div>
+          <h4>Audit Record Details</h4>
+          <span class="modal-subtitle">Log ID #{{ selectedLogForDetail.auditId || selectedLogForDetail.id }} · {{ selectedLogForDetail.timestamp | date:'medium' }}</span>
+        </div>
+      </div>
+      <button type="button" class="modal-close-btn" (click)="closeLogDetail()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-grid-meta">
+        <div class="meta-field">
+          <label>User</label>
+          <div class="meta-val highlight">
+            <strong>&#64;{{ selectedLogForDetail.username }}</strong>
+            <span class="role-pill" [ngClass]="'role-' + (selectedLogForDetail.userRole || 'user').toLowerCase()">{{ selectedLogForDetail.userRole }}</span>
+          </div>
+        </div>
+        <div class="meta-field">
+          <label>Operation Action</label>
+          <div class="meta-val">
+            <span class="action-badge" [ngClass]="getActionBadgeClass(selectedLogForDetail.action)">
+              {{ selectedLogForDetail.action }}
+            </span>
+          </div>
+        </div>
+        <div class="meta-field">
+          <label>Module / Resource</label>
+          <div class="meta-val"><code>{{ selectedLogForDetail.tableName || selectedLogForDetail.resourceName }}</code></div>
+        </div>
+        <div class="meta-field">
+          <label>Client IP Address</label>
+          <div class="meta-val"><code>{{ selectedLogForDetail.ipAddress || '127.0.0.1' }}</code></div>
+        </div>
+        <div class="meta-field">
+          <label>Timestamp</label>
+          <div class="meta-val"><code>{{ selectedLogForDetail.timestamp }}</code></div>
+        </div>
+      </div>
+
+      <div class="modal-payload-section">
+        <label>Event Details & Change Payload</label>
+        <pre class="payload-pre"><code>{{ selectedLogForDetail.details || selectedLogForDetail.newValue || 'No additional payload metadata logged.' }}</code></pre>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary btn-sm" (click)="closeLogDetail()">Close</button>
+    </div>
+  </div>
+</div>

@@ -37,22 +37,22 @@
         </div>
       </div>
     </div>
-    <div class="table-container">
-      <table>
+    <div class="table-container table-responsive">
+      <table class="table" appResizableTable [tableId]="'drivers_table'">
         <thead>
           <tr>
-            <th *ngIf="isColumnVisible('drivers', 'ID')" (click)="setSort('id')" style="cursor:pointer;">Driver ID <span *ngIf="sortField === 'id'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('drivers', 'Name')" (click)="setSort('driverName')" style="cursor:pointer;">{{ 'driver.name' | translate:currentLang }} <span *ngIf="sortField === 'driverName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('drivers', 'Mobile')" (click)="setSort('mobile')" style="cursor:pointer;">{{ 'driver.mobile' | translate:currentLang }} <span *ngIf="sortField === 'mobile'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('drivers', 'License')" (click)="setSort('licenseNumber')" style="cursor:pointer;">{{ 'driver.license' | translate:currentLang }} <span *ngIf="sortField === 'licenseNumber'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('drivers', 'Address')">{{ 'driver.address' | translate:currentLang }}</th>
-            <th *ngIf="isColumnVisible('drivers', 'Trips')">Trips</th>
-            <th *ngIf="isColumnVisible('drivers', 'Earnings')">Earnings</th>
-            <th *ngIf="isColumnVisible('drivers', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
+            <th *ngIf="isColumnVisible('drivers', 'ID')" (click)="setSort('id')" style="cursor:pointer; min-width: 100px;">Driver ID <span *ngIf="sortField === 'id'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('drivers', 'Name')" (click)="setSort('driverName')" style="cursor:pointer; min-width: 140px;">{{ 'driver.name' | translate:currentLang }} <span *ngIf="sortField === 'driverName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('drivers', 'Mobile')" (click)="setSort('mobile')" style="cursor:pointer; min-width: 120px;">{{ 'driver.mobile' | translate:currentLang }} <span *ngIf="sortField === 'mobile'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('drivers', 'License')" (click)="setSort('licenseNumber')" style="cursor:pointer; min-width: 130px;">{{ 'driver.license' | translate:currentLang }} <span *ngIf="sortField === 'licenseNumber'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('drivers', 'Address')" style="min-width: 150px;">{{ 'driver.address' | translate:currentLang }}</th>
+            <th *ngIf="isColumnVisible('drivers', 'Trips')" style="min-width: 80px;">Trips</th>
+            <th *ngIf="isColumnVisible('drivers', 'Earnings')" style="min-width: 110px;">Earnings</th>
+            <th *ngIf="isColumnVisible('drivers', 'Actions')" style="min-width: 130px;">{{ 'label.actions' | translate:currentLang }}</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let driver of getProcessedList(drivers, 'drivers')">
+          <tr *ngFor="let driver of getProcessedList(drivers, 'drivers'); trackBy: trackById">
             <td *ngIf="isColumnVisible('drivers', 'ID')">{{ driver.id }}</td>
             <td *ngIf="isColumnVisible('drivers', 'Name')"><strong>{{ driver.driverName }}</strong></td>
             <td *ngIf="isColumnVisible('drivers', 'Mobile')">{{ driver.mobile }}</td>
@@ -65,7 +65,8 @@
               ₹{{ getDriverStats(driver.id).earnings | number:'1.0-0' }}
             </td>
             <td *ngIf="isColumnVisible('drivers', 'Actions')">
-              <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteDriver(driver.id)">{{ 'btn.delete' | translate:currentLang }}</button>
+              <button class="btn btn-outline btn-sm" style="margin-right: 5px; font-weight:700; font-size: 11.5px; padding: 4px 8px;" (click)="editDriver(driver)">✏️ Edit</button>
+              <button class="btn btn-danger btn-sm" style="font-size: 11.5px; padding: 4px 8px;" *ngIf="canDelete()" (click)="deleteDriver(driver.id)">{{ 'btn.delete' | translate:currentLang }}</button>
             </td>
           </tr>
         </tbody>

@@ -9,72 +9,97 @@ export class NotificationService {
   constructor() {}
 
   /**
+   * Enterprise Standard Top-Right Toast for Instant User Feedback
+   * Glassmorphic, non-intrusive, positioned gracefully at top-right below the header.
+   */
+  private showToast(icon: 'success' | 'info' | 'warning' | 'error', title: string, text: string = '') {
+    const isDark = document.body.classList.contains('dark-theme');
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: icon,
+      title: title,
+      text: text,
+      showConfirmButton: false,
+      showCloseButton: true,
+      timer: 4000,
+      timerProgressBar: true,
+      background: isDark ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.97)',
+      color: isDark ? '#f8fafc' : '#0f172a',
+      customClass: {
+        container: 'futane-toast-container-top',
+        popup: `futane-toast-popup futane-toast-${icon}`,
+        title: 'futane-toast-title',
+        htmlContainer: 'futane-toast-text',
+        timerProgressBar: `futane-toast-progress futane-toast-progress-${icon}`,
+        closeButton: 'futane-toast-close'
+      },
+      showClass: {
+        popup: 'swal2-toast-show'
+      },
+      hideClass: {
+        popup: 'swal2-toast-hide'
+      }
+    });
+  }
+
+  /**
    * Backward-compatible & Enterprise Standard Methods
    */
   success(title: string, text: string = '') {
-    Swal.fire({
-      icon: 'success',
-      title: title,
-      text: text,
-      timer: 2000,
-      showConfirmButton: false,
-      timerProgressBar: true
-    });
+    this.showToast('success', title, text);
   }
 
   error(title: string, text: string = '') {
-    Swal.fire({
-      icon: 'error',
-      title: title,
-      text: text,
-      confirmButtonColor: '#d33',
-      confirmButtonText: 'OK'
-    });
+    this.showToast('error', title, text);
   }
 
   warning(title: string, text: string = '') {
-    Swal.fire({
-      icon: 'warning',
-      title: title,
-      text: text,
-      confirmButtonColor: '#f39c12',
-      confirmButtonText: 'OK'
-    });
+    this.showToast('warning', title, text);
   }
 
   info(title: string, text: string = '') {
-    Swal.fire({
-      icon: 'info',
-      title: title,
-      text: text,
-      timer: 2000,
-      showConfirmButton: false,
-      timerProgressBar: true
-    });
+    this.showToast('info', title, text);
   }
 
   confirmAction(title: string, text: string, confirmBtnText: string = 'Yes, Delete'): Promise<boolean> {
+    const isDark = document.body.classList.contains('dark-theme');
     return Swal.fire({
       title: title,
       text: text,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#6e7881',
+      showCloseButton: true,
+      background: isDark ? '#0f172a' : '#ffffff',
+      color: isDark ? '#f8fafc' : '#0f172a',
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
       confirmButtonText: confirmBtnText,
-      cancelButtonText: 'Cancel'
+      cancelButtonText: 'Cancel',
+      customClass: {
+        popup: 'futane-dialog-popup',
+        title: 'futane-dialog-title',
+        htmlContainer: 'futane-dialog-text',
+        confirmButton: 'futane-dialog-confirm-btn',
+        cancelButton: 'futane-dialog-cancel-btn'
+      }
     }).then(res => res.isConfirmed);
   }
 
-  /**
-   * Specialized Enterprise Methods
-   */
-  showSaveSuccess(message: string = 'Record added successfully.') {
+  showSuccess(message: string = 'Operation completed successfully.') {
     this.success('Success', message);
   }
 
+  showInfo(message: string = '') {
+    this.info('Information', message);
+  }
+
+  showSaveSuccess(message: string = 'Record added successfully.') {
+    this.success('Saved Successfully', message);
+  }
+
   showUpdateSuccess(message: string = 'Record updated successfully.') {
-    this.success('Success', message);
+    this.success('Updated Successfully', message);
   }
 
   async showDeleteConfirm(title: string = 'Delete Record?', text: string = 'This action cannot be undone.'): Promise<boolean> {
@@ -82,16 +107,26 @@ export class NotificationService {
   }
 
   showDeleteSuccess(message: string = 'Record deleted successfully.') {
-    this.success('Deleted!', message);
+    this.success('Deleted', message);
   }
 
   showValidationError(message: string, focusElementId?: string) {
+    const isDark = document.body.classList.contains('dark-theme');
     Swal.fire({
       icon: 'warning',
       title: 'Validation Error',
       text: message,
-      confirmButtonColor: '#f39c12',
-      confirmButtonText: 'Fix Issue'
+      confirmButtonColor: '#f59e0b',
+      confirmButtonText: 'Fix Issue',
+      showCloseButton: true,
+      background: isDark ? '#0f172a' : '#ffffff',
+      color: isDark ? '#f8fafc' : '#0f172a',
+      customClass: {
+        popup: 'futane-dialog-popup',
+        title: 'futane-dialog-title',
+        htmlContainer: 'futane-dialog-text',
+        confirmButton: 'futane-dialog-confirm-btn'
+      }
     }).then(() => {
       if (focusElementId) {
         const el = document.getElementById(focusElementId);
@@ -128,11 +163,19 @@ export class NotificationService {
   }
 
   showLoading(title: string = 'Processing...', message: string = 'Please wait...') {
+    const isDark = document.body.classList.contains('dark-theme');
     Swal.fire({
       title: title,
       text: message,
       allowOutsideClick: false,
       allowEscapeKey: false,
+      background: isDark ? '#0f172a' : '#ffffff',
+      color: isDark ? '#f8fafc' : '#0f172a',
+      customClass: {
+        popup: 'futane-dialog-popup',
+        title: 'futane-dialog-title',
+        htmlContainer: 'futane-dialog-text'
+      },
       didOpen: () => {
         Swal.showLoading();
       }
@@ -144,13 +187,23 @@ export class NotificationService {
   }
 
   showSessionExpired(onLogin: () => void) {
+    const isDark = document.body.classList.contains('dark-theme');
     Swal.fire({
       icon: 'warning',
       title: 'Session Expired',
       text: 'Your session has expired due to inactivity. Please log in again.',
       confirmButtonText: 'Login Again',
-      confirmButtonColor: '#3085d6',
-      allowOutsideClick: false
+      confirmButtonColor: '#d97706',
+      showCloseButton: true,
+      allowOutsideClick: false,
+      background: isDark ? '#0f172a' : '#ffffff',
+      color: isDark ? '#f8fafc' : '#0f172a',
+      customClass: {
+        popup: 'futane-dialog-popup',
+        title: 'futane-dialog-title',
+        htmlContainer: 'futane-dialog-text',
+        confirmButton: 'futane-dialog-confirm-btn'
+      }
     }).then(() => {
       onLogin();
     });

@@ -41,10 +41,20 @@ export class AnalyticsComponent implements OnInit {
     this.loadPowerBiSettings();
   }
 
+  private isSafeUrl(url: string): boolean {
+    if (!url) return false;
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  }
+
   loadPowerBiSettings() {
     this.apiService.getSettings().subscribe((settings: any[]) => {
       const biSetting = settings ? settings.find((s: any) => s.settingKey === 'powerbi_embed_url') : null;
-      if (biSetting && biSetting.settingValue) {
+      if (biSetting && biSetting.settingValue && this.isSafeUrl(biSetting.settingValue)) {
         this.powerBiUrlInput = biSetting.settingValue;
         this.powerBiSimulatorActive = false;
         this.powerBiEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(biSetting.settingValue);
@@ -58,9 +68,14 @@ export class AnalyticsComponent implements OnInit {
   }
 
   savePowerBiUrl() {
-    if (!this.powerBiUrlInput.trim()) return;
-    this.apiService.saveSetting('powerbi_embed_url', this.powerBiUrlInput).subscribe(() => {
-      this.powerBiEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.powerBiUrlInput);
+    const trimmed = this.powerBiUrlInput.trim();
+    if (!trimmed) return;
+    if (!this.isSafeUrl(trimmed)) {
+      this.notificationService.showError('Invalid URL. Only secure HTTP and HTTPS URLs are supported for embedding.');
+      return;
+    }
+    this.apiService.saveSetting('powerbi_embed_url', trimmed).subscribe(() => {
+      this.powerBiEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(trimmed);
       this.powerBiSimulatorActive = false;
       this.notificationService.showSaveSuccess('Power BI URL saved successfully!');
     });

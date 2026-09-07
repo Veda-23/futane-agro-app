@@ -8,12 +8,14 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
 
+import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
+import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-raw-materials',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective, ResizableTableDirective, IndianDatePipe],
   templateUrl: './raw-materials.component.html',
   styleUrls: ['./raw-materials.component.css']
 })
@@ -97,7 +99,9 @@ export class RawMaterialsComponent implements OnInit {
     }
     const vendor = this.vendors.find(v => v.id === parseInt(this.rawMaterialsForm.id));
     if (!vendor) return;
-    
+
+    const editId = (this.rawMaterialsForm as any)._editId;
+
     const payload = {
       date: this.rawMaterialsForm.date,
       materialName: this.rawMaterialsForm.materialName,
@@ -109,19 +113,47 @@ export class RawMaterialsComponent implements OnInit {
       weightSlipPath: this.rawMaterialsForm.weightSlipPath || ''
     };
 
-    this.apiService.createRawMaterial(payload).subscribe({
-      next: (res) => {
-        if (res) this.rawMaterialsList.unshift(res);
-        this.loadData();
-        this.notificationService.success('Data Added', 'Raw material purchase record added successfully');
-        this.logAudit("Added new raw material purchase: " + this.rawMaterialsForm.materialName);
-        this.rawMaterialsForm = { date: '', materialName: 'HDPE Plastic Granules', id: '', weight: 0, rate: 0, purchaseBillPath: '', weightSlipPath: '' };
-      },
-      error: (err) => this.notificationService.error('Error', "Failed to save raw material: " + (err.error?.message || err.message))
-    });
+    if (editId) {
+      this.apiService.updateRawMaterial(editId, payload).subscribe({
+        next: () => {
+          this.loadData();
+          this.notificationService.success('Updated', 'Raw material record updated successfully');
+          this.logAudit('Updated raw material: ' + this.rawMaterialsForm.materialName);
+          this.rawMaterialsForm = { date: '', materialName: 'HDPE Plastic Granules', id: '', weight: 0, rate: 0, purchaseBillPath: '', weightSlipPath: '' };
+        },
+        error: (err) => this.notificationService.error('Error', 'Failed to update raw material: ' + (err.error?.message || err.message))
+      });
+    } else {
+      this.apiService.createRawMaterial(payload).subscribe({
+        next: (res) => {
+          if (res) this.rawMaterialsList.unshift(res);
+          this.loadData();
+          this.notificationService.success('Data Added', 'Raw material purchase record added successfully');
+          this.logAudit("Added new raw material purchase: " + this.rawMaterialsForm.materialName);
+          this.rawMaterialsForm = { date: '', materialName: 'HDPE Plastic Granules', id: '', weight: 0, rate: 0, purchaseBillPath: '', weightSlipPath: '' };
+        },
+        error: (err) => this.notificationService.error('Error', "Failed to save raw material: " + (err.error?.message || err.message))
+      });
+    }
   }
 
-  deleteRawMaterial(id: string) {
+  editRawMaterial(rm: any) {
+    this.rawMaterialsForm = {
+      date: rm.date || '',
+      materialName: rm.materialName || 'HDPE Plastic Granules',
+      id: rm.vendor?.id || '',
+      weight: rm.weight || 0,
+      rate: rm.rate || 0,
+      purchaseBillPath: rm.purchaseBillPath || '',
+      weightSlipPath: rm.weightSlipPath || ''
+    };
+    (this.rawMaterialsForm as any)._editId = rm.id;
+    this.notificationService.info('Edit Mode', `Loaded ${rm.materialName} record for editing.`);
+    const formEl = document.querySelector('.form-card');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  deleteRawMaterial(id: any) {
     if (!this.canDelete()) {
       this.notificationService.warning('Permission Denied', "Permission denied");
       return;
@@ -193,5 +225,9 @@ export class RawMaterialsComponent implements OnInit {
   private resolvePath(obj: any, path: string): any {
     if (!path) return '';
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
+  }
+
+  trackById(index: number, item: any): any {
+    return item?.id ?? item?.rawMaterialId ?? index;
   }
 }

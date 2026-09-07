@@ -34,7 +34,8 @@ export class VendorsComponent implements OnInit {
   ];
   
   vendorTableActions = [
-    { label: 'Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
+    { label: '✏️ Edit', action: 'edit', class: 'btn btn-sm btn-outline' },
+    { label: '🗑️ Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
   ];
 
   constructor(private apiService: ApiService, private notificationService: NotificationService) {}
@@ -62,21 +63,41 @@ export class VendorsComponent implements OnInit {
     return this.loggedInUser && (this.loggedInUser.role === 'SUPER_ADMIN' || this.loggedInUser.role === 'ADMIN');
   }
 
+  editVendor(vendor: any) {
+    this.vendorForm = { ...vendor };
+    const formEl = document.querySelector('.form-card');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
+    this.notificationService.info('Editing', `Editing vendor: ${vendor.vendorName}`);
+  }
+
   saveVendor() {
     if (!this.vendorForm.vendorName || !this.vendorForm.mobile) {
       this.notificationService.warning('Invalid Input', "Please fill required fields");
       return;
     }
-    this.apiService.createVendor(this.vendorForm).subscribe({
-      next: (res) => {
-        if (res) this.vendors.unshift(res);
-        this.loadData();
-        this.notificationService.success('Data Added', 'Vendor created successfully');
-        this.logAudit("Created vendor: " + this.vendorForm.vendorName);
-        this.vendorForm = { vendorName: '', mobile: '', address: '', gstNumber: '' };
-      },
-      error: (err) => this.notificationService.error('Error', "Failed to save vendor: " + (err.error?.message || err.message))
-    });
+    const editId = (this.vendorForm as any).id;
+    if (editId) {
+      this.apiService.updateVendor(editId, this.vendorForm).subscribe({
+        next: () => {
+          this.loadData();
+          this.notificationService.success('Updated', 'Vendor updated successfully');
+          this.logAudit('Updated vendor: ' + this.vendorForm.vendorName);
+          this.vendorForm = { vendorName: '', mobile: '', address: '', gstNumber: '' };
+        },
+        error: (err) => this.notificationService.error('Error', 'Failed to update vendor: ' + (err.error?.message || err.message))
+      });
+    } else {
+      this.apiService.createVendor(this.vendorForm).subscribe({
+        next: (res) => {
+          if (res) this.vendors.unshift(res);
+          this.loadData();
+          this.notificationService.success('Data Saved', 'Vendor saved successfully');
+          this.logAudit("Saved vendor: " + this.vendorForm.vendorName);
+          this.vendorForm = { vendorName: '', mobile: '', address: '', gstNumber: '' };
+        },
+        error: (err) => this.notificationService.error('Error', "Failed to save vendor: " + (err.error?.message || err.message))
+      });
+    }
   }
 
   deleteVendor(id: string) {
@@ -98,7 +119,27 @@ export class VendorsComponent implements OnInit {
     });
   }
 
+  batchDeleteVendors(ids: string[]) {
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "Permission denied");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Bulk Delete', `Delete ${ids.length} selected vendor(s)?`, 'Yes, Delete All').then(confirmed => {
+      if (confirmed) {
+        ids.forEach(id => {
+          this.apiService.deleteVendor(id).subscribe({
+            next: () => {
+              this.vendors = this.vendors.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            }
+          });
+        });
+        this.notificationService.success('Batch Delete', `Deleted ${ids.length} vendor(s)`);
+      }
+    });
+  }
+
   handleVendorAction(event: any) {
+    if (event.action === 'edit') this.editVendor(event.item);
     if (event.action === 'delete') this.deleteVendor(event.item.id);
   }
 

@@ -34,7 +34,8 @@ export class PartyComponent implements OnInit {
   ];
   
   partyTableActions = [
-    { label: 'Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
+    { label: '✏️ Edit', action: 'edit', class: 'btn btn-sm btn-secondary' },
+    { label: '🗑️ Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
   ];
 
   constructor(private apiService: ApiService, private notificationService: NotificationService) {}
@@ -58,7 +59,7 @@ export class PartyComponent implements OnInit {
   validateForm(type: string): boolean {
     if (type === 'party') {
       if (!this.partyForm.partyName || !this.partyForm.partyContact) {
-        this.notificationService.warning('Invalid Input', "Please fill all required fields");
+        this.notificationService.warning('Validation Error', 'Please fill all required fields');
         return false;
       }
     }
@@ -84,23 +85,39 @@ export class PartyComponent implements OnInit {
 
   saveParty() {
     if (!this.validateForm('party')) return;
-    if (this.isDuplicateParty()) return;
-    this.apiService.createParty(this.partyForm).subscribe({
-      next: (res) => {
-        if (res) this.parties.unshift(res);
-        this.loadData();
-        this.notificationService.success('Data Added', 'Party registered successfully');
-        this.logAudit("Registered new party: " + this.partyForm.partyName);
-        this.partyForm = { partyName: '', partyAddress: '', partyContact: '', gstNumber: '', email: '', city: '', state: '', gstCertPath: '', panCardPath: '', agreementPath: '' };
-      },
-      error: (err) => {
-        if (err.status === 409) {
-          this.notificationService.error('Conflict', err.error?.message || "A party with this unique info already exists.");
-        } else {
-          this.notificationService.error('Error', "Failed to save party: " + (err.error?.message || err.message));
+
+    const id = (this.partyForm as any).id;
+
+    if (id) {
+      // UPDATE existing party
+      this.apiService.updateParty(id, this.partyForm).subscribe({
+        next: (res) => {
+          this.loadData();
+          this.partyForm = { partyName: '', partyAddress: '', partyContact: '', gstNumber: '', email: '', city: '', state: '', gstCertPath: '', panCardPath: '', agreementPath: '' };
+          this.notificationService.success('Success', 'Party updated successfully!');
+          this.logAudit('Updated party: ' + res.partyName);
+        },
+        error: (err) => this.notificationService.error('Error', 'Failed to update party: ' + (err.error?.message || err.message))
+      });
+    } else {
+      // CREATE new party — check duplicates only on create
+      if (this.isDuplicateParty()) return;
+      this.apiService.createParty(this.partyForm).subscribe({
+        next: (res) => {
+          this.loadData();
+          this.partyForm = { partyName: '', partyAddress: '', partyContact: '', gstNumber: '', email: '', city: '', state: '', gstCertPath: '', panCardPath: '', agreementPath: '' };
+          this.notificationService.success('Success', 'Party saved successfully!');
+          this.logAudit('Registered new party: ' + res.partyName);
+        },
+        error: (err) => {
+          if (err.status === 409) {
+            this.notificationService.warning('Duplicate Record', err.error?.message || 'A party with this GST or name already exists.');
+          } else {
+            this.notificationService.error('Error', 'Failed to save party: ' + (err.error?.message || err.message));
+          }
         }
-      }
-    });
+      });
+    }
   }
 
   deleteParty(id: string) {
@@ -122,8 +139,49 @@ export class PartyComponent implements OnInit {
     });
   }
 
+  batchDeleteParties(ids: string[]) {
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Bulk Delete', `Delete ${ids.length} selected parties?`, 'Yes, Delete All').then(confirmed => {
+      if (confirmed) {
+        ids.forEach(id => {
+          this.apiService.deleteParty(id).subscribe({
+            next: () => {
+              this.parties = this.parties.filter(x => String(x.id) !== id);
+            }
+          });
+        });
+        this.notificationService.success('Batch Complete', `${ids.length} parties deleted`);
+      }
+    });
+  }
+
+  editParty(party: any) {
+    this.partyForm = {
+      partyName: party.partyName || '',
+      partyAddress: party.partyAddress || party.address || '',
+      partyContact: party.partyContact || party.contact || party.mobile || '',
+      gstNumber: party.gstNumber || '',
+      email: party.email || '',
+      city: party.city || '',
+      state: party.state || '',
+      gstCertPath: party.gstCertPath || '',
+      panCardPath: party.panCardPath || '',
+      agreementPath: party.agreementPath || ''
+    };
+    if (party.id) {
+      (this.partyForm as any).id = party.id;
+    }
+    this.notificationService.info('Editing Party', `Loaded "${party.partyName}" into form.`);
+    const formEl = document.querySelector('.form-card');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
+  }
+
   handlePartyAction(event: any) {
     if (event.action === 'delete') this.deleteParty(event.item.id);
+    if (event.action === 'edit') this.editParty(event.item);
   }
 
   logAudit(action: string) {

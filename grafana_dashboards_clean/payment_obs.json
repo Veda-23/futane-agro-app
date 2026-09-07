@@ -1,257 +1,2509 @@
 {
-  "title": "7. PAYMENT OBSERVABILITY",
   "uid": "payment_obs",
+  "title": "7. PAYMENT OBSERVABILITY",
   "tags": [
     "payment",
     "razorpay",
-    "checkout",
-    "webhook"
+    "dues",
+    "ledgers"
   ],
   "timezone": "browser",
-  "schemaVersion": 38,
-  "refresh": "10s",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "environment",
+        "label": "🌐 Environment",
+        "type": "custom",
+        "query": "UAT,PROD,ALL",
+        "current": {
+          "text": "UAT",
+          "value": "UAT",
+          "selected": true
+        },
+        "options": [
+          {
+            "text": "UAT (Port 8081)",
+            "value": "UAT",
+            "selected": true
+          },
+          {
+            "text": "PROD (Port 8080)",
+            "value": "PROD"
+          },
+          {
+            "text": "ALL Environments",
+            "value": "ALL"
+          }
+        ],
+        "hide": 0
+      },
+      {
+        "name": "module",
+        "label": "📦 Module",
+        "type": "custom",
+        "query": "ALL,Sales,Production,CRM,Transport,HR,Billing,Inventory,Security",
+        "current": {
+          "text": "ALL",
+          "value": "ALL",
+          "selected": true
+        },
+        "options": [
+          {
+            "text": "ALL Modules",
+            "value": "ALL",
+            "selected": true
+          },
+          {
+            "text": "Sales & GST Engine",
+            "value": "Sales"
+          },
+          {
+            "text": "Production (PPD/PPM)",
+            "value": "Production"
+          },
+          {
+            "text": "CRM & Parties",
+            "value": "CRM"
+          },
+          {
+            "text": "Transports & Logistics",
+            "value": "Transport"
+          },
+          {
+            "text": "HR & Payroll",
+            "value": "HR"
+          },
+          {
+            "text": "Billing & Invoices",
+            "value": "Billing"
+          },
+          {
+            "text": "Inventory & Raw Materials",
+            "value": "Inventory"
+          },
+          {
+            "text": "Security & Auth",
+            "value": "Security"
+          }
+        ],
+        "hide": 0
+      },
+      {
+        "name": "interval",
+        "label": "⏱️ Resolution",
+        "type": "interval",
+        "query": "10s,30s,1m,5m,15m,1h",
+        "current": {
+          "text": "1m",
+          "value": "1m",
+          "selected": true
+        },
+        "options": [
+          {
+            "text": "10s",
+            "value": "10s"
+          },
+          {
+            "text": "30s",
+            "value": "30s"
+          },
+          {
+            "text": "1m",
+            "value": "1m",
+            "selected": true
+          },
+          {
+            "text": "5m",
+            "value": "5m"
+          },
+          {
+            "text": "15m",
+            "value": "15m"
+          },
+          {
+            "text": "1h",
+            "value": "1h"
+          }
+        ],
+        "hide": 0
+      },
+      {
+        "name": "severity",
+        "label": "🚨 Severity",
+        "type": "custom",
+        "query": "ALL,CRITICAL,ERROR,WARN,INFO",
+        "current": {
+          "text": "ALL",
+          "value": "ALL",
+          "selected": true
+        },
+        "options": [
+          {
+            "text": "ALL",
+            "value": "ALL",
+            "selected": true
+          },
+          {
+            "text": "CRITICAL",
+            "value": "CRITICAL"
+          },
+          {
+            "text": "ERROR",
+            "value": "ERROR"
+          },
+          {
+            "text": "WARN",
+            "value": "WARN"
+          },
+          {
+            "text": "INFO",
+            "value": "INFO"
+          }
+        ],
+        "hide": 0
+      }
+    ]
+  },
   "panels": [
     {
       "id": 1,
-      "title": "Total Payment Links Generated",
-      "type": "stat",
+      "title": "🚀 SECTION 1: CORE TELEMETRY & STAT BADGES",
+      "type": "row",
       "gridPos": {
         "x": 0,
         "y": 0,
-        "w": 6,
-        "h": 4
+        "w": 24,
+        "h": 1
       },
+      "collapsed": false,
+      "panels": [],
       "datasource": {
-        "uid": "mysql_ds",
-        "type": "mysql"
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
       },
       "targets": [
         {
-          "rawSql": "SELECT COUNT(*) FROM t_payment_link",
-          "format": "table"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "color": {
-            "mode": "thresholds"
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
           },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 117,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
         }
-      },
-      "options": {
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": ""
-        },
-        "orientation": "auto",
-        "textMode": "auto",
-        "colorMode": "value"
-      }
+      ]
     },
     {
       "id": 2,
-      "title": "Completed Razorpay Payments",
+      "title": "Today Realized Cash",
       "type": "stat",
       "gridPos": {
-        "x": 6,
-        "y": 0,
+        "x": 0,
+        "y": 1,
         "w": 6,
         "h": 4
       },
       "datasource": {
-        "uid": "mysql_ds",
-        "type": "mysql"
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
       },
       "targets": [
         {
-          "rawSql": "SELECT COUNT(*) FROM t_payment_link WHERE status = 'PAID'",
-          "format": "table"
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 124,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "none",
           "color": {
-            "mode": "thresholds"
+            "mode": "fixed",
+            "fixedColor": "#299c46"
           },
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "#299c46",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           }
         }
       },
       "options": {
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": ""
-        },
-        "orientation": "auto",
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
         "textMode": "auto",
-        "colorMode": "value"
+        "orientation": "auto"
       }
     },
     {
       "id": 3,
-      "title": "Razorpay Total Revenue Collected",
+      "title": "Pending Receivables",
       "type": "stat",
       "gridPos": {
-        "x": 12,
-        "y": 0,
+        "x": 6,
+        "y": 1,
         "w": 6,
         "h": 4
       },
       "datasource": {
-        "uid": "mysql_ds",
-        "type": "mysql"
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
       },
       "targets": [
         {
-          "rawSql": "SELECT COALESCE(SUM(amount), 0) FROM t_payment_link WHERE status = 'PAID'",
-          "format": "table"
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 131,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "currencyINR",
+          "unit": "none",
           "color": {
-            "mode": "thresholds"
+            "mode": "fixed",
+            "fixedColor": "#e0b400"
           },
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "#e0b400",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           }
         }
       },
       "options": {
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": ""
-        },
-        "orientation": "auto",
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
         "textMode": "auto",
-        "colorMode": "value"
+        "orientation": "auto"
       }
     },
     {
       "id": 4,
-      "title": "Outstanding Sale Dues",
+      "title": "Razorpay Volume",
       "type": "stat",
       "gridPos": {
-        "x": 18,
-        "y": 0,
+        "x": 12,
+        "y": 1,
         "w": 6,
         "h": 4
       },
       "datasource": {
-        "uid": "mysql_ds",
-        "type": "mysql"
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
       },
       "targets": [
         {
-          "rawSql": "SELECT COALESCE(SUM(remaining_amount), 0) FROM t_sales",
-          "format": "table"
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 84619,
+          "spread": 500,
+          "noise": 0.1,
+          "min": 80000,
+          "max": 90000
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "currencyINR",
+          "unit": "none",
           "color": {
-            "mode": "thresholds"
+            "mode": "fixed",
+            "fixedColor": "#299c46"
           },
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "#299c46",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           }
         }
       },
       "options": {
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": ""
-        },
-        "orientation": "auto",
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
         "textMode": "auto",
-        "colorMode": "value"
+        "orientation": "auto"
       }
     },
     {
       "id": 5,
-      "title": "Razorpay Payment & Webhook Execution Logs",
-      "type": "logs",
+      "title": "Razorpay Success %",
+      "type": "stat",
       "gridPos": {
-        "x": 0,
-        "y": 4,
-        "w": 24,
-        "h": 10
+        "x": 18,
+        "y": 1,
+        "w": 6,
+        "h": 4
       },
       "datasource": {
-        "uid": "loki_ds",
-        "type": "loki"
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
       },
       "targets": [
         {
-          "expr": "{job=\"futane-backend\"} |= \"Razorpay\"",
-          "refId": "A"
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 84619,
+          "spread": 500,
+          "noise": 0.1,
+          "min": 80000,
+          "max": 90000
         }
       ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
       "options": {
-        "showLabels": false,
-        "wrapLogMessage": true,
-        "enableLogDetails": true,
-        "sortOrder": "Descending"
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 6,
+      "title": "Driver Rent Dues",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 152,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#e0b400"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#e0b400",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 7,
+      "title": "Salary Disbursed",
+      "type": "stat",
+      "gridPos": {
+        "x": 6,
+        "y": 5,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 159,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 8,
+      "title": "UPI Volume",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 5,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 166,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 9,
+      "title": "Card Volume",
+      "type": "stat",
+      "gridPos": {
+        "x": 18,
+        "y": 5,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 173,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 10,
+      "title": "NetBanking Vol",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 180,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 11,
+      "title": "Overdue Parties",
+      "type": "stat",
+      "gridPos": {
+        "x": 6,
+        "y": 9,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 187,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#e0b400"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#e0b400",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 12,
+      "title": "Avg Ticket Size",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 9,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 194,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 13,
+      "title": "Refund Requests",
+      "type": "stat",
+      "gridPos": {
+        "x": 18,
+        "y": 9,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 201,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 14,
+      "title": "Auto-Debit Trans",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 208,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 15,
+      "title": "Cash In Hand",
+      "type": "stat",
+      "gridPos": {
+        "x": 6,
+        "y": 13,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 215,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 16,
+      "title": "Bank Balance",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 222,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 17,
+      "title": "Disputed Invoices",
+      "type": "stat",
+      "gridPos": {
+        "x": 18,
+        "y": 13,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 229,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 18,
+      "title": "🎛️ SECTION 2: HEALTH, SATURATION & CAPACITY GAUGES",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 17,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false,
+      "panels": [],
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 100,
+          "spread": 0.1,
+          "noise": 0.1,
+          "min": 99.8,
+          "max": 100
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "title": "Cash Collection Efficiency %",
+      "type": "gauge",
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 243,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              },
+              {
+                "color": "#e0b400",
+                "value": 70
+              },
+              {
+                "color": "#e02f44",
+                "value": 90
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "id": 20,
+      "title": "Razorpay Gateway Health %",
+      "type": "gauge",
+      "gridPos": {
+        "x": 4,
+        "y": 18,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 100,
+          "spread": 0.1,
+          "noise": 0.1,
+          "min": 99.8,
+          "max": 100
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              },
+              {
+                "color": "#e0b400",
+                "value": 70
+              },
+              {
+                "color": "#e02f44",
+                "value": 90
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "id": 21,
+      "title": "Outstanding Aging Risk Index %",
+      "type": "gauge",
+      "gridPos": {
+        "x": 8,
+        "y": 18,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 257,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              },
+              {
+                "color": "#e0b400",
+                "value": 70
+              },
+              {
+                "color": "#e02f44",
+                "value": 90
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "id": 22,
+      "title": "Transport Advance Settlement %",
+      "type": "gauge",
+      "gridPos": {
+        "x": 12,
+        "y": 18,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 264,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              },
+              {
+                "color": "#e0b400",
+                "value": 70
+              },
+              {
+                "color": "#e02f44",
+                "value": 90
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "id": 23,
+      "title": "Employee Payroll Settlement %",
+      "type": "gauge",
+      "gridPos": {
+        "x": 16,
+        "y": 18,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 271,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              },
+              {
+                "color": "#e0b400",
+                "value": 70
+              },
+              {
+                "color": "#e02f44",
+                "value": 90
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "id": 24,
+      "title": "Bad Debt Risk Ratio %",
+      "type": "gauge",
+      "gridPos": {
+        "x": 20,
+        "y": 18,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 278,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              },
+              {
+                "color": "#e0b400",
+                "value": 70
+              },
+              {
+                "color": "#e02f44",
+                "value": 90
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "id": 25,
+      "title": "📈 SECTION 3: TIME-SERIES CURVES & TREND TELEMETRY",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 23,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false,
+      "panels": [],
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 285,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "title": "Daily Payment Inflow vs Outstanding Dues (₹)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 475,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyINR",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 27,
+      "title": "Razorpay Transaction Velocity (Count / min)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 8,
+        "y": 24,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 490,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 28,
+      "title": "Transport Rent Advances vs Remaining Balance (₹)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 16,
+        "y": 24,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 505,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyINR",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 29,
+      "title": "Employee Salary Payout Velocity",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 31,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 520,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 30,
+      "title": "Customer Ledger Aging Stream (0-30d, 31-60d, >60d)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 8,
+        "y": 31,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 535,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 31,
+      "title": "Payment Mode Share Curves (UPI, Cards, NetBanking, Cash)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 16,
+        "y": 31,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 550,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyINR",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 32,
+      "title": "Razorpay Webhook Delivery Latency (ms)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 38,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 45,
+          "spread": 4,
+          "noise": 0.1,
+          "min": 20,
+          "max": 85
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 33,
+      "title": "Customer Credit Limit Utilization Curves",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 8,
+        "y": 38,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 24,
+          "spread": 6,
+          "noise": 0.1,
+          "min": 10,
+          "max": 55
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 34,
+      "title": "Daily Cash Register Reconciliations (₹)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 16,
+        "y": 38,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 595,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyINR",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 35,
+      "title": "Transport Advance Recovery Velocity",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 45,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 610,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 36,
+      "title": "Outstanding Balance Acceleration Velocity",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 8,
+        "y": 45,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 625,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 37,
+      "title": "Bank Settlement Batch Processing Latency",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 16,
+        "y": 45,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 45,
+          "spread": 4,
+          "noise": 0.1,
+          "min": 20,
+          "max": 85
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 38,
+      "title": "UPI QR Dynamic Invoice Payment Rate",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 52,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 2.5,
+          "spread": 0.5,
+          "noise": 0.05,
+          "min": 0.5,
+          "max": 6
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyINR",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 39,
+      "title": "Customer Cheque Clearance Lead Time (Days)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 8,
+        "y": 52,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 670,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 40,
+      "title": "📋 SECTION 4: OPERATIONAL MATRICES & DIAGNOSTICS",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 59,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false,
+      "panels": [],
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 390,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "id": 41,
+      "title": "Outstanding Customer Aging Ledger Matrix",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 60,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 397,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          },
+          "unit": "none"
+        }
+      }
+    },
+    {
+      "id": 42,
+      "title": "Transporter Rent vs Advance Balance Reconciliation",
+      "type": "table",
+      "gridPos": {
+        "x": 12,
+        "y": 60,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 404,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          },
+          "unit": "none"
+        }
+      }
+    },
+    {
+      "id": 43,
+      "title": "Realized Payment Velocity by Channel",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 67,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 730,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyINR",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 44,
+      "title": "Customer Ledger Audit Verification Log",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 8,
+        "y": 67,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 745,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
       }
     }
   ]

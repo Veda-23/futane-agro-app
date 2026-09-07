@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, retry } from 'rxjs';
+import { Observable, retry, shareReplay, tap } from 'rxjs';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -9,6 +9,12 @@ import { environment } from '../environments/environment';
 export class ApiService {
   public baseUrl: string;
 
+  private cachedParties$?: Observable<any>;
+  private cachedVendors$?: Observable<any>;
+  private cachedDrivers$?: Observable<any>;
+  private cachedEmployees$?: Observable<any>;
+  private cachedMachines$?: Observable<any>;
+
   constructor(private http: HttpClient) {
     const savedBackend = localStorage.getItem('backend_url');
     if (savedBackend) {
@@ -16,6 +22,20 @@ export class ApiService {
     } else {
       this.baseUrl = environment.apiUrl;
     }
+  }
+
+  // Cache invalidation helpers
+  invalidatePartiesCache(): void { this.cachedParties$ = undefined; }
+  invalidateVendorsCache(): void { this.cachedVendors$ = undefined; }
+  invalidateDriversCache(): void { this.cachedDrivers$ = undefined; }
+  invalidateEmployeesCache(): void { this.cachedEmployees$ = undefined; }
+  invalidateMachinesCache(): void { this.cachedMachines$ = undefined; }
+  clearAllReferenceCache(): void {
+    this.cachedParties$ = undefined;
+    this.cachedVendors$ = undefined;
+    this.cachedDrivers$ = undefined;
+    this.cachedEmployees$ = undefined;
+    this.cachedMachines$ = undefined;
   }
 
   // Auth
@@ -29,6 +49,15 @@ export class ApiService {
 
   changePassword(data: { username: string; currentPassword: string; newPassword: string }): Observable<any> {
     return this.http.put(`${this.baseUrl}/users/change-password`, data);
+  }
+
+  // Google ADK & AI Research Agent
+  runAiResearch(query: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/adk/research`, { query });
+  }
+
+  getPolymerMarketRates(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/adk/research`, { query: 'Current HDPE injection moulding granule prices in India' });
   }
 
 
@@ -55,50 +84,94 @@ export class ApiService {
     return this.getSystemHealth();
   }
 
+  getPrometheusMetrics(): Observable<string> {
+    return this.http.get(`${this.baseUrl.replace(/\/api$/, '')}/actuator/prometheus`, { responseType: 'text' });
+  }
+
+  getGrafanaHealth(): Observable<any> {
+    return this.http.get('http://localhost:3000/api/health');
+  }
+
   getEnvInfo(): Observable<any> {
     return this.http.get(`${this.baseUrl}/env`);
   }
 
-  // Parties
-  getParties(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/parties`);
+  // Parties (Cached with shareReplay)
+  getParties(forceRefresh: boolean = false): Observable<any> {
+    if (forceRefresh || !this.cachedParties$) {
+      this.cachedParties$ = this.http.get(`${this.baseUrl}/parties`).pipe(
+        retry(1),
+        shareReplay(1)
+      );
+    }
+    return this.cachedParties$;
   }
   createParty(party: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/parties`, party);
+    return this.http.post(`${this.baseUrl}/parties`, party).pipe(
+      tap(() => this.invalidatePartiesCache())
+    );
   }
   updateParty(id: string, party: any): Observable<any> {
-    return this.http.put(`${this.baseUrl}/parties/${id}`, party);
+    return this.http.put(`${this.baseUrl}/parties/${id}`, party).pipe(
+      tap(() => this.invalidatePartiesCache())
+    );
   }
   deleteParty(id: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/parties/${id}`);
+    return this.http.delete(`${this.baseUrl}/parties/${id}`).pipe(
+      tap(() => this.invalidatePartiesCache())
+    );
   }
 
-  // Vendors
-  getVendors(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/vendors`);
+  // Vendors (Cached with shareReplay)
+  getVendors(forceRefresh: boolean = false): Observable<any> {
+    if (forceRefresh || !this.cachedVendors$) {
+      this.cachedVendors$ = this.http.get(`${this.baseUrl}/vendors`).pipe(
+        retry(1),
+        shareReplay(1)
+      );
+    }
+    return this.cachedVendors$;
   }
   createVendor(vendor: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/vendors`, vendor);
+    return this.http.post(`${this.baseUrl}/vendors`, vendor).pipe(
+      tap(() => this.invalidateVendorsCache())
+    );
   }
   updateVendor(id: string, vendor: any): Observable<any> {
-    return this.http.put(`${this.baseUrl}/vendors/${id}`, vendor);
+    return this.http.put(`${this.baseUrl}/vendors/${id}`, vendor).pipe(
+      tap(() => this.invalidateVendorsCache())
+    );
   }
   deleteVendor(id: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/vendors/${id}`);
+    return this.http.delete(`${this.baseUrl}/vendors/${id}`).pipe(
+      tap(() => this.invalidateVendorsCache())
+    );
   }
 
-  // Drivers
-  getDrivers(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/drivers`);
+  // Drivers (Cached with shareReplay)
+  getDrivers(forceRefresh: boolean = false): Observable<any> {
+    if (forceRefresh || !this.cachedDrivers$) {
+      this.cachedDrivers$ = this.http.get(`${this.baseUrl}/drivers`).pipe(
+        retry(1),
+        shareReplay(1)
+      );
+    }
+    return this.cachedDrivers$;
   }
   createDriver(driver: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/drivers`, driver);
+    return this.http.post(`${this.baseUrl}/drivers`, driver).pipe(
+      tap(() => this.invalidateDriversCache())
+    );
   }
   updateDriver(id: string, driver: any): Observable<any> {
-    return this.http.put(`${this.baseUrl}/drivers/${id}`, driver);
+    return this.http.put(`${this.baseUrl}/drivers/${id}`, driver).pipe(
+      tap(() => this.invalidateDriversCache())
+    );
   }
   deleteDriver(id: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/drivers/${id}`);
+    return this.http.delete(`${this.baseUrl}/drivers/${id}`).pipe(
+      tap(() => this.invalidateDriversCache())
+    );
   }
 
   // PPD Production
@@ -107,6 +180,9 @@ export class ApiService {
   }
   createPpd(ppd: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/ppd`, ppd);
+  }
+  updatePpd(id: string, ppd: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/ppd/${id}`, ppd);
   }
   deletePpd(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/ppd/${id}`);
@@ -119,6 +195,9 @@ export class ApiService {
   createPpm(ppm: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/ppm`, ppm);
   }
+  updatePpm(id: string, ppm: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/ppm/${id}`, ppm);
+  }
   deletePpm(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/ppm/${id}`);
   }
@@ -130,6 +209,9 @@ export class ApiService {
   createRawMaterial(rm: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/raw-materials`, rm);
   }
+  updateRawMaterial(id: string, rm: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/raw-materials/${id}`, rm);
+  }
   deleteRawMaterial(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/raw-materials/${id}`);
   }
@@ -140,6 +222,9 @@ export class ApiService {
   }
   createSale(sale: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/sales`, sale);
+  }
+  updateSale(id: string, sale: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/sales/${id}`, sale);
   }
   deleteSale(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/sales/${id}`);
@@ -165,6 +250,9 @@ export class ApiService {
   createPayment(payment: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/payments`, payment);
   }
+  updatePayment(id: string, payment: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/payments/${id}`, payment);
+  }
   deletePayment(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/payments/${id}`);
   }
@@ -174,18 +262,30 @@ export class ApiService {
     return this.http.get(`${this.baseUrl}/invoices`);
   }
 
-  // Employees
-  getEmployees(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/employees`);
+  // Employees (Cached with shareReplay)
+  getEmployees(forceRefresh: boolean = false): Observable<any> {
+    if (forceRefresh || !this.cachedEmployees$) {
+      this.cachedEmployees$ = this.http.get(`${this.baseUrl}/employees`).pipe(
+        retry(1),
+        shareReplay(1)
+      );
+    }
+    return this.cachedEmployees$;
   }
   createEmployee(employee: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/employees`, employee);
+    return this.http.post(`${this.baseUrl}/employees`, employee).pipe(
+      tap(() => this.invalidateEmployeesCache())
+    );
   }
   updateEmployee(id: string, employee: any): Observable<any> {
-    return this.http.put(`${this.baseUrl}/employees/${id}`, employee);
+    return this.http.put(`${this.baseUrl}/employees/${id}`, employee).pipe(
+      tap(() => this.invalidateEmployeesCache())
+    );
   }
   deleteEmployee(id: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/employees/${id}`);
+    return this.http.delete(`${this.baseUrl}/employees/${id}`).pipe(
+      tap(() => this.invalidateEmployeesCache())
+    );
   }
 
   // Salaries
@@ -231,22 +331,37 @@ export class ApiService {
   }
 
   // Audit Logs
-  getAuditLogs(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/audit-logs`);
+  getAuditLogs(params?: any): Observable<any> {
+    return this.http.get(`${this.baseUrl}/audit-logs`, { params });
   }
   createAuditLog(log: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/audit-logs`, log);
   }
 
-  // Machines
-  getMachines(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/machines`);
+  // Machines (Cached with shareReplay)
+  getMachines(forceRefresh: boolean = false): Observable<any> {
+    if (forceRefresh || !this.cachedMachines$) {
+      this.cachedMachines$ = this.http.get(`${this.baseUrl}/machines`).pipe(
+        retry(1),
+        shareReplay(1)
+      );
+    }
+    return this.cachedMachines$;
   }
   createMachine(machine: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/machines`, machine);
+    return this.http.post(`${this.baseUrl}/machines`, machine).pipe(
+      tap(() => this.invalidateMachinesCache())
+    );
+  }
+  updateMachine(id: string, machine: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/machines/${id}`, machine).pipe(
+      tap(() => this.invalidateMachinesCache())
+    );
   }
   deleteMachine(id: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/machines/${id}`);
+    return this.http.delete(`${this.baseUrl}/machines/${id}`).pipe(
+      tap(() => this.invalidateMachinesCache())
+    );
   }
 
   // Machine Breakdowns
@@ -255,6 +370,9 @@ export class ApiService {
   }
   createMachineBreakdown(bd: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/machine-breakdowns`, bd);
+  }
+  updateMachineBreakdown(id: string, bd: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/breakdowns/${id}`, bd);
   }
   deleteMachineBreakdown(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/machine-breakdowns/${id}`);
@@ -281,6 +399,9 @@ export class ApiService {
   createExpense(expense: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/expenses`, expense);
   }
+  updateExpense(id: string, expense: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/expenses/${id}`, expense);
+  }
   deleteExpense(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/expenses/${id}`);
   }
@@ -291,6 +412,9 @@ export class ApiService {
   }
   createBankTransaction(txn: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/bank-transactions`, txn);
+  }
+  updateBankTransaction(id: string, txn: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/bank-transactions/${id}`, txn);
   }
   deleteBankTransaction(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/bank-transactions/${id}`);
@@ -347,6 +471,177 @@ export class ApiService {
       params = `?toDate=${toDate}`;
     }
     return this.http.get(`${this.baseUrl}/reports/tally-xml${params}`, { responseType: 'text' });
+  }
+
+  // =========================================================================
+  // SUPER ADMIN NO-CODE CONTROL CENTER API METHODS
+  // =========================================================================
+  getAdminBranding(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/branding`);
+  }
+  saveAdminBranding(payload: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/branding`, payload);
+  }
+  uploadCompanyLogo(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post(`${this.baseUrl}/admin/branding/logo-upload`, formData);
+  }
+
+  getAdminTeams(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/teams`);
+  }
+  createAdminTeam(team: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/teams`, team);
+  }
+  updateAdminTeam(id: string, team: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/admin/teams/${id}`, team);
+  }
+  deactivateAdminTeam(id: string): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/admin/teams/${id}/deactivate`, {});
+  }
+
+  getAdminUsers(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/users`);
+  }
+  inviteUser(payload: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/users/invite`, payload);
+  }
+  forcePasswordReset(username: string, payload?: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/users/${username}/reset-password`, payload || {});
+  }
+
+  getAdminRolePermissions(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/permissions`);
+  }
+  saveAdminRolePermissions(permissions: any[]): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/permissions`, permissions);
+  }
+
+  getAdminFeatureFlags(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/features`);
+  }
+  toggleAdminFeatureFlag(moduleKey: string, enabled: boolean): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/features/${moduleKey}/toggle`, { enabled });
+  }
+
+  getCustomFieldDefs(entityName: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/custom-fields/${entityName}`);
+  }
+  createCustomFieldDef(def: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/custom-fields`, def);
+  }
+  deleteCustomFieldDef(id: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/admin/custom-fields/${id}`);
+  }
+  getCustomFieldValues(entityName: string, recordId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/custom-fields/values/${entityName}/${recordId}`);
+  }
+  saveCustomFieldValues(entityName: string, recordId: string, values: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/custom-fields/values/${entityName}/${recordId}`, values);
+  }
+
+  // Developer Hub: API Keys
+  getApiKeys(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/api-keys`);
+  }
+  createApiKey(payload: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/api-keys`, payload);
+  }
+  revokeApiKey(id: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/admin/api-keys/${id}`);
+  }
+
+  // Developer Hub: Webhooks
+  getWebhooks(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/webhooks`);
+  }
+  createWebhook(payload: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/webhooks`, payload);
+  }
+  deleteWebhook(id: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/admin/webhooks/${id}`);
+  }
+  testWebhook(id: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/webhooks/${id}/test`, {});
+  }
+
+  // Governance & Cache Management
+  getCacheStats(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/cache/stats`);
+  }
+  flushCache(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/cache/flush`, {});
+  }
+  updateAuditRetention(days: number): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/governance/retention`, { retentionDays: days });
+  }
+
+  // Multi-Company & Billing Profiles
+  getCompanyProfiles(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/billing/companies`);
+  }
+  saveCompanyProfile(profile: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/billing/companies`, profile);
+  }
+  setDefaultCompany(id: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/billing/companies/${id}/set-default`, {});
+  }
+  deleteCompanyProfile(id: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/admin/billing/companies/${id}`);
+  }
+
+  // Banking & UPI Accounts
+  getBankProfiles(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/billing/banks`);
+  }
+  saveBankProfile(bank: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/billing/banks`, bank);
+  }
+  setPrimaryBank(id: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/billing/banks/${id}/set-primary`, {});
+  }
+  deleteBankProfile(id: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/admin/billing/banks/${id}`);
+  }
+
+  // Invoice Template & Print Designer
+  getInvoiceTemplateConfig(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/billing/invoice-template`);
+  }
+  saveInvoiceTemplateConfig(config: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/billing/invoice-template`, config);
+  }
+
+  // Automated Notification Templates (WhatsApp/SMS)
+  getNotificationTemplates(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/notifications/templates`);
+  }
+  saveNotificationTemplate(template: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/notifications/templates`, template);
+  }
+  toggleNotificationTemplate(id: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/notifications/templates/${id}/toggle`, {});
+  }
+  testSendNotification(payload: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/notifications/templates/test-send`, payload);
+  }
+
+  // System Diagnostics & Enterprise Backup
+  getSystemDiagnostics(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/governance/diagnostics`);
+  }
+  exportSystemBackup(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/governance/backup/export`);
+  }
+  getAdminSystemHealth(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/admin/system-health`);
+  }
+  flushCacheRegion(cacheName: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/cache/${cacheName}/flush`, {});
+  }
+  forceLogoutAllUsers(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin/sessions/force-logout-all`, {});
   }
 }
 

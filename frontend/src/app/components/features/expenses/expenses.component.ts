@@ -8,10 +8,13 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
 
+import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
+import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
+
 @Component({
   selector: 'app-expenses',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective, ResizableTableDirective, IndianDatePipe],
   templateUrl: './expenses.component.html',
   styleUrls: ['./expenses.component.css']
 })
@@ -70,17 +73,45 @@ export class ExpensesComponent implements OnInit {
 
   saveExpense() {
     if (!this.validateForm()) return;
-    const payload = { ...this.expenseForm, paidBy: this.loggedInUser?.username || 'admin' };
-    this.apiService.createExpense(payload).subscribe({
-      next: (res) => {
-        if (res) this.expensesList.unshift(res);
-        this.loadData();
-        this.notificationService.success('Data Added', 'Expense record added successfully');
-        this.logAudit('Created expense: ' + this.expenseForm.description);
-        this.expenseForm = { expenseDate: '', category: 'Maintenance', description: '', amount: 0, paidBy: '' };
-      },
-      error: (err) => this.notificationService.error('Error', "Failed to save expense: " + (err.error?.message || err.message))
-    });
+    const editId = (this.expenseForm as any)._editId;
+    const payload = { ...this.expenseForm, paidBy: this.expenseForm.paidBy || this.loggedInUser?.username || 'admin' };
+
+    if (editId) {
+      this.apiService.updateExpense(editId, payload).subscribe({
+        next: () => {
+          this.loadData();
+          this.notificationService.success('Updated', 'Expense record updated successfully');
+          this.logAudit('Updated expense: ' + this.expenseForm.description);
+          this.expenseForm = { expenseDate: '', category: 'Maintenance', description: '', amount: 0, paidBy: '' };
+        },
+        error: (err) => this.notificationService.error('Error', 'Failed to update expense: ' + (err.error?.message || err.message))
+      });
+    } else {
+      this.apiService.createExpense(payload).subscribe({
+        next: (res) => {
+          if (res) this.expensesList.unshift(res);
+          this.loadData();
+          this.notificationService.success('Data Added', 'Expense record added successfully');
+          this.logAudit('Created expense: ' + this.expenseForm.description);
+          this.expenseForm = { expenseDate: '', category: 'Maintenance', description: '', amount: 0, paidBy: '' };
+        },
+        error: (err) => this.notificationService.error('Error', "Failed to save expense: " + (err.error?.message || err.message))
+      });
+    }
+  }
+
+  editExpense(e: any) {
+    this.expenseForm = {
+      expenseDate: e.expenseDate || '',
+      category: e.category || 'Maintenance',
+      description: e.description || '',
+      amount: e.amount || 0,
+      paidBy: e.paidBy || ''
+    };
+    (this.expenseForm as any)._editId = e.id;
+    this.notificationService.info('Edit Mode', `Loaded expense record for ${e.category} for editing.`);
+    const formEl = document.querySelector('.form-card');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
   }
 
   deleteExpense(id: string) {
@@ -155,5 +186,9 @@ export class ExpensesComponent implements OnInit {
   private resolvePath(obj: any, path: string): any {
     if (!path) return '';
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
+  }
+
+  trackById(index: number, item: any): any {
+    return item?.id ?? item?.expenseId ?? index;
   }
 }

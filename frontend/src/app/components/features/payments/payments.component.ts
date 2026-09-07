@@ -9,12 +9,14 @@ import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
 import { DataTableComponent } from '../../data-table/data-table.component';
 
+import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
+import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-payments',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, DataTableComponent, AutoSelectDirective, FormStateDirective],
+  imports: [CommonModule, FormsModule, TranslatePipe, DataTableComponent, AutoSelectDirective, FormStateDirective, ResizableTableDirective, IndianDatePipe],
   templateUrl: './payments.component.html',
   styleUrls: ['./payments.component.css']
 })
@@ -105,29 +107,58 @@ export class PaymentsComponent implements OnInit {
       return;
     }
 
-    if (this.salesList && this.salesList.length > 0) {
-      const outstanding = this.getOutstandingBalance(this.paymentsForm.id);
-      if (outstanding > 0 && Number(this.paymentsForm.amountReceived) > outstanding) {
-        this.notificationService.warning(
-          'Overpayment Warning',
-          `Amount ₹${Number(this.paymentsForm.amountReceived).toLocaleString('en-IN')} exceeds outstanding balance of ₹${outstanding.toLocaleString('en-IN')}`
-        );
-        return;
+    const editId = (this.paymentsForm as any)._editId;
+
+    if (editId) {
+      // UPDATE: only safe metadata fields (mode, date)
+      this.apiService.updatePayment(editId, this.paymentsForm).subscribe({
+        next: () => {
+          this.loadData();
+          this.notificationService.success('Updated', 'Payment record updated successfully');
+          this.logAudit('Updated payment record ID: ' + editId);
+          this.paymentsForm = { id: '', invoiceNo: '', amountReceived: 0, paymentMode: 'UPI', paymentDate: '' };
+        },
+        error: (err) => this.notificationService.error('Error', 'Failed to update payment: ' + (err.error?.message || err.message))
+      });
+    } else {
+      if (this.salesList && this.salesList.length > 0) {
+        const outstanding = this.getOutstandingBalance(this.paymentsForm.id);
+        if (outstanding > 0 && Number(this.paymentsForm.amountReceived) > outstanding) {
+          this.notificationService.warning(
+            'Overpayment Warning',
+            `Amount ₹${Number(this.paymentsForm.amountReceived).toLocaleString('en-IN')} exceeds outstanding balance of ₹${outstanding.toLocaleString('en-IN')}`
+          );
+          return;
+        }
       }
+      this.apiService.createPayment(this.paymentsForm).subscribe({
+        next: (res) => {
+          if (res) this.paymentsList.unshift(res);
+          this.loadData();
+          this.notificationService.success('Data Added', 'Payment collection record added successfully');
+          this.logAudit("Added new payment collection");
+          this.paymentsForm = { id: '', invoiceNo: '', amountReceived: 0, paymentMode: 'UPI', paymentDate: '' };
+        },
+        error: (err) => this.notificationService.error('Error', "Failed to save payment: " + (err.error?.message || err.message))
+      });
     }
-    this.apiService.createPayment(this.paymentsForm).subscribe({
-      next: (res) => {
-        if (res) this.paymentsList.unshift(res);
-        this.loadData();
-        this.notificationService.success('Data Added', 'Payment collection record added successfully');
-        this.logAudit("Added new payment collection");
-        this.paymentsForm = { id: '', invoiceNo: '', amountReceived: 0, paymentMode: 'UPI', paymentDate: '' };
-      },
-      error: (err) => this.notificationService.error('Error', "Failed to save payment: " + (err.error?.message || err.message))
-    });
   }
 
-  deletePayment(id: string) {
+  editPayment(p: any) {
+    this.paymentsForm = {
+      id: p.party?.id || '',
+      invoiceNo: p.invoiceNo || '',
+      amountReceived: p.amountReceived || 0,
+      paymentMode: p.paymentMode || 'UPI',
+      paymentDate: p.paymentDate || ''
+    };
+    (this.paymentsForm as any)._editId = p.id;
+    this.notificationService.info('Edit Mode', `Loaded payment record for ${p.party?.partyName || 'party'} for editing.`);
+    const formEl = document.querySelector('.form-card');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  deletePayment(id: any) {
     if (!this.canDelete()) {
       this.notificationService.warning('Permission Denied', "Permission denied");
       return;
@@ -199,5 +230,9 @@ export class PaymentsComponent implements OnInit {
   private resolvePath(obj: any, path: string): any {
     if (!path) return '';
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
+  }
+
+  trackByPaymentId(index: number, item: any): any {
+    return item?.id ?? item?.paymentId ?? index;
   }
 }

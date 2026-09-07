@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, HostListener } from '@angular/core';
+import { Component, OnInit, Input, OnChanges } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -8,18 +8,23 @@ import { FormStateDirective } from '../../../directives/form-state.directive';
 import { InrPipe } from '../../../pipes/inr-currency.pipe';
 import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { QrCodeComponent } from '../../shared/qr-code/qr-code.component';
+import { FilterBarComponent } from '../../shared/filter-bar/filter-bar.component';
+import { DataFilterService, FilterCriteria } from '../../../services/data-filter.service';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-billing-hub',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, DecimalPipe, AutoSelectDirective, FormStateDirective, InrPipe, IndianDatePipe, QrCodeComponent],
+  imports: [
+    CommonModule, FormsModule, TranslatePipe, DecimalPipe,
+    AutoSelectDirective, FormStateDirective, InrPipe, IndianDatePipe,
+    QrCodeComponent, FilterBarComponent
+  ],
   templateUrl: './billing-hub.component.html',
   styleUrls: ['./billing-hub.component.css']
 })
-export class BillingHubComponent implements OnInit {
+export class BillingHubComponent implements OnInit, OnChanges {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'billinghub';
   @Input() loggedInUser: any = null;
@@ -31,150 +36,386 @@ export class BillingHubComponent implements OnInit {
   @Input() salariesList: any[] = [];
   @Input() settingsList: any[] = [];
 
-  activeBillType = 'tax_invoice';
-  selectedBillRecordId = '';
-  selectedBillRecord: any = null;
-  showBillModal = false;
-  showPreviewCard = false;
-  currentDocumentNumber = '';
-  today = new Date();
+  activeBillType: string = 'tax_invoice';
+  selectedRecordId: string = '';
+  selectedRecord: any = null;
+  currentDocumentNumber: string = '';
+  today: Date = new Date();
 
-  constructor(private apiService: ApiService) {}
+  // Smart Filter state for document selection
+  filterYear: string = '';
+  filterMonth: string = '';
+  filterSearch: string = '';
+  filterDateFrom: string = '';
+  filterDateTo: string = '';
+
+  years: number[] = [];
+  months: { name: string; value: string }[] = [
+    { name: 'January', value: '01' },
+    { name: 'February', value: '02' },
+    { name: 'March', value: '03' },
+    { name: 'April', value: '04' },
+    { name: 'May', value: '05' },
+    { name: 'June', value: '06' },
+    { name: 'July', value: '07' },
+    { name: 'August', value: '08' },
+    { name: 'September', value: '09' },
+    { name: 'October', value: '10' },
+    { name: 'November', value: '11' },
+    { name: 'December', value: '12' }
+  ];
+
+  // Standardized Enterprise Document Color Themes
+  docThemes: { [key: string]: { primary: string; secondary: string; title: string; prefix: string; accent: string } } = {
+    tax_invoice: { primary: '#C2410C', secondary: '#FFF7ED', accent: '#EA580C', title: 'TAX INVOICE', prefix: 'FA/24-25/' },
+    proforma: { primary: '#1E40AF', secondary: '#EFF6FF', accent: '#2563EB', title: 'PROFORMA INVOICE', prefix: 'FA/PI/24-25/' },
+    delivery_challan: { primary: '#15803D', secondary: '#F0FDF4', accent: '#16A34A', title: 'DELIVERY CHALLAN', prefix: 'FA/DC/25-26/' },
+    payment_receipt: { primary: '#0F766E', secondary: '#F0FDFA', accent: '#0D9488', title: 'PAYMENT RECEIPT', prefix: 'FA/RP/25-26/' },
+    purchase_invoice: { primary: '#4338CA', secondary: '#EEF2FF', accent: '#6366F1', title: 'PURCHASE INVOICE', prefix: 'FA/PUR/25-26/' },
+    transport_receipt: { primary: '#9A3412', secondary: '#FFF7ED', accent: '#C2410C', title: 'TRANSPORT RECEIPT', prefix: 'FA/TR/25-26/' },
+    salary_slip: { primary: '#0369A1', secondary: '#F0F9FF', accent: '#0284C7', title: 'SALARY SLIP', prefix: 'FA/SAL/25-26/' }
+  };
+
+  constructor(
+    private apiService: ApiService,
+    private filterService: DataFilterService
+  ) {}
 
   ngOnInit() {
-    if (!this.settingsList || this.settingsList.length === 0) {
-      this.apiService.getSettings().subscribe(res => {
-        if (res) this.settingsList = res;
-      });
+    this.extractAvailableYears();
+    this.loadAllSources();
+  }
+
+  ngOnChanges() {
+    this.extractAvailableYears();
+    if (!this.selectedRecord) {
+      this.autoSelectFirst();
     }
   }
 
-  get companyInfo(): any {
-    return {
-      name: this.getSettingVal('company_name') || 'Futane Agro Industries Pvt. Ltd.',
-      address: this.getSettingVal('company_address') || 'Village Futane, Tal. Rahuri, Dist. Ahmednagar, Maharashtra - 413706',
-      phone: this.getSettingVal('company_phone') || '+91-XXXXXXXXXX',
-      email: this.getSettingVal('company_email') || 'info@futaneagro.com',
-      gstin: this.getSettingVal('company_gstin') || '27XXXXX000X1ZX',
-      pan: this.getSettingVal('company_pan') || 'XXXXX0000X',
-      fssai: this.getSettingVal('company_fssai') || 'XXXXXXXXXXXXXXXXXX'
+  extractAvailableYears() {
+    const yearSet = new Set<number>();
+    const currentYear = new Date().getFullYear();
+    yearSet.add(currentYear);
+    yearSet.add(currentYear - 1);
+    yearSet.add(currentYear - 2);
+
+    const checkAndAdd = (dateStr: any) => {
+      if (!dateStr) return;
+      const str = String(dateStr).trim();
+      const match = str.match(/^(\d{4})/);
+      if (match) {
+        const y = parseInt(match[1], 10);
+        if (y >= 2000 && y <= 2100) yearSet.add(y);
+      }
     };
+
+    (this.salesList || []).forEach(s => checkAndAdd(s.date));
+    (this.dispatchesList || []).forEach(d => checkAndAdd(d.dispatchDate || d.date));
+    (this.paymentsList || []).forEach(p => checkAndAdd(p.paymentDate || p.date));
+    (this.rawMaterialsList || []).forEach(rm => checkAndAdd(rm.inwardDate || rm.date));
+    (this.transportsList || []).forEach(tr => checkAndAdd(tr.transportDate || tr.date));
+    (this.salariesList || []).forEach(sal => {
+      if (sal.year) yearSet.add(parseInt(String(sal.year), 10));
+      checkAndAdd(sal.disbursementDate || sal.date);
+    });
+
+    this.years = Array.from(yearSet).sort((a, b) => b - a);
   }
 
-  get gstRate(): number {
-    const val = parseFloat(this.getSettingVal('gst_rate_percentage') || '18');
-    return isNaN(val) ? 0.18 : val / 100;
+  loadAllSources() {
+    if (!this.salesList || this.salesList.length === 0) {
+      this.apiService.getSales().subscribe(res => { 
+        if (res) { 
+          this.salesList = res; 
+          this.extractAvailableYears();
+          this.autoSelectFirst(); 
+        } 
+      });
+    }
+    if (!this.dispatchesList || this.dispatchesList.length === 0) {
+      this.apiService.getDispatches().subscribe(res => { 
+        if (res) { 
+          this.dispatchesList = res; 
+          this.extractAvailableYears();
+        } 
+      });
+    }
+    if (!this.paymentsList || this.paymentsList.length === 0) {
+      this.apiService.getPayments().subscribe(res => { 
+        if (res) { 
+          this.paymentsList = res; 
+          this.extractAvailableYears();
+        } 
+      });
+    }
+    if (!this.rawMaterialsList || this.rawMaterialsList.length === 0) {
+      this.apiService.getRawMaterials().subscribe(res => { 
+        if (res) { 
+          this.rawMaterialsList = res; 
+          this.extractAvailableYears();
+        } 
+      });
+    }
+    if (!this.transportsList || this.transportsList.length === 0) {
+      this.apiService.getTransports().subscribe(res => { 
+        if (res) { 
+          this.transportsList = res; 
+          this.extractAvailableYears();
+        } 
+      });
+    }
+    if (!this.salariesList || this.salariesList.length === 0) {
+      this.apiService.getSalaries().subscribe(res => { 
+        if (res) { 
+          this.salariesList = res; 
+          this.extractAvailableYears();
+        } 
+      });
+    }
+    this.autoSelectFirst();
   }
 
-  getSettingVal(key: string): string {
-    return this.settingsList?.find((s: any) => s.key === key || s.settingKey === key)?.value
-      || this.settingsList?.find((s: any) => s.key === key || s.settingKey === key)?.settingValue
-      || '';
+  get currentTheme() {
+    return this.docThemes[this.activeBillType] || this.docThemes['tax_invoice'];
   }
 
   onBillTypeChange() {
-    this.selectedBillRecordId = '';
-    this.selectedBillRecord = null;
-    this.showBillModal = false;
-    this.showPreviewCard = false;
-    this.currentDocumentNumber = '';
+    this.selectedRecordId = '';
+    this.selectedRecord = null;
+    this.autoSelectFirst();
   }
 
-  getBillSourceList(): any[] {
+  onRecordSelectChange() {
+    const list = this.getFilteredRecords();
+    this.selectedRecord = list.find((item: any) => String(this.getRecordId(item)) === String(this.selectedRecordId)) || null;
+    if (this.selectedRecord) {
+      this.generateDocNumber();
+    }
+  }
+
+  onFilterCriteriaChange() {
+    const filtered = this.getFilteredRecords();
+    const currentStillMatches = filtered.some((item: any) => String(this.getRecordId(item)) === String(this.selectedRecordId));
+    if (!currentStillMatches) {
+      if (filtered.length > 0) {
+        this.selectedRecord = filtered[0];
+        this.selectedRecordId = String(this.getRecordId(this.selectedRecord));
+        this.generateDocNumber();
+      } else {
+        this.selectedRecord = null;
+        this.selectedRecordId = '';
+      }
+    }
+  }
+
+  resetFilters() {
+    this.filterYear = '';
+    this.filterMonth = '';
+    this.filterSearch = '';
+    this.filterDateFrom = '';
+    this.filterDateTo = '';
+    this.onFilterCriteriaChange();
+  }
+
+  autoSelectFirst() {
+    const list = this.getFilteredRecords();
+    if (list && list.length > 0) {
+      this.selectedRecord = list[0];
+      this.selectedRecordId = String(this.getRecordId(this.selectedRecord));
+      this.generateDocNumber();
+    } else {
+      this.selectedRecord = null;
+      this.selectedRecordId = '';
+    }
+  }
+
+  getCurrentSourceList(): any[] {
     switch (this.activeBillType) {
-      case 'tax_invoice': case 'proforma': return this.salesList;
-      case 'delivery_challan': return this.dispatchesList;
-      case 'payment_receipt': return this.paymentsList;
-      case 'purchase_invoice': return this.rawMaterialsList;
-      case 'transport_receipt': return this.transportsList;
-      case 'salary_slip': return this.salariesList;
-      default: return [];
+      case 'tax_invoice':
+      case 'proforma':
+        return this.salesList || [];
+      case 'delivery_challan':
+        return this.dispatchesList || [];
+      case 'payment_receipt':
+        return this.paymentsList || [];
+      case 'purchase_invoice':
+        return this.rawMaterialsList || [];
+      case 'transport_receipt':
+        return this.transportsList || [];
+      case 'salary_slip':
+        return this.salariesList || [];
+      default:
+        return [];
     }
   }
 
-  getRecordId(item: any): any {
-    if (!item) return null;
-    if (item.paymentId !== undefined) return item.paymentId;
-    if (item.rawMaterialId !== undefined) return item.rawMaterialId;
-    if (item.id !== undefined) return item.id;
-    return null;
+  getFilteredRecords(): any[] {
+    const source = this.getCurrentSourceList();
+    if (!source || source.length === 0) return [];
+
+    return source.filter((item: any) => {
+      const recDate = this.getRecordDateString(item);
+      const recYear = this.getRecordYear(item, recDate);
+      const recMonth = this.getRecordMonth(item, recDate);
+
+      // Filter by Year
+      if (this.filterYear) {
+        if (recYear !== this.filterYear) return false;
+      }
+
+      // Filter by Month
+      if (this.filterMonth) {
+        if (recMonth !== this.filterMonth) return false;
+      }
+
+      // Filter by Date Range From
+      if (this.filterDateFrom && recDate) {
+        if (recDate < this.filterDateFrom) return false;
+      }
+
+      // Filter by Date Range To
+      if (this.filterDateTo && recDate) {
+        if (recDate > this.filterDateTo) return false;
+      }
+
+      // Filter by Search Query
+      if (this.filterSearch && this.filterSearch.trim()) {
+        const query = this.filterSearch.toLowerCase().trim();
+        const searchPool = [
+          item.party?.partyName,
+          item.sale?.party?.partyName,
+          item.vendor?.vendorName,
+          item.employee?.empName,
+          item.driver?.driverName,
+          item.driverName,
+          item.vehicleNumber,
+          item.truckNumber,
+          item.materialName,
+          item.crateType,
+          item.sale?.crateType,
+          item.referenceNo,
+          item.remarks,
+          item.deliveryAddress,
+          item.id,
+          item.saleId,
+          item.rawMaterialId,
+          item.paymentId
+        ].filter(Boolean).join(' ').toLowerCase();
+
+        if (!searchPool.includes(query)) return false;
+      }
+
+      return true;
+    });
   }
 
-  onBillRecordChange() {
-    const list = this.getBillSourceList();
-    const id = this.selectedBillRecordId;
-    this.selectedBillRecord = list.find(item => String(this.getRecordId(item)) === String(id)) || null;
-    this.showBillModal = false;
-    this.showPreviewCard = !!this.selectedBillRecord;
-    if (this.selectedBillRecord) {
-      this.currentDocumentNumber = this.generateDocumentNumber(this.activeBillType);
+  private getRecordDateString(item: any): string {
+    if (!item) return '';
+    return item.date || item.dispatchDate || item.paymentDate || item.inwardDate || item.transportDate || item.disbursementDate || '';
+  }
+
+  private getRecordYear(item: any, dateStr: string): string {
+    if (this.activeBillType === 'salary_slip' && item.year) {
+      return String(item.year);
+    }
+    if (dateStr && dateStr.length >= 4) {
+      return dateStr.substring(0, 4);
+    }
+    return '';
+  }
+
+  private getRecordMonth(item: any, dateStr: string): string {
+    if (this.activeBillType === 'salary_slip' && item.month) {
+      const m = String(item.month).trim();
+      if (!isNaN(Number(m))) {
+        return m.padStart(2, '0');
+      }
+      // Month name match
+      const found = this.months.find(mon => mon.name.toLowerCase() === m.toLowerCase());
+      if (found) return found.value;
+    }
+    if (dateStr && dateStr.length >= 7) {
+      return dateStr.substring(5, 7);
+    }
+    return '';
+  }
+
+  getRecordId(rec: any): string {
+    return rec?.id || rec?.saleId || rec?.paymentId || rec?.rawMaterialId || rec?.empId || '';
+  }
+
+  getRecordLabel(item: any): string {
+    if (!item) return '';
+    switch (this.activeBillType) {
+      case 'tax_invoice':
+      case 'proforma':
+        return `${item.party?.partyName || 'Customer'} — Qty: ${item.quantity || 0} Crates (₹${(item.totalAmount || 0).toLocaleString('en-IN')}) — ${item.date || ''}`;
+      case 'delivery_challan':
+        return `${item.sale?.party?.partyName || 'Customer'} — Vehicle: ${item.vehicleNumber || 'N/A'} (Qty: ${item.sale?.quantity || 0}) — ${item.dispatchDate || ''}`;
+      case 'payment_receipt':
+        return `${item.party?.partyName || 'Customer'} — Received: ₹${(item.amountReceived || 0).toLocaleString('en-IN')} (${item.paymentDate || ''})`;
+      case 'purchase_invoice':
+        return `${item.vendor?.vendorName || 'Vendor'} — ${item.materialName || 'Raw Material'} (₹${(item.amount || 0).toLocaleString('en-IN')}) — ${item.inwardDate || ''}`;
+      case 'transport_receipt':
+        return `${item.truckNumber || 'Vehicle'} — Driver: ${item.driver?.driverName || 'N/A'} (Rent: ₹${(item.rent || 0).toLocaleString('en-IN')}) — ${item.transportDate || item.date || ''}`;
+      case 'salary_slip':
+        return `${item.employee?.empName || 'Employee'} — ${item.month}/${item.year} (₹${(item.salaryAmount || 0).toLocaleString('en-IN')})`;
+      default:
+        return item.id || 'Record';
     }
   }
 
-  // Auto-Generated Document Serial Numbers (F-02)
-  generateDocumentNumber(type: string): string {
-    const prefix: { [key: string]: string } = {
-      tax_invoice: 'INV',
-      proforma: 'PRO',
-      delivery_challan: 'DC',
-      payment_receipt: 'REC',
-      purchase_invoice: 'PI',
-      transport_receipt: 'TR',
-      salary_slip: 'SAL'
-    };
-    const p = prefix[type] || 'DOC';
-    const year = new Date().getFullYear().toString().slice(-2);
-    const month = String(new Date().getMonth() + 1).padStart(2, '0');
-    const recId = this.selectedBillRecord ? String(this.getRecordId(this.selectedBillRecord)).padStart(4, '0') : String(Math.floor(Math.random() * 9000) + 1000);
-    return `FA-${p}-${year}${month}-${recId}`;
+  getMatchCountText(): string {
+    const count = this.getFilteredRecords().length;
+    const total = this.getCurrentSourceList().length;
+    const typeTitle = this.currentTheme.title;
+    
+    let filterDesc = '';
+    if (this.filterMonth) {
+      const mObj = this.months.find(m => m.value === this.filterMonth);
+      filterDesc += ` for ${mObj ? mObj.name : this.filterMonth}`;
+    }
+    if (this.filterYear) {
+      filterDesc += ` ${this.filterYear}`;
+    }
+    if (this.filterSearch) {
+      filterDesc += ` matching "${this.filterSearch}"`;
+    }
+
+    return `Found ${count} ${typeTitle.toLowerCase()} record(s)${filterDesc} (out of ${total} total)`;
   }
 
-  getDocumentTitle(type: string): string {
-    const titles: { [key: string]: string } = {
-      tax_invoice: 'Tax Invoice',
-      proforma: 'Proforma Invoice',
-      delivery_challan: 'Delivery Challan',
-      payment_receipt: 'Payment Receipt',
-      purchase_invoice: 'Purchase Bill / Inward Slip',
-      transport_receipt: 'Transport & Freight Receipt',
-      salary_slip: 'Employee Salary Slip'
-    };
-    return titles[type] || 'Commercial Document';
+  generateDocNumber() {
+    const seq = Math.floor(1000 + Math.random() * 9000);
+    this.currentDocumentNumber = `${this.currentTheme.prefix}${seq}`;
   }
 
-  // GST Calculation Breakdown (F-03)
-  getGSTBreakdown(saleRecord: any): any {
-    const baseAmount = saleRecord?.totalAmount || (saleRecord?.quantity * saleRecord?.rate) || 0;
-    const gstRate = 0.18; // 18% GST standard
-    const isInterState = saleRecord?.party?.state && saleRecord?.party?.state.toLowerCase() !== 'maharashtra';
-
-    const gstAmount = baseAmount * gstRate;
-    return {
-      baseAmount,
-      cgst: isInterState ? 0 : gstAmount / 2,
-      sgst: isInterState ? 0 : gstAmount / 2,
-      igst: isInterState ? gstAmount : 0,
-      totalGst: gstAmount,
-      grandTotal: baseAmount + gstAmount,
-      isInterState
-    };
+  get upiQrString(): string {
+    const amount = this.getTotalPayableAmount();
+    const upiId = 'futaneagro@upi';
+    const name = encodeURIComponent('Futane Agro Industries');
+    const note = encodeURIComponent(`Invoice_${this.currentDocumentNumber}`);
+    return `upi://pay?pa=${upiId}&pn=${name}&am=${amount.toFixed(2)}&tn=${note}&cu=INR`;
   }
 
-  // Dynamic NPCI Bharat UPI QR String Generator (V-01)
-  getUpiQrString(party: any, amount: number, invoiceNo: string): string {
-    const upiId = this.getSettingVal('company_upi_id') || 'futaneagro@okhdfcbank';
-    const payeeName = encodeURIComponent(this.getSettingVal('company_name') || 'Futane Agro Industries');
-    const note = encodeURIComponent(`Inv_${invoiceNo || 'BILL'}`);
-    const safeAmount = (amount && !isNaN(amount)) ? Number(amount).toFixed(2) : '0.00';
-    return `upi://pay?pa=${upiId}&pn=${payeeName}&am=${safeAmount}&tn=${note}&cu=INR`;
+  getTotalPayableAmount(): number {
+    if (!this.selectedRecord) return 0;
+    if (this.activeBillType === 'tax_invoice') {
+      const base = this.selectedRecord.totalAmount || (this.selectedRecord.quantity * this.selectedRecord.rate) || 0;
+      return base * 1.18; // base + 18% GST
+    }
+    if (this.activeBillType === 'purchase_invoice') {
+      const base = this.selectedRecord.amount || (this.selectedRecord.weight * this.selectedRecord.rate) || 0;
+      return base * 1.18; // base + 18% GST
+    }
+    return this.selectedRecord.totalAmount || this.selectedRecord.amountReceived || this.selectedRecord.amount || this.selectedRecord.salaryAmount || (this.selectedRecord.quantity * this.selectedRecord.rate) || 0;
   }
 
-  // Amount In Words Converter (F-04)
-  amountToWords(amount: number | null | undefined): string {
+  amountInWords(amount: number): string {
     if (!amount || isNaN(amount)) return 'Zero Rupees Only';
     const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
-      'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
-      'Seventeen', 'Eighteen', 'Nineteen'];
+      'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
     const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
 
     const numToWords = (n: number): string => {
@@ -189,159 +430,24 @@ export class BillingHubComponent implements OnInit {
 
     const rupees = Math.floor(amount);
     const paise = Math.round((amount - rupees) * 100);
-    let result = 'Rupees ' + numToWords(rupees).trim();
-    if (paise > 0) {
-      result += ' and ' + numToWords(paise).trim() + ' Paise';
-    }
-    return result + ' Only';
+    let str = numToWords(rupees).trim() + ' Rupees';
+    if (paise > 0) str += ' and ' + numToWords(paise).trim() + ' Paise';
+    return str + ' Only';
   }
 
-  openBillModal() { this.showBillModal = true; }
-  closeBillModal() { this.showBillModal = false; }
-
-  closeBillModalOnBackdrop(event: MouseEvent) {
-    if ((event.target as HTMLElement).style.position === 'fixed' ||
-        (event.target as HTMLElement).getAttribute('style')?.includes('position:fixed')) {
-      this.closeBillModal();
-    }
+  printDocument() {
+    window.print();
   }
 
-  @HostListener('document:keydown.escape')
-  onEscapeKey() { if (this.showBillModal) this.closeBillModal(); }
-
-  // WhatsApp Sharing with pre-filled message (F-06)
-  shareOnWhatsApp() {
-    if (!this.selectedBillRecord) return;
-    const rec = this.selectedBillRecord;
-    let msg = '';
-    let rawPhone = '';
-
-    if (this.activeBillType === 'tax_invoice' || this.activeBillType === 'proforma') {
-      const gst = this.getGSTBreakdown(rec);
-      rawPhone = rec.party?.partyContact || rec.party?.contact || '';
-      msg = `🧾 *${this.activeBillType === 'tax_invoice' ? 'TAX INVOICE' : 'PROFORMA INVOICE'}*\n`
-          + `*Futane Agro Industries Pvt. Ltd.*\n\n`
-          + `Doc No: *${this.currentDocumentNumber}*\n`
-          + `Customer: *${rec.party?.partyName || 'Customer'}*\n`
-          + `Date: ${rec.date || new Date().toISOString().split('T')[0]}\n`
-          + `Item: ${rec.crateType} (${rec.crateMaterial || 'Plastic'})\n`
-          + `Quantity: ${rec.quantity} crates\n`
-          + `Rate: ₹${Number(rec.rate).toLocaleString('en-IN')}/crate\n`
-          + `Sub-Total: ₹${Number(gst.baseAmount).toLocaleString('en-IN')}\n`
-          + `GST (18%): ₹${Number(gst.totalGst).toLocaleString('en-IN')}\n`
-          + `*Grand Total: ₹${Number(gst.grandTotal).toLocaleString('en-IN')}*\n\n`
-          + `Please arrange payment at your earliest convenience.\n`
-          + `— Futane Agro Industries`;
-    } else if (this.activeBillType === 'payment_receipt') {
-      rawPhone = rec.party?.partyContact || rec.party?.contact || '';
-      msg = `✅ *PAYMENT RECEIPT*\n`
-          + `*Futane Agro Industries Pvt. Ltd.*\n\n`
-          + `Receipt No: *${this.currentDocumentNumber}*\n`
-          + `Customer: *${rec.party?.partyName || 'Customer'}*\n`
-          + `Amount Received: *₹${Number(rec.amountReceived).toLocaleString('en-IN')}*\n`
-          + `Payment Mode: ${rec.paymentMode || 'Cash'}\n`
-          + `Date: ${rec.paymentDate}\n\n`
-          + `Thank you for your payment! 🙏\n— Futane Agro Industries`;
-    } else if (this.activeBillType === 'delivery_challan') {
-      rawPhone = rec.sale?.party?.partyContact || rec.sale?.party?.contact || '';
-      msg = `🚚 *DELIVERY CHALLAN*\n`
-          + `*Futane Agro Industries Pvt. Ltd.*\n\n`
-          + `Challan No: *${this.currentDocumentNumber}*\n`
-          + `Customer: *${rec.sale?.party?.partyName || 'Customer'}*\n`
-          + `Vehicle: *${rec.vehicleNumber || 'N/A'}*\n`
-          + `Driver: ${rec.driverName || 'N/A'}\n`
-          + `Quantity: ${rec.sale?.quantity || 0} crates (${rec.sale?.crateType || ''})\n`
-          + `Date: ${rec.dispatchDate}\n\n`
-          + `— Futane Agro Industries`;
-    } else if (this.activeBillType === 'salary_slip') {
-      rawPhone = rec.employee?.empContact || '';
-      msg = `💼 *SALARY SLIP - ${rec.month}/${rec.year}*\n`
-          + `*Futane Agro Industries Pvt. Ltd.*\n\n`
-          + `Employee: *${rec.employee?.empName}*\n`
-          + `Designation: ${rec.employee?.designation}\n`
-          + `Gross Pay: ₹${Number(rec.salaryAmount).toLocaleString('en-IN')}\n`
-          + `PF Deduction (12%): ₹${Number(rec.salaryAmount * 0.12).toLocaleString('en-IN')}\n`
-          + `*Net Salary: ₹${Number(rec.salaryAmount * 0.88).toLocaleString('en-IN')}*\n\n`
-          + `— Futane Agro HR`;
-    } else {
-      msg = `📄 Document ${this.currentDocumentNumber} from *Futane Agro Industries Pvt. Ltd.*`;
-    }
-
-    const digits = rawPhone.replace(/\D/g, '');
-    let fullPhone = '';
-    if (digits.length === 10) fullPhone = '91' + digits;
-    else if (digits.length === 12 && digits.startsWith('91')) fullPhone = digits;
-    else if (digits.length > 0) fullPhone = digits;
-
-    const url = fullPhone
-      ? `https://wa.me/${fullPhone}?text=${encodeURIComponent(msg)}`
-      : `https://wa.me/?text=${encodeURIComponent(msg)}`;
-    window.open(url, '_blank');
-    this.logAudit(`Shared ${this.activeBillType} ID ${this.currentDocumentNumber} via WhatsApp`);
-  }
-
-  // Download PDF
-  downloadBillingHubPDF() {
-    if (!this.selectedBillRecord) return;
-    const element = document.getElementById('printable-billing-card');
-    if (!element) {
-      Swal.fire({ icon: 'error', title: 'Error', text: 'Could not find billing card element.' });
-      return;
-    }
-
-    const id = this.currentDocumentNumber || this.getRecordId(this.selectedBillRecord);
-    this.logAudit(`Downloaded PDF for ${this.activeBillType} ID ${id}`);
-
-    Swal.fire({ title: 'Generating PDF…', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-
-    html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false })
-      .then(canvas => {
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const imgW = 210, pageH = 297;
-        const imgH = (canvas.height * imgW) / canvas.width;
-        let leftH = imgH, pos = 0;
-        const img = canvas.toDataURL('image/png');
-        pdf.addImage(img, 'PNG', 0, pos, imgW, imgH);
-        leftH -= pageH;
-        while (leftH >= 0) {
-          pos = leftH - imgH;
-          pdf.addPage();
-          pdf.addImage(img, 'PNG', 0, pos, imgW, imgH);
-          leftH -= pageH;
-        }
-        pdf.save(`${this.activeBillType}_${id}.pdf`);
-        Swal.close();
-        Swal.fire({ icon: 'success', title: 'PDF Downloaded!', timer: 1500, showConfirmButton: false });
-      })
-      .catch(() => {
-        Swal.close();
-        Swal.fire({ icon: 'error', title: 'PDF Error', text: 'Could not generate PDF. Please try again.' });
-      });
-  }
-
-  printBillingDocument() {
-    if (!this.selectedBillRecord) return;
-    const element = document.getElementById('printable-billing-card');
-    if (!element) return;
-    const printWin = window.open('', '_blank', 'width=900,height=1200');
-    if (!printWin) {
-      Swal.fire({ icon: 'warning', title: 'Popup Blocked', text: 'Please allow popups for this site to print.' });
-      return;
-    }
-    const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"],style'))
-      .map((el: any) => el.outerHTML).join('');
-    printWin.document.write(`<!DOCTYPE html><html><head><title>Print</title>${styles}
-      <style>
-        body { background:#fff !important; color:#000 !important; padding:20px; margin:0; }
-        .no-print { display:none !important; }
-        .bill-watermark { opacity:.06 !important; }
-        .billing-a4-card { box-shadow:none !important; border:none !important; background:#fff !important; }
-      </style></head><body>${element.outerHTML}</body></html>`);
-    printWin.document.close();
-    setTimeout(() => { printWin.focus(); printWin.print(); }, 600);
-  }
-
-  logAudit(action: string) {
-    this.apiService.createAuditLog({ username: this.loggedInUser?.username || 'System', action }).subscribe();
+  async downloadPDF() {
+    const el = document.getElementById('printable-document-sheet');
+    if (!el) return;
+    const canvas = await html2canvas(el, { scale: 2, useCORS: true });
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const imgWidth = 210;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+    pdf.save(`${this.activeBillType}_${this.currentDocumentNumber.replace(/\//g, '-')}.pdf`);
   }
 }

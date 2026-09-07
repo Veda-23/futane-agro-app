@@ -84,26 +84,27 @@
           </div>
         </div>
       </div>
-      <div class="table-container">
-        <table>
+      <div class="table-container table-responsive">
+        <table class="table" appResizableTable tableId="payments_table">
           <thead>
             <tr>
-              <th *ngIf="isColumnVisible('payments', 'Date')" (click)="setSort('paymentDate')" style="cursor:pointer;">{{ 'payments.date' | translate:currentLang }} <span *ngIf="sortField === 'paymentDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('payments', 'Party')" (click)="setSort('party.partyName')" style="cursor:pointer;">{{ 'party.name' | translate:currentLang }} <span *ngIf="sortField === 'party.partyName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('payments', 'Invoice Ref')" (click)="setSort('invoiceNo')" style="cursor:pointer;">{{ 'payments.invoice_ref' | translate:currentLang }} <span *ngIf="sortField === 'invoiceNo'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('payments', 'Amount')" (click)="setSort('amountReceived')" style="cursor:pointer;">{{ 'payments.amount' | translate:currentLang }} <span *ngIf="sortField === 'amountReceived'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('payments', 'Mode')" (click)="setSort('paymentMode')" style="cursor:pointer;">{{ 'payments.mode' | translate:currentLang }} <span *ngIf="sortField === 'paymentMode'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('payments', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
+              <th *ngIf="isColumnVisible('payments', 'Date')" (click)="setSort('paymentDate')" style="cursor:pointer; min-width:110px;">{{ 'payments.date' | translate:currentLang }} <span *ngIf="sortField === 'paymentDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('payments', 'Party')" (click)="setSort('party.partyName')" style="cursor:pointer; min-width:160px;">{{ 'party.name' | translate:currentLang }} <span *ngIf="sortField === 'party.partyName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('payments', 'Invoice Ref')" (click)="setSort('invoiceNo')" style="cursor:pointer; min-width:140px;">{{ 'payments.invoice_ref' | translate:currentLang }} <span *ngIf="sortField === 'invoiceNo'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('payments', 'Amount')" (click)="setSort('amountReceived')" style="cursor:pointer; min-width:130px;">{{ 'payments.amount' | translate:currentLang }} <span *ngIf="sortField === 'amountReceived'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('payments', 'Mode')" (click)="setSort('paymentMode')" style="cursor:pointer; min-width:100px;">{{ 'payments.mode' | translate:currentLang }} <span *ngIf="sortField === 'paymentMode'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('payments', 'Actions')" style="min-width:120px;">{{ 'label.actions' | translate:currentLang }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let payment of getProcessedList(paymentsList, 'payments')">
-              <td *ngIf="isColumnVisible('payments', 'Date')">{{ payment.paymentDate }}</td>
-              <td *ngIf="isColumnVisible('payments', 'Party')">{{ payment.party?.partyName }}</td>
+            <tr *ngFor="let payment of getProcessedList(paymentsList, 'payments'); trackBy: trackByPaymentId">
+              <td *ngIf="isColumnVisible('payments', 'Date')"><span class="date-cell">{{ payment.paymentDate | indianDate }}</span></td>
+              <td *ngIf="isColumnVisible('payments', 'Party')" style="font-weight:700;">{{ payment.party?.partyName }}</td>
               <td *ngIf="isColumnVisible('payments', 'Invoice Ref')"><code>{{ payment.invoiceNo || 'N/A' }}</code></td>
-              <td *ngIf="isColumnVisible('payments', 'Amount')"><strong class="text-green">₹{{ payment.amountReceived }}</strong></td>
-              <td *ngIf="isColumnVisible('payments', 'Mode')"><span class="badge badge-info">{{ payment.paymentMode }}</span></td>
-              <td *ngIf="isColumnVisible('payments', 'Actions')">
+              <td *ngIf="isColumnVisible('payments', 'Amount')"><strong style="color:var(--accent-success, #10b981); font-size:13.5px;">₹{{ payment.amountReceived | number:'1.2-2' }}</strong></td>
+              <td *ngIf="isColumnVisible('payments', 'Mode')"><span class="badge badge-info" style="font-weight:700;">{{ payment.paymentMode }}</span></td>
+              <td *ngIf="isColumnVisible('payments', 'Actions')" style="display:flex; gap:6px;">
+                <button class="btn btn-secondary btn-sm" (click)="editPayment(payment)">✏️ Edit</button>
                 <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deletePayment(payment.paymentId)">{{ 'btn.delete' | translate:currentLang }}</button>
               </td>
             </tr>

@@ -91,32 +91,32 @@
   </div>
 
   <!-- Table -->
-  <div class="table-container">
-    <table>
+  <div class="table-container table-responsive">
+    <table class="table" appResizableTable tableId="invoices_table">
       <thead>
         <tr>
-          <th *ngIf="isColumnVisible('invoices','ID')" (click)="setSort('id')" style="cursor:pointer;">
+          <th *ngIf="isColumnVisible('invoices','ID')" (click)="setSort('id')" style="cursor:pointer; min-width:90px;">
             # <span *ngIf="sortField==='id'">{{ sortAsc ? '▲' : '▼' }}</span>
           </th>
-          <th *ngIf="isColumnVisible('invoices','Invoice No')" (click)="setSort('invoiceNo')" style="cursor:pointer;">
+          <th *ngIf="isColumnVisible('invoices','Invoice No')" (click)="setSort('invoiceNo')" style="cursor:pointer; min-width:140px;">
             {{ 'inv.no' | translate:currentLang }} <span *ngIf="sortField==='invoiceNo'">{{ sortAsc ? '▲' : '▼' }}</span>
           </th>
-          <th *ngIf="isColumnVisible('invoices','Date')" (click)="setSort('createdDate')" style="cursor:pointer;">
+          <th *ngIf="isColumnVisible('invoices','Date')" (click)="setSort('createdDate')" style="cursor:pointer; min-width:110px;">
             {{ 'inv.date' | translate:currentLang }} <span *ngIf="sortField==='createdDate'">{{ sortAsc ? '▲' : '▼' }}</span>
           </th>
-          <th *ngIf="isColumnVisible('invoices','Party')" (click)="setSort('sale.party.partyName')" style="cursor:pointer;">
+          <th *ngIf="isColumnVisible('invoices','Party')" (click)="setSort('sale.party.partyName')" style="cursor:pointer; min-width:160px;">
             {{ 'inv.party_name' | translate:currentLang }} <span *ngIf="sortField==='sale.party.partyName'">{{ sortAsc ? '▲' : '▼' }}</span>
           </th>
-          <th *ngIf="isColumnVisible('invoices','Description')">Description</th>
-          <th *ngIf="isColumnVisible('invoices','Total Bill')" (click)="setSort('sale.totalAmount')" style="cursor:pointer;">
+          <th *ngIf="isColumnVisible('invoices','Description')" style="min-width:160px;">Description</th>
+          <th *ngIf="isColumnVisible('invoices','Total Bill')" (click)="setSort('sale.totalAmount')" style="cursor:pointer; min-width:120px;">
             {{ 'inv.total_bill' | translate:currentLang }} <span *ngIf="sortField==='sale.totalAmount'">{{ sortAsc ? '▲' : '▼' }}</span>
           </th>
-          <th *ngIf="isColumnVisible('invoices','Status')">Status</th>
-          <th *ngIf="isColumnVisible('invoices','Actions')">{{ 'label.actions' | translate:currentLang }}</th>
+          <th *ngIf="isColumnVisible('invoices','Status')" style="min-width:110px;">Status</th>
+          <th *ngIf="isColumnVisible('invoices','Actions')" style="min-width:130px;">{{ 'label.actions' | translate:currentLang }}</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let inv of getProcessedList(invoicesList, 'invoices')">
+        <tr *ngFor="let inv of getProcessedList(invoicesList, 'invoices'); trackBy: trackByInvoiceId">
           <td *ngIf="isColumnVisible('invoices','ID')">
             <span [title]="inv.id" style="font-family:monospace;font-size:11px;background:var(--bg-canvas);
                   padding:2px 6px;border-radius:4px;color:var(--text-muted);cursor:help;">
@@ -124,18 +124,18 @@
             </span>
           </td>
           <td *ngIf="isColumnVisible('invoices','Invoice No')">
-            <span [title]="inv.invoiceNo" style="font-family:monospace;font-size:12px;color:var(--accent);">
+            <span [title]="inv.invoiceNo" style="font-family:monospace;font-size:12px;font-weight:700;color:var(--accent);">
               {{ inv.invoiceNo?.length > 20 ? (inv.invoiceNo | slice:0:20) + '…' : inv.invoiceNo }}
             </span>
           </td>
-          <td *ngIf="isColumnVisible('invoices','Date')">{{ formatDate(inv.createdDate) }}</td>
+          <td *ngIf="isColumnVisible('invoices','Date')"><span class="date-cell">{{ (inv.createdDate || inv.date) | indianDate }}</span></td>
           <td *ngIf="isColumnVisible('invoices','Party')"><strong>{{ inv.sale?.party?.partyName }}</strong></td>
           <td *ngIf="isColumnVisible('invoices','Description')"
-              style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+              style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
               [title]="inv.sale?.crateType + ' | ' + inv.sale?.crateMaterial + ' | Qty: ' + inv.sale?.quantity">
             {{ inv.sale?.crateType }} ({{ inv.sale?.quantity }})
           </td>
-          <td *ngIf="isColumnVisible('invoices','Total Bill')"><strong>₹{{ inv.sale?.totalAmount | number:'1.2-2' }}</strong></td>
+          <td *ngIf="isColumnVisible('invoices','Total Bill')"><strong style="color:var(--text-primary);">₹{{ inv.sale?.totalAmount | number:'1.2-2' }}</strong></td>
           <td *ngIf="isColumnVisible('invoices','Status')">
             <span class="badge"
               [class.badge-success]="inv.sale?.remaining === 0"
@@ -144,14 +144,12 @@
               {{ inv.sale?.remaining === 0 ? '✓ Paid' : inv.sale?.remaining >= inv.sale?.totalAmount ? '✗ Unpaid' : '◑ Partial' }}
             </span>
           </td>
-          <td *ngIf="isColumnVisible('invoices','Actions')">
-            <div style="display:flex;gap:6px;align-items:center;">
-              <button class="btn btn-primary" (click)="viewInvoice(inv)"
-                      style="height:32px;padding:0 12px;font-size:12px;white-space:nowrap;">
+          <td *ngIf="isColumnVisible('invoices','Actions')" style="text-align:right; padding-right:14px;">
+            <div class="row-actions-group" style="justify-content: flex-end;">
+              <button class="btn-row-action btn-edit" (click)="viewInvoice(inv)" title="View Invoice">
                 👁 View
               </button>
-              <button class="btn btn-outline" (click)="downloadPDFInvoice(inv)"
-                      style="height:32px;padding:0 12px;font-size:12px;white-space:nowrap;">
+              <button class="btn-row-action" (click)="downloadPDFInvoice(inv)" title="Download PDF">
                 ⬇ PDF
               </button>
             </div>

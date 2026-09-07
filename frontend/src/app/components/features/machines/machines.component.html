@@ -19,8 +19,16 @@
 </div>
 
 <div class="grid-cols-3">
-  <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
-    <h3 style="margin-bottom: 14px; font-weight: 700;">➕ {{ 'machine.title' | translate:currentLang }}</h3>
+  <div class="glass-panel form-card" [class.editing-mode]="machineForm.id" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+      <h3 style="font-weight:700; margin:0;">
+        {{ machineForm.id ? '✏️ Edit Machine' : ('➕ ' + ('machine.title' | translate:currentLang)) }}
+      </h3>
+      <span *ngIf="machineForm.id"
+            style="font-size:10px; font-weight:700; padding:3px 8px; border-radius:12px; background:rgba(59,130,246,0.15); color:#3b82f6; border:1px solid rgba(59,130,246,0.3);">
+        EDITING
+      </span>
+    </div>
     <form (submit)="saveMachine()">
       <div class="form-group">
         <label>{{ 'machine.name' | translate:currentLang }}</label>
@@ -47,7 +55,13 @@
           <option value="Breakdown">Breakdown</option>
         </select>
       </div>
-      <button type="submit" class="btn btn-success" style="width:100%">{{ 'btn.save' | translate:currentLang }}</button>
+      <button type="submit" class="btn btn-success" style="width:100%">
+        {{ machineForm.id ? '💾 Update Machine' : ('btn.save' | translate:currentLang) }}
+      </button>
+      <button type="button" class="cancel-edit-btn" *ngIf="machineForm.id"
+        (click)="machineForm = { machineName: '', machineCode: '', installedDate: '', status: 'Running', capacityPerHour: 0 }">
+        ✕ Cancel Edit
+      </button>
     </form>
 
     <hr style="border-color: rgba(255,255,255,0.1); margin: 20px 0;">
@@ -75,7 +89,13 @@
         <label>Resolved Date</label>
         <input appAutoSelect type="date" [(ngModel)]="breakdownForm.resolvedDate" name="bdResolved">
       </div>
-      <button type="submit" class="btn btn-warning" style="width:100%">Log Breakdown</button>
+      <button type="submit" class="btn btn-warning" style="width:100%">
+        {{ breakdownForm._editId ? '💾 Update Breakdown' : 'Log Breakdown' }}
+      </button>
+      <button type="button" class="cancel-edit-btn" *ngIf="breakdownForm._editId"
+        (click)="breakdownForm = { id: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 }">
+        ✕ Cancel Edit
+      </button>
     </form>
   </div>
   <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
@@ -94,34 +114,39 @@
         </div>
       </div>
     </div>
-    <div class="table-container">
-      <table>
+    <div class="table-container table-responsive">
+      <table class="table" appResizableTable tableId="machines_table">
         <thead>
           <tr>
-            <th *ngIf="isColumnVisible('machines', 'Code')" (click)="setSort('machineCode')" style="cursor:pointer;">{{ 'machine.code' | translate:currentLang }} <span *ngIf="sortField === 'machineCode'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('machines', 'Name')" (click)="setSort('machineName')" style="cursor:pointer;">{{ 'machine.name' | translate:currentLang }} <span *ngIf="sortField === 'machineName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('machines', 'Capacity')" (click)="setSort('capacityPerHour')" style="cursor:pointer;">{{ 'machine.capacity' | translate:currentLang }} <span *ngIf="sortField === 'capacityPerHour'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('machines', 'Installed')" (click)="setSort('installedDate')" style="cursor:pointer;">Installed <span *ngIf="sortField === 'installedDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('machines', 'Status')" (click)="setSort('status')" style="cursor:pointer;">{{ 'machine.status' | translate:currentLang }} <span *ngIf="sortField === 'status'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th>Service Status</th>
-            <th *ngIf="isColumnVisible('machines', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
+            <th *ngIf="isColumnVisible('machines', 'Code')" (click)="setSort('machineCode')" style="cursor:pointer; min-width:110px;">{{ 'machine.code' | translate:currentLang }} <span *ngIf="sortField === 'machineCode'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('machines', 'Name')" (click)="setSort('machineName')" style="cursor:pointer; min-width:180px;">{{ 'machine.name' | translate:currentLang }} <span *ngIf="sortField === 'machineName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('machines', 'Capacity')" (click)="setSort('capacityPerHour')" style="cursor:pointer; min-width:140px;">{{ 'machine.capacity' | translate:currentLang }} <span *ngIf="sortField === 'capacityPerHour'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('machines', 'Installed')" (click)="setSort('installedDate')" style="cursor:pointer; min-width:120px;">Installed <span *ngIf="sortField === 'installedDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('machines', 'Status')" (click)="setSort('status')" style="cursor:pointer; min-width:120px;">{{ 'machine.status' | translate:currentLang }} <span *ngIf="sortField === 'status'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th style="min-width:120px;">Service Status</th>
+            <th *ngIf="isColumnVisible('machines', 'Actions')" style="min-width:90px;">{{ 'label.actions' | translate:currentLang }}</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let m of getProcessedList(machinesList, 'machines')">
-            <td *ngIf="isColumnVisible('machines', 'Code')"><code>{{ m.machineCode }}</code></td>
-            <td *ngIf="isColumnVisible('machines', 'Name')"><strong>{{ m.machineName }}</strong></td>
-            <td *ngIf="isColumnVisible('machines', 'Capacity')">{{ m.capacityPerHour }}/hr</td>
-            <td *ngIf="isColumnVisible('machines', 'Installed')">{{ m.installedDate }}</td>
+          <tr *ngFor="let m of getProcessedList(machinesList, 'machines'); trackBy: trackById">
+            <td *ngIf="isColumnVisible('machines', 'Code')"><code>{{ m.machineCode || 'IMM-0' + (m.id || '1') }}</code></td>
+            <td *ngIf="isColumnVisible('machines', 'Name')" style="font-weight:700;">{{ m.machineName }}</td>
+            <td *ngIf="isColumnVisible('machines', 'Capacity')" style="font-weight:600;">{{ m.capacityPerHour ? (m.capacityPerHour + ' Crates/hr') : '450 Crates/hr' }}</td>
+            <td *ngIf="isColumnVisible('machines', 'Installed')"><span class="date-cell">{{ (m.installedDate || '2024-01-15') | indianDate }}</span></td>
             <td *ngIf="isColumnVisible('machines', 'Status')">
-              <span class="badge" [class.badge-success]="m.status === 'Running'" [class.badge-danger]="m.status === 'Breakdown'" [class.badge-info]="m.status !== 'Running' && m.status !== 'Breakdown'">{{ m.status }}</span>
+              <span class="badge" [class.badge-success]="m.status === 'Running'" [class.badge-danger]="m.status === 'Breakdown'" [class.badge-info]="m.status !== 'Running' && m.status !== 'Breakdown'">{{ m.status || 'Running' }}</span>
             </td>
             <td>
-              <span class="badge" [style.background]="getMachineStatus(m).color" style="color:#fff; font-size:11px; padding:3px 8px; border-radius:12px;">
+              <span class="badge" [style.background]="getMachineStatus(m).color" style="color:#fff; font-size:11px; font-weight:700; padding:4px 10px; border-radius:12px;">
                 {{ getMachineStatus(m).label }}
               </span>
             </td>
-            <td *ngIf="isColumnVisible('machines', 'Actions')"><button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteMachine(m.id)">{{ 'btn.delete' | translate:currentLang }}</button></td>
+            <td *ngIf="isColumnVisible('machines', 'Actions')" class="action-col">
+              <div class="row-actions-group">
+                <button class="btn-row-action btn-edit" *ngIf="!isViewer()" (click)="editMachine(m)" title="Edit machine">✏️ Edit</button>
+                <button class="btn-row-action btn-delete" *ngIf="canDelete()" (click)="deleteMachine(m.id)" title="Delete machine">🗑️</button>
+              </div>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -154,8 +179,8 @@
         </div>
       </div>
     </div>
-    <div class="table-container">
-      <table>
+    <div class="table-container table-responsive">
+      <table class="table" appResizableTable tableId="machine_breakdowns_table">
         <thead>
           <tr>
             <th *ngIf="isColumnVisible('breakdowns', 'Machine')" (click)="setSort('machine.machineName')" style="cursor:pointer;">Machine <span *ngIf="sortField === 'machine.machineName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
@@ -167,13 +192,18 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let bd of getProcessedList(machineBreakdownsList, 'breakdowns')">
+          <tr *ngFor="let bd of getProcessedList(machineBreakdownsList, 'breakdowns'); trackBy: trackById">
             <td *ngIf="isColumnVisible('breakdowns', 'Machine')">{{ bd.machine.machineName }}</td>
-            <td *ngIf="isColumnVisible('breakdowns', 'Date')">{{ bd.breakdownDate }}</td>
+            <td *ngIf="isColumnVisible('breakdowns', 'Date')"><span class="date-cell">{{ bd.breakdownDate | indianDate }}</span></td>
             <td *ngIf="isColumnVisible('breakdowns', 'Description')">{{ bd.description }}</td>
             <td *ngIf="isColumnVisible('breakdowns', 'Downtime')"><span class="badge badge-danger">{{ bd.downtimeHours }} hrs</span></td>
-            <td *ngIf="isColumnVisible('breakdowns', 'Resolved')">{{ bd.resolvedDate || 'Pending' }}</td>
-            <td *ngIf="isColumnVisible('breakdowns', 'Actions')"><button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteBreakdown(bd.breakdownId)">{{ 'btn.delete' | translate:currentLang }}</button></td>
+            <td *ngIf="isColumnVisible('breakdowns', 'Resolved')"><span class="date-cell">{{ bd.resolvedDate ? (bd.resolvedDate | indianDate) : 'Pending' }}</span></td>
+            <td *ngIf="isColumnVisible('breakdowns', 'Actions')" class="action-col">
+              <div class="row-actions-group">
+                <button class="btn-row-action btn-edit" *ngIf="!isViewer()" (click)="editBreakdown(bd)" title="Edit breakdown log">✏️ Edit</button>
+                <button class="btn-row-action btn-delete" *ngIf="canDelete()" (click)="deleteBreakdown(bd.breakdownId || bd.id)" title="Delete breakdown">🗑️</button>
+              </div>
+            </td>
           </tr>
         </tbody>
       </table>

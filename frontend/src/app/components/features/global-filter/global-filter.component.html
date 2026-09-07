@@ -1,53 +1,493 @@
-<div class="filter-card">
-  <div class="filter-header" (click)="toggleVisibility.emit()" style="cursor: pointer;">
-    <div class="filter-title">
-      <div class="filter-icon">🔍</div>
-      <h3>Global Data Filters</h3>
-      <span *ngIf="filters.query || filters.date || filters.month" class="active-pill">Active Filter</span>
-    </div>
-    <div class="filter-actions">
-      <button type="button" class="btn-reset" (click)="$event.stopPropagation(); reset.emit()">Reset Filters</button>
-      <button type="button" class="btn-export" (click)="$event.stopPropagation(); export.emit()">Export Filtered (CSV)</button>
-    </div>
-  </div>
+<div class="enterprise-filter-container no-print">
   
-  <div *ngIf="showFilters" class="filter-body">
-    <div class="filter-grid">
-      <div class="form-field">
-        <label class="field-label">SEARCH QUERY</label>
-        <div class="input-wrapper">
-          <input appAutoSelect type="text" class="custom-input" [(ngModel)]="filters.query" (ngModelChange)="onFilterChange()" placeholder="Type to search...">
-          <button *ngIf="filters.query" (click)="filters.query = ''; onFilterChange()" type="button" class="clear-btn" title="Clear Search">✕</button>
+  <!-- COMPACT PRIMARY FILTER BAR -->
+  <div class="filter-main-bar">
+    <div class="filter-controls-left">
+      
+      <!-- 1. Universal Search Input -->
+      <div class="filter-search-box" *ngIf="showSearch">
+        <span class="search-icon"><i class="bi bi-search"></i></span>
+        <input id="global-search-input" appAutoSelect type="text" class="search-input"
+          [(ngModel)]="filters.query" (ngModelChange)="onFilterChange()" 
+          placeholder="Search records... (Ctrl+F)">
+        <span class="kbd-badge" *ngIf="!filters.query">⌘K</span>
+        <button *ngIf="filters.query" (click)="filters.query = ''; onFilterChange()" type="button" class="btn-input-clear" title="Clear Search">✕</button>
+      </div>
+
+      <!-- 2. Date Range (Compact) -->
+      <div class="filter-date-range-box" *ngIf="showDateRange">
+        <span class="date-icon"><i class="bi bi-calendar3"></i></span>
+        <input appAutoSelect type="date" class="date-input" [(ngModel)]="filters.dateFrom" (ngModelChange)="onFilterChange()" title="From Date">
+        <span class="date-sep">→</span>
+        <input appAutoSelect type="date" class="date-input" [(ngModel)]="filters.dateTo" (ngModelChange)="onFilterChange()" title="To Date">
+        <button *ngIf="filters.dateFrom || filters.dateTo" (click)="filters.dateFrom = ''; filters.dateTo = ''; onFilterChange()" type="button" class="btn-input-clear">✕</button>
+      </div>
+
+      <!-- 3. Month & Year Selectors (For Monthly summary / Salaries) -->
+      <div class="filter-month-year-group" *ngIf="showMonthYear">
+        <select class="compact-select" [(ngModel)]="filters.month" (ngModelChange)="onFilterChange()">
+          <option value="">All Months</option>
+          <option *ngFor="let m of months" [value]="m">{{ m }}</option>
+        </select>
+        <select class="compact-select" [(ngModel)]="filters.year" (ngModelChange)="onFilterChange()">
+          <option value="">All Years</option>
+          <option *ngFor="let y of years" [value]="y">{{ y }}</option>
+        </select>
+      </div>
+
+      <!-- 4. Status Multi-select Dropdown -->
+      <div class="status-dropdown-wrapper" *ngIf="showStatusFilter" style="position:relative;">
+        <button type="button" class="btn-status-trigger" 
+          [class.has-selection]="selectedStatuses.length > 0 || filters.status"
+          (click)="showStatusDropdown = !showStatusDropdown; $event.stopPropagation()">
+          🏷️ {{ selectedStatuses.length > 0 ? selectedStatuses.join(', ') : (filters.status || 'Status') }}
+          <span class="dropdown-caret">{{ showStatusDropdown ? '▲' : '▼' }}</span>
+        </button>
+
+        <div class="status-popover-panel" *ngIf="showStatusDropdown" (click)="$event.stopPropagation()">
+          <div class="popover-title">Filter by Status</div>
+          <div class="status-chips-grid">
+            <button type="button" *ngFor="let s of statusOptions" 
+              class="status-pill-btn" 
+              [class.active]="isStatusSelected(s)"
+              (click)="toggleStatus(s)">
+              {{ isStatusSelected(s) ? '✓ ' : '' }}{{ s }}
+            </button>
+          </div>
+          <div class="popover-footer" *ngIf="selectedStatuses.length > 0">
+            <button type="button" class="btn-text-clear" (click)="clearStatuses()">Clear Status</button>
+          </div>
         </div>
       </div>
 
-      <div class="form-field">
-        <label class="field-label">DATE FILTER</label>
-        <div class="input-wrapper">
-          <input appAutoSelect type="date" class="custom-input" [(ngModel)]="filters.date" (ngModelChange)="onFilterChange()">
+      <!-- 5. Quick Context Chips (Parties Tab) -->
+      <div class="quick-chips-group" *ngIf="activeTab === 'parties'">
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('partyType', '')" (click)="setQuickChip('partyType', '')">ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.partyType === 'CUSTOMER'" (click)="setQuickChip('partyType', 'CUSTOMER')">CUSTOMERS</button>
+        <button type="button" class="quick-chip" [class.active]="filters.partyType === 'SUPPLIER'" (click)="setQuickChip('partyType', 'SUPPLIER')">SUPPLIERS</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'ACTIVE'" (click)="setQuickChip('status', 'ACTIVE')">ACTIVE</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'INACTIVE'" (click)="setQuickChip('status', 'INACTIVE')">INACTIVE</button>
+      </div>
+
+      <!-- 6. Quick Context Chips (Inventory Tab) -->
+      <div class="quick-chips-group" *ngIf="activeTab === 'inventory' || activeTab === 'raw-materials'">
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('stockStatus', '')" (click)="setQuickChip('stockStatus', '')">ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.stockStatus === 'IN STOCK'" (click)="setQuickChip('stockStatus', 'IN STOCK')">IN STOCK</button>
+        <button type="button" class="quick-chip" [class.active]="filters.stockStatus === 'LOW STOCK'" (click)="setQuickChip('stockStatus', 'LOW STOCK')">LOW STOCK</button>
+        <button type="button" class="quick-chip" [class.active]="filters.stockStatus === 'OUT OF STOCK'" (click)="setQuickChip('stockStatus', 'OUT OF STOCK')">OUT OF STOCK</button>
+      </div>
+
+      <!-- 7. Quick Context Chips (Machines Tab) -->
+      <div class="quick-chips-group" *ngIf="activeTab === 'machines'">
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('machineStatus', '')" (click)="setQuickChip('machineStatus', '')">ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.machineStatus === 'RUNNING'" (click)="setQuickChip('machineStatus', 'RUNNING')">RUNNING</button>
+        <button type="button" class="quick-chip" [class.active]="filters.machineStatus === 'IDLE'" (click)="setQuickChip('machineStatus', 'IDLE')">IDLE</button>
+        <button type="button" class="quick-chip" [class.active]="filters.machineStatus === 'MAINTENANCE'" (click)="setQuickChip('machineStatus', 'MAINTENANCE')">MAINTENANCE</button>
+      </div>
+
+      <!-- 8. Quick Context Chips (Sales & Invoices) -->
+      <div class="quick-chips-group" *ngIf="activeTab === 'sales' || activeTab === 'invoices'">
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'PAID'" (click)="setQuickChip('status', 'PAID')">PAID</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'PENDING'" (click)="setQuickChip('status', 'PENDING')">PENDING</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'PARTIAL'" (click)="setQuickChip('status', 'PARTIAL')">PARTIAL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'OVERDUE'" (click)="setQuickChip('status', 'OVERDUE')">OVERDUE</button>
+      </div>
+
+      <!-- 9. Quick Context Chips (Payments) -->
+      <div class="quick-chips-group" *ngIf="activeTab === 'payments'">
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('paymentStatus', '')" (click)="setQuickChip('paymentStatus', '')">ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.paymentStatus === 'PAID'" (click)="setQuickChip('paymentStatus', 'PAID')">PAID</button>
+        <button type="button" class="quick-chip" [class.active]="filters.paymentStatus === 'PENDING'" (click)="setQuickChip('paymentStatus', 'PENDING')">PENDING</button>
+        <button type="button" class="quick-chip" [class.active]="filters.paymentStatus === 'PARTIAL'" (click)="setQuickChip('paymentStatus', 'PARTIAL')">PARTIAL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.paymentStatus === 'FAILED'" (click)="setQuickChip('paymentStatus', 'FAILED')">FAILED</button>
+      </div>
+
+      <!-- 10. Quick Context Chips (Dispatch) -->
+      <div class="quick-chips-group" *ngIf="activeTab === 'dispatch'">
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Delivered'" (click)="setQuickChip('status', 'Delivered')">DELIVERED</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'In Transit'" (click)="setQuickChip('status', 'In Transit')">IN TRANSIT</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Pending'" (click)="setQuickChip('status', 'Pending')">PENDING</button>
+      </div>
+
+      <!-- 11. Quick Context Chips (Salaries) -->
+      <div class="quick-chips-group" *ngIf="activeTab === 'salaries'">
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Paid'" (click)="setQuickChip('status', 'Paid')">PAID</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Pending'" (click)="setQuickChip('status', 'Pending')">PENDING</button>
+      </div>
+
+      <!-- 12. Quick Context Chips (Employees) -->
+      <div class="quick-chips-group" *ngIf="activeTab === 'employees'">
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'ACTIVE'" (click)="setQuickChip('status', 'ACTIVE')">ACTIVE</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'ON LEAVE'" (click)="setQuickChip('status', 'ON LEAVE')">ON LEAVE</button>
+      </div>
+
+      <!-- 13. Quick Context Chips (Transports) -->
+      <div class="quick-chips-group" *ngIf="activeTab === 'transports'">
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'COMPLETED'" (click)="setQuickChip('status', 'COMPLETED')">COMPLETED</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'PENDING'" (click)="setQuickChip('status', 'PENDING')">PENDING</button>
+      </div>
+
+      <!-- 14. Quick Context Chips (Bank Ledger) -->
+      <div class="quick-chips-group" *ngIf="activeTab === 'bank'">
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Credit'" (click)="setQuickChip('status', 'Credit')">CREDIT</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Debit'" (click)="setQuickChip('status', 'Debit')">DEBIT</button>
+      </div>
+
+      <!-- 15. Quick Context Chips (Expenses) -->
+      <div class="quick-chips-group" *ngIf="activeTab === 'expenses'">
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Maintenance'" (click)="setQuickChip('status', 'Maintenance')">MAINTENANCE</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Diesel'" (click)="setQuickChip('status', 'Diesel')">DIESEL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Electricity'" (click)="setQuickChip('status', 'Electricity')">ELECTRICITY</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Repair'" (click)="setQuickChip('status', 'Repair')">REPAIR</button>
+      </div>
+
+    </div>
+
+    <!-- Right Controls: Advanced Filter Trigger, Reset, Export, Refresh -->
+    <div class="filter-controls-right">
+      
+      <!-- Advanced Filters Toggle -->
+      <div class="advanced-filter-trigger-wrapper" *ngIf="hasAdvancedFilters" style="position:relative;">
+        <button type="button" class="btn-filter-toggle" 
+          [class.has-active]="activeFilterCount > 0"
+          (click)="showAdvancedDrawer = !showAdvancedDrawer; $event.stopPropagation()">
+          <span><i class="bi bi-sliders" style="margin-right:4px;"></i> Filters</span>
+          <span class="badge-count" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
+          <span class="dropdown-caret">{{ showAdvancedDrawer ? '▲' : '▼' }}</span>
+        </button>
+
+        <!-- Advanced Filter Popover / Accordion -->
+        <div class="advanced-filter-popover animated-slide-down" *ngIf="showAdvancedDrawer" (click)="$event.stopPropagation()">
+          <div class="popover-header">
+            <h4><i class="bi bi-sliders" style="margin-right:6px; color:#d97706;"></i> Advanced Filters</h4>
+            <button type="button" class="btn-close-popover" (click)="showAdvancedDrawer = false">✕</button>
+          </div>
+
+          <div class="popover-body">
+            
+            <!-- PRODUCTION SPECIFIC -->
+            <div *ngIf="activeTab === 'production'" class="advanced-fields-grid">
+              <div class="adv-field">
+                <label>Crate Type</label>
+                <select [(ngModel)]="filters.crateType" (ngModelChange)="onFilterChange()">
+                  <option value="">All Crate Types</option>
+                  <option *ngFor="let c of crateTypes" [value]="c">{{ c }}</option>
+                </select>
+              </div>
+
+              <div class="adv-field">
+                <label>Shift</label>
+                <select [(ngModel)]="filters.shift" (ngModelChange)="onFilterChange()">
+                  <option value="">All Shifts</option>
+                  <option *ngFor="let s of shifts" [value]="s">{{ s }}</option>
+                </select>
+              </div>
+
+              <div class="adv-field">
+                <label>Min Success Threshold</label>
+                <input type="number" [(ngModel)]="filters.minSuccessful" (ngModelChange)="onFilterChange()" placeholder="e.g. 100">
+              </div>
+
+              <div class="adv-field">
+                <label>Min Efficiency: <b>{{ filters.minEfficiency || 0 }}%</b></label>
+                <input type="range" [(ngModel)]="filters.minEfficiency" (ngModelChange)="onFilterChange()" min="0" max="95" step="5">
+              </div>
+            </div>
+
+            <!-- SALES / INVOICES SPECIFIC -->
+            <div *ngIf="activeTab === 'sales' || activeTab === 'invoices'" class="advanced-fields-grid">
+              <div class="adv-field">
+                <label>Customer / Party</label>
+                <select [(ngModel)]="filters.partyId" (ngModelChange)="onFilterChange()">
+                  <option value="">All Customers</option>
+                  <option *ngFor="let p of partiesList" [value]="p.id">{{ p.partyName }}</option>
+                </select>
+              </div>
+              <div class="adv-field">
+                <label>Payment Mode</label>
+                <select [(ngModel)]="filters.paymentMode" (ngModelChange)="onFilterChange()">
+                  <option value="">All Modes</option>
+                  <option value="CASH">Cash</option>
+                  <option value="BANK_TRANSFER">Bank Transfer (NEFT/RTGS)</option>
+                  <option value="UPI">UPI</option>
+                  <option value="CHEQUE">Cheque</option>
+                  <option value="CREDIT">Credit</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- PAYMENTS SPECIFIC -->
+            <div *ngIf="activeTab === 'payments'" class="advanced-fields-grid">
+              <div class="adv-field">
+                <label>Party</label>
+                <select [(ngModel)]="filters.partyId" (ngModelChange)="onFilterChange()">
+                  <option value="">All Parties</option>
+                  <option *ngFor="let p of partiesList" [value]="p.id">{{ p.partyName }}</option>
+                </select>
+              </div>
+              <div class="adv-field">
+                <label>Payment Mode</label>
+                <select [(ngModel)]="filters.paymentMode" (ngModelChange)="onFilterChange()">
+                  <option value="">All Modes</option>
+                  <option value="CASH">Cash</option>
+                  <option value="BANK_TRANSFER">Bank Transfer</option>
+                  <option value="UPI">UPI</option>
+                  <option value="CHEQUE">Cheque</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- EMPLOYEES SPECIFIC -->
+            <div *ngIf="activeTab === 'employees'" class="advanced-fields-grid">
+              <div class="adv-field">
+                <label>Department</label>
+                <select [(ngModel)]="filters.department" (ngModelChange)="onFilterChange()">
+                  <option value="">All Departments</option>
+                  <option value="Production">Production</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="Dispatch">Dispatch & Logistics</option>
+                  <option value="Quality">Quality Control</option>
+                  <option value="Administration">Administration</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- MONTHLY SUMMARY / PRODUCTION SPECIFIC -->
+            <div *ngIf="activeTab === 'monthly-production'" class="advanced-fields-grid">
+              <div class="adv-field">
+                <label>Month</label>
+                <select [(ngModel)]="filters.month" (ngModelChange)="onFilterChange()">
+                  <option value="">All Months</option>
+                  <option *ngFor="let m of months" [value]="m">{{ m }}</option>
+                </select>
+              </div>
+
+              <div class="adv-field">
+                <label>Year</label>
+                <select [(ngModel)]="filters.year" (ngModelChange)="onFilterChange()">
+                  <option value="">All Years</option>
+                  <option *ngFor="let y of years" [value]="y">{{ y }}</option>
+                </select>
+              </div>
+
+              <div class="adv-field">
+                <label>Min Production (Crates)</label>
+                <input type="number" [(ngModel)]="filters.minSuccessful" (ngModelChange)="onFilterChange()" placeholder="e.g. 5000">
+              </div>
+
+              <div class="adv-field">
+                <label>Max Electricity Units</label>
+                <input type="number" [(ngModel)]="filters.maxBill" (ngModelChange)="onFilterChange()" placeholder="e.g. 2500">
+              </div>
+            </div>
+
+            <!-- INVENTORY & RAW MATERIALS SPECIFIC -->
+            <div *ngIf="activeTab === 'inventory' || activeTab === 'raw-materials'" class="advanced-fields-grid">
+              <div class="adv-field">
+                <label>Stock Status</label>
+                <select [(ngModel)]="filters.stockStatus" (ngModelChange)="onFilterChange()">
+                  <option value="">All Stock Levels</option>
+                  <option value="IN STOCK">In Stock</option>
+                  <option value="LOW STOCK">Low Stock (< 200)</option>
+                  <option value="OUT OF STOCK">Out of Stock</option>
+                </select>
+              </div>
+
+              <div class="adv-field">
+                <label>Crate / Material Type</label>
+                <select [(ngModel)]="filters.crateType" (ngModelChange)="onFilterChange()">
+                  <option value="">All Types</option>
+                  <option *ngFor="let c of crateTypes" [value]="c">{{ c }}</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- MACHINES SPECIFIC -->
+            <div *ngIf="activeTab === 'machines'" class="advanced-fields-grid">
+              <div class="adv-field">
+                <label>Machine Status</label>
+                <select [(ngModel)]="filters.machineStatus" (ngModelChange)="onFilterChange()">
+                  <option value="">All Machine Statuses</option>
+                  <option value="RUNNING">Running</option>
+                  <option value="IDLE">Idle</option>
+                  <option value="MAINTENANCE">Maintenance</option>
+                  <option value="BREAKDOWN">Breakdown</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- TRANSPORTS & DISPATCH SPECIFIC -->
+            <div *ngIf="activeTab === 'transports' || activeTab === 'dispatch'" class="advanced-fields-grid">
+              <div class="adv-field">
+                <label>Status</label>
+                <select [(ngModel)]="filters.status" (ngModelChange)="onFilterChange()">
+                  <option value="">All Statuses</option>
+                  <option value="Pending">Pending</option>
+                  <option value="In Transit">In Transit</option>
+                  <option value="Delivered">Delivered</option>
+                  <option value="Completed">Completed</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- SALARIES SPECIFIC -->
+            <div *ngIf="activeTab === 'salaries'" class="advanced-fields-grid">
+              <div class="adv-field">
+                <label>Month</label>
+                <select [(ngModel)]="filters.month" (ngModelChange)="onFilterChange()">
+                  <option value="">All Months</option>
+                  <option *ngFor="let m of months" [value]="m">{{ m }}</option>
+                </select>
+              </div>
+              <div class="adv-field">
+                <label>Year</label>
+                <select [(ngModel)]="filters.year" (ngModelChange)="onFilterChange()">
+                  <option value="">All Years</option>
+                  <option *ngFor="let y of years" [value]="y">{{ y }}</option>
+                </select>
+              </div>
+              <div class="adv-field">
+                <label>Payment Status</label>
+                <select [(ngModel)]="filters.status" (ngModelChange)="onFilterChange()">
+                  <option value="">All Statuses</option>
+                  <option value="Paid">Paid</option>
+                  <option value="Pending">Pending</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- EXPENSES SPECIFIC -->
+            <div *ngIf="activeTab === 'expenses'" class="advanced-fields-grid">
+              <div class="adv-field">
+                <label>Expense Category</label>
+                <select [(ngModel)]="filters.status" (ngModelChange)="onFilterChange()">
+                  <option value="">All Categories</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="Diesel">Diesel</option>
+                  <option value="Electricity">Electricity</option>
+                  <option value="Repair">Repair</option>
+                  <option value="Raw Material">Raw Material</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- BANK SPECIFIC -->
+            <div *ngIf="activeTab === 'bank'" class="advanced-fields-grid">
+              <div class="adv-field">
+                <label>Transaction Type</label>
+                <select [(ngModel)]="filters.status" (ngModelChange)="onFilterChange()">
+                  <option value="">All Types</option>
+                  <option value="Credit">Credit (+)</option>
+                  <option value="Debit">Debit (-)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- PARTIES SPECIFIC -->
+            <div *ngIf="activeTab === 'parties'" class="advanced-fields-grid">
+              <div class="adv-field">
+                <label>Party Type</label>
+                <select [(ngModel)]="filters.partyType" (ngModelChange)="onFilterChange()">
+                  <option value="">All Types</option>
+                  <option value="CUSTOMER">Customers</option>
+                  <option value="SUPPLIER">Suppliers</option>
+                </select>
+              </div>
+              <div class="adv-field">
+                <label>Status</label>
+                <select [(ngModel)]="filters.status" (ngModelChange)="onFilterChange()">
+                  <option value="">All Statuses</option>
+                  <option value="ACTIVE">Active</option>
+                  <option value="INACTIVE">Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- VENDORS SPECIFIC -->
+            <div *ngIf="activeTab === 'vendors'" class="advanced-fields-grid">
+              <div class="adv-field">
+                <label>Vendor Status</label>
+                <select [(ngModel)]="filters.status" (ngModelChange)="onFilterChange()">
+                  <option value="">All Statuses</option>
+                  <option value="ACTIVE">Active</option>
+                  <option value="INACTIVE">Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- DRIVERS SPECIFIC -->
+            <div *ngIf="activeTab === 'drivers'" class="advanced-fields-grid">
+              <div class="adv-field">
+                <label>Driver Status</label>
+                <select [(ngModel)]="filters.status" (ngModelChange)="onFilterChange()">
+                  <option value="">All Statuses</option>
+                  <option value="AVAILABLE">Available</option>
+                  <option value="ON TRIP">On Trip</option>
+                  <option value="LEAVE">On Leave</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- AUDIT LOGS SPECIFIC -->
+            <div *ngIf="activeTab === 'audit-logs'" class="advanced-fields-grid">
+              <div class="adv-field">
+                <label>Action Category</label>
+                <select [(ngModel)]="filters.status" (ngModelChange)="onFilterChange()">
+                  <option value="">All Actions</option>
+                  <option value="CREATE">Create (New Records)</option>
+                  <option value="UPDATE">Update (Edits)</option>
+                  <option value="DELETE">Delete (Removals)</option>
+                  <option value="LOGIN">Authentication</option>
+                </select>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="popover-actions">
+            <button type="button" class="btn-popover-reset" (click)="onReset()">Reset All</button>
+            <button type="button" class="btn-popover-apply" (click)="showAdvancedDrawer = false">✓ Apply Filters</button>
+          </div>
         </div>
       </div>
 
-      <div class="form-field">
-        <label class="field-label">MONTH FILTER</label>
-        <div class="input-wrapper">
-          <select class="custom-select" [(ngModel)]="filters.month" (ngModelChange)="onFilterChange()">
-            <option value="">All Months</option>
-            <option value="January">January</option>
-            <option value="February">February</option>
-            <option value="March">March</option>
-            <option value="April">April</option>
-            <option value="May">May</option>
-            <option value="June">June</option>
-            <option value="July">July</option>
-            <option value="August">August</option>
-            <option value="September">September</option>
-            <option value="October">October</option>
-            <option value="November">November</option>
-            <option value="December">December</option>
-          </select>
-        </div>
-      </div>
+      <!-- Reset Button -->
+      <button type="button" class="btn-action-icon btn-reset" *ngIf="activeFilterCount > 0" (click)="onReset()" title="Reset All Filters">
+        <i class="bi bi-arrow-counterclockwise"></i> Reset
+      </button>
+
+      <!-- Export CSV -->
+      <button type="button" class="btn-action-icon btn-export" (click)="export.emit()" title="Export Filtered CSV">
+        <i class="bi bi-download" style="margin-right:4px;"></i> Export
+      </button>
+
+      <!-- Refresh -->
+      <button type="button" class="btn-action-icon btn-refresh" (click)="refresh.emit()" title="Refresh Data">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+
     </div>
   </div>
+
+  <!-- ACTIVE FILTER CHIPS BAR -->
+  <div class="active-chips-bar animated-fade" *ngIf="activeChips.length > 0">
+    <span class="active-chips-label">Active Filters:</span>
+    <div class="chips-list">
+      <span class="active-chip" *ngFor="let chip of activeChips">
+        <b class="chip-label-tag">{{ chip.label }}:</b> {{ chip.value }}
+        <button type="button" class="chip-remove-btn" (click)="removeChip(chip.key)" title="Remove this filter">✕</button>
+      </span>
+      <button type="button" class="clear-all-chip-btn" (click)="onReset()">Clear All</button>
+    </div>
+  </div>
+
 </div>
+

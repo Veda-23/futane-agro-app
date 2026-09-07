@@ -155,6 +155,28 @@ public class Employee extends BaseEntity {
         this.aadhaarCardPath = aadhaarCardPath;
     }
 
+    @Column(name = "department", length = 100)
+    private String department;
+
+    @Column(name = "team_id", length = 36)
+    private String teamId;
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    public String getTeamId() {
+        return teamId;
+    }
+
+    public void setTeamId(String teamId) {
+        this.teamId = teamId;
+    }
+
     public String getBankPassbookPath() {
         return bankPassbookPath;
     }

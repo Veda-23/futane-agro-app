@@ -4,6 +4,8 @@ import com.futaneagro.entity.*;
 import com.futaneagro.repository.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -74,20 +76,33 @@ public class AppStartupRunner implements CommandLineRunner {
     private BankTransactionRepository bankTransactionRepo;
 
     @Autowired
+    private com.futaneagro.service.DataSeederService dataSeederService;
+
+    @Autowired
     private Environment env;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    private static final Logger log = LoggerFactory.getLogger(AppStartupRunner.class);
+
     @Override
     public void run(String... args) throws Exception {
-        System.out.println("🚀 AppStartupRunner: Initializing Futane Agro bootstrap processes for 18 tables...");
+
+        log.info("🚀 AppStartupRunner: Initializing Futane Agro bootstrap processes for 18 tables...");
 
         // 1. Generate sample Excel file if it doesn't exist
         String excelFilePath = "futane_agro_data.xlsx";
         File excelFile = new File(excelFilePath);
         if (!excelFile.exists()) {
-            System.out.println("Generating sample Excel spreadsheet at: " + excelFile.getAbsolutePath());
+            log.info("Generating sample Excel spreadsheet at: {}", excelFile.getAbsolutePath());
             generateSampleExcel(excelFile);
+        }
+
+        // 2. Trigger comprehensive enterprise data seeder
+        try {
+            dataSeederService.seedAllComprehensiveData();
+        } catch (Exception ex) {
+            log.warn("Non-fatal data seeding warning: type={} message={}", ex.getClass().getSimpleName(), ex.getMessage());
         }
 
         // 2. Conditional Users Seeding based on Profile
@@ -104,50 +119,146 @@ public class AppStartupRunner implements CommandLineRunner {
 
         if (userRepo.count() == 0) {
             if (isUat) {
-                User superAdmin = new User("SUPER_ADMIN", passwordEncoder.encode("superadmin123"), "SUPER_ADMIN", "Super Admin");
-                superAdmin.setEmail("vedantmehare25@gmail.com");
+                User superAdmin = new User("SUPER_ADMIN", passwordEncoder.encode("superadmin123"), "SUPER_ADMIN", "Super Administrator");
+                superAdmin.setEmail("admin@futaneagro.com");
+                superAdmin.setTeamId("ADMIN");
                 userRepo.save(superAdmin);
 
-                User uatAdmin = new User("UAT_ADMIN", passwordEncoder.encode("admin123"), "ADMIN", "UAT Admin User");
-                uatAdmin.setEmail("vedantmehare25@gmail.com");
+                User uatAdmin = new User("UAT_ADMIN", passwordEncoder.encode("admin123"), "ADMIN", "Rajesh Patil");
+                uatAdmin.setEmail("rajesh.patil@futaneagro.com");
+                uatAdmin.setTeamId("MANUFACTURING");
                 userRepo.save(uatAdmin);
 
-                User admin = new User("ADMIN", passwordEncoder.encode("admin123"), "ADMIN", "Admin User");
-                admin.setEmail("vedantmehare25@gmail.com");
+                User admin = new User("ADMIN", passwordEncoder.encode("admin123"), "ADMIN", "Neha Sharma");
+                admin.setEmail("neha.sharma@futaneagro.com");
+                admin.setTeamId("HR");
                 userRepo.save(admin);
 
-                User accountant = new User("ACCOUNTANT", passwordEncoder.encode("accountant123"), "ACCOUNTANT", "Accountant User");
-                accountant.setEmail("vedantmehare25@gmail.com");
+                User manager = new User("MANAGER", passwordEncoder.encode("manager123"), "MANAGER", "Sanjay Deshmukh");
+                manager.setEmail("sanjay.d@futaneagro.com");
+                manager.setTeamId("MANUFACTURING");
+                userRepo.save(manager);
+
+                User accountant = new User("ACCOUNTANT", passwordEncoder.encode("accountant123"), "ACCOUNTANT", "Amit Kulkarni");
+                accountant.setEmail("amit.kulkarni@futaneagro.com");
+                accountant.setTeamId("FINANCE");
                 userRepo.save(accountant);
 
-                User uatOperator = new User("UAT_OPERATOR", passwordEncoder.encode("operator123"), "OPERATOR", "UAT Operator User");
-                uatOperator.setEmail("vedantmehare25@gmail.com");
+                User uatOperator = new User("UAT_OPERATOR", passwordEncoder.encode("operator123"), "OPERATOR", "Suresh Shinde");
+                uatOperator.setEmail("suresh.shinde@futaneagro.com");
+                uatOperator.setTeamId("SUPPLY_CHAIN");
                 userRepo.save(uatOperator);
 
-                User operator = new User("OPERATOR", passwordEncoder.encode("operator123"), "OPERATOR", "Operator User");
-                operator.setEmail("vedantmehare25@gmail.com");
+                User operator = new User("OPERATOR", passwordEncoder.encode("operator123"), "OPERATOR", "Sunil Deshmukh");
+                operator.setEmail("sunil.deshmukh@futaneagro.com");
+                operator.setTeamId("MANUFACTURING");
                 userRepo.save(operator);
 
-                User viewer = new User("VIEWER", passwordEncoder.encode("viewer123"), "VIEWER", "Viewer User");
-                viewer.setEmail("vedantmehare25@gmail.com");
+                User viewer = new User("VIEWER", passwordEncoder.encode("viewer123"), "VIEWER", "Pooja Verma");
+                viewer.setEmail("pooja.verma@futaneagro.com");
+                viewer.setTeamId("COMMERCE");
                 userRepo.save(viewer);
 
-                System.out.println("✓ UAT Users seeded with BCrypt-encoded passwords.");
+                System.out.println("✓ UAT Users seeded with distinct email accounts and BCrypt passwords.");
             } else if (isProd) {
-                userRepo.save(new User("SUPER_ADMIN",  passwordEncoder.encode("superadmin123"), "SUPER_ADMIN", "Super Admin"));
-                userRepo.save(new User("ADMIN",        passwordEncoder.encode("admin123"),      "ADMIN",       "Admin User"));
-                userRepo.save(new User("MANAGER",      passwordEncoder.encode("manager123"),    "MANAGER",     "Manager User"));
-                userRepo.save(new User("ACCOUNTANT",   passwordEncoder.encode("accountant123"), "ACCOUNTANT",  "Accountant User"));
-                userRepo.save(new User("OPERATOR",     passwordEncoder.encode("operator123"),   "OPERATOR",    "Operator User"));
-                userRepo.save(new User("VIEWER",       passwordEncoder.encode("viewer123"),     "VIEWER",      "Viewer User"));
-                System.out.println("✓ Production Users seeded with BCrypt-encoded passwords.");
+                User sa = new User("SUPER_ADMIN",  passwordEncoder.encode("superadmin123"), "SUPER_ADMIN", "Vedant Mehare");
+                sa.setEmail("vedant@futaneagro.com");
+                sa.setTeamId("ADMIN");
+                userRepo.save(sa);
+
+                User adm = new User("ADMIN",        passwordEncoder.encode("admin123"),      "ADMIN",       "Rajesh Patil");
+                adm.setEmail("rajesh.patil@futaneagro.com");
+                adm.setTeamId("MANUFACTURING");
+                userRepo.save(adm);
+
+                User mgr = new User("MANAGER",      passwordEncoder.encode("manager123"),    "MANAGER",     "Sanjay Deshmukh");
+                mgr.setEmail("sanjay.d@futaneagro.com");
+                mgr.setTeamId("MANUFACTURING");
+                userRepo.save(mgr);
+
+                User acc = new User("ACCOUNTANT",   passwordEncoder.encode("accountant123"), "ACCOUNTANT",  "Amit Kulkarni");
+                acc.setEmail("amit.kulkarni@futaneagro.com");
+                acc.setTeamId("FINANCE");
+                userRepo.save(acc);
+
+                User op = new User("OPERATOR",     passwordEncoder.encode("operator123"),   "OPERATOR",    "Sunil Deshmukh");
+                op.setEmail("sunil.deshmukh@futaneagro.com");
+                op.setTeamId("MANUFACTURING");
+                userRepo.save(op);
+
+                User vw = new User("VIEWER",       passwordEncoder.encode("viewer123"),     "VIEWER",      "Pooja Verma");
+                vw.setEmail("pooja.verma@futaneagro.com");
+                vw.setTeamId("COMMERCE");
+                userRepo.save(vw);
+                System.out.println("✓ Production Users seeded with distinct email accounts and BCrypt passwords.");
             } else {
-                userRepo.save(new User("admin",        passwordEncoder.encode("admin123"),       "ADMIN",       "Vedant Futane"));
-                userRepo.save(new User("manager",      passwordEncoder.encode("manager123"),     "MANAGER",     "Sanjay Manager"));
-                userRepo.save(new User("accountant",   passwordEncoder.encode("accountant123"),  "ACCOUNTANT",  "Pankaj Accountant"));
-                userRepo.save(new User("operator",     passwordEncoder.encode("operator123"),    "OPERATOR",    "Anil Operator"));
+                User adm = new User("admin",        passwordEncoder.encode("admin123"),       "ADMIN",       "Vedant Mehare");
+                adm.setEmail("vedant@futaneagro.com");
+                adm.setTeamId("ADMIN");
+                userRepo.save(adm);
+
+                User mgr = new User("manager",      passwordEncoder.encode("manager123"),     "MANAGER",     "Sanjay Deshmukh");
+                mgr.setEmail("sanjay.d@futaneagro.com");
+                mgr.setTeamId("MANUFACTURING");
+                userRepo.save(mgr);
+
+                User acc = new User("accountant",   passwordEncoder.encode("accountant123"),  "ACCOUNTANT",  "Amit Kulkarni");
+                acc.setEmail("amit.kulkarni@futaneagro.com");
+                acc.setTeamId("FINANCE");
+                userRepo.save(acc);
+
+                User op = new User("operator",     passwordEncoder.encode("operator123"),    "OPERATOR",    "Sunil Deshmukh");
+                op.setEmail("sunil.deshmukh@futaneagro.com");
+                op.setTeamId("MANUFACTURING");
+                userRepo.save(op);
                 System.out.println("✓ Default dev users seeded with BCrypt-encoded passwords.");
             }
+        } else {
+            // Clean legacy duplicate emails on startup
+            userRepo.findAll().forEach(u -> {
+                String un = u.getUsername() != null ? u.getUsername().toUpperCase() : "";
+                if ("SUPER_ADMIN".equals(un) && (u.getEmail() == null || u.getEmail().contains("vedantmehare25"))) {
+                    u.setName("Vedant Mehare");
+                    u.setEmail("vedant@futaneagro.com");
+                    u.setTeamId("ADMIN");
+                    userRepo.save(u);
+                } else if ("ADMIN".equals(un) && (u.getEmail() == null || u.getEmail().contains("vedantmehare25"))) {
+                    u.setName("Neha Sharma");
+                    u.setEmail("neha.sharma@futaneagro.com");
+                    u.setTeamId("HR");
+                    userRepo.save(u);
+                } else if ("UAT_ADMIN".equals(un) && (u.getEmail() == null || u.getEmail().contains("vedantmehare25"))) {
+                    u.setName("Rajesh Patil");
+                    u.setEmail("rajesh.patil@futaneagro.com");
+                    u.setTeamId("MANUFACTURING");
+                    userRepo.save(u);
+                } else if ("MANAGER".equals(un) && (u.getEmail() == null || u.getEmail().contains("vedantmehare25"))) {
+                    u.setName("Sanjay Deshmukh");
+                    u.setEmail("sanjay.d@futaneagro.com");
+                    u.setTeamId("MANUFACTURING");
+                    userRepo.save(u);
+                } else if ("ACCOUNTANT".equals(un) && (u.getEmail() == null || u.getEmail().contains("vedantmehare25"))) {
+                    u.setName("Amit Kulkarni");
+                    u.setEmail("amit.kulkarni@futaneagro.com");
+                    u.setTeamId("FINANCE");
+                    userRepo.save(u);
+                } else if ("UAT_OPERATOR".equals(un) && (u.getEmail() == null || u.getEmail().contains("vedantmehare25"))) {
+                    u.setName("Suresh Shinde");
+                    u.setEmail("suresh.shinde@futaneagro.com");
+                    u.setTeamId("SUPPLY_CHAIN");
+                    userRepo.save(u);
+                } else if ("OPERATOR".equals(un) && (u.getEmail() == null || u.getEmail().contains("vedantmehare25"))) {
+                    u.setName("Sunil Deshmukh");
+                    u.setEmail("sunil.deshmukh@futaneagro.com");
+                    u.setTeamId("MANUFACTURING");
+                    userRepo.save(u);
+                } else if ("VIEWER".equals(un) && (u.getEmail() == null || u.getEmail().contains("vedantmehare25"))) {
+                    u.setName("Pooja Verma");
+                    u.setEmail("pooja.verma@futaneagro.com");
+                    u.setTeamId("COMMERCE");
+                    userRepo.save(u);
+                }
+            });
         }
 
         // 3. Party
@@ -478,8 +589,7 @@ public class AppStartupRunner implements CommandLineRunner {
                 System.out.println("Sample Excel workbook generated successfully.");
             }
         } catch (Exception e) {
-            System.err.println("Error generating sample Excel file: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Error generating sample Excel file: type={} message={}", e.getClass().getSimpleName(), e.getMessage(), e);
         }
     }
 }

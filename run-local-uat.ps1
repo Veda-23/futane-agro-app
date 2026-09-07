@@ -33,7 +33,7 @@ if (-not (Test-Path $JAR)) {
 
 # ---- Start Backend ----
 Write-Host "[1/2] Starting UAT Backend (port 8081)..." -ForegroundColor Green
-$backendArgs = "-jar `"$JAR`" --spring.profiles.active=uat --server.port=8081 --spring.liquibase.enabled=false --spring.jpa.hibernate.ddl-auto=none"
+$backendArgs = "-jar `"$JAR`" --spring.profiles.active=uat --server.port=8081 --spring.liquibase.enabled=false"
 $backend = Start-Process "$JAVA17" -ArgumentList $backendArgs -PassThru -WindowStyle Minimized
 Write-Host "      Backend PID: $($backend.Id)" -ForegroundColor Gray
 Write-Host "      Waiting 20s for Spring Boot startup..." -ForegroundColor Gray
@@ -48,7 +48,7 @@ Write-Host "========================================" -ForegroundColor Green
 Write-Host "  UAT IS RUNNING!" -ForegroundColor Green
 Write-Host "  Frontend: http://localhost:4201" -ForegroundColor Yellow  
 Write-Host "  Backend:  http://localhost:8081" -ForegroundColor Yellow
-Write-Host "  Login:    admin / admin123" -ForegroundColor Yellow
+Write-Host "  Login:    SUPER_ADMIN / superadmin123" -ForegroundColor Yellow
 Write-Host "========================================" -ForegroundColor Green
 Write-Host "Close this window or press Ctrl+C to stop."
 try { while ($true) { Start-Sleep 5 } }

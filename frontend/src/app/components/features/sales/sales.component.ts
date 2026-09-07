@@ -9,12 +9,14 @@ import Swal from 'sweetalert2';
 
 declare var Razorpay: any;
 
+import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
+import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-sales',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, DataTableComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, DataTableComponent, ResizableTableDirective, IndianDatePipe],
   templateUrl: './sales.component.html',
   styleUrls: ['./sales.component.css']
 })
@@ -96,22 +98,41 @@ export class SalesComponent implements OnInit {
       this.notificationService.warning('Invalid Input', "Please fill required valid fields");
       return;
     }
-    this.apiService.createSale(this.salesForm).subscribe({
-      next: (res) => {
-        if (res) this.salesList.unshift(res);
-        this.loadData();
-        this.notificationService.success('Data Added', 'Data added successfully');
-        this.logAudit("Added new sale record");
-        this.salesForm = { date: '', id: '', crateType: 'Apple Crate', crateMaterial: 'Plastic', quantity: 0, rate: 0, totalAmount: 0, paid: 0, remaining: 0 };
-      },
-      error: (err) => {
-        if (err.status === 409) {
-          this.notificationService.error('Conflict', err.error?.message || "A sale with this unique info already exists.");
-        } else {
-          this.notificationService.error('Error', "Failed to save sale: " + (err.error?.message || err.message));
+
+    const editId = (this.salesForm as any)._editId;
+
+    if (editId) {
+      // UPDATE existing sale
+      const party = this.parties.find(p => p.id === parseInt(this.salesForm.id) || String(p.id) === String(this.salesForm.id));
+      const payload = { ...this.salesForm, party: party || { id: this.salesForm.id } };
+      this.apiService.updateSale(editId, payload).subscribe({
+        next: () => {
+          this.loadData();
+          this.notificationService.success('Updated', 'Sale record updated successfully');
+          this.logAudit('Updated sale record ID: ' + editId);
+          this.salesForm = { date: '', id: '', crateType: 'Apple Crate', crateMaterial: 'Plastic', quantity: 0, rate: 0, totalAmount: 0, paid: 0, remaining: 0 };
+        },
+        error: (err) => this.notificationService.error('Error', 'Failed to update sale: ' + (err.error?.message || err.message))
+      });
+    } else {
+      // CREATE new sale
+      this.apiService.createSale(this.salesForm).subscribe({
+        next: (res) => {
+          if (res) this.salesList.unshift(res);
+          this.loadData();
+          this.notificationService.success('Data Added', 'Data added successfully');
+          this.logAudit("Added new sale record");
+          this.salesForm = { date: '', id: '', crateType: 'Apple Crate', crateMaterial: 'Plastic', quantity: 0, rate: 0, totalAmount: 0, paid: 0, remaining: 0 };
+        },
+        error: (err) => {
+          if (err.status === 409) {
+            this.notificationService.error('Conflict', err.error?.message || "A sale with this unique info already exists.");
+          } else {
+            this.notificationService.error('Error', "Failed to save sale: " + (err.error?.message || err.message));
+          }
         }
-      }
-    });
+      });
+    }
   }
 
   deleteSale(id: string) {
@@ -131,6 +152,26 @@ export class SalesComponent implements OnInit {
         });
       }
     });
+  }
+
+  editSale(sale: any) {
+    this.salesForm = {
+      ...this.salesForm,
+      id: sale.party?.id || '',
+      date: sale.date || '',
+      crateType: sale.crateType || 'Apple Crate',
+      crateMaterial: sale.crateMaterial || 'Plastic',
+      quantity: sale.quantity || 0,
+      rate: sale.rate || 0,
+      totalAmount: sale.totalAmount || 0,
+      paid: sale.paid || 0,
+      remaining: sale.remaining || 0
+    };
+    // Store the sale's own record id separately for the PUT call
+    (this.salesForm as any)._editId = sale.id;
+    this.notificationService.info('Editing Sale', `Loaded sale for "${sale.party?.partyName || 'party'}" into form.`);
+    const formEl = document.querySelector('.form-card');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
   }
 
   payWithRazorpay(sale: any) {
@@ -347,6 +388,10 @@ export class SalesComponent implements OnInit {
   private resolvePath(obj: any, path: string): any {
     if (!path) return '';
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
+  }
+
+  trackBySaleId(index: number, item: any): any {
+    return item?.id ?? item?.saleId ?? index;
   }
 }
 

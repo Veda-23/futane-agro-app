@@ -3,6 +3,8 @@ package com.futaneagro.service;
 import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -10,6 +12,8 @@ import javax.annotation.PostConstruct;
 
 @Service
 public class SmsService {
+
+    private static final Logger log = LoggerFactory.getLogger(SmsService.class);
 
     @Value("${twilio.account.sid}")
     private String accountSid;
@@ -25,23 +29,25 @@ public class SmsService {
         if (accountSid != null && !accountSid.isEmpty() && !accountSid.equals("your_twilio_sid")) {
             try {
                 Twilio.init(accountSid, authToken);
-                System.out.println("✅ Twilio initialized successfully.");
+                log.info("Twilio SMS client initialized successfully.");
             } catch (Exception e) {
-                System.err.println("❌ Failed to initialize Twilio: " + e.getMessage());
+                // SECURITY: do not log authToken or accountSid — log only the error type
+                log.error("Failed to initialize Twilio client: type={}", e.getClass().getSimpleName());
             }
         } else {
-            System.out.println("⚠️ Twilio credentials not provided. SMS delivery is disabled.");
+            log.warn("Twilio credentials not provided. SMS delivery is disabled.");
         }
     }
 
     public void sendOtpSms(String toMobileNumber, String otp) {
         if (toMobileNumber == null || toMobileNumber.isEmpty()) {
-            System.err.println("Cannot send OTP SMS: User mobile number is empty");
+            // SECURITY: do not log the mobile number
+            log.warn("sendOtpSms skipped: recipient mobile number is empty");
             return;
         }
 
         if (accountSid == null || accountSid.isEmpty() || accountSid.equals("your_twilio_sid")) {
-            System.out.println("⚠️ Twilio is disabled. Would have sent OTP " + otp + " to " + toMobileNumber);
+            log.debug("Twilio is disabled. OTP SMS delivery skipped.");
             return;
         }
 
@@ -57,16 +63,17 @@ public class SmsService {
                     "Your Futane Agro ERP Login OTP is: " + otp + ". Valid for 15 minutes. Do not share this code."
             ).create();
 
-            System.out.println("✅ Sent OTP SMS to: " + toMobileNumber + " | Message SID: " + message.getSid());
+            // SECURITY: Log message SID for audit trail; do not log OTP or full mobile number
+            log.info("OTP SMS sent successfully. SID={}", message.getSid());
 
         } catch (Exception e) {
-            System.err.println("❌ Failed to send OTP SMS to " + toMobileNumber + ": " + e.getMessage());
+            log.error("Failed to send OTP SMS: type={} message={}", e.getClass().getSimpleName(), e.getMessage());
         }
     }
 
     public void sendWhatsAppPaymentLink(String toMobileNumber, String message) {
         if (accountSid == null || accountSid.isEmpty() || accountSid.equals("your_twilio_sid")) {
-            System.out.println("⚠️ Twilio disabled. WhatsApp message would have been:\n" + message);
+            log.debug("Twilio disabled. WhatsApp message delivery skipped.");
             return;
         }
         if (toMobileNumber == null || toMobileNumber.isEmpty()) return;
@@ -74,9 +81,9 @@ public class SmsService {
             String whatsappTo = "whatsapp:" + (toMobileNumber.startsWith("+") ? toMobileNumber : "+91" + toMobileNumber);
             String whatsappFrom = "whatsapp:" + twilioPhoneNumber;
             Message.creator(new PhoneNumber(whatsappTo), new PhoneNumber(whatsappFrom), message).create();
-            System.out.println("✅ WhatsApp payment link sent to: " + whatsappTo);
+            log.info("WhatsApp payment link sent successfully.");
         } catch (Exception e) {
-            System.err.println("❌ Failed to send WhatsApp message: " + e.getMessage());
+            log.error("Failed to send WhatsApp message: type={} message={}", e.getClass().getSimpleName(), e.getMessage());
         }
     }
 }

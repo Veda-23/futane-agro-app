@@ -97,13 +97,67 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-websocket</artifactId>
     </dependency>
+    <!-- Caching & High Performance In-Memory Cache -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-cache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+    </dependency>
 
   </dependencies>
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <parameters>true</parameters>
+          <compilerArgs>
+            <arg>-parameters</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+
+      <!-- SECURITY: OWASP Dependency-Check — CVE scanning for all dependencies -->
+      <!-- Run: mvn dependency-check:check -->
+      <plugin>
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
+        <version>9.2.0</version>
+        <configuration>
+          <failBuildOnCVSS>7</failBuildOnCVSS>
+          <suppressionFile>owasp-suppressions.xml</suppressionFile>
+          <format>HTML</format>
+          <outputDirectory>${project.build.directory}/dependency-check-report</outputDirectory>
+        </configuration>
+      </plugin>
+
+      <!-- SECURITY: Maven Enforcer — require minimum Java version -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.4.1</version>
+        <executions>
+          <execution>
+            <id>enforce-java</id>
+            <goals><goal>enforce</goal></goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion>
+                  <version>[11,)</version>
+                  <message>This project requires Java 11 or higher</message>
+                </requireJavaVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

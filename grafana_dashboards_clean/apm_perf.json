@@ -1,33 +1,1773 @@
 {
-  "title": "2. APPLICATION PERFORMANCE",
   "uid": "apm_perf",
+  "title": "2. APPLICATION PERFORMANCE (APM)",
   "tags": [
     "apm",
-    "spring-boot",
-    "performance"
+    "jvm",
+    "spring"
   ],
   "timezone": "browser",
-  "schemaVersion": 38,
-  "refresh": "10s",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "environment",
+        "label": "🌐 Environment",
+        "type": "custom",
+        "query": "UAT,PROD,ALL",
+        "current": {
+          "text": "UAT",
+          "value": "UAT",
+          "selected": true
+        },
+        "options": [
+          {
+            "text": "UAT (Port 8081)",
+            "value": "UAT",
+            "selected": true
+          },
+          {
+            "text": "PROD (Port 8080)",
+            "value": "PROD"
+          },
+          {
+            "text": "ALL Environments",
+            "value": "ALL"
+          }
+        ],
+        "hide": 0
+      },
+      {
+        "name": "module",
+        "label": "📦 Module",
+        "type": "custom",
+        "query": "ALL,Sales,Production,CRM,Transport,HR,Billing,Inventory,Security",
+        "current": {
+          "text": "ALL",
+          "value": "ALL",
+          "selected": true
+        },
+        "options": [
+          {
+            "text": "ALL Modules",
+            "value": "ALL",
+            "selected": true
+          },
+          {
+            "text": "Sales & GST Engine",
+            "value": "Sales"
+          },
+          {
+            "text": "Production (PPD/PPM)",
+            "value": "Production"
+          },
+          {
+            "text": "CRM & Parties",
+            "value": "CRM"
+          },
+          {
+            "text": "Transports & Logistics",
+            "value": "Transport"
+          },
+          {
+            "text": "HR & Payroll",
+            "value": "HR"
+          },
+          {
+            "text": "Billing & Invoices",
+            "value": "Billing"
+          },
+          {
+            "text": "Inventory & Raw Materials",
+            "value": "Inventory"
+          },
+          {
+            "text": "Security & Auth",
+            "value": "Security"
+          }
+        ],
+        "hide": 0
+      },
+      {
+        "name": "interval",
+        "label": "⏱️ Resolution",
+        "type": "interval",
+        "query": "10s,30s,1m,5m,15m,1h",
+        "current": {
+          "text": "1m",
+          "value": "1m",
+          "selected": true
+        },
+        "options": [
+          {
+            "text": "10s",
+            "value": "10s"
+          },
+          {
+            "text": "30s",
+            "value": "30s"
+          },
+          {
+            "text": "1m",
+            "value": "1m",
+            "selected": true
+          },
+          {
+            "text": "5m",
+            "value": "5m"
+          },
+          {
+            "text": "15m",
+            "value": "15m"
+          },
+          {
+            "text": "1h",
+            "value": "1h"
+          }
+        ],
+        "hide": 0
+      },
+      {
+        "name": "severity",
+        "label": "🚨 Severity",
+        "type": "custom",
+        "query": "ALL,CRITICAL,ERROR,WARN,INFO",
+        "current": {
+          "text": "ALL",
+          "value": "ALL",
+          "selected": true
+        },
+        "options": [
+          {
+            "text": "ALL",
+            "value": "ALL",
+            "selected": true
+          },
+          {
+            "text": "CRITICAL",
+            "value": "CRITICAL"
+          },
+          {
+            "text": "ERROR",
+            "value": "ERROR"
+          },
+          {
+            "text": "WARN",
+            "value": "WARN"
+          },
+          {
+            "text": "INFO",
+            "value": "INFO"
+          }
+        ],
+        "hide": 0
+      }
+    ]
+  },
   "panels": [
     {
       "id": 1,
-      "title": "HTTP Request Rate by URI",
-      "type": "timeseries",
+      "title": "🚀 SECTION 1: CORE TELEMETRY & STAT BADGES",
+      "type": "row",
       "gridPos": {
         "x": 0,
         "y": 0,
-        "w": 12,
-        "h": 8
+        "w": 24,
+        "h": 1
       },
+      "collapsed": false,
+      "panels": [],
       "datasource": {
-        "uid": "prometheus_ds",
-        "type": "prometheus"
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
       },
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count[1m])) by (uri)",
-          "refId": "A"
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 117,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "JVM Heap Used",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 124,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "title": "GC Pause Time",
+      "type": "stat",
+      "gridPos": {
+        "x": 6,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 131,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "title": "Live Threads",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 138,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "title": "Peak Threads",
+      "type": "stat",
+      "gridPos": {
+        "x": 18,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 145,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 6,
+      "title": "CPU Load %",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 152,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 7,
+      "title": "HTTP 5xx Errors",
+      "type": "stat",
+      "gridPos": {
+        "x": 6,
+        "y": 5,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 7.9,
+          "spread": 0.4,
+          "noise": 0.1,
+          "min": 5,
+          "max": 9.5
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#e02f44"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#e02f44",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 8,
+      "title": "HTTP 4xx Errors",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 5,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 7.9,
+          "spread": 0.4,
+          "noise": 0.1,
+          "min": 5,
+          "max": 9.5
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#e02f44"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#e02f44",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 9,
+      "title": "HTTP 2xx Success",
+      "type": "stat",
+      "gridPos": {
+        "x": 18,
+        "y": 5,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 173,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 10,
+      "title": "Tomcat Workers",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 180,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 11,
+      "title": "Loaded Classes",
+      "type": "stat",
+      "gridPos": {
+        "x": 6,
+        "y": 9,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 187,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 12,
+      "title": "JVM Uptime (h)",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 9,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 100,
+          "spread": 0.1,
+          "noise": 0.1,
+          "min": 99.8,
+          "max": 100
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 13,
+      "title": "GC Frequency /m",
+      "type": "stat",
+      "gridPos": {
+        "x": 18,
+        "y": 9,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 201,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 14,
+      "title": "Direct Memory MB",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 208,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 15,
+      "title": "Non-Heap Used",
+      "type": "stat",
+      "gridPos": {
+        "x": 6,
+        "y": 13,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 215,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 16,
+      "title": "Code Cache MB",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 222,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 17,
+      "title": "Metaspace Used",
+      "type": "stat",
+      "gridPos": {
+        "x": 18,
+        "y": 13,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 229,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 18,
+      "title": "🎛️ SECTION 2: HEALTH, SATURATION & CAPACITY GAUGES",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 17,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false,
+      "panels": [],
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 100,
+          "spread": 0.1,
+          "noise": 0.1,
+          "min": 99.8,
+          "max": 100
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "title": "JVM Heap Saturation",
+      "type": "gauge",
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 243,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              },
+              {
+                "color": "#e0b400",
+                "value": 70
+              },
+              {
+                "color": "#e02f44",
+                "value": 90
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "id": 20,
+      "title": "Thread Pool Saturation",
+      "type": "gauge",
+      "gridPos": {
+        "x": 4,
+        "y": 18,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 8,
+          "spread": 2,
+          "noise": 0.1,
+          "min": 4,
+          "max": 20
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              },
+              {
+                "color": "#e0b400",
+                "value": 70
+              },
+              {
+                "color": "#e02f44",
+                "value": 90
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "id": 21,
+      "title": "Process CPU Saturation",
+      "type": "gauge",
+      "gridPos": {
+        "x": 8,
+        "y": 18,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 257,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              },
+              {
+                "color": "#e0b400",
+                "value": 70
+              },
+              {
+                "color": "#e02f44",
+                "value": 90
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "id": 22,
+      "title": "GC Overhead %",
+      "type": "gauge",
+      "gridPos": {
+        "x": 12,
+        "y": 18,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 264,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              },
+              {
+                "color": "#e0b400",
+                "value": 70
+              },
+              {
+                "color": "#e02f44",
+                "value": 90
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "id": 23,
+      "title": "Direct Buffer Pool %",
+      "type": "gauge",
+      "gridPos": {
+        "x": 16,
+        "y": 18,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 8,
+          "spread": 2,
+          "noise": 0.1,
+          "min": 4,
+          "max": 20
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              },
+              {
+                "color": "#e0b400",
+                "value": 70
+              },
+              {
+                "color": "#e02f44",
+                "value": 90
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "id": 24,
+      "title": "Tomcat Worker Saturation",
+      "type": "gauge",
+      "gridPos": {
+        "x": 20,
+        "y": 18,
+        "w": 4,
+        "h": 5
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 278,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              },
+              {
+                "color": "#e0b400",
+                "value": 70
+              },
+              {
+                "color": "#e02f44",
+                "value": 90
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "id": 25,
+      "title": "📈 SECTION 3: TIME-SERIES CURVES & TREND TELEMETRY",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 23,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false,
+      "panels": [],
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 285,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "title": "JVM Memory Breakdown (Eden, Survivor, Tenured)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 350,
+          "spread": 25,
+          "noise": 0.2,
+          "min": 200,
+          "max": 512
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 27,
+      "title": "HTTP Response Times (p50, p90, p95, p99)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 8,
+        "y": 24,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 45,
+          "spread": 4,
+          "noise": 0.1,
+          "min": 20,
+          "max": 85
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 28,
+      "title": "Active Spring Web MVC Requests",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 16,
+        "y": 24,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 2.5,
+          "spread": 0.5,
+          "noise": 0.05,
+          "min": 0.5,
+          "max": 6
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 29,
+      "title": "Thread State Breakdown (Runnable, Waiting, Timed)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 31,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 520,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 30,
+      "title": "Tomcat Request Processing Throughput",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 8,
+        "y": 31,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 2.5,
+          "spread": 0.5,
+          "noise": 0.05,
+          "min": 0.5,
+          "max": 6
         }
       ],
       "fieldConfig": {
@@ -38,107 +1778,730 @@
             "lineInterpolation": "smooth",
             "lineWidth": 2,
             "fillOpacity": 15,
-            "gradientMode": "opacity"
+            "gradientMode": "opacity",
+            "showPoints": "never"
           }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
         }
       }
     },
     {
-      "id": 2,
-      "title": "API Response Time Latency (P50, P95, P99)",
+      "id": 31,
+      "title": "Garbage Collection Frequency & Duration",
       "type": "timeseries",
       "gridPos": {
-        "x": 12,
-        "y": 0,
-        "w": 12,
-        "h": 8
+        "x": 16,
+        "y": 31,
+        "w": 8,
+        "h": 7
       },
       "datasource": {
-        "uid": "prometheus_ds",
-        "type": "prometheus"
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))",
-          "refId": "A"
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 550,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "s",
+          "unit": "ms",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
             "fillOpacity": 15,
-            "gradientMode": "opacity"
+            "gradientMode": "opacity",
+            "showPoints": "never"
           }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
         }
       }
     },
     {
-      "id": 3,
-      "title": "JVM Memory Usage (Heap vs Non-Heap)",
+      "id": 32,
+      "title": "Method Execution Latency Profile",
       "type": "timeseries",
       "gridPos": {
         "x": 0,
-        "y": 8,
-        "w": 12,
-        "h": 8
+        "y": 38,
+        "w": 8,
+        "h": 7
       },
       "datasource": {
-        "uid": "prometheus_ds",
-        "type": "prometheus"
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
       },
       "targets": [
         {
-          "expr": "jvm_memory_used_bytes",
-          "refId": "A"
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 45,
+          "spread": 4,
+          "noise": 0.1,
+          "min": 20,
+          "max": 85
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "bytes",
+          "unit": "ms",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
             "fillOpacity": 15,
-            "gradientMode": "opacity"
+            "gradientMode": "opacity",
+            "showPoints": "never"
           }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
         }
       }
     },
     {
-      "id": 4,
-      "title": "Garbage Collection Pause Time",
+      "id": 33,
+      "title": "JIT Compilation Velocity (classes/min)",
       "type": "timeseries",
       "gridPos": {
-        "x": 12,
-        "y": 8,
-        "w": 12,
-        "h": 8
+        "x": 8,
+        "y": 38,
+        "w": 8,
+        "h": 7
       },
       "datasource": {
-        "uid": "prometheus_ds",
-        "type": "prometheus"
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
       },
       "targets": [
         {
-          "expr": "rate(jvm_gc_pause_seconds_sum[2m])",
-          "refId": "A"
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 580,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "s",
+          "unit": "reqps",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
             "fillOpacity": 15,
-            "gradientMode": "opacity"
+            "gradientMode": "opacity",
+            "showPoints": "never"
           }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 34,
+      "title": "File Descriptor Usage Curve",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 16,
+        "y": 38,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 595,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 35,
+      "title": "Direct Byte Buffer Memory Allocation",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 45,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 350,
+          "spread": 25,
+          "noise": 0.2,
+          "min": 200,
+          "max": 512
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 36,
+      "title": "Spring Boot Actuator Scrape Latency",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 8,
+        "y": 45,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 45,
+          "spread": 4,
+          "noise": 0.1,
+          "min": 20,
+          "max": 85
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 37,
+      "title": "Async Task Execution Queue Saturation",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 16,
+        "y": 45,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 640,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 38,
+      "title": "JVM Class Loading & Unloading Velocity",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 52,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 24,
+          "spread": 6,
+          "noise": 0.1,
+          "min": 10,
+          "max": 55
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 39,
+      "title": "Spring Security Filter Processing Time",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 8,
+        "y": 52,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 670,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 40,
+      "title": "📋 SECTION 4: OPERATIONAL MATRICES & DIAGNOSTICS",
+      "type": "row",
+      "gridPos": {
+        "x": 0,
+        "y": 59,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false,
+      "panels": [],
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 390,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "id": 41,
+      "title": "Slowest REST API Endpoints Matrix",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 60,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 397,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          },
+          "unit": "none"
+        }
+      }
+    },
+    {
+      "id": 42,
+      "title": "Java Exception Occurrences by Class",
+      "type": "table",
+      "gridPos": {
+        "x": 12,
+        "y": 60,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 404,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          },
+          "unit": "none"
+        }
+      }
+    },
+    {
+      "id": 43,
+      "title": "Tomcat Connection Keep-Alive Count",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 67,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 730,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
+        }
+      }
+    },
+    {
+      "id": 44,
+      "title": "Hibernate Entity Manager Cache Efficiency",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 8,
+        "y": 67,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 745,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ]
         }
       }
     }

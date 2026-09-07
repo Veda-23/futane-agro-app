@@ -8,10 +8,13 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
 
+import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
+import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
+
 @Component({
   selector: 'app-transports',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective, ResizableTableDirective, IndianDatePipe],
   templateUrl: './transports.component.html',
   styleUrls: ['./transports.component.css']
 })
@@ -69,6 +72,8 @@ export class TransportsComponent implements OnInit {
     const driver = this.drivers.find(d => d.id === parseInt(this.transportsForm.id));
     if (!driver) return;
 
+    const editId = (this.transportsForm as any)._editId;
+
     const payload = {
       date: this.transportsForm.date,
       truckNumber: this.transportsForm.truckNumber,
@@ -79,16 +84,44 @@ export class TransportsComponent implements OnInit {
       driverLicensePath: this.transportsForm.driverLicensePath || ''
     };
 
-    this.apiService.createTransport(payload).subscribe({
-      next: (res) => {
-        if (res) this.transportsList.unshift(res);
-        this.loadData();
-        this.notificationService.success('Data Added', 'Transport rental record added successfully');
-        this.logAudit("Logged transport rental for truck: " + this.transportsForm.truckNumber);
-        this.transportsForm = { date: '', truckNumber: '', id: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
-      },
-      error: (err) => this.notificationService.error('Error', "Failed to save transport: " + (err.error?.message || err.message))
-    });
+    if (editId) {
+      this.apiService.updateTransport(editId, payload).subscribe({
+        next: () => {
+          this.loadData();
+          this.notificationService.success('Updated', 'Transport record updated successfully');
+          this.logAudit('Updated transport record ID: ' + editId);
+          this.transportsForm = { date: '', truckNumber: '', id: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
+        },
+        error: (err) => this.notificationService.error('Error', 'Failed to update transport: ' + (err.error?.message || err.message))
+      });
+    } else {
+      this.apiService.createTransport(payload).subscribe({
+        next: (res) => {
+          if (res) this.transportsList.unshift(res);
+          this.loadData();
+          this.notificationService.success('Data Added', 'Transport rental record added successfully');
+          this.logAudit("Logged transport rental for truck: " + this.transportsForm.truckNumber);
+          this.transportsForm = { date: '', truckNumber: '', id: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
+        },
+        error: (err) => this.notificationService.error('Error', "Failed to save transport: " + (err.error?.message || err.message))
+      });
+    }
+  }
+
+  editTransport(tr: any) {
+    this.transportsForm = {
+      date: tr.date || '',
+      truckNumber: tr.truckNumber || '',
+      id: tr.driver?.id || '',
+      rent: tr.rent || 0,
+      advance: tr.advance || 0,
+      truckPhotoPath: tr.truckPhotoPath || '',
+      driverLicensePath: tr.driverLicensePath || ''
+    };
+    (this.transportsForm as any)._editId = tr.id;
+    this.notificationService.info('Edit Mode', `Loaded transport record for truck ${tr.truckNumber} for editing.`);
+    const formEl = document.querySelector('.form-card');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
   }
 
   deleteTransport(id: string) {
@@ -163,5 +196,9 @@ export class TransportsComponent implements OnInit {
   private resolvePath(obj: any, path: string): any {
     if (!path) return '';
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
+  }
+
+  trackById(index: number, item: any): any {
+    return item?.id ?? item?.transportId ?? index;
   }
 }

@@ -1,143 +1,217 @@
-<header class="app-header" role="banner">
-
-  <!-- Left: Menu + Brand + Page Title -->
+<header class="app-header">
+  
+  <!-- Left Section: Navigation Toggle, Breadcrumb & Live Telemetry -->
   <div class="header-left">
-    <button class="menu-toggle" (click)="toggleSidebar()" aria-label="Toggle sidebar" id="sidebar-toggle-btn">
+    <button class="mobile-toggle-btn" (click)="toggleSidebar()" title="Toggle Navigation Drawer" aria-label="Toggle navigation">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
       </svg>
     </button>
 
-    <div class="header-brand">
-      <div class="header-logo" style="background: rgba(255,255,255,0.03); border-radius: 8px; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid var(--border-color); padding: 4px; margin-right: 8px;">
-        <img src="assets/logo.svg" alt="Futane Agro Logo" style="width: 100%; height: 100%; object-fit: contain;">
-      </div>
-      <span class="header-brand-name" style="color: #D97706 !important;">Futane Agro ERP</span>
-      <span *ngIf="isUat" style="background: rgba(245, 158, 11, 0.25); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.5); padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; margin-left: 8px; letter-spacing: 0.5px;">UAT (8081)</span>
-      <span *ngIf="isProd" style="background: rgba(16, 185, 129, 0.25); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.5); padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; margin-left: 8px; letter-spacing: 0.5px;">PROD (8080)</span>
+    <!-- Contextual Breadcrumb -->
+    <div class="header-breadcrumb">
+      <span class="breadcrumb-root">ERP</span>
+      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-current">{{ getFormattedTabTitle(activeTab) }}</span>
     </div>
 
-    <div class="header-divider"></div>
-
-    <div class="header-page-title">
-      <h1 class="page-heading">{{ activeTab | titlecase }}</h1>
-    </div>
-
-    <div class="header-datetime">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
-      </svg>
-      <span>{{ currentDateTimeString }}</span>
+    <!-- Live Telemetry Badges -->
+    <div class="header-telemetry-pills">
+      <span class="telemetry-pill env-pill" [class.env-uat]="isUat" [class.env-prod]="isProd">
+        <span class="pill-dot"></span>
+        {{ isUat ? 'UAT 8081' : 'PROD 8080' }}
+      </span>
+      <span class="telemetry-pill time-pill" title="Indian Standard Time (IST)">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        {{ currentDate }} • {{ currentTime }}
+      </span>
     </div>
   </div>
 
-  <!-- Right: Global Search + Dev config + Notification + Lang + User + Logout -->
-  <div class="header-right">
+  <!-- Center Section: Omnichannel Command Search (⌘K / Ctrl+K) -->
+  <div class="header-center">
+    <div class="omnisearch-box">
+      <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input 
+        #searchInput
+        type="text" 
+        class="omnisearch-input" 
+        placeholder="Quick search modules, parties, dispatches... (⌘K)"
+        [(ngModel)]="globalSearchQuery"
+        (input)="doGlobalSearch()"
+        (focus)="doGlobalSearch()">
+      <kbd class="omnisearch-kbd">⌘K</kbd>
 
-    <!-- Global Search (L5-001) -->
-    <div class="header-search-wrapper" style="position: relative; min-width: 200px; max-width: 260px;">
-      <input type="text" [(ngModel)]="globalSearchQuery" (input)="doGlobalSearch()"
-             placeholder="🔍 Search ERP..."
-             style="width: 100%; padding: 6px 12px; font-size: 12px; border-radius: 20px; border: 1px solid var(--border-glass); background: rgba(0,0,0,0.06); color: var(--text-primary);">
-      
-      <!-- Search Flyout -->
-      <div *ngIf="globalSearchResults.length > 0"
-           style="position: absolute; top: 38px; left: 0; right: 0; background: var(--bg-secondary); border: 1px solid var(--border-glass); border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.25); z-index: 999; overflow: hidden;">
-        <div *ngFor="let res of globalSearchResults" (click)="goToSearchResult(res)"
-             style="padding: 8px 12px; border-bottom: 1px solid var(--border-glass); cursor: pointer; display: flex; justify-content: space-between; align-items: center;"
-             onmouseover="this.style.background='rgba(217, 119, 6, 0.1)'" onmouseout="this.style.background='transparent'">
-          <div>
-            <div style="font-weight: 600; font-size: 12px; color: var(--text-primary);">{{ res.label }}</div>
-            <div style="font-size: 10px; color: var(--text-muted);">{{ res.detail }}</div>
+      <!-- Global Search Results Flyout -->
+      <div class="search-flyout" *ngIf="globalSearchResults.length > 0">
+        <div class="flyout-header">Search Results</div>
+        <div class="flyout-items">
+          <div 
+            *ngFor="let res of globalSearchResults" 
+            class="flyout-item" 
+            (click)="goToSearchResult(res)">
+            <div class="flyout-item-label">{{ res.label }}</div>
+            <div class="flyout-item-meta">
+              <span class="flyout-type-badge">{{ res.type }}</span>
+              <span class="flyout-detail">{{ res.detail }}</span>
+            </div>
           </div>
-          <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(217, 119, 6, 0.2); color: #d97706; font-weight: bold;">{{ res.type }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Section: Quick Utilities & User Profile -->
+  <div class="header-right">
+    
+    <!-- Theme Toggle (Light / Dark) -->
+    <button class="header-icon-btn" (click)="themeService.toggle()" title="Toggle Theme (Light / Dark)" aria-label="Toggle theme">
+      <i class="bi" [ngClass]="themeService.isDark ? 'bi-sun-fill text-warning' : 'bi-moon-stars-fill'"></i>
+    </button>
+
+    <!-- Telemetry & Infrastructure Health Popover -->
+    <div class="telemetry-popover-wrapper" *ngIf="telemetryHealth">
+      <button class="telemetry-health-btn" (click)="toggleAlertDropdown()" title="View System Telemetry & Cluster Health">
+        <span class="pulse-indicator" [ngClass]="telemetryHealth?.allHealthy ? 'pulse-healthy' : 'pulse-warning'"></span>
+        <span class="health-btn-text">System</span>
+      </button>
+
+      <!-- Dropdown -->
+      <div class="telemetry-popover-menu" *ngIf="showAlertDropdown">
+        <div class="popover-title-bar">
+          <span>Infrastructure Telemetry</span>
+          <span class="badge" [ngClass]="telemetryHealth?.allHealthy ? 'badge-success' : 'badge-warning'">
+            {{ telemetryHealth?.allHealthy ? 'All Systems Healthy' : 'Degraded' }}
+          </span>
+        </div>
+        <div class="telemetry-status-grid">
+          <div class="telemetry-item">
+            <span class="service-name"><i class="bi bi-database" style="margin-right: 4px;"></i> MySQL 8.0</span>
+            <span class="service-state" [class.state-up]="telemetryHealth?.mysqlOnline" [class.state-down]="!telemetryHealth?.mysqlOnline">
+              ● {{ telemetryHealth?.mysqlOnline ? 'ONLINE' : 'OFFLINE' }}
+            </span>
+          </div>
+          <div class="telemetry-item">
+            <span class="service-name"><i class="bi bi-graph-up text-primary" style="margin-right: 4px;"></i> Grafana (3000)</span>
+            <span class="service-state" [class.state-up]="telemetryHealth?.grafanaOnline" [class.state-down]="!telemetryHealth?.grafanaOnline">
+              ● {{ telemetryHealth?.grafanaOnline ? ('ONLINE ' + (telemetryHealth?.grafanaVersion || '')) : 'OFFLINE' }}
+            </span>
+          </div>
+          <div class="telemetry-item">
+            <span class="service-name"><i class="bi bi-activity text-warning" style="margin-right: 4px;"></i> Prometheus (9090)</span>
+            <span class="service-state" [class.state-up]="telemetryHealth?.prometheusOnline" [class.state-down]="!telemetryHealth?.prometheusOnline">
+              ● {{ telemetryHealth?.prometheusOnline ? 'ACTIVE (260+ series)' : 'OFFLINE' }}
+            </span>
+          </div>
+          <div class="telemetry-item">
+            <span class="service-name"><i class="bi bi-cpu text-info" style="margin-right: 4px;"></i> Spring Boot</span>
+            <span class="service-state" [class.state-up]="telemetryHealth?.backendOnline" [class.state-down]="!telemetryHealth?.backendOnline">
+              ● {{ telemetryHealth?.backendOnline ? 'ONLINE' : 'OFFLINE' }}
+            </span>
+          </div>
+        </div>
+        <div *ngIf="telemetryHealth?.alerts?.length > 0" class="telemetry-alerts-box" style="padding: 10px 14px; border-top: 1px solid var(--border-color); max-height: 120px; overflow-y: auto;">
+          <div *ngFor="let a of telemetryHealth.alerts" style="font-size: 11px; margin-bottom: 6px;">
+            <strong [style.color]="a.severity === 'CRITICAL' ? '#ef4444' : '#f59e0b'">[{{ a.severity }}] {{ a.name }}:</strong>
+            <div style="color: var(--text-secondary);">{{ a.summary }}</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- API URL (Dev only) -->
-    <div class="dev-config" *ngIf="!isProduction && loggedInUser?.role === 'SUPER_ADMIN'">
-      <span class="dev-label">API</span>
-      <input type="text" [(ngModel)]="customBackendUrl" (change)="saveBackendUrl()" placeholder="Backend URL" class="dev-input">
-    </div>
-
-    <!-- Notification Bell (K-02, K-03) -->
-    <div class="notif-wrapper" style="position: relative;">
-      <button class="icon-btn notif-btn" aria-label="Notifications" id="notif-btn" (click)="toggleNotifDropdown()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-        </svg>
-        <span class="notif-dot" *ngIf="appNotifService.unreadCount > 0"
-              style="position:absolute; top:-2px; right:-2px; background:#ef4444; color:#fff; font-size:9px; font-weight:800; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+    <!-- Notifications Bell -->
+    <div class="notif-wrapper">
+      <button class="header-icon-btn notif-btn" (click)="toggleNotifDropdown()" title="System Alerts & Notifications" aria-label="Notifications">
+        <i class="bi bi-bell-fill"></i>
+        <span class="notif-badge" *ngIf="appNotifService.unreadCount > 0">
           {{ appNotifService.unreadCount > 9 ? '9+' : appNotifService.unreadCount }}
         </span>
       </button>
 
-      <!-- Glassmorphic Notifications Dropdown -->
-      <div class="notif-dropdown" *ngIf="showNotifDropdown" style="width: 360px; max-height: 440px; overflow-y: auto;">
-        <div class="notif-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border-glass);">
-          <span class="notif-title" style="font-weight: 700; font-size: 13px;">
-            🔔 Notifications
-            <span *ngIf="appNotifService.unreadCount > 0" style="background:#ef4444; color:#fff; border-radius:10px; padding:1px 6px; font-size:10px; margin-left:4px;">
-              {{ appNotifService.unreadCount }}
-            </span>
-          </span>
-          <div style="display: flex; gap: 6px;">
-            <button class="notif-mark-read" (click)="appNotifService.markAllRead()" style="font-size: 11px; cursor: pointer; background: none; border: none; color: var(--accent-orange, #d97706);">✓ Read All</button>
-            <button class="notif-mark-read" (click)="appNotifService.clearAll()" style="font-size: 11px; cursor: pointer; background: none; border: none; color: var(--text-muted);">🗑️ Clear</button>
+      <!-- Notifications Dropdown -->
+      <div class="notif-dropdown" *ngIf="showNotifDropdown">
+        <div class="notif-header">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span class="notif-title">Notifications & Alerts</span>
+            <span class="badge badge-warning" *ngIf="appNotifService.unreadCount > 0" style="font-size: 10px;">{{ appNotifService.unreadCount }} new</span>
+          </div>
+          <div class="notif-actions">
+            <button class="notif-action-link" (click)="appNotifService.markAllRead()">Read All</button>
+            <button class="notif-action-link text-danger" (click)="appNotifService.clearAll()">Clear</button>
           </div>
         </div>
         <div class="notif-list">
-          <div class="notif-item" *ngFor="let notif of (appNotifService.notifications$ | async)"
-               [class.unread]="!notif.isRead"
-               (click)="onNotifClick(notif)"
-               style="cursor: pointer; padding: 10px 14px; border-bottom: 1px solid var(--border-glass); display: flex; align-items: flex-start; gap: 8px;">
-            <div class="notif-icon-wrap" style="font-size: 16px; flex-shrink: 0;">
-              <span *ngIf="notif.type === 'warning'">⚠️</span>
-              <span *ngIf="notif.type === 'error'">❌</span>
-              <span *ngIf="notif.type === 'success'">✅</span>
-              <span *ngIf="notif.type === 'info'">ℹ️</span>
+          <div class="notif-card" *ngFor="let notif of (appNotifService.notifications$ | async)" [class.unread]="!notif.isRead" (click)="onNotifClick(notif)">
+            <div class="notif-content">
+              <div class="notif-item-title" style="display: flex; align-items: center; gap: 6px;">
+                <span *ngIf="notif.type === 'error'">🔴</span>
+                <span *ngIf="notif.type === 'warning'">🟡</span>
+                <span *ngIf="notif.type === 'info'">🔵</span>
+                <span *ngIf="notif.type === 'success'">🟢</span>
+                <strong>{{ notif.title }}</strong>
+              </div>
+              <div class="notif-msg">{{ notif.message }}</div>
+              <div class="notif-meta" style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                <span class="notif-time">{{ notif.timestamp | indianDate:true }}</span>
+                <span *ngIf="notif.actionRoute" style="color: var(--primary); font-size: 10px; font-weight: 700;">Open Tab →</span>
+              </div>
             </div>
-            <div class="notif-body" style="flex: 1; min-width: 0;">
-              <div class="notif-item-title" style="font-weight: 600; font-size: 12px;">{{ notif.title }}</div>
-              <div class="notif-item-desc" style="font-size: 11px; color: var(--text-secondary); word-break: break-word;">{{ notif.message }}</div>
-              <div class="notif-item-time" style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">{{ notif.timestamp | indianDate:true }}</div>
-            </div>
-            <button class="notif-clear-btn" (click)="$event.stopPropagation(); appNotifService.remove(notif.id)" aria-label="Dismiss" style="background: none; border: none; color: var(--text-muted); font-size: 14px; cursor: pointer;">&times;</button>
+            <button class="notif-dismiss-btn" (click)="$event.stopPropagation(); appNotifService.remove(notif.id)">&times;</button>
           </div>
-          <div class="notif-empty" *ngIf="(appNotifService.notifications$ | async)?.length === 0" style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">
-            🎉 All caught up! No notifications.
+          <div *ngIf="(appNotifService.notifications$ | async)?.length === 0" class="notif-empty">
+            🎉 All caught up! No active alerts.
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Language Switcher -->
-    <div class="lang-switcher" role="group" aria-label="Language">
-      <button class="lang-btn" [class.lang-active]="currentLang === 'en'" (click)="setLanguage('en')">EN</button>
+    <!-- Language Selector Pill -->
+    <div class="lang-selector-pill" role="group" aria-label="Language selector">
+      <button class="lang-option-btn" [class.active]="currentLang === 'en'" (click)="setLanguage('en')">EN</button>
       <span class="lang-sep">|</span>
-      <button class="lang-btn" [class.lang-active]="currentLang === 'mr'" (click)="setLanguage('mr')">मराठी</button>
+      <button class="lang-option-btn" [class.active]="currentLang === 'mr'" (click)="setLanguage('mr')">मराठी</button>
       <span class="lang-sep">|</span>
-      <button class="lang-btn" [class.lang-active]="currentLang === 'hi'" (click)="setLanguage('hi')">हिंदी</button>
+      <button class="lang-option-btn" [class.active]="currentLang === 'hi'" (click)="setLanguage('hi')">हिंदी</button>
     </div>
 
-    <!-- User info card (J-04: Initials Avatar) -->
-    <div class="user-session-card">
-      <div class="user-avatar-sm" style="font-weight: 800; background: linear-gradient(135deg, #d97706, #f59e0b); color: #fff;">
-        {{ getUserInitials(loggedInUser) }}
-      </div>
-      <div class="user-session-text">
-        <span class="user-session-name">{{ loggedInUser?.name }} <span class="user-role-chip">({{ loggedInUser?.role }})</span></span>
-        <span class="user-session-meta">Session: {{ sessionDuration }} &nbsp;|&nbsp; ⏱ Idle Logout: {{ logoutCountdown }}</span>
+    <!-- User Profile Dropdown -->
+    <div class="user-profile-wrapper">
+      <button class="user-profile-btn" (click)="toggleUserDropdown()" title="User Profile & Session">
+        <div class="user-avatar-circle">{{ getUserInitials(loggedInUser) }}</div>
+        <span class="user-name-text">{{ loggedInUser?.name || loggedInUser?.username || 'Admin' }}</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+
+      <!-- Interactive User Menu Flyout -->
+      <div class="user-dropdown-menu" *ngIf="showUserDropdown">
+        <div class="user-dropdown-header">
+          <div class="user-full-name">{{ loggedInUser?.name || loggedInUser?.username || 'Super Admin' }}</div>
+          <div class="user-role-text">{{ loggedInUser?.role || 'SUPER_ADMIN' }}</div>
+          <div class="user-session-text" *ngIf="sessionDuration">Session: {{ sessionDuration }}</div>
+        </div>
+        <div class="user-dropdown-divider"></div>
+        <div class="user-menu-links">
+          <button class="user-menu-item" (click)="navigateTo('reports')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <span>Executive Reports</span>
+          </button>
+          <button class="user-menu-item" (click)="navigateTo('settings')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>System Settings</span>
+          </button>
+        </div>
+        <div class="user-dropdown-divider"></div>
+        <button class="user-menu-item text-danger" (click)="handleLogout()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 8px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          <span>Sign Out</span>
+        </button>
       </div>
     </div>
-
-    <button class="btn btn-secondary btn-sm logout-btn" id="signout-btn" (click)="handleLogout()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
-      </svg>
-      {{ 'btn.logout' | translate:currentLang }}
-    </button>
 
   </div>
+
 </header>

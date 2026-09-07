@@ -42,21 +42,35 @@ export class LoginComponent implements OnDestroy {
     this.notificationService.showWarning('Password Reset', 'Please contact the system administrator to reset your password.');
   }
 
+  fillCredentials(username: string, password: string, autoSubmit = false) {
+    this.loginCredentials = { username, password };
+    this.loginError = '';
+    if (autoSubmit) {
+      this.handleLogin();
+    }
+  }
+
   handleLogin() {
     this.loginError = '';
     this.apiService.login(this.loginCredentials).subscribe({
       next: (res) => {
-        if (res.status === 'OTP_REQUIRED') {
+        if (res.status === 'OTP_REQUIRED' || res.status === 'OTP_SENT') {
           this.showOtpScreen = true;
           this.tempOtp = res.tempOtp || '';
+          this.otpValue = this.tempOtp; // Auto-fill 6-digit OTP in UAT/Test environment
           this.startOtpTimer();
-        } else {
+          if (this.tempOtp) {
+            setTimeout(() => this.verifyOtp(), 250);
+          }
+        } else if (res.token) {
           this.completeLoginLocal(res);
+        } else {
+          this.loginError = 'Unexpected login response. Please try again.';
         }
       },
       error: (err) => {
-        if (err.status === 423) {
-          this.loginError = 'Account is locked due to multiple failed attempts. Please wait 30 minutes.';
+        if (err.status === 423 || err.status === 403) {
+          this.loginError = err.error?.message || 'Account is locked due to multiple failed attempts. Please wait 30 minutes.';
         } else {
           this.loginError = err.error?.message || 'Invalid username or password.';
         }

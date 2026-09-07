@@ -2,6 +2,8 @@ package com.futaneagro.entity;
 
 import java.time.LocalDateTime;
 
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
@@ -30,8 +32,18 @@ public class MachineMaster extends BaseEntity {
     @Column(name = "warranty_date")
     private LocalDate warrantyDate;
 
+    @Column(name = "machine_code", length = 50)
+    private String machineCode;
+
+    @Column(name = "capacity_per_hour")
+    private Integer capacityPerHour;
+
+    @Column(name = "installed_date")
+    private LocalDate installedDate;
+
     @Column(name = "status", nullable = false, length = 50)
-    private String status = "Running"; // Running, Maintenance, Stopped
+    private String status = "Running"; // Running, Maintenance, Stopped
+
     public MachineMaster() {}
 
     public Integer getMachineId() {
@@ -40,6 +52,33 @@ public class MachineMaster extends BaseEntity {
 
     public void setMachineId(Integer machineId) {
         this.machineId = machineId;
+    }
+
+    public String getMachineCode() {
+        return machineCode != null ? machineCode : (machineId != null ? "IMM-" + String.format("%03d", machineId) : (getId() != null ? "IMM-" + getId().substring(0, Math.min(4, getId().length())) : "IMM-001"));
+    }
+
+    public void setMachineCode(String machineCode) {
+        this.machineCode = machineCode;
+    }
+
+    public Integer getCapacityPerHour() {
+        return capacityPerHour != null ? capacityPerHour : 600;
+    }
+
+    public void setCapacityPerHour(Integer capacityPerHour) {
+        this.capacityPerHour = capacityPerHour;
+    }
+
+    public LocalDate getInstalledDate() {
+        return installedDate != null ? installedDate : purchaseDate;
+    }
+
+    public void setInstalledDate(LocalDate installedDate) {
+        this.installedDate = installedDate;
+        if (this.purchaseDate == null) {
+            this.purchaseDate = installedDate;
+        }
     }
 
     public String getMachineName() {
@@ -80,4 +119,4 @@ public class MachineMaster extends BaseEntity {
 
     public void setStatus(String status) {
         this.status = status;
-    }}
+    }}

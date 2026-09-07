@@ -1,74 +1,86 @@
 <div class="data-table-wrapper">
-  <!-- Toolbar -->
-  <div class="table-toolbar">
+  <!-- Unified Top Action Toolbar -->
+  <div class="table-toolbar" *ngIf="!hideToolbarSearch || selectedRows.size > 0">
     <div class="search-box">
-      <input type="text" [ngModel]="searchTerm" (ngModelChange)="onSearchInput($event)" [placeholder]="searchPlaceholder" class="form-control" style="max-width: 300px; display: inline-block;">
+      <input *ngIf="!hideToolbarSearch" type="text" [ngModel]="searchTerm" (ngModelChange)="onSearchInput($event)" [placeholder]="searchPlaceholder" class="form-control table-search-input">
+      <span *ngIf="selectedRows.size > 0" class="badge badge-primary selected-count-pill">
+        ✓ {{ selectedRows.size }} Selected
+      </span>
     </div>
-    <div class="toolbar-actions" style="display: flex; gap: 8px;">
-      <button class="btn btn-outline btn-sm" (click)="exportCSV()">Export CSV</button>
-      <button class="btn btn-primary btn-sm" (click)="exportExcel()">📊 Export Excel</button>
-    </div>
-  </div>
+    
+    <div class="toolbar-actions">
+      <!-- Selected Context Actions -->
+      <ng-container *ngIf="selectedRows.size > 0">
+        <button *ngIf="selectedRows.size === 1" class="btn btn-warning btn-sm" (click)="emitEditSelected()">
+          <i class="bi bi-pencil" style="font-size: 11px;"></i> Edit Selected
+        </button>
+        <button class="btn btn-danger btn-sm" (click)="emitBatchDelete()">
+          <i class="bi bi-trash" style="font-size: 11px;"></i> Delete ({{ selectedRows.size }})
+        </button>
+        <button class="btn btn-secondary btn-sm" (click)="selectedRows.clear(); allSelected = false;">
+          ✕ Clear
+        </button>
+      </ng-container>
 
-  <!-- Batch Actions Bar (A-12) -->
-  <div *ngIf="hasSelection" class="batch-actions"
-       style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; margin-bottom: 12px;">
-    <span style="font-weight: 600; font-size: 13px; color: var(--accent-error);">
-      ✓ {{ selectedRows.size }} row(s) selected
-    </span>
-    <div style="display: flex; gap: 8px;">
-      <button class="btn btn-danger btn-sm" (click)="emitBatchDelete()">
-        🗑️ Delete Selected
+      <!-- Global Export Actions -->
+      <button *ngIf="!hideToolbarSearch" class="btn btn-secondary btn-sm" (click)="exportCSV()">
+        <i class="bi bi-file-earmark-spreadsheet" style="font-size: 12px;"></i> CSV
       </button>
-      <button class="btn btn-secondary btn-sm" (click)="selectedRows.clear(); allSelected = false;">
-        Cancel
+      <button *ngIf="!hideToolbarSearch" class="btn btn-primary btn-sm" (click)="exportExcel()">
+        <i class="bi bi-file-earmark-excel" style="font-size: 12px;"></i> Excel
       </button>
     </div>
   </div>
 
   <!-- Table -->
-  <div class="table-container" style="overflow-x: auto;">
-    <table>
+  <div class="table-container table-responsive">
+    <table class="table enterprise-table" appResizableTable [tableId]="tableId">
       <thead>
         <tr>
-          <th *ngIf="enableMultiSelect" style="width: 40px; text-align: center;">
-            <input type="checkbox" [checked]="allSelected" (change)="toggleSelectAll()" style="cursor: pointer;">
+          <th *ngIf="enableMultiSelect" style="width: 44px; text-align: center;">
+            <input type="checkbox" class="enterprise-row-checkbox" [checked]="allSelected" (change)="toggleSelectAll()" title="Select All">
           </th>
           <th *ngFor="let col of columns" (click)="setSort(col.key)" style="cursor: pointer;">
             {{ col.label }}
-            <span *ngIf="sortColumn === col.key">
+            <span *ngIf="sortColumn === col.key" style="margin-left: 4px; font-size: 10px;">
               {{ sortDirection === 'asc' ? '▲' : '▼' }}
             </span>
           </th>
-          <th *ngIf="actions && actions.length > 0">Actions</th>
+          <th *ngIf="actions && actions.length > 0" style="min-width: 110px; text-align: right;">Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let item of processedData; trackBy: trackById">
-          <td *ngIf="enableMultiSelect" style="width: 40px; text-align: center;">
+          <td *ngIf="enableMultiSelect" style="width: 44px; text-align: center;">
             <input type="checkbox"
-                   [checked]="selectedRows.has(item.id ? item.id.toString() : (item.paymentId ? item.paymentId.toString() : ''))"
-                   (change)="toggleSelectRow(item.id || item.paymentId)" style="cursor: pointer;">
+                   class="enterprise-row-checkbox"
+                   [checked]="selectedRows.has(getRowId(item))"
+                   (change)="toggleSelectRow(getRowId(item))" title="Select row">
           </td>
           <td *ngFor="let col of columns" [title]="item[col.key] || ''">
             <span *ngIf="!col.type || col.type === 'text'">{{ item[col.key] }}</span>
-            <span *ngIf="col.type === 'date'">{{ item[col.key] | date:'shortDate' }}</span>
-            <span *ngIf="col.type === 'currency'">{{ item[col.key] | currency:'INR' }}</span>
+            <span *ngIf="col.type === 'date'" class="date-cell">{{ item[col.key] | date:'dd-MMM-yyyy' }}</span>
+            <span *ngIf="col.type === 'currency'" style="font-weight: 600; font-family: var(--font-mono);">₹{{ item[col.key] | number:'1.2-2' }}</span>
             <span *ngIf="col.type === 'badge'" class="badge badge-info">{{ item[col.key] }}</span>
             <span *ngIf="col.type === 'timeago'" class="badge badge-secondary" [title]="item[col.key]">{{ getTimeAgo(item[col.key]) }}</span>
           </td>
-          <td *ngIf="actions && actions.length > 0">
-            <button *ngFor="let action of actions" 
-                    [class]="action.class || 'btn btn-sm btn-outline'" 
-                    style="margin-right: 5px;"
-                    (click)="onActionClick(action.action, item)">
-              {{ action.label }}
-            </button>
+          <td *ngIf="actions && actions.length > 0" class="table-action-col">
+            <div class="row-actions-group">
+              <button *ngFor="let action of actions" 
+                      [class]="action.class || 'btn btn-row-action'" 
+                      (click)="onActionClick(action.action, item)">
+                {{ action.label }}
+              </button>
+            </div>
           </td>
         </tr>
-        <tr *ngIf="processedData.length === 0">
-          <td [attr.colspan]="columns.length + (enableMultiSelect ? 1 : 0) + (actions.length > 0 ? 1 : 0)" style="text-align: center; padding: 20px;">
-            No records found.
+        <tr *ngIf="processedData.length === 0" class="empty-state-row">
+          <td [attr.colspan]="columns.length + (enableMultiSelect ? 1 : 0) + (actions.length > 0 ? 1 : 0)" style="text-align: center; padding: 48px 20px;">
+            <div class="empty-state-box" style="margin: 0; border: none; background: transparent; padding: 0;">
+              <i class="bi bi-inbox empty-icon"></i>
+              <h4>No records found</h4>
+              <p>No data matches the current search query or active filters.</p>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -76,9 +88,11 @@
   </div>
 
   <!-- Pagination -->
-  <div class="pagination" *ngIf="getTotalPages() > 1">
-    <button class="btn btn-sm" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">Previous</button>
-    <span>Page {{ currentPage }} of {{ getTotalPages() }}</span>
-    <button class="btn btn-sm" [disabled]="currentPage === getTotalPages()" (click)="changePage(currentPage + 1)">Next</button>
+  <div class="table-pagination" *ngIf="getTotalPages() > 1">
+    <span>Showing Page <strong>{{ currentPage }}</strong> of <strong>{{ getTotalPages() }}</strong></span>
+    <div style="display: flex; gap: 8px;">
+      <button class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">Previous</button>
+      <button class="btn btn-secondary btn-sm" [disabled]="currentPage === getTotalPages()" (click)="changePage(currentPage + 1)">Next</button>
+    </div>
   </div>
 </div>

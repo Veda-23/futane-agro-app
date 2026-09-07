@@ -1,0 +1,14 @@
+package com.futaneagro.repository;
+
+import com.futaneagro.entity.CompanyProfile;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface CompanyProfileRepository extends JpaRepository<CompanyProfile, String> {
+    List<CompanyProfile> findByIsActiveTrueOrderByIsDefaultDescCompanyNameAsc();
+    Optional<CompanyProfile> findByIsDefaultTrue();
+}

@@ -1,0 +1,99 @@
+<!-- Floating Trigger Button -->
+<button class="copilot-toggle-btn" (click)="isOpen = !isOpen" title="Ask ERP Copilot">
+  <i class="bi bi-robot" style="font-size: 22px; color: #ffffff;"></i>
+  <span class="pulse-dot"></span>
+</button>
+
+<!-- Slide-over Drawer -->
+<div class="copilot-drawer glass-panel" *ngIf="isOpen">
+  <!-- Header Bar -->
+  <div class="copilot-header">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span style="font-size:22px; color:#d97706;"><i class="bi bi-cpu-fill"></i></span>
+      <div>
+        <strong style="font-size:14px; color:var(--text-primary);">Futane ADK Copilot</strong>
+        <div style="font-size:10px; color:var(--text-secondary); display:flex; align-items:center; gap:4px;">
+          <span style="display:inline-block; width:6px; height:6px; background:#10B981; border-radius:50%;"></span>
+          <span>Live Autonomous ERP Agent</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:6px;">
+      <button class="btn-new-chat" (click)="newChat()" title="Start a fresh conversation"><i class="bi bi-stars" style="margin-right:3px;"></i> New Chat</button>
+      <button class="close-btn" (click)="isOpen = false" title="Close drawer">✕</button>
+    </div>
+  </div>
+
+  <!-- Language & Voice Selector -->
+  <div class="copilot-subtoolbar">
+    <div style="display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text-secondary);">
+      <span>Voice Lang:</span>
+      <select [(ngModel)]="selectedLang" class="lang-select">
+        <option value="en-IN">🇬🇧 English</option>
+        <option value="hi-IN">🇮🇳 हिंदी (Hindi)</option>
+        <option value="mr-IN">🚩 मराठी (Marathi)</option>
+      </select>
+    </div>
+    <button class="voice-btn" [class.listening]="isListening" (click)="toggleVoice()" [title]="isListening ? 'Listening... click to stop' : 'Click to speak query'">
+      <i class="bi bi-mic-fill"></i>
+      <span *ngIf="isListening" class="voice-pulse"></span>
+    </button>
+  </div>
+
+  <!-- Quick Action Chips -->
+  <div class="quick-chips">
+    <button (click)="sendMessage('Who has overdue payments?')"><i class="bi bi-currency-rupee"></i> Overdue Dues</button>
+    <button (click)="sendMessage('Show today production output')"><i class="bi bi-building-fill"></i> Today Output</button>
+    <button (click)="sendMessage('Which raw materials are low?')"><i class="bi bi-boxes"></i> Raw Materials</button>
+    <button (click)="sendMessage('Which machines are active?')"><i class="bi bi-gear-fill"></i> Machines</button>
+    <button (click)="sendMessage('Is production server healthy?')"><i class="bi bi-shield-check"></i> Server Health</button>
+  </div>
+
+  <!-- Message History -->
+  <div class="chat-history">
+    <div *ngFor="let msg of messages" class="msg-bubble" [class.user]="msg.role === 'user'" [class.assistant]="msg.role !== 'user'">
+      <div class="msg-top">
+        <span class="msg-sender">{{ msg.role === 'user' ? 'You' : 'ADK Copilot' }}</span>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="msg-time">{{ msg.timestamp }}</span>
+          <button *ngIf="msg.role !== 'user'" class="copy-btn" (click)="copyMessage(msg.text)" title="Copy message"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+      <div class="msg-text" [innerHTML]="formatMarkdown(msg.text)"></div>
+      
+      <!-- Tool Execution Badge -->
+      <div *ngIf="msg.tool" class="tool-badge">
+        <span>⚡ Tool: <code>{{ msg.tool }}</code></span>
+      </div>
+
+      <!-- Action Proposal Card (Requires Explicit Confirmation) -->
+      <div *ngIf="msg.actionProposal" class="action-proposal-card">
+        <div class="action-title">⚡ Proposed Operational Action</div>
+        <div class="action-desc">{{ msg.actionProposal.description }}</div>
+        <div class="action-buttons">
+          <button class="btn btn-warning btn-sm" (click)="confirmAction(msg.actionProposal)">
+            <i class="bi bi-check-lg" style="margin-right:4px;"></i> Confirm & Execute
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Typing Loader -->
+    <div *ngIf="isLoading" class="msg-bubble assistant loading">
+      <span>Querying live factory systems & reasoning... ⏳</span>
+    </div>
+  </div>
+
+  <!-- Input Bar -->
+  <div class="chat-input-bar">
+    <input 
+      type="text" 
+      [(ngModel)]="inputQuery" 
+      (keyup.enter)="sendCurrent()" 
+      placeholder="Ask in English, हिंदी, or मराठी..."
+      [disabled]="isLoading">
+    <button class="btn btn-primary" (click)="sendCurrent()" [disabled]="!inputQuery.trim() || isLoading">
+      <i class="bi bi-send-fill" style="margin-right:4px;"></i> Send
+    </button>
+  </div>
+</div>

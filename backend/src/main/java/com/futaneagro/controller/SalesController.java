@@ -5,7 +5,9 @@ import com.futaneagro.entity.*;
 import com.futaneagro.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -67,7 +69,16 @@ public class SalesController {
     }
 
     @PostMapping("/sales")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'OPERATOR')")
+    @Transactional(rollbackFor = Exception.class)
     public Sales createSale(@RequestBody Sales sale) {
+        if (sale == null || sale.getQuantity() <= 0) {
+            throw new IllegalArgumentException("Sale quantity must be greater than zero.");
+        }
+        if (sale.getRate() != null && sale.getRate().compareTo(java.math.BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Sale rate cannot be negative.");
+        }
+
         // Enforce server-side totals and remaining balance calculation to prevent parameter tampering
         sale.calculateTotals();
         Sales savedSale = salesRepository.save(sale);
@@ -102,7 +113,60 @@ public class SalesController {
         return savedSale;
     }
 
+    @PutMapping("/sales/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'OPERATOR')")
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseEntity<Sales> updateSale(@PathVariable String id, @RequestBody Sales details) {
+        if (details == null || details.getQuantity() <= 0) {
+            return ResponseEntity.badRequest().build();
+        }
+        if (details.getRate() != null && details.getRate().compareTo(java.math.BigDecimal.ZERO) < 0) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        return salesRepository.findById(id).map(sale -> {
+            String oldState = toJson(sale);
+
+            // Revert old inventory sold stock
+            inventoryRepository.findByCrateTypeAndMaterialType(sale.getCrateType(), sale.getCrateMaterial()).ifPresent(inv -> {
+                inv.setSoldStock(Math.max(0, inv.getSoldStock() - sale.getQuantity()));
+                inventoryRepository.save(inv);
+            });
+
+            // Apply updates
+            sale.setDate(details.getDate());
+            sale.setCrateType(details.getCrateType());
+            sale.setCrateMaterial(details.getCrateMaterial());
+            sale.setQuantity(details.getQuantity());
+            sale.setRate(details.getRate());
+            sale.setPaid(details.getPaid());
+            if (details.getParty() != null) sale.setParty(details.getParty());
+            sale.calculateTotals();
+
+            Sales savedSale = salesRepository.save(sale);
+
+            // Apply new inventory sold stock
+            Optional<Inventory> newInvOpt = inventoryRepository.findByCrateTypeAndMaterialType(savedSale.getCrateType(), savedSale.getCrateMaterial());
+            Inventory newInv = newInvOpt.orElseGet(() -> {
+                Inventory i = new Inventory();
+                i.setCrateType(savedSale.getCrateType());
+                i.setMaterialType(savedSale.getCrateMaterial());
+                i.setOpeningStock(0);
+                i.setProducedStock(0);
+                i.setSoldStock(0);
+                return i;
+            });
+            newInv.setSoldStock(newInv.getSoldStock() + savedSale.getQuantity());
+            inventoryRepository.save(newInv);
+
+            saveAuditLog("Updated sale ID: " + id, "Sales", oldState, toJson(savedSale));
+            return ResponseEntity.ok(savedSale);
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
     @DeleteMapping("/sales/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @Transactional(rollbackFor = Exception.class)
     public void deleteSale(@PathVariable String id) {
         salesRepository.findById(id).ifPresent(sale -> {
             String oldState = toJson(sale);
@@ -138,38 +202,67 @@ public class SalesController {
     }
 
     @PostMapping("/payments")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT')")
+    @Transactional(rollbackFor = Exception.class)
     public PaymentCollection createPayment(@RequestBody PaymentCollection payment) {
-        PaymentCollection saved = paymentCollectionRepository.save(payment);
+        if (payment == null || payment.getAmountReceived() == null || payment.getAmountReceived().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Payment amount must be greater than zero.");
+        }
 
         // If payment is for a specific invoice, update the corresponding Sales Paid status
         if (payment.getInvoiceNo() != null && !payment.getInvoiceNo().trim().isEmpty()) {
-            Optional<Invoice> invOpt = invoiceRepository.findByInvoiceNo(payment.getInvoiceNo());
+            Optional<Invoice> invOpt = invoiceRepository.findByInvoiceNo(payment.getInvoiceNo().trim());
             if (invOpt.isPresent()) {
                 Sales sale = invOpt.get().getSale();
-                java.math.BigDecimal newPaid = sale.getPaid().add(payment.getAmountReceived());
-                if (newPaid.compareTo(sale.getTotalAmount()) > 0) {
+                java.math.BigDecimal currentPaid = sale.getPaid() != null ? sale.getPaid() : java.math.BigDecimal.ZERO;
+                java.math.BigDecimal total = sale.getTotalAmount() != null ? sale.getTotalAmount() : java.math.BigDecimal.ZERO;
+                java.math.BigDecimal newPaid = currentPaid.add(payment.getAmountReceived());
+                if (newPaid.compareTo(total) > 0) {
                     throw new IllegalArgumentException("Payment amount exceeds remaining invoice balance.");
                 }
                 sale.setPaid(newPaid);
-                sale.setRemaining(sale.getTotalAmount().subtract(newPaid));
+                sale.setRemaining(total.subtract(newPaid).max(java.math.BigDecimal.ZERO));
                 salesRepository.save(sale);
             }
         }
-        saveAuditLog("Created payment record for party ID: " + saved.getParty().getId(), "Payment_Collection", null, toJson(saved));
+
+        PaymentCollection saved = paymentCollectionRepository.save(payment);
+        String partyInfo = (saved.getParty() != null && saved.getParty().getId() != null) ? "party ID: " + saved.getParty().getId() : "N/A";
+        saveAuditLog("Created payment record for " + partyInfo, "Payment_Collection", null, toJson(saved));
         return saved;
     }
 
+    @PutMapping("/payments/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT')")
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseEntity<PaymentCollection> updatePayment(@PathVariable String id, @RequestBody PaymentCollection details) {
+        return paymentCollectionRepository.findById(id).map(payment -> {
+            String oldState = toJson(payment);
+            // Safe update: only metadata fields, not amountReceived (affects ledger)
+            payment.setPaymentMode(details.getPaymentMode());
+            payment.setPaymentDate(details.getPaymentDate());
+            PaymentCollection saved = paymentCollectionRepository.save(payment);
+            saveAuditLog("Updated payment record ID: " + id, "Payment_Collection", oldState, toJson(saved));
+            return ResponseEntity.ok(saved);
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
     @DeleteMapping("/payments/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @Transactional(rollbackFor = Exception.class)
     public void deletePayment(@PathVariable String id) {
         paymentCollectionRepository.findById(id).ifPresent(payment -> {
             String oldState = toJson(payment);
             // Revert payment from Sales Paid status
             if (payment.getInvoiceNo() != null && !payment.getInvoiceNo().trim().isEmpty()) {
-                invoiceRepository.findByInvoiceNo(payment.getInvoiceNo()).ifPresent(inv -> {
+                invoiceRepository.findByInvoiceNo(payment.getInvoiceNo().trim()).ifPresent(inv -> {
                     Sales sale = inv.getSale();
-                    java.math.BigDecimal newPaid = sale.getPaid().subtract(payment.getAmountReceived());
+                    java.math.BigDecimal currentPaid = sale.getPaid() != null ? sale.getPaid() : java.math.BigDecimal.ZERO;
+                    java.math.BigDecimal amountReceived = payment.getAmountReceived() != null ? payment.getAmountReceived() : java.math.BigDecimal.ZERO;
+                    java.math.BigDecimal newPaid = currentPaid.subtract(amountReceived).max(java.math.BigDecimal.ZERO);
                     sale.setPaid(newPaid);
-                    sale.setRemaining(sale.getTotalAmount().subtract(newPaid));
+                    java.math.BigDecimal total = sale.getTotalAmount() != null ? sale.getTotalAmount() : java.math.BigDecimal.ZERO;
+                    sale.setRemaining(total.subtract(newPaid).max(java.math.BigDecimal.ZERO));
                     salesRepository.save(sale);
                 });
             }

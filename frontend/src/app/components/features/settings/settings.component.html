@@ -1,317 +1,2074 @@
-<div *ngIf="activeTab === 'settings'">
-  <div class="grid-cols-3">
-    
-    <!-- Left Column: User Management -->
-    <div class="glass-panel" style="grid-column: span 1; padding: 20px;">
-      <h3>👥 {{ 'settings.title' | translate:currentLang }}</h3>
-      <p style="color: var(--text-secondary); margin-bottom: 15px; font-size:13px;">{{ 'settings.desc' | translate:currentLang }}</p>
-      
-      <form (submit)="saveUser()" style="margin-bottom: 25px; border-bottom: 1px solid var(--border-glass); padding-bottom: 20px;">
-        <h4>{{ 'settings.add_user' | translate:currentLang }}</h4>
-        <div class="form-group">
-          <label>{{ 'settings.fullname' | translate:currentLang }}</label>
-          <input appAutoSelect type="text" [(ngModel)]="userForm.name" name="usrName" required [placeholder]="'settings.fullname' | translate:currentLang">
-        </div>
-        <div class="form-group">
-          <label>{{ 'settings.username' | translate:currentLang }}</label>
-          <input appAutoSelect type="text" [(ngModel)]="userForm.username" name="usrUsername" required [placeholder]="'settings.username' | translate:currentLang">
-        </div>
-        <div class="form-group">
-          <label>{{ 'settings.password' | translate:currentLang }}</label>
-          <input appAutoSelect type="password" [(ngModel)]="userForm.password" name="usrPassword" required [placeholder]="'settings.password' | translate:currentLang">
-        </div>
-        <div class="form-group">
-          <label>Email Address</label>
-          <input appAutoSelect type="email" [(ngModel)]="userForm.email" name="usrEmail" placeholder="name@company.com">
-        </div>
-        <div class="form-group">
-          <label>{{ 'settings.role' | translate:currentLang }}</label>
-          <select [(ngModel)]="userForm.role" name="usrRole" required>
-            <option value="ADMIN">ADMIN (Full Access)</option>
-            <option value="MANAGER">MANAGER (All except Delete)</option>
-            <option value="ACCOUNTANT">ACCOUNTANT (Finance/Sales)</option>
-            <option value="OPERATOR">OPERATOR (Daily Production)</option>
-          </select>
-        </div>
-        <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'settings.register_user_btn' | translate:currentLang }}</button>
-      </form>
+<div class="admin-control-center" *ngIf="activeTab === 'settings'">
 
-      <h4>{{ 'settings.registered_users' | translate:currentLang }}</h4>
-      <div style="max-height: 400px; overflow-y: auto;">
-        <div *ngFor="let u of usersList" style="padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); border-radius: 8px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 4px;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <strong>{{ u.name }}</strong>
-            <span class="badge badge-info">{{ u.role }}</span>
-          </div>
-          <div style="font-size:12px; color: var(--text-secondary);">{{ 'settings.username' | translate:currentLang }}: <code>{{ u.username }}</code></div>
-          
-          <div style="display: flex; align-items: center; gap: 5px; margin-top: 4px;">
-            <span style="font-size: 11px; color: var(--text-secondary);">Email:</span>
-            <input appAutoSelect type="email" [value]="u.email || ''" (change)="updateUserEmail(u.username, $any($event.target).value)" placeholder="No email set" style="padding: 2px 4px; font-size: 11px; border: 1px solid var(--border-glass); border-radius: 4px; background: rgba(0,0,0,0.1); color: var(--text-primary); flex: 1;">
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-            <button type="button" class="btn btn-sm" [class.btn-danger]="u.accountLocked" [class.btn-secondary]="!u.accountLocked" (click)="toggleUserLock(u.username, u.accountLocked)" style="padding: 4px 8px; font-size:11px;">
-              {{ u.accountLocked ? '🔒 Locked' : '🔓 Active' }}
-            </button>
-            
-            <div style="display: flex; gap: 5px;">
-              <select [value]="u.role" (change)="updateUserRole(u.username, $any($event.target).value)" style="padding: 2px; font-size:11px; width: 110px;">
-                <option value="ADMIN">ADMIN</option>
-                <option value="MANAGER">MANAGER</option>
-                <option value="ACCOUNTANT">ACCOUNTANT</option>
-                <option value="OPERATOR">OPERATOR</option>
-              </select>
-              
-              <button class="btn btn-danger btn-sm" *ngIf="loggedInUser?.role !== 'MANAGER' && u.username !== loggedInUser?.username" (click)="deleteUser(u.username)" style="padding: 2px 6px;">🗑️</button>
-            </div>
-          </div>
+  <!-- Top Banner: Futuristic Command Center HUD -->
+  <div class="admin-header-banner">
+    <div class="banner-left">
+      <div class="banner-icon-box">
+        <span class="material-symbols-outlined">tune</span>
       </div>
-
-      <!-- Change Password Section (J-01) -->
-      <div style="margin-top: 20px; border-top: 1px solid var(--border-glass); padding-top: 16px;">
-        <h4 style="margin-bottom:14px; font-weight:700;">🔒 Change Password</h4>
-
-        <!-- Current Password -->
-        <div class="form-group">
-          <label>Current Password</label>
-          <div style="position:relative;">
-            <input [type]="changePasswordForm.showCurrent ? 'text' : 'password'"
-                   [(ngModel)]="changePasswordForm.currentPassword"
-                   name="cpCurrent" placeholder="Enter current password">
-            <button type="button" (click)="changePasswordForm.showCurrent = !changePasswordForm.showCurrent"
-                    style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--text-secondary);">
-              {{ changePasswordForm.showCurrent ? '🙈' : '👁️' }}
-            </button>
-          </div>
-        </div>
-
-        <!-- New Password -->
-        <div class="form-group">
-          <label>New Password</label>
-          <div style="position:relative;">
-            <input [type]="changePasswordForm.showNew ? 'text' : 'password'"
-                   [(ngModel)]="changePasswordForm.newPassword"
-                   name="cpNew" placeholder="Min 8 chars, mixed case + number + symbol">
-            <button type="button" (click)="changePasswordForm.showNew = !changePasswordForm.showNew"
-                    style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--text-secondary);">
-              {{ changePasswordForm.showNew ? '🙈' : '👁️' }}
-            </button>
-          </div>
-          <!-- Strength meter -->
-          <app-password-strength [password]="changePasswordForm.newPassword"></app-password-strength>
-        </div>
-
-        <!-- Confirm Password -->
-        <div class="form-group">
-          <label>Confirm New Password</label>
-          <input type="password" [(ngModel)]="changePasswordForm.confirmPassword"
-                 name="cpConfirm" placeholder="Re-enter new password"
-                 [style.border-color]="changePasswordForm.confirmPassword &&
-                   changePasswordForm.newPassword !== changePasswordForm.confirmPassword ? 'var(--accent-error, #ef4444)' : ''">
-          <small *ngIf="changePasswordForm.confirmPassword &&
-                        changePasswordForm.newPassword !== changePasswordForm.confirmPassword"
-                 style="color:var(--accent-error, #ef4444); font-size:11px;">Passwords do not match</small>
-        </div>
-
-        <button class="btn btn-primary" (click)="changePassword()" [disabled]="changingPassword" style="width:100%; margin-top:8px;">
-          {{ changingPassword ? '⏳ Updating...' : '🔒 Change Password' }}
-        </button>
-      </div>
-    </div>
-
-    <!-- Right Column (Span 2): 80+ ERP System Settings & Theme Toggle -->
-    <div class="glass-panel" style="grid-column: span 2; padding: 20px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h3>⚙️ {{ 'settings.config_title' | translate:currentLang }}</h3>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size:13px; font-weight:600;">Dark Theme:</span>
-          <input appAutoSelect type="checkbox" [checked]="isDarkMode" (change)="toggleDarkMode()" style="width: 20px; height: 20px; cursor: pointer;">
-        </div>
-      </div>
-      
-      <p style="color: var(--text-secondary); margin-bottom: 15px; font-size:13px;">Modify live ERP features, billing headers, inventory levels, or SMS key mappings.</p>
-
-      <!-- Company & Bank visual panel -->
-      <div class="grid-cols-2" style="gap: 15px; margin-bottom: 25px; border-bottom: 1px solid var(--border-glass); padding-bottom: 20px; display: grid;">
-        <div class="glass-panel" style="padding: 15px; background: rgba(255,255,255,0.01);">
-          <h4 style="margin-top:0; color: var(--accent-orange);">🏢 Company Profile Settings</h4>
-          <div class="form-group">
-            <label>Company Name</label>
-            <input appAutoSelect type="text" [ngModel]="getSettingVal('bill.company_name')" (ngModelChange)="setSettingVal('bill.company_name', $event)">
-          </div>
-          <div class="form-group">
-            <label>GSTIN Number</label>
-            <input appAutoSelect type="text" [ngModel]="getSettingVal('gstin_number')" (ngModelChange)="setSettingVal('gstin_number', $event)">
-          </div>
-          <div class="form-group">
-            <label>PAN Number</label>
-            <input appAutoSelect type="text" [ngModel]="getSettingVal('pan_number')" (ngModelChange)="setSettingVal('pan_number', $event)">
-          </div>
-          <div class="form-group">
-            <label>Company Address</label>
-            <input appAutoSelect type="text" [ngModel]="getSettingVal('bill.company_address')" (ngModelChange)="setSettingVal('bill.company_address', $event)">
-          </div>
-        </div>
-        <div class="glass-panel" style="padding: 15px; background: rgba(255,255,255,0.01);">
-          <h4 style="margin-top:0; color: var(--accent-orange);">🏦 Bank Account details</h4>
-          <div class="form-group">
-            <label>Bank Name</label>
-            <input appAutoSelect type="text" [ngModel]="getSettingVal('bank_name')" (ngModelChange)="setSettingVal('bank_name', $event)">
-          </div>
-          <div class="form-group">
-            <label>Account Number</label>
-            <input appAutoSelect type="text" [ngModel]="getSettingVal('bank_account_no')" (ngModelChange)="setSettingVal('bank_account_no', $event)">
-          </div>
-          <div class="form-group">
-            <label>IFSC Code</label>
-            <input appAutoSelect type="text" [ngModel]="getSettingVal('bank_ifsc')" (ngModelChange)="setSettingVal('bank_ifsc', $event)">
-          </div>
-          <div class="form-group">
-            <label>Invoice Prefix</label>
-            <input appAutoSelect type="text" [ngModel]="getSettingVal('invoice_prefix')" (ngModelChange)="setSettingVal('invoice_prefix', $event)">
-          </div>
-        </div>
-      </div>
-
-      <!-- Backup & Recovery visual panel -->
-      <div class="glass-panel" style="margin-bottom: 25px; border-bottom: 1px solid var(--border-glass); padding-bottom: 20px; background: rgba(255,255,255,0.01);">
-        <h4 style="margin-top:0; display:flex; justify-content:space-between; align-items:center; color: var(--accent-orange);">
-          💾 Database Backup & Recovery Manager
-          <button type="button" class="btn btn-primary btn-sm" (click)="triggerBackup()">Create Manual Backup Now</button>
-        </h4>
-        <p style="color:var(--text-secondary); font-size:12px; margin-bottom:12px;">Trigger a safe SQL dump of the live database, or restore from previous runs. Backups are stored inside the local environment folder.</p>
+      <div class="banner-titles">
+        <h2>
+          Super Admin Control Center
+          <span class="super-admin-badge">
+            <span class="material-symbols-outlined" style="font-size: 14px;">verified_user</span>
+            SUPER ADMIN
+          </span>
+          <span class="hud-live-pill">
+            <span class="hud-live-dot"></span>
+            LIVE SYNC
+          </span>
+        </h2>
+        <p>Centralized enterprise operating suite for branding, business rules, API gateways, and governance.</p>
         
-        <div class="table-container" style="max-height: 180px; overflow-y: auto;">
-          <table style="width:100%; font-size:12px; border-collapse: collapse;">
-            <thead>
-              <tr style="background: rgba(0,0,0,0.1);">
-                <th style="padding: 6px;">Backup File Name</th>
-                <th style="padding: 6px;">Date Modified</th>
-                <th style="padding: 6px;">Size (KB)</th>
-                <th style="padding: 6px; text-align: center;">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let b of backupsList" style="border-bottom: 1px solid var(--border-glass);">
-                <td style="padding: 6px;"><code>{{ b.name }}</code></td>
-                <td style="padding: 6px;">{{ b.lastModified }}</td>
-                <td style="padding: 6px;">{{ (b.size / 1024) | number:'1.1-1' }} KB</td>
-                <td style="padding: 6px; text-align: center;">
-                  <button type="button" class="btn btn-warning btn-sm" (click)="triggerRestore(b.filename)" style="padding: 2px 8px; font-size: 11px;">Restore</button>
-                </td>
-              </tr>
-              <tr *ngIf="backupsList.length === 0">
-                <td colspan="4" style="text-align:center; padding: 10px; color:var(--text-muted);">No backup files found in directory.</td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- Futuristic HUD Micro-Telemetry Strip -->
+        <div class="hud-telemetry-strip">
+          <span class="hud-metric" title="STOMP WebSocket broker live connection">
+            <span class="material-symbols-outlined hud-icon">sensors</span>
+            WS Broker: <strong>Connected</strong>
+          </span>
+          <span class="hud-divider">|</span>
+          <span class="hud-metric" title="In-Memory Cache TTL">
+            <span class="material-symbols-outlined hud-icon">bolt</span>
+            Caffeine: <strong>30m TTL Active</strong>
+          </span>
+          <span class="hud-divider">|</span>
+          <span class="hud-metric" title="Database Health Status">
+            <span class="material-symbols-outlined hud-icon" [style.color]="systemHealth?.db === 'HEALTHY' ? '#10b981' : '#ef4444'">database</span>
+            DB: <strong [style.color]="systemHealth?.db === 'HEALTHY' ? '#10b981' : '#ef4444'">{{ systemHealth?.db === 'HEALTHY' ? 'Healthy' : 'Degraded' }}</strong>
+          </span>
+          <span class="hud-divider">|</span>
+          <span class="hud-metric" title="Mail Service Connectivity">
+            <span class="material-symbols-outlined hud-icon" [style.color]="systemHealth?.mail === 'CONNECTED' ? '#10b981' : '#ef4444'">mail</span>
+            Mail: <strong [style.color]="systemHealth?.mail === 'CONNECTED' ? '#10b981' : '#ef4444'">{{ systemHealth?.mail === 'CONNECTED' ? 'Connected' : 'Disconnected' }}</strong>
+          </span>
+          <span class="hud-divider">|</span>
+          <span class="hud-metric" title="Audit Trail IP Logging">
+            <span class="material-symbols-outlined hud-icon">security</span>
+            Audit Guard: <strong>IP Logged</strong>
+          </span>
         </div>
       </div>
-      
-      <!-- Search bar with AI simulator -->
-      <div style="margin-bottom: 20px;">
-        <input appAutoSelect type="text" [(ngModel)]="settingsSearchQuery" placeholder="🔍 Search settings by category, key or descriptions..." style="width: 100%; padding: 12px; font-size:14px; border: 1px solid var(--border-glass); border-radius: 8px; background: rgba(0,0,0,0.05);">
-      </div>
-      
-      <!-- AI Suggestion box -->
-      <div style="background: rgba(217, 119, 6, 0.08); border: 1px dashed var(--accent-orange); padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 500; margin-bottom: 20px; color: #b45309; display: flex; align-items: center; gap: 8px;">
-        <span>{{ aiRecommendation }}</span>
-      </div>
-
-      <!-- Scrollable settings list -->
-      <div style="max-height: 600px; overflow-y: auto; padding-right: 10px;">
-        <table style="width:100%; border-collapse: collapse; font-size: 13px;">
-          <thead>
-            <tr style="position: sticky; top: 0; z-index: 10;">
-              <th style="width: 25%;">{{ 'settings.key' | translate:currentLang }}</th>
-              <th style="width: 20%;">{{ 'settings.category_lbl' | translate:currentLang }}</th>
-              <th style="width: 40%;">{{ 'settings.description' | translate:currentLang }}</th>
-              <th style="width: 15%;">{{ 'settings.value' | translate:currentLang }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let s of filteredSettings" style="border-bottom: 1px solid var(--border-glass);">
-              <td style="padding: 10px; font-weight: 600;">
-                {{ s.label }}<br>
-                <code style="font-size:10px; color: var(--text-muted);">{{ s.key }}</code>
-              </td>
-              <td style="padding: 10px;">
-                <span class="badge badge-info">{{ s.category }}</span>
-              </td>
-              <td style="padding: 10px; color: var(--text-secondary); font-size: 12px;">
-                {{ s.description }}
-              </td>
-              <td style="padding: 10px;">
-                <input appAutoSelect *ngIf="s.type === 'text'" type="text" [(ngModel)]="s.value" style="padding: 4px 8px; font-size: 12px; height: 32px;">
-                <input appAutoSelect *ngIf="s.type === 'number'" type="number" [(ngModel)]="s.value" style="padding: 4px 8px; font-size: 12px; height: 32px;">
-                <input appAutoSelect *ngIf="s.type === 'boolean'" type="checkbox" [(ngModel)]="s.value" style="width: 18px; height: 18px; cursor: pointer;" (change)="s.key === 'theme_dark_mode_enabled' ? toggleDarkMode($event.target.checked) : null">
-              </td>
-            </tr>
-            <tr *ngIf="filteredSettings.length === 0">
-              <td colspan="4" style="text-align: center; padding: 30px; color: var(--text-muted);">
-                {{ 'settings.no_match' | translate:currentLang }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
     </div>
-
+    <div class="banner-right">
+      <button class="btn btn-outline-secondary btn-sm hud-sync-btn" (click)="loadAllControlCenterData()" title="Reload settings and evict stale local state">
+        <span class="material-symbols-outlined" style="font-size: 15px; vertical-align: middle;">sync</span> Sync Data
+      </button>
+    </div>
   </div>
 
-  <!-- Company Information Section (N-02) -->
-  <div class="glass-panel" style="padding:20px; margin-top:20px;"
-       *ngIf="loggedInUser?.role === 'SUPER_ADMIN' || loggedInUser?.role === 'ADMIN'">
-    <h3 style="margin-bottom:16px; font-weight:700;">🏢 Company Information</h3>
-    <div class="grid-cols-2">
-      <div class="form-group">
-        <label>Company Name</label>
-        <input type="text"
-               [ngModel]="getSettingVal('company_name')"
-               (ngModelChange)="setSettingVal('company_name', $event)"
-               name="coName" placeholder="Futane Agro Industries Pvt. Ltd.">
+  <!-- Top Segmented Domains Navigation Strip -->
+  <div class="settings-top-navbar">
+    <div class="settings-nav-scroll-container">
+      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'branding'" (click)="switchSubNav('branding')">
+        <span class="material-symbols-outlined nav-pill-icon">palette</span>
+        <span>Branding & Themes</span>
+      </button>
+      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'business-rules'" (click)="switchSubNav('business-rules')">
+        <span class="material-symbols-outlined nav-pill-icon">corporate_fare</span>
+        <span>Business Rules</span>
+      </button>
+      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'teams'" (click)="switchSubNav('teams')">
+        <span class="material-symbols-outlined nav-pill-icon">apartment</span>
+        <span>Teams & Depts</span>
+      </button>
+      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'custom_fields'" (click)="switchSubNav('custom_fields')">
+        <span class="material-symbols-outlined nav-pill-icon">extension</span>
+        <span>Extensible Fields</span>
+      </button>
+      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'notifications'" (click)="switchSubNav('notifications')">
+        <span class="material-symbols-outlined nav-pill-icon">chat</span>
+        <span>WhatsApp & Alerts</span>
+      </button>
+      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'users'" (click)="switchSubNav('users')">
+        <span class="material-symbols-outlined nav-pill-icon">badge</span>
+        <span>Users & RBAC</span>
+      </button>
+      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'features'" (click)="switchSubNav('features')">
+        <span class="material-symbols-outlined nav-pill-icon">toggle_on</span>
+        <span>Feature Flags</span>
+        <span class="badge-count-pill" [ngClass]="featureFlagBadgeClass" *ngIf="featureFlags.length > 0">{{ activeFeatureCount }}/{{ featureFlags.length }}</span>
+      </button>
+      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'developer'" (click)="switchSubNav('developer')">
+        <span class="material-symbols-outlined nav-pill-icon">terminal</span>
+        <span>Developer Hub</span>
+      </button>
+      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'governance'" (click)="switchSubNav('governance')">
+        <span class="material-symbols-outlined nav-pill-icon">memory</span>
+        <span>Cache & Gov</span>
+      </button>
+      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'password'" (click)="switchSubNav('password')">
+        <span class="material-symbols-outlined nav-pill-icon">lock_reset</span>
+        <span>Security</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Full-Width Content Panel -->
+  <div class="admin-content-panel">
+
+      <!-- ========================================================================= -->
+      <!-- 1. BRANDING & VISUAL THEMES                                                -->
+      <!-- ========================================================================= -->
+      <div *ngIf="activeSubTab === 'branding'" class="subtab-section">
+        <div class="section-top-header">
+          <div>
+            <h3>🎨 Branding & Visual Identity System</h3>
+            <p>Configure corporate visual tokens, primary theme palette, typography, and logo assets.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-primary btn-sm" (click)="saveBrandingSettings()">
+              <span class="material-symbols-outlined" style="font-size: 15px;">save</span> Save Branding
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-two-col-grid branding-cards-grid">
+          <!-- 1. Logo & Asset System Card -->
+          <div class="glass-card settings-card logo-card-panel">
+            <h4><span class="material-symbols-outlined">image</span> Enterprise Logo & Assets</h4>
+            <p class="card-desc">Upload company branding mark. Vector SVG or transparent PNG recommended.</p>
+            
+            <div class="modern-logo-dropzone" (click)="logoFileInput.click()">
+              <div class="logo-circle-container">
+                <img [src]="branding.brand_logo_url || 'assets/logo.svg'" alt="Brand Logo" class="logo-display-img">
+              </div>
+              <div class="logo-meta-info">
+                <div class="logo-upload-prompt">
+                  <span class="material-symbols-outlined upload-icon">cloud_upload</span>
+                  <span class="upload-headline">{{ isUploadingLogo ? 'Uploading logo...' : 'Click to Replace Corporate Logo' }}</span>
+                </div>
+                <span class="upload-subtext">Supports vector SVG, high-res PNG, or JPG (Max 2MB)</span>
+              </div>
+              <input type="file" #logoFileInput (change)="onLogoFileSelected($event)" accept="image/*" style="display: none;">
+            </div>
+
+            <div class="form-group" style="margin-top: 18px;">
+              <label>Default Interface Theme Mode</label>
+              <select [(ngModel)]="branding.default_theme" (ngModelChange)="hasUnsavedChanges = true" class="form-control select-modern">
+                <option value="light">☀️ Light Mode (Clean Enterprise)</option>
+                <option value="dark">🌙 Midnight Slate (Dark Mode)</option>
+                <option value="oled">🖤 OLED True Black (High Contrast)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 2. Color Palette & Typography Card -->
+          <div class="glass-card settings-card palette-card-panel">
+            <h4><span class="material-symbols-outlined">palette</span> Primary Theme Palette & Typography</h4>
+            <p class="card-desc">Drives navigation highlights, primary buttons, and metric tokens app-wide.</p>
+
+            <!-- Theme Palette Control -->
+            <div class="theme-palette-container">
+              <div class="color-hex-group">
+                <span class="color-swatch-box" [style.background-color]="branding.brand_primary_color"></span>
+                <input type="text" [(ngModel)]="branding.brand_primary_color" (ngModelChange)="onBrandColorChange($event)" class="form-control hex-code-input font-mono" placeholder="#d97706">
+              </div>
+
+              <div class="palette-swatches-row">
+                <button *ngFor="let c of presetColors" 
+                        type="button" 
+                        class="color-preset-circle" 
+                        [style.background-color]="c" 
+                        [class.active-preset]="branding.brand_primary_color === c"
+                        (click)="onBrandColorChange(c)"
+                        [title]="c">
+                  <span class="material-symbols-outlined checkmark-icon" *ngIf="branding.brand_primary_color === c">check</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-row-grid" style="margin-top: 16px;">
+              <div class="form-group">
+                <label>Typography Font Family</label>
+                <select [(ngModel)]="branding.font_family" (ngModelChange)="hasUnsavedChanges = true" class="form-control select-modern">
+                  <option *ngFor="let f of fontOptions" [value]="f">{{ f }}</option>
+                </select>
+                <div class="font-preview-line" [style.font-family]="branding.font_family" style="margin-top: 6px; padding: 4px 8px; border-radius: 4px; background: rgba(148,163,184,0.1); font-size: 12px; color: #475569;">
+                  Preview: The quick brown fox jumps over the lazy dog (1234567890)
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Table Density Default</label>
+                <select [(ngModel)]="branding.table_density" (ngModelChange)="hasUnsavedChanges = true" class="form-control select-modern">
+                  <option value="compact">Compact Density</option>
+                  <option value="comfortable">Comfortable (Standard)</option>
+                  <option value="spacious">Spacious Density</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 14px;">
+              <label>Application Display Title</label>
+              <input type="text" [(ngModel)]="branding.app_display_name" (ngModelChange)="hasUnsavedChanges = true" class="form-control" placeholder="Futane Agro ERP">
+            </div>
+
+            <div class="form-group" style="margin-top: 14px;">
+              <label>Header Tagline / Slogan</label>
+              <input type="text" [(ngModel)]="branding.app_tagline" (ngModelChange)="hasUnsavedChanges = true" class="form-control" placeholder="Quality Crates, Stronger Future">
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label>GSTIN</label>
-        <input type="text"
-               [ngModel]="getSettingVal('company_gstin')"
-               (ngModelChange)="setSettingVal('company_gstin', $event)"
-               name="coGstin" placeholder="27XXXXX000X1ZX">
+
+      <!-- ========================================================================= -->
+      <!-- 2. ERP BUSINESS RULES & MULTI-COMPANY BILLING                              -->
+      <!-- ========================================================================= -->
+      <div *ngIf="activeSubTab === 'business-rules'" class="subtab-section">
+        <div class="section-top-header">
+          <div>
+            <h3>🏢 Multi-Company Billing & ERP Business Rules</h3>
+            <p>Configure corporate legal entities, GSTIN profiles, banking & UPI settlement, and plant operation parameters.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary btn-sm" (click)="openAddBankModal()">
+              <span class="material-symbols-outlined" style="font-size: 15px;">account_balance</span> + Add Bank Account
+            </button>
+            <button class="btn btn-secondary btn-sm" (click)="openAddCompanyModal()">
+              <span class="material-symbols-outlined" style="font-size: 15px;">domain</span> + Add Legal Entity
+            </button>
+            <button class="btn btn-primary btn-sm" (click)="saveBusinessRules()">
+              <span class="material-symbols-outlined" style="font-size: 15px;">save</span> Save Rules
+            </button>
+          </div>
+        </div>
+
+        <!-- 1. MULTI-COMPANY ENTITIES SECTION -->
+        <div class="business-section-block">
+          <div class="block-title-row">
+            <h4>
+              <span class="material-symbols-outlined" style="color: #d97706; font-size: 18px;">corporate_fare</span>
+              Registered Company & Plant Billing Profiles ({{ companyProfiles.length }})
+            </h4>
+            <span class="section-hint-badge">Multi-Entity B2B Billing</span>
+          </div>
+
+          <div class="company-grid-cards">
+            <div class="glass-card company-card" *ngFor="let c of companyProfiles" [class.company-default-card]="c.isDefault">
+              <div class="company-card-header">
+                <div class="company-brand-info">
+                  <div class="company-icon-avatar" [class.avatar-default]="c.isDefault">
+                    <span class="material-symbols-outlined">factory</span>
+                  </div>
+                  <div>
+                    <div class="company-title-row">
+                      <span class="company-name">{{ c.companyName }}</span>
+                      <span class="badge-pill badge-primary" *ngIf="c.isDefault">⭐ DEFAULT BILLING</span>
+                    </div>
+                    <span class="company-trade">{{ c.tradeName || c.companyName }}</span>
+                  </div>
+                </div>
+                <div class="company-actions">
+                  <button class="btn-icon-subtle" (click)="openEditCompanyModal(c)" title="Edit Company Details">
+                    <span class="material-symbols-outlined" style="font-size: 17px;">edit</span>
+                  </button>
+                  <button class="btn-icon-subtle" *ngIf="!c.isDefault" (click)="setDefaultCompany(c)" title="Set as Default">
+                    <span class="material-symbols-outlined" style="font-size: 17px; color: #d97706;">star</span>
+                  </button>
+                  <button class="btn-icon-subtle text-danger" *ngIf="!c.isDefault" (click)="deleteCompany(c)" title="Deactivate">
+                    <span class="material-symbols-outlined" style="font-size: 17px;">delete</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="company-card-body">
+                <div class="company-tax-pills">
+                  <span class="tax-pill font-mono"><strong>GSTIN:</strong> {{ c.gstin }}</span>
+                  <span class="tax-pill font-mono" *ngIf="c.pan"><strong>PAN:</strong> {{ c.pan }}</span>
+                  <span class="tax-pill font-mono" *ngIf="c.cin"><strong>CIN:</strong> {{ c.cin }}</span>
+                  <span class="tax-pill font-mono" *ngIf="c.stateCode"><strong>State:</strong> {{ c.stateCode }}</span>
+                </div>
+
+                <div class="company-address-block">
+                  <p class="address-line">
+                    <span class="material-symbols-outlined addr-icon">location_on</span>
+                    <span><strong>Regd:</strong> {{ c.registeredAddress || 'Not specified' }}</span>
+                  </p>
+                  <p class="address-line" *ngIf="c.factoryAddress">
+                    <span class="material-symbols-outlined addr-icon" style="color: #d97706;">precision_manufacturing</span>
+                    <span><strong>Works:</strong> {{ c.factoryAddress }}</span>
+                  </p>
+                  <div class="contact-meta-row" *ngIf="c.phone || c.email">
+                    <span *ngIf="c.phone"><span class="material-symbols-outlined" style="font-size: 13px;">call</span> {{ c.phone }}</span>
+                    <span *ngIf="c.email"><span class="material-symbols-outlined" style="font-size: 13px;">mail</span> {{ c.email }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. BANKING & UPI SETTLEMENT HUB -->
+        <div class="business-section-block">
+          <div class="block-title-row">
+            <h4>
+              <span class="material-symbols-outlined" style="color: #059669; font-size: 18px;">account_balance</span>
+              Corporate Bank & UPI Settlement Accounts ({{ bankProfiles.length }})
+            </h4>
+            <span class="section-hint-badge" style="background: rgba(5,150,105,0.1); color: #059669; border-color: rgba(5,150,105,0.3);">Invoice QR Ready</span>
+          </div>
+
+          <div class="bank-grid-cards">
+            <div class="glass-card bank-account-card" *ngFor="let b of bankProfiles" [class.bank-primary-card]="b.isPrimary">
+              <div class="bank-card-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div class="bank-icon-avatar" [class.avatar-primary]="b.isPrimary">
+                    <span class="material-symbols-outlined">payments</span>
+                  </div>
+                  <div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <span class="bank-name">{{ b.bankName }}</span>
+                      <span class="badge-pill badge-success" *ngIf="b.isPrimary">⭐ PRIMARY</span>
+                    </div>
+                    <span class="bank-type">{{ b.accountType }} ACCOUNT &bull; {{ b.branchName || 'Main Branch' }}</span>
+                  </div>
+                </div>
+                <div class="bank-actions">
+                  <button class="btn-icon-subtle" (click)="openEditBankModal(b)" title="Edit Bank">
+                    <span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
+                  </button>
+                  <button class="btn-icon-subtle" *ngIf="!b.isPrimary" (click)="setPrimaryBank(b)" title="Set Primary">
+                    <span class="material-symbols-outlined" style="font-size: 16px; color: #059669;">check_circle</span>
+                  </button>
+                  <button class="btn-icon-subtle text-danger" *ngIf="!b.isPrimary" (click)="deleteBank(b)" title="Deactivate">
+                    <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="bank-details-grid">
+                <div class="bank-field">
+                  <span class="field-label">A/C Number</span>
+                  <span class="field-value font-mono">{{ b.accountNumber }}</span>
+                </div>
+                <div class="bank-field">
+                  <span class="field-label">IFSC Code</span>
+                  <span class="field-value font-mono font-bold">{{ b.ifscCode }}</span>
+                </div>
+                <div class="bank-field" *ngIf="b.accountHolderName">
+                  <span class="field-label">Beneficiary</span>
+                  <span class="field-value">{{ b.accountHolderName }}</span>
+                </div>
+                <div class="bank-field" *ngIf="b.upiId">
+                  <span class="field-label">UPI ID</span>
+                  <span class="field-value font-mono" style="color: #059669; font-weight: 700;">📱 {{ b.upiId }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. INVOICE PARAMETERS & SHIFTS -->
+        <div class="settings-two-col-grid" style="margin-bottom: 24px;">
+          <!-- GST & Billing Rules -->
+          <div class="glass-card settings-card">
+            <h4><span class="material-symbols-outlined">receipt_long</span> GST & Tax Invoice Parameters</h4>
+            <p class="card-desc">Prefix formats, standard HSN code, and customer credit policies.</p>
+
+            <div class="form-group" style="margin-top: 12px;">
+              <label>Invoice Number Prefix Pattern</label>
+              <input type="text" [(ngModel)]="businessRules.invoice_prefix" (ngModelChange)="hasUnsavedChanges = true" class="form-control font-mono" placeholder="INV-2026/">
+            </div>
+            <div class="form-row-grid" style="margin-top: 12px;">
+              <div class="form-group">
+                <label>Default HSN/SAC Code</label>
+                <input type="text" [(ngModel)]="businessRules.default_hsn" (ngModelChange)="hasUnsavedChanges = true" class="form-control font-mono" placeholder="3923">
+              </div>
+              <div class="form-group">
+                <label>Tax Round-off Method</label>
+                <select [(ngModel)]="businessRules.tax_roundoff" (ngModelChange)="hasUnsavedChanges = true" class="form-control select-modern">
+                  <option value="NEAREST_RUPEE">Round to Nearest ₹1</option>
+                  <option value="EXACT_DECIMAL">Exact Two Decimals</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" style="margin-top: 12px;">
+              <label>Default Customer Credit Days</label>
+              <input type="number" [(ngModel)]="businessRules.credit_days_default" (ngModelChange)="hasUnsavedChanges = true" class="form-control" placeholder="30">
+            </div>
+          </div>
+
+          <!-- Manufacturing Shifts & Tariffs -->
+          <div class="glass-card settings-card">
+            <h4><span class="material-symbols-outlined">precision_manufacturing</span> Plant Shifts & Cost Parameters</h4>
+            <p class="card-desc">Shift hours, electricity power tariff, and raw material safety buffers.</p>
+
+            <div class="form-row-grid" style="margin-top: 12px;">
+              <div class="form-group">
+                <label>Shift 1 (Morning)</label>
+                <input type="text" [(ngModel)]="businessRules.shift1_timings" (ngModelChange)="hasUnsavedChanges = true" class="form-control" placeholder="06:00 - 14:00">
+              </div>
+              <div class="form-group">
+                <label>Shift 2 (Evening)</label>
+                <input type="text" [(ngModel)]="businessRules.shift2_timings" (ngModelChange)="hasUnsavedChanges = true" class="form-control" placeholder="14:00 - 22:00">
+              </div>
+            </div>
+            <div class="form-row-grid" style="margin-top: 12px;">
+              <div class="form-group">
+                <label>Shift 3 (Night)</label>
+                <input type="text" [(ngModel)]="businessRules.shift3_timings" (ngModelChange)="hasUnsavedChanges = true" class="form-control" placeholder="22:00 - 06:00">
+              </div>
+              <div class="form-group">
+                <label>Power Tariff (₹ / kWh)</label>
+                <input type="number" step="0.1" [(ngModel)]="businessRules.power_tariff_per_kwh" (ngModelChange)="hasUnsavedChanges = true" class="form-control" placeholder="8.50">
+              </div>
+            </div>
+            <div class="form-row-grid" style="margin-top: 12px;">
+              <div class="form-group">
+                <label>HDPE Safety Stock (kg)</label>
+                <input type="number" [(ngModel)]="businessRules.safety_stock_hdpe_kg" (ngModelChange)="hasUnsavedChanges = true" class="form-control" placeholder="10000">
+              </div>
+              <div class="form-group">
+                <label>Masterbatch Buffer (kg)</label>
+                <input type="number" [(ngModel)]="businessRules.safety_stock_masterbatch_kg" (ngModelChange)="hasUnsavedChanges = true" class="form-control" placeholder="500">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. LIVE INVOICE & PRINT TEMPLATE DESIGNER -->
+        <div class="invoice-designer-container">
+          <div class="section-top-header" style="margin-bottom: 16px;">
+            <div>
+              <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 6px;">
+                <span class="material-symbols-outlined" style="color: #d97706; font-size: 20px;">design_services</span>
+                Live Tax Invoice & Print Layout Designer
+              </h4>
+              <p style="margin: 4px 0 0 0; font-size: 12px; color: #64748b;">
+                Customize document header titles, legal terms & conditions, UPI QR code visibility, and signatory layout with live preview.
+              </p>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-secondary btn-sm" (click)="openPrintPreview()" title="Open A4 Print Preview">
+                <span class="material-symbols-outlined" style="font-size: 15px;">print</span> Print Preview
+              </button>
+              <button class="btn btn-primary btn-sm" (click)="saveInvoiceTemplate()">
+                <span class="material-symbols-outlined" style="font-size: 15px;">save</span> Save Layout
+              </button>
+            </div>
+          </div>
+
+          <!-- Document Type Selector Tabs (Issue 6c) -->
+          <div class="doc-type-selector-tabs" style="display: flex; gap: 6px; margin: 12px 0 16px 0; overflow-x: auto; padding-bottom: 4px;">
+            <button *ngFor="let dt of docTypes" 
+                    type="button" 
+                    class="btn btn-sm" 
+                    [ngClass]="selectedDocType === dt.key ? 'btn-primary' : 'btn-secondary'" 
+                    (click)="selectDocType(dt.key)"
+                    style="display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; padding: 6px 12px; border-radius: 6px;">
+              <span class="material-symbols-outlined" style="font-size: 15px;">{{ dt.icon }}</span>
+              {{ dt.label }}
+            </button>
+          </div>
+
+          <div class="invoice-designer-grid">
+            <!-- Left Column: Template Controls -->
+            <div class="glass-card invoice-controls-card">
+              <h5 style="margin: 0 0 12px 0; font-size: 13px; font-weight: 700; color: #334155;">Layout Parameters ({{ selectedDocType }})</h5>
+
+              <div class="form-row-grid">
+                <div class="form-group">
+                  <label>Document Title</label>
+                  <input type="text" [(ngModel)]="invoiceTemplate.invoiceTitle" class="form-control" placeholder="TAX INVOICE">
+                </div>
+                <div class="form-group">
+                  <label>Document Subtitle</label>
+                  <input type="text" [(ngModel)]="invoiceTemplate.invoiceSubtitle" class="form-control" placeholder="Original for Recipient (B2B)">
+                </div>
+              </div>
+
+              <div class="form-row-grid" style="margin-top: 12px;">
+                <div class="form-group">
+                  <label>Signatory Title</label>
+                  <input type="text" [(ngModel)]="invoiceTemplate.signatoryTitle" class="form-control" placeholder="Authorized Signatory">
+                </div>
+                <div class="form-group">
+                  <label>Legal Jurisdiction</label>
+                  <input type="text" [(ngModel)]="invoiceTemplate.jurisdictionClause" class="form-control" placeholder="Subject to Pune Jurisdiction only">
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-top: 12px;">
+                <label>Header Remarks / Declaration</label>
+                <input type="text" [(ngModel)]="invoiceTemplate.headerNotes" class="form-control" placeholder="Declaration notes">
+              </div>
+
+              <div class="form-group" style="margin-top: 12px;">
+                <label>Terms & Conditions (One per line)</label>
+                <textarea [(ngModel)]="invoiceTemplate.termsAndConditions" class="form-control font-mono" rows="6" style="min-height: 150px; resize: vertical;" placeholder="Terms and conditions"></textarea>
+              </div>
+
+              <div class="form-group" style="margin-top: 12px;">
+                <label>Footer Greeting / Note</label>
+                <input type="text" [(ngModel)]="invoiceTemplate.footerNotes" class="form-control" placeholder="Thank you message">
+              </div>
+
+              <div class="invoice-toggles-grid" style="margin-top: 14px;">
+                <label class="toggle-pill-label">
+                  <input type="checkbox" [(ngModel)]="invoiceTemplate.showBankDetails">
+                  <span>Show Bank Details</span>
+                </label>
+                <label class="toggle-pill-label">
+                  <input type="checkbox" [(ngModel)]="invoiceTemplate.showUpiQrCode">
+                  <span>Show UPI QR Code</span>
+                </label>
+                <label class="toggle-pill-label">
+                  <input type="checkbox" [(ngModel)]="invoiceTemplate.showCompanyLogo">
+                  <span>Show Logo</span>
+                </label>
+                <label class="toggle-pill-label">
+                  <input type="checkbox" [(ngModel)]="invoiceTemplate.showHsnSummary">
+                  <span>Show HSN Table</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Right Column: Live Interactive Invoice Preview Sheet -->
+            <div class="invoice-preview-sheet">
+              <div class="preview-paper">
+                <!-- Invoice Header -->
+                <div class="inv-paper-header">
+                  <div class="inv-brand-block">
+                    <img *ngIf="invoiceTemplate.showCompanyLogo && branding.brand_logo_url" [src]="branding.brand_logo_url" alt="Logo" class="inv-logo">
+                    <div>
+                      <h4 class="inv-company-title">{{ companyProfiles[0]?.companyName || 'Futane Agro Tech Pvt. Ltd.' }}</h4>
+                      <p class="inv-address-sub">{{ companyProfiles[0]?.factoryAddress || 'Gat No. 124/2, Baramati-Phaltan Road, MIDC Industrial Area, Baramati, Pune - 413133' }}</p>
+                      <p class="inv-gstin-line"><strong>GSTIN:</strong> {{ companyProfiles[0]?.gstin || '27ABCDE1234F1Z5' }} | <strong>PAN:</strong> {{ companyProfiles[0]?.pan || 'ABCDE1234F' }}</p>
+                    </div>
+                  </div>
+                  <div class="inv-title-badge-block">
+                    <div class="inv-main-title">{{ invoiceTemplate.invoiceTitle || 'TAX INVOICE' }}</div>
+                    <div class="inv-sub-title">{{ invoiceTemplate.invoiceSubtitle || 'Original for Recipient' }}</div>
+                    <div class="inv-meta-tag"><strong>INVOICE NO:</strong> FA/26-27/0842</div>
+                    <div class="inv-meta-tag"><strong>DATE:</strong> 02-Sep-2026</div>
+                  </div>
+                </div>
+
+                <div class="inv-divider-line"></div>
+
+                <!-- Buyer & Dispatch Info -->
+                <div class="inv-party-grid">
+                  <div class="inv-party-col">
+                    <div class="party-heading">BILLED TO (BUYER):</div>
+                    <div class="party-name">Maharashtra Agro Logistics Ltd.</div>
+                    <div class="party-sub">Plot 88, APMC Market Yard, Gultekdi, Pune - 411037</div>
+                    <div class="party-sub"><strong>GSTIN:</strong> 27AABCM9876Q1ZB | State: Maharashtra (27)</div>
+                  </div>
+                  <div class="inv-party-col">
+                    <div class="party-heading">DISPATCH & VEHICLE DETAILS:</div>
+                    <div class="party-sub"><strong>Vehicle No:</strong> MH-12-RN-4582 (Eicher 17ft)</div>
+                    <div class="party-sub"><strong>Place of Supply:</strong> Pune (27)</div>
+                    <div class="party-sub"><strong>Payment Terms:</strong> 30 Days Credit</div>
+                  </div>
+                </div>
+
+                <!-- Sample Invoice Items Table -->
+                <table class="inv-items-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Item Description</th>
+                      <th>HSN</th>
+                      <th>Qty</th>
+                      <th>Rate (₹)</th>
+                      <th>Taxable (₹)</th>
+                      <th>GST</th>
+                      <th>Total (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>1</td>
+                      <td><strong>Industrial Heavy Duty Crates (54L)</strong><br><span style="font-size: 9px; color: #64748b;">Virgin HDPE &bull; Color: Royal Blue &bull; Custom Embossed</span></td>
+                      <td>{{ businessRules.default_hsn || '3923' }}</td>
+                      <td>500 Nos</td>
+                      <td>380.00</td>
+                      <td>1,90,000.00</td>
+                      <td>18%</td>
+                      <td>2,24,200.00</td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colspan="5" style="text-align: right; font-weight: 700;">Subtotal:</td>
+                      <td colspan="3" style="font-weight: 700;">₹ 1,90,000.00</td>
+                    </tr>
+                    <tr>
+                      <td colspan="5" style="text-align: right; font-size: 10.5px;">CGST &#64; 9%:</td>
+                      <td colspan="3" style="font-size: 10.5px;">₹ 17,100.00</td>
+                    </tr>
+                    <tr>
+                      <td colspan="5" style="text-align: right; font-size: 10.5px;">SGST &#64; 9%:</td>
+                      <td colspan="3" style="font-size: 10.5px;">₹ 17,100.00</td>
+                    </tr>
+                    <tr class="inv-grand-total-row">
+                      <td colspan="5" style="text-align: right; font-weight: 800; font-size: 12px;">GRAND TOTAL:</td>
+                      <td colspan="3" style="font-weight: 800; font-size: 13px; color: #d97706;">₹ 2,24,200.00</td>
+                    </tr>
+                  </tfoot>
+                </table>
+
+                <!-- Bottom Layout: Banking, UPI QR & Signatory -->
+                <div class="inv-bottom-grid">
+                  <!-- Bank & UPI -->
+                  <div class="inv-settlement-box" *ngIf="invoiceTemplate.showBankDetails">
+                    <div style="font-size: 10px; font-weight: 700; color: #0f172a; text-transform: uppercase; margin-bottom: 4px;">
+                      🏦 Bank Remittance Details:
+                    </div>
+                    <div style="font-size: 9.5px; color: #334155; line-height: 1.4;">
+                      <strong>Bank:</strong> {{ bankProfiles[0]?.bankName || 'HDFC Bank Ltd.' }}<br>
+                      <strong>A/C No:</strong> {{ bankProfiles[0]?.accountNumber || '50200067891234' }}<br>
+                      <strong>IFSC:</strong> {{ bankProfiles[0]?.ifscCode || 'HDFC0001234' }} &bull; <strong>Branch:</strong> {{ bankProfiles[0]?.branchName || 'Baramati MIDC' }}
+                    </div>
+                  </div>
+
+                  <!-- UPI QR Code -->
+                  <div class="inv-qr-box" *ngIf="invoiceTemplate.showUpiQrCode">
+                    <div class="mock-qr-code">
+                      <span class="material-symbols-outlined" style="font-size: 32px; color: #0f172a;">qr_code_2</span>
+                    </div>
+                    <span style="font-size: 8.5px; color: #64748b; font-weight: 600; text-align: center;">Scan to Pay via UPI<br><strong style="color: #059669;">{{ bankProfiles[0]?.upiId || 'futaneagro@okaxis' }}</strong></span>
+                  </div>
+
+                  <!-- Signatory Box -->
+                  <div class="inv-sign-box">
+                    <div class="sign-for-line">For {{ companyProfiles[0]?.companyName || 'Futane Agro Tech Pvt. Ltd.' }}</div>
+                    <div class="sign-stamp-area">
+                      <span class="material-symbols-outlined" style="font-size: 28px; color: rgba(217,119,6,0.4);">verified</span>
+                    </div>
+                    <div class="sign-title-line">{{ invoiceTemplate.signatoryTitle || 'Authorized Signatory' }}</div>
+                  </div>
+                </div>
+
+                <!-- Terms & Conditions Footer -->
+                <div class="inv-tc-block">
+                  <div class="tc-title">Terms & Conditions:</div>
+                  <pre class="tc-content">{{ invoiceTemplate.termsAndConditions }}</pre>
+                  <div class="tc-jurisdiction">{{ invoiceTemplate.jurisdictionClause }} &bull; {{ invoiceTemplate.footerNotes }}</div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="form-group" style="grid-column:span 2;">
-        <label>Registered Address</label>
-        <textarea rows="2"
-                  [ngModel]="getSettingVal('company_address')"
-                  (ngModelChange)="setSettingVal('company_address', $event)"
-                  name="coAddr" placeholder="Village Futane, Tal. Rahuri, Dist. Ahmednagar, Maharashtra - 413706"></textarea>
+
+      <!-- ========================================================================= -->
+      <!-- 3. DEVELOPER HUB & API GATEWAYS                                            -->
+      <!-- ========================================================================= -->
+      <div *ngIf="activeSubTab === 'developer'" class="subtab-section">
+        <div class="section-top-header">
+          <div>
+            <h3>⚡ Developer Hub & API Gateways</h3>
+            <p>Generate scoped integration API keys, configure outbound event webhooks, and manage rate limits.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-primary btn-sm" (click)="openCreateApiKeyModal()" *ngIf="devHubSubTab === 'apikeys'">
+              <span class="material-symbols-outlined" style="font-size: 15px;">key</span> Generate API Key
+            </button>
+            <button class="btn btn-primary btn-sm" (click)="openCreateWebhookModal()" *ngIf="devHubSubTab === 'webhooks'">
+              <span class="material-symbols-outlined" style="font-size: 15px;">webhook</span> Add Webhook
+            </button>
+          </div>
+        </div>
+
+        <!-- Dev Hub Nav Switcher -->
+        <div class="user-access-tabs" style="margin-bottom: 16px;">
+          <button type="button" class="tab-btn" [class.active]="devHubSubTab === 'apikeys'" (click)="devHubSubTab = 'apikeys'">
+            <span class="material-symbols-outlined" style="font-size: 16px;">key</span> API Bearer Keys ({{ apiKeysList.length }})
+          </button>
+          <button type="button" class="tab-btn" [class.active]="devHubSubTab === 'webhooks'" (click)="devHubSubTab = 'webhooks'">
+            <span class="material-symbols-outlined" style="font-size: 16px;">webhook</span> Event Webhooks ({{ webhooksList.length }})
+          </button>
+          <button type="button" class="tab-btn" [class.active]="devHubSubTab === 'observability'" (click)="devHubSubTab = 'observability'">
+            <span class="material-symbols-outlined" style="font-size: 16px;">monitoring</span> Grafana SRE Wallboards (10-Tab L1, L2, L3)
+          </button>
+        </div>
+
+        <!-- API Keys Table -->
+        <div *ngIf="devHubSubTab === 'apikeys'" class="glass-card settings-card" style="padding: 0; overflow: hidden;">
+          <div class="settings-table-scroll">
+            <table class="table enterprise-table">
+              <thead>
+                <tr>
+                  <th>KEY NAME</th>
+                  <th>TOKEN PREFIX</th>
+                  <th>PERMISSION SCOPES</th>
+                  <th>CREATED BY</th>
+                  <th>STATUS</th>
+                  <th class="col-actions">ACTION</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let k of apiKeysList">
+                  <td><strong>{{ k.name }}</strong></td>
+                  <td><code class="code-badge">{{ k.keyPrefix || 'fa_live_***' }}</code></td>
+                  <td><span class="pill-badge pill-info">{{ k.scopes }}</span></td>
+                  <td>{{ k.createdBy || 'SUPER_ADMIN' }}</td>
+                  <td>
+                    <span class="pill-badge" [ngClass]="k.isActive ? 'pill-success' : 'pill-danger'">
+                      {{ k.isActive ? 'ACTIVE' : 'REVOKED' }}
+                    </span>
+                  </td>
+                  <td class="col-actions">
+                    <div class="btn-action-group">
+                      <button type="button" *ngIf="k.isActive" class="btn btn-danger-subtle btn-xs" (click)="revokeApiKey(k)" title="Revoke API key immediately">
+                        <span class="material-symbols-outlined" style="font-size: 13px;">block</span> Revoke
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="apiKeysList.length === 0">
+                  <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                    No external API keys generated. Click "Generate API Key" to connect Zapier, ERP microservices, or custom integrations.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Webhooks Table -->
+        <div *ngIf="devHubSubTab === 'webhooks'" class="glass-card settings-card" style="padding: 0; overflow: hidden;">
+          <div class="settings-table-scroll">
+            <table class="table enterprise-table">
+              <thead>
+                <tr>
+                  <th>NAME</th>
+                  <th>ENDPOINT URL</th>
+                  <th>EVENT TRIGGER</th>
+                  <th>HMAC SECRET</th>
+                  <th>STATUS</th>
+                  <th class="col-actions">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let w of webhooksList">
+                  <td><strong>{{ w.name }}</strong></td>
+                  <td><code class="code-badge">{{ w.endpointUrl }}</code></td>
+                  <td><span class="pill-badge pill-primary">{{ w.eventType }}</span></td>
+                  <td><code class="code-badge">{{ w.secretToken ? 'whsec_***' : 'None' }}</code></td>
+                  <td>
+                    <span class="pill-badge pill-success">
+                      <span class="dot-indicator dot-success"></span> {{ w.lastStatusCode === 200 ? '200 OK' : 'Active' }}
+                    </span>
+                  </td>
+                  <td class="col-actions">
+                    <div class="btn-action-group">
+                      <button class="btn-test-ping" (click)="testWebhook(w)" title="Send test ping payload">
+                        <span class="material-symbols-outlined" style="font-size: 14px; color: #f59e0b;">bolt</span> Test Ping
+                      </button>
+                      <button class="btn-delete-action" (click)="deleteWebhook(w)" title="Remove webhook">
+                        <span class="material-symbols-outlined" style="font-size: 14px;">delete</span> Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="webhooksList.length === 0">
+                  <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                    No active webhook endpoints registered. Click "Add Webhook" to push real-time ERP events to your endpoint.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3. Grafana SRE Wallboards & Observability Suite -->
+        <div *ngIf="devHubSubTab === 'observability'">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <p style="margin: 0; font-size: 13px; color: #64748b;">
+              Direct integration gateways to Grafana 10-Tab Tiered Observability Dashboards on <a href="http://localhost:3000" target="_blank" style="color: #d97706; font-weight: 700;">http://localhost:3000</a>.
+            </p>
+            <a href="http://localhost:3000" target="_blank" class="btn btn-secondary btn-xs" style="text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+              <span class="material-symbols-outlined" style="font-size: 14px;">open_in_new</span> Open Grafana Home
+            </a>
+          </div>
+
+          <!-- 3 Tiered Operations Cards -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-bottom: 20px;">
+            <div class="glass-card" style="padding: 18px; border-left: 4px solid #d97706; background: var(--bg-card, #ffffff); border-radius: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <span style="font-size: 11px; font-weight: 800; color: #d97706; text-transform: uppercase; letter-spacing: 0.3px;">TIER L1 &bull; EXECUTIVE</span>
+                <span class="badge-pill badge-success">10 TABS &bull; NOC</span>
+              </div>
+              <h4 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 700; color: #0f172a;">Executive Command Center</h4>
+              <p style="margin: 0 0 14px 0; font-size: 12px; color: #64748b; line-height: 1.4;">
+                NOC Wallboard with application service health clusters, SLA latency histograms, and financial ledgers.
+              </p>
+              <a href="http://localhost:3000/d/l1_wallboard_master/l1-executive-command-center-noc-wallboard" target="_blank" class="btn btn-primary btn-sm" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <span class="material-symbols-outlined" style="font-size: 15px;">open_in_new</span> Launch L1 Wallboard
+              </a>
+            </div>
+
+            <div class="glass-card" style="padding: 18px; border-left: 4px solid #2563eb; background: var(--bg-card, #ffffff); border-radius: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <span style="font-size: 11px; font-weight: 800; color: #2563eb; text-transform: uppercase; letter-spacing: 0.3px;">TIER L2 &bull; OPERATIONS</span>
+                <span class="badge-pill badge-info">10 TABS &bull; ENG</span>
+              </div>
+              <h4 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 700; color: #0f172a;">Subsystem & Domain Operations</h4>
+              <p style="margin: 0 0 14px 0; font-size: 12px; color: #64748b; line-height: 1.4;">
+                Engineering control for MySQL InnoDB, HikariCP pools, Nginx gateways, and Spring Boot APM actuators.
+              </p>
+              <a href="http://localhost:3000/d/l2_subsystem_control/fd01c25" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <span class="material-symbols-outlined" style="font-size: 15px;">open_in_new</span> Launch L2 Control
+              </a>
+            </div>
+
+            <div class="glass-card" style="padding: 18px; border-left: 4px solid #059669; background: var(--bg-card, #ffffff); border-radius: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <span style="font-size: 11px; font-weight: 800; color: #059669; text-transform: uppercase; letter-spacing: 0.3px;">TIER L3 &bull; SRE DIAGNOSTICS</span>
+                <span class="badge-pill badge-success">10 TABS &bull; SRE</span>
+              </div>
+              <h4 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 700; color: #0f172a;">Root Cause & Diagnostic Analytics</h4>
+              <p style="margin: 0 0 14px 0; font-size: 12px; color: #64748b; line-height: 1.4;">
+                SRE diagnostics for slow queries, thread contention, golden signal latency percentiles, and Loki log streams.
+              </p>
+              <a href="http://localhost:3000/d/l3_root_cause_diagnostics/4253ad8" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <span class="material-symbols-outlined" style="font-size: 15px;">open_in_new</span> Launch L3 SRE Diagnostics
+              </a>
+            </div>
+          </div>
+
+          <!-- 10 Domain Dashboards Quick Links Grid -->
+          <div class="glass-card settings-card" style="padding: 16px;">
+            <h5 style="margin: 0 0 12px 0; font-size: 13px; font-weight: 700; color: #334155; display: flex; align-items: center; gap: 6px;">
+              <span class="material-symbols-outlined" style="color: #d97706; font-size: 18px;">dashboard_customize</span>
+              Dedicated Subsystem Observability Dashboards (Standard Suite)
+            </h5>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;">
+              <a href="http://localhost:3000/d/master_cc/1-master-command-center" target="_blank" class="obs-quick-card">
+                <span class="material-symbols-outlined obs-icon" style="color: #d97706;">dashboard</span>
+                <div>
+                  <strong>1. Master Command Center</strong>
+                  <div class="obs-sub">Live NOC Overview</div>
+                </div>
+              </a>
+              <a href="http://localhost:3000/d/apm_perf/2-application-performance-apm" target="_blank" class="obs-quick-card">
+                <span class="material-symbols-outlined obs-icon" style="color: #2563eb;">speed</span>
+                <div>
+                  <strong>2. APM Performance</strong>
+                  <div class="obs-sub">JVM & Spring Actuator</div>
+                </div>
+              </a>
+              <a href="http://localhost:3000/d/db_obs/3-database-observability" target="_blank" class="obs-quick-card">
+                <span class="material-symbols-outlined obs-icon" style="color: #059669;">database</span>
+                <div>
+                  <strong>3. Database Observability</strong>
+                  <div class="obs-sub">InnoDB & HikariCP</div>
+                </div>
+              </a>
+              <a href="http://localhost:3000/d/network_noc/4-network-and-nginx-noc" target="_blank" class="obs-quick-card">
+                <span class="material-symbols-outlined obs-icon" style="color: #7c3aed;">router</span>
+                <div>
+                  <strong>4. Network & Nginx NOC</strong>
+                  <div class="obs-sub">QPS & Latency</div>
+                </div>
+              </a>
+              <a href="http://localhost:3000/d/infra_obs/5-docker-and-server-infrastructure" target="_blank" class="obs-quick-card">
+                <span class="material-symbols-outlined obs-icon" style="color: #0284c7;">dns</span>
+                <div>
+                  <strong>5. Server Infrastructure</strong>
+                  <div class="obs-sub">CPU, Memory & Disk</div>
+                </div>
+              </a>
+              <a href="http://localhost:3000/d/business_erp/6-business-kpi-and-revenue" target="_blank" class="obs-quick-card">
+                <span class="material-symbols-outlined obs-icon" style="color: #10b981;">monetization_on</span>
+                <div>
+                  <strong>6. Business KPI & Ledger</strong>
+                  <div class="obs-sub">Sales & Production</div>
+                </div>
+              </a>
+              <a href="http://localhost:3000/d/payment_obs/7-payment-observability" target="_blank" class="obs-quick-card">
+                <span class="material-symbols-outlined obs-icon" style="color: #f59e0b;">credit_card</span>
+                <div>
+                  <strong>7. Payment Observability</strong>
+                  <div class="obs-sub">Razorpay & UPI</div>
+                </div>
+              </a>
+              <a href="http://localhost:3000/d/security_soc/8-security-and-audit-soc" target="_blank" class="obs-quick-card">
+                <span class="material-symbols-outlined obs-icon" style="color: #ef4444;">security</span>
+                <div>
+                  <strong>8. Security & SOC</strong>
+                  <div class="obs-sub">Auth & Failed Logins</div>
+                </div>
+              </a>
+              <a href="http://localhost:3000/d/logs_events/9-logs-and-realtime-alerts" target="_blank" class="obs-quick-card">
+                <span class="material-symbols-outlined obs-icon" style="color: #8b5cf6;">article</span>
+                <div>
+                  <strong>9. Logs & Alerts</strong>
+                  <div class="obs-sub">Loki Stream Logs</div>
+                </div>
+              </a>
+              <a href="http://localhost:3000/d/sre_ops/10-sre-operations-and-reliability" target="_blank" class="obs-quick-card">
+                <span class="material-symbols-outlined obs-icon" style="color: #6366f1;">troubleshoot</span>
+                <div>
+                  <strong>10. SRE Operations</strong>
+                  <div class="obs-sub">Error Budgets & SLO</div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Phone</label>
-        <input type="text"
-               [ngModel]="getSettingVal('company_phone')"
-               (ngModelChange)="setSettingVal('company_phone', $event)"
-               name="coPhone" placeholder="+91-XXXXXXXXXX">
+
+      <!-- ========================================================================= -->
+      <!-- 4. GOVERNANCE, CACHE & SYSTEM DIAGNOSTICS                                  -->
+      <!-- ========================================================================= -->
+      <div *ngIf="activeSubTab === 'governance'" class="subtab-section">
+        <div class="section-top-header">
+          <div>
+            <h3>📡 System Governance, Live Telemetry & Backups</h3>
+            <p>Monitor real-time JVM telemetry, database latency, in-memory cache eviction, and export enterprise configuration snapshots.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary btn-sm" (click)="loadSystemDiagnostics()" [disabled]="isLoadingDiagnostics">
+              <span class="material-symbols-outlined" style="font-size: 15px;">refresh</span> {{ isLoadingDiagnostics ? 'Probing...' : 'Refresh Telemetry' }}
+            </button>
+            <button class="btn btn-primary btn-sm" (click)="downloadEnterpriseBackupSnapshot()" [disabled]="isExportingBackup">
+              <span class="material-symbols-outlined" style="font-size: 15px;">download</span> {{ isExportingBackup ? 'Exporting...' : '📥 Export Backup Snapshot' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- 1. LIVE TELEMETRY GAUGE CARDS -->
+        <div class="diagnostics-metrics-grid" style="margin-bottom: 20px;">
+          <!-- JVM Heap Memory -->
+          <div class="glass-card telemetry-card">
+            <div class="telemetry-card-top">
+              <div class="telemetry-icon-box" style="background: rgba(217, 119, 6, 0.12); color: #d97706;">
+                <span class="material-symbols-outlined">memory</span>
+              </div>
+              <span class="telemetry-badge" [ngClass]="systemDiagnostics.memoryUsagePercent > 80 ? 'badge-danger' : 'badge-success'">
+                {{ systemDiagnostics.memoryUsagePercent || 24.5 }}% ALLOCATED
+              </span>
+            </div>
+            <div class="telemetry-metric-title">JVM Heap Memory</div>
+            <div class="telemetry-metric-val">{{ systemDiagnostics.usedMemoryMb || 245 }} MB <span class="telemetry-sub-val">/ {{ systemDiagnostics.maxMemoryMb || 1024 }} MB</span></div>
+            <div class="progress-bar-bg" style="margin-top: 8px;">
+              <div class="progress-bar-fill" [style.width.%]="systemDiagnostics.memoryUsagePercent || 24.5"></div>
+            </div>
+          </div>
+
+          <!-- DB Latency -->
+          <div class="glass-card telemetry-card">
+            <div class="telemetry-card-top">
+              <div class="telemetry-icon-box" style="background: rgba(5, 150, 105, 0.12); color: #059669;">
+                <span class="material-symbols-outlined">database</span>
+              </div>
+              <span class="badge-pill badge-success">HEALTHY</span>
+            </div>
+            <div class="telemetry-metric-title">Database Latency</div>
+            <div class="telemetry-metric-val">{{ systemDiagnostics.dbLatencyMs || 1.2 }} ms <span class="telemetry-sub-val">ping</span></div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 6px;">MySQL InnoDB Connection Pool Active</div>
+          </div>
+
+          <!-- Active Threads -->
+          <div class="glass-card telemetry-card">
+            <div class="telemetry-card-top">
+              <div class="telemetry-icon-box" style="background: rgba(37, 99, 235, 0.12); color: #2563eb;">
+                <span class="material-symbols-outlined">heap_snapshot_multiple</span>
+              </div>
+              <span class="badge-pill badge-info">THREADS</span>
+            </div>
+            <div class="telemetry-metric-title">JVM Active Threads</div>
+            <div class="telemetry-metric-val">{{ systemDiagnostics.activeThreads || 18 }} <span class="telemetry-sub-val">Workers</span></div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 6px;">Async Worker Pool: 8 Core Dispatchers</div>
+          </div>
+
+          <!-- WebSocket Gateway -->
+          <div class="glass-card telemetry-card">
+            <div class="telemetry-card-top">
+              <div class="telemetry-icon-box" style="background: rgba(124, 58, 237, 0.12); color: #7c3aed;">
+                <span class="material-symbols-outlined">hub</span>
+              </div>
+              <span class="badge-pill badge-success">LIVE WS</span>
+            </div>
+            <div class="telemetry-metric-title">WebSocket Broker</div>
+            <div class="telemetry-metric-val" style="font-size: 14px; font-weight: 700; color: #059669;">STOMP / SockJS Active</div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 6px;">Real-time event subscriptions synchronized</div>
+          </div>
+        </div>
+
+        <div class="settings-two-col-grid">
+          <!-- Caffeine Cache Control -->
+          <div class="glass-card settings-card">
+            <h4><span class="material-symbols-outlined">bolt</span> Caffeine In-Memory Cache</h4>
+            <p class="card-desc">High-performance L1 in-memory caching for branding, role permissions, and feature flags.</p>
+            
+            <div class="cache-regions-list" style="margin: 14px 0;">
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-radius: 6px; background: rgba(0,0,0,0.03); margin-bottom: 6px;">
+                <div>
+                  <strong style="font-size: 12px;">branding</strong>
+                  <span style="font-size: 11px; color: #64748b; margin-left: 8px;">TTL: 30m | ACTIVE</span>
+                </div>
+                <button type="button" class="btn btn-action-subtle btn-xs" (click)="flushCacheRegion('branding')">Flush</button>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-radius: 6px; background: rgba(0,0,0,0.03); margin-bottom: 6px;">
+                <div>
+                  <strong style="font-size: 12px;">featureFlags</strong>
+                  <span style="font-size: 11px; color: #64748b; margin-left: 8px;">TTL: 10m | ACTIVE</span>
+                </div>
+                <button type="button" class="btn btn-action-subtle btn-xs" (click)="flushCacheRegion('featureFlags')">Flush</button>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-radius: 6px; background: rgba(0,0,0,0.03); margin-bottom: 6px;">
+                <div>
+                  <strong style="font-size: 12px;">rolePermissions</strong>
+                  <span style="font-size: 11px; color: #64748b; margin-left: 8px;">TTL: 60m | ACTIVE</span>
+                </div>
+                <button type="button" class="btn btn-action-subtle btn-xs" (click)="flushCacheRegion('rolePermissions')">Flush</button>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-radius: 6px; background: rgba(0,0,0,0.03); margin-bottom: 6px;">
+                <div>
+                  <strong style="font-size: 12px;">teams</strong>
+                  <span style="font-size: 11px; color: #64748b; margin-left: 8px;">TTL: 30m | ACTIVE</span>
+                </div>
+                <button type="button" class="btn btn-action-subtle btn-xs" (click)="flushCacheRegion('teams')">Flush</button>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+              <button class="btn btn-danger-outline btn-sm" (click)="flushCacheRegion('all')" style="flex: 1;">
+                <span class="material-symbols-outlined" style="font-size: 15px;">delete_sweep</span> Flush All Caches
+              </button>
+              <button class="btn btn-danger btn-sm" (click)="forceLogoutAllSessions()" title="Emergency session invalidation">
+                <span class="material-symbols-outlined" style="font-size: 15px;">logout</span> Emergency Reset
+              </button>
+            </div>
+          </div>
+
+          <!-- Audit Log Retention & Platform Environment -->
+          <div class="glass-card settings-card">
+            <h4><span class="material-symbols-outlined">history_toggle_off</span> Audit Log Retention & Environment</h4>
+            <p class="card-desc">Configure automated compliance archiving window for security log records.</p>
+            
+            <div class="form-group" style="margin-top: 14px;">
+              <label>Log Retention Window</label>
+              <select [(ngModel)]="auditRetentionDays" class="form-control">
+                <option [value]="30">30 Days (Standard)</option>
+                <option [value]="90">90 Days (Enterprise Default)</option>
+                <option [value]="180">180 Days (Compliance)</option>
+                <option [value]="365">365 Days (1 Year Audit)</option>
+              </select>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
+              <button class="btn btn-primary btn-sm" (click)="saveAuditRetention()">
+                Save Retention Policy
+              </button>
+              <span style="font-size: 10.5px; color: #64748b; font-family: var(--font-mono, monospace);">
+                JDK: {{ systemDiagnostics.jvmVersion || '17.0.20' }}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email"
-               [ngModel]="getSettingVal('company_email')"
-               (ngModelChange)="setSettingVal('company_email', $event)"
-               name="coEmail" placeholder="info@futaneagro.com">
+
+      <!-- ========================================================================= -->
+      <!-- 5. TEAMS & DEPARTMENT DIRECTORY                                           -->
+      <!-- ========================================================================= -->
+      <div *ngIf="activeSubTab === 'teams'" class="subtab-section">
+        <div class="section-top-header">
+          <div>
+            <h3>👥 Teams & Department Directory</h3>
+            <p>Organize ERP operators, plant managers, and accounts staff into distinct operational teams.</p>
+          </div>
+          <button class="btn btn-primary btn-sm" (click)="openAddTeamModal()">
+            <span class="material-symbols-outlined" style="font-size: 15px;">add</span> Add Team
+          </button>
+        </div>
+
+        <div class="glass-card settings-card" style="padding: 0; overflow: hidden;">
+          <div class="settings-table-scroll">
+            <table class="table enterprise-table" style="table-layout: fixed;">
+              <thead>
+                <tr>
+                  <th style="width: 180px;">TEAM NAME</th>
+                  <th style="width: 120px;">CODE</th>
+                  <th style="min-width: 260px;">DESCRIPTION</th>
+                  <th style="width: 130px;">COLOR TAG</th>
+                  <th style="width: 100px;">STATUS</th>
+                  <th class="col-actions" style="width: 160px;">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let t of teamsList">
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span class="material-symbols-outlined" [style.color]="t.colorTag" style="font-size: 20px;">{{ t.icon || 'groups' }}</span>
+                      <strong>{{ t.name }}</strong>
+                    </div>
+                  </td>
+                  <td><code class="code-badge font-mono">{{ t.code }}</code></td>
+                  <td [title]="t.description || 'General department'">
+                    <div class="team-desc-truncate" style="max-width: 320px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                      {{ t.description || 'General department' }}
+                    </div>
+                  </td>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <span class="color-tag-pill" [style.background-color]="t.colorTag" style="display: inline-block; width: 14px; height: 14px; border-radius: 50%;"></span>
+                      <span class="font-mono text-secondary" style="font-size: 11px;">{{ t.colorTag }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="pill-badge" [ngClass]="t.isActive ? 'pill-success' : 'pill-danger'">
+                      <span class="dot-indicator" [ngClass]="t.isActive ? 'dot-success' : 'dot-danger'"></span>
+                      {{ t.isActive ? 'ACTIVE' : 'INACTIVE' }}
+                    </span>
+                  </td>
+                  <td class="col-actions">
+                    <div class="btn-action-group">
+                      <button type="button" class="btn btn-action-subtle btn-xs" (click)="openEditTeamModal(t)" title="Edit department">
+                        <span class="material-symbols-outlined" style="font-size: 13px;">edit</span> Edit
+                      </button>
+                      <button type="button" *ngIf="t.isActive" class="btn btn-danger-subtle btn-xs" (click)="deactivateTeam(t)" title="Deactivate department">
+                        <span class="material-symbols-outlined" style="font-size: 13px;">delete</span> Deactivate
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="teamsList.length === 0">
+                  <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                    No operational teams configured. Click "Add Team" to create departments.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label>GST Rate (%)</label>
-        <input type="number"
-               [ngModel]="getSettingVal('gst_rate_percentage')"
-               (ngModelChange)="setSettingVal('gst_rate_percentage', $event)"
-               name="gstRate" min="0" max="28" step="0.01">
+
+      <!-- ========================================================================= -->
+      <!-- 6. EXTENSIBLE CUSTOM FIELDS                                                -->
+      <!-- ========================================================================= -->
+      <div *ngIf="activeSubTab === 'custom_fields'" class="subtab-section">
+        <div class="section-top-header">
+          <div>
+            <h3>🧩 Extensible Custom Fields Engine</h3>
+            <p>Extend ERP core schemas (Parties, Items, Invoices, Batches) with custom metadata fields without database migrations.</p>
+          </div>
+          <button class="btn btn-primary btn-sm" (click)="openAddCustomFieldModal()">
+            <span class="material-symbols-outlined" style="font-size: 15px;">add</span> Add Custom Field
+          </button>
+        </div>
+
+        <!-- Entity Selector Pills -->
+        <div class="user-access-tabs" style="margin-bottom: 16px;">
+          <button type="button" 
+                  class="tab-btn" 
+                  *ngFor="let ent of ['PARTIES', 'ITEMS', 'INVOICES', 'PRODUCTION_BATCHES', 'MACHINES']"
+                  [class.active]="selectedEntityForCustomFields === ent" 
+                  (click)="selectCustomFieldEntity(ent)">
+            <span class="material-symbols-outlined" style="font-size: 15px;">database</span>
+            {{ ent }} ({{ getCustomFieldsCountForEntity(ent) }})
+          </button>
+        </div>
+
+        <div class="glass-card settings-card" style="padding: 0; overflow: hidden;">
+          <div class="settings-table-scroll">
+            <table class="table enterprise-table">
+              <thead>
+                <tr>
+                  <th>FIELD LABEL</th>
+                  <th>FIELD KEY</th>
+                  <th>DATA TYPE</th>
+                  <th>REQUIRED</th>
+                  <th>OPTIONS / CONFIG</th>
+                  <th class="col-actions">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let f of customFieldDefs">
+                  <td><strong>{{ f.fieldLabel }}</strong></td>
+                  <td><code class="code-badge font-mono">{{ f.fieldKey }}</code></td>
+                  <td><span class="pill-badge pill-info">{{ f.fieldType }}</span></td>
+                  <td>
+                    <span class="pill-badge" [ngClass]="f.isRequired ? 'pill-danger' : 'pill-secondary'">
+                      {{ f.isRequired ? 'MANDATORY' : 'OPTIONAL' }}
+                    </span>
+                  </td>
+                  <td>
+                    <span *ngIf="f.optionsJson" class="code-badge">{{ f.optionsJson }}</span>
+                    <span *ngIf="!f.optionsJson" style="color: var(--text-muted);">Standard</span>
+                  </td>
+                  <td class="col-actions">
+                    <div class="btn-action-group">
+                      <button type="button" class="btn btn-danger-subtle btn-xs" (click)="deleteCustomField(f)" title="Remove custom field definition">
+                        <span class="material-symbols-outlined" style="font-size: 13px;">delete</span> Remove
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="customFieldDefs.length === 0">
+                  <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                    No custom fields configured for <strong>{{ selectedEntityForCustomFields }}</strong>. Click "Add Custom Field" to attach custom attributes.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label>PAN Number</label>
-        <input type="text"
-               [ngModel]="getSettingVal('company_pan')"
-               (ngModelChange)="setSettingVal('company_pan', $event)"
-               name="coPan" placeholder="XXXXX0000X">
+
+      <!-- ========================================================================= -->
+      <!-- 5. AUTOMATED MESSAGING & WHATSAPP DISPATCH ENGINE                          -->
+      <!-- ========================================================================= -->
+      <div *ngIf="activeSubTab === 'notifications'" class="subtab-section">
+        <div class="section-top-header">
+          <div>
+            <h3>💬 Automated Messaging & WhatsApp Dispatch Engine</h3>
+            <p>Configure automated transactional notifications, dispatch alerts, payment reminders, and DLT message templates.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-primary btn-sm" (click)="saveSelectedNotificationTemplate()" *ngIf="selectedNotificationTemplate">
+              <span class="material-symbols-outlined" style="font-size: 15px;">save</span> Save Template
+            </button>
+          </div>
+        </div>
+
+        <div class="notifications-layout-grid">
+          <!-- Left Column: Template List -->
+          <div class="glass-card notif-sidebar-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h5 style="margin: 0; font-size: 13px; font-weight: 700; color: #334155;">Templates ({{ notificationTemplates.length }})</h5>
+              <span class="badge-pill badge-primary" style="font-size: 9.5px;">DLT Ready</span>
+            </div>
+
+            <div class="notif-template-list">
+              <div class="notif-template-item" *ngFor="let t of notificationTemplates"
+                   [class.item-active]="selectedNotificationTemplate?.id === t.id"
+                   (click)="selectNotificationTemplate(t)">
+                <div class="notif-item-top">
+                  <span class="channel-pill" [ngClass]="'channel-' + t.channel?.toLowerCase()">
+                    <span *ngIf="t.channel === 'WHATSAPP'">🟢 WhatsApp</span>
+                    <span *ngIf="t.channel === 'SMS'">📱 SMS</span>
+                    <span *ngIf="t.channel === 'EMAIL'">✉️ Email</span>
+                  </span>
+                  <label class="switch-toggle switch-xs" (click)="$event.stopPropagation()">
+                    <input type="checkbox" [checked]="t.isEnabled" (change)="toggleNotificationTemplateActive(t, $event)">
+                    <span class="slider-round"></span>
+                  </label>
+                </div>
+                <div class="notif-item-title">{{ t.templateName }}</div>
+                <div class="notif-item-event"><code>{{ t.eventKey }}</code></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Middle Column: Template Editor -->
+          <div class="glass-card notif-editor-card" *ngIf="selectedNotificationTemplate">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color, #e2e8f0);">
+              <div>
+                <h5 style="margin: 0; font-size: 14px; font-weight: 700; color: #1e293b;">
+                  Template Configuration: <span style="color: #d97706;">{{ selectedNotificationTemplate.templateName }}</span>
+                </h5>
+                <span style="font-size: 11px; color: #64748b;">Trigger event: <code>{{ selectedNotificationTemplate.eventKey }}</code></span>
+              </div>
+              <span class="badge-pill" [ngClass]="selectedNotificationTemplate.isEnabled ? 'badge-success' : 'badge-danger'">
+                {{ selectedNotificationTemplate.isEnabled ? 'ACTIVE & TRIGGERING' : 'PAUSED' }}
+              </span>
+            </div>
+
+            <div class="form-row-grid">
+              <div class="form-group">
+                <label>Template Display Name</label>
+                <input type="text" [(ngModel)]="selectedNotificationTemplate.templateName" class="form-control" placeholder="Template Name">
+              </div>
+              <div class="form-group">
+                <label>Delivery Channel</label>
+                <select [(ngModel)]="selectedNotificationTemplate.channel" class="form-control select-modern">
+                  <option value="WHATSAPP">WhatsApp Business API</option>
+                  <option value="SMS">Transactional SMS (DLT)</option>
+                  <option value="EMAIL">Transactional Email</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row-grid" style="margin-top: 14px;">
+              <div class="form-group">
+                <label>ERP Event Trigger</label>
+                <select [(ngModel)]="selectedNotificationTemplate.eventKey" class="form-control select-modern">
+                  <option value="INVOICE_DISPATCHED">INVOICE_DISPATCHED (On Goods Outward)</option>
+                  <option value="PAYMENT_REMINDER">PAYMENT_REMINDER (Payment Due Settlement)</option>
+                  <option value="ORDER_CONFIRMED">ORDER_CONFIRMED (Sales Order Approved)</option>
+                  <option value="LOW_STOCK_ALARM">LOW_STOCK_ALARM (Raw Material Below Buffer)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Indian DLT Template ID (Compliance)</label>
+                <input type="text" [(ngModel)]="selectedNotificationTemplate.dltTemplateId" class="form-control font-mono" placeholder="DLT-FA-1002938">
+              </div>
+            </div>
+
+            <!-- Dynamic Placeholder Chips -->
+            <div class="placeholders-bar" style="margin-top: 16px;">
+              <span class="placeholder-label">Click to Insert Dynamic Variable:</span>
+              <div class="chips-wrap">
+                <button type="button" class="token-chip" *ngFor="let p of availablePlaceholders" (click)="insertPlaceholderToken(p.token)" [title]="p.label">
+                  + {{ p.token }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Message Body Textarea -->
+            <div class="form-group" style="margin-top: 14px;">
+              <label>Message Content (Supports Emojis & Bold *text*)</label>
+              <textarea [(ngModel)]="selectedNotificationTemplate.templateText" class="form-control font-mono" rows="6" placeholder="Message content with dynamic tokens"></textarea>
+            </div>
+          </div>
+
+          <!-- Right Column: Live Smartphone Preview & Test Simulator -->
+          <div class="notif-preview-col" *ngIf="selectedNotificationTemplate">
+            <!-- Smartphone WhatsApp Chat Mockup -->
+            <div class="smartphone-frame">
+              <div class="phone-speaker-notch"></div>
+              <div class="phone-top-bar">
+                <span class="material-symbols-outlined" style="font-size: 15px;">signal_cellular_4_bar</span>
+                <span style="font-weight: 700;">12:45</span>
+                <span class="material-symbols-outlined" style="font-size: 15px;">battery_full</span>
+              </div>
+              <div class="phone-whatsapp-header">
+                <div class="phone-avatar">
+                  <span class="material-symbols-outlined">factory</span>
+                </div>
+                <div class="phone-contact-info">
+                  <div class="phone-name">Futane Agro ERP <span class="verified-check">✓</span></div>
+                  <div class="phone-status">Official Business Account</div>
+                </div>
+              </div>
+              <div class="phone-chat-body">
+                <div class="chat-date-pill">Today</div>
+                <div class="whatsapp-bubble">
+                  <div class="bubble-text">{{ getRenderedPreviewText() }}</div>
+                  <div class="bubble-meta">
+                    <span>12:45 PM</span>
+                    <span class="material-symbols-outlined bubble-ticks">done_all</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Test Dispatch Simulator -->
+            <div class="glass-card test-simulator-card" style="margin-top: 14px;">
+              <h5 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 4px;">
+                <span class="material-symbols-outlined" style="font-size: 16px; color: #059669;">send_to_mobile</span>
+                Test Message Simulator
+              </h5>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" [(ngModel)]="testPhoneInput" class="form-control font-mono" style="font-size: 12px;" placeholder="+91 98220 99999">
+                <button class="btn btn-secondary btn-sm" (click)="simulateTestDispatch()" [disabled]="isSimulatingDispatch">
+                  <span class="material-symbols-outlined" style="font-size: 14px;" *ngIf="!isSimulatingDispatch">send</span>
+                  {{ isSimulatingDispatch ? 'Sending...' : 'Test' }}
+                </button>
+              </div>
+
+              <!-- Simulation Output -->
+              <div class="simulation-result" *ngIf="testSimulationResult">
+                <div style="font-size: 10px; font-weight: 700; color: #059669; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
+                  <span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>
+                  DISPATCH SIMULATED ({{ testSimulationResult.channel }})
+                </div>
+                <div style="font-size: 10px; color: #64748b; margin-bottom: 4px;">Delivered to: {{ testSimulationResult.recipient }}</div>
+                <pre class="rendered-payload-box">{{ testSimulationResult.renderedMessage }}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <!-- ========================================================================= -->
+      <!-- 6. USERS & RBAC MATRIX                                                     -->
+      <!-- ========================================================================= -->
+      <div *ngIf="activeSubTab === 'users'" class="subtab-section">
+        <div class="section-top-header">
+          <div>
+            <h3>🛡️ Users, Roles & Access Control Matrix</h3>
+            <p>Manage system users, assign role templates, and configure customized per-user module access.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-primary btn-sm" (click)="openInviteUserModal()" *ngIf="userAccessSubTab === 'users'">
+              <span class="material-symbols-outlined" style="font-size: 15px;">person_add</span> Invite User
+            </button>
+            <button class="btn btn-primary btn-sm" (click)="savePermissionsMatrix()" *ngIf="userAccessSubTab === 'matrix'">
+              <span class="material-symbols-outlined" style="font-size: 15px;">save</span> Save Matrix
+            </button>
+          </div>
+        </div>
+
+        <div class="user-access-tabs" style="margin-bottom: 16px;">
+          <button type="button" class="tab-btn" [class.active]="userAccessSubTab === 'users'" (click)="userAccessSubTab = 'users'">
+            <span class="material-symbols-outlined" style="font-size: 16px;">people</span> Users Directory ({{ adminUsersList.length }})
+          </button>
+          <button type="button" class="tab-btn" [class.active]="userAccessSubTab === 'matrix'" (click)="userAccessSubTab = 'matrix'">
+            <span class="material-symbols-outlined" style="font-size: 16px;">table_chart</span> Role Permission Matrix
+          </button>
+        </div>
+
+        <!-- Users Table -->
+        <div *ngIf="userAccessSubTab === 'users'" class="glass-card settings-card user-table-card" style="padding: 0; overflow: hidden; border-radius: 12px;">
+          <div class="settings-table-scroll">
+            <table class="table enterprise-table users-directory-table">
+              <thead>
+                <tr>
+                  <th class="col-num">#</th>
+                  <th class="col-user">USER & CONTACT</th>
+                  <th class="col-role">ASSIGNED ROLE</th>
+                  <th class="col-team">TEAM</th>
+                  <th class="col-login">LAST LOGIN</th>
+                  <th class="col-status">STATUS</th>
+                  <th class="col-actions">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let u of adminUsersList; let i = index">
+                  <td class="col-num"><span class="text-muted font-mono" style="font-size: 11px;">{{ i + 1 }}</span></td>
+                  <td class="col-user">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <div class="user-avatar-initials" [style.background-color]="getUserAvatarColor(u.name || u.username)" style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 10px; flex-shrink: 0;">
+                        {{ getInitials(u.name || u.fullName || u.username) }}
+                      </div>
+                      <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0;">
+                        <strong style="font-size: 12px; color: #1e293b; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;" [title]="u.name || u.fullName || u.username">{{ u.name || u.fullName || u.username }}</strong>
+                        <div style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: #64748b; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                          <span class="font-mono" style="color: #64748b;">&#64;{{ formatHandle(u.username) }}</span>
+                          <span style="color: #cbd5e1;">•</span>
+                          <span class="font-mono text-secondary" style="font-size: 10px; color: #64748b; max-width: 130px; text-overflow: ellipsis; overflow: hidden; display: inline-block; vertical-align: middle;" [title]="u.email || ''">{{ u.email || '—' }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="col-role">
+                    <span class="pill-badge" [ngClass]="getRoleBadgeClass(u.role)" style="font-size: 9.5px; padding: 2px 5px;">
+                      {{ u.role }}
+                    </span>
+                  </td>
+                  <td class="col-team">
+                    <span class="team-tag-pill" *ngIf="u.teamName" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; padding: 2px 5px; border-radius: 12px; background: rgba(217, 119, 6, 0.1); color: #d97706; font-weight: 600; white-space: nowrap;">
+                      <span class="material-symbols-outlined" style="font-size: 11px;">groups</span>
+                      {{ u.teamName }}
+                    </span>
+                    <span class="text-muted" *ngIf="!u.teamName" style="font-size: 10.5px;">—</span>
+                  </td>
+                  <td class="col-login">
+                    <span class="last-login-text text-secondary" style="font-size: 10.5px; white-space: nowrap;">{{ u.lastLogin || getSimulatedLastLogin(i) }}</span>
+                  </td>
+                  <td class="col-status">
+                    <span class="pill-badge" [ngClass]="u.status === 'ACTIVE' || !u.accountLocked ? 'pill-success' : 'pill-danger'" style="font-size: 9.5px; padding: 2px 5px;">
+                      <span class="dot-indicator" [ngClass]="u.status === 'ACTIVE' || !u.accountLocked ? 'dot-success' : 'dot-danger'" style="width: 5px; height: 5px;"></span>
+                      {{ u.status || (u.accountLocked ? 'DISABLED' : 'ACTIVE') }}
+                    </span>
+                  </td>
+                  <td class="col-actions">
+                    <div class="btn-action-group" style="display: inline-flex; align-items: center; gap: 3px; justify-content: flex-end;">
+                      <!-- Custom Access: Icon button -->
+                      <button type="button" class="btn btn-action-subtle btn-xs" (click)="openUserAccessModal(u)" title="Custom Permissions" style="padding: 3px 5px; border-radius: 5px;">
+                        <span class="material-symbols-outlined" style="font-size: 13px; color: var(--brand-primary, #d97706);">tune</span>
+                      </button>
+                      <!-- Edit User: Subtle Button -->
+                      <button type="button" class="btn btn-action-subtle btn-xs" (click)="openEditUserModal(u)" title="Edit user profile" style="padding: 3px 5px; border-radius: 5px;">
+                        <span class="material-symbols-outlined" style="font-size: 13px; color: #0284c7;">edit</span>
+                      </button>
+                      <!-- Kebab ⋮ Dropdown -->
+                      <div class="kebab-menu-wrapper" style="position: relative; display: inline-block;">
+                        <button type="button" class="btn-kebab-trigger" (click)="toggleUserKebab(u, $event)" title="More user actions" style="background: none; border: 1px solid #e2e8f0; border-radius: 5px; padding: 3px 4px; cursor: pointer; color: #64748b; display: flex; align-items: center;">
+                          <span class="material-symbols-outlined" style="font-size: 14px;">more_vert</span>
+                        </button>
+                        <div class="kebab-dropdown-menu glass-dropdown" [class.kebab-dropup]="i >= adminUsersList.length - 2 && adminUsersList.length > 3" *ngIf="openKebabUserId === u.username" (click)="$event.stopPropagation()">
+                          <button type="button" class="kebab-item" (click)="forceResetPassword(u)" style="width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: none; border: none; font-size: 12px; color: #334155; cursor: pointer; text-align: left;">
+                            <span class="material-symbols-outlined" style="font-size: 15px; color: #dc2626;">lock_reset</span> Reset Password
+                          </button>
+                          <button type="button" class="kebab-item" (click)="openChangeRoleModal(u)" style="width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: none; border: none; font-size: 12px; color: #334155; cursor: pointer; text-align: left;">
+                            <span class="material-symbols-outlined" style="font-size: 15px; color: #d97706;">badge</span> Change Role
+                          </button>
+                          <button type="button" class="kebab-item text-danger" (click)="toggleLockUser(u)" style="width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: none; border: none; font-size: 12px; color: #dc2626; cursor: pointer; text-align: left;">
+                            <span class="material-symbols-outlined" style="font-size: 15px;">{{ u.accountLocked ? 'lock_open' : 'block' }}</span> {{ u.accountLocked ? 'Unlock Account' : 'Deactivate User' }}
+                          </button>
+                          <div style="border-top: 1px solid #f1f5f9; margin: 4px 0;"></div>
+                          <button type="button" class="kebab-item" (click)="viewUserAudit(u)" style="width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: none; border: none; font-size: 12px; color: #334155; cursor: pointer; text-align: left;">
+                            <span class="material-symbols-outlined" style="font-size: 15px; color: #64748b;">history</span> View Audit History
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Permissions Matrix -->
+        <div *ngIf="userAccessSubTab === 'matrix'" class="glass-card settings-card">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+            <label style="font-weight: 600;">Select Role to Configure:</label>
+            <select [(ngModel)]="selectedRoleForMatrix" class="form-control" style="max-width: 200px;">
+              <option *ngFor="let r of rolesList" [value]="r">{{ r }}</option>
+            </select>
+          </div>
+
+          <div class="settings-table-scroll">
+            <table class="table enterprise-table rbac-matrix-table" style="min-width: 780px;">
+              <thead>
+                <tr>
+                  <th style="min-width: 240px;">ERP MODULE</th>
+                  <th style="text-align: center; width: 90px;">VIEW</th>
+                  <th style="text-align: center; width: 90px;">CREATE</th>
+                  <th style="text-align: center; width: 90px;">EDIT</th>
+                  <th style="text-align: center; width: 90px;">DELETE</th>
+                  <th style="text-align: center; width: 90px;">EXPORT</th>
+                  <th style="text-align: center; width: 90px;">APPROVE</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let perm of filteredMatrix">
+                  <td><strong>{{ perm.moduleName || perm.moduleKey }}</strong></td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" [checked]="perm.canView" (change)="toggleMatrixPermission(perm, 'canView')" style="width: 16px; height: 16px; cursor: pointer;">
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" [checked]="perm.canCreate" (change)="toggleMatrixPermission(perm, 'canCreate')" style="width: 16px; height: 16px; cursor: pointer;">
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" [checked]="perm.canEdit" (change)="toggleMatrixPermission(perm, 'canEdit')" style="width: 16px; height: 16px; cursor: pointer;">
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" [checked]="perm.canDelete" (change)="toggleMatrixPermission(perm, 'canDelete')" style="width: 16px; height: 16px; cursor: pointer;">
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" [checked]="perm.canExport" (change)="toggleMatrixPermission(perm, 'canExport')" style="width: 16px; height: 16px; cursor: pointer;">
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" [checked]="perm.canApprove" (change)="toggleMatrixPermission(perm, 'canApprove')" style="width: 16px; height: 16px; cursor: pointer;">
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- 7. DYNAMIC FEATURE FLAGS (ACTIVE, RICH & INTERACTIVE)                     -->
+      <!-- ========================================================================= -->
+      <div *ngIf="activeSubTab === 'features'" class="subtab-section">
+        <div class="section-top-header">
+          <div>
+            <h3>🚩 Dynamic Feature Flags & Subsystem Modules</h3>
+            <p>Live enable/disable individual ERP subsystems without redeploying code or stopping the server.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-primary btn-sm" (click)="enableAllFeatures()">
+              <span class="material-symbols-outlined" style="font-size: 15px;">bolt</span> Enable All Modules
+            </button>
+          </div>
+        </div>
+
+        <!-- Telemetry & Search Filter Bar -->
+        <div class="feature-filter-bar">
+          <div class="feature-active-stat">
+            <span class="live-pulse-dot"></span>
+            <span><strong>{{ activeFeatureCount }}</strong> of <strong>{{ featureFlags.length }}</strong> Subsystems Active ({{ Math.round((activeFeatureCount / (featureFlags.length || 1)) * 100) }}%)</span>
+          </div>
+
+          <div class="feature-search-box">
+            <span class="material-symbols-outlined search-icon">search</span>
+            <input type="text" [(ngModel)]="featureSearchQuery" placeholder="Search module name or key..." class="feature-search-input">
+          </div>
+        </div>
+
+        <!-- Category Filter Pills -->
+        <div class="category-filter-row">
+          <button *ngFor="let cat of ['ALL', 'Core', 'Manufacturing', 'Commerce', 'Supply Chain', 'Finance', 'Human Resources', 'Administration']"
+                  type="button" 
+                  class="cat-chip" 
+                  [class.active]="featureCategoryFilter === cat"
+                  (click)="featureCategoryFilter = cat">
+            {{ cat }}
+          </button>
+        </div>
+
+        <!-- Dynamic Grid of Cards -->
+        <div class="feature-flags-grid">
+          <div *ngFor="let f of filteredFeatureFlags" 
+               class="feature-flag-card"
+               [class.card-active]="f.enabled || f.isEnabled">
+            
+            <div class="card-left-info">
+              <div class="card-title-row">
+                <div class="icon-avatar" [class.icon-active]="f.enabled || f.isEnabled">
+                  <span class="material-symbols-outlined">{{ f.icon || 'star' }}</span>
+                </div>
+                <div>
+                  <h4 class="flag-title">{{ f.moduleName }}</h4>
+                  <span class="flag-category">{{ f.category || 'General' }}</span>
+                </div>
+              </div>
+              <p class="flag-desc">{{ f.description }}</p>
+            </div>
+
+            <div class="card-right-controls">
+              <span class="status-pill" [class.status-enabled]="f.enabled || f.isEnabled">
+                <span class="status-dot"></span>
+                {{ (f.enabled || f.isEnabled) ? 'ENABLED' : 'DISABLED' }}
+              </span>
+
+              <label class="toggle-switch">
+                <input type="checkbox" [checked]="f.enabled || f.isEnabled" (change)="toggleFeature(f)">
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- 9. CHANGE PASSWORD                                                         -->
+      <!-- ========================================================================= -->
+      <div *ngIf="activeSubTab === 'password'" class="subtab-section">
+        <div class="section-top-header">
+          <div>
+            <h3>🔒 Security Administration & Credentials</h3>
+            <p>Ensure root account credentials follow enterprise policies and manage high-privilege emergency security controls.</p>
+          </div>
+        </div>
+
+        <div class="settings-two-col-grid" style="align-items: start;">
+          <!-- Left Column: Master Password Management -->
+          <div class="glass-card settings-card" style="padding: 22px; border-radius: 12px;">
+            <h4><span class="material-symbols-outlined" style="color: var(--primary);">lock</span> Change Super Admin Password</h4>
+            <p class="card-desc">Update root administrator authentication credentials with policy enforcement.</p>
+
+            <div class="form-group" style="margin-top: 14px;">
+              <label>Current Master Password *</label>
+              <div class="password-input-wrap" style="position: relative;">
+                <input [type]="changePasswordForm.showCurrent ? 'text' : 'password'" [(ngModel)]="changePasswordForm.currentPassword" class="form-control" placeholder="Enter existing password" style="padding-right: 38px;">
+                <button type="button" class="btn-eye-toggle" (click)="changePasswordForm.showCurrent = !changePasswordForm.showCurrent" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 4px; display: flex; align-items: center;">
+                  <span class="material-symbols-outlined" style="font-size: 18px;">{{ changePasswordForm.showCurrent ? 'visibility_off' : 'visibility' }}</span>
+                </button>
+              </div>
+            </div>
+            <div class="form-group" style="margin-top: 14px;">
+              <label>New Secure Password *</label>
+              <div class="password-input-wrap" style="position: relative;">
+                <input [type]="changePasswordForm.showNew ? 'text' : 'password'" [(ngModel)]="changePasswordForm.newPassword" class="form-control" placeholder="Minimum 8 characters with symbols" style="padding-right: 38px;">
+                <button type="button" class="btn-eye-toggle" (click)="changePasswordForm.showNew = !changePasswordForm.showNew" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 4px; display: flex; align-items: center;">
+                  <span class="material-symbols-outlined" style="font-size: 18px;">{{ changePasswordForm.showNew ? 'visibility_off' : 'visibility' }}</span>
+                </button>
+              </div>
+            </div>
+            <div class="form-group" style="margin-top: 14px;">
+              <label>Confirm New Password *</label>
+              <div class="password-input-wrap" style="position: relative;">
+                <input [type]="changePasswordForm.showNew ? 'text' : 'password'" [(ngModel)]="changePasswordForm.confirmPassword" class="form-control" placeholder="Re-type new password" style="padding-right: 38px;">
+              </div>
+            </div>
+
+            <div style="background: var(--bg-hover); padding: 12px 14px; border-radius: 8px; margin-top: 16px; font-size: 11.5px; color: var(--text-secondary); line-height: 1.5; border: 1px solid var(--border-color);">
+              <strong style="color: var(--text-primary);">Security Requirements:</strong>
+              <ul style="margin: 4px 0 0 16px; padding: 0;">
+                <li>At least 8 alphanumeric characters</li>
+                <li>Includes uppercase letters, numbers & special symbols</li>
+                <li>Will automatically invalidate active sessions across other devices</li>
+              </ul>
+            </div>
+
+            <button class="btn btn-primary" (click)="submitChangePassword()" [disabled]="changingPassword" style="width: 100%; margin-top: 20px; height: 38px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span class="material-symbols-outlined" style="font-size: 16px;">lock_reset</span>
+              {{ changingPassword ? 'Updating Password...' : 'Update Master Password' }}
+            </button>
+          </div>
+
+          <!-- Right Column: Separated Danger Zone -->
+          <div class="glass-card settings-card danger-zone-card" style="padding: 22px; border-radius: 12px; border: 1px solid var(--color-danger); background: var(--bg-card); position: relative; overflow: hidden;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+              <span class="material-symbols-outlined" style="color: var(--color-danger); font-size: 22px;">warning</span>
+              <h4 style="margin: 0; color: var(--color-danger); font-size: 15px; font-weight: 800;">Danger Zone</h4>
+              <span class="pill-badge pill-danger" style="margin-left: auto; font-size: 10px;">DESTRUCTIVE</span>
+            </div>
+            <p class="card-desc" style="color: var(--text-secondary); margin-bottom: 16px;">
+              High-privilege operational commands with system-wide impact. Proceed with caution.
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <!-- Action 1: Force Session Logout -->
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-hover);">
+                <div>
+                  <strong style="font-size: 13px; color: var(--text-primary); display: block;">Emergency Session Invalidation</strong>
+                  <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px;">
+                    Instantly invalidates all active user sessions and forces re-authentication across all portals.
+                  </span>
+                </div>
+                <button type="button" class="btn btn-danger btn-sm" (click)="forceLogoutAllSessions()" style="white-space: nowrap; margin-left: 14px;">
+                  <span class="material-symbols-outlined" style="font-size: 14px;">logout</span> Terminate All
+                </button>
+              </div>
+
+              <!-- Action 2: Purge In-Memory Cache -->
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-hover);">
+                <div>
+                  <strong style="font-size: 13px; color: var(--text-primary); display: block;">Flush Global In-Memory Caches</strong>
+                  <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px;">
+                    Evicts all Caffeine L1 caches (branding, RBAC, feature flags). Next queries will hit the DB directly.
+                  </span>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="flushCacheRegion('all')" style="white-space: nowrap; margin-left: 14px;">
+                  <span class="material-symbols-outlined" style="font-size: 14px;">delete_sweep</span> Flush Cache
+                </button>
+              </div>
+
+              <!-- Action 3: Export System Snapshot -->
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-hover);">
+                <div>
+                  <strong style="font-size: 13px; color: var(--text-primary); display: block;">Export Configuration Snapshot</strong>
+                  <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px;">
+                    Download an offline JSON configuration backup before performing sensitive changes.
+                  </span>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="downloadEnterpriseBackupSnapshot()" style="white-space: nowrap; margin-left: 14px;">
+                  <span class="material-symbols-outlined" style="font-size: 14px;">download</span> Backup Now
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  </div>
+
+<!-- ========================================================================= -->
+<!-- MODALS                                                                     -->
+<!-- ========================================================================= -->
+
+<!-- User Custom Access Modal (NEW) -->
+<div class="modal-backdrop" *ngIf="showUserAccessModal" (click)="showUserAccessModal = false">
+  <div class="modal-content" (click)="$event.stopPropagation()" style="max-width: 680px;">
+    <div class="modal-header">
+      <div>
+        <h4>Custom Module Access: {{ selectedUserForCustomAccess?.fullName || selectedUserForCustomAccess?.username }}</h4>
+        <span style="font-size: 11.5px; color: var(--text-secondary);">Role: <strong>{{ selectedUserForCustomAccess?.role }}</strong></span>
+      </div>
+      <button class="modal-close-btn" (click)="showUserAccessModal = false">✕</button>
+    </div>
+    <div class="modal-body" style="max-height: 65vh; overflow-y: auto;">
+      <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 14px;">
+        Customize which subsystems and navigation tabs this user can access on their portal.
+      </p>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+        <div *ngFor="let m of userCustomModules" 
+             style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-surface);">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="material-symbols-outlined" style="font-size: 18px; color: var(--brand-primary);">{{ m.icon || 'folder' }}</span>
+            <div>
+              <strong style="font-size: 12.5px; display: block;">{{ m.moduleName }}</strong>
+              <span style="font-size: 10.5px; color: var(--text-muted);">{{ m.category }}</span>
+            </div>
+          </div>
+          <input type="checkbox" [(ngModel)]="m.isAllowed" style="width: 16px; height: 16px; cursor: pointer;">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" (click)="showUserAccessModal = false">Cancel</button>
+      <button class="btn btn-primary btn-sm" (click)="saveUserCustomAccess()">Save User Permissions</button>
     </div>
   </div>
 </div>
+
+<!-- Create API Key Modal -->
+<div class="modal-backdrop" *ngIf="showApiKeyModal" (click)="showApiKeyModal = false">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h4>Generate Scoped API Key</h4>
+      <button class="modal-close-btn" (click)="showApiKeyModal = false">✕</button>
+    </div>
+    <div class="modal-body" *ngIf="!generatedApiKeyResult">
+      <div class="form-group">
+        <label>Integration Name</label>
+        <input type="text" [(ngModel)]="newApiKeyForm.name" class="form-control" placeholder="e.g. Zapier Production Sync">
+      </div>
+      <div class="form-group" style="margin-top: 14px;">
+        <label>Permission Scopes</label>
+        <input type="text" [(ngModel)]="newApiKeyForm.scopes" class="form-control" placeholder="read:sales,write:production">
+      </div>
+    </div>
+    <div class="modal-body" *ngIf="generatedApiKeyResult">
+      <div class="alert alert-success" style="background: rgba(5,150,105,0.1); border: 1px solid rgba(5,150,105,0.3); padding: 12px; border-radius: 8px;">
+        <strong>API Key Generated!</strong> Make sure to copy it now, it will not be shown again.
+      </div>
+      <div class="form-group" style="margin-top: 12px;">
+        <label>Bearer Token</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" [value]="generatedApiKeyResult.apiKey" readonly class="form-control" style="font-family: monospace;">
+          <button class="btn btn-secondary" (click)="copyApiKeyToClipboard(generatedApiKeyResult.apiKey)">Copy</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" (click)="showApiKeyModal = false">Close</button>
+      <button class="btn btn-primary btn-sm" (click)="submitCreateApiKey()" *ngIf="!generatedApiKeyResult">Generate Key</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Webhook Modal -->
+<div class="modal-backdrop" *ngIf="showWebhookModal" (click)="showWebhookModal = false">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h4>Register Outbound Webhook</h4>
+      <button class="modal-close-btn" (click)="showWebhookModal = false">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Webhook Name</label>
+        <input type="text" [(ngModel)]="newWebhookForm.name" class="form-control" placeholder="e.g. Invoice Billing Hook">
+      </div>
+      <div class="form-group" style="margin-top: 14px;">
+        <label>Payload Endpoint URL</label>
+        <input type="url" [(ngModel)]="newWebhookForm.endpointUrl" class="form-control" placeholder="https://api.yourdomain.com/webhook">
+      </div>
+      <div class="form-group" style="margin-top: 14px;">
+        <label>Event Trigger Type</label>
+        <select [(ngModel)]="newWebhookForm.eventType" class="form-control">
+          <option value="INVOICE_CREATED">INVOICE_CREATED (When new invoice is approved)</option>
+          <option value="PAYMENT_RECEIVED">PAYMENT_RECEIVED (Customer settlement recorded)</option>
+          <option value="PRODUCTION_BATCH_COMPLETED">PRODUCTION_BATCH_COMPLETED (Shift output saved)</option>
+          <option value="LOW_STOCK_ALARM">LOW_STOCK_ALARM (Granules below safety threshold)</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" (click)="showWebhookModal = false">Cancel</button>
+      <button class="btn btn-primary btn-sm" (click)="submitCreateWebhook()">Register Webhook</button>
+    </div>
+  </div>
+</div>
+
+<!-- Team Modal -->
+<div class="modal-backdrop" *ngIf="showTeamModal" (click)="showTeamModal = false">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h4>{{ editingTeam ? 'Edit Team' : 'Create Team' }}</h4>
+      <button class="modal-close-btn" (click)="showTeamModal = false">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Team Name</label>
+        <input type="text" [(ngModel)]="teamForm.name" class="form-control" placeholder="e.g. Injection Moulding Ops">
+      </div>
+      <div class="form-group" style="margin-top: 14px;">
+        <label>Team Code</label>
+        <input type="text" [(ngModel)]="teamForm.code" class="form-control" placeholder="e.g. MOULD_OPS">
+      </div>
+      <div class="form-group" style="margin-top: 14px;">
+        <label>Description</label>
+        <input type="text" [(ngModel)]="teamForm.description" class="form-control" placeholder="Department responsibility">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" (click)="showTeamModal = false">Cancel</button>
+      <button class="btn btn-primary btn-sm" (click)="saveTeam()">Save Team</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Custom Field Modal -->
+<div class="modal-backdrop" *ngIf="showCustomFieldModal" (click)="showCustomFieldModal = false">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h4>Add Custom Field to {{ selectedEntityForCustomFields }}</h4>
+      <button class="modal-close-btn" (click)="showCustomFieldModal = false">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Field Display Label</label>
+        <input type="text" [(ngModel)]="customFieldForm.fieldLabel" (ngModelChange)="autoGenerateFieldKey()" class="form-control" placeholder="e.g. Tax Registration No">
+      </div>
+      <div class="form-group" style="margin-top: 14px;">
+        <label>Database Key</label>
+        <input type="text" [(ngModel)]="customFieldForm.fieldKey" class="form-control" placeholder="e.g. tax_reg_no">
+      </div>
+      <div class="form-group" style="margin-top: 14px;">
+        <label>Field Data Type</label>
+        <select [(ngModel)]="customFieldForm.fieldType" class="form-control">
+          <option value="TEXT">Single Line Text</option>
+          <option value="NUMBER">Number</option>
+          <option value="DATE">Date</option>
+          <option value="SELECT">Select Dropdown</option>
+          <option value="CURRENCY">Currency (₹)</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-top: 14px;" *ngIf="customFieldForm.fieldType === 'SELECT'">
+        <label>Dropdown Options (Comma separated)</label>
+        <input type="text" [(ngModel)]="customFieldForm.optionsJson" class="form-control" placeholder="Option A, Option B, Option C">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" (click)="showCustomFieldModal = false">Cancel</button>
+      <button class="btn btn-primary btn-sm" (click)="saveCustomField()">Create Field</button>
+    </div>
+  </div>
+</div>
+
+<!-- Invite User Modal -->
+<div class="modal-backdrop" *ngIf="showInviteUserModal" (click)="showInviteUserModal = false">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h4>Invite New ERP User</h4>
+      <button class="modal-close-btn" (click)="showInviteUserModal = false">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" [(ngModel)]="inviteUserForm.name" class="form-control" placeholder="John Doe">
+      </div>
+      <div class="form-group" style="margin-top: 14px;">
+        <label>Email Address</label>
+        <input type="email" [(ngModel)]="inviteUserForm.email" class="form-control" placeholder="john@futaneagro.com">
+      </div>
+      <div class="form-group" style="margin-top: 14px;">
+        <label>Assign Role</label>
+        <select [(ngModel)]="inviteUserForm.role" class="form-control">
+          <option *ngFor="let r of rolesList" [value]="r">{{ r }}</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" (click)="showInviteUserModal = false">Cancel</button>
+      <button class="btn btn-primary btn-sm" (click)="submitInviteUser()">Send Invite</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Company Profile Modal -->
+<div class="modal-backdrop" *ngIf="showCompanyModal" (click)="showCompanyModal = false">
+  <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h4><span class="material-symbols-outlined" style="vertical-align: middle;">domain</span> {{ editingCompany ? 'Edit Company Profile' : 'Add Legal Entity / Plant Profile' }}</h4>
+      <button class="modal-close-btn" (click)="showCompanyModal = false">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row-grid">
+        <div class="form-group">
+          <label>Company Legal Name *</label>
+          <input type="text" [(ngModel)]="companyForm.companyName" class="form-control" placeholder="e.g. Futane Agro Tech Pvt. Ltd.">
+        </div>
+        <div class="form-group">
+          <label>Trade / Brand Name</label>
+          <input type="text" [(ngModel)]="companyForm.tradeName" class="form-control" placeholder="e.g. Futane Agro">
+        </div>
+      </div>
+
+      <div class="form-row-grid" style="margin-top: 14px;">
+        <div class="form-group">
+          <label>GSTIN (15-Digit) *</label>
+          <input type="text" [(ngModel)]="companyForm.gstin" class="form-control font-mono" placeholder="27ABCDE1234F1Z5">
+        </div>
+        <div class="form-group">
+          <label>PAN Number</label>
+          <input type="text" [(ngModel)]="companyForm.pan" class="form-control font-mono" placeholder="ABCDE1234F">
+        </div>
+      </div>
+
+      <div class="form-row-grid" style="margin-top: 14px;">
+        <div class="form-group">
+          <label>CIN / Registration No.</label>
+          <input type="text" [(ngModel)]="companyForm.cin" class="form-control font-mono" placeholder="U01111PN2020PTC123456">
+        </div>
+        <div class="form-group">
+          <label>State Code (GST)</label>
+          <input type="text" [(ngModel)]="companyForm.stateCode" class="form-control font-mono" placeholder="27 (Maharashtra)">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: 14px;">
+        <label>Registered Office Address</label>
+        <textarea [(ngModel)]="companyForm.registeredAddress" class="form-control" rows="2" placeholder="Full legal registered address"></textarea>
+      </div>
+
+      <div class="form-group" style="margin-top: 14px;">
+        <label>Factory / Plant Works Address</label>
+        <textarea [(ngModel)]="companyForm.factoryAddress" class="form-control" rows="2" placeholder="Manufacturing plant / dispatch premises address"></textarea>
+      </div>
+
+      <div class="form-row-grid" style="margin-top: 14px;">
+        <div class="form-group">
+          <label>Billing Phone</label>
+          <input type="text" [(ngModel)]="companyForm.phone" class="form-control" placeholder="+91 98220 12345">
+        </div>
+        <div class="form-group">
+          <label>Accounts Email</label>
+          <input type="email" [(ngModel)]="companyForm.email" class="form-control" placeholder="billing@futaneagro.com">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: 14px;">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+          <input type="checkbox" [(ngModel)]="companyForm.isDefault">
+          <span>Set as Default Billing Company for Invoices</span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" (click)="showCompanyModal = false">Cancel</button>
+      <button class="btn btn-primary btn-sm" (click)="saveCompany()">Save Company Entity</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Bank Profile Modal -->
+<div class="modal-backdrop" *ngIf="showBankModal" (click)="showBankModal = false">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h4><span class="material-symbols-outlined" style="vertical-align: middle;">account_balance</span> {{ editingBank ? 'Edit Bank Account' : 'Add Corporate Bank Account' }}</h4>
+      <button class="modal-close-btn" (click)="showBankModal = false">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Bank Name *</label>
+        <input type="text" [(ngModel)]="bankForm.bankName" class="form-control" placeholder="e.g. HDFC Bank Ltd.">
+      </div>
+      <div class="form-group" style="margin-top: 14px;">
+        <label>Beneficiary / Account Holder Name</label>
+        <input type="text" [(ngModel)]="bankForm.accountHolderName" class="form-control" placeholder="e.g. Futane Agro Tech Pvt. Ltd.">
+      </div>
+      <div class="form-row-grid" style="margin-top: 14px;">
+        <div class="form-group">
+          <label>Account Number *</label>
+          <input type="text" [(ngModel)]="bankForm.accountNumber" class="form-control font-mono" placeholder="50200012345678">
+        </div>
+        <div class="form-group">
+          <label>IFSC Code *</label>
+          <input type="text" [(ngModel)]="bankForm.ifscCode" class="form-control font-mono font-bold" placeholder="HDFC0001234">
+        </div>
+      </div>
+      <div class="form-row-grid" style="margin-top: 14px;">
+        <div class="form-group">
+          <label>Branch Name</label>
+          <input type="text" [(ngModel)]="bankForm.branchName" class="form-control" placeholder="e.g. Baramati MIDC Branch">
+        </div>
+        <div class="form-group">
+          <label>Account Type</label>
+          <select [(ngModel)]="bankForm.accountType" class="form-control">
+            <option value="CURRENT">Current Account</option>
+            <option value="OD_CC">Cash Credit / Overdraft</option>
+            <option value="SAVINGS">Savings Account</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" style="margin-top: 14px;">
+        <label>UPI ID for Dynamic QR on Invoices</label>
+        <input type="text" [(ngModel)]="bankForm.upiId" class="form-control font-mono" placeholder="futaneagro@okaxis">
+      </div>
+      <div class="form-group" style="margin-top: 14px;">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+          <input type="checkbox" [(ngModel)]="bankForm.isPrimary">
+          <span>Set as Primary Settlement Bank on Invoices</span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" (click)="showBankModal = false">Cancel</button>
+      <button class="btn btn-primary btn-sm" (click)="saveBank()">Save Bank Account</button>
+    </div>
+  </div>
+</div>
+

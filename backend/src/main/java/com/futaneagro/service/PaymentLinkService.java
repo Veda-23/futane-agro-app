@@ -45,6 +45,9 @@ public class PaymentLinkService {
     @Value("${razorpay.key.id:}")
     private String keyId;
 
+    @Value("${razorpay.key.secret:}")
+    private String keySecret;
+
     /**
      * Creates a Razorpay Payment Link for the given sale.
      * Amount and customer details come exclusively from the DB — never from caller.
@@ -148,22 +151,31 @@ public class PaymentLinkService {
         }
 
         PaymentLink link = linkOpt.get();
+        // Idempotency check 2: Has this link already been marked PAID?
+        if ("PAID".equalsIgnoreCase(link.getStatus())) {
+            log.info("ℹ️  PaymentLink {} is already in PAID status — skipping duplicate credit", razorpayPaymentLinkId);
+            return;
+        }
+
         link.setRazorpayPaymentId(razorpayPaymentId);
         link.setStatus("PAID");
         paymentLinkRepository.save(link);
 
         // Update the Sales record — add to paid, reduce remaining
         salesRepository.findById(link.getSaleId()).ifPresent(sale -> {
+            BigDecimal paidAmount = link.getAmount() != null ? link.getAmount() : BigDecimal.ZERO;
             BigDecimal currentPaid = sale.getPaid() != null ? sale.getPaid() : BigDecimal.ZERO;
-            sale.setPaid(currentPaid.add(link.getAmount()));
-            sale.setRemaining(sale.getTotalAmount().subtract(sale.getPaid()));
+            BigDecimal newPaid = currentPaid.add(paidAmount);
+            sale.setPaid(newPaid);
+            BigDecimal total = sale.getTotalAmount() != null ? sale.getTotalAmount() : BigDecimal.ZERO;
+            sale.setRemaining(total.subtract(newPaid).max(BigDecimal.ZERO));
             salesRepository.save(sale);
 
             // Add to Payment Registry
             PaymentCollection pc = new PaymentCollection();
             pc.setParty(sale.getParty());
             pc.setInvoiceNo("RZP-" + razorpayPaymentId);
-            pc.setAmountReceived(link.getAmount());
+            pc.setAmountReceived(paidAmount);
             pc.setPaymentMode("Razorpay (Online)");
             pc.setPaymentDate(LocalDate.now());
             paymentCollectionRepository.save(pc);
@@ -263,22 +275,21 @@ public class PaymentLinkService {
      * Standard Web Checkout: Verify Signature and mark paid
      */
     @Transactional
-    public boolean verifyStandardCheckoutSignature(String razorpayOrderId, String razorpayPaymentId, String razorpaySignature, String keySecret) {
+    public boolean verifyStandardCheckoutSignature(String razorpayOrderId, String razorpayPaymentId, String razorpaySignature, String secret) {
+        if (razorpayOrderId == null || razorpayOrderId.trim().isEmpty() ||
+            razorpayPaymentId == null || razorpayPaymentId.trim().isEmpty() ||
+            razorpaySignature == null || razorpaySignature.trim().isEmpty()) {
+            log.warn("Missing mandatory parameters for Razorpay signature verification.");
+            return false;
+        }
+
+        String effectiveSecret = (secret != null && !secret.trim().isEmpty()) ? secret.trim() : (this.keySecret != null ? this.keySecret.trim() : "");
+        if (effectiveSecret.isEmpty()) {
+            log.error("RAZORPAY_KEY_SECRET is not configured — rejecting signature verification for safety.");
+            return false;
+        }
+
         try {
-            String effectiveSecret = (keySecret != null && !keySecret.trim().isEmpty()) ? keySecret.trim() : "tS4jbsDbF38zWFE8p7f7Qvxc";
-
-            if (razorpayOrderId != null && razorpayOrderId.startsWith("order_rzp_")) {
-                log.info("Sandbox Razorpay order {} verified successfully!", razorpayOrderId);
-                updatePaymentLinkStatus(razorpayOrderId, razorpayPaymentId);
-                return true;
-            }
-
-            if (razorpaySignature == null || razorpaySignature.trim().isEmpty()) {
-                log.info("Sandbox Razorpay payment {} verified!", razorpayPaymentId);
-                updatePaymentLinkStatus(razorpayOrderId, razorpayPaymentId);
-                return true;
-            }
-
             String payload = razorpayOrderId + "|" + razorpayPaymentId;
             javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
             mac.init(new javax.crypto.spec.SecretKeySpec(effectiveSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8), "HmacSHA256"));
@@ -289,12 +300,15 @@ public class PaymentLinkService {
             }
             String generatedSignature = hex.toString();
 
-            boolean isValid = generatedSignature.equalsIgnoreCase(razorpaySignature);
-            log.info("Signature check: generated={} received={} match={}", generatedSignature, razorpaySignature, isValid);
+            // Constant-time HMAC comparison prevents timing attacks (MessageDigest.isEqual)
+            boolean isValid = java.security.MessageDigest.isEqual(
+                generatedSignature.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                razorpaySignature.getBytes(java.nio.charset.StandardCharsets.UTF_8)
+            );
 
-            // In sandbox/test mode or with valid signature, approve & record payment
-            if (isValid || razorpayPaymentId.startsWith("pay_") || razorpayOrderId.startsWith("order_")) {
-                updatePaymentLinkStatus(razorpayOrderId, razorpayPaymentId);
+            log.info("Razorpay signature check: orderId={} match={}", razorpayOrderId, isValid);
+            if (isValid) {
+                markSaleAsPaid(razorpayOrderId, razorpayPaymentId);
                 return true;
             }
             return false;
@@ -305,30 +319,6 @@ public class PaymentLinkService {
     }
 
     private void updatePaymentLinkStatus(String orderId, String paymentId) {
-        try {
-            Optional<PaymentLink> linkOpt = paymentLinkRepository.findByRazorpayPaymentLinkId(orderId);
-            if (linkOpt.isPresent()) {
-                PaymentLink link = linkOpt.get();
-                link.setStatus("PAID");
-                link.setRazorpayPaymentId(paymentId);
-                paymentLinkRepository.save(link);
-
-                if (link.getSaleId() != null) {
-                    Optional<Sales> saleOpt = salesRepository.findById(link.getSaleId());
-                    if (saleOpt.isPresent()) {
-                        Sales sale = saleOpt.get();
-                        BigDecimal paidAmount = link.getAmount() != null ? link.getAmount() : BigDecimal.ZERO;
-                        BigDecimal currentPaid = sale.getPaid() != null ? sale.getPaid() : BigDecimal.ZERO;
-                        BigDecimal newPaid = currentPaid.add(paidAmount);
-                        sale.setPaid(newPaid);
-                        BigDecimal total = sale.getTotalAmount() != null ? sale.getTotalAmount() : BigDecimal.ZERO;
-                        sale.setRemaining(total.subtract(newPaid).max(BigDecimal.ZERO));
-                        salesRepository.save(sale);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            log.error("Failed to update payment link status: {}", e.getMessage(), e);
-        }
+        markSaleAsPaid(orderId, paymentId);
     }
 }

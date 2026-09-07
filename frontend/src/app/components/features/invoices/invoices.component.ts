@@ -8,10 +8,13 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import Swal from 'sweetalert2';
 
+import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
+import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
+
 @Component({
   selector: 'app-invoices',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, ResizableTableDirective, IndianDatePipe],
   templateUrl: './invoices.component.html',
   styleUrls: ['./invoices.component.css']
 })
@@ -258,5 +261,9 @@ export class InvoicesComponent implements OnInit {
     if (this.loggedInUser) {
       this.apiService.createAuditLog({ username: this.loggedInUser.username, action }).subscribe();
     }
+  }
+
+  trackByInvoiceId(index: number, item: any): any {
+    return item?.id ?? item?.invoiceId ?? item?.invoiceNo ?? index;
   }
 }

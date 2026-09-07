@@ -1,44 +1,44 @@
 <!-- Quick-Access Financial KPIs (E-10) -->
-<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px; margin-bottom:20px;">
+<div class="report-kpi-grid">
   <!-- Total Revenue -->
   <div class="glass-panel" style="padding:16px; text-align:center; position:relative; overflow:hidden;">
-    <div style="font-size:24px; margin-bottom:4px;">💰</div>
+    <div style="margin-bottom:6px;"><i class="bi bi-currency-rupee" style="font-size:24px; color:var(--color-success);"></i></div>
     <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Total Sales Revenue</div>
-    <div style="font-size:22px; font-weight:800; color:var(--accent-success, #10b981);">
+    <div style="font-size:22px; font-weight:800; color:var(--color-success);">
       {{ totalRevenue | inr }}
     </div>
   </div>
 
   <!-- Total Outstanding -->
   <div class="glass-panel" style="padding:16px; text-align:center; position:relative; overflow:hidden;">
-    <div style="font-size:24px; margin-bottom:4px;">⚠️</div>
+    <div style="margin-bottom:6px;"><i class="bi bi-exclamation-triangle-fill" style="font-size:24px; color:var(--color-danger);"></i></div>
     <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Total Outstanding</div>
-    <div style="font-size:22px; font-weight:800; color:var(--accent-error, #ef4444);">
+    <div style="font-size:22px; font-weight:800; color:var(--color-danger);">
       {{ totalOutstanding | inr }}
     </div>
   </div>
 
   <!-- Production This Month -->
   <div class="glass-panel" style="padding:16px; text-align:center; position:relative; overflow:hidden;">
-    <div style="font-size:24px; margin-bottom:4px;">🏭</div>
+    <div style="margin-bottom:6px;"><i class="bi bi-building-fill" style="font-size:24px; color:var(--primary);"></i></div>
     <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Production This Month</div>
-    <div style="font-size:22px; font-weight:800; color:var(--accent-orange, #d97706);">
+    <div style="font-size:22px; font-weight:800; color:var(--primary);">
       {{ monthlyProductionTotal | number }} <span style="font-size:13px; font-weight:500;">crates</span>
     </div>
   </div>
 
   <!-- Expenses This Month -->
   <div class="glass-panel" style="padding:16px; text-align:center; position:relative; overflow:hidden;">
-    <div style="font-size:24px; margin-bottom:4px;">💸</div>
+    <div style="margin-bottom:6px;"><i class="bi bi-cash-coin" style="font-size:24px; color:var(--color-warning);"></i></div>
     <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Expenses This Month</div>
-    <div style="font-size:22px; font-weight:800; color:var(--accent-warning, #f59e0b);">
+    <div style="font-size:22px; font-weight:800; color:var(--color-warning);">
       {{ monthlyExpenseTotal | inr }}
     </div>
   </div>
 </div>
 
 <!-- Filter Toolbar (E-01) -->
-<div class="glass-panel" style="padding:18px; margin-bottom:18px;">
+<div class="report-filter-bar glass-panel">
   <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
 
     <!-- Report Type -->
@@ -142,24 +142,24 @@
     <table *ngIf="reportFilter.type === 'production'" style="width:100%;">
       <thead>
         <tr>
-          <th>Date</th>
+          <th style="width:110px;">Date</th>
           <th>Crate Type</th>
-          <th>Shift</th>
-          <th>Total Produced</th>
-          <th>Successful</th>
-          <th>Rejected</th>
-          <th>Efficiency</th>
+          <th style="width:120px; text-align:center;">Shift</th>
+          <th style="width:130px; text-align:right;">Total Produced</th>
+          <th style="width:120px; text-align:right;">Successful</th>
+          <th style="width:110px; text-align:right;">Rejected</th>
+          <th style="width:100px; text-align:center;">Efficiency</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let row of filteredReportData">
           <td>{{ row.date | indianDate }}</td>
           <td><strong>{{ row.crateType }}</strong></td>
-          <td><span class="badge badge-info">{{ row.shift }}</span></td>
-          <td>{{ row.totalProduction | number }}</td>
-          <td style="color:var(--accent-success, #10b981); font-weight:600;">{{ row.successful | number }}</td>
-          <td style="color:var(--accent-error, #ef4444);">{{ row.rejected | number }}</td>
-          <td>
+          <td style="text-align:center;"><span class="badge badge-info">{{ row.shift }}</span></td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums; font-weight:600;">{{ row.totalProduction | number }}</td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums; color:var(--accent-success, #10b981); font-weight:600;">{{ row.successful | number }}</td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums; color:var(--accent-error, #ef4444); font-weight:600;">{{ row.rejected | number }}</td>
+          <td style="text-align:center;">
             <span class="badge"
                   [style.background]="(row.successful / (row.totalProduction || 1)) >= 0.9 ? 'var(--accent-success, #10b981)' : 'var(--accent-warning, #f59e0b)'"
                   style="color:#fff; padding:2px 8px; border-radius:12px; font-size:11px;">
@@ -174,10 +174,10 @@
       <tfoot *ngIf="filteredReportData.length > 0" style="background:rgba(217,119,6,0.1); font-weight:700;">
         <tr>
           <td colspan="3">TOTAL ({{ filteredReportData.length }} records)</td>
-          <td>{{ reportTotals.qty | number }}</td>
-          <td>—</td>
-          <td>—</td>
-          <td>—</td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums;">{{ reportTotals.qty | number }}</td>
+          <td style="text-align:right;">—</td>
+          <td style="text-align:right;">—</td>
+          <td style="text-align:center;">—</td>
         </tr>
       </tfoot>
     </table>
@@ -187,21 +187,21 @@
       <thead>
         <tr>
           <th>Month</th>
-          <th>Days Active</th>
-          <th>Total Produced</th>
-          <th>Successful</th>
-          <th>Rejected</th>
-          <th>Avg Efficiency</th>
+          <th style="text-align:center; width:120px;">Days Active</th>
+          <th style="text-align:right; width:140px;">Total Produced</th>
+          <th style="text-align:right; width:130px;">Successful</th>
+          <th style="text-align:right; width:120px;">Rejected</th>
+          <th style="text-align:center; width:120px;">Avg Efficiency</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let m of monthlyProductionSummary">
           <td><strong>{{ m.label }}</strong></td>
-          <td>{{ m.days }} days</td>
-          <td style="font-weight:700;">{{ m.totalProduction | number }}</td>
-          <td style="color:var(--accent-success, #10b981); font-weight:600;">{{ m.successful | number }}</td>
-          <td style="color:var(--accent-error, #ef4444);">{{ m.rejected | number }}</td>
-          <td>
+          <td style="text-align:center;">{{ m.days }} days</td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums; font-weight:700;">{{ m.totalProduction | number }}</td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums; color:var(--accent-success, #10b981); font-weight:600;">{{ m.successful | number }}</td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums; color:var(--accent-error, #ef4444);">{{ m.rejected | number }}</td>
+          <td style="text-align:center;">
             <span class="badge" style="background:var(--accent-success, #10b981); color:#fff; padding:2px 8px; border-radius:12px; font-size:11px;">
               {{ m.efficiency }}
             </span>
@@ -217,14 +217,14 @@
     <table *ngIf="reportFilter.type === 'sales'" style="width:100%;">
       <thead>
         <tr>
-          <th>Date</th>
+          <th style="width:100px;">Date</th>
           <th>Customer</th>
           <th>Item</th>
-          <th>Qty</th>
-          <th>Rate</th>
-          <th>Total</th>
-          <th>Paid</th>
-          <th>Outstanding</th>
+          <th style="text-align:right; width:90px;">Qty</th>
+          <th style="text-align:right; width:100px;">Rate</th>
+          <th style="text-align:right; width:120px;">Total</th>
+          <th style="text-align:right; width:110px;">Paid</th>
+          <th style="text-align:right; width:120px;">Outstanding</th>
         </tr>
       </thead>
       <tbody>
@@ -232,11 +232,11 @@
           <td>{{ s.date | indianDate }}</td>
           <td><strong>{{ s.party?.partyName || 'Customer' }}</strong></td>
           <td>{{ s.crateType }} ({{ s.crateMaterial }})</td>
-          <td>{{ s.quantity | number }}</td>
-          <td>{{ s.rate | inr }}</td>
-          <td style="font-weight:600;">{{ s.totalAmount | inr }}</td>
-          <td style="color:var(--accent-success, #10b981);">{{ s.paid | inr }}</td>
-          <td style="color:var(--accent-error, #ef4444); font-weight:600;">{{ s.remaining | inr }}</td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums;">{{ s.quantity | number }}</td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums;">{{ s.rate | inr }}</td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums; font-weight:600;">{{ s.totalAmount | inr }}</td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums; color:var(--accent-success, #10b981);">{{ s.paid | inr }}</td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums; color:var(--accent-error, #ef4444); font-weight:600;">{{ s.remaining | inr }}</td>
         </tr>
         <tr *ngIf="filteredReportData.length === 0">
           <td colspan="8" style="text-align:center; padding:30px; color:var(--text-secondary);">No sales records found for the selected period.</td>
@@ -245,11 +245,11 @@
       <tfoot *ngIf="filteredReportData.length > 0" style="background:rgba(217,119,6,0.1); font-weight:700;">
         <tr>
           <td colspan="3">TOTAL ({{ filteredReportData.length }} records)</td>
-          <td>{{ reportTotals.qty | number }}</td>
-          <td>—</td>
-          <td>{{ getSalesTotals().total | inr }}</td>
-          <td style="color:var(--accent-success, #10b981);">{{ getSalesTotals().paid | inr }}</td>
-          <td style="color:var(--accent-error, #ef4444);">{{ getSalesTotals().outstanding | inr }}</td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums;">{{ reportTotals.qty | number }}</td>
+          <td style="text-align:right;">—</td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums;">{{ getSalesTotals().total | inr }}</td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums; color:var(--accent-success, #10b981);">{{ getSalesTotals().paid | inr }}</td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums; color:var(--accent-error, #ef4444);">{{ getSalesTotals().outstanding | inr }}</td>
         </tr>
       </tfoot>
     </table>
@@ -316,18 +316,18 @@
         <tr>
           <th>Item / Crate Type</th>
           <th>Material</th>
-          <th>Current Stock</th>
-          <th>Min Level</th>
-          <th>Status</th>
+          <th style="text-align:right; width:140px;">Current Stock</th>
+          <th style="text-align:right; width:120px;">Min Level</th>
+          <th style="text-align:center; width:130px;">Status</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let item of filteredReportData">
           <td><strong>{{ item.crateType }}</strong></td>
           <td>{{ item.crateMaterial || 'Plastic' }}</td>
-          <td style="font-weight:700; font-size:14px;">{{ item.currentStock | number }}</td>
-          <td>{{ item.minimumStockLevel || 10 }}</td>
-          <td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums; font-weight:700; font-size:14px;">{{ item.currentStock | number }}</td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums;">{{ item.minimumStockLevel || 10 }}</td>
+          <td style="text-align:center;">
             <span class="badge"
                   [style.background]="(item.currentStock || 0) <= (item.minimumStockLevel || 10) ? 'var(--accent-error, #ef4444)' : 'var(--accent-success, #10b981)'"
                   style="color:#fff; padding:2px 8px; border-radius:12px; font-size:11px;">
@@ -359,24 +359,24 @@
           <tr>
             <th>Employee</th>
             <th>Designation</th>
-            <th>Month / Year</th>
-            <th>Salary Amount</th>
-            <th>Status</th>
-            <th>Paid Date</th>
+            <th style="text-align:center; width:120px;">Month / Year</th>
+            <th style="text-align:right; width:140px;">Salary Amount</th>
+            <th style="text-align:center; width:110px;">Status</th>
+            <th style="text-align:center; width:120px;">Paid Date</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let sal of filteredReportData">
             <td><strong>{{ sal.employee?.empName || 'Employee' }}</strong></td>
             <td>{{ sal.employee?.designation }}</td>
-            <td>{{ sal.month }} / {{ sal.year }}</td>
-            <td style="font-weight:600;">{{ sal.salaryAmount | inr }}</td>
-            <td>
+            <td style="text-align:center;">{{ sal.month }} / {{ sal.year }}</td>
+            <td style="text-align:right; font-variant-numeric:tabular-nums; font-weight:600;">{{ sal.salaryAmount | inr }}</td>
+            <td style="text-align:center;">
               <span class="badge" [class.badge-success]="sal.status === 'Paid'" [class.badge-warning]="sal.status !== 'Paid'">
                 {{ sal.status }}
               </span>
             </td>
-            <td>{{ sal.paidDate | indianDate }}</td>
+            <td style="text-align:center;">{{ sal.paidDate | indianDate }}</td>
           </tr>
           <tr *ngIf="filteredReportData.length === 0">
             <td colspan="6" style="text-align:center; padding:30px; color:var(--text-secondary);">No payroll records found.</td>
@@ -385,8 +385,8 @@
         <tfoot *ngIf="filteredReportData.length > 0" style="background:rgba(217,119,6,0.1); font-weight:700;">
           <tr>
             <td colspan="3">TOTAL PAYROLL ({{ filteredReportData.length }} records)</td>
-            <td>{{ reportTotals.amount | inr }}</td>
-            <td colspan="2">—</td>
+            <td style="text-align:right; font-variant-numeric:tabular-nums;">{{ reportTotals.amount | inr }}</td>
+            <td colspan="2" style="text-align:center;">—</td>
           </tr>
         </tfoot>
       </table>
@@ -407,11 +407,11 @@
       <table style="width:100%;">
         <thead>
           <tr>
-            <th>Date</th>
+            <th style="width:110px;">Date</th>
             <th>Category</th>
             <th>Description</th>
             <th>Paid By</th>
-            <th style="text-align:right;">Amount</th>
+            <th style="text-align:right; width:130px;">Amount</th>
           </tr>
         </thead>
         <tbody>
@@ -420,7 +420,7 @@
             <td><span class="badge badge-info">{{ ex.category }}</span></td>
             <td>{{ ex.description }}</td>
             <td>{{ ex.paidBy || 'Cash' }}</td>
-            <td style="text-align:right; font-weight:700; color:var(--accent-warning, #f59e0b);">{{ ex.amount | inr }}</td>
+            <td style="text-align:right; font-variant-numeric:tabular-nums; font-weight:700; color:var(--accent-warning, #f59e0b);">{{ ex.amount | inr }}</td>
           </tr>
           <tr *ngIf="filteredReportData.length === 0">
             <td colspan="5" style="text-align:center; padding:30px; color:var(--text-secondary);">No expenses recorded for selected period.</td>
@@ -429,7 +429,7 @@
         <tfoot *ngIf="filteredReportData.length > 0" style="background:rgba(217,119,6,0.1); font-weight:700;">
           <tr>
             <td colspan="4">TOTAL EXPENSES ({{ filteredReportData.length }} records)</td>
-            <td style="text-align:right; color:var(--accent-warning, #f59e0b);">{{ reportTotals.amount | inr }}</td>
+            <td style="text-align:right; font-variant-numeric:tabular-nums; color:var(--accent-warning, #f59e0b);">{{ reportTotals.amount | inr }}</td>
           </tr>
         </tfoot>
       </table>
@@ -439,13 +439,13 @@
     <table *ngIf="reportFilter.type === 'transport'" style="width:100%;">
       <thead>
         <tr>
-          <th>Date</th>
+          <th style="width:110px;">Date</th>
           <th>Truck No.</th>
           <th>Driver</th>
-          <th>Rent (₹)</th>
-          <th>Advance (₹)</th>
-          <th>Due (₹)</th>
-          <th>Status</th>
+          <th style="text-align:right; width:120px;">Rent (₹)</th>
+          <th style="text-align:right; width:120px;">Advance (₹)</th>
+          <th style="text-align:right; width:120px;">Due (₹)</th>
+          <th style="text-align:center; width:110px;">Status</th>
         </tr>
       </thead>
       <tbody>
@@ -454,13 +454,13 @@
           <td>{{ t.date | indianDate }}</td>
           <td><strong>{{ t.truckNumber }}</strong></td>
           <td>{{ t.driver?.driverName || 'N/A' }}</td>
-          <td>{{ t.rent | inr }}</td>
-          <td style="color:var(--accent-success, #10b981);">{{ t.advance | inr }}</td>
-          <td style="font-weight:700;"
+          <td style="text-align:right; font-variant-numeric:tabular-nums;">{{ t.rent | inr }}</td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums; color:var(--accent-success, #10b981);">{{ t.advance | inr }}</td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums; font-weight:700;"
               [style.color]="((t.rent || 0) - (t.advance || 0)) > 0 ? 'var(--accent-error, #ef4444)' : 'var(--accent-success, #10b981)'">
             {{ ((t.rent || 0) - (t.advance || 0)) > 0 ? (((t.rent || 0) - (t.advance || 0)) | inr) : '✅ Cleared' }}
           </td>
-          <td>
+          <td style="text-align:center;">
             <span *ngIf="((t.rent || 0) - (t.advance || 0)) > 0 && isOlderThan30Days(t.date)"
                   style="color:var(--accent-error, #ef4444); font-size:11px; font-weight:700;">⚠️ Overdue</span>
             <span *ngIf="((t.rent || 0) - (t.advance || 0)) > 0 && !isOlderThan30Days(t.date)"
@@ -476,8 +476,8 @@
       <tfoot *ngIf="filteredReportData.length > 0" style="background:rgba(217,119,6,0.1); font-weight:700;">
         <tr>
           <td colspan="3">TOTAL ({{ filteredReportData.length }} records)</td>
-          <td>{{ reportTotals.amount | inr }}</td>
-          <td colspan="3">—</td>
+          <td style="text-align:right; font-variant-numeric:tabular-nums;">{{ reportTotals.amount | inr }}</td>
+          <td colspan="3" style="text-align:center;">—</td>
         </tr>
       </tfoot>
     </table>

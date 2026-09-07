@@ -1,16 +1,22 @@
 package com.futaneagro.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 
-import javax.mail.MessagingException;
+import org.springframework.web.util.HtmlUtils;
+
 import javax.mail.internet.MimeMessage;
 
 @Service
 public class EmailService {
+
+    private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
     @Autowired
     private JavaMailSender mailSender;
@@ -18,9 +24,14 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String senderEmail;
 
+    @Value("${app.base-url:http://localhost:4200}")
+    private String baseUrl;
+
+    @Async
     public void sendOtpEmail(String toEmail, String otp, String username) {
         if (toEmail == null || toEmail.isEmpty()) {
-            System.err.println("Cannot send OTP email: User email is empty");
+            // SECURITY: don't log the raw email address at WARN in case it contains PII
+            log.warn("sendOtpEmail skipped: recipient email is empty");
             return;
         }
 
@@ -32,11 +43,14 @@ public class EmailService {
             helper.setTo(toEmail);
             helper.setSubject("Your Login OTP - Futane Agro ERP");
 
+            String safeUsername = HtmlUtils.htmlEscape(username != null ? username : "User");
+            String safeOtp = HtmlUtils.htmlEscape(otp != null ? otp : "");
+
             String htmlMsg = "<div style='font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 10px;'>"
                     + "<h2 style='color: #4CAF50;'>Futane Agro Industries</h2>"
-                    + "<p>Hello <b>" + username + "</b>,</p>"
+                    + "<p>Hello <b>" + safeUsername + "</b>,</p>"
                     + "<p>Your One-Time Password (OTP) for logging into the ERP system is:</p>"
-                    + "<h1 style='background: #f4f4f4; padding: 10px; border-radius: 5px; text-align: center; letter-spacing: 5px; color: #333;'>" + otp + "</h1>"
+                    + "<h1 style='background: #f4f4f4; padding: 10px; border-radius: 5px; text-align: center; letter-spacing: 5px; color: #333;'>" + safeOtp + "</h1>"
                     + "<p>This OTP is valid for 15 minutes. Please do not share this code with anyone.</p>"
                     + "<br>"
                     + "<p style='font-size: 12px; color: #888;'>If you did not request this login, please contact the system administrator immediately.</p>"
@@ -45,11 +59,103 @@ public class EmailService {
             helper.setText(htmlMsg, true);
             mailSender.send(message);
 
-            System.out.println("✅ Sent OTP email to: " + toEmail);
-
         } catch (Exception e) {
-            System.err.println("❌ Failed to send OTP email to " + toEmail + ": " + e.getMessage());
-            e.printStackTrace();
+            // SECURITY: log the error class and message internally, but never bubble raw exception details to caller
+            log.error("Failed to send OTP email: type={} message={}", e.getClass().getSimpleName(), e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendUserInvitation(String toEmail, String tempPassword, String invitedBy, String username) {
+        if (toEmail == null || toEmail.trim().isEmpty()) {
+            log.warn("sendUserInvitation skipped: recipient email is empty");
+            return;
+        }
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(senderEmail != null && !senderEmail.isEmpty() ? senderEmail : "noreply@futaneagro.com");
+            helper.setTo(toEmail);
+            helper.setSubject("Welcome to Futane Agro ERP - Account Invitation");
+
+            String safeUsername = HtmlUtils.htmlEscape(username != null ? username : "User");
+            String safeInvitedBy = HtmlUtils.htmlEscape(invitedBy != null ? invitedBy : "Super Admin");
+            String safeTempPassword = HtmlUtils.htmlEscape(tempPassword != null ? tempPassword : "");
+
+            String htmlMsg = "<div style='font-family: Arial, sans-serif; padding: 24px; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;'>"
+                    + "<div style='text-align: center; margin-bottom: 20px;'>"
+                    + "<h2 style='color: #d97706; margin: 0;'>Futane Agro ERP</h2>"
+                    + "<p style='color: #64748b; font-size: 13px;'>Enterprise Resource Planning</p>"
+                    + "</div>"
+                    + "<h3 style='color: #1e293b; margin-top: 0;'>Welcome aboard, " + safeUsername + "!</h3>"
+                    + "<p style='color: #334155; line-height: 1.5;'><b>" + safeInvitedBy + "</b> has invited you to join the Futane Agro ERP system.</p>"
+                    + "<div style='background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; margin: 20px 0;'>"
+                    + "<p style='margin: 0 0 8px 0; color: #475569; font-size: 13px;'>Your Temporary Login Credentials:</p>"
+                    + "<p style='margin: 0; font-size: 14px;'><strong>Username:</strong> <code style='color: #0f172a; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;'>" + safeUsername + "</code></p>"
+                    + "<p style='margin: 8px 0 0 0; font-size: 14px;'><strong>Temporary Password:</strong> <code style='color: #d97706; background: #fef3c7; padding: 2px 6px; border-radius: 4px; font-weight: bold;'>" + safeTempPassword + "</code></p>"
+                    + "</div>"
+                    + "<p style='color: #334155; line-height: 1.5;'>You will be required to set a new password on your first login.</p>"
+                    + "<div style='text-align: center; margin: 24px 0;'>"
+                    + "<a href='" + baseUrl + "' style='background: #d97706; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 600; display: inline-block;'>Login to ERP Portal</a>"
+                    + "</div>"
+                    + "<hr style='border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;'>"
+                    + "<p style='font-size: 12px; color: #94a3b8; margin: 0;'>If you did not expect this invitation, please contact your system administrator.</p>"
+                    + "</div>";
+
+            helper.setText(htmlMsg, true);
+            mailSender.send(message);
+
+            log.info("Sent invitation email to user account");
+        } catch (Exception e) {
+            log.error("Failed to send invitation email: type={} message={}", e.getClass().getSimpleName(), e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendPasswordResetEmail(String toEmail, String tempPassword, String username) {
+        if (toEmail == null || toEmail.trim().isEmpty()) {
+            log.warn("sendPasswordResetEmail skipped: recipient email is empty");
+            return;
+        }
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(senderEmail != null && !senderEmail.isEmpty() ? senderEmail : "noreply@futaneagro.com");
+            helper.setTo(toEmail);
+            helper.setSubject("Futane Agro ERP - Password Reset Request");
+
+            String safeUsername = HtmlUtils.htmlEscape(username != null ? username : "User");
+            String safeTempPassword = HtmlUtils.htmlEscape(tempPassword != null ? tempPassword : "");
+
+            String htmlMsg = "<div style='font-family: Arial, sans-serif; padding: 24px; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;'>"
+                    + "<div style='text-align: center; margin-bottom: 20px;'>"
+                    + "<h2 style='color: #d97706; margin: 0;'>Futane Agro ERP</h2>"
+                    + "<p style='color: #64748b; font-size: 13px;'>Security &amp; Authentication</p>"
+                    + "</div>"
+                    + "<h3 style='color: #1e293b; margin-top: 0;'>Password Reset Notice</h3>"
+                    + "<p style='color: #334155; line-height: 1.5;'>Hello <b>" + safeUsername + "</b>,</p>"
+                    + "<p style='color: #334155; line-height: 1.5;'>An administrator has initiated a password reset for your account. Use the temporary password below to log in:</p>"
+                    + "<div style='background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;'>"
+                    + "<div style='font-size: 20px; font-weight: bold; letter-spacing: 2px; color: #d97706; font-family: monospace;'>" + safeTempPassword + "</div>"
+                    + "</div>"
+                    + "<p style='color: #334155; line-height: 1.5;'>You must change your password immediately upon login.</p>"
+                    + "<div style='text-align: center; margin: 24px 0;'>"
+                    + "<a href='" + baseUrl + "' style='background: #d97706; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 600; display: inline-block;'>Log In &amp; Reset Password</a>"
+                    + "</div>"
+                    + "<hr style='border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;'>"
+                    + "<p style='font-size: 12px; color: #94a3b8; margin: 0;'>If you did not request this change, please inform your Super Admin immediately.</p>"
+                    + "</div>";
+
+            helper.setText(htmlMsg, true);
+            mailSender.send(message);
+
+            log.info("Sent password reset email to user account");
+        } catch (Exception e) {
+            log.error("Failed to send password reset email: type={} message={}", e.getClass().getSimpleName(), e.getMessage());
         }
     }
 }

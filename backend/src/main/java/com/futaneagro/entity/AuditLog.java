@@ -36,6 +36,9 @@ public class AuditLog {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "ip_address", length = 50)
+    private String ipAddress;
+
     public AuditLog() {}
 
     @PrePersist
@@ -118,5 +121,13 @@ public class AuditLog {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
     }
 }

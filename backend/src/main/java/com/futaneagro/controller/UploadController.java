@@ -1,116 +1,197 @@
 package com.futaneagro.controller;
 
+import com.futaneagro.security.FileSecurityService;
+import com.futaneagro.service.AuditService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/uploads")
 public class UploadController {
 
+    private static final Logger log = LoggerFactory.getLogger(UploadController.class);
     private static final String UPLOAD_DIR = "uploads";
-    private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList(".jpg", ".jpeg", ".png", ".pdf");
-    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    private static final String BRANDING_DIR = "uploads/branding";
+
+    private static final Set<String> ALLOWED_BRANDING_EXTENSIONS = Set.of(
+        ".png", ".jpg", ".jpeg", ".svg"
+    );
+
+    @Autowired
+    private FileSecurityService fileSecurityService;
+
+    @Autowired
+    private AuditService auditService;
+
+    @Autowired
+    private com.futaneagro.security.RateLimitingService rateLimitingService;
 
     @PostMapping("/upload")
-    public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) {
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body("Uploaded file is empty.");
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'OPERATOR')")
+    public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file,
+                                        HttpServletRequest request) {
+        if (rateLimitingService.isRateLimited(request, com.futaneagro.security.RateLimitingService.Action.UPLOAD)) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.TOO_MANY_REQUESTS)
+                    .body(Map.of("error", "Upload rate limit exceeded. Please wait a moment before trying again."));
         }
 
-        // Validate File Size
-        if (file.getSize() > MAX_FILE_SIZE) {
-            return ResponseEntity.badRequest().body("File size exceeds the 10MB limit.");
-        }
-
-        // Validate File Extension
-        String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null) {
-            return ResponseEntity.badRequest().body("Invalid filename.");
-        }
-        
-        String extension = "";
-        int dotIndex = originalFilename.lastIndexOf('.');
-        if (dotIndex >= 0) {
-            extension = originalFilename.substring(dotIndex).toLowerCase();
-        }
-
-        if (!ALLOWED_EXTENSIONS.contains(extension)) {
-            return ResponseEntity.badRequest().body("Unsupported file type. Only JPG, PNG, and PDF are allowed.");
+        // Magic-bytes + extension + size + deep content validation
+        FileSecurityService.FileValidationResult validation = fileSecurityService.validate(file);
+        if (!validation.valid) {
+            log.warn("File upload rejected from IP {}: {}", request.getRemoteAddr(), validation.error);
+            auditService.log("FILE_UPLOAD_BLOCKED", "Uploads", "Reason: " + validation.error);
+            return ResponseEntity.badRequest().body(Map.of("error", validation.error));
         }
 
         try {
-            // Ensure uploads directory exists
             File dir = new File(UPLOAD_DIR);
-            if (!dir.exists()) {
-                dir.mkdirs();
+            if (!dir.exists()) dir.mkdirs();
+
+            // UUID prefix guarantees uniqueness + prevents filename collision attacks
+            String newFilename = UUID.randomUUID().toString() + "_" + validation.sanitizedFilename;
+            Path baseDir = Paths.get(UPLOAD_DIR).toAbsolutePath().normalize();
+            Path targetPath = baseDir.resolve(newFilename).normalize();
+
+            // Strict path traversal check
+            if (!targetPath.startsWith(baseDir)) {
+                return ResponseEntity.status(403).body(Map.of("error", "Invalid upload path"));
             }
 
-            // Save file
-            // Clean filename to prevent path traversal
-            String cleanFilename = Paths.get(originalFilename).getFileName().toString();
-            String newFilename = UUID.randomUUID().toString() + "_" + cleanFilename.replaceAll("\\s+", "_");
-            Path targetPath = Paths.get(UPLOAD_DIR).resolve(newFilename);
             Files.copy(file.getInputStream(), targetPath);
+            log.info("File uploaded: {} by user: {}", newFilename, getCurrentUsername());
+            auditService.log("FILE_UPLOADED", "Uploads", "Saved file: " + newFilename);
 
             Map<String, String> response = new HashMap<>();
-            response.put("url", "http://localhost:8080/api/uploads/" + newFilename);
             response.put("filename", newFilename);
-
+            response.put("url", "/api/uploads/" + newFilename);
+            response.put("size", String.valueOf(file.getSize()));
             return ResponseEntity.ok(response);
+
         } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error saving file: " + e.getMessage());
+            log.error("File upload IO error: {}", e.getMessage());
+            return ResponseEntity.status(500).body(Map.of("error", "Error saving file"));
         }
     }
 
+    /**
+     * Serve uploaded user documents (Aadhaar, passbooks, invoices, delivery notes).
+     * Protected endpoint — requires authenticated user with appropriate role.
+     */
     @GetMapping("/{filename:.+}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'OPERATOR', 'VIEWER')")
     public ResponseEntity<Resource> getFile(@PathVariable String filename) {
         try {
-            Path baseDir = Paths.get(UPLOAD_DIR).toAbsolutePath().normalize();
-            Path filePath = baseDir.resolve(filename).toAbsolutePath().normalize();
+            // Sanitize requested filename (prevent path traversal)
+            String safeFilename = fileSecurityService.sanitizeFilename(filename);
+            Path baseDir  = Paths.get(UPLOAD_DIR).toAbsolutePath().normalize();
+            Path filePath = baseDir.resolve(safeFilename).toAbsolutePath().normalize();
 
-            // Guard against Path Traversal vulnerabilities
+            // Strict canonical path boundary check
             if (!filePath.startsWith(baseDir)) {
+                log.warn("Path traversal attempt blocked: {}", filename);
                 return ResponseEntity.status(403).build();
             }
 
             Resource resource = new UrlResource(filePath.toUri());
-
-            if (resource.exists() || resource.isReadable()) {
-                String contentType = Files.probeContentType(filePath);
-                if (contentType == null) {
-                    contentType = "application/octet-stream";
-                }
-
-                return ResponseEntity.ok()
-                        .contentType(MediaType.parseMediaType(contentType))
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
-                        .body(resource);
-            } else {
+            if (!resource.exists() || !resource.isReadable()) {
                 return ResponseEntity.notFound().build();
             }
+
+            String contentType = Files.probeContentType(filePath);
+            if (contentType == null) contentType = "application/octet-stream";
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    // Content-Disposition: attachment forces download and prevents browser from executing HTML/SVG/scripts
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                    // Prevent MIME sniffing
+                    .header("X-Content-Type-Options", "nosniff")
+                    // Private cache control for sensitive documents
+                    .cacheControl(CacheControl.noStore().mustRevalidate().cachePrivate())
+                    .body(resource);
+
         } catch (MalformedURLException e) {
             return ResponseEntity.badRequest().build();
         } catch (IOException e) {
             return ResponseEntity.status(500).build();
         }
     }
-}
 
+    /**
+     * Serve public branding assets (company logos for login screen and top nav).
+     * Publicly accessible with aggressive caching and strict extension verification.
+     */
+    @GetMapping("/branding/{filename:.+}")
+    public ResponseEntity<Resource> getBrandingLogo(@PathVariable String filename) {
+        try {
+            String safeFilename = fileSecurityService.sanitizeFilename(filename);
+            int dotIdx = safeFilename.lastIndexOf('.');
+            if (dotIdx == -1) {
+                return ResponseEntity.badRequest().build();
+            }
+            String ext = safeFilename.substring(dotIdx).toLowerCase();
+            if (!ALLOWED_BRANDING_EXTENSIONS.contains(ext)) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            Path baseDir = Paths.get(BRANDING_DIR).toAbsolutePath().normalize();
+            Path filePath = baseDir.resolve(safeFilename).toAbsolutePath().normalize();
+
+            if (!filePath.startsWith(baseDir)) {
+                log.warn("Branding path traversal attempt blocked: {}", filename);
+                return ResponseEntity.status(403).build();
+            }
+
+            Resource resource = new UrlResource(filePath.toUri());
+            if (!resource.exists() || !resource.isReadable()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            MediaType mediaType;
+            if (ext.equals(".png")) mediaType = MediaType.IMAGE_PNG;
+            else if (ext.equals(".jpg") || ext.equals(".jpeg")) mediaType = MediaType.IMAGE_JPEG;
+            else if (ext.equals(".svg")) mediaType = MediaType.parseMediaType("image/svg+xml");
+            else mediaType = MediaType.APPLICATION_OCTET_STREAM;
+
+            return ResponseEntity.ok()
+                    .contentType(mediaType)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+                    .header("X-Content-Type-Options", "nosniff")
+                    .cacheControl(CacheControl.maxAge(1, TimeUnit.DAYS).cachePublic())
+                    .body(resource);
+
+        } catch (MalformedURLException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    private String getCurrentUsername() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null ? auth.getName() : "anonymous";
+    }
+}

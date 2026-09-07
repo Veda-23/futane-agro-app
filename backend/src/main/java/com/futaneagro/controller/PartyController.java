@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.futaneagro.entity.*;
 import com.futaneagro.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,12 +58,14 @@ public class PartyController {
 
     // --- Party Endpoints ---
     @GetMapping("/parties")
+    @Cacheable(value = "parties")
     public List<Party> getAllParties() {
         return partyRepository.findAll();
     }
 
     @PostMapping("/parties")
     @Transactional
+    @CacheEvict(value = "parties", allEntries = true)
     public Party createParty(@Valid @RequestBody Party party) {
         Party saved = partyRepository.save(party);
         saveAuditLog("Created party: " + saved.getPartyName(), "Party", null, toJson(saved));
@@ -70,6 +74,7 @@ public class PartyController {
 
     @PutMapping("/parties/{id}")
     @Transactional
+    @CacheEvict(value = "parties", allEntries = true)
     public ResponseEntity<Party> updateParty(@PathVariable String id, @Valid @RequestBody Party details) {
         return partyRepository.findById(id).map(party -> {
             String oldState = toJson(party);
@@ -94,6 +99,7 @@ public class PartyController {
 
     @DeleteMapping("/parties/{id}")
     @Transactional
+    @CacheEvict(value = "parties", allEntries = true)
     public ResponseEntity<Void> deleteParty(@PathVariable String id) {
         return partyRepository.findById(id).map(party -> {
             String oldState = toJson(party);
@@ -110,12 +116,14 @@ public class PartyController {
 
     // --- Vendor Endpoints ---
     @GetMapping("/vendors")
+    @Cacheable(value = "vendors")
     public List<Vendor> getAllVendors() {
         return vendorRepository.findAll();
     }
 
     @PostMapping("/vendors")
     @Transactional
+    @CacheEvict(value = "vendors", allEntries = true)
     public Vendor createVendor(@Valid @RequestBody Vendor vendor) {
         Vendor saved = vendorRepository.save(vendor);
         saveAuditLog("Created vendor: " + saved.getVendorName(), "Vendor", null, toJson(saved));
@@ -124,6 +132,7 @@ public class PartyController {
 
     @PutMapping("/vendors/{id}")
     @Transactional
+    @CacheEvict(value = "vendors", allEntries = true)
     public ResponseEntity<Vendor> updateVendor(@PathVariable String id, @Valid @RequestBody Vendor details) {
         return vendorRepository.findById(id).map(vendor -> {
             String oldState = toJson(vendor);
@@ -141,6 +150,7 @@ public class PartyController {
 
     @DeleteMapping("/vendors/{id}")
     @Transactional
+    @CacheEvict(value = "vendors", allEntries = true)
     public ResponseEntity<Void> deleteVendor(@PathVariable String id) {
         return vendorRepository.findById(id).map(vendor -> {
             String oldState = toJson(vendor);
@@ -157,12 +167,14 @@ public class PartyController {
 
     // --- Driver Endpoints ---
     @GetMapping("/drivers")
+    @Cacheable(value = "drivers")
     public List<Driver> getAllDrivers() {
         return driverRepository.findAll();
     }
 
     @PostMapping("/drivers")
     @Transactional
+    @CacheEvict(value = "drivers", allEntries = true)
     public Driver createDriver(@RequestBody Driver driver) {
         Driver saved = driverRepository.save(driver);
         saveAuditLog("Created driver: " + saved.getDriverName(), "Driver", null, toJson(saved));
@@ -171,6 +183,7 @@ public class PartyController {
 
     @PutMapping("/drivers/{id}")
     @Transactional
+    @CacheEvict(value = "drivers", allEntries = true)
     public ResponseEntity<Driver> updateDriver(@PathVariable String id, @RequestBody Driver details) {
         return driverRepository.findById(id).map(driver -> {
             String oldState = toJson(driver);
@@ -188,6 +201,7 @@ public class PartyController {
 
     @DeleteMapping("/drivers/{id}")
     @Transactional
+    @CacheEvict(value = "drivers", allEntries = true)
     public ResponseEntity<Void> deleteDriver(@PathVariable String id) {
         return driverRepository.findById(id).map(driver -> {
             String oldState = toJson(driver);

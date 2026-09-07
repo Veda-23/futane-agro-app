@@ -29,6 +29,7 @@ services:
     container_name: futane_agro_backend_uat
     ports:
       - "8082:8081"
+    entrypoint: ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar", "--spring.profiles.active=uat", "--server.port=8081", "--server.http2.enabled=false"]
     environment:
       - SPRING_PROFILES_ACTIVE=uat
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-uat:3306/futane_agro_uat?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
@@ -36,6 +37,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=Vedant
       - MAIL_USERNAME=vedantmehare25@gmail.com
       - MAIL_PASSWORD=vsbtirkwuqviuicj
+      - SERVER_HTTP2_ENABLED=false
     depends_on:
       mysql-uat:
         condition: service_healthy

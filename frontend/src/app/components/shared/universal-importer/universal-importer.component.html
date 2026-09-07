@@ -1,0 +1,209 @@
+<!-- Universal Enterprise Glassmorphic CSV Importer Card -->
+<div class="importer-card-wrapper">
+  <div class="importer-card glass-panel" [class.dragging]="isDragging"
+       (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+    
+    <!-- Top Module Selector (When on Dashboard / Global Mode) -->
+    <div class="importer-module-selector" *ngIf="showModuleSelector">
+      <span class="selector-label">🎯 Select Module to Import:</span>
+      <div class="module-chips">
+        <button type="button" 
+                *ngFor="let m of availableModules" 
+                class="chip-btn" 
+                [class.active]="module === m.key"
+                (click)="onModuleChange(m.key)">
+          <span>{{ m.icon }}</span> {{ m.label }}
+        </button>
+      </div>
+    </div>
+
+    <div class="importer-main-row">
+      <div class="importer-content-left">
+        <div class="importer-icon-ring">
+          <i class="bi bi-file-earmark-spreadsheet" style="font-size:22px; color:#d97706;"></i>
+        </div>
+        <div class="importer-text">
+          <h4>{{ title }} <span class="format-badge">CSV ONLY</span></h4>
+          <p>{{ description }}</p>
+        </div>
+      </div>
+
+      <div class="importer-actions-right">
+        <!-- 1. Download Sample CSV Template Button -->
+        <button type="button" class="btn-template-dl" (click)="downloadTemplate()" title="Download standard CSV format">
+          <span><i class="bi bi-download" style="margin-right:4px;"></i> Download Sample Template (.csv)</span>
+        </button>
+
+        <!-- 2. CSV File Input Trigger -->
+        <label class="btn-choose-file" [class.loading]="isLoading">
+          <input type="file" (change)="onFileSelected($event)" accept=".csv" style="display:none;">
+          <span *ngIf="!isLoading"><i class="bi bi-folder2-open" style="margin-right:4px;"></i> Choose CSV File</span>
+          <span *ngIf="isLoading"><i class="bi bi-hourglass-split" style="margin-right:4px;"></i> Validating CSV...</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Drag & Drop Hint Footer -->
+    <div class="importer-drop-hint">
+      <span>💡 Drag &amp; drop your <strong>.csv</strong> file here, or click <em>Choose CSV File</em>. Files must be in standard comma-separated format.</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- 🔍 DRY-RUN VALIDATION & PREVIEW MODAL -->
+<!-- ========================================================================= -->
+<div class="modal-backdrop animated-fade-in" *ngIf="showPreviewModal">
+  <div class="importer-modal glass-modal animated-slide-up">
+    
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-badge-icon"><i class="bi bi-clipboard-data-fill" style="font-size:20px; color:#d97706;"></i></div>
+        <div>
+          <h3>CSV Import Validation &amp; Dry-Run Preview</h3>
+          <p>Target Module: <strong style="color:#d97706; text-transform:uppercase;">{{ previewData?.module }}</strong> · File: <strong>{{ selectedFile?.name }}</strong></p>
+        </div>
+      </div>
+      <button type="button" class="btn-close-modal" (click)="closeModal()">✕</button>
+    </div>
+
+    <!-- Summary KPI Counters -->
+    <div class="preview-kpi-grid">
+      <div class="kpi-box kpi-total">
+        <div class="kpi-label">TOTAL ROWS</div>
+        <div class="kpi-value">{{ previewData?.totalRows }}</div>
+      </div>
+      <div class="kpi-box kpi-valid">
+        <div class="kpi-label">✓ VALID ROWS</div>
+        <div class="kpi-value">{{ previewData?.validRows }}</div>
+      </div>
+      <div class="kpi-box kpi-new">
+        <div class="kpi-label">➕ NEW RECORDS</div>
+        <div class="kpi-value">{{ previewData?.newRows }}</div>
+      </div>
+      <div class="kpi-box kpi-dup">
+        <div class="kpi-label">🔄 EXISTING DUPLICATES</div>
+        <div class="kpi-value">{{ previewData?.duplicateRows }}</div>
+      </div>
+      <div class="kpi-box kpi-invalid" [class.has-errors]="(previewData?.invalidRows || 0) > 0">
+        <div class="kpi-label">⚠️ INVALID ROWS</div>
+        <div class="kpi-value">{{ previewData?.invalidRows }}</div>
+      </div>
+    </div>
+
+    <!-- Duplicate Handling Strategy Selector -->
+    <div class="duplicate-strategy-card" *ngIf="(previewData?.duplicateRows || 0) > 0">
+      <div class="dup-strat-title">
+        <span>🛡️ Duplicate Records Policy</span>
+        <small>Choose how the system handles existing database matches:</small>
+      </div>
+      <div class="dup-strat-options">
+        <label class="strat-label" [class.selected]="duplicateStrategy === 'UPDATE'">
+          <input type="radio" name="dupStrategy" value="UPDATE" [(ngModel)]="duplicateStrategy">
+          <div>
+            <strong>Update Existing Records (Recommended)</strong>
+            <p>Overwrites matching records with new CSV values.</p>
+          </div>
+        </label>
+        <label class="strat-label" [class.selected]="duplicateStrategy === 'SKIP'">
+          <input type="radio" name="dupStrategy" value="SKIP" [(ngModel)]="duplicateStrategy">
+          <div>
+            <strong>Skip Duplicates</strong>
+            <p>Ignores duplicates and inserts only completely new records.</p>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Tabs: Valid Rows Preview vs Invalid Errors -->
+    <div class="modal-tab-bar">
+      <button type="button" class="mtab-btn" [class.active]="previewTab === 'valid'" (click)="previewTab = 'valid'">
+        ✓ Valid Rows ({{ previewData?.validRows }})
+      </button>
+      <button type="button" class="mtab-btn" [class.active]="previewTab === 'invalid'" (click)="previewTab = 'invalid'" [class.tab-has-errors]="(previewData?.invalidRows || 0) > 0">
+        ⚠️ Errors &amp; Invalid Rows ({{ previewData?.invalidRows }})
+      </button>
+    </div>
+
+    <!-- TAB 1: VALID ROWS PREVIEW TABLE -->
+    <div class="modal-table-container" *ngIf="previewTab === 'valid'">
+      <div *ngIf="(previewData?.previewRows?.length || 0) === 0" class="empty-state">
+        No valid rows found to preview.
+      </div>
+      <table *ngIf="(previewData?.previewRows?.length || 0) > 0" class="preview-table">
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th *ngFor="let key of (previewData?.previewRows?.[0] | keyvalue)">
+              <span *ngIf="!key.key.startsWith('_')">{{ key.key }}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of previewData?.previewRows | slice:0:50">
+            <td>
+              <span *ngIf="!row._isDuplicate" class="badge-status badge-new">New</span>
+              <span *ngIf="row._isDuplicate" class="badge-status badge-update">Update</span>
+            </td>
+            <td *ngFor="let item of row | keyvalue">
+              <span *ngIf="!item.key.startsWith('_')">{{ item.value }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div *ngIf="(previewData?.previewRows?.length || 0) > 50" class="table-more-hint">
+        Showing first 50 of {{ previewData?.previewRows?.length }} rows.
+      </div>
+    </div>
+
+    <!-- TAB 2: INVALID ROWS & ERROR TABLE -->
+    <div class="modal-table-container" *ngIf="previewTab === 'invalid'">
+      <div *ngIf="(previewData?.errors?.length || 0) === 0" class="empty-state text-success">
+        ✓ 100% Clean Data! No errors detected in this CSV file.
+      </div>
+      <div *ngIf="(previewData?.errors?.length || 0) > 0">
+        <div class="error-action-banner">
+          <span>⚠️ {{ previewData?.errors?.length }} validation issue(s) detected. Valid rows can still be imported.</span>
+          <button type="button" class="btn-dl-errors" (click)="downloadErrorReport()">
+            📥 Download Error Report (.csv)
+          </button>
+        </div>
+        <table class="preview-table error-table">
+          <thead>
+            <tr>
+              <th style="width:70px;">Row #</th>
+              <th>Column</th>
+              <th>Provided Value</th>
+              <th>Error Details</th>
+              <th>Suggested Fix</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let err of previewData?.errors">
+              <td style="font-weight:700; color:#ef4444;">Row {{ err.rowNumber }}</td>
+              <td><strong>{{ err.column }}</strong></td>
+              <td><code>{{ err.rawValue || '(blank)' }}</code></td>
+              <td class="text-danger">{{ err.errorMessage }}</td>
+              <td class="text-success">{{ err.suggestedFix }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div class="modal-footer">
+      <button type="button" class="btn-modal-cancel" (click)="closeModal()" [disabled]="isExecuting">
+        Cancel
+      </button>
+      <button type="button" class="btn-modal-confirm" (click)="confirmImport()"
+              [disabled]="isExecuting || (previewData?.validRows || 0) === 0">
+        <span *ngIf="!isExecuting">✓ Confirm &amp; Import {{ previewData?.validRows }} Record(s)</span>
+        <span *ngIf="isExecuting">⏳ Committing to Database...</span>
+      </button>
+    </div>
+
+  </div>
+</div>

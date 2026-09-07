@@ -77,30 +77,33 @@
           </div>
         </div>
       </div>
-      <div class="table-container">
-        <table>
+      <div class="table-container table-responsive">
+        <table class="table" appResizableTable [tableId]="'salaries_table'">
           <thead>
             <tr>
-              <th *ngIf="isColumnVisible('salaries', 'Name')" (click)="setSort('employee.empName')" style="cursor:pointer;">{{ 'hr.name' | translate:currentLang }} <span *ngIf="sortField === 'employee.empName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('salaries', 'Month/Year')" (click)="setSort('month')" style="cursor:pointer;">{{ 'sal.month' | translate:currentLang }} <span *ngIf="sortField === 'month'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('salaries', 'Amount')" (click)="setSort('salaryAmount')" style="cursor:pointer;">{{ 'sal.amount' | translate:currentLang }} <span *ngIf="sortField === 'salaryAmount'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('salaries', 'Date')" (click)="setSort('paidDate')" style="cursor:pointer;">{{ 'sal.date' | translate:currentLang }} <span *ngIf="sortField === 'paidDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('salaries', 'Status')" (click)="setSort('status')" style="cursor:pointer;">{{ 'label.status' | translate:currentLang }} <span *ngIf="sortField === 'status'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('salaries', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
+              <th *ngIf="isColumnVisible('salaries', 'Name')" (click)="setSort('employee.empName')" style="cursor:pointer; min-width: 140px;">{{ 'hr.name' | translate:currentLang }} <span *ngIf="sortField === 'employee.empName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('salaries', 'Month/Year')" (click)="setSort('month')" style="cursor:pointer; min-width: 120px;">{{ 'sal.month' | translate:currentLang }} <span *ngIf="sortField === 'month'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('salaries', 'Amount')" (click)="setSort('salaryAmount')" style="cursor:pointer; min-width: 120px;">{{ 'sal.amount' | translate:currentLang }} <span *ngIf="sortField === 'salaryAmount'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('salaries', 'Date')" (click)="setSort('paidDate')" style="cursor:pointer; min-width: 130px;">{{ 'sal.date' | translate:currentLang }} <span *ngIf="sortField === 'paidDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('salaries', 'Status')" (click)="setSort('status')" style="cursor:pointer; min-width: 100px;">{{ 'label.status' | translate:currentLang }} <span *ngIf="sortField === 'status'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('salaries', 'Actions')" style="min-width: 130px;">{{ 'label.actions' | translate:currentLang }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let sal of getProcessedList(salariesList, 'salaries')">
-              <td *ngIf="isColumnVisible('salaries', 'Name')">{{ sal.employee.empName }}</td>
+            <tr *ngFor="let sal of getProcessedList(salariesList, 'salaries'); trackBy: trackById">
+              <td *ngIf="isColumnVisible('salaries', 'Name')"><strong>{{ sal.employee?.empName || 'Employee #' + (sal.employee?.id || sal.employeeId) }}</strong></td>
               <td *ngIf="isColumnVisible('salaries', 'Month/Year')">{{ sal.month }} / {{ sal.year }}</td>
-              <td *ngIf="isColumnVisible('salaries', 'Amount')"><strong>₹{{ sal.salaryAmount }}</strong></td>
-              <td *ngIf="isColumnVisible('salaries', 'Date')">{{ sal.paidDate || 'N/A' }}</td>
+              <td *ngIf="isColumnVisible('salaries', 'Amount')"><strong>₹{{ sal.salaryAmount | number:'1.2-2' }}</strong></td>
+              <td *ngIf="isColumnVisible('salaries', 'Date')">
+                <span class="date-cell">{{ sal.paidDate | indianDate }}</span>
+              </td>
               <td *ngIf="isColumnVisible('salaries', 'Status')">
                 <span class="badge badge-success" *ngIf="sal.status === 'Paid'">Paid</span>
                 <span class="badge badge-warning" *ngIf="sal.status === 'Pending'">Pending</span>
               </td>
               <td *ngIf="isColumnVisible('salaries', 'Actions')">
-                <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteSalary(sal.id)">{{ 'btn.delete' | translate:currentLang }}</button>
+                <button class="btn btn-outline btn-sm" style="margin-right: 5px; font-weight:700; font-size: 11.5px; padding: 4px 8px;" (click)="editSalary(sal)">✏️ Edit</button>
+                <button class="btn btn-danger btn-sm" style="font-size: 11.5px; padding: 4px 8px;" *ngIf="canDelete()" (click)="deleteSalary(sal.id)">{{ 'btn.delete' | translate:currentLang }}</button>
               </td>
             </tr>
           </tbody>

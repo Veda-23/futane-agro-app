@@ -44,26 +44,38 @@
         </div>
       </div>
     </div>
-    <div class="table-container">
-      <table>
+    <div class="table-container table-responsive">
+      <table class="table" appResizableTable [tableId]="'bank_table'">
         <thead>
           <tr>
-            <th *ngIf="isColumnVisible('bank', 'Date')" (click)="setSort('transactionDate')" style="cursor:pointer;">{{ 'bank.date' | translate:currentLang }} <span *ngIf="sortField === 'transactionDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('bank', 'Type')" (click)="setSort('transactionType')" style="cursor:pointer;">{{ 'bank.type' | translate:currentLang }} <span *ngIf="sortField === 'transactionType'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('bank', 'Amount')" (click)="setSort('amount')" style="cursor:pointer;">{{ 'bank.amount' | translate:currentLang }} <span *ngIf="sortField === 'amount'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('bank', 'Description')">{{ 'bank.desc' | translate:currentLang }}</th>
-            <th *ngIf="isColumnVisible('bank', 'Reference')" (click)="setSort('referenceNo')" style="cursor:pointer;">{{ 'bank.reference' | translate:currentLang }} <span *ngIf="sortField === 'referenceNo'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('bank', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
+            <th *ngIf="isColumnVisible('bank', 'Date')" (click)="setSort('transactionDate')" style="cursor:pointer; min-width: 130px;">{{ 'bank.date' | translate:currentLang }} <span *ngIf="sortField === 'transactionDate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('bank', 'Type')" (click)="setSort('transactionType')" style="cursor:pointer; min-width: 100px;">{{ 'bank.type' | translate:currentLang }} <span *ngIf="sortField === 'transactionType'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('bank', 'Amount')" (click)="setSort('amount')" style="cursor:pointer; min-width: 120px;">{{ 'bank.amount' | translate:currentLang }} <span *ngIf="sortField === 'amount'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('bank', 'Description')" style="min-width: 160px;">{{ 'bank.desc' | translate:currentLang }}</th>
+            <th *ngIf="isColumnVisible('bank', 'Reference')" (click)="setSort('referenceNo')" style="cursor:pointer; min-width: 130px;">{{ 'bank.reference' | translate:currentLang }} <span *ngIf="sortField === 'referenceNo'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('bank', 'Actions')" style="min-width: 130px;">{{ 'label.actions' | translate:currentLang }}</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let bt of getProcessedList(bankTransactionsList, 'bank')">
-            <td *ngIf="isColumnVisible('bank', 'Date')">{{ bt.transactionDate }}</td>
-            <td *ngIf="isColumnVisible('bank', 'Type')"><span class="badge" [class.badge-success]="bt.transactionType === 'Credit'" [class.badge-danger]="bt.transactionType === 'Debit'">{{ bt.transactionType }}</span></td>
-            <td *ngIf="isColumnVisible('bank', 'Amount')"><strong [class.text-green]="bt.transactionType === 'Credit'" [class.text-red]="bt.transactionType === 'Debit'">₹{{ bt.amount }}</strong></td>
+          <tr *ngFor="let bt of getProcessedList(bankTransactionsList, 'bank'); trackBy: trackById">
+            <td *ngIf="isColumnVisible('bank', 'Date')">
+              <span class="date-cell">{{ bt.transactionDate | indianDate }}</span>
+            </td>
+            <td *ngIf="isColumnVisible('bank', 'Type')">
+              <span class="badge badge-success" *ngIf="bt.transactionType === 'Credit'">Credit</span>
+              <span class="badge badge-danger" *ngIf="bt.transactionType === 'Debit'">Debit</span>
+            </td>
+            <td *ngIf="isColumnVisible('bank', 'Amount')">
+              <strong [style.color]="bt.transactionType === 'Credit' ? 'var(--accent-success, #10b981)' : 'var(--accent-danger, #ef4444)'">
+                ₹{{ bt.amount | number:'1.2-2' }}
+              </strong>
+            </td>
             <td *ngIf="isColumnVisible('bank', 'Description')">{{ bt.description }}</td>
             <td *ngIf="isColumnVisible('bank', 'Reference')"><code>{{ bt.referenceNo || 'N/A' }}</code></td>
-            <td *ngIf="isColumnVisible('bank', 'Actions')"><button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteBankTransaction(bt.id)">{{ 'btn.delete' | translate:currentLang }}</button></td>
+            <td *ngIf="isColumnVisible('bank', 'Actions')">
+              <button class="btn btn-outline btn-sm" style="margin-right: 5px; font-weight: 700; font-size: 11.5px; padding: 4px 8px;" (click)="editBankTransaction(bt)">✏️ Edit</button>
+              <button class="btn btn-danger btn-sm" style="font-size: 11.5px; padding: 4px 8px;" *ngIf="canDelete()" (click)="deleteBankTransaction(bt.id)">{{ 'btn.delete' | translate:currentLang }}</button>
+            </td>
           </tr>
         </tbody>
       </table>

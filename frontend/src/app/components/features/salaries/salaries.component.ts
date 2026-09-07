@@ -9,11 +9,13 @@ import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
 
 import { forkJoin } from 'rxjs';
+import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
+import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 
 @Component({
   selector: 'app-salaries',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective, IndianDatePipe, ResizableTableDirective],
   templateUrl: './salaries.component.html',
   styleUrls: ['./salaries.component.css']
 })
@@ -116,22 +118,28 @@ export class SalariesComponent implements OnInit {
     return false;
   }
 
+  editSalary(sal: any) {
+    this.salariesForm = {
+      id: sal.employee ? String(sal.employee.id) : (sal.employeeId ? String(sal.employeeId) : ''),
+      month: sal.month || 'May',
+      year: sal.year || 2026,
+      salaryAmount: sal.salaryAmount || 0,
+      status: sal.status || 'Pending',
+      paidDate: sal.paidDate || ''
+    };
+    (this.salariesForm as any)._editId = sal.id;
+    const formEl = document.querySelector('.form-card');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
+    this.notificationService.info('Editing', `Editing salary for ${sal.employee?.empName || 'Employee'}`);
+  }
+
   saveSalary() {
     if (!this.salariesForm.id || !this.salariesForm.month || !this.salariesForm.year || !this.salariesForm.salaryAmount) {
       this.notificationService.warning('Invalid Input', "Please fill required fields");
       return;
     }
 
-    const now = new Date();
-    const monthIndex = this.allMonths.indexOf(this.salariesForm.month);
-    if (this.salariesForm.year > now.getFullYear() || (this.salariesForm.year === now.getFullYear() && monthIndex > now.getMonth())) {
-      this.notificationService.warning('Invalid Date', 'Cannot generate salary records for future months.');
-      return;
-    }
-
-    if (this.isSalaryAlreadyPaid()) {
-      return;
-    }
+    const editId = (this.salariesForm as any)._editId;
 
     const emp = this.employees.find(e => e.id === parseInt(this.salariesForm.id));
     if (!emp) return;
@@ -145,16 +153,38 @@ export class SalariesComponent implements OnInit {
       paidDate: this.salariesForm.paidDate ? this.salariesForm.paidDate : null
     };
 
-    this.apiService.createSalary(payload).subscribe({
-      next: (res) => {
-        if (res) this.salariesList.unshift(res);
-        this.loadData();
-        this.notificationService.success('Data Added', 'Salary record added successfully');
-        this.logAudit("Generated salary release log for employee: " + emp.empName);
-        this.salariesForm = { id: '', month: 'May', year: 2026, salaryAmount: 0, status: 'Pending', paidDate: '' };
-      },
-      error: (err) => this.notificationService.error('Error', "Failed to save salary: " + (err.error?.message || err.message))
-    });
+    if (editId) {
+      // UPDATE: skip duplicate and future-date checks
+      this.apiService.updateSalary(editId, payload).subscribe({
+        next: () => {
+          this.loadData();
+          this.notificationService.success('Updated', 'Salary record updated successfully');
+          this.logAudit('Updated salary for employee: ' + emp.empName);
+          this.salariesForm = { id: '', month: 'May', year: 2026, salaryAmount: 0, status: 'Pending', paidDate: '' };
+        },
+        error: (err) => this.notificationService.error('Error', 'Failed to update salary: ' + (err.error?.message || err.message))
+      });
+    } else {
+      // CREATE: apply all validations
+      const now = new Date();
+      const monthIndex = this.allMonths.indexOf(this.salariesForm.month);
+      if (this.salariesForm.year > now.getFullYear() || (this.salariesForm.year === now.getFullYear() && monthIndex > now.getMonth())) {
+        this.notificationService.warning('Invalid Date', 'Cannot generate salary records for future months.');
+        return;
+      }
+      if (this.isSalaryAlreadyPaid()) return;
+
+      this.apiService.createSalary(payload).subscribe({
+        next: (res) => {
+          if (res) this.salariesList.unshift(res);
+          this.loadData();
+          this.notificationService.success('Data Added', 'Salary record added successfully');
+          this.logAudit("Generated salary release log for employee: " + emp.empName);
+          this.salariesForm = { id: '', month: 'May', year: 2026, salaryAmount: 0, status: 'Pending', paidDate: '' };
+        },
+        error: (err) => this.notificationService.error('Error', "Failed to save salary: " + (err.error?.message || err.message))
+      });
+    }
   }
 
   deleteSalary(id: string) {
@@ -229,5 +259,9 @@ export class SalariesComponent implements OnInit {
   private resolvePath(obj: any, path: string): any {
     if (!path) return '';
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
+  }
+
+  trackById(index: number, item: any): any {
+    return item?.id ?? item?.salaryId ?? index;
   }
 }

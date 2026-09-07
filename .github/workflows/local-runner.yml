@@ -1,0 +1,34 @@
+name: Futane Agro ERP - Local Runner (Self-Hosted)
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform on local machine'
+        required: true
+        default: 'restart-uat'
+        type: choice
+        options:
+          - restart-uat
+          - docker-status
+          - stop-uat
+
+jobs:
+  local-deploy:
+    name: Run on Local Machine
+    runs-on: [self-hosted, windows]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Execute Local Action
+        shell: powershell
+        run: |
+          Write-Host "Executing on local machine: ${{ inputs.action }}"
+          if ("${{ inputs.action }}" -eq "restart-uat") {
+            docker compose -f docker-compose.uat.yml restart
+          } elseif ("${{ inputs.action }}" -eq "docker-status") {
+            docker ps
+          } elseif ("${{ inputs.action }}" -eq "stop-uat") {
+            docker compose -f docker-compose.uat.yml stop
+          }

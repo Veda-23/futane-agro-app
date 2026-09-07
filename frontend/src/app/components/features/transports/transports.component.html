@@ -43,28 +43,29 @@
         </div>
       </div>
     </div>
-    <div class="table-container">
-      <table>
+    <div class="table-container table-responsive">
+      <table class="table" appResizableTable tableId="transports_table">
         <thead>
           <tr>
-            <th *ngIf="isColumnVisible('transports', 'Date')" (click)="setSort('date')" style="cursor:pointer;">{{ 'trans.date' | translate:currentLang }} <span *ngIf="sortField === 'date'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('transports', 'Truck')" (click)="setSort('truckNumber')" style="cursor:pointer;">{{ 'trans.truck' | translate:currentLang }} <span *ngIf="sortField === 'truckNumber'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('transports', 'Driver')" (click)="setSort('driver.driverName')" style="cursor:pointer;">{{ 'driver.name' | translate:currentLang }} <span *ngIf="sortField === 'driver.driverName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('transports', 'Rent')" (click)="setSort('rent')" style="cursor:pointer;">{{ 'trans.rent' | translate:currentLang }} <span *ngIf="sortField === 'rent'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('transports', 'Advance')" (click)="setSort('advance')" style="cursor:pointer;">{{ 'trans.advance' | translate:currentLang }} <span *ngIf="sortField === 'advance'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('transports', 'Remaining')" (click)="setSort('remaining')" style="cursor:pointer;">{{ 'trans.remaining' | translate:currentLang }} <span *ngIf="sortField === 'remaining'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-            <th *ngIf="isColumnVisible('transports', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
+            <th *ngIf="isColumnVisible('transports', 'Date')" (click)="setSort('date')" style="cursor:pointer; min-width:110px;">{{ 'trans.date' | translate:currentLang }} <span *ngIf="sortField === 'date'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('transports', 'Truck')" (click)="setSort('truckNumber')" style="cursor:pointer; min-width:140px;">{{ 'trans.truck' | translate:currentLang }} <span *ngIf="sortField === 'truckNumber'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('transports', 'Driver')" (click)="setSort('driver.driverName')" style="cursor:pointer; min-width:160px;">{{ 'driver.name' | translate:currentLang }} <span *ngIf="sortField === 'driver.driverName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('transports', 'Rent')" (click)="setSort('rent')" style="cursor:pointer; min-width:110px;">{{ 'trans.rent' | translate:currentLang }} <span *ngIf="sortField === 'rent'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('transports', 'Advance')" (click)="setSort('advance')" style="cursor:pointer; min-width:110px;">{{ 'trans.advance' | translate:currentLang }} <span *ngIf="sortField === 'advance'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('transports', 'Remaining')" (click)="setSort('remaining')" style="cursor:pointer; min-width:110px;">{{ 'trans.remaining' | translate:currentLang }} <span *ngIf="sortField === 'remaining'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+            <th *ngIf="isColumnVisible('transports', 'Actions')" style="min-width:120px;">{{ 'label.actions' | translate:currentLang }}</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let tr of getProcessedList(transportsList, 'transports')">
-            <td *ngIf="isColumnVisible('transports', 'Date')">{{ tr.date }}</td>
+          <tr *ngFor="let tr of getProcessedList(transportsList, 'transports'); trackBy: trackById">
+            <td *ngIf="isColumnVisible('transports', 'Date')"><span class="date-cell">{{ tr.date | indianDate }}</span></td>
             <td *ngIf="isColumnVisible('transports', 'Truck')"><code>{{ tr.truckNumber }}</code></td>
-            <td *ngIf="isColumnVisible('transports', 'Driver')">{{ tr.driver.driverName }} ({{ tr.driver.mobile }})</td>
-            <td *ngIf="isColumnVisible('transports', 'Rent')">₹{{ tr.rent }}</td>
-            <td *ngIf="isColumnVisible('transports', 'Advance')"><span class="badge badge-success">₹{{ tr.advance }}</span></td>
-            <td *ngIf="isColumnVisible('transports', 'Remaining')"><span class="badge badge-danger">₹{{ tr.remaining }}</span></td>
-            <td *ngIf="isColumnVisible('transports', 'Actions')">
+            <td *ngIf="isColumnVisible('transports', 'Driver')" style="font-weight:700;">{{ tr.driver?.driverName }} <small style="color:var(--text-secondary);">({{ tr.driver?.mobile }})</small></td>
+            <td *ngIf="isColumnVisible('transports', 'Rent')" style="font-weight:600;">₹{{ tr.rent | number:'1.2-2' }}</td>
+            <td *ngIf="isColumnVisible('transports', 'Advance')"><span class="badge badge-success" style="font-weight:700;">₹{{ tr.advance | number:'1.2-2' }}</span></td>
+            <td *ngIf="isColumnVisible('transports', 'Remaining')"><span class="badge badge-danger" style="font-weight:700;">₹{{ tr.remaining | number:'1.2-2' }}</span></td>
+            <td *ngIf="isColumnVisible('transports', 'Actions')" style="display:flex; gap:6px;">
+              <button class="btn btn-secondary btn-sm" (click)="editTransport(tr)">✏️ Edit</button>
               <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteTransport(tr.id)">{{ 'btn.delete' | translate:currentLang }}</button>
             </td>
           </tr>

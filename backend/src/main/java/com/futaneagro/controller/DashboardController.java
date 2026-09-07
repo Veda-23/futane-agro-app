@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -41,6 +42,9 @@ public class DashboardController {
 
     @Autowired
     private ExcelImporterService excelImporterService;
+
+    @Autowired
+    private com.futaneagro.security.FileSecurityService fileSecurityService;
 
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getStats() {
@@ -157,26 +161,47 @@ public class DashboardController {
     }
 
     @PostMapping("/import")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ResponseEntity<String> importExcel(@RequestParam("file") MultipartFile file) {
-        if (file.isEmpty()) {
+        if (file == null || file.isEmpty()) {
             return ResponseEntity.badRequest().body("Please upload a file.");
         }
+        String orig = file.getOriginalFilename();
+        if (orig == null) {
+            return ResponseEntity.badRequest().body("Invalid file name.");
+        }
+        String origLower = orig.toLowerCase();
+        if (!origLower.endsWith(".xlsx") && !origLower.endsWith(".xls")) {
+            return ResponseEntity.badRequest().body("Only Excel spreadsheet files (.xlsx, .xls) are allowed.");
+        }
+        if (file.getSize() > 10 * 1024 * 1024) {
+            return ResponseEntity.badRequest().body("File size exceeds 10MB limit.");
+        }
+
+        com.futaneagro.security.FileSecurityService.FileValidationResult validation = fileSecurityService.validate(file);
+        if (!validation.valid) {
+            return ResponseEntity.badRequest().body("File validation failed: " + validation.error);
+        }
+
+        File tempFile = null;
         try {
-            // Save to temp file
-            File tempFile = File.createTempFile("upload-", file.getOriginalFilename());
+            // Secure temp file creation: do not use unvalidated user input in filename
+            String ext = origLower.endsWith(".xlsx") ? ".xlsx" : ".xls";
+            tempFile = File.createTempFile("dashboard-upload-", ext);
             file.transferTo(tempFile);
 
             // Run imports
             excelImporterService.importParty(tempFile.getAbsolutePath());
             excelImporterService.importInventory(tempFile.getAbsolutePath());
 
-            // Delete temp file
-            tempFile.delete();
-
             return ResponseEntity.ok("Data imported successfully.");
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error importing file: " + e.getMessage());
+            log.error("Dashboard file import failed: type={}", e.getClass().getSimpleName(), e);
+            return ResponseEntity.status(500).body("Error importing file. Please verify the file format and try again.");
+        } finally {
+            if (tempFile != null && tempFile.exists()) {
+                tempFile.delete();
+            }
         }
     }
 }

@@ -13,15 +13,18 @@ public class RazorpayService {
 
     private static final Logger log = LoggerFactory.getLogger(RazorpayService.class);
 
-    @Value("${razorpay.key.id:rzp_test_placeholder}")
+    @Value("${razorpay.key.id:}")
     private String keyId;
 
-    @Value("${razorpay.key.secret:rzp_secret_placeholder}")
+    @Value("${razorpay.key.secret:}")
     private String keySecret;
 
     public String createPaymentLink(String invoiceNo, double amount, String customerName, String customerPhone) throws Exception {
+        if (keyId == null || keyId.isBlank() || keySecret == null || keySecret.isBlank()) {
+            throw new IllegalStateException("Razorpay credentials are not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.");
+        }
         try {
-            RazorpayClient client = new RazorpayClient(keyId, keySecret);
+            RazorpayClient client = new RazorpayClient(keyId.trim(), keySecret.trim());
             JSONObject paymentLinkRequest = new JSONObject();
             paymentLinkRequest.put("amount", (long)(amount * 100)); // amount in paise
             paymentLinkRequest.put("currency", "INR");

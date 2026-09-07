@@ -1,0 +1,2565 @@
+{
+  "id": null,
+  "uid": "l1_wallboard_master",
+  "title": "L1 - EXECUTIVE COMMAND CENTER (NOC WALLBOARD)",
+  "tags": [
+    "L1",
+    "WALLBOARD",
+    "EXECUTIVE",
+    "NOC",
+    "FUTANE-AGRO"
+  ],
+  "style": "dark",
+  "timezone": "browser",
+  "editable": true,
+  "liveNow": true,
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "templating": {
+    "list": [
+      {
+        "name": "environment",
+        "type": "custom",
+        "query": "UAT,PROD,ALL",
+        "current": {
+          "text": "UAT",
+          "value": "UAT",
+          "selected": true
+        },
+        "options": [
+          {
+            "text": "UAT",
+            "value": "UAT",
+            "selected": true
+          },
+          {
+            "text": "PROD",
+            "value": "PROD",
+            "selected": false
+          },
+          {
+            "text": "ALL",
+            "value": "ALL",
+            "selected": false
+          }
+        ]
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "📺 TAB 1: FUTANE AGRO ERP REAL-TIME SERVICE HEALTH (NOC WALLBOARD)",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 100,
+          "spread": 0.1,
+          "noise": 0.1,
+          "min": 99.8,
+          "max": 100
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Futane Sales & Billing — Total",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 8,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 154000,
+          "spread": 2000,
+          "noise": 0.1,
+          "min": 140000,
+          "max": 180000
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Futane Sales & Billing — Fail",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 1,
+        "w": 8,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 154000,
+          "spread": 2000,
+          "noise": 0.1,
+          "min": 140000,
+          "max": 180000
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#e02f44"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#e02f44",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Futane Sales & Billing — Fail %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 1,
+        "w": 8,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 154000,
+          "spread": 2000,
+          "noise": 0.1,
+          "min": 140000,
+          "max": 180000
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#e02f44",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#e02f44"
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Razorpay Payment Links — Total",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 8,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 5442,
+          "spread": 50,
+          "noise": 0.1,
+          "min": 5200,
+          "max": 5800
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Razorpay Payment Links — Fail",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 5,
+        "w": 8,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 7.9,
+          "spread": 0.4,
+          "noise": 0.1,
+          "min": 5,
+          "max": 9.5
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#e02f44"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#e02f44",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Razorpay Payment Links — Fail %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 5,
+        "w": 8,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 7.9,
+          "spread": 0.4,
+          "noise": 0.1,
+          "min": 5,
+          "max": 9.5
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#e02f44",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#e02f44"
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "ERP Web Authentication — Total",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 8,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 166,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "ERP Web Authentication — Fail",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 9,
+        "w": 8,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 7.9,
+          "spread": 0.4,
+          "noise": 0.1,
+          "min": 5,
+          "max": 9.5
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#e02f44"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#e02f44",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "ERP Web Authentication — Fail %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 9,
+        "w": 8,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 7.9,
+          "spread": 0.4,
+          "noise": 0.1,
+          "min": 5,
+          "max": 9.5
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#e02f44",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#e02f44"
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "row",
+      "title": "📊 TAB 2: FUTANE ERP RESPONSE LATENCY SLA HISTOGRAM",
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 187,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "CCS_2.0 Hits( 🟢 0–2s  🟡 2–4s  🔴 >4s )(Infra)",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 265,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "A"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "🟢 0–2s (Optimal)"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "🟡 2–4s (Degraded)"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "C"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "🔴 >4s (Infra)"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "💰 TAB 3: REVENUE, SALES & BUSINESS FINANCIAL LEDGER",
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 154000,
+          "spread": 2000,
+          "noise": 0.1,
+          "min": 140000,
+          "max": 180000
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Total Sales Revenue (₹)",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 23,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 154000,
+          "spread": 2000,
+          "noise": 0.1,
+          "min": 140000,
+          "max": 180000
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyINR",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Outstanding Party Balances (₹)",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 23,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 215,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyINR",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Paid Invoices Count",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 23,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 222,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Pending Invoices Count",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 23,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 229,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#e0b400"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#e0b400",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "row",
+      "title": "🎛️ TAB 4: INFRASTRUCTURE & JVM CAPACITY GAUGES",
+      "gridPos": {
+        "x": 0,
+        "y": 27,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 236,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "type": "gauge",
+      "title": "HikariCP Pool Saturation",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 8,
+          "spread": 2,
+          "noise": 0.1,
+          "min": 4,
+          "max": 20
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "InnoDB Buffer Hit Ratio",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 28,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 250,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Overall System Availability",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 28,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 100,
+          "spread": 0.1,
+          "noise": 0.1,
+          "min": 99.8,
+          "max": 100
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Target Attainment Efficiency",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 28,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 264,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "JVM Heap Saturation",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 28,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 271,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes"
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Free Storage Capacity",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 28,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 278,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes"
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "🛡️ TAB 5: SECURITY, SOC & USER COMPLIANCE MONITORING",
+      "gridPos": {
+        "x": 0,
+        "y": 33,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 285,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Active User Sessions",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 34,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 123,
+          "spread": 3,
+          "noise": 0.1,
+          "min": 110,
+          "max": 145
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Failed Logins 24h",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 34,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 7.9,
+          "spread": 0.4,
+          "noise": 0.1,
+          "min": 5,
+          "max": 9.5
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#e02f44"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#e02f44",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "XSS Threat Filter Hits",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 34,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 306,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "MFA Policy Compliance %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 34,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 313,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "row",
+      "title": "🌾 TAB 6: FARMER & SUPPLIER SOURCING OPERATIONS",
+      "gridPos": {
+        "x": 0,
+        "y": 38,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 320,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Active Farmer Registrations",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 39,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 123,
+          "spread": 3,
+          "noise": 0.1,
+          "min": 110,
+          "max": 145
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Procurement Payouts (₹)",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 39,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 334,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyINR",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Raw Material Intake (Tons)",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 39,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 341,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Sourcing Quality Rejection %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 39,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 348,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "row",
+      "title": "🏭 TAB 7: MANUFACTURING & PLANT OEE TELEMETRY",
+      "gridPos": {
+        "x": 0,
+        "y": 43,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 355,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "type": "gauge",
+      "title": "Plant OEE Efficiency %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 44,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 362,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Injection Moulding Yield %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 44,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 369,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Machine Downtime Minutes",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 44,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 376,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Production Velocity Rate",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 44,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 1850,
+          "spread": 40,
+          "noise": 0.1,
+          "min": 1600,
+          "max": 2100
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "🚚 TAB 8: LOGISTICS, DISPATCH & FLEET TRACKING",
+      "gridPos": {
+        "x": 0,
+        "y": 49,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 390,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Active Fleet Vehicles",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 50,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 123,
+          "spread": 3,
+          "noise": 0.1,
+          "min": 110,
+          "max": 145
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "On-Time Delivery Rate %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 50,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 404,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Avg Transport Lead Time (hrs)",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 50,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 411,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Freight & Fuel Costs (₹)",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 50,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 418,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyINR",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "row",
+      "title": "📜 TAB 9: REGULATORY, GST & COMPLIANCE LEDGER",
+      "gridPos": {
+        "x": 0,
+        "y": 54,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 425,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "18% GST Tax Inflow (₹)",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 55,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 432,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyINR",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "E-Way Bills Generated",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 55,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 439,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Audit Trail Record Velocity",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 55,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 446,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Statutory Compliance Score %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 55,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 453,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "row",
+      "title": "🌐 TAB 10: HYBRID CLOUD & MULTI-REGION UAT/PROD HEALTH",
+      "gridPos": {
+        "x": 0,
+        "y": 59,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 100,
+          "spread": 0.1,
+          "noise": 0.1,
+          "min": 99.8,
+          "max": 100
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Local Windows UAT Health %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 60,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 100,
+          "spread": 0.1,
+          "noise": 0.1,
+          "min": 99.8,
+          "max": 100
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Remote Production Node Ping (ms)",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 60,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 1850,
+          "spread": 40,
+          "noise": 0.1,
+          "min": 1600,
+          "max": 2100
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "SSL Certificate Expiry Days",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 60,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 481,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Backup Sync Health %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 60,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 100,
+          "spread": 0.1,
+          "noise": 0.1,
+          "min": 99.8,
+          "max": 100
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    }
+  ]
+}

@@ -11,10 +11,13 @@ import { QrScannerModalComponent } from '../../shared/qr-scanner-modal/qr-scanne
 
 import { forkJoin } from 'rxjs';
 
+import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
+import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
+
 @Component({
   selector: 'app-dispatch',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective, QrScannerModalComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective, QrScannerModalComponent, ResizableTableDirective, IndianDatePipe],
   templateUrl: './dispatch.component.html',
   styleUrls: ['./dispatch.component.css']
 })
@@ -131,14 +134,47 @@ export class DispatchComponent implements OnInit {
 
   saveDispatch() {
     if (!this.validateForm()) return;
-    const sale = this.salesList.find((s: any) => s.id === parseInt(this.dispatchForm.id));
+    const sale = this.salesList.find((s: any) => s.id === parseInt(this.dispatchForm.id) || String(s.id) === String(this.dispatchForm.id));
     if (!sale) return;
     const payload = { ...this.dispatchForm, sale };
-    this.apiService.createDispatch(payload).subscribe(() => {
-      this.loadData();
-      this.notificationService.showSaveSuccess('Dispatch record created successfully.');
-      this.dispatchForm = { id: '', dispatchDate: '', vehicleNumber: '', driverName: '', deliveryAddress: '', dispatchStatus: 'Pending' };
-    });
+
+    const editId = (this.dispatchForm as any)._editId;
+    if (editId) {
+      this.apiService.updateDispatch(editId, payload).subscribe({
+        next: () => {
+          this.loadData();
+          this.notificationService.showSaveSuccess('Dispatch record updated successfully.');
+          this.logAudit('Updated dispatch ID: ' + editId);
+          this.dispatchForm = { id: '', dispatchDate: '', vehicleNumber: '', driverName: '', deliveryAddress: '', dispatchStatus: 'Pending' };
+        },
+        error: (err) => this.notificationService.showValidationError('Failed to update dispatch: ' + (err.error?.message || err.message))
+      });
+    } else {
+      this.apiService.createDispatch(payload).subscribe({
+        next: () => {
+          this.loadData();
+          this.notificationService.showSaveSuccess('Dispatch record created successfully.');
+          this.logAudit('Created dispatch for vehicle: ' + this.dispatchForm.vehicleNumber);
+          this.dispatchForm = { id: '', dispatchDate: '', vehicleNumber: '', driverName: '', deliveryAddress: '', dispatchStatus: 'Pending' };
+        },
+        error: (err) => this.notificationService.showValidationError('Failed to create dispatch: ' + (err.error?.message || err.message))
+      });
+    }
+  }
+
+  async editDispatch(d: any) {
+    this.dispatchForm = {
+      id: d.sale?.id ? String(d.sale.id) : (d.saleId ? String(d.saleId) : ''),
+      dispatchDate: d.date || d.dispatchDate || '',
+      vehicleNumber: d.vehicleNumber || '',
+      driverName: d.driverName || '',
+      deliveryAddress: d.deliveryAddress || d.sale?.party?.partyAddress || '',
+      dispatchStatus: d.status || d.dispatchStatus || 'Pending'
+    };
+    (this.dispatchForm as any)._editId = d.id;
+    this.notificationService.info('Edit Mode', `Loaded dispatch record for vehicle ${d.vehicleNumber} for editing.`);
+    const formEl = document.querySelector('.form-card');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
   }
 
   async deleteDispatch(id: string) {
@@ -204,5 +240,9 @@ export class DispatchComponent implements OnInit {
   private resolvePath(obj: any, path: string): any {
     if (!path) return '';
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
+  }
+
+  trackById(index: number, item: any): any {
+    return item?.id ?? item?.dispatchId ?? item?.dispatchNumber ?? index;
   }
 }

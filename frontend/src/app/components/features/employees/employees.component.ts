@@ -33,7 +33,8 @@ export class EmployeesComponent implements OnInit {
   ];
   
   employeeTableActions = [
-    { label: 'Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
+    { label: '✏️ Edit', action: 'edit', class: 'btn btn-sm btn-secondary' },
+    { label: '🗑️ Delete', action: 'delete', class: 'btn btn-sm btn-danger' }
   ];
 
   constructor(private apiService: ApiService, private notificationService: NotificationService) {}
@@ -69,25 +70,43 @@ export class EmployeesComponent implements OnInit {
       return;
     }
 
-    if (this.isDuplicateEmployee()) {
-      return;
+    const editId = (this.employeeForm as any).id;
+    if (editId) {
+      this.apiService.updateEmployee(editId, this.employeeForm).subscribe({
+        next: () => {
+          this.loadData();
+          this.notificationService.success('Updated', 'Employee updated successfully');
+          this.logAudit('Updated employee: ' + this.employeeForm.empName);
+          this.employeeForm = { empName: '', empContact: '', salary: 0, address: '', designation: '', joiningDate: '', aadhaarNo: '', bankAccount: '', photoPath: '', aadhaarCardPath: '', bankPassbookPath: '' };
+        },
+        error: (err) => this.notificationService.error('Error', 'Failed to update employee: ' + (err.error?.message || err.message))
+      });
+    } else {
+      if (this.isDuplicateEmployee()) {
+        return;
+      }
+      this.apiService.createEmployee(this.employeeForm).subscribe({
+        next: (res) => {
+          this.loadData();
+          this.notificationService.success('Success', 'Employee saved successfully');
+          this.logAudit("Registered employee: " + this.employeeForm.empName);
+          this.employeeForm = { empName: '', empContact: '', salary: 0, address: '', designation: '', joiningDate: '', aadhaarNo: '', bankAccount: '', photoPath: '', aadhaarCardPath: '', bankPassbookPath: '' };
+        },
+        error: (err) => this.notificationService.error('Error', "Failed to save employee: " + (err.error?.message || err.message))
+      });
     }
+  }
 
-    this.apiService.createEmployee(this.employeeForm).subscribe({
-      next: (res) => {
-        if (res) this.employees.unshift(res);
-        this.loadData();
-        this.notificationService.success('Data Added', 'Employee registered successfully');
-        this.logAudit("Registered employee: " + this.employeeForm.empName);
-        this.employeeForm = { empName: '', empContact: '', salary: 0, address: '', designation: '', joiningDate: '', aadhaarNo: '', bankAccount: '', photoPath: '', aadhaarCardPath: '', bankPassbookPath: '' };
-      },
-      error: (err) => this.notificationService.error('Error', "Failed to register employee: " + (err.error?.message || err.message))
-    });
+  editEmployee(emp: any) {
+    this.employeeForm = { ...emp };
+    this.notificationService.info('Edit Mode', `Loaded employee ${emp.empName} for editing.`);
+    const formEl = document.querySelector('.form-card');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
   }
 
   deleteEmployee(id: string) {
     if (!this.canDelete()) {
-      this.notificationService.warning('Permission Denied', "Permission denied");
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
       return;
     }
     this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this employee?', 'Yes, Delete').then(confirmed => {
@@ -104,13 +123,36 @@ export class EmployeesComponent implements OnInit {
     });
   }
 
+  batchDeleteEmployees(ids: string[]) {
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "You don't have permission to delete.");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Bulk Delete', `Delete ${ids.length} selected employees?`, 'Yes, Delete All').then(confirmed => {
+      if (confirmed) {
+        ids.forEach(id => {
+          this.apiService.deleteEmployee(id).subscribe({
+            next: () => {
+              this.employees = this.employees.filter(x => String(x.id) !== id);
+            }
+          });
+        });
+        this.notificationService.success('Batch Complete', `${ids.length} employees deleted`);
+      }
+    });
+  }
+
   handleEmployeeAction(event: any) {
     if (event.action === 'delete') this.deleteEmployee(event.item.id);
+    if (event.action === 'edit') this.editEmployee(event.item);
   }
 
   logAudit(action: string) {
     if (this.loggedInUser) {
-      this.apiService.createAuditLog({ username: this.loggedInUser.username, action }).subscribe();
+      this.apiService.createAuditLog({
+        username: this.loggedInUser.username,
+        action: action
+      }).subscribe();
     }
   }
 

@@ -1,0 +1,2141 @@
+{
+  "id": null,
+  "uid": "l2_subsystem_control",
+  "title": "L2 - SUBSYSTEM & DOMAIN OPERATIONS (ENGINEERING CONTROL)",
+  "tags": [
+    "L2",
+    "ENGINEERING",
+    "OPERATIONS",
+    "SUBSYSTEM",
+    "FUTANE-AGRO"
+  ],
+  "style": "dark",
+  "timezone": "browser",
+  "editable": true,
+  "liveNow": true,
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "templating": {
+    "list": [
+      {
+        "name": "environment",
+        "type": "custom",
+        "query": "UAT,PROD,ALL",
+        "current": {
+          "text": "UAT",
+          "value": "UAT",
+          "selected": true
+        },
+        "options": [
+          {
+            "text": "UAT",
+            "value": "UAT",
+            "selected": true
+          },
+          {
+            "text": "PROD",
+            "value": "PROD",
+            "selected": false
+          },
+          {
+            "text": "ALL",
+            "value": "ALL",
+            "selected": false
+          }
+        ]
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "🎛️ TAB 1: SUBSYSTEM CORE TELEMETRY & ENGINE BADGES",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 117,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Database Active Pool",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 123,
+          "spread": 3,
+          "noise": 0.1,
+          "min": 110,
+          "max": 145
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "JVM Heap Used",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 131,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Nginx Gateway QPS",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 138,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Razorpay Webhook Latency",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 84619,
+          "spread": 500,
+          "noise": 0.1,
+          "min": 80000,
+          "max": 90000
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "row",
+      "title": "🎛️ TAB 2: DOMAIN SATURATION & SUBSYSTEM HEALTH GAUGES",
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 100,
+          "spread": 0.1,
+          "noise": 0.1,
+          "min": 99.8,
+          "max": 100
+        }
+      ]
+    },
+    {
+      "type": "gauge",
+      "title": "MySQL Pool Utilization %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 8,
+          "spread": 2,
+          "noise": 0.1,
+          "min": 4,
+          "max": 20
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Garbage Collection Overhead %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 6,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 166,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Host CPU Utilization %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 6,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 173,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Gateway Bandwidth Saturation %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 6,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 180,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Payment Gateway Health %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 6,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 100,
+          "spread": 0.1,
+          "noise": 0.1,
+          "min": 99.8,
+          "max": 100
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Audit Compliance %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 6,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 194,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "📈 TAB 3: SUBSYSTEM PERFORMANCE & CURVE TRENDS",
+      "gridPos": {
+        "x": 0,
+        "y": 11,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 201,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "JVM Heap vs Non-Heap Memory Utilization",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 350,
+          "spread": 25,
+          "noise": 0.2,
+          "min": 200,
+          "max": 512
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "MySQL Query Execution Rate vs Slow Queries",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 12,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 2.5,
+          "spread": 0.5,
+          "noise": 0.05,
+          "min": 0.5,
+          "max": 6
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "🛢️ TAB 4: DATABASE JDBC & INNODB ENGINE DEEP-DIVE",
+      "gridPos": {
+        "x": 0,
+        "y": 19,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 222,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "InnoDB Buffer Hit Ratio",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 229,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Table Open Cache Ratio",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 20,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 236,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Query Execution Rate / sec",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 20,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 243,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "InnoDB Lock Wait Duration (ms)",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 20,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 250,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "row",
+      "title": "🌐 TAB 5: NETWORK NOC & API GATEWAY DISTRIBUTION",
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 257,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Nginx Traffic Ingress vs Egress Throughput",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 25,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 2.5,
+          "spread": 0.5,
+          "noise": 0.05,
+          "min": 0.5,
+          "max": 6
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "TLS Handshake Duration Timeline (ms)",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 25,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 430,
+          "spread": 10,
+          "noise": 0.15,
+          "min": 50,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never"
+          }
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "⚡ TAB 6: SPRING BOOT APM & ACTUATOR METRICS",
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 278,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Active Spring Beans Count",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 33,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 123,
+          "spread": 3,
+          "noise": 0.1,
+          "min": 110,
+          "max": 145
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "REST Controller Execution Velocity",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 33,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 292,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "HTTP 5xx Server Error Rate %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 33,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 7.9,
+          "spread": 0.4,
+          "noise": 0.1,
+          "min": 5,
+          "max": 9.5
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#e02f44"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#e02f44",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Garbage Collection Pause (ms)",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 33,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 306,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "row",
+      "title": "📦 TAB 7: HIBERNATE ORM & SECOND-LEVEL CACHE ANALYTICS",
+      "gridPos": {
+        "x": 0,
+        "y": 37,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 313,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Hibernate Cache Hit %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 38,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 320,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "DB Connection Lease Time (ms)",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 38,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 327,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Transaction Rollback Count",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 38,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 334,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "ORM Entity Persist Rate / sec",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 38,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 341,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "row",
+      "title": "⚡ TAB 8: ASYNC CRON EXECUTOR & THREAD POOL TELEMETRY",
+      "gridPos": {
+        "x": 0,
+        "y": 42,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 8,
+          "spread": 2,
+          "noise": 0.1,
+          "min": 4,
+          "max": 20
+        }
+      ]
+    },
+    {
+      "type": "gauge",
+      "title": "Executor Queue Saturation %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 43,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 355,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Active Worker Threads",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 43,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 123,
+          "spread": 3,
+          "noise": 0.1,
+          "min": 110,
+          "max": 145
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Email Dispatch Latency (ms)",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 43,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 369,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Cron Task Completion Health %",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 43,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 100,
+          "spread": 0.1,
+          "noise": 0.1,
+          "min": 99.8,
+          "max": 100
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "🔐 TAB 9: SPRING SECURITY & JWT TOKEN SESSION DRILL-DOWN",
+      "gridPos": {
+        "x": 0,
+        "y": 48,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 383,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Active JWT Tokens Issued",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 49,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 123,
+          "spread": 3,
+          "noise": 0.1,
+          "min": 110,
+          "max": 145
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Token Refresh Rate / min",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 49,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 397,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Password Reset Volume",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 49,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 404,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "RBAC Permission Denied Hits",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 49,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 411,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "row",
+      "title": "🗄️ TAB 10: FILE SYSTEM, ATTACHMENTS & S3 STORAGE MONITORING",
+      "gridPos": {
+        "x": 0,
+        "y": 53,
+        "w": 24,
+        "h": 1
+      },
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 418,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Invoice PDF Generation Rate",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 54,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 425,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Storage Disk Read/Write IOPS",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 54,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 432,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Backup Sync Upload Velocity",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 54,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 439,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Free Storage Capacity (GB)",
+      "datasource": {
+        "uid": "testdata_ds",
+        "type": "grafana-testdata-datasource"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 54,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "testdata_ds",
+            "type": "grafana-testdata-datasource"
+          },
+          "refId": "A",
+          "scenarioId": "random_walk",
+          "startValue": 446,
+          "spread": 8,
+          "noise": 0.1,
+          "min": 80,
+          "max": 250
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto"
+      }
+    }
+  ]
+}

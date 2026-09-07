@@ -8,10 +8,12 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
 
+import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
+
 @Component({
   selector: 'app-drivers',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective, ResizableTableDirective],
   templateUrl: './drivers.component.html',
   styleUrls: ['./drivers.component.css']
 })
@@ -79,18 +81,38 @@ export class DriversComponent implements OnInit {
     return true;
   }
 
+  editDriver(driver: any) {
+    this.driverForm = { ...driver };
+    const formEl = document.querySelector('.form-card');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
+    this.notificationService.info('Editing', `Editing driver: ${driver.driverName}`);
+  }
+
   saveDriver() {
     if (!this.validateForm()) return;
-    this.apiService.createDriver(this.driverForm).subscribe({
-      next: (res) => {
-        if (res) this.drivers.unshift(res);
-        this.loadData();
-        this.notificationService.success('Data Added', 'Driver created successfully');
-        this.logAudit("Created driver: " + this.driverForm.driverName);
-        this.driverForm = { driverName: '', mobile: '', licenseNumber: '', address: '' };
-      },
-      error: (err) => this.notificationService.error('Error', "Failed to create driver: " + (err.error?.message || err.message))
-    });
+    const editId = (this.driverForm as any).id;
+    if (editId) {
+      this.apiService.updateDriver(editId, this.driverForm).subscribe({
+        next: () => {
+          this.loadData();
+          this.notificationService.success('Updated', 'Driver updated successfully');
+          this.logAudit('Updated driver: ' + this.driverForm.driverName);
+          this.driverForm = { driverName: '', mobile: '', licenseNumber: '', address: '' };
+        },
+        error: (err) => this.notificationService.error('Error', 'Failed to update driver: ' + (err.error?.message || err.message))
+      });
+    } else {
+      this.apiService.createDriver(this.driverForm).subscribe({
+        next: (res) => {
+          if (res) this.drivers.unshift(res);
+          this.loadData();
+          this.notificationService.success('Data Added', 'Driver created successfully');
+          this.logAudit("Created driver: " + this.driverForm.driverName);
+          this.driverForm = { driverName: '', mobile: '', licenseNumber: '', address: '' };
+        },
+        error: (err) => this.notificationService.error('Error', "Failed to create driver: " + (err.error?.message || err.message))
+      });
+    }
   }
 
   deleteDriver(id: string) {
@@ -165,5 +187,9 @@ export class DriversComponent implements OnInit {
   private resolvePath(obj: any, path: string): any {
     if (!path) return '';
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
+  }
+
+  trackById(index: number, item: any): any {
+    return item?.id ?? item?.driverId ?? index;
   }
 }

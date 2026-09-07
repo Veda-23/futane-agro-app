@@ -8,10 +8,13 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
 
+import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
+import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
+
 @Component({
   selector: 'app-machines',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective, ResizableTableDirective, IndianDatePipe],
   templateUrl: './machines.component.html',
   styleUrls: ['./machines.component.css']
 })
@@ -23,8 +26,8 @@ export class MachinesComponent implements OnInit {
   machinesList: any[] = [];
   machineBreakdownsList: any[] = [];
 
-  machineForm = { machineName: '', machineCode: '', installedDate: '', status: 'Running', capacityPerHour: 0 };
-  breakdownForm = { id: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 };
+  machineForm: any = { machineName: '', machineCode: '', installedDate: '', status: 'Running', capacityPerHour: 0 };
+  breakdownForm: any = { id: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 };
 
   Math = Math;
 
@@ -105,16 +108,29 @@ export class MachinesComponent implements OnInit {
 
   saveMachine() {
     if (!this.validateForm('machine')) return;
-    this.apiService.createMachine(this.machineForm).subscribe({
-      next: (res) => {
-        if (res) this.machinesList.unshift(res);
-        this.loadData();
-        this.notificationService.success('Data Added', 'Machine added successfully');
-        this.logAudit('Added machine: ' + this.machineForm.machineName);
-        this.machineForm = { machineName: '', machineCode: '', installedDate: '', status: 'Running', capacityPerHour: 0 };
-      },
-      error: (err) => this.notificationService.error('Error', "Failed to add machine: " + (err.error?.message || err.message))
-    });
+    const editId = this.machineForm.id;
+    if (editId) {
+      this.apiService.updateMachine(editId, this.machineForm).subscribe({
+        next: () => {
+          this.loadData();
+          this.notificationService.success('Updated', 'Machine updated successfully');
+          this.logAudit('Updated machine: ' + this.machineForm.machineName);
+          this.machineForm = { machineName: '', machineCode: '', installedDate: '', status: 'Running', capacityPerHour: 0 };
+        },
+        error: (err) => this.notificationService.error('Error', 'Failed to update machine: ' + (err.error?.message || err.message))
+      });
+    } else {
+      this.apiService.createMachine(this.machineForm).subscribe({
+        next: (res) => {
+          if (res) this.machinesList.unshift(res);
+          this.loadData();
+          this.notificationService.success('Data Added', 'Machine added successfully');
+          this.logAudit('Added machine: ' + this.machineForm.machineName);
+          this.machineForm = { machineName: '', machineCode: '', installedDate: '', status: 'Running', capacityPerHour: 0 };
+        },
+        error: (err) => this.notificationService.error('Error', "Failed to add machine: " + (err.error?.message || err.message))
+      });
+    }
   }
 
   deleteMachine(id: string) {
@@ -136,21 +152,48 @@ export class MachinesComponent implements OnInit {
     });
   }
 
+  editMachine(machine: any) {
+    this.machineForm = {
+      id: machine.id,
+      machineName: machine.machineName || '',
+      machineCode: machine.machineCode || '',
+      installedDate: machine.installedDate || '',
+      status: machine.status || 'Running',
+      capacityPerHour: machine.capacityPerHour || 0
+    };
+    this.notificationService.info('Editing Machine', `Loaded "${machine.machineName}" into form.`);
+    const formEl = document.querySelector('.form-card');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
+  }
+
   saveBreakdown() {
     if (!this.validateForm('breakdown')) return;
     const machine = this.machinesList.find((m: any) => m.id === parseInt(this.breakdownForm.id));
     if (!machine) return;
+    const editId = (this.breakdownForm as any)._editId;
     const payload = { ...this.breakdownForm, machine };
-    this.apiService.createMachineBreakdown(payload).subscribe({
-      next: (res) => {
-        if (res) this.machineBreakdownsList.unshift(res);
-        this.loadData();
-        this.notificationService.success('Data Added', 'Machine breakdown record added successfully');
-        this.logAudit('Logged breakdown for machine: ' + machine.machineName);
-        this.breakdownForm = { id: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 };
-      },
-      error: (err) => this.notificationService.error('Error', "Failed to log breakdown: " + (err.error?.message || err.message))
-    });
+    if (editId) {
+      this.apiService.updateMachineBreakdown(editId, payload).subscribe({
+        next: () => {
+          this.loadData();
+          this.notificationService.success('Updated', 'Breakdown log updated successfully');
+          this.logAudit('Updated breakdown for machine: ' + machine.machineName);
+          this.breakdownForm = { id: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 };
+        },
+        error: (err) => this.notificationService.error('Error', 'Failed to update breakdown: ' + (err.error?.message || err.message))
+      });
+    } else {
+      this.apiService.createMachineBreakdown(payload).subscribe({
+        next: (res) => {
+          if (res) this.machineBreakdownsList.unshift(res);
+          this.loadData();
+          this.notificationService.success('Data Added', 'Machine breakdown record added successfully');
+          this.logAudit('Logged breakdown for machine: ' + machine.machineName);
+          this.breakdownForm = { id: '', breakdownDate: '', description: '', resolvedDate: '', downtimeHours: 0 };
+        },
+        error: (err) => this.notificationService.error('Error', "Failed to log breakdown: " + (err.error?.message || err.message))
+      });
+    }
   }
 
   deleteBreakdown(id: string) {
@@ -168,6 +211,37 @@ export class MachinesComponent implements OnInit {
           },
           error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
         });
+      }
+    });
+  }
+
+  editBreakdown(bd: any) {
+    this.breakdownForm = {
+      id: bd.machine?.id || bd.machineId || '',
+      breakdownDate: bd.breakdownDate || '',
+      description: bd.description || '',
+      resolvedDate: bd.resolvedDate || '',
+      downtimeHours: bd.downtimeHours || 0
+    };
+    (this.breakdownForm as any)._editId = bd.id;
+    this.notificationService.info('Editing Breakdown', `Loaded breakdown log for editing.`);
+    const formEl = document.querySelectorAll('.form-card');
+    if (formEl.length > 1) formEl[1].scrollIntoView({ behavior: 'smooth' });
+  }
+
+  batchDeleteMachines(ids: string[]) {
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', "Permission denied");
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', `Delete ${ids.length} machines?`, 'Yes, Delete All').then(confirmed => {
+      if (confirmed) {
+        ids.forEach(id => {
+          this.apiService.deleteMachine(id).subscribe({
+            next: () => { this.machinesList = this.machinesList.filter(x => String(x.id) !== id); }
+          });
+        });
+        this.notificationService.success('Batch Complete', `${ids.length} machines deleted`);
       }
     });
   }
@@ -225,5 +299,9 @@ export class MachinesComponent implements OnInit {
   private resolvePath(obj: any, path: string): any {
     if (!path) return '';
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
+  }
+
+  trackById(index: number, item: any): any {
+    return item?.id ?? item?.machineId ?? item?.breakdownId ?? index;
   }
 }

@@ -1,324 +1,393 @@
-<aside class="sidebar" [class.open]="isSidebarOpen">
+<aside class="sidebar" [class.open]="isSidebarOpen" [class.collapsed]="isCollapsed">
 
   <!-- Brand Header -->
   <div class="sidebar-header">
-    <div class="sidebar-brand">
-      <div class="brand-logo" style="background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1px solid var(--border-color); padding: 4px;">
-        <img src="assets/logo.svg" alt="Futane Agro Logo" style="width: 100%; height: 100%; object-fit: contain;">
+    <div class="sidebar-brand" [title]="isCollapsed ? 'FUTANE AGRO ERP' : ''">
+      <div class="brand-logo">
+        <img src="assets/logo.svg" alt="Futane Agro" class="brand-logo-img">
       </div>
-      <div class="brand-text">
+      <div class="brand-text" *ngIf="!isCollapsed">
         <span class="brand-name">FUTANE AGRO</span>
-        <span class="brand-sub">ERP System</span>
+        <span class="brand-sub">Manufacturing ERP</span>
       </div>
     </div>
-    <button class="mobile-close-btn" (click)="toggleSidebar()" aria-label="Close sidebar">
+    <button class="mobile-close-btn" (click)="toggleSidebar()" aria-label="Close navigation">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M18 6L6 18M6 6l12 12"/>
       </svg>
     </button>
   </div>
 
-  <!-- User Badge -->
-  <div class="sidebar-user-badge">
+  <!-- User Profile Badge (Expanded) -->
+  <div class="sidebar-user-badge" *ngIf="!isCollapsed && showUserCard">
     <div class="user-avatar">{{ loggedInUser?.name?.charAt(0) || 'A' }}</div>
     <div class="user-info">
-      <span class="user-name">{{ loggedInUser?.name || 'User' }}</span>
-      <span class="role-badge">{{ loggedInUser?.role }}</span>
+      <span class="user-name">{{ loggedInUser?.name || 'Enterprise Admin' }}</span>
+      <span class="role-badge">{{ loggedInUser?.role || 'SUPER_ADMIN' }}</span>
     </div>
+    <button class="user-card-hide-btn" (click)="toggleUserCard()" title="Collapse Profile Card" aria-label="Collapse profile card">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="18 15 12 9 6 15"/>
+      </svg>
+    </button>
   </div>
 
-  <!-- Navigation -->
+  <!-- Mini Pill when User Card is Collapsed (Expanded Sidebar) -->
+  <div class="sidebar-user-mini" *ngIf="!isCollapsed && !showUserCard" (click)="toggleUserCard()" title="Expand Profile Card">
+    <span class="mini-avatar">{{ loggedInUser?.name?.charAt(0) || 'A' }}</span>
+    <span class="mini-text">{{ loggedInUser?.name || 'Enterprise Admin' }}</span>
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+
+  <!-- User Avatar Only (Collapsed Sidebar) -->
+  <div class="sidebar-user-collapsed" *ngIf="isCollapsed" [title]="(loggedInUser?.name || 'Enterprise Admin') + ' (' + (loggedInUser?.role || 'SUPER_ADMIN') + ')'">
+    <div class="user-avatar">{{ loggedInUser?.name?.charAt(0) || 'A' }}</div>
+  </div>
+
+  <!-- Main Navigation List -->
   <nav class="sidebar-nav" role="navigation" aria-label="Main Navigation">
 
-    <!-- Core -->
-    <div class="nav-group-label">Core</div>
-    <ul>
+    <!-- 1. DASHBOARD -->
+    <div class="nav-group-label" *ngIf="!isCollapsed">Dashboard</div>
+    <div class="nav-group-divider" *ngIf="isCollapsed" title="Dashboard"></div>
+    <ul class="nav-menu-list">
       <li *ngIf="accessibleTabs['dashboard']"
           [class.active]="activeTab === 'dashboard'"
           (click)="switchTab('dashboard')"
-          title="Dashboard">
+          [attr.title]="'nav.dashboard' | translate:currentLang"
+          [attr.aria-label]="'nav.dashboard' | translate:currentLang">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
             <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
           </svg>
         </span>
-        <span class="nav-label">{{ 'nav.dashboard' | translate:currentLang }}</span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.dashboard' | translate:currentLang }}</span>
       </li>
     </ul>
 
-    <!-- Manufacturing -->
-    <div class="nav-group-label">Manufacturing</div>
-    <ul>
+    <!-- 2. OPERATIONS -->
+    <div class="nav-group-label" *ngIf="!isCollapsed">Operations</div>
+    <div class="nav-group-divider" *ngIf="isCollapsed" title="Operations"></div>
+    <ul class="nav-menu-list">
       <li *ngIf="accessibleTabs['production']"
           [class.active]="activeTab === 'production'"
-          (click)="switchTab('production')" title="Production">
+          (click)="switchTab('production')"
+          [attr.title]="'nav.production' | translate:currentLang"
+          [attr.aria-label]="'nav.production' | translate:currentLang">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41M19.07 19.07l-1.41-1.41M6.34 6.34L4.93 4.93M21 12h-2M5 12H3M12 21v-2M12 5V3"/>
           </svg>
         </span>
-        <span class="nav-label">{{ 'nav.production' | translate:currentLang }}</span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.production' | translate:currentLang }}</span>
       </li>
       <li *ngIf="accessibleTabs['monthly-production']"
           [class.active]="activeTab === 'monthly-production'"
-          (click)="switchTab('monthly-production')" title="Monthly Summary">
+          (click)="switchTab('monthly-production')"
+          [attr.title]="'nav.monthly-production' | translate:currentLang"
+          [attr.aria-label]="'nav.monthly-production' | translate:currentLang">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
           </svg>
         </span>
-        <span class="nav-label">{{ 'nav.monthly-production' | translate:currentLang }}</span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.monthly-production' | translate:currentLang }}</span>
       </li>
-      <li *ngIf="accessibleTabs['machines']"
-          [class.active]="activeTab === 'machines'"
-          (click)="switchTab('machines')" title="Machines">
-        <span class="nav-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2M12 12v4M10 14h4"/>
-          </svg>
-        </span>
-        <span class="nav-label">{{ 'nav.machines' | translate:currentLang }}</span>
-      </li>
-    </ul>
-
-    <!-- Commerce -->
-    <div class="nav-group-label">Commerce</div>
-    <ul>
-      <li *ngIf="accessibleTabs['parties']"
-          [class.active]="activeTab === 'parties'"
-          (click)="switchTab('parties')" title="Parties">
-        <span class="nav-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-        </span>
-        <span class="nav-label">{{ 'nav.parties' | translate:currentLang }}</span>
-      </li>
-      <li *ngIf="accessibleTabs['sales']"
-          [class.active]="activeTab === 'sales'"
-          (click)="switchTab('sales')" title="Sales">
-        <span class="nav-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
-          </svg>
-        </span>
-        <span class="nav-label">{{ 'nav.sales' | translate:currentLang }}</span>
-      </li>
-      <li *ngIf="accessibleTabs['payments']"
-          [class.active]="activeTab === 'payments'"
-          (click)="switchTab('payments')" title="Payments">
-        <span class="nav-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/>
-          </svg>
-        </span>
-        <span class="nav-label">{{ 'nav.payments' | translate:currentLang }}</span>
-      </li>
-      <li *ngIf="accessibleTabs['invoices']"
-          [class.active]="activeTab === 'invoices'"
-          (click)="switchTab('invoices')" title="Invoices">
-        <span class="nav-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-            <line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>
-          </svg>
-        </span>
-        <span class="nav-label">{{ 'nav.invoices' | translate:currentLang }}</span>
-      </li>
-      <li *ngIf="accessibleTabs['billinghub']"
-          [class.active]="activeTab === 'billinghub'"
-          (click)="switchTab('billinghub')" title="Billing Hub">
-        <span class="nav-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-          </svg>
-        </span>
-        <span class="nav-label">{{ 'nav.billinghub' | translate:currentLang }}</span>
-      </li>
-    </ul>
-
-    <!-- Supply Chain -->
-    <div class="nav-group-label">Supply Chain</div>
-    <ul>
       <li *ngIf="accessibleTabs['inventory']"
           [class.active]="activeTab === 'inventory'"
-          (click)="switchTab('inventory')" title="Inventory">
+          (click)="switchTab('inventory')"
+          [attr.title]="'nav.inventory' | translate:currentLang"
+          [attr.aria-label]="'nav.inventory' | translate:currentLang">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
             <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
           </svg>
         </span>
-        <span class="nav-label">{{ 'nav.inventory' | translate:currentLang }}</span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.inventory' | translate:currentLang }}</span>
       </li>
+      <li *ngIf="accessibleTabs['machines']"
+          [class.active]="activeTab === 'machines'"
+          (click)="switchTab('machines')"
+          [attr.title]="'nav.machines' | translate:currentLang"
+          [attr.aria-label]="'nav.machines' | translate:currentLang">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2M12 12v4M10 14h4"/>
+          </svg>
+        </span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.machines' | translate:currentLang }}</span>
+      </li>
+    </ul>
+
+    <!-- 3. SUPPLY CHAIN -->
+    <div class="nav-group-label" *ngIf="!isCollapsed">Supply Chain</div>
+    <div class="nav-group-divider" *ngIf="isCollapsed" title="Supply Chain"></div>
+    <ul class="nav-menu-list">
       <li *ngIf="accessibleTabs['raw-materials']"
           [class.active]="activeTab === 'raw-materials'"
-          (click)="switchTab('raw-materials')" title="Raw Materials">
+          (click)="switchTab('raw-materials')"
+          [attr.title]="'nav.raw-materials' | translate:currentLang"
+          [attr.aria-label]="'nav.raw-materials' | translate:currentLang">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
           </svg>
         </span>
-        <span class="nav-label">{{ 'nav.raw-materials' | translate:currentLang }}</span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.raw-materials' | translate:currentLang }}</span>
       </li>
       <li *ngIf="accessibleTabs['vendors']"
           [class.active]="activeTab === 'vendors'"
-          (click)="switchTab('vendors')" title="Vendors">
+          (click)="switchTab('vendors')"
+          [attr.title]="'nav.vendors' | translate:currentLang"
+          [attr.aria-label]="'nav.vendors' | translate:currentLang">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+            <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
           </svg>
         </span>
-        <span class="nav-label">{{ 'nav.vendors' | translate:currentLang }}</span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.vendors' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['sales']"
+          [class.active]="activeTab === 'sales'"
+          (click)="switchTab('sales')"
+          [attr.title]="'nav.sales' | translate:currentLang"
+          [attr.aria-label]="'nav.sales' | translate:currentLang">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+          </svg>
+        </span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.sales' | translate:currentLang }}</span>
       </li>
       <li *ngIf="accessibleTabs['dispatch']"
           [class.active]="activeTab === 'dispatch'"
-          (click)="switchTab('dispatch')" title="Dispatch">
+          (click)="switchTab('dispatch')"
+          [attr.title]="'nav.dispatch' | translate:currentLang"
+          [attr.aria-label]="'nav.dispatch' | translate:currentLang">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="1" y="3" width="15" height="13" rx="1"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+            <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+          </svg>
+        </span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.dispatch' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['transports']"
+          [class.active]="activeTab === 'transports'"
+          (click)="switchTab('transports')"
+          [attr.title]="'nav.transports' | translate:currentLang"
+          [attr.aria-label]="'nav.transports' | translate:currentLang">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/>
             <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
           </svg>
         </span>
-        <span class="nav-label">{{ 'nav.dispatch' | translate:currentLang }}</span>
-      </li>
-      <li *ngIf="accessibleTabs['transports']"
-          [class.active]="activeTab === 'transports'"
-          (click)="switchTab('transports')" title="Transport">
-        <span class="nav-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3M9 17h6m4 0h2M13 17v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4"/>
-            <circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
-          </svg>
-        </span>
-        <span class="nav-label">{{ 'nav.transport' | translate:currentLang }}</span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.transports' | translate:currentLang }}</span>
       </li>
       <li *ngIf="accessibleTabs['drivers']"
           [class.active]="activeTab === 'drivers'"
-          (click)="switchTab('drivers')" title="Drivers">
+          (click)="switchTab('drivers')"
+          [attr.title]="'nav.drivers' | translate:currentLang"
+          [attr.aria-label]="'nav.drivers' | translate:currentLang">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/>
+            <circle cx="12" cy="7" r="4"/><path d="M6 21v-2a6 6 0 0 1 12 0v2"/><circle cx="12" cy="12" r="9"/>
           </svg>
         </span>
-        <span class="nav-label">{{ 'nav.drivers' | translate:currentLang }}</span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.drivers' | translate:currentLang }}</span>
       </li>
-    </ul>
-
-    <!-- Finance -->
-    <div class="nav-group-label">Finance</div>
-    <ul>
-      <li *ngIf="accessibleTabs['bank']"
-          [class.active]="activeTab === 'bank'"
-          (click)="switchTab('bank')" title="Bank">
-        <span class="nav-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/>
-            <line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/>
-            <line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/>
-          </svg>
-        </span>
-        <span class="nav-label">{{ 'nav.bank' | translate:currentLang }}</span>
-      </li>
-      <li *ngIf="accessibleTabs['expenses']"
-          [class.active]="activeTab === 'expenses'"
-          (click)="switchTab('expenses')" title="Expenses">
-        <span class="nav-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4H8M12 6v2m0 8v2"/>
-          </svg>
-        </span>
-        <span class="nav-label">{{ 'nav.expenses' | translate:currentLang }}</span>
-      </li>
-      <li *ngIf="accessibleTabs['reports']"
-          [class.active]="activeTab === 'reports'"
-          (click)="switchTab('reports')" title="Reports">
-        <span class="nav-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-            <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
-          </svg>
-        </span>
-        <span class="nav-label">{{ 'nav.reports' | translate:currentLang }}</span>
-      </li>
-      <li *ngIf="accessibleTabs['analytics']"
-          [class.active]="activeTab === 'analytics'"
-          (click)="switchTab('analytics')" title="Analytics">
-        <span class="nav-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-          </svg>
-        </span>
-        <span class="nav-label">{{ 'nav.analytics' | translate:currentLang }}</span>
-      </li>
-    </ul>
-
-    <!-- HR -->
-    <div class="nav-group-label">Human Resources</div>
-    <ul>
-      <li *ngIf="accessibleTabs['employees']"
-          [class.active]="activeTab === 'employees'"
-          (click)="switchTab('employees')" title="HR & Employees">
+      <li *ngIf="accessibleTabs['parties']"
+          [class.active]="activeTab === 'parties'"
+          (click)="switchTab('parties')"
+          [attr.title]="'nav.parties' | translate:currentLang"
+          [attr.aria-label]="'nav.parties' | translate:currentLang">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
         </span>
-        <span class="nav-label">{{ 'nav.hr' | translate:currentLang }}</span>
-      </li>
-      <li *ngIf="accessibleTabs['salaries']"
-          [class.active]="activeTab === 'salaries'"
-          (click)="switchTab('salaries')" title="Salaries">
-        <span class="nav-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
-          </svg>
-        </span>
-        <span class="nav-label">{{ 'nav.salaries' | translate:currentLang }}</span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.parties' | translate:currentLang }}</span>
       </li>
     </ul>
 
-    <!-- Admin -->
-    <div class="nav-group-label">Admin</div>
-    <ul>
-      <li *ngIf="accessibleTabs['settings']"
-          [class.active]="activeTab === 'settings'"
-          (click)="switchTab('settings')" title="Settings">
+    <!-- 4. FINANCE -->
+    <div class="nav-group-label" *ngIf="!isCollapsed">Finance</div>
+    <div class="nav-group-divider" *ngIf="isCollapsed" title="Finance"></div>
+    <ul class="nav-menu-list">
+      <li *ngIf="accessibleTabs['payments']"
+          [class.active]="activeTab === 'payments'"
+          (click)="switchTab('payments')"
+          [attr.title]="'nav.payments' | translate:currentLang"
+          [attr.aria-label]="'nav.payments' | translate:currentLang">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            <rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/>
           </svg>
         </span>
-        <span class="nav-label">{{ 'nav.settings' | translate:currentLang }}</span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.payments' | translate:currentLang }}</span>
       </li>
+      <li *ngIf="accessibleTabs['invoices']"
+          [class.active]="activeTab === 'invoices'"
+          (click)="switchTab('invoices')"
+          [attr.title]="'nav.invoices' | translate:currentLang"
+          [attr.aria-label]="'nav.invoices' | translate:currentLang">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            <line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>
+          </svg>
+        </span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.invoices' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['billinghub']"
+          [class.active]="activeTab === 'billinghub'"
+          (click)="switchTab('billinghub')"
+          [attr.title]="'nav.billinghub' | translate:currentLang"
+          [attr.aria-label]="'nav.billinghub' | translate:currentLang">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+        </span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.billinghub' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['bank']"
+          [class.active]="activeTab === 'bank'"
+          (click)="switchTab('bank')"
+          [attr.title]="'nav.bank' | translate:currentLang"
+          [attr.aria-label]="'nav.bank' | translate:currentLang">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.bank' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['expenses']"
+          [class.active]="activeTab === 'expenses'"
+          (click)="switchTab('expenses')"
+          [attr.title]="'nav.expenses' | translate:currentLang"
+          [attr.aria-label]="'nav.expenses' | translate:currentLang">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+        </span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.expenses' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['salaries']"
+          [class.active]="activeTab === 'salaries'"
+          (click)="switchTab('salaries')"
+          [attr.title]="'nav.salaries' | translate:currentLang"
+          [attr.aria-label]="'nav.salaries' | translate:currentLang">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><line x1="12" y1="6" x2="12" y2="18"/>
+          </svg>
+        </span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.salaries' | translate:currentLang }}</span>
+      </li>
+    </ul>
+
+    <!-- 5. MANAGEMENT -->
+    <div class="nav-group-label" *ngIf="!isCollapsed">Management</div>
+    <div class="nav-group-divider" *ngIf="isCollapsed" title="Management"></div>
+    <ul class="nav-menu-list">
+      <li *ngIf="accessibleTabs['employees']"
+          [class.active]="activeTab === 'employees'"
+          (click)="switchTab('employees')"
+          [attr.title]="'nav.employees' | translate:currentLang"
+          [attr.aria-label]="'nav.employees' | translate:currentLang">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
+          </svg>
+        </span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.employees' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['reports']"
+          [class.active]="activeTab === 'reports'"
+          (click)="switchTab('reports')"
+          [attr.title]="'nav.reports' | translate:currentLang"
+          [attr.aria-label]="'nav.reports' | translate:currentLang">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+          </svg>
+        </span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.reports' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['analytics']"
+          [class.active]="activeTab === 'analytics'"
+          (click)="switchTab('analytics')"
+          [attr.title]="'nav.analytics' | translate:currentLang"
+          [attr.aria-label]="'nav.analytics' | translate:currentLang">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+        </span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.analytics' | translate:currentLang }}</span>
+      </li>
+    </ul>
+
+    <!-- 6. ADMINISTRATION -->
+    <div class="nav-group-label" *ngIf="!isCollapsed">Administration</div>
+    <div class="nav-group-divider" *ngIf="isCollapsed" title="Administration"></div>
+    <ul class="nav-menu-list">
       <li *ngIf="accessibleTabs['audit-logs']"
           [class.active]="activeTab === 'audit-logs'"
-          (click)="switchTab('audit-logs')" title="Audit Logs">
+          (click)="switchTab('audit-logs')"
+          [attr.title]="'nav.audit-logs' | translate:currentLang"
+          [attr.aria-label]="'nav.audit-logs' | translate:currentLang">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
         </span>
-        <span class="nav-label">{{ 'nav.auditlog' | translate:currentLang }}</span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.audit-logs' | translate:currentLang }}</span>
+      </li>
+      <li *ngIf="accessibleTabs['settings']"
+          [class.active]="activeTab === 'settings'"
+          (click)="switchTab('settings')"
+          [attr.title]="'nav.settings' | translate:currentLang"
+          [attr.aria-label]="'nav.settings' | translate:currentLang">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </span>
+        <span class="nav-label" *ngIf="!isCollapsed">{{ 'nav.settings' | translate:currentLang }}</span>
       </li>
     </ul>
 
   </nav>
 
-  <!-- Sidebar Footer -->
+  <!-- Sidebar Footer with Version & Collapse/Expand Toggle -->
   <div class="sidebar-footer">
-    <div class="sidebar-footer-brand">
-      <span>Futane Agro ERP</span>
-      <span class="version-tag">v2.0</span>
+    <div class="footer-tag" *ngIf="!isCollapsed">
+      <span class="tag-status-dot"></span>
+      <span class="tag-text">Futane Agro v6.0</span>
     </div>
+    <button type="button" class="sidebar-collapse-toggle-btn" (click)="toggleCollapse()" [title]="isCollapsed ? 'Expand Navigation (240px)' : 'Collapse Navigation (68px)'" [attr.aria-label]="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
+      <svg *ngIf="!isCollapsed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+      </svg>
+      <svg *ngIf="isCollapsed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+      </svg>
+      <span class="collapse-btn-label" *ngIf="!isCollapsed">Collapse</span>
+    </button>
   </div>
 
 </aside>
 
-<!-- Mobile Bottom Navigation (G-02) -->
+<!-- Mobile Bottom Navigation -->
 <nav class="mobile-bottom-nav" role="navigation" aria-label="Mobile navigation">
   <button class="mobile-nav-btn" [class.active]="activeTab === 'dashboard'" (click)="switchTab('dashboard')">
     <span class="mobile-nav-icon">🏠</span>

@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
+import { UniversalImporterComponent } from '../../shared/universal-importer/universal-importer.component';
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
@@ -17,7 +18,7 @@ Chart.register(...registerables);
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective, IndianDatePipe, InrPipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective, IndianDatePipe, InrPipe, UniversalImporterComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
@@ -126,6 +127,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       if (this.salesChart) this.salesChart.destroy();
       if (this.customersChart) this.customersChart.destroy();
 
+      const chartFont = { family: "'Outfit', sans-serif", size: 11 };
+
       // Production Chart
       const prodCtx = document.getElementById('prodChartCanvas') as HTMLCanvasElement;
       if (prodCtx && chartData.productionData) {
@@ -138,19 +141,34 @@ export class DashboardComponent implements OnInit, OnDestroy {
             datasets: [{
               label: 'Crates Produced',
               data: data,
-              backgroundColor: 'rgba(139, 92, 246, 0.6)',
+              backgroundColor: 'rgba(139, 92, 246, 0.75)',
               borderColor: '#8b5cf6',
-              borderWidth: 1
+              borderWidth: 1,
+              borderRadius: 6
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-              y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af' } },
-              x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+              y: { 
+                grid: { color: 'rgba(148, 163, 184, 0.12)' }, 
+                ticks: { color: '#64748b', font: chartFont } 
+              },
+              x: { 
+                grid: { display: false }, 
+                ticks: { color: '#64748b', font: chartFont } 
+              }
             },
-            plugins: { legend: { display: false } }
+            plugins: { 
+              legend: { display: false },
+              tooltip: {
+                titleFont: { family: "'Outfit', sans-serif", size: 12, weight: 'bold' },
+                bodyFont: { family: "'Outfit', sans-serif", size: 12 },
+                padding: 10,
+                cornerRadius: 8
+              }
+            }
           }
         });
       }
@@ -165,22 +183,48 @@ export class DashboardComponent implements OnInit, OnDestroy {
           data: {
             labels: labels,
             datasets: [{
-              label: 'Sales Revenue',
+              label: 'Sales Revenue (₹)',
               data: data,
-              borderColor: '#3b82f6',
-              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.12)',
               fill: true,
-              tension: 0.4
+              tension: 0.35,
+              pointBackgroundColor: '#10b981',
+              pointBorderColor: '#ffffff',
+              pointBorderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-              y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af' } },
-              x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+              y: { 
+                grid: { color: 'rgba(148, 163, 184, 0.12)' }, 
+                ticks: { 
+                  color: '#64748b', 
+                  font: chartFont,
+                  callback: (v) => '₹' + Number(v).toLocaleString('en-IN')
+                } 
+              },
+              x: { 
+                grid: { display: false }, 
+                ticks: { color: '#64748b', font: chartFont } 
+              }
             },
-            plugins: { legend: { display: false } }
+            plugins: { 
+              legend: { display: false },
+              tooltip: {
+                titleFont: { family: "'Outfit', sans-serif", size: 12, weight: 'bold' },
+                bodyFont: { family: "'Outfit', sans-serif", size: 12 },
+                padding: 10,
+                cornerRadius: 8,
+                callbacks: {
+                  label: (context) => ' Revenue: ₹' + Number(context.parsed.y).toLocaleString('en-IN')
+                }
+              }
+            }
           }
         });
       }
@@ -188,8 +232,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
       // Customers Chart
       const custCtx = document.getElementById('custChartCanvas') as HTMLCanvasElement;
       if (custCtx && chartData.topCustomersData) {
-        const labels = Object.keys(chartData.topCustomersData);
-        const data = Object.values(chartData.topCustomersData);
+        // Group top 8 parties, aggregate remainder as 'Others'
+        const entries = Object.entries(chartData.topCustomersData).sort((a: any, b: any) => b[1] - a[1]);
+        const topEntries = entries.slice(0, 7);
+        const otherSum = entries.slice(7).reduce((acc: number, curr: any) => acc + (curr[1] || 0), 0);
+        if (otherSum > 0) {
+          topEntries.push(['Other Customers', otherSum]);
+        }
+
+        const labels = topEntries.map(e => e[0]);
+        const data = topEntries.map(e => e[1]);
         this.customersChart = new Chart(custCtx, {
           type: 'doughnut',
           data: {
@@ -197,14 +249,37 @@ export class DashboardComponent implements OnInit, OnDestroy {
             datasets: [{
               data: data,
               backgroundColor: themeColors.slice(0, labels.length),
-              borderWidth: 0
+              borderWidth: 2,
+              borderColor: 'var(--bg-surface, #ffffff)',
+              hoverOffset: 6
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            cutout: '62%',
             plugins: {
-              legend: { position: 'right', labels: { color: '#9ca3af' } }
+              legend: { 
+                position: 'right', 
+                labels: { 
+                  color: '#475569',
+                  font: { family: "'Outfit', sans-serif", size: 12, weight: 'bold' },
+                  padding: 12,
+                  boxWidth: 12,
+                  boxHeight: 12,
+                  usePointStyle: true,
+                  pointStyle: 'circle'
+                } 
+              },
+              tooltip: {
+                titleFont: { family: "'Outfit', sans-serif", size: 12, weight: 'bold' },
+                bodyFont: { family: "'Outfit', sans-serif", size: 12 },
+                padding: 10,
+                cornerRadius: 8,
+                callbacks: {
+                  label: (context) => ' Sales: ₹' + Number(context.parsed).toLocaleString('en-IN')
+                }
+              }
             }
           }
         });
@@ -261,5 +336,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.uploadStatus = 'Error importing file: ' + err.error;
       }
     });
+  }
+
+  onBulkImportSuccess(event: any) {
+    this.loadDashboardData();
+    this.loadRecentActivity();
   }
 }

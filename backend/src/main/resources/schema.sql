@@ -316,8 +316,88 @@ CREATE TABLE Bank_Transaction (
     deleted_date DATE
 );
 
--- 21. Settings Table (For Custom Power BI Embedding URL)
+-- 21. Settings Table (For Custom Power BI Embedding URL & Branding)
 CREATE TABLE Settings (
     config_key VARCHAR(100) PRIMARY KEY,
     config_value TEXT
 );
+
+-- 22. Teams / Departments Table
+CREATE TABLE IF NOT EXISTS t_core_team (
+    id CHAR(36) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    description VARCHAR(255),
+    icon VARCHAR(50),
+    color_tag VARCHAR(30),
+    sidebar_order INT DEFAULT 0,
+    show_in_sidebar BOOLEAN DEFAULT TRUE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 23. Role Permissions Table
+CREATE TABLE IF NOT EXISTS t_core_role_permissions (
+    id CHAR(36) PRIMARY KEY,
+    role VARCHAR(50) NOT NULL,
+    module_key VARCHAR(50) NOT NULL,
+    module_name VARCHAR(100),
+    can_view BOOLEAN DEFAULT TRUE,
+    can_create BOOLEAN DEFAULT FALSE,
+    can_edit BOOLEAN DEFAULT FALSE,
+    can_delete BOOLEAN DEFAULT FALSE,
+    can_export BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_role_module (role, module_key)
+);
+
+-- 24. Feature Flags Table
+CREATE TABLE IF NOT EXISTS t_sys_feature_flags (
+    id CHAR(36) PRIMARY KEY,
+    module_key VARCHAR(50) NOT NULL UNIQUE,
+    module_name VARCHAR(100) NOT NULL,
+    category VARCHAR(50),
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    description VARCHAR(255),
+    icon VARCHAR(50),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 25. Custom Field Definitions Table
+CREATE TABLE IF NOT EXISTS t_sys_custom_field_def (
+    id CHAR(36) PRIMARY KEY,
+    entity_name VARCHAR(50) NOT NULL,
+    field_key VARCHAR(50) NOT NULL,
+    field_label VARCHAR(100) NOT NULL,
+    field_type VARCHAR(30) NOT NULL,
+    options_json TEXT,
+    is_required BOOLEAN DEFAULT FALSE,
+    default_value VARCHAR(255),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 26. Custom Field Values Table
+CREATE TABLE IF NOT EXISTS t_sys_custom_field_val (
+    id CHAR(36) PRIMARY KEY,
+    field_def_id CHAR(36) NOT NULL,
+    entity_name VARCHAR(50) NOT NULL,
+    entity_record_id VARCHAR(100) NOT NULL,
+    field_value TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_field_record (field_def_id, entity_record_id)
+);
+
+-- Custom Fields Performance Indexes
+CREATE INDEX IF NOT EXISTS idx_custom_field_def_entity ON t_sys_custom_field_def(entity_name, is_active);
+CREATE INDEX IF NOT EXISTS idx_custom_field_val_entity_record ON t_sys_custom_field_val(entity_name, entity_record_id);
+CREATE INDEX IF NOT EXISTS idx_custom_field_val_field_id ON t_sys_custom_field_val(field_def_id);
+

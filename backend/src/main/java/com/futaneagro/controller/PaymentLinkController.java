@@ -1,9 +1,12 @@
 package com.futaneagro.controller;
 
 import com.futaneagro.service.PaymentLinkService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -13,16 +16,19 @@ import java.util.Map;
 @RequestMapping("/api/sales")
 public class PaymentLinkController {
 
+    private static final Logger log = LoggerFactory.getLogger(PaymentLinkController.class);
+
     @Autowired
     private PaymentLinkService paymentLinkService;
 
-    @Value("${razorpay.key.secret}")
+    @Value("${razorpay.key.secret:}")
     private String keySecret;
 
     /**
      * POST /api/sales/{saleId}/payment-link
      */
     @PostMapping("/{saleId}/payment-link")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT')")
     public ResponseEntity<?> createPaymentLink(@PathVariable String saleId) {
         try {
             Map<String, String> result = paymentLinkService.createPaymentLink(saleId);
@@ -30,7 +36,8 @@ public class PaymentLinkController {
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of("error", "Failed to create payment link: " + e.getMessage()));
+            log.error("Failed to create payment link for sale {}: type={} message={}", saleId, e.getClass().getSimpleName(), e.getMessage());
+            return ResponseEntity.internalServerError().body(Map.of("error", "Failed to create payment link. Please try again or contact support."));
         }
     }
 
@@ -39,6 +46,7 @@ public class PaymentLinkController {
      * Standard Web Checkout: Create Order
      */
     @PostMapping("/{saleId}/checkout/order")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT')")
     public ResponseEntity<?> createCheckoutOrder(
             @PathVariable String saleId,
             @RequestParam(required = false) java.math.BigDecimal requestedAmount) {
@@ -48,7 +56,8 @@ public class PaymentLinkController {
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+            log.error("Failed to create checkout order for sale {}: type={} message={}", saleId, e.getClass().getSimpleName(), e.getMessage());
+            return ResponseEntity.internalServerError().body(Map.of("error", "Failed to create checkout order. Please try again."));
         }
     }
 

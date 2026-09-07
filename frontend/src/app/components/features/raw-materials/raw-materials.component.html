@@ -61,28 +61,29 @@
           </div>
         </div>
       </div>
-      <div class="table-container">
-        <table>
+      <div class="table-container table-responsive">
+        <table class="table" appResizableTable tableId="raw_materials_table">
           <thead>
             <tr>
-              <th *ngIf="isColumnVisible('raw', 'Date')" (click)="setSort('date')" style="cursor:pointer;">{{ 'raw.date' | translate:currentLang }} <span *ngIf="sortField === 'date'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('raw', 'Material')" (click)="setSort('materialName')" style="cursor:pointer;">{{ 'raw.material_name' | translate:currentLang }} <span *ngIf="sortField === 'materialName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('raw', 'Vendor')" (click)="setSort('vendor.vendorName')" style="cursor:pointer;">{{ 'vendor.name' | translate:currentLang }} <span *ngIf="sortField === 'vendor.vendorName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('raw', 'Weight')" (click)="setSort('weight')" style="cursor:pointer;">{{ 'raw.weight' | translate:currentLang }} <span *ngIf="sortField === 'weight'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('raw', 'Rate')" (click)="setSort('rate')" style="cursor:pointer;">{{ 'raw.rate' | translate:currentLang }} <span *ngIf="sortField === 'rate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('raw', 'Amount')" (click)="setSort('amount')" style="cursor:pointer;">{{ 'label.amount' | translate:currentLang }} <span *ngIf="sortField === 'amount'">{{ sortAsc ? '▲' : '▼' }}</span></th>
-              <th *ngIf="isColumnVisible('raw', 'Actions')">{{ 'label.actions' | translate:currentLang }}</th>
+              <th *ngIf="isColumnVisible('raw', 'Date')" (click)="setSort('date')" style="cursor:pointer; min-width:110px;">{{ 'label.date' | translate:currentLang }} <span *ngIf="sortField === 'date'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('raw', 'Material')" (click)="setSort('materialName')" style="cursor:pointer; min-width:180px;">{{ 'raw.material' | translate:currentLang }} <span *ngIf="sortField === 'materialName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('raw', 'Vendor')" (click)="setSort('vendor.vendorName')" style="cursor:pointer; min-width:160px;">{{ 'vendor.name' | translate:currentLang }} <span *ngIf="sortField === 'vendor.vendorName'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('raw', 'Weight')" (click)="setSort('weight')" style="cursor:pointer; min-width:110px;">{{ 'raw.weight' | translate:currentLang }} <span *ngIf="sortField === 'weight'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('raw', 'Rate')" (click)="setSort('rate')" style="cursor:pointer; min-width:110px;">{{ 'raw.rate' | translate:currentLang }} <span *ngIf="sortField === 'rate'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('raw', 'Amount')" (click)="setSort('amount')" style="cursor:pointer; min-width:130px;">{{ 'label.amount' | translate:currentLang }} <span *ngIf="sortField === 'amount'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th *ngIf="isColumnVisible('raw', 'Actions')" style="min-width:120px;">{{ 'label.actions' | translate:currentLang }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let rm of getProcessedList(rawMaterialsList, 'raw')">
-              <td *ngIf="isColumnVisible('raw', 'Date')">{{ rm.date }}</td>
-              <td *ngIf="isColumnVisible('raw', 'Material')">{{ rm.materialName }}</td>
+            <tr *ngFor="let rm of getProcessedList(rawMaterialsList, 'raw'); trackBy: trackById">
+              <td *ngIf="isColumnVisible('raw', 'Date')"><span class="date-cell">{{ rm.date | indianDate }}</span></td>
+              <td *ngIf="isColumnVisible('raw', 'Material')" style="font-weight:700;">{{ rm.materialName }}</td>
               <td *ngIf="isColumnVisible('raw', 'Vendor')">{{ rm.vendor?.vendorName }}</td>
-              <td *ngIf="isColumnVisible('raw', 'Weight')">{{ rm.weight }} kg</td>
-              <td *ngIf="isColumnVisible('raw', 'Rate')">₹{{ rm.rate }}</td>
-              <td *ngIf="isColumnVisible('raw', 'Amount')"><strong>₹{{ rm.amount }}</strong></td>
-              <td *ngIf="isColumnVisible('raw', 'Actions')">
+              <td *ngIf="isColumnVisible('raw', 'Weight')" style="font-weight:600;">{{ rm.weight | number }} kg</td>
+              <td *ngIf="isColumnVisible('raw', 'Rate')">₹{{ rm.rate | number:'1.2-2' }}</td>
+              <td *ngIf="isColumnVisible('raw', 'Amount')"><strong style="color:var(--text-primary);">₹{{ rm.amount | number:'1.2-2' }}</strong></td>
+              <td *ngIf="isColumnVisible('raw', 'Actions')" style="display:flex; gap:6px;">
+                <button class="btn btn-secondary btn-sm" (click)="editRawMaterial(rm)">✏️ Edit</button>
                 <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteRawMaterial(rm.rawMaterialId)">{{ 'btn.delete' | translate:currentLang }}</button>
               </td>
             </tr>

@@ -11,6 +11,7 @@ public class User extends BaseEntity {
     private String username;
 
     @Column(name = "password", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Column(name = "role", nullable = false, length = 50)
@@ -119,6 +120,28 @@ public class User extends BaseEntity {
 
     public void setMobileNumber(String mobileNumber) {
         this.mobileNumber = mobileNumber;
+    }
+
+    @Column(name = "team_id", length = 36)
+    private String teamId;
+
+    @Column(name = "status", length = 20)
+    private String status = "ACTIVE"; // ACTIVE, INVITED, DISABLED
+
+    public String getTeamId() {
+        return teamId;
+    }
+
+    public void setTeamId(String teamId) {
+        this.teamId = teamId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public Boolean getForcePasswordChange() {

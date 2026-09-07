@@ -7,10 +7,13 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
 
+import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
+import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
+
 @Component({
   selector: 'app-bank',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective, IndianDatePipe, ResizableTableDirective],
   templateUrl: './bank.component.html',
   styleUrls: ['./bank.component.css']
 })
@@ -82,6 +85,37 @@ export class BankComponent implements OnInit {
     return list || [];
   }
 
+  editBankTransaction(bt: any) {
+    this.bankTxnForm = {
+      transactionDate: bt.transactionDate || '',
+      transactionType: bt.transactionType || 'Credit',
+      amount: bt.amount || 0,
+      description: bt.description || '',
+      referenceNo: bt.referenceNo || ''
+    };
+    const formEl = document.querySelector('.form-card');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
+    this.notificationService.info('Editing', `Editing transaction: ${bt.description}`);
+  }
+
+  deleteBankTransaction(id: any) {
+    if (!this.canDelete()) {
+      this.notificationService.warning('Permission Denied', 'Permission denied');
+      return;
+    }
+    this.notificationService.confirmAction('Confirm Delete', 'Delete this bank transaction?', 'Yes, Delete').then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteBankTransaction(id).subscribe({
+          next: () => {
+            this.bankTransactionsList = this.bankTransactionsList.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
+            this.notificationService.success('Deleted', 'Transaction deleted');
+          },
+          error: (err) => this.notificationService.error('Error', err.error?.message || err.message)
+        });
+      }
+    });
+  }
+
   saveBankTransaction() {
     if (!this.validateForm()) return;
     this.apiService.createBankTransaction(this.bankTxnForm).subscribe(() => {
@@ -89,5 +123,9 @@ export class BankComponent implements OnInit {
       this.notificationService.showSaveSuccess('Bank transaction recorded successfully.');
       this.bankTxnForm = { transactionDate: '', transactionType: 'Credit', amount: 0, description: '', referenceNo: '' };
     });
+  }
+
+  trackById(index: number, item: any): any {
+    return item?.id ?? item?.bankTransactionId ?? index;
   }
 }

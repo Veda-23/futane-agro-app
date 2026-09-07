@@ -140,5 +140,9 @@ export class InventoryComponent implements OnInit {
     if (!path) return '';
     return path.split('.').reduce((o, p) => o && o[p] != null ? o[p] : '', obj);
   }
+
+  trackById(index: number, item: any): any {
+    return item?.id ?? item?.inventoryId ?? index;
+  }
 }
 

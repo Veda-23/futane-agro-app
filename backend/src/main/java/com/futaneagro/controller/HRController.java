@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.futaneagro.entity.*;
 import com.futaneagro.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,12 +55,14 @@ public class HRController {
 
     // --- Employee Endpoints ---
     @GetMapping("/employees")
+    @Cacheable(value = "employees")
     public List<Employee> getAllEmployees() {
         return employeeRepository.findAll();
     }
 
     @PostMapping("/employees")
     @Transactional
+    @CacheEvict(value = "employees", allEntries = true)
     public Employee createEmployee(@Valid @RequestBody Employee employee) {
         Employee saved = employeeRepository.save(employee);
         saveAuditLog("Created employee: " + saved.getEmpName(), "Employees", null, toJson(saved));
@@ -67,6 +71,7 @@ public class HRController {
 
     @PutMapping("/employees/{id}")
     @Transactional
+    @CacheEvict(value = "employees", allEntries = true)
     public ResponseEntity<Employee> updateEmployee(@PathVariable String id, @Valid @RequestBody Employee details) {
         return employeeRepository.findById(id).map(emp -> {
             String oldState = toJson(emp);
@@ -91,6 +96,7 @@ public class HRController {
 
     @DeleteMapping("/employees/{id}")
     @Transactional
+    @CacheEvict(value = "employees", allEntries = true)
     public ResponseEntity<Void> deleteEmployee(@PathVariable String id) {
         return employeeRepository.findById(id).map(emp -> {
             String oldState = toJson(emp);
