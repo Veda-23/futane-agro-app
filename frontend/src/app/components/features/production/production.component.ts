@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { AutoSelectDirective } from '../../../directives/auto-select.directive';
 import { FormStateDirective } from '../../../directives/form-state.directive';
 import { NotificationService } from '../../../services/notification.service';
@@ -11,6 +11,8 @@ import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { UniversalImporterComponent } from '../../shared/universal-importer/universal-importer.component';
 import { forkJoin } from 'rxjs';
 import * as XLSX from 'xlsx';
+import { Chart, registerables } from 'chart.js';
+Chart.register(...registerables);
 
 export interface ColumnConfig {
   key: string;
@@ -26,7 +28,7 @@ export interface ColumnConfig {
   templateUrl: './production.component.html',
   styleUrls: ['./production.component.css']
 })
-export class ProductionComponent implements OnInit {
+export class ProductionComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'production';
   @Input() loggedInUser: any = null;
@@ -196,7 +198,12 @@ export class ProductionComponent implements OnInit {
         this.ppdList = ppd || [];
         this.ppmList = ppm || [];
         this.isLoading = false;
-        setTimeout(() => this.isRefreshing = false, 400);
+        setTimeout(() => {
+          this.isRefreshing = false;
+          if (this.activeTab === 'monthly-production') {
+            this.updatePpmChart();
+          }
+        }, 300);
       },
       error: (err) => {
         this.isLoading = false;
@@ -218,6 +225,9 @@ export class ProductionComponent implements OnInit {
   switchSubTab(tab: string) {
     this.activeTab = tab;
     this.onNavigateTab.emit(tab);
+    if (tab === 'monthly-production') {
+      setTimeout(() => this.updatePpmChart(), 200);
+    }
   }
 
   getActiveFilterCount(tableKey: string): number {
@@ -283,6 +293,11 @@ export class ProductionComponent implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  // --- PPM Chart & Performance Visualization ---
+  ppmChart: any = null;
+  isChartVisible: boolean = true;
+  chartMetricView: 'crates-cost' | 'units' = 'crates-cost';
+
   getPpmTotalCrates(): number {
     return (this.ppmList || []).reduce((acc, curr) => acc + (Number(curr.cratesProduced) || 0), 0);
   }
@@ -299,6 +314,330 @@ export class ProductionComponent implements OnInit {
     const crates = this.getPpmTotalCrates();
     const bill = this.getPpmTotalBill();
     return crates > 0 ? bill / crates : 0;
+  }
+
+  getPpmAvgUnitsPerCrate(): number {
+    const crates = this.getPpmTotalCrates();
+    const units = this.getPpmTotalUnits();
+    return crates > 0 ? units / crates : 0;
+  }
+
+  getPpmAverageCratesPerMonth(): number {
+    const count = (this.ppmList || []).length;
+    return count > 0 ? Math.round(this.getPpmTotalCrates() / count) : 0;
+  }
+
+  getPpmAverageUnitsPerMonth(): number {
+    const count = (this.ppmList || []).length;
+    return count > 0 ? this.getPpmTotalUnits() / count : 0;
+  }
+
+  getPpmAverageBillPerMonth(): number {
+    const count = (this.ppmList || []).length;
+    return count > 0 ? this.getPpmTotalBill() / count : 0;
+  }
+
+  getPpmPeakMonth(): string {
+    if (!this.ppmList || this.ppmList.length === 0) return 'None';
+    let peak = this.ppmList[0];
+    for (const item of this.ppmList) {
+      if ((Number(item.cratesProduced) || 0) > (Number(peak.cratesProduced) || 0)) {
+        peak = item;
+      }
+    }
+    return `${peak.month} ${peak.year}`;
+  }
+
+  getPpmYears(): number[] {
+    const years = new Set<number>();
+    (this.ppmList || []).forEach(p => {
+      if (p.year) years.add(Number(p.year));
+    });
+    const curYear = new Date().getFullYear();
+    years.add(curYear);
+    years.add(curYear - 1);
+    years.add(curYear + 1);
+    return Array.from(years).sort((a, b) => b - a);
+  }
+
+  prevMonth() {
+    if (!this.tabFilterPpmMonth) {
+      this.tabFilterPpmMonth = 'August';
+      this.currentPage = 1;
+      this.updatePpmChart();
+      return;
+    }
+    const idx = this.months.findIndex(m => m.toLowerCase() === this.tabFilterPpmMonth.toLowerCase());
+    if (idx > 0) {
+      this.tabFilterPpmMonth = this.months[idx - 1];
+    } else if (idx === 0) {
+      this.tabFilterPpmMonth = this.months[11];
+      if (this.tabFilterPpmYear) this.tabFilterPpmYear = Number(this.tabFilterPpmYear) - 1;
+    }
+    this.currentPage = 1;
+    this.updatePpmChart();
+  }
+
+  nextMonth() {
+    if (!this.tabFilterPpmMonth) {
+      this.tabFilterPpmMonth = 'March';
+      this.currentPage = 1;
+      this.updatePpmChart();
+      return;
+    }
+    const idx = this.months.findIndex(m => m.toLowerCase() === this.tabFilterPpmMonth.toLowerCase());
+    if (idx < 11 && idx >= 0) {
+      this.tabFilterPpmMonth = this.months[idx + 1];
+    } else if (idx === 11) {
+      this.tabFilterPpmMonth = this.months[0];
+      if (this.tabFilterPpmYear) this.tabFilterPpmYear = Number(this.tabFilterPpmYear) + 1;
+    }
+    this.currentPage = 1;
+    this.updatePpmChart();
+  }
+
+  setQuickMonth(month: string) {
+    this.tabFilterPpmMonth = month;
+    this.currentPage = 1;
+    this.updatePpmChart();
+  }
+
+  setQuickYear(year: any) {
+    this.tabFilterPpmYear = year;
+    this.currentPage = 1;
+    this.updatePpmChart();
+  }
+
+  getCostEfficiencyClass(cost: number): string {
+    if (cost <= 1.60) return 'badge-eff-optimum';
+    if (cost <= 2.00) return 'badge-eff-normal';
+    return 'badge-eff-high';
+  }
+
+  getFilteredSum(field: string): number {
+    const list = this.getProcessedList(this.ppmList, 'ppm');
+    return list.reduce((sum, item) => sum + (Number(item[field]) || 0), 0);
+  }
+
+  getFilteredWeightedCostPerCrate(): number {
+    const totalCrates = this.getFilteredSum('cratesProduced');
+    const totalBill = this.getFilteredSum('electricityBill');
+    return totalCrates > 0 ? totalBill / totalCrates : 0;
+  }
+
+  getFilteredWeightedUnitsPerCrate(): number {
+    const totalCrates = this.getFilteredSum('cratesProduced');
+    const totalUnits = this.getFilteredSum('electricityUnits');
+    return totalCrates > 0 ? totalUnits / totalCrates : 0;
+  }
+
+  toggleChartVisibility() {
+    this.isChartVisible = !this.isChartVisible;
+    if (this.isChartVisible) {
+      setTimeout(() => this.updatePpmChart(), 100);
+    }
+  }
+
+  setChartMetricView(view: 'crates-cost' | 'units') {
+    this.chartMetricView = view;
+    this.updatePpmChart();
+  }
+
+  ngAfterViewInit() {
+    if (this.activeTab === 'monthly-production') {
+      setTimeout(() => this.updatePpmChart(), 300);
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.ppmChart) {
+      this.ppmChart.destroy();
+      this.ppmChart = null;
+    }
+  }
+
+  updatePpmChart() {
+    if (!this.isChartVisible) return;
+    const canvas = document.getElementById('ppmPerformanceChartCanvas') as HTMLCanvasElement;
+    if (!canvas) return;
+
+    if (this.ppmChart) {
+      this.ppmChart.destroy();
+      this.ppmChart = null;
+    }
+
+    const monthOrder: { [m: string]: number } = {
+      january: 1, jan: 1, february: 2, feb: 2, march: 3, mar: 3, april: 4, apr: 4,
+      may: 5, june: 6, jun: 6, july: 7, jul: 7, august: 8, aug: 8,
+      september: 9, sep: 9, october: 10, oct: 10, november: 11, nov: 11, december: 12, dec: 12
+    };
+
+    const sorted = [...(this.ppmList || [])].sort((a, b) => {
+      const yearA = Number(a.year) || 2026;
+      const yearB = Number(b.year) || 2026;
+      const mA = monthOrder[String(a.month).toLowerCase()] || 0;
+      const mB = monthOrder[String(b.month).toLowerCase()] || 0;
+      return (yearA * 100 + mA) - (yearB * 100 + mB);
+    });
+
+    if (sorted.length === 0) return;
+
+    const labels = sorted.map(s => `${String(s.month).slice(0, 3).toUpperCase()} ${s.year}`);
+    const crates = sorted.map(s => Number(s.cratesProduced) || 0);
+    const costs = sorted.map(s => (s.cratesProduced ? (Number(s.electricityBill) / Number(s.cratesProduced)) : 0));
+    const units = sorted.map(s => Number(s.electricityUnits) || 0);
+    const intensities = sorted.map(s => (s.cratesProduced ? (Number(s.electricityUnits) / Number(s.cratesProduced)) : 0));
+
+    const chartFont: any = { family: "'Outfit', 'Segoe UI', sans-serif", size: 11.5 };
+
+    let datasets: any[] = [];
+    let scales: any = {};
+
+    if (this.chartMetricView === 'crates-cost') {
+      datasets = [
+        {
+          type: 'bar',
+          label: 'Total Crates Produced',
+          data: crates,
+          backgroundColor: 'rgba(5, 150, 105, 0.72)',
+          borderColor: '#059669',
+          borderWidth: 1.5,
+          borderRadius: 6,
+          yAxisID: 'yCrates',
+          order: 2
+        },
+        {
+          type: 'line',
+          label: 'Electricity Cost / Crate (₹)',
+          data: costs,
+          borderColor: '#d97706',
+          backgroundColor: 'rgba(217, 119, 6, 0.15)',
+          borderWidth: 2.5,
+          tension: 0.35,
+          pointRadius: 4.5,
+          pointBackgroundColor: '#d97706',
+          pointHoverRadius: 6.5,
+          yAxisID: 'yCost',
+          order: 1
+        }
+      ];
+
+      scales = {
+        x: {
+          grid: { display: false },
+          ticks: { color: '#64748b', font: chartFont }
+        },
+        yCrates: {
+          type: 'linear',
+          position: 'left',
+          grid: { color: 'rgba(148, 163, 184, 0.12)' },
+          ticks: {
+            color: '#64748b',
+            font: chartFont,
+            callback: (val: any) => Number(val).toLocaleString()
+          },
+          title: { display: true, text: 'Crates Volume', color: '#64748b', font: { size: 10.5, weight: 'bold' } }
+        },
+        yCost: {
+          type: 'linear',
+          position: 'right',
+          grid: { drawOnChartArea: false },
+          ticks: {
+            color: '#d97706',
+            font: chartFont,
+            callback: (val: any) => '₹' + Number(val).toFixed(2)
+          },
+          title: { display: true, text: 'Cost / Crate (₹)', color: '#d97706', font: { size: 10.5, weight: 'bold' } }
+        }
+      };
+    } else {
+      datasets = [
+        {
+          type: 'bar',
+          label: 'Power Grid Usage (kWh)',
+          data: units,
+          backgroundColor: 'rgba(14, 165, 233, 0.72)',
+          borderColor: '#0284c7',
+          borderWidth: 1.5,
+          borderRadius: 6,
+          yAxisID: 'yUnits',
+          order: 2
+        },
+        {
+          type: 'line',
+          label: 'Energy Intensity (kWh / Crate)',
+          data: intensities,
+          borderColor: '#8b5cf6',
+          backgroundColor: 'rgba(139, 92, 246, 0.15)',
+          borderWidth: 2.5,
+          tension: 0.35,
+          pointRadius: 4.5,
+          pointBackgroundColor: '#8b5cf6',
+          pointHoverRadius: 6.5,
+          yAxisID: 'yIntensity',
+          order: 1
+        }
+      ];
+
+      scales = {
+        x: {
+          grid: { display: false },
+          ticks: { color: '#64748b', font: chartFont }
+        },
+        yUnits: {
+          type: 'linear',
+          position: 'left',
+          grid: { color: 'rgba(148, 163, 184, 0.12)' },
+          ticks: {
+            color: '#64748b',
+            font: chartFont,
+            callback: (val: any) => Number(val).toLocaleString() + ' kWh'
+          },
+          title: { display: true, text: 'Electricity (kWh)', color: '#64748b', font: { size: 10.5, weight: 'bold' } }
+        },
+        yIntensity: {
+          type: 'linear',
+          position: 'right',
+          grid: { drawOnChartArea: false },
+          ticks: {
+            color: '#8b5cf6',
+            font: chartFont,
+            callback: (val: any) => Number(val).toFixed(2) + ' kWh'
+          },
+          title: { display: true, text: 'kWh / Crate', color: '#8b5cf6', font: { size: 10.5, weight: 'bold' } }
+        }
+      };
+    }
+
+    const chartConfig: any = {
+      type: 'bar',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 200 },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              boxWidth: 14,
+              font: chartFont,
+              usePointStyle: true
+            }
+          },
+          tooltip: {
+            padding: 10,
+            cornerRadius: 8,
+            titleFont: { family: "'Outfit', 'Segoe UI', sans-serif", size: 12, weight: 'bold' },
+            bodyFont: { family: "'Outfit', 'Segoe UI', sans-serif", size: 11.5 }
+          }
+        },
+        scales
+      }
+    };
+
+    this.ppmChart = new Chart(canvas, chartConfig);
   }
 
   // --- Role Checkers ---

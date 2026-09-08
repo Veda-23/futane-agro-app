@@ -58,12 +58,12 @@
     <div class="subnav-tabs-group" role="tablist">
       <button type="button" role="tab" class="subnav-tab-btn" [class.active]="activeTab === 'production'" (click)="switchSubTab('production')">
         <i class="bi bi-calendar2-check"></i>
-        <span>Daily Production (PPD)</span>
+        <span>🏭 Daily Production (PPD)</span>
         <span class="tab-badge-pill">{{ ppdList.length }}</span>
       </button>
       <button type="button" role="tab" class="subnav-tab-btn" [class.active]="activeTab === 'monthly-production'" (click)="switchSubTab('monthly-production')">
         <i class="bi bi-bar-chart-steps"></i>
-        <span>Monthly Summary (PPM)</span>
+        <span>📅 Monthly Summary (PPM)</span>
         <span class="tab-badge-pill">{{ ppmList.length }}</span>
       </button>
     </div>
@@ -74,7 +74,7 @@
     <div class="kpi-card total-card">
       <div class="kpi-icon-wrap"><i class="bi bi-boxes"></i></div>
       <div class="kpi-content">
-        <span class="kpi-label">TOTAL PRODUCED</span>
+        <span class="kpi-label">🏭 TOTAL PRODUCED</span>
         <strong class="kpi-value">{{ getPpdTotal() | number }} <span class="kpi-unit">crates</span></strong>
         <span class="kpi-meta"><i class="bi bi-layers me-1"></i>Across {{ ppdList.length }} logged batches</span>
       </div>
@@ -82,7 +82,7 @@
     <div class="kpi-card success-card">
       <div class="kpi-icon-wrap"><i class="bi bi-check2-circle"></i></div>
       <div class="kpi-content">
-        <span class="kpi-label">SUCCESSFUL CRATES</span>
+        <span class="kpi-label">✅ SUCCESSFUL CRATES</span>
         <strong class="kpi-value text-success">{{ getPpdSuccessful() | number }} <span class="kpi-unit">crates</span></strong>
         <span class="kpi-meta"><i class="bi bi-shield-check me-1"></i>Passed quality gate</span>
       </div>
@@ -90,7 +90,7 @@
     <div class="kpi-card danger-card">
       <div class="kpi-icon-wrap"><i class="bi bi-x-octagon"></i></div>
       <div class="kpi-content">
-        <span class="kpi-label">REJECTIONS</span>
+        <span class="kpi-label">⚠️ REJECTIONS</span>
         <strong class="kpi-value text-danger">{{ getPpdRejected() | number }} <span class="kpi-unit">crates</span></strong>
         <span class="kpi-meta"><i class="bi bi-exclamation-triangle me-1"></i>{{ getPpdTotal() > 0 ? ((getPpdRejected() / getPpdTotal()) * 100 | number:'1.1-1') : 0 }}% scrap rate</span>
       </div>
@@ -98,7 +98,7 @@
     <div class="kpi-card efficiency-card">
       <div class="kpi-icon-wrap"><i class="bi bi-speedometer2"></i></div>
       <div class="kpi-content">
-        <span class="kpi-label">OVERALL BATCH YIELD</span>
+        <span class="kpi-label">⚡ OVERALL BATCH YIELD</span>
         <strong class="kpi-value text-primary">{{ getPpdEfficiency() | number:'1.1-1' }}%</strong>
         <div class="kpi-progress-bar">
           <div class="kpi-progress-fill" [style.width.%]="getPpdEfficiency()"></div>
@@ -576,21 +576,30 @@
       </div>
     </div>
 
-    <!-- Right-side quick controls: Month, Year, Refresh, + New Summary -->
+    <!-- Right-side quick controls: Month/Year Stepper, Refresh, + New Summary -->
     <div class="header-right-col">
-      <!-- Quick Month Selector -->
+      <!-- Month & Year Navigator / Quick Selector -->
       <div class="quick-control-item">
-        <label class="control-mini-label"><i class="bi bi-calendar-month me-1"></i>Month</label>
-        <select [(ngModel)]="tabFilterPpmMonth" class="form-select-compact" title="Filter by month" (change)="currentPage = 1">
-          <option value="">All Months</option>
-          <option *ngFor="let m of months" [value]="m">{{ m }}</option>
-        </select>
-      </div>
+        <label class="control-mini-label"><i class="bi bi-calendar-range me-1"></i>Period Navigation</label>
+        <div class="month-stepper-group" role="group" aria-label="Month and year navigation">
+          <button type="button" class="btn-stepper-arrow" (click)="prevMonth()" title="Previous month" aria-label="Previous month">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          
+          <select [(ngModel)]="tabFilterPpmMonth" class="header-select-month" (change)="currentPage = 1; updatePpmChart()" title="Select month" aria-label="Select month">
+            <option value="">All Months</option>
+            <option *ngFor="let m of months" [value]="m">{{ m }}</option>
+          </select>
 
-      <!-- Quick Year Selector -->
-      <div class="quick-control-item">
-        <label class="control-mini-label"><i class="bi bi-calendar3 me-1"></i>Year</label>
-        <input type="number" [(ngModel)]="tabFilterPpmYear" class="form-control-compact ppm-year-input" placeholder="Year" (input)="currentPage = 1">
+          <select [(ngModel)]="tabFilterPpmYear" class="header-select-year" (change)="currentPage = 1; updatePpmChart()" title="Select year" aria-label="Select year">
+            <option value="">All Years</option>
+            <option *ngFor="let y of getPpmYears()" [value]="y">{{ y }}</option>
+          </select>
+
+          <button type="button" class="btn-stepper-arrow" (click)="nextMonth()" title="Next month" aria-label="Next month">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
       </div>
 
       <!-- Refresh Data Button -->
@@ -610,12 +619,12 @@
   <!-- 2. PRODUCTION MODULE SUB-NAVIGATION (Tabs) -->
   <div class="production-subnav-bar">
     <div class="subnav-tabs-group" role="tablist">
-      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="activeTab === 'production'" (click)="switchSubTab('production')">
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="activeTab === 'production'" (click)="switchSubTab('production')" aria-selected="false">
         <i class="bi bi-calendar2-check"></i>
         <span>Daily Production (PPD)</span>
         <span class="tab-badge-pill">{{ ppdList.length }}</span>
       </button>
-      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="activeTab === 'monthly-production'" (click)="switchSubTab('monthly-production')">
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="activeTab === 'monthly-production'" (click)="switchSubTab('monthly-production')" aria-selected="true">
         <i class="bi bi-bar-chart-steps"></i>
         <span>Monthly Summary (PPM)</span>
         <span class="tab-badge-pill">{{ ppmList.length }}</span>
@@ -623,43 +632,103 @@
     </div>
   </div>
 
-  <!-- 3. MONTHLY KPI TELEMETRY STRIP -->
-  <section class="production-kpi-grid">
+  <!-- 3. MONTHLY KPI TELEMETRY STRIP (5-Card Balanced Strip) -->
+  <section class="production-kpi-grid ppm-kpi-grid" aria-label="Monthly Production KPIs">
+    <!-- Card 1: Total Crates -->
     <div class="kpi-card total-card">
       <div class="kpi-icon-wrap"><i class="bi bi-boxes"></i></div>
       <div class="kpi-content">
-        <span class="kpi-label">TOTAL CRATES PRODUCED</span>
+        <span class="kpi-label">TOTAL PRODUCTION</span>
         <strong class="kpi-value">{{ getPpmTotalCrates() | number }} <span class="kpi-unit">crates</span></strong>
-        <span class="kpi-meta"><i class="bi bi-calendar3 me-1"></i>Across {{ ppmList.length }} logged months</span>
+        <span class="kpi-meta"><i class="bi bi-calendar-check me-1"></i>Across {{ ppmList.length }} logged months</span>
       </div>
     </div>
-    <div class="kpi-card ppm-electricity-card">
+
+    <!-- Card 2: Electricity kWh -->
+    <div class="kpi-card success-card">
       <div class="kpi-icon-wrap"><i class="bi bi-lightning-charge-fill"></i></div>
       <div class="kpi-content">
         <span class="kpi-label">TOTAL ELECTRICITY</span>
-        <strong class="kpi-value ppm-electricity-value">{{ getPpmTotalUnits() | number:'1.1-1' }} <span class="kpi-unit">kWh</span></strong>
-        <span class="kpi-meta"><i class="bi bi-activity me-1"></i>Power grid meter usage</span>
+        <strong class="kpi-value text-info">{{ getPpmTotalUnits() | number:'1.1-1' }} <span class="kpi-unit">kWh</span></strong>
+        <span class="kpi-meta"><i class="bi bi-speedometer2 me-1"></i>{{ getPpmAverageUnitsPerMonth() | number:'1.0-0' }} kWh / mo avg</span>
       </div>
     </div>
-    <div class="kpi-card ppm-expense-card">
+
+    <!-- Card 3: Total Power Bill -->
+    <div class="kpi-card danger-card">
       <div class="kpi-icon-wrap"><i class="bi bi-currency-rupee"></i></div>
       <div class="kpi-content">
-        <span class="kpi-label">TOTAL POWER EXPENSE</span>
-        <strong class="kpi-value ppm-expense-value">₹{{ getPpmTotalBill() | number:'1.2-2' }}</strong>
-        <span class="kpi-meta"><i class="bi bi-receipt me-1"></i>Accumulated tariff bills</span>
+        <span class="kpi-label">POWER UTILITY BILL</span>
+        <strong class="kpi-value text-warning">₹{{ getPpmTotalBill() | number:'1.2-2' }}</strong>
+        <span class="kpi-meta"><i class="bi bi-receipt me-1"></i>₹{{ getPpmAverageBillPerMonth() | number:'1.0-0' }} / mo avg</span>
       </div>
     </div>
-    <div class="kpi-card ppm-cost-card">
+
+    <!-- Card 4: Average Cost / Crate -->
+    <div class="kpi-card efficiency-card">
       <div class="kpi-icon-wrap"><i class="bi bi-pie-chart-fill"></i></div>
       <div class="kpi-content">
-        <span class="kpi-label">AVERAGE COST / CRATE</span>
-        <strong class="kpi-value ppm-cost-value">₹{{ getPpmAvgCostPerCrate() | number:'1.2-2' }}</strong>
-        <span class="kpi-meta"><i class="bi bi-lightning me-1"></i>Electricity overhead per unit</span>
+        <span class="kpi-label">OVERHEAD / CRATE</span>
+        <strong class="kpi-value text-primary">₹{{ getPpmAvgCostPerCrate() | number:'1.2-2' }}</strong>
+        <span class="kpi-meta"><i class="bi bi-cpu me-1"></i>{{ getPpmAvgUnitsPerCrate() | number:'1.2-2' }} kWh per finished crate</span>
+      </div>
+    </div>
+
+    <!-- Card 5: Peak Monthly Volume -->
+    <div class="kpi-card peak-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-trophy-fill"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">PEAK OUTPUT MONTH</span>
+        <strong class="kpi-value text-success font-compact">{{ getPpmPeakMonth() }}</strong>
+        <span class="kpi-meta"><i class="bi bi-graph-up-arrow me-1"></i>Record manufacturing batch</span>
       </div>
     </div>
   </section>
 
-  <!-- 4. ADD / EDIT MONTHLY SUMMARY FORM -->
+  <!-- 4. MONTHLY PERFORMANCE VISUALIZATION (Chart.js Trajectory Card) -->
+  <section class="glass-panel performance-chart-panel" aria-label="Monthly Performance Chart">
+    <div class="chart-panel-header">
+      <div class="chart-header-left">
+        <div class="chart-lead-icon">
+          <i class="bi bi-graph-up text-primary"></i>
+        </div>
+        <div>
+          <h3 class="chart-section-title">Monthly Output & Energy Cost Trajectory</h3>
+          <span class="chart-section-subtitle">Comparative timeline of crate output volume vs electricity unit overhead</span>
+        </div>
+      </div>
+
+      <div class="chart-header-right">
+        <!-- Metric View Switcher -->
+        <div class="chart-metric-toggle" role="group" aria-label="Chart metric toggle">
+          <button type="button" class="btn-metric-toggle" [class.active]="chartMetricView === 'crates-cost'" (click)="setChartMetricView('crates-cost')">
+            <i class="bi bi-bar-chart-line me-1"></i> Crates & Cost
+          </button>
+          <button type="button" class="btn-metric-toggle" [class.active]="chartMetricView === 'units'" (click)="setChartMetricView('units')">
+            <i class="bi bi-lightning-charge me-1"></i> Energy (kWh)
+          </button>
+        </div>
+
+        <!-- Toggle Visibility Button -->
+        <button type="button" class="btn btn-secondary btn-sm btn-chart-collapse" (click)="toggleChartVisibility()" [title]="isChartVisible ? 'Hide Performance Chart' : 'Show Performance Chart'" aria-label="Toggle Chart">
+          <i class="bi" [ngClass]="isChartVisible ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+          <span>{{ isChartVisible ? 'Hide' : 'Show Chart' }}</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="chart-panel-body" *ngIf="isChartVisible">
+      <div class="chart-canvas-container" *ngIf="ppmList.length > 0">
+        <canvas id="ppmPerformanceChartCanvas" role="img" aria-label="Monthly Production Performance Trajectory Chart"></canvas>
+      </div>
+      <div class="chart-empty-state" *ngIf="ppmList.length === 0">
+        <i class="bi bi-bar-chart empty-chart-icon"></i>
+        <p>No monthly production summaries available to visualize. Add a record to generate performance metrics.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. ADD / EDIT MONTHLY SUMMARY FORM (Collapsible 2-3 Column Card) -->
   <div class="glass-panel form-expansion-panel animate-fade-in" *ngIf="!isViewer() && isPpmFormVisible" [class.editing-mode]="ppmForm.id">
     <div class="form-panel-header">
       <div class="form-header-title">
@@ -667,7 +736,7 @@
           <i class="bi" [ngClass]="ppmForm.id ? 'bi-pencil-square' : 'bi-plus-circle-fill'"></i>
         </span>
         <div>
-          <h4>{{ ppmForm.id ? 'Edit Monthly Summary' : ('ppm.add_title' | translate:currentLang) }}</h4>
+          <h4>{{ ppmForm.id ? 'Edit Monthly Production Summary' : ('ppm.add_title' | translate:currentLang) }}</h4>
           <span class="form-header-hint">Record aggregate monthly crate volume and power utility bill</span>
         </div>
       </div>
@@ -686,7 +755,7 @@
         <!-- Month -->
         <div class="form-field-col">
           <label class="field-label"><i class="bi bi-calendar-month me-1 text-primary"></i>{{ 'ppm.month' | translate:currentLang }} <span class="req-star">*</span></label>
-          <select [(ngModel)]="ppmForm.month" name="ppmMonth" required class="form-input-control">
+          <select [(ngModel)]="ppmForm.month" name="ppmMonth" required class="form-input-control" title="Select Month">
             <option *ngFor="let m of months" [value]="m">{{ m }}</option>
           </select>
         </div>
@@ -694,30 +763,30 @@
         <!-- Year -->
         <div class="form-field-col">
           <label class="field-label"><i class="bi bi-calendar3 me-1 text-primary"></i>Year <span class="req-star">*</span></label>
-          <input appAutoSelect type="number" [(ngModel)]="ppmForm.year" name="ppmYear" required placeholder="2026" class="form-input-control font-mono">
+          <input appAutoSelect type="number" [(ngModel)]="ppmForm.year" name="ppmYear" required placeholder="2026" class="form-input-control font-mono" title="Enter Year">
         </div>
 
         <!-- Crates Produced -->
         <div class="form-field-col">
-          <label class="field-label"><i class="bi bi-boxes me-1 text-primary"></i>Crates Produced <span class="req-star">*</span></label>
-          <input appAutoSelect type="number" [(ngModel)]="ppmForm.cratesProduced" name="ppmCrates" required placeholder="0" class="form-input-control font-mono">
+          <label class="field-label"><i class="bi bi-boxes me-1 text-primary"></i>{{ 'ppd.totalProduction' | translate:currentLang }} <span class="req-star">*</span></label>
+          <input appAutoSelect type="number" [(ngModel)]="ppmForm.cratesProduced" name="ppmCrates" required placeholder="0" class="form-input-control font-mono" title="Crates Produced">
         </div>
 
         <!-- Electricity Units -->
         <div class="form-field-col">
-          <label class="field-label"><i class="bi bi-lightning-charge me-1 text-info"></i>{{ 'ppm.units' | translate:currentLang }} <span class="req-star">*</span></label>
-          <input appAutoSelect type="number" step="0.01" [(ngModel)]="ppmForm.electricityUnits" name="ppmUnits" required placeholder="0.00" class="form-input-control font-mono">
+          <label class="field-label"><i class="bi bi-lightning-charge me-1 text-info"></i>{{ 'ppm.units' | translate:currentLang }} (kWh) <span class="req-star">*</span></label>
+          <input appAutoSelect type="number" step="0.01" [(ngModel)]="ppmForm.electricityUnits" name="ppmUnits" required placeholder="0.00" class="form-input-control font-mono" title="Electricity Units">
         </div>
 
         <!-- Electricity Bill -->
         <div class="form-field-col">
           <label class="field-label"><i class="bi bi-currency-rupee me-1 text-warning"></i>{{ 'ppm.bill' | translate:currentLang }} (₹) <span class="req-star">*</span></label>
-          <input appAutoSelect type="number" step="0.01" [(ngModel)]="ppmForm.electricityBill" name="ppmBill" required placeholder="0.00" class="form-input-control font-mono">
+          <input appAutoSelect type="number" step="0.01" [(ngModel)]="ppmForm.electricityBill" name="ppmBill" required placeholder="0.00" class="form-input-control font-mono" title="Electricity Bill">
         </div>
 
-        <!-- Computed Factor Preview -->
+        <!-- Computed Factor Previews -->
         <div class="form-field-col">
-          <label class="field-label"><i class="bi bi-calculator me-1 text-muted"></i>Estimated Cost / Crate <span class="auto-badge">(Preview)</span></label>
+          <label class="field-label"><i class="bi bi-calculator me-1 text-muted"></i>Estimated Cost / Crate <span class="auto-badge">(Live)</span></label>
           <input type="text" [value]="'₹' + ((ppmForm.cratesProduced ? (ppmForm.electricityBill / ppmForm.cratesProduced) : 0) | number:'1.2-2')" readonly class="form-input-control readonly-input font-mono">
         </div>
       </div>
@@ -735,7 +804,7 @@
     </form>
   </div>
 
-  <!-- 5. MONTHLY SUMMARY TABLE CARD -->
+  <!-- 6. MONTHLY SUMMARY TABLE CARD -->
   <div class="glass-panel table-panel-card">
     
     <!-- Table Toolbar -->
@@ -754,21 +823,18 @@
 
         <!-- Month Filter -->
         <div class="toolbar-filter-select">
-          <select [(ngModel)]="tabFilterPpmMonth" (change)="currentPage = 1" class="toolbar-select" title="Filter by month">
+          <select [(ngModel)]="tabFilterPpmMonth" (change)="currentPage = 1; updatePpmChart()" class="toolbar-select" title="Filter by month">
             <option value="">All Months</option>
             <option *ngFor="let m of months" [value]="m">{{ m }}</option>
           </select>
         </div>
 
-        <!-- Min Crates Filter (exposes existing TS filter logic) -->
-        <div class="toolbar-filter-minval" title="Show only months with at least this many crates produced">
-          <input type="number"
-            [(ngModel)]="tabFilterPpmMinCrates"
-            (input)="currentPage = 1"
-            class="toolbar-input-compact"
-            placeholder="Min crates"
-            min="0"
-            aria-label="Minimum crates produced filter">
+        <!-- Year Filter -->
+        <div class="toolbar-filter-select">
+          <select [(ngModel)]="tabFilterPpmYear" (change)="currentPage = 1; updatePpmChart()" class="toolbar-select" title="Filter by year">
+            <option value="">All Years</option>
+            <option *ngFor="let y of getPpmYears()" [value]="y">{{ y }}</option>
+          </select>
         </div>
 
         <!-- Active Filter Indicator & Reset -->
@@ -776,7 +842,7 @@
           <span class="active-filter-pill">
             <i class="bi bi-funnel-fill me-1"></i>Filtered ({{ getActiveFilterCount('ppm') }})
           </span>
-          <button type="button" class="btn-filter-reset" (click)="resetFilters('ppm')" title="Reset all applied filters" aria-label="Reset filters">
+          <button type="button" class="btn-filter-reset" (click)="resetFilters('ppm'); updatePpmChart()" title="Reset filters" aria-label="Reset filters">
             <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
           </button>
         </div>
@@ -854,21 +920,8 @@
       </div>
     </div>
 
-    <!-- Loading Skeleton (PPM) -->
-    <div *ngIf="isLoading" class="skeleton-container" aria-busy="true">
-      <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5,6]"></div>
-    </div>
-
-    <!-- Error State (PPM) -->
-    <div *ngIf="!isLoading && hasError" class="empty-state-card" style="padding: 48px; text-align: center;">
-      <div class="state-icon-wrap text-warning"><i class="bi bi-exclamation-triangle-fill" style="font-size: 40px;"></i></div>
-      <h3 class="state-title">Unable to Load Monthly Summaries</h3>
-      <p class="state-desc">The manufacturing API server did not return monthly records. Check your network or retry.</p>
-      <button type="button" class="btn btn-primary" (click)="loadData()"><i class="bi bi-arrow-clockwise me-1"></i> Retry Connection</button>
-    </div>
-
     <!-- Data Table -->
-    <div *ngIf="!isLoading && !hasError" class="table-responsive table-wrapper-custom" [ngClass]="'density-' + tableDensity">
+    <div class="table-responsive table-wrapper-custom" [ngClass]="'density-' + tableDensity">
       <table class="table enterprise-table" appResizableTable tableId="ppm_table">
         <thead class="sticky-thead">
           <tr>
@@ -877,7 +930,7 @@
                 <input type="checkbox" 
                   class="enterprise-row-checkbox"
                   [checked]="isAllSelected('ppm', getProcessedList(ppmList, 'ppm'))" 
-                  (change)="toggleSelectAll('ppm', getProcessedList(ppmList, 'ppm'))"
+                  (change)="toggleSelectAll('ppm', getProcessedList(ppmList, 'ppm'))" 
                   title="Select All summaries on current page"
                   aria-label="Select all rows">
               </th>
@@ -890,11 +943,11 @@
                 <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'cratesProduced' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
               </th>
               <th *ngIf="col.visible && col.key === 'electricityUnits'" (click)="setSort('electricityUnits')" class="sortable-th text-end" style="min-width: 140px;">
-                <span class="th-content">{{ 'ppm.units' | translate:currentLang }}</span>
+                <span class="th-content">{{ 'ppm.units' | translate:currentLang }} (kWh)</span>
                 <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'electricityUnits' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
               </th>
               <th *ngIf="col.visible && col.key === 'electricityBill'" (click)="setSort('electricityBill')" class="sortable-th text-end" style="min-width: 140px;">
-                <span class="th-content">{{ 'ppm.bill' | translate:currentLang }}</span>
+                <span class="th-content">{{ 'ppm.bill' | translate:currentLang }} (₹)</span>
                 <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'electricityBill' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
               </th>
               <th *ngIf="col.visible && col.key === 'unitsPerCrate'" class="text-end" style="min-width: 120px;">
@@ -961,7 +1014,11 @@
                 </div>
               </td>
               <td *ngIf="col.visible && col.key === 'unitsPerCrate'" class="text-end font-mono">{{ (ppm.cratesProduced ? (ppm.electricityUnits / ppm.cratesProduced) : 0) | number:'1.2-2' }}</td>
-              <td *ngIf="col.visible && col.key === 'costPerCrate'" class="text-end font-mono" style="font-weight: 700;">₹{{ (ppm.cratesProduced ? (ppm.electricityBill / ppm.cratesProduced) : 0) | number:'1.2-2' }}</td>
+              <td *ngIf="col.visible && col.key === 'costPerCrate'" class="text-end font-mono" style="font-weight: 700;">
+                <span class="badge-cost-eff" [ngClass]="getCostEfficiencyClass(ppm.cratesProduced ? (ppm.electricityBill / ppm.cratesProduced) : 0)">
+                  ₹{{ (ppm.cratesProduced ? (ppm.electricityBill / ppm.cratesProduced) : 0) | number:'1.2-2' }}
+                </span>
+              </td>
               <td *ngIf="col.visible && col.key === 'actions'" class="table-action-col text-end" style="padding-right: 16px;">
                 <div class="row-actions-group">
                   <button type="button" class="btn-row-action btn-edit" *ngIf="!isViewer()" (click)="openDrawerEdit('ppm', ppm)" title="Edit Summary" aria-label="Edit summary">
@@ -975,6 +1032,32 @@
             </ng-container>
           </tr>
         </tbody>
+
+        <!-- Table Summary / Totals Footer Row -->
+        <tfoot class="table-summary-tfoot" *ngIf="getProcessedList(ppmList, 'ppm').length > 0">
+          <tr>
+            <td *ngIf="isColVisible('ppm', 'select')"></td>
+            <td *ngIf="isColVisible('ppm', 'monthYear')" class="tfoot-label">
+              <strong>SUMMARY ({{ getProcessedList(ppmList, 'ppm').length }} Months)</strong>
+            </td>
+            <td *ngIf="isColVisible('ppm', 'cratesProduced')" class="text-end font-mono">
+              <strong>{{ getFilteredSum('cratesProduced') | number }}</strong>
+            </td>
+            <td *ngIf="isColVisible('ppm', 'electricityUnits')" class="text-end font-mono">
+              <strong>{{ getFilteredSum('electricityUnits') | number:'1.2-2' }}</strong>
+            </td>
+            <td *ngIf="isColVisible('ppm', 'electricityBill')" class="text-end font-mono">
+              <strong class="text-warning">₹{{ getFilteredSum('electricityBill') | number:'1.2-2' }}</strong>
+            </td>
+            <td *ngIf="isColVisible('ppm', 'unitsPerCrate')" class="text-end font-mono">
+              <strong>{{ getFilteredWeightedUnitsPerCrate() | number:'1.2-2' }}</strong>
+            </td>
+            <td *ngIf="isColVisible('ppm', 'costPerCrate')" class="text-end font-mono">
+              <strong class="text-primary">₹{{ getFilteredWeightedCostPerCrate() | number:'1.2-2' }}</strong>
+            </td>
+            <td *ngIf="isColVisible('ppm', 'actions')"></td>
+          </tr>
+        </tfoot>
       </table>
     </div>
 
@@ -1053,31 +1136,34 @@
       <!-- PPM Drawer Fields -->
       <div *ngIf="drawerMode === 'ppm'" class="drawer-fields-grid">
         <div class="form-group">
-          <label class="field-label"><i class="bi bi-calendar-month me-1 text-primary"></i>Month <span class="req-star">*</span></label>
-          <select [(ngModel)]="drawerRecord.month" class="form-input-control">
+          <label class="field-label">Month <span class="req-star">*</span></label>
+          <select [(ngModel)]="drawerRecord.month" class="form-control">
             <option *ngFor="let m of months" [value]="m">{{ m }}</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="field-label"><i class="bi bi-calendar3 me-1 text-primary"></i>Year <span class="req-star">*</span></label>
-          <input type="number" [(ngModel)]="drawerRecord.year" class="form-input-control font-mono">
+          <label class="field-label">Year <span class="req-star">*</span></label>
+          <input type="number" [(ngModel)]="drawerRecord.year" class="form-control font-mono">
         </div>
         <div class="form-group">
-          <label class="field-label"><i class="bi bi-boxes me-1 text-primary"></i>Crates Produced <span class="req-star">*</span></label>
-          <input type="number" [(ngModel)]="drawerRecord.cratesProduced" class="form-input-control font-mono">
+          <label class="field-label">Crates Produced <span class="req-star">*</span></label>
+          <input type="number" [(ngModel)]="drawerRecord.cratesProduced" class="form-control font-mono">
         </div>
         <div class="form-group">
-          <label class="field-label"><i class="bi bi-lightning-charge me-1 text-info"></i>Electricity Units <span class="field-label-unit">(kWh)</span> <span class="req-star">*</span></label>
-          <input type="number" step="0.01" [(ngModel)]="drawerRecord.electricityUnits" class="form-input-control font-mono">
+          <label class="field-label">Electricity Units (kWh) <span class="req-star">*</span></label>
+          <input type="number" step="0.01" [(ngModel)]="drawerRecord.electricityUnits" class="form-control font-mono">
         </div>
         <div class="form-group">
-          <label class="field-label"><i class="bi bi-currency-rupee me-1 text-warning"></i>Electricity Bill <span class="field-label-unit">(₹)</span> <span class="req-star">*</span></label>
-          <input type="number" step="0.01" [(ngModel)]="drawerRecord.electricityBill" class="form-input-control font-mono">
+          <label class="field-label">Electricity Bill (₹) <span class="req-star">*</span></label>
+          <input type="number" step="0.01" [(ngModel)]="drawerRecord.electricityBill" class="form-control font-mono">
         </div>
-        <!-- Computed preview -->
         <div class="form-group">
-          <label class="field-label"><i class="bi bi-calculator me-1 text-muted"></i>Estimated Cost / Crate <span class="auto-badge">(Preview)</span></label>
-          <input type="text" [value]="'₹' + ((drawerRecord.cratesProduced ? (drawerRecord.electricityBill / drawerRecord.cratesProduced) : 0) | number:'1.2-2')" readonly class="form-input-control readonly-input font-mono">
+          <label class="field-label">Est. Cost / Crate <span class="auto-badge">(Live)</span></label>
+          <input type="text" [value]="'₹' + ((drawerRecord.cratesProduced ? (drawerRecord.electricityBill / drawerRecord.cratesProduced) : 0) | number:'1.2-2')" readonly class="form-control readonly-input font-mono">
+        </div>
+        <div class="form-group">
+          <label class="field-label">Est. Energy / Crate <span class="auto-badge">(Live)</span></label>
+          <input type="text" [value]="((drawerRecord.cratesProduced ? (drawerRecord.electricityUnits / drawerRecord.cratesProduced) : 0) | number:'1.2-2') + ' kWh'" readonly class="form-control readonly-input font-mono">
         </div>
       </div>
 

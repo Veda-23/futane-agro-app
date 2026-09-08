@@ -54,9 +54,6 @@ export class AuditLogsComponent implements OnInit {
   currentPage: number = 1;
   pageSize: number = 15;
 
-  // Export dropdown
-  showExportMenu: boolean = false;
-
   // Selected Log for detail modal
   selectedLogForDetail: AuditLogItem | null = null;
   copiedPayload: boolean = false;

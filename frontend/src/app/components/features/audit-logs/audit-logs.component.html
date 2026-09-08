@@ -7,7 +7,7 @@
           <i class="bi bi-shield-check" style="font-size: 18px;"></i>
         </div>
         <div class="badge-text">
-          <h3>Security Audit Logs</h3>
+          <h3>🛡️ Security Audit Logs</h3>
           <span class="badge-subtitle">Immutable Activity & Compliance Trail</span>
         </div>
       </div>
@@ -32,17 +32,17 @@
       <!-- Filters -->
       <div class="filter-select-group">
         <select [(ngModel)]="auditFilter.tableName" (ngModelChange)="currentPage = 1" class="audit-select" title="Filter by Module">
-          <option value="">All Modules</option>
+          <option value="">📦 All Modules</option>
           <option *ngFor="let t of uniqueTableNames" [value]="t">{{ t }}</option>
         </select>
 
         <select [(ngModel)]="auditFilter.action" (ngModelChange)="currentPage = 1" class="audit-select" title="Filter by Action Type">
-          <option value="">All Actions</option>
-          <option value="LOGIN">LOGIN</option>
-          <option value="LOGOUT">LOGOUT</option>
-          <option value="CREATE">CREATE</option>
-          <option value="UPDATE">UPDATE</option>
-          <option value="DELETE">DELETE</option>
+          <option value="">⚡ All Actions</option>
+          <option value="LOGIN">🔑 LOGIN</option>
+          <option value="LOGOUT">🚪 LOGOUT</option>
+          <option value="CREATE">➕ CREATE</option>
+          <option value="UPDATE">✏️ UPDATE</option>
+          <option value="DELETE">🗑️ DELETE</option>
         </select>
 
         <button *ngIf="searchTerm || auditFilter.tableName || auditFilter.action || auditFilter.username" 
@@ -61,17 +61,10 @@
         <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious density"><i class="bi bi-grid-3x2-gap"></i> Spacious</button>
       </div>
 
-      <!-- Export -->
-      <div class="export-dropdown-wrapper">
-        <button type="button" class="btn btn-secondary btn-sm" (click)="showExportMenu = !showExportMenu; $event.stopPropagation()" title="Export audit records">
-          <i class="bi bi-download me-1"></i> Export &#x25BE;
-        </button>
-        <div class="export-menu" *ngIf="showExportMenu" (click)="$event.stopPropagation()">
-          <button type="button" class="export-menu-item" (click)="exportCSV(); showExportMenu = false">
-            <i class="bi bi-file-earmark-spreadsheet me-1"></i> CSV (.csv)
-          </button>
-        </div>
-      </div>
+      <!-- Export CSV -->
+      <button type="button" class="btn btn-secondary btn-sm" (click)="exportCSV()" title="Export audit records to CSV">
+        <i class="bi bi-download me-1"></i> Export
+      </button>
 
       <!-- Reload Data -->
       <button type="button" class="btn btn-secondary btn-sm" (click)="loadData(true)" title="Reload audit data">

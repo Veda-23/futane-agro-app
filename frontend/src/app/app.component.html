@@ -71,28 +71,28 @@
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-people-fill text-primary" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Accounts</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">👥 Total Accounts</div>
               <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalPartiesCount() }} Parties</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-patch-check-fill text-success" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">GSTIN Verified</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">✅ GSTIN Verified</div>
               <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">{{ getGstRegisteredPartiesCount() }} Compliant</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-geo-alt-fill text-info" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Regional Network</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">📍 Regional Network</div>
               <strong style="font-size: 13px; color: var(--color-info); font-family: var(--font-heading);">{{ getLocalStatePartiesCount() }} MH Accounts</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-shield-check text-warning" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Credit Health</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🛡️ Credit Health</div>
               <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">Tier-A Enterprise</strong>
             </div>
           </div>
@@ -104,7 +104,7 @@
               <div style="display: flex; align-items: center; gap: 12px;">
                 <span class="badge-icon"><i class="bi bi-people-fill" style="color:var(--primary); font-size:18px;"></i></span>
                 <div class="badge-text">
-                  <h3>{{ editingPartyId ? 'Edit Party Profile' : ('party.add_title' | translate:currentLang) }}</h3>
+                  <h3>🏢 {{ editingPartyId ? 'Edit Party Profile' : ('party.add_title' | translate:currentLang) }}</h3>
                   <p class="subtitle">Register and update customer & vendor profiles</p>
                 </div>
               </div>
@@ -112,7 +112,7 @@
             </div>
             <form #partyNgForm="ngForm" (submit)="saveParty()">
               <div class="form-group">
-                <label>{{ 'party.name' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>🏢 {{ 'party.name' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="partyForm.partyName" name="partyName" #partyNameRef="ngModel" required minlength="2">
                 <div *ngIf="partyNameRef.invalid && (partyNameRef.dirty || partyNameRef.touched)" class="error-msg" style="margin-top:4px; margin-bottom:0; padding:4px 8px;">
                   <small *ngIf="partyNameRef.errors?.['required']">Name is required.</small>
@@ -120,7 +120,7 @@
                 </div>
               </div>
               <div class="form-group">
-                <label>{{ 'party.gst' | translate:currentLang }}</label>
+                <label>🆔 {{ 'party.gst' | translate:currentLang }}</label>
                 <input type="text" [(ngModel)]="partyForm.gstNumber" name="partyGst" #partyGstRef="ngModel" required pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$" placeholder="15-digit GSTIN number">
                 <div *ngIf="partyGstRef.invalid && (partyGstRef.dirty || partyGstRef.touched)" class="error-msg" style="margin-top:4px; margin-bottom:0; padding:4px 8px;">
                   <small *ngIf="partyGstRef.errors?.['required']">GST is required.</small>
@@ -128,7 +128,7 @@
                 </div>
               </div>
               <div class="form-group">
-                <label>{{ 'party.email' | translate:currentLang }}</label>
+                <label>✉️ {{ 'party.email' | translate:currentLang }}</label>
                 <input type="email" [(ngModel)]="partyForm.email" name="partyEmail" #partyEmailRef="ngModel" required email placeholder="name@company.com">
                 <div *ngIf="partyEmailRef.invalid && (partyEmailRef.dirty || partyEmailRef.touched)" class="error-msg" style="margin-top:4px; margin-bottom:0; padding:4px 8px;">
                   <small *ngIf="partyEmailRef.errors?.['required']">Email is required.</small>
@@ -136,7 +136,7 @@
                 </div>
               </div>
               <div class="form-group">
-                <label>{{ 'party.contact' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>📞 {{ 'party.contact' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="partyForm.partyContact" name="partyContact" #partyContactRef="ngModel" required pattern="^\d{10}$" placeholder="10-digit mobile">
                 <div *ngIf="partyContactRef.invalid && (partyContactRef.dirty || partyContactRef.touched)" class="error-msg" style="margin-top:4px; margin-bottom:0; padding:4px 8px;">
                   <small *ngIf="partyContactRef.errors?.['required']">Contact is required.</small>
@@ -144,11 +144,11 @@
                 </div>
               </div>
               <div class="form-group">
-                <label>{{ 'party.address' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>📍 {{ 'party.address' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="partyForm.partyAddress" name="partyAddress" required placeholder="Full street address">
               </div>
               <div class="form-group">
-                <label>{{ 'party.state' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>🗺️ {{ 'party.state' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="partyForm.state" name="partyState" required placeholder="State (e.g. Maharashtra)">
               </div>
 
@@ -166,7 +166,7 @@
               </div>
 
               <button type="submit" class="btn btn-primary" [disabled]="partyNgForm.invalid" style="width: 100%;">
-                <i class="bi bi-check2 me-1"></i>{{ editingPartyId ? 'Update Party Profile' : ('party.register_btn' | translate:currentLang) }}
+                <i class="bi bi-check2 me-1"></i>💾 {{ editingPartyId ? 'Update Party Profile' : ('party.register_btn' | translate:currentLang) }}
               </button>
             </form>
           </div>
@@ -245,7 +245,7 @@
           <div class="kpi-metric-card">
             <div class="kpi-metric-icon-wrap info"><i class="bi bi-cart-check-fill" style="font-size: 20px; color: #3b82f6;"></i></div>
             <div class="kpi-metric-info">
-              <span class="kpi-metric-label">Total Sales Orders</span>
+              <span class="kpi-metric-label">📦 Total Sales Orders</span>
               <span class="kpi-metric-value">{{ getTotalSalesOrdersCount() }}</span>
               <span class="kpi-metric-subtext">All-time order count</span>
             </div>
@@ -253,7 +253,7 @@
           <div class="kpi-metric-card">
             <div class="kpi-metric-icon-wrap"><i class="bi bi-currency-rupee" style="font-size: 20px; color: #d97706;"></i></div>
             <div class="kpi-metric-info">
-              <span class="kpi-metric-label">Total Sales Value</span>
+              <span class="kpi-metric-label">💰 Total Sales Value</span>
               <span class="kpi-metric-value">{{ formatINR(getTotalSalesAmount()) }}</span>
               <span class="kpi-metric-subtext">Gross billed amount</span>
             </div>
@@ -261,7 +261,7 @@
           <div class="kpi-metric-card">
             <div class="kpi-metric-icon-wrap success"><i class="bi bi-check-circle-fill" style="font-size: 20px; color: #10b981;"></i></div>
             <div class="kpi-metric-info">
-              <span class="kpi-metric-label">Total Paid</span>
+              <span class="kpi-metric-label">✅ Total Paid</span>
               <span class="kpi-metric-value text-green">{{ formatINR(getTotalSalesPaid()) }}</span>
               <span class="kpi-metric-subtext">Cleared collections</span>
             </div>
@@ -269,7 +269,7 @@
           <div class="kpi-metric-card">
             <div class="kpi-metric-icon-wrap danger"><i class="bi bi-hourglass-split" style="font-size: 20px; color: #ef4444;"></i></div>
             <div class="kpi-metric-info">
-              <span class="kpi-metric-label">Balance Pending</span>
+              <span class="kpi-metric-label">⏳ Balance Pending</span>
               <span class="kpi-metric-value text-red">{{ formatINR(getTotalSalesPending()) }}</span>
               <span class="kpi-metric-subtext">Outstanding receivables</span>
             </div>
@@ -282,7 +282,7 @@
               <div style="display: flex; align-items: center; gap: 12px;">
                 <span class="badge-icon"><i class="bi bi-plus-circle-fill" style="color:var(--primary); font-size:18px;"></i></span>
                 <div class="badge-text">
-                  <h3>{{ editingSaleId ? 'Edit Sales Order' : ('sales.add_title' | translate:currentLang) }}</h3>
+                  <h3>📦 {{ editingSaleId ? 'Edit Sales Order' : ('sales.add_title' | translate:currentLang) }}</h3>
                   <p class="subtitle">Record dispatched crate orders and billing</p>
                 </div>
               </div>
@@ -290,18 +290,18 @@
             </div>
             <form (submit)="saveSales()">
               <div class="form-group">
-                <label>{{ 'label.date' | translate:currentLang }}</label>
+                <label>📅 {{ 'label.date' | translate:currentLang }}</label>
                 <input type="date" [(ngModel)]="salesForm.date" name="salesDate" required>
               </div>
               <div class="form-group">
-                <label>{{ 'label.select_party' | translate:currentLang }}</label>
+                <label>🏢 {{ 'label.select_party' | translate:currentLang }}</label>
                 <select [(ngModel)]="salesForm.id" name="salesParty" required>
                   <option value="" disabled selected>-- Select Customer Party --</option>
                   <option *ngFor="let party of parties" [value]="party.id">{{ cleanDisplayName(party.partyName) }}</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>{{ 'sales.crate_type' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>📦 {{ 'sales.crate_type' | translate:currentLang }} <span class="req-star">*</span></label>
                 <select [(ngModel)]="salesForm.crateType" name="salesCrateType" required>
                   <option value="" disabled>-- Select Crate Type --</option>
                   <option value="Apple Crate">Apple Crate</option>
@@ -311,32 +311,32 @@
                 </select>
               </div>
               <div class="form-group">
-                <label>{{ 'sales.crate_material' | translate:currentLang }}</label>
+                <label>🧪 {{ 'sales.crate_material' | translate:currentLang }}</label>
                 <input type="text" [(ngModel)]="salesForm.crateMaterial" name="salesMaterial" required placeholder="e.g. HDPE Plastic">
               </div>
               <div class="form-group">
-                <label>{{ 'sales.quantity' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>🔢 {{ 'sales.quantity' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="number" [(ngModel)]="salesForm.quantity" name="salesQty" required placeholder="e.g. 500" (input)="calculateSalesTotal()">
               </div>
               <div class="form-group">
-                <label>{{ 'sales.rate' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>💰 {{ 'sales.rate' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="number" step="0.01" [(ngModel)]="salesForm.rate" name="salesRate" required placeholder="e.g. 240.00" (input)="calculateSalesTotal()">
               </div>
               <div class="form-group">
-                <label>{{ 'sales.paid' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>💵 {{ 'sales.paid' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="number" step="0.01" [(ngModel)]="salesForm.paid" name="salesPaid" required placeholder="e.g. 50000.00" (input)="calculateSalesTotal()">
               </div>
               <!-- Calculates automatically -->
               <div class="form-group">
-                <label>{{ 'sales.total' | translate:currentLang }}</label>
+                <label>🧾 {{ 'sales.total' | translate:currentLang }}</label>
                 <input type="number" [value]="salesForm.totalAmount" disabled style="background: var(--bg-hover); color: var(--color-warning); font-weight: 700;">
               </div>
               <div class="form-group">
-                <label>{{ 'sales.remaining' | translate:currentLang }}</label>
+                <label>⏳ {{ 'sales.remaining' | translate:currentLang }}</label>
                 <input type="number" [value]="salesForm.remaining" disabled style="background: var(--bg-hover); color: var(--color-danger); font-weight: 700;">
               </div>
               <button type="submit" class="btn btn-primary" style="width: 100%;">
-                <i class="bi bi-check2 me-1"></i>{{ editingSaleId ? 'Update Sales Order' : ('sales.save_btn' | translate:currentLang) }}
+                <i class="bi bi-check2 me-1"></i>💾 {{ editingSaleId ? 'Update Sales Order' : ('sales.save_btn' | translate:currentLang) }}
               </button>
             </form>
           </div>
@@ -471,28 +471,28 @@
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-cash-coin text-success" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Collected</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">💵 Total Collected</div>
               <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">₹{{ getTotalPaymentsCollected() | number:'1.0-0' }}</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-receipt-cutoff text-primary" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Receipts Logged</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🧾 Receipts Logged</div>
               <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ paymentsList.length }} Transactions</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-calendar-check text-info" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Monthly Run</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">📅 Monthly Run</div>
               <strong style="font-size: 13px; color: var(--color-info); font-family: var(--font-heading);">₹{{ getMonthlyPaymentsCollected() | number:'1.0-0' }}</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-shield-check text-warning" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Reconciliation</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🛡️ Reconciliation</div>
               <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">100% Cleared</strong>
             </div>
           </div>
@@ -504,7 +504,7 @@
               <div style="display: flex; align-items: center; gap: 12px;">
                 <span class="badge-icon"><i class="bi bi-plus-circle-fill" style="color:var(--primary); font-size:18px;"></i></span>
                 <div class="badge-text">
-                  <h3>{{ editingPaymentId ? 'Edit Payment Record' : ('payments.add_title' | translate:currentLang) }}</h3>
+                  <h3>💳 {{ editingPaymentId ? 'Edit Payment Record' : ('payments.add_title' | translate:currentLang) }}</h3>
                   <p class="subtitle">Record invoice receipts and customer payments</p>
                 </div>
               </div>
@@ -512,28 +512,28 @@
             </div>
             <form (submit)="savePayment()">
               <div class="form-group">
-                <label>{{ 'payments.date' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>📅 {{ 'payments.date' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="date" [(ngModel)]="paymentsForm.paymentDate" name="payDate" required>
               </div>
               <div class="form-group">
-                <label>{{ 'label.select_party' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>🏢 {{ 'label.select_party' | translate:currentLang }} <span class="req-star">*</span></label>
                 <select [(ngModel)]="paymentsForm.id" name="payParty" required>
                   <option *ngFor="let party of parties" [value]="party.id">{{ party.partyName }}</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>{{ 'payments.invoice_ref' | translate:currentLang }}</label>
+                <label>📄 {{ 'payments.invoice_ref' | translate:currentLang }}</label>
                 <select [(ngModel)]="paymentsForm.invoiceNo" name="payInvoice" required>
                   <option value="">General payment (No Invoice)</option>
                   <option *ngFor="let invoice of invoicesList" [value]="invoice.invoiceNo">{{ invoice.invoiceNo }} (₹{{ invoice.sale?.remaining || 0 }} due)</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>{{ 'payments.amount' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>💵 {{ 'payments.amount' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="number" step="0.01" [(ngModel)]="paymentsForm.amountReceived" name="payAmt" required>
               </div>
               <div class="form-group">
-                <label>{{ 'payments.mode' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>💳 {{ 'payments.mode' | translate:currentLang }} <span class="req-star">*</span></label>
                 <select [(ngModel)]="paymentsForm.paymentMode" name="payMode" required>
                   <option value="Cash">Cash</option>
                   <option value="UPI">UPI (Google Pay / PhonePe)</option>
@@ -556,7 +556,7 @@
               </div>
 
               <button type="submit" class="btn btn-primary" style="width: 100%;">
-                <i class="bi bi-check2 me-1"></i>{{ editingPaymentId ? 'Update Payment Record' : ('payments.save_btn' | translate:currentLang) }}
+                <i class="bi bi-check2 me-1"></i>💾 {{ editingPaymentId ? 'Update Payment Record' : ('payments.save_btn' | translate:currentLang) }}
               </button>
             </form>
           </div>
@@ -567,7 +567,7 @@
                 <div class="section-title-badge">
                   <span class="badge-icon"><i class="bi bi-credit-card-fill" style="color:var(--primary); font-size:18px;"></i></span>
                   <div class="badge-text">
-                    <h3>{{ 'payments.records_title' | translate:currentLang }}</h3>
+                    <h3>💳 {{ 'payments.records_title' | translate:currentLang }}</h3>
                   </div>
                 </div>
               </div>
@@ -684,28 +684,28 @@
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-boxes text-primary" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Procurements</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">📦 Procurements</div>
               <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalRawMaterialsCount() }} Batches</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-layer-forward text-info" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Weight</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">⚖️ Total Weight</div>
               <strong style="font-size: 13px; color: var(--color-info); font-family: var(--font-heading);">{{ getTotalRawMaterialsWeight() | number:'1.0-0' }} kg</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-currency-rupee text-success" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Value</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">💰 Total Value</div>
               <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">₹{{ getTotalRawMaterialsValue() | number:'1.0-0' }}</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-graph-up-arrow text-warning" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Avg Unit Cost</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">📈 Avg Unit Cost</div>
               <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">₹{{ getAverageRawMaterialRate() | number:'1.2-2' }}/kg</strong>
             </div>
           </div>
@@ -717,7 +717,7 @@
               <div style="display: flex; align-items: center; gap: 12px;">
                 <span class="badge-icon"><i class="bi bi-plus-circle-fill" style="color:var(--primary); font-size:18px;"></i></span>
                 <div class="badge-text">
-                  <h3>{{ editingRawMaterialId ? 'Edit Raw Material Purchase' : ('raw.add_title' | translate:currentLang) }}</h3>
+                  <h3>🧪 {{ editingRawMaterialId ? 'Edit Raw Material Purchase' : ('raw.add_title' | translate:currentLang) }}</h3>
                   <p class="subtitle">Log raw resin, masterbatch and polymer purchases</p>
                 </div>
               </div>
@@ -725,25 +725,25 @@
             </div>
             <form (submit)="saveRawMaterial()">
               <div class="form-group">
-                <label>{{ 'raw.date' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>📅 {{ 'raw.date' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="date" [(ngModel)]="rawMaterialsForm.date" name="rawDate" required>
               </div>
               <div class="form-group">
-                <label>{{ 'raw.material_name' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>🧪 {{ 'raw.material_name' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="rawMaterialsForm.materialName" name="rawName" required placeholder="e.g. HDPE Granules">
               </div>
               <div class="form-group">
-                <label>{{ 'label.select_vendor' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>🏭 {{ 'label.select_vendor' | translate:currentLang }} <span class="req-star">*</span></label>
                 <select [(ngModel)]="rawMaterialsForm.id" name="rawVendor" required>
                   <option *ngFor="let vendor of vendors" [value]="vendor.id">{{ vendor.vendorName }}</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>{{ 'raw.weight' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>⚖️ {{ 'raw.weight' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="number" step="0.1" [(ngModel)]="rawMaterialsForm.weight" name="rawWeight" required>
               </div>
               <div class="form-group">
-                <label>{{ 'raw.rate' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>💰 {{ 'raw.rate' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="number" step="0.01" [(ngModel)]="rawMaterialsForm.rate" name="rawRate" required>
               </div>
 
@@ -761,7 +761,7 @@
               </div>
 
               <button type="submit" class="btn btn-primary" style="width: 100%;">
-                <i class="bi bi-check2 me-1"></i>{{ editingRawMaterialId ? 'Update Purchase Record' : ('raw.save_btn' | translate:currentLang) }}
+                <i class="bi bi-check2 me-1"></i>💾 {{ editingRawMaterialId ? 'Update Purchase Record' : ('raw.save_btn' | translate:currentLang) }}
               </button>
             </form>
           </div>
@@ -772,7 +772,7 @@
                 <div class="section-title-badge">
                   <span class="badge-icon"><i class="bi bi-boxes" style="color:var(--primary); font-size:18px;"></i></span>
                   <div class="badge-text">
-                    <h3>{{ 'raw.records_title' | translate:currentLang }}</h3>
+                    <h3>🧪 {{ 'raw.records_title' | translate:currentLang }}</h3>
                   </div>
                 </div>
               </div>
@@ -891,28 +891,28 @@
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-shop text-primary" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Approved Suppliers</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🏭 Approved Suppliers</div>
               <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalVendorsCount() }} Vendors</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-patch-check-fill text-success" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">GSTIN Compliant</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">✅ GSTIN Compliant</div>
               <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">{{ getGstRegisteredVendorsCount() }} Verified</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-boxes text-info" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Core Material</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">📦 Core Material</div>
               <strong style="font-size: 13px; color: var(--color-info); font-family: var(--font-heading);">Polymer & Granules</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-shield-check text-warning" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Quality Tier</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🛡️ Quality Tier</div>
               <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">A1 Certified</strong>
             </div>
           </div>
@@ -924,7 +924,7 @@
               <div style="display: flex; align-items: center; gap: 12px;">
                 <span class="badge-icon"><i class="bi bi-shop" style="color:var(--primary); font-size:18px;"></i></span>
                 <div class="badge-text">
-                  <h3>{{ editingVendorId ? 'Edit Vendor Profile' : ('vendor.add_title' | translate:currentLang) }}</h3>
+                  <h3>🏭 {{ editingVendorId ? 'Edit Vendor Profile' : ('vendor.add_title' | translate:currentLang) }}</h3>
                   <p class="subtitle">Register raw material and polymer vendors</p>
                 </div>
               </div>
@@ -932,19 +932,19 @@
             </div>
             <form (submit)="saveVendor()">
               <div class="form-group">
-                <label>{{ 'vendor.name' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>🏢 {{ 'vendor.name' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="vendorForm.vendorName" name="vName" required placeholder="Company/Supplier name">
               </div>
               <div class="form-group">
-                <label>{{ 'vendor.mobile' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>📞 {{ 'vendor.mobile' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="vendorForm.mobile" name="vMobile" required placeholder="10-digit mobile">
               </div>
               <div class="form-group">
-                <label>{{ 'vendor.address' | translate:currentLang }}</label>
+                <label>📍 {{ 'vendor.address' | translate:currentLang }}</label>
                 <input type="text" [(ngModel)]="vendorForm.address" name="vAddress" required placeholder="Office street address">
               </div>
               <div class="form-group">
-                <label>{{ 'vendor.gst' | translate:currentLang }}</label>
+                <label>🆔 {{ 'vendor.gst' | translate:currentLang }}</label>
                 <input type="text" [(ngModel)]="vendorForm.gstNumber" name="vGst" required placeholder="15-digit GSTIN">
               </div>
 
@@ -962,7 +962,7 @@
               </div>
 
               <button type="submit" class="btn btn-primary" style="width: 100%;">
-                <i class="bi bi-check2 me-1"></i>{{ editingVendorId ? 'Update Vendor' : ('vendor.register_btn' | translate:currentLang) }}
+                <i class="bi bi-check2 me-1"></i>💾 {{ editingVendorId ? 'Update Vendor' : ('vendor.register_btn' | translate:currentLang) }}
               </button>
             </form>
           </div>
@@ -973,7 +973,7 @@
                 <div class="section-title-badge">
                   <span class="badge-icon"><i class="bi bi-building" style="color:var(--primary); font-size:18px;"></i></span>
                   <div class="badge-text">
-                    <h3>{{ 'vendor.records_title' | translate:currentLang }}</h3>
+                    <h3>🏢 {{ 'vendor.records_title' | translate:currentLang }}</h3>
                     <p class="subtitle">Approved supplier directory and contact database</p>
                   </div>
                 </div>
@@ -1042,28 +1042,28 @@
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-boxes text-primary" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Stocked SKUs</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">📦 Stocked SKUs</div>
               <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ inventoryList.length || 0 }} Finished SKUs</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-box-seam-fill text-success" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Available Crates</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🏭 Available Crates</div>
               <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">{{ getTotalInventoryStock() | number:'1.0-0' }} Units Ready</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-cash-stack text-info" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Inventory Valuation</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">💰 Inventory Valuation</div>
               <strong style="font-size: 13px; color: var(--color-info); font-family: var(--font-heading);">₹{{ getTotalInventoryValue() | number:'1.0-0' }}</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-building-check text-warning" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Warehouse Storage</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🏢 Warehouse Storage</div>
               <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">95% Nominal Capacity</strong>
             </div>
           </div>
@@ -1080,7 +1080,7 @@
                 {{ pred.currentStock }} kg in stock · Burn rate: {{ pred.burnoutRatePerDay }} kg/day · Estimated depletion in <strong [style.color]="pred.riskLevel === 'CRITICAL' ? 'var(--color-danger)' : 'var(--color-warning)'">{{ pred.daysRemaining }} days</strong>
               </div>
             </div>
-            <button class="btn btn-outline-danger btn-sm" (click)="switchTab('raw-materials')">
+            <button class="btn btn-warning btn-sm" (click)="switchTab('raw-materials')" style="height:32px; padding:0 12px; font-weight:600;">
               <i class="bi bi-box-seam me-1"></i> Re-order Now
             </button>
           </div>
@@ -1093,7 +1093,7 @@
               <div class="section-title-badge">
                 <span class="badge-icon"><i class="bi bi-box-seam" style="color:var(--primary); font-size:18px;"></i></span>
                 <div class="badge-text">
-                  <h3>{{ 'inv.records_title' | translate:currentLang }}</h3>
+                  <h3>📦 {{ 'inv.records_title' | translate:currentLang }}</h3>
                 </div>
               </div>
             </div>
@@ -1208,28 +1208,28 @@
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-people-fill text-primary" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Active Workforce</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">👥 Active Workforce</div>
               <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ (employees || []).length }} Staff</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-cash-stack text-success" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Monthly Payroll</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">💵 Monthly Payroll</div>
               <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">₹{{ getEmployeesTotalPayroll() | number:'1.0-0' }}</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-graph-up-arrow text-info" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Avg Compensation</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">📈 Avg Compensation</div>
               <strong style="font-size: 13px; color: var(--primary); font-family: var(--font-heading);">₹{{ getEmployeesAvgSalary() | number:'1.0-0' }}/mo</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-diagram-3-fill text-warning" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Operational Roles</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">💼 Operational Roles</div>
               <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ getEmployeesDistinctRoles() }} Roles</strong>
             </div>
           </div>
@@ -1241,7 +1241,7 @@
               <div style="display: flex; align-items: center; gap: 12px;">
                 <span class="badge-icon"><i class="bi bi-people-fill" style="color:var(--primary); font-size:18px;"></i></span>
                 <div class="badge-text">
-                  <h3>{{ editingEmployeeId ? 'Edit Staff Profile' : ('hr.add_title' | translate:currentLang) }}</h3>
+                  <h3>👤 {{ editingEmployeeId ? 'Edit Staff Profile' : ('hr.add_title' | translate:currentLang) }}</h3>
                   <p class="subtitle">Enroll worker profiles, Aadhaar and salary metrics</p>
                 </div>
               </div>
@@ -1249,35 +1249,35 @@
             </div>
             <form (submit)="saveEmployee()">
               <div class="form-group">
-                <label>{{ 'hr.name' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>👤 {{ 'hr.name' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="employeeForm.empName" name="eName" required placeholder="Worker name">
               </div>
               <div class="form-group">
-                <label>{{ 'hr.designation' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>💼 {{ 'hr.designation' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="employeeForm.designation" name="eDesig" required placeholder="Role (e.g. Operator, Accountant)">
               </div>
               <div class="form-group">
-                <label>{{ 'hr.mobile' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>📞 {{ 'hr.mobile' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="employeeForm.empContact" name="eContact" required placeholder="10-digit mobile">
               </div>
               <div class="form-group">
-                <label>{{ 'hr.salary' | translate:currentLang }} (₹/mo) <span class="req-star">*</span></label>
+                <label>💵 {{ 'hr.salary' | translate:currentLang }} (₹/mo) <span class="req-star">*</span></label>
                 <input type="number" [(ngModel)]="employeeForm.salary" name="eSalary" required placeholder="Monthly salary in ₹">
               </div>
               <div class="form-group">
-                <label>{{ 'hr.aadhaar' | translate:currentLang }}</label>
+                <label>🆔 {{ 'hr.aadhaar' | translate:currentLang }}</label>
                 <input type="text" [(ngModel)]="employeeForm.aadhaarNo" name="eAadhaar" placeholder="12-digit Aadhaar Card number">
               </div>
               <div class="form-group">
-                <label>{{ 'hr.bank' | translate:currentLang }}</label>
+                <label>🏦 {{ 'hr.bank' | translate:currentLang }}</label>
                 <input type="text" [(ngModel)]="employeeForm.bankAccount" name="eBank" placeholder="IFS Code / Account No">
               </div>
               <div class="form-group">
-                <label>{{ 'hr.joining_date' | translate:currentLang }}</label>
+                <label>📅 {{ 'hr.joining_date' | translate:currentLang }}</label>
                 <input type="date" [(ngModel)]="employeeForm.joiningDate" name="eJoin">
               </div>
               <div class="form-group">
-                <label>{{ 'hr.address' | translate:currentLang }}</label>
+                <label>📍 {{ 'hr.address' | translate:currentLang }}</label>
                 <input type="text" [(ngModel)]="employeeForm.address" name="eAddr" placeholder="Residential address">
               </div>
 
@@ -1301,7 +1301,7 @@
               </div>
 
               <button type="submit" class="btn btn-primary" style="width: 100%;">
-                <i class="bi bi-check2 me-1"></i>{{ editingEmployeeId ? 'Update Staff Profile' : ('hr.register_btn' | translate:currentLang) }}
+                <i class="bi bi-check2 me-1"></i>💾 {{ editingEmployeeId ? 'Update Staff Profile' : ('hr.register_btn' | translate:currentLang) }}
               </button>
             </form>
           </div>
@@ -1310,9 +1310,9 @@
             <div class="table-toolbar-top no-print">
               <div class="toolbar-left">
                 <div class="section-title-badge">
-                  <span class="badge-icon"><i class="bi bi-person-workspace" style="color:var(--primary); font-size:18px;"></i></span>
+                  <span class="badge-icon"><i class="bi bi-people-fill" style="color:var(--primary); font-size:18px;"></i></span>
                   <div class="badge-text">
-                    <h3>{{ 'hr.records_title' | translate:currentLang }}</h3>
+                    <h3>👥 {{ 'hr.records_title' | translate:currentLang }}</h3>
                   </div>
                 </div>
               </div>
@@ -1380,28 +1380,28 @@
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-cash-stack text-success" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Disbursed</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">💵 Total Disbursed</div>
               <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">₹{{ getTotalSalariesPaid() | number:'1.0-0' }}</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-clock-history text-warning" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Pending Payouts</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">⏳ Pending Payouts</div>
               <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">₹{{ getTotalSalariesPending() | number:'1.0-0' }}</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-pie-chart-fill text-primary" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Disbursal Rate</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">📊 Disbursal Rate</div>
               <strong style="font-size: 13px; color: var(--primary); font-family: var(--font-heading);">{{ (getTotalSalariesPaid() + getTotalSalariesPending() > 0 ? (getTotalSalariesPaid() / (getTotalSalariesPaid() + getTotalSalariesPending()) * 100) : 100) | number:'1.1-1' }}%</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-receipt-cutoff text-info" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Vouchers Logged</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🧾 Vouchers Logged</div>
               <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ (salariesList || []).length }} Records</strong>
             </div>
           </div>
@@ -1413,7 +1413,7 @@
               <div style="display: flex; align-items: center; gap: 12px;">
                 <span class="badge-icon"><i class="bi bi-wallet2" style="color:var(--primary); font-size:18px;"></i></span>
                 <div class="badge-text">
-                  <h3>{{ editingSalaryId ? 'Edit Salary Release' : ('sal.add_title' | translate:currentLang) }}</h3>
+                  <h3>💵 {{ editingSalaryId ? 'Edit Salary Release' : ('sal.add_title' | translate:currentLang) }}</h3>
                   <p class="subtitle">Disburse monthly wages and track payment clearance</p>
                 </div>
               </div>
@@ -1421,14 +1421,14 @@
             </div>
             <form (submit)="saveSalary()">
               <div class="form-group">
-                <label>{{ 'label.select_employee' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>👤 {{ 'label.select_employee' | translate:currentLang }} <span class="req-star">*</span></label>
                 <select [(ngModel)]="salariesForm.id" name="salEmp" required>
                   <option value="" disabled selected>-- Select Staff Member --</option>
                   <option *ngFor="let emp of employees" [value]="emp.id">{{ emp.empName }} (₹{{ emp.salary }}/mo)</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>{{ 'sal.month' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>📅 {{ 'sal.month' | translate:currentLang }} <span class="req-star">*</span></label>
                 <select [(ngModel)]="salariesForm.month" name="salMonth" required>
                   <option value="January">January</option>
                   <option value="February">February</option>
@@ -1445,22 +1445,22 @@
                 </select>
               </div>
               <div class="form-group">
-                <label>{{ 'sal.year' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>📆 {{ 'sal.year' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="number" [(ngModel)]="salariesForm.year" name="salYear" required>
               </div>
               <div class="form-group">
-                <label>{{ 'sal.amount' | translate:currentLang }} (₹) <span class="req-star">*</span></label>
+                <label>💵 {{ 'sal.amount' | translate:currentLang }} (₹) <span class="req-star">*</span></label>
                 <input type="number" [(ngModel)]="salariesForm.salaryAmount" name="salAmount" required placeholder="Monthly salary in ₹">
               </div>
               <div class="form-group">
-                <label>{{ 'sal.status' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>📌 {{ 'sal.status' | translate:currentLang }} <span class="req-star">*</span></label>
                 <select [(ngModel)]="salariesForm.status" name="salStatus" required>
                   <option value="Paid">Paid</option>
                   <option value="Pending">Pending</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>{{ 'sal.date' | translate:currentLang }}</label>
+                <label>🗓️ {{ 'sal.date' | translate:currentLang }}</label>
                 <input type="date" [(ngModel)]="salariesForm.paidDate" name="salPaidDate">
               </div>
 
@@ -1478,7 +1478,7 @@
               </div>
 
               <button type="submit" class="btn btn-primary" style="width: 100%;">
-                <i class="bi bi-check2 me-1"></i>{{ editingSalaryId ? 'Update Salary Record' : ('sal.save_btn' | translate:currentLang) }}
+                <i class="bi bi-check2 me-1"></i>💾 {{ editingSalaryId ? 'Update Salary' : ('sal.release_btn' | translate:currentLang) }}
               </button>
             </form>
           </div>
@@ -1489,7 +1489,7 @@
                 <div class="section-title-badge">
                   <span class="badge-icon"><i class="bi bi-cash-stack" style="color:var(--primary); font-size:18px;"></i></span>
                   <div class="badge-text">
-                    <h3>{{ 'sal.records_title' | translate:currentLang }}</h3>
+                    <h3>💵 {{ 'sal.records_title' | translate:currentLang }}</h3>
                   </div>
                 </div>
               </div>
@@ -1609,28 +1609,28 @@
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-truck text-primary" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Trips</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🚚 Total Trips</div>
               <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalTransportsCount() }} Dispatches</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-cash-stack text-success" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Freight</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">💰 Total Freight</div>
               <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">₹{{ getTotalTransportRent() | number:'1.0-0' }}</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-wallet2 text-info" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Advance Disbursed</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">💵 Advance Disbursed</div>
               <strong style="font-size: 13px; color: var(--color-info); font-family: var(--font-heading);">₹{{ getTotalTransportAdvance() | number:'1.0-0' }}</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-hourglass-split text-warning" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Pending Balance</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">⏳ Pending Balance</div>
               <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">₹{{ getTotalTransportBalance() | number:'1.0-0' }}</strong>
             </div>
           </div>
@@ -1642,7 +1642,7 @@
               <div style="display: flex; align-items: center; gap: 12px;">
                 <span class="badge-icon"><i class="bi bi-truck" style="color:var(--primary); font-size:18px;"></i></span>
                 <div class="badge-text">
-                  <h3>{{ editingTransportId ? 'Edit Transport Record' : ('trans.add_title' | translate:currentLang) }}</h3>
+                  <h3>🚚 {{ editingTransportId ? 'Edit Transport Record' : ('trans.add_title' | translate:currentLang) }}</h3>
                   <p class="subtitle">Log freight vehicles, drivers, rentals and advance cash</p>
                 </div>
               </div>
@@ -1650,25 +1650,25 @@
             </div>
             <form (submit)="saveTransport()">
               <div class="form-group">
-                <label>{{ 'trans.date' | translate:currentLang }}</label>
+                <label>📅 {{ 'trans.date' | translate:currentLang }}</label>
                 <input type="date" [(ngModel)]="transportsForm.date" name="trDate" required>
               </div>
               <div class="form-group">
-                <label>{{ 'trans.truck' | translate:currentLang }}</label>
+                <label>🚛 {{ 'trans.truck' | translate:currentLang }}</label>
                 <input type="text" [(ngModel)]="transportsForm.truckNumber" name="trTruck" required placeholder="MH-12-XX-XXXX">
               </div>
               <div class="form-group">
-                <label>{{ 'label.select_driver' | translate:currentLang }}</label>
+                <label>🧑‍✈️ {{ 'label.select_driver' | translate:currentLang }}</label>
                 <select [(ngModel)]="transportsForm.id" name="trDriver" required>
                   <option *ngFor="let driver of drivers" [value]="driver.id">{{ driver.driverName }}</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>{{ 'trans.rent' | translate:currentLang }}</label>
+                <label>💰 {{ 'trans.rent' | translate:currentLang }}</label>
                 <input type="number" [(ngModel)]="transportsForm.rent" name="trRent" required>
               </div>
               <div class="form-group">
-                <label>{{ 'trans.advance' | translate:currentLang }}</label>
+                <label>💵 {{ 'trans.advance' | translate:currentLang }}</label>
                 <input type="number" [(ngModel)]="transportsForm.advance" name="trAdv" required>
               </div>
 
@@ -1686,7 +1686,7 @@
               </div>
 
               <button type="submit" class="btn btn-primary" style="width: 100%;">
-                <i class="bi bi-check2 me-1"></i>{{ editingTransportId ? 'Update Transport Record' : ('trans.save_btn' | translate:currentLang) }}
+                <i class="bi bi-check2 me-1"></i>💾 {{ editingTransportId ? 'Update Transport Record' : ('trans.save_btn' | translate:currentLang) }}
               </button>
             </form>
           </div>
@@ -1697,7 +1697,7 @@
                 <div class="section-title-badge">
                   <span class="badge-icon"><i class="bi bi-truck" style="color:var(--primary); font-size:18px;"></i></span>
                   <div class="badge-text">
-                    <h3>{{ 'trans.records_title' | translate:currentLang }}</h3>
+                    <h3>🚚 {{ 'trans.records_title' | translate:currentLang }}</h3>
                   </div>
                 </div>
               </div>
@@ -1816,28 +1816,28 @@
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-person-badge text-primary" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Active Roster</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🧑‍✈️ Active Roster</div>
               <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalDriversCount() }} Drivers</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-card-checklist text-success" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Licensed Fleet</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">✅ Licensed Fleet</div>
               <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">{{ getLicensedDriversCount() }} Verified</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-geo-alt-fill text-info" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Route Ready</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🛣️ Route Ready</div>
               <strong style="font-size: 13px; color: var(--color-info); font-family: var(--font-heading);">100% Available</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-shield-check text-warning" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Compliance</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🛡️ Compliance</div>
               <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">RTO Cleared</strong>
             </div>
           </div>
@@ -1849,7 +1849,7 @@
               <div style="display: flex; align-items: center; gap: 12px;">
                 <span class="badge-icon"><i class="bi bi-person-badge" style="color:var(--primary); font-size:18px;"></i></span>
                 <div class="badge-text">
-                  <h3>{{ editingDriverId ? 'Edit Driver Profile' : ('driver.add_title' | translate:currentLang) }}</h3>
+                  <h3>🧑‍✈️ {{ editingDriverId ? 'Edit Driver Profile' : ('driver.add_title' | translate:currentLang) }}</h3>
                   <p class="subtitle">Register and verify commercial vehicle drivers</p>
                 </div>
               </div>
@@ -1857,19 +1857,19 @@
             </div>
             <form (submit)="saveDriver()">
               <div class="form-group">
-                <label>{{ 'driver.name' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>🧑‍✈️ {{ 'driver.name' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="driverForm.driverName" name="dName" required placeholder="Driver full name">
               </div>
               <div class="form-group">
-                <label>{{ 'driver.mobile' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>📞 {{ 'driver.mobile' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="driverForm.mobile" name="dMobile" required placeholder="10-digit mobile">
               </div>
               <div class="form-group">
-                <label>{{ 'driver.license' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>🪪 {{ 'driver.license' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="driverForm.licenseNumber" name="dLic" required placeholder="Driver License ID">
               </div>
               <div class="form-group">
-                <label>{{ 'driver.address' | translate:currentLang }}</label>
+                <label>📍 {{ 'driver.address' | translate:currentLang }}</label>
                 <input type="text" [(ngModel)]="driverForm.address" name="dAddr" required placeholder="Residential address">
               </div>
 
@@ -1887,7 +1887,7 @@
               </div>
 
               <button type="submit" class="btn btn-primary" style="width: 100%;">
-                <i class="bi bi-check2 me-1"></i>{{ editingDriverId ? 'Update Driver Profile' : ('driver.register_btn' | translate:currentLang) }}
+                <i class="bi bi-check2 me-1"></i>💾 {{ editingDriverId ? 'Update Driver Profile' : ('driver.register_btn' | translate:currentLang) }}
               </button>
             </form>
           </div>
@@ -1898,7 +1898,7 @@
                 <div class="section-title-badge">
                   <span class="badge-icon"><i class="bi bi-person-vcard" style="color:var(--primary); font-size:18px;"></i></span>
                   <div class="badge-text">
-                    <h3>{{ 'driver.records_title' | translate:currentLang }}</h3>
+                    <h3>🧑‍✈️ {{ 'driver.records_title' | translate:currentLang }}</h3>
                   </div>
                 </div>
               </div>
@@ -2051,28 +2051,28 @@
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-cpu-fill text-primary" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Fleet</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">⚙️ Total Fleet</div>
               <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalMachinesCount() }} Units</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-play-circle-fill text-success" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Active / Running</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">✅ Active / Running</div>
               <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">{{ getRunningMachinesCount() }} Online</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-tools text-warning" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">In Maintenance</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🔧 In Maintenance</div>
               <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">{{ getMaintenanceMachinesCount() }} Units</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-speedometer2 text-info" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Fleet Utilization</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">📊 Fleet Utilization</div>
               <strong style="font-size: 13px; color: var(--color-info); font-family: var(--font-heading);">{{ getFleetUtilizationRate() }}% Capacity</strong>
             </div>
           </div>
@@ -2084,7 +2084,7 @@
               <div style="display: flex; align-items: center; gap: 12px;">
                 <span class="badge-icon"><i class="bi bi-cpu" style="color:var(--primary); font-size:18px;"></i></span>
                 <div class="badge-text">
-                  <h3>{{ editingMachineId ? 'Edit Machine Profile' : ('machine.title' | translate:currentLang) }}</h3>
+                  <h3>⚙️ {{ editingMachineId ? 'Edit Machine Profile' : ('machine.title' | translate:currentLang) }}</h3>
                   <p class="subtitle">Injection moulding unit configuration & status</p>
                 </div>
               </div>
@@ -2092,23 +2092,23 @@
             </div>
             <form (submit)="saveMachine()">
               <div class="form-group">
-                <label>{{ 'machine.name' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>⚙️ {{ 'machine.name' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="machineForm.machineName" name="mName" required placeholder="e.g. Injection Moulding Machine 1">
               </div>
               <div class="form-group">
-                <label>{{ 'machine.code' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>🏷️ {{ 'machine.code' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="machineForm.machineCode" name="mCode" required placeholder="e.g. IMM-003">
               </div>
               <div class="form-group">
-                <label>{{ 'machine.capacity_hour' | translate:currentLang }}</label>
+                <label>⚡ {{ 'machine.capacity_hour' | translate:currentLang }}</label>
                 <input type="number" [(ngModel)]="machineForm.capacityPerHour" name="mCapacity" required>
               </div>
               <div class="form-group">
-                <label>{{ 'machine.installed' | translate:currentLang }}</label>
+                <label>📅 {{ 'machine.installed' | translate:currentLang }}</label>
                 <input type="date" [(ngModel)]="machineForm.installedDate" name="mDate" required>
               </div>
               <div class="form-group">
-                <label>{{ 'machine.status' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>📌 {{ 'machine.status' | translate:currentLang }} <span class="req-star">*</span></label>
                 <select [(ngModel)]="machineForm.status" name="mStatus" required>
                   <option value="Running">Running</option>
                   <option value="Idle">Idle</option>
@@ -2131,7 +2131,7 @@
               </div>
 
               <button type="submit" class="btn btn-primary" style="width:100%">
-                <i class="bi bi-check2 me-1"></i>{{ editingMachineId ? 'Update Machine' : ('btn.save' | translate:currentLang) }}
+                <i class="bi bi-check2 me-1"></i>💾 {{ editingMachineId ? 'Update Machine' : ('btn.save' | translate:currentLang) }}
               </button>
             </form>
 
@@ -2140,7 +2140,7 @@
               <div style="display: flex; align-items: center; gap: 12px;">
                 <span class="badge-icon"><i class="bi bi-exclamation-triangle-fill" style="color:var(--primary); font-size:18px;"></i></span>
                 <div class="badge-text">
-                  <h3 style="font-size: 15px;">{{ editingBreakdownId ? 'Edit Breakdown Record' : 'Log Machine Breakdown' }}</h3>
+                  <h3 style="font-size: 15px;">🚨 {{ editingBreakdownId ? 'Edit Breakdown Record' : 'Log Machine Breakdown' }}</h3>
                   <p class="subtitle">Record downtime & maintenance resolution</p>
                 </div>
               </div>
@@ -2148,25 +2148,25 @@
             </div>
             <form (submit)="saveBreakdown()">
               <div class="form-group">
-                <label>{{ 'label.select_machine' | translate:currentLang }}</label>
+                <label>⚙️ {{ 'label.select_machine' | translate:currentLang }}</label>
                 <select [(ngModel)]="breakdownForm.id" name="bdMachine" required>
                   <option *ngFor="let m of machinesList" [value]="m.id">{{ m.machineName }}</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>Breakdown Date</label>
+                <label>📅 Breakdown Date</label>
                 <input type="date" [(ngModel)]="breakdownForm.breakdownDate" name="bdDate" required>
               </div>
               <div class="form-group">
-                <label>Description</label>
+                <label>📝 Description</label>
                 <input type="text" [(ngModel)]="breakdownForm.description" name="bdDesc" required placeholder="What failed?">
               </div>
               <div class="form-group">
-                <label>Downtime (hours)</label>
+                <label>⏱️ Downtime (hours)</label>
                 <input type="number" [(ngModel)]="breakdownForm.downtimeHours" name="bdHours" required>
               </div>
               <div class="form-group">
-                <label>Resolved Date</label>
+                <label>✅ Resolved Date</label>
                 <input type="date" [(ngModel)]="breakdownForm.resolvedDate" name="bdResolved">
               </div>
 
@@ -2184,7 +2184,7 @@
               </div>
 
               <button type="submit" class="btn btn-primary" style="width:100%">
-                <i class="bi bi-check2 me-1"></i>{{ editingBreakdownId ? 'Update Breakdown' : 'Log Breakdown' }}
+                <i class="bi bi-check2 me-1"></i>💾 {{ editingBreakdownId ? 'Update Breakdown' : 'Log Breakdown' }}
               </button>
             </form>
           </div>
@@ -2195,7 +2195,7 @@
                 <div class="section-title-badge">
                   <span class="badge-icon"><i class="bi bi-gear-fill" style="color:var(--primary); font-size:18px;"></i></span>
                   <div class="badge-text">
-                    <h3>{{ 'machine.records_title' | translate:currentLang }}</h3>
+                    <h3>⚙️ {{ 'machine.records_title' | translate:currentLang }}</h3>
                   </div>
                 </div>
               </div>
@@ -2427,28 +2427,28 @@
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-truck text-primary" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Shipments</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🚚 Total Shipments</div>
               <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalDispatchesCount() }} Manifests</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-geo-alt-fill text-info" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">In Transit</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">📍 In Transit</div>
               <strong style="font-size: 13px; color: var(--color-info); font-family: var(--font-heading);">{{ getInTransitDispatchesCount() }} On Route</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-check-circle-fill text-success" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Fulfilled</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">✅ Delivered</div>
               <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">{{ getDeliveredDispatchesCount() }} Delivered</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-clock-history text-warning" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Pending Clearance</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">⏱️ Pending Clearance</div>
               <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">{{ getPendingDispatchesCount() }} Staged</strong>
             </div>
           </div>
@@ -2460,7 +2460,7 @@
               <div style="display: flex; align-items: center; gap: 12px;">
                 <span class="badge-icon"><i class="bi bi-box-arrow-up-right" style="color:var(--primary); font-size:18px;"></i></span>
                 <div class="badge-text">
-                  <h3>{{ editingDispatchId ? 'Edit Dispatch Record' : ('dispatch.title' | translate:currentLang) }}</h3>
+                  <h3>🚚 {{ editingDispatchId ? 'Edit Dispatch Record' : ('dispatch.title' | translate:currentLang) }}</h3>
                   <p class="subtitle">Record delivery shipments, vehicle registration and consignee tracking</p>
                 </div>
               </div>
@@ -2468,29 +2468,29 @@
             </div>
             <form (submit)="saveDispatch()">
               <div class="form-group">
-                <label>{{ 'label.select_sale' | translate:currentLang }}</label>
+                <label>📦 {{ 'label.select_sale' | translate:currentLang }}</label>
                 <select [(ngModel)]="dispatchForm.id" name="dSale" required>
                   <option *ngFor="let s of salesList" [value]="s.id">{{ s.party.partyName }} - {{ s.crateType }} ({{ s.date }})</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>{{ 'dispatch.date' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>📅 {{ 'dispatch.date' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="date" [(ngModel)]="dispatchForm.dispatchDate" name="dDate" required>
               </div>
               <div class="form-group">
-                <label>{{ 'dispatch.vehicle' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>🚛 {{ 'dispatch.vehicle' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="dispatchForm.vehicleNumber" name="dVehicle" required placeholder="MH-12-AB-1234">
               </div>
               <div class="form-group">
-                <label>{{ 'dispatch.driver' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>🧑‍✈️ {{ 'dispatch.driver' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="dispatchForm.driverName" name="dDriver" required placeholder="Driver full name">
               </div>
               <div class="form-group">
-                <label>{{ 'dispatch.address' | translate:currentLang }}</label>
+                <label>📍 {{ 'dispatch.address' | translate:currentLang }}</label>
                 <input type="text" [(ngModel)]="dispatchForm.deliveryAddress" name="dAddress" required placeholder="Full delivery address">
               </div>
               <div class="form-group">
-                <label>{{ 'dispatch.status' | translate:currentLang }}</label>
+                <label>📌 {{ 'dispatch.status' | translate:currentLang }}</label>
                 <select [(ngModel)]="dispatchForm.dispatchStatus" name="dStatus" required>
                   <option value="Pending">Pending</option>
                   <option value="In Transit">In Transit</option>
@@ -2512,7 +2512,7 @@
               </div>
 
               <button type="submit" class="btn btn-primary" style="width:100%">
-                <i class="bi bi-check2 me-1"></i>{{ editingDispatchId ? 'Update Dispatch Record' : ('dispatch.save_btn' | translate:currentLang) }}
+                <i class="bi bi-check2 me-1"></i>💾 {{ editingDispatchId ? 'Update Dispatch Record' : ('dispatch.save_btn' | translate:currentLang) }}
               </button>
             </form>
           </div>
@@ -2523,7 +2523,7 @@
                 <div class="section-title-badge">
                   <span class="badge-icon"><i class="bi bi-send-check" style="color:var(--primary); font-size:18px;"></i></span>
                   <div class="badge-text">
-                    <h3>{{ 'dispatch.records_title' | translate:currentLang }}</h3>
+                    <h3>🚚 {{ 'dispatch.records_title' | translate:currentLang }}</h3>
                   </div>
                 </div>
               </div>
@@ -2642,28 +2642,28 @@
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-wallet2 text-danger" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Overhead</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">💸 Total Overhead</div>
               <strong style="font-size: 13px; color: var(--color-danger); font-family: var(--font-heading);">₹{{ getAllTimeExpensesTotal() | number:'1.0-0' }}</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-calendar3 text-warning" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Monthly Burn</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🔥 Monthly Burn</div>
               <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">₹{{ getMonthlyExpensesTotal() | number:'1.0-0' }}</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-tag-fill text-info" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Top Category</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🏷️ Top Category</div>
               <strong style="font-size: 13px; color: var(--primary); font-family: var(--font-heading);">{{ getTopExpenseCategory() }}</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-receipt text-primary" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Vouchers Logged</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🧾 Vouchers Logged</div>
               <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalExpensesCount() }} Records</strong>
             </div>
           </div>
@@ -2675,7 +2675,7 @@
               <div style="display: flex; align-items: center; gap: 12px;">
                 <span class="badge-icon"><i class="bi bi-receipt-cutoff" style="color:var(--primary); font-size:18px;"></i></span>
                 <div class="badge-text">
-                  <h3>{{ editingExpenseId ? 'Edit Expense Record' : ('expense.title' | translate:currentLang) }}</h3>
+                  <h3>💸 {{ editingExpenseId ? 'Edit Expense Record' : ('expense.title' | translate:currentLang) }}</h3>
                   <p class="subtitle">Log operational costs, factory overheads and utility bills</p>
                 </div>
               </div>
@@ -2683,11 +2683,11 @@
             </div>
             <form (submit)="saveExpense()">
               <div class="form-group">
-                <label>{{ 'label.date' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>📅 {{ 'label.date' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="date" [(ngModel)]="expenseForm.expenseDate" name="expDate" required>
               </div>
               <div class="form-group">
-                <label>{{ 'expense.category' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>🏷️ {{ 'expense.category' | translate:currentLang }} <span class="req-star">*</span></label>
                 <select [(ngModel)]="expenseForm.category" name="expCat" required>
                   <option value="Maintenance">Maintenance</option>
                   <option value="Office">Office</option>
@@ -2698,11 +2698,11 @@
                 </select>
               </div>
               <div class="form-group">
-                <label>{{ 'expense.description' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>📝 {{ 'expense.description' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="expenseForm.description" name="expDesc" required placeholder="What was the expense for?">
               </div>
               <div class="form-group">
-                <label>{{ 'label.amount' | translate:currentLang }} (₹) <span class="req-star">*</span></label>
+                <label>💵 {{ 'label.amount' | translate:currentLang }} (₹) <span class="req-star">*</span></label>
                 <input type="number" step="0.01" [(ngModel)]="expenseForm.amount" name="expAmt" required placeholder="0.00">
               </div>
 
@@ -2720,7 +2720,7 @@
               </div>
 
               <button type="submit" class="btn btn-primary" style="width:100%">
-                <i class="bi bi-check2 me-1"></i>{{ editingExpenseId ? 'Update Expense' : ('btn.save' | translate:currentLang) }}
+                <i class="bi bi-check2 me-1"></i>💾 {{ editingExpenseId ? 'Update Expense' : ('btn.save' | translate:currentLang) }}
               </button>
             </form>
           </div>
@@ -2731,7 +2731,7 @@
                 <div class="section-title-badge">
                   <span class="badge-icon"><i class="bi bi-wallet2" style="color:var(--primary); font-size:18px;"></i></span>
                   <div class="badge-text">
-                    <h3>{{ 'expense.records_title' | translate:currentLang }}</h3>
+                    <h3>💸 {{ 'expense.records_title' | translate:currentLang }}</h3>
                   </div>
                 </div>
               </div>
@@ -2848,7 +2848,7 @@
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-bank2 text-primary" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Net Bank Balance</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">🏦 Net Bank Balance</div>
               <strong style="font-size: 13px; font-family: var(--font-heading);" [style.color]="getNetBankBalance() >= 0 ? 'var(--color-success)' : 'var(--color-danger)'">
                 ₹{{ getNetBankBalance() | number:'1.0-0' }}
               </strong>
@@ -2857,21 +2857,21 @@
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-arrow-down-left-circle-fill text-success" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Inflow (Credits)</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">📈 Inflow (Credits)</div>
               <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">₹{{ getTotalBankCredits() | number:'1.0-0' }}</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-arrow-up-right-circle-fill text-danger" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Outflow (Debits)</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">📉 Outflow (Debits)</div>
               <strong style="font-size: 13px; color: var(--color-danger); font-family: var(--font-heading);">₹{{ getTotalBankDebits() | number:'1.0-0' }}</strong>
             </div>
           </div>
           <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
             <i class="bi bi-journal-check text-info" style="font-size: 18px;"></i>
             <div>
-              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Txns</div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">📑 Total Txns</div>
               <strong style="font-size: 13px; color: var(--primary); font-family: var(--font-heading);">{{ getTotalBankTxnCount() }} Logged</strong>
             </div>
           </div>
@@ -2883,7 +2883,7 @@
               <div style="display: flex; align-items: center; gap: 12px;">
                 <span class="badge-icon"><i class="bi bi-bank2" style="color:var(--primary); font-size:18px;"></i></span>
                 <div class="badge-text">
-                  <h3>{{ editingBankTxnId ? 'Edit Bank Transaction' : ('bank.title' | translate:currentLang) }}</h3>
+                  <h3>🏦 {{ editingBankTxnId ? 'Edit Bank Transaction' : ('bank.title' | translate:currentLang) }}</h3>
                   <p class="subtitle">Record bank transfers, UPI collections and cheque clearances</p>
                 </div>
               </div>
@@ -2891,26 +2891,26 @@
             </div>
             <form (submit)="saveBankTransaction()">
               <div class="form-group">
-                <label>{{ 'bank.date' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>📅 {{ 'bank.date' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="date" [(ngModel)]="bankTxnForm.transactionDate" name="bDate" required>
               </div>
               <div class="form-group">
-                <label>{{ 'bank.type' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>🔄 {{ 'bank.type' | translate:currentLang }} <span class="req-star">*</span></label>
                 <select [(ngModel)]="bankTxnForm.transactionType" name="bType" required>
                   <option value="Credit">Credit (Income / Inflow)</option>
                   <option value="Debit">Debit (Payment / Outflow)</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>{{ 'bank.amount' | translate:currentLang }} (₹) <span class="req-star">*</span></label>
+                <label>💵 {{ 'bank.amount' | translate:currentLang }} (₹) <span class="req-star">*</span></label>
                 <input type="number" step="0.01" [(ngModel)]="bankTxnForm.amount" name="bAmt" required placeholder="0.00">
               </div>
               <div class="form-group">
-                <label>{{ 'bank.desc' | translate:currentLang }} <span class="req-star">*</span></label>
+                <label>📝 {{ 'bank.desc' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="bankTxnForm.description" name="bDesc" required placeholder="Transaction purpose">
               </div>
               <div class="form-group">
-                <label>{{ 'bank.reference' | translate:currentLang }}</label>
+                <label>🔢 {{ 'bank.reference' | translate:currentLang }}</label>
                 <input type="text" [(ngModel)]="bankTxnForm.referenceNo" name="bRef" placeholder="UPI/NEFT/IMPS Ref #">
               </div>
 
@@ -2928,7 +2928,7 @@
               </div>
 
               <button type="submit" class="btn btn-primary" style="width:100%">
-                <i class="bi bi-check2 me-1"></i>{{ editingBankTxnId ? 'Update Transaction' : ('btn.save' | translate:currentLang) }}
+                <i class="bi bi-check2 me-1"></i>💾 {{ editingBankTxnId ? 'Update Transaction' : ('btn.save' | translate:currentLang) }}
               </button>
             </form>
           </div>
@@ -2939,7 +2939,7 @@
                 <div class="section-title-badge">
                   <span class="badge-icon"><i class="bi bi-journal-text" style="color:var(--primary); font-size:18px;"></i></span>
                   <div class="badge-text">
-                    <h3>{{ 'bank.records_title' | translate:currentLang }}</h3>
+                    <h3>🏦 {{ 'bank.records_title' | translate:currentLang }}</h3>
                   </div>
                 </div>
               </div>
@@ -3089,7 +3089,7 @@
 
               <!-- Full Screen Toggle Button -->
               <button type="button" class="btn btn-secondary btn-sm" (click)="toggleSidebar()" title="Toggle Full Screen View">
-                <i class="bi bi-arrows-fullscreen"></i> {{ isSidebarOpen ? 'Full Screen' : 'Show Sidebar' }}
+                <i class="bi bi-arrows-fullscreen me-1"></i> {{ isSidebarOpen ? 'Full Screen' : 'Show Sidebar' }}
               </button>
 
               <!-- Refresh Button -->

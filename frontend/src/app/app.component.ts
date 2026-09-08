@@ -1439,6 +1439,53 @@ export class AppComponent implements OnInit, OnDestroy {
     }, 500);
   }
 
+  // Automated Tab State Cleanup & Isolation (Dismiss dangling tasks, open modals, unsubmitted edit forms)
+  dismissPreviousTabState() {
+    try {
+      // 1. Reset all active entity edit IDs safely
+      const self = this as any;
+      if ('editingPartyId' in self) self.editingPartyId = null;
+      if ('editingSaleId' in self) self.editingSaleId = null;
+      if ('editingBreakdownId' in self) self.editingBreakdownId = null;
+      if ('editingEmployeeId' in self) self.editingEmployeeId = null;
+      if ('editingSalaryId' in self) self.editingSalaryId = null;
+      if ('editingMachineId' in self) self.editingMachineId = null;
+      if ('editingVendorId' in self) self.editingVendorId = null;
+      if ('editingTransportId' in self) self.editingTransportId = null;
+      if ('editingDriverId' in self) self.editingDriverId = null;
+      if ('editingDispatchId' in self) self.editingDispatchId = null;
+      if ('editingExpenseId' in self) self.editingExpenseId = null;
+      if ('editingRawId' in self) self.editingRawId = null;
+      if ('editingBankId' in self) self.editingBankId = null;
+
+      // 2. Safely call form cancellation handlers to clear partial inputs
+      if (typeof this.cancelEditParty === 'function') this.cancelEditParty();
+      if (typeof this.cancelEditSale === 'function') this.cancelEditSale();
+      if (typeof this.cancelEditBreakdown === 'function') this.cancelEditBreakdown();
+      if (typeof this.cancelEditEmployee === 'function') this.cancelEditEmployee();
+      if (typeof this.cancelEditSalary === 'function') this.cancelEditSalary();
+      if (typeof this.cancelEditMachine === 'function') this.cancelEditMachine();
+      if (typeof this.cancelEditVendor === 'function') this.cancelEditVendor();
+      if (typeof this.cancelEditTransport === 'function') this.cancelEditTransport();
+      if (typeof this.cancelEditDriver === 'function') this.cancelEditDriver();
+      if (typeof this.cancelEditDispatch === 'function') this.cancelEditDispatch();
+      if (typeof this.cancelEditExpense === 'function') this.cancelEditExpense();
+      if (typeof this.cancelEditRawMaterial === 'function') this.cancelEditRawMaterial();
+      if (typeof this.cancelEditBankTxn === 'function') this.cancelEditBankTxn();
+
+      // 3. Dismiss all open dropdowns, popovers, and menus
+      if (typeof this.closeAllExportDropdowns === 'function') this.closeAllExportDropdowns();
+      this.showColDropdown = {};
+      this.showFilters = false;
+
+      // 4. Reset table selection state safely
+      if ('selectedRowIds' in self) self.selectedRowIds = {};
+      if ('tableSelectionState' in self) self.tableSelectionState = {};
+    } catch (e) {
+      console.warn('Tab cleanup executed with non-critical warning:', e);
+    }
+  }
+
   // --- Tab Switcher ---
   switchTab(tab: string) {
     if (this.forcePasswordChangeMode && tab !== 'settings') {
@@ -1450,6 +1497,9 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     if (this.accessibleTabs[tab]) {
+      // Isolate and clean up any dangling task or edit state from previous tab
+      this.dismissPreviousTabState();
+
       this.activeTab = tab;
       sessionStorage.setItem('activeTab', tab);
       this.currentPage = 1;

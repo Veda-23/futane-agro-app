@@ -11,7 +11,7 @@
     <div class="toolbar-actions">
       <!-- Selected Context Actions -->
       <ng-container *ngIf="selectedRows.size > 0">
-        <button *ngIf="selectedRows.size === 1" class="btn btn-secondary btn-sm" (click)="emitEditSelected()">
+        <button *ngIf="selectedRows.size === 1" class="btn btn-warning btn-sm" (click)="emitEditSelected()">
           <i class="bi bi-pencil" style="font-size: 11px;"></i> Edit Selected
         </button>
         <button class="btn btn-danger btn-sm" (click)="emitBatchDelete()">
@@ -23,19 +23,12 @@
       </ng-container>
 
       <!-- Global Export Actions -->
-      <div *ngIf="!hideToolbarSearch" class="export-dropdown-wrapper">
-        <button type="button" class="btn btn-secondary btn-sm" (click)="toggleExportMenu($event)">
-          <i class="bi bi-download" style="font-size: 11px;"></i> Export &#x25BE;
-        </button>
-        <div class="export-menu" *ngIf="showExportMenu" (click)="$event.stopPropagation()">
-          <button type="button" class="export-menu-item" (click)="exportCSV(); showExportMenu = false">
-            <i class="bi bi-file-earmark-spreadsheet me-1"></i> CSV (.csv)
-          </button>
-          <button type="button" class="export-menu-item" (click)="exportExcel(); showExportMenu = false">
-            <i class="bi bi-file-earmark-excel me-1"></i> Excel (.xlsx)
-          </button>
-        </div>
-      </div>
+      <button *ngIf="!hideToolbarSearch" class="btn btn-secondary btn-sm" (click)="exportCSV()">
+        <i class="bi bi-file-earmark-spreadsheet" style="font-size: 12px;"></i> CSV
+      </button>
+      <button *ngIf="!hideToolbarSearch" class="btn btn-primary btn-sm" (click)="exportExcel()">
+        <i class="bi bi-file-earmark-excel" style="font-size: 12px;"></i> Excel
+      </button>
     </div>
   </div>
 
