@@ -69,36 +69,36 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   getFormattedTabTitle(tab: string): string {
     if (!tab || tab.toLowerCase().trim() === 'dashboard') {
-      return '📊 Command Center';
+      return 'Command Center';
     }
     const cleanKey = tab.toLowerCase().trim();
     const titles: { [key: string]: string } = {
-      'production': '🏭 Daily Production',
-      'monthly-production': '📅 Monthly Summary',
-      'monthly_production': '📅 Monthly Summary',
-      'machines': '⚙️ Factory Machines',
-      'parties': '👥 Parties & Customers',
-      'sales': '📦 Sales Orders',
-      'payments': '💳 Payment Registry',
-      'payment-registry': '💳 Payment Registry',
-      'invoices': '🧾 Invoices & Bills',
-      'billinghub': '🛒 Billing Hub',
-      'billing-hub': '🛒 Billing Hub',
-      'inventory': '📦 Live Inventory',
-      'raw-materials': '🧪 Raw Materials',
-      'raw_materials': '🧪 Raw Materials',
-      'vendors': '🤝 Vendors Directory',
-      'transports': '🚛 Logistics & Transport',
-      'drivers': '🚚 Drivers & Fleet',
-      'dispatch': '📋 Dispatches & Challans',
-      'expenses': '💸 Expense Tracker',
-      'bank': '🏦 Bank & Cash Treasury',
-      'employees': '👷 Staff & Workers',
-      'salaries': '💵 Salary & Payroll',
-      'analytics': '📈 Analytics & BI',
-      'reports': '📑 Reports & Statements',
-      'audit-logs': '🛡️ Security Audit Logs',
-      'settings': '⚙️ System Settings'
+      'production': 'Daily Production',
+      'monthly-production': 'Monthly Summary',
+      'monthly_production': 'Monthly Summary',
+      'machines': 'Factory Machines',
+      'parties': 'Parties & Customers',
+      'sales': 'Sales Orders',
+      'payments': 'Payment Registry',
+      'payment-registry': 'Payment Registry',
+      'invoices': 'Invoices & Bills',
+      'billinghub': 'Billing Hub',
+      'billing-hub': 'Billing Hub',
+      'inventory': 'Live Inventory',
+      'raw-materials': 'Raw Materials',
+      'raw_materials': 'Raw Materials',
+      'vendors': 'Vendors Directory',
+      'transports': 'Logistics & Transport',
+      'drivers': 'Drivers & Fleet',
+      'dispatch': 'Dispatches & Challans',
+      'expenses': 'Expense Tracker',
+      'bank': 'Bank & Cash Treasury',
+      'employees': 'Staff & Workers',
+      'salaries': 'Salary & Payroll',
+      'analytics': 'Analytics & BI',
+      'reports': 'Reports & Statements',
+      'audit-logs': 'Security Audit Logs',
+      'settings': 'System Settings'
     };
     return titles[cleanKey] || tab.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   }

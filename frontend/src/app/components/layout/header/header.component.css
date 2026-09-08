@@ -11,16 +11,16 @@
   height: var(--header-height, 52px);
   background: var(--header-bg, #FFFFFF);
   border-bottom: 1px solid var(--border-color, #E2E8F0);
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   padding: 0 var(--header-padding-x, 14px);
   position: sticky;
   top: 0;
   z-index: 990;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  gap: 10px;
+  gap: 12px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -30,7 +30,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
+  min-width: 0;
+  justify-self: start;
 }
 
 .mobile-toggle-btn {
@@ -77,6 +78,9 @@
   color: var(--text-primary);
   margin: 0;
   white-space: nowrap;
+  max-width: 175px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Telemetry Pills */
@@ -125,10 +129,11 @@
 
 /* Center Zone: Omnisearch */
 .header-center {
-  flex: 0 1 230px;
-  max-width: 250px;
-  min-width: 150px;
-  margin: 0 8px;
+  justify-self: center;
+  width: 250px;
+  max-width: 280px;
+  min-width: 180px;
+  margin: 0;
 }
 
 .omnisearch-box {
@@ -275,6 +280,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  justify-self: end;
   flex-shrink: 0;
 }
 
@@ -677,6 +683,8 @@
 
 @media (max-width: 768px) {
   .app-header {
+    display: flex;
+    justify-content: space-between;
     padding: 0 14px;
   }
   .header-center {
