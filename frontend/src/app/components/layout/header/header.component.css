@@ -11,31 +11,30 @@
   height: var(--header-height, 52px);
   background: var(--header-bg, #FFFFFF);
   border-bottom: 1px solid var(--border-color, #E2E8F0);
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
   align-items: center;
-  padding: 0 var(--header-padding-x, 14px);
+  justify-content: space-between;
+  padding: 0 12px;
   position: sticky;
   top: 0;
   z-index: 990;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  gap: 12px;
+  gap: 8px;
   width: 100%;
   box-sizing: border-box;
 }
 
-/* Left Zone */
+/* Left Zone: Tab Hide Toggle, Breadcrumb, Telemetry */
 .header-left {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-width: 0;
-  justify-self: start;
+  flex-shrink: 0;
 }
 
 .mobile-toggle-btn {
-  display: none;
+  display: flex !important; /* Sidebar / tab drawer hide toggle button — ALWAYS VISIBLE */
   background: transparent;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md, 6px);
@@ -57,28 +56,32 @@
   display: flex;
   align-items: center;
   gap: 5px;
+  width: 145px; /* Locked width so breadcrumb never pushes search or right buttons on tab switch */
+  flex-shrink: 0;
 }
 
 .breadcrumb-root {
   font-size: 11px;
   font-weight: 700;
   color: var(--text-muted);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
 }
 
 .breadcrumb-sep {
   color: var(--text-muted);
   font-size: 11px;
+  flex-shrink: 0;
 }
 
 .breadcrumb-current {
   font-family: var(--font-heading, 'Plus Jakarta Sans', sans-serif);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
   white-space: nowrap;
-  max-width: 175px;
+  max-width: 105px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -88,13 +91,14 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .telemetry-pill {
   display: flex;
   align-items: center;
-  height: 26px;
-  padding: 0 8px;
+  height: 25px;
+  padding: 0 7px;
   border-radius: var(--radius-pill);
   font-size: 10.5px;
   font-weight: 600;
@@ -102,6 +106,7 @@
   background: var(--bg-hover);
   color: var(--text-secondary);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .env-pill {
@@ -129,11 +134,10 @@
 
 /* Center Zone: Omnisearch */
 .header-center {
-  justify-self: center;
-  width: 250px;
-  max-width: 280px;
-  min-width: 180px;
-  margin: 0;
+  flex: 0 1 200px;
+  max-width: 220px;
+  min-width: 130px;
+  margin: 0 4px;
 }
 
 .omnisearch-box {
@@ -143,23 +147,23 @@
 
 .search-icon {
   position: absolute;
-  left: 11px;
+  left: 10px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-muted);
   pointer-events: none;
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
 }
 
 .omnisearch-input {
   width: 100%;
-  height: 36px;
-  padding: 0 46px 0 34px;
+  height: 34px;
+  padding: 0 38px 0 30px;
   background: var(--bg-hover, #f8fafc);
   border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: var(--radius-md, 8px);
-  font-size: 13px;
+  border-radius: var(--radius-md, 7px);
+  font-size: 12.5px;
   font-weight: 500;
   color: var(--text-primary);
   outline: none;
@@ -175,21 +179,20 @@
 
 .omnisearch-kbd {
   position: absolute;
-  right: 8px;
+  right: 6px;
   top: 50%;
   transform: translateY(-50%);
   background: var(--bg-surface, #ffffff);
   border: 1px solid var(--border-color, #cbd5e1);
   border-radius: 4px;
-  padding: 0 6px;
-  font-size: 10px;
+  padding: 0 4px;
+  font-size: 9.5px;
   font-weight: 700;
-  height: 20px;
-  line-height: 18px;
+  height: 18px;
+  line-height: 16px;
   font-family: var(--font-mono, monospace);
   color: var(--text-secondary, #475569);
   pointer-events: none;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 @keyframes headerDropdownFade {
@@ -280,7 +283,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  justify-self: end;
+  margin-left: auto;
   flex-shrink: 0;
 }
 
