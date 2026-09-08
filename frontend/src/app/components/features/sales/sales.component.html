@@ -1,145 +1,1090 @@
-<!-- 5. Sales Entry Tab -->
-<div *ngIf="activeTab === 'sales'">
-  <div class="enterprise-header">
-    <div class="enterprise-header-title-group">
-      <div class="enterprise-header-icon"><i class="bi bi-graph-up-arrow"></i></div>
-      <div class="enterprise-header-text">
-        <h2>Sales & Order Management</h2>
-        <p>Record crate sales, customer party orders, pricing rates, and GST totals</p>
+<div class="sales-screen-wrapper">
+  <!-- 1. STABLE PAGE HEADER -->
+  <header class="sales-page-header">
+    <div class="header-left-col">
+      <div class="header-breadcrumb">
+        <span>ERP</span>
+        <span class="breadcrumb-separator">/</span>
+        <span>COMMERCIAL OPERATIONS</span>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-active">SALES & REVENUE ORDERS</span>
+      </div>
+      <div class="header-title-row">
+        <div class="header-icon-box">
+          <i class="bi bi-cart-check-fill"></i>
+        </div>
+        <div>
+          <h1 class="header-main-title">Sales Entry & Commercial Orders</h1>
+          <p class="header-subtitle">Manage fruit crate commercial orders, customer billing, instant UPI/Razorpay collections, and real-time receivables ledger.</p>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="grid-cols-3">
-    <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
-      <h3 style="margin-bottom:14px;font-weight:700;"><i class="bi bi-plus-lg me-1"></i>{{ 'sales.add_title' | translate:currentLang }}</h3>
-      <form (submit)="saveSales()">
-        <div class="form-group">
-          <label>{{ 'label.date' | translate:currentLang }}</label>
-          <input appAutoSelect type="date" [(ngModel)]="salesForm.date" name="salesDate" required>
-        </div>
-        <div class="form-group">
-          <label>{{ 'label.select_party' | translate:currentLang }}</label>
-          <select [(ngModel)]="salesForm.id" name="salesParty" required>
-            <option *ngFor="let party of parties" [value]="party.id">{{ party.partyName }}</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>{{ 'sales.crate_type' | translate:currentLang }}</label>
-          <select [(ngModel)]="salesForm.crateType" name="salesCrateType" required>
-            <option value="Apple Crate">Apple Crate</option>
-            <option value="Tomato Tray">Tomato Tray</option>
-            <option value="Mango Box">Mango Box</option>
-            <option value="Grape Box">Grape Box</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>{{ 'sales.crate_material' | translate:currentLang }}</label>
-          <input appAutoSelect type="text" [(ngModel)]="salesForm.crateMaterial" name="salesMaterial" required>
-        </div>
-        <div class="form-group">
-          <label>{{ 'sales.quantity' | translate:currentLang }}</label>
-          <input appAutoSelect type="number" [(ngModel)]="salesForm.quantity" name="salesQty" required (input)="calculateSalesTotal()">
-        </div>
-        <div class="form-group">
-          <label>{{ 'sales.rate' | translate:currentLang }}</label>
-          <input appAutoSelect type="number" step="0.01" [(ngModel)]="salesForm.rate" name="salesRate" required (input)="calculateSalesTotal()">
-        </div>
-        <div class="form-group">
-          <label>{{ 'sales.paid' | translate:currentLang }}</label>
-          <input appAutoSelect type="number" step="0.01" [(ngModel)]="salesForm.paid" name="salesPaid" required (input)="calculateSalesTotal()">
-        </div>
-        <!-- Calculates automatically -->
-        <div class="form-group">
-          <label>{{ 'sales.total' | translate:currentLang }}</label>
-          <input appAutoSelect type="number" [value]="salesForm.totalAmount" disabled style="background: rgba(255,255,255,0.02); color: var(--accent-orange); font-weight: bold;">
-        </div>
-        <div class="form-group">
-          <label>{{ 'sales.remaining' | translate:currentLang }}</label>
-          <input appAutoSelect type="number" [value]="salesForm.remaining" disabled style="background: rgba(255,255,255,0.02); color: var(--accent-red); font-weight: bold;">
-        </div>
-        <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'sales.save_btn' | translate:currentLang }}</button>
-      </form>
+    <div class="header-right-col">
+      <button 
+        type="button" 
+        class="btn-header-action btn-secondary" 
+        (click)="loadData(true)" 
+        [disabled]="isRefreshing"
+        title="Reload fresh data from database">
+        <i class="bi bi-arrow-clockwise" [class.spin-anim]="isRefreshing"></i>
+        <span>Refresh</span>
+      </button>
+
+      <button 
+        type="button" 
+        class="btn-header-action btn-secondary" 
+        (click)="exportToCsv()"
+        title="Export current view to CSV">
+        <i class="bi bi-filetype-csv"></i>
+        <span>CSV</span>
+      </button>
+
+      <button 
+        type="button" 
+        class="btn-header-action btn-secondary" 
+        (click)="exportToExcel()"
+        title="Export ledger for Microsoft Excel">
+        <i class="bi bi-file-earmark-excel"></i>
+        <span>Excel</span>
+      </button>
+
+      <button 
+        *ngIf="!isViewer()" 
+        type="button" 
+        class="btn-header-action btn-primary" 
+        (click)="toggleFormVisibility()"
+        title="Create new sales order">
+        <i class="bi" [ngClass]="isFormVisible ? 'bi-dash-lg' : 'bi-plus-lg'"></i>
+        <span>{{ isFormVisible ? 'Close Form' : 'New Sales Order' }}</span>
+      </button>
     </div>
-    <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
-      <h3>{{ 'sales.records_title' | translate:currentLang }}</h3>
-      
-      <!-- Skeleton Loader (A-01) -->
-      <div *ngIf="isLoading" class="skeleton-container" aria-busy="true" aria-label="Loading sales...">
-        <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5,6]"></div>
-      </div>
+  </header>
 
-      <!-- Error State -->
-      <div *ngIf="!isLoading && hasError" class="empty-state" style="padding:40px; text-align:center;">
-        <div style="margin-bottom:12px;"><i class="bi bi-exclamation-triangle text-danger" style="font-size:48px;"></i></div>
-        <h3 style="color: var(--text-primary);">Failed to Load Sales Data</h3>
-        <p style="color: var(--text-secondary); margin-bottom:16px;">Could not connect to the server. Please check your connection.</p>
-        <button class="btn btn-primary" (click)="loadData()"><i class="bi bi-arrow-repeat me-1"></i>Retry</button>
-      </div>
+  <!-- 2. SUBNAV TABS BAR -->
+  <nav class="sales-subnav-bar" aria-label="Sales filtering subtabs">
+    <button 
+      type="button" 
+      class="subnav-tab-btn" 
+      [class.active]="subTab === 'all'" 
+      (click)="setSubTab('all')">
+      <i class="bi bi-list-columns"></i>
+      <span>All Orders</span>
+      <span class="tab-badge default">{{ getTotalOrdersCount() }}</span>
+    </button>
 
-      <div *ngIf="!isLoading && !hasError">
-        <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
-          <div class="column-visibility-dropdown" style="position:relative;">
-            <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('sales')" style="padding: 6px 12px; font-size: 13px;">
-              <i class="bi bi-layout-three-columns me-1"></i>Columns
-            </button>
-            <div class="dropdown-menu" *ngIf="showColDropdown['sales']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
-              <label *ngFor="let col of getTableColumns('sales')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-                <input appAutoSelect type="checkbox" [checked]="isColumnVisible('sales', col)" (change)="toggleColumn('sales', col)" style="width:auto; margin:0; cursor:pointer;">
-                {{col}}
-              </label>
-            </div>
+    <button 
+      type="button" 
+      class="subnav-tab-btn" 
+      [class.active]="subTab === 'pending'" 
+      (click)="setSubTab('pending')">
+      <i class="bi bi-hourglass-split"></i>
+      <span>Payment Pending</span>
+      <span class="tab-badge warning">{{ getPendingCount() }}</span>
+    </button>
+
+    <button 
+      type="button" 
+      class="subnav-tab-btn" 
+      [class.active]="subTab === 'paid'" 
+      (click)="setSubTab('paid')">
+      <i class="bi bi-check-circle-fill"></i>
+      <span>Fully Settled</span>
+      <span class="tab-badge success">{{ getPaidCount() }}</span>
+    </button>
+
+    <button 
+      type="button" 
+      class="subnav-tab-btn" 
+      [class.active]="subTab === 'high_volume'" 
+      (click)="setSubTab('high_volume')">
+      <i class="bi bi-boxes"></i>
+      <span>High Volume (10k+)</span>
+      <span class="tab-badge info">{{ getHighVolumeCount() }}</span>
+    </button>
+  </nav>
+
+  <!-- 3. TELEMETRY RIBBON (5 BALANCED KPI CARDS) -->
+  <section class="sales-kpi-ribbon" aria-label="Commercial sales metrics">
+    <!-- Card 1: Total Orders -->
+    <div class="kpi-card">
+      <div class="kpi-icon-wrapper primary">
+        <i class="bi bi-receipt"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Commercial Orders</span>
+        <div class="kpi-value-row">
+          <span class="kpi-number">{{ getTotalOrdersCount() }}</span>
+          <span class="kpi-trend up"><i class="bi bi-arrow-up-short"></i>Active</span>
+        </div>
+        <span class="kpi-meta">All-time sales contracts</span>
+      </div>
+    </div>
+
+    <!-- Card 2: Gross Billed Value -->
+    <div class="kpi-card">
+      <div class="kpi-icon-wrapper warning">
+        <i class="bi bi-currency-rupee"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Gross Billed Value</span>
+        <div class="kpi-value-row">
+          <span class="kpi-number text-warning">{{ getTotalSalesAmount() | inr }}</span>
+        </div>
+        <span class="kpi-meta">Cumulative invoiced amount</span>
+      </div>
+    </div>
+
+    <!-- Card 3: Cleared Collections -->
+    <div class="kpi-card">
+      <div class="kpi-icon-wrapper success">
+        <i class="bi bi-shield-check"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Realized Collections</span>
+        <div class="kpi-value-row">
+          <span class="kpi-number text-success">{{ getTotalSalesPaid() | inr }}</span>
+        </div>
+        <span class="kpi-meta">Received in cash & bank</span>
+      </div>
+    </div>
+
+    <!-- Card 4: Outstanding Receivables -->
+    <div class="kpi-card">
+      <div class="kpi-icon-wrapper danger">
+        <i class="bi bi-clock-history"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Balance Pending</span>
+        <div class="kpi-value-row">
+          <span class="kpi-number text-danger">{{ getTotalSalesPending() | inr }}</span>
+        </div>
+        <span class="kpi-meta">Outstanding receivables</span>
+      </div>
+    </div>
+
+    <!-- Card 5: Collection Rate Efficiency -->
+    <div class="kpi-card">
+      <div class="kpi-icon-wrapper info">
+        <i class="bi bi-pie-chart-fill"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Collection Rate</span>
+        <div class="kpi-value-row">
+          <span class="kpi-number text-info">{{ getCollectionEfficiency() }}%</span>
+          <div class="kpi-progress-track">
+            <div class="kpi-progress-bar" [style.width.%]="getCollectionEfficiency()"></div>
           </div>
         </div>
-        <div class="table-container table-responsive">
-        <table class="table" appResizableTable tableId="sales_table">
-          <thead>
-            <tr>
-              <th *ngIf="isColumnVisible('sales', 'Date')" (click)="setSort('date')" style="cursor:pointer; min-width:110px;">{{ 'label.date' | translate:currentLang }} <span *ngIf="sortField === 'date'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('sales', 'Party')" (click)="setSort('party.partyName')" style="cursor:pointer; min-width:160px;">{{ 'party.name' | translate:currentLang }} <span *ngIf="sortField === 'party.partyName'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('sales', 'Crate Type')" (click)="setSort('crateType')" style="cursor:pointer; min-width:180px;">{{ 'sales.crate_type' | translate:currentLang }} <span *ngIf="sortField === 'crateType'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('sales', 'Quantity')" (click)="setSort('quantity')" style="cursor:pointer; min-width:100px;">{{ 'sales.quantity' | translate:currentLang }} <span *ngIf="sortField === 'quantity'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('sales', 'Rate')" (click)="setSort('rate')" style="cursor:pointer; min-width:100px;">{{ 'sales.rate' | translate:currentLang }} <span *ngIf="sortField === 'rate'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('sales', 'Total')" (click)="setSort('totalAmount')" style="cursor:pointer; min-width:120px;">{{ 'sales.total' | translate:currentLang }} <span *ngIf="sortField === 'totalAmount'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('sales', 'Paid')" (click)="setSort('paid')" style="cursor:pointer; min-width:120px;">{{ 'sales.paid' | translate:currentLang }} <span *ngIf="sortField === 'paid'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('sales', 'Remaining')" (click)="setSort('remaining')" style="cursor:pointer; min-width:120px;">{{ 'sales.remaining' | translate:currentLang }} <span *ngIf="sortField === 'remaining'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('sales', 'Actions')" style="min-width:140px;">{{ 'label.actions' | translate:currentLang }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let sale of getProcessedList(salesList, 'sales'); trackBy: trackBySaleId">
-              <td *ngIf="isColumnVisible('sales', 'Date')"><span class="date-cell">{{ sale.date | indianDate }}</span></td>
-              <td *ngIf="isColumnVisible('sales', 'Party')" style="font-weight:700;">{{ sale.party?.partyName }}</td>
-              <td *ngIf="isColumnVisible('sales', 'Crate Type')">{{ sale.crateType }} ({{ sale.crateMaterial || 'Plastic' }})</td>
-              <td *ngIf="isColumnVisible('sales', 'Quantity')" style="font-weight:700;">{{ sale.quantity | number }}</td>
-              <td *ngIf="isColumnVisible('sales', 'Rate')">₹{{ sale.rate | number:'1.2-2' }}</td>
-              <td *ngIf="isColumnVisible('sales', 'Total')" style="font-weight:700; color:var(--text-primary);">₹{{ sale.totalAmount | number:'1.2-2' }}</td>
-              <td *ngIf="isColumnVisible('sales', 'Paid')"><span class="badge badge-success" style="font-weight:700;">₹{{ sale.paid | number:'1.2-2' }}</span></td>
-              <td *ngIf="isColumnVisible('sales', 'Remaining')"><span class="badge badge-danger" style="font-weight:700;">₹{{ sale.remaining | number:'1.2-2' }}</span></td>
-              <td *ngIf="isColumnVisible('sales', 'Actions')" style="display:flex; gap:6px;">
-                <button class="btn btn-secondary btn-sm" *ngIf="!isViewer()" (click)="editSale(sale)"><i class="bi bi-pencil me-1"></i>Edit</button>
-                <button class="btn btn-primary btn-sm" *ngIf="sale.remaining > 0" (click)="payWithRazorpay(sale)">Pay Now</button>
-                <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteSale(sale.id)">{{ 'btn.delete' | translate:currentLang }}</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <span class="kpi-meta">Receivables efficiency</span>
       </div>
-      <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
-        <span style="font-size:13px; color:var(--text-secondary);">
-          Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['sales'] || 0) }} of {{ tableFilteredCounts['sales'] || 0 }} entries
-        </span>
-        <div style="display:flex; gap:8px;">
-          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
-            Previous
-          </button>
-          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['sales'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
-            Next
-          </button>
+    </div>
+  </section>
+
+  <!-- 4. COLLAPSIBLE ADD / EDIT SALES ORDER FORM -->
+  <section 
+    *ngIf="isFormVisible && !isViewer()" 
+    class="sales-form-card" 
+    aria-label="Sales entry form">
+    <div class="form-card-header">
+      <div class="form-header-title">
+        <div class="form-icon-pill">
+          <i class="bi" [ngClass]="editingSaleId ? 'bi-pencil-square' : 'bi-cart-plus-fill'"></i>
+        </div>
+        <div>
+          <h2 class="form-title-text">{{ editingSaleId ? 'Edit Commercial Sales Order' : 'Create New Commercial Sales Order' }}</h2>
+          <span class="form-subtitle-text">
+            {{ editingSaleId ? 'Modify existing sales transaction and update financial accounts.' : 'Enter customer details, crate model specifications, volume, and initial payment.' }}
+          </span>
+        </div>
+      </div>
+      <button 
+        type="button" 
+        class="btn-close-form" 
+        (click)="cancelEditSale()" 
+        title="Close form panel">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <form class="sales-form-body" (ngSubmit)="saveSales()">
+      <div class="form-grid-layout">
+        <!-- Field 1: Order Date -->
+        <div class="form-group">
+          <label class="form-label" for="saleDate">
+            Order Date <span class="required-star">*</span>
+          </label>
+          <div class="input-with-icon">
+            <i class="bi bi-calendar3 input-prefix-icon"></i>
+            <input 
+              id="saleDate" 
+              type="date" 
+              class="form-control" 
+              name="saleDate" 
+              [(ngModel)]="salesForm.date" 
+              required />
+          </div>
+        </div>
+
+        <!-- Field 2: Customer / Party Selection -->
+        <div class="form-group party-select-group">
+          <label class="form-label" for="saleParty">
+            Customer / Company <span class="required-star">*</span>
+          </label>
+          <div class="input-with-icon">
+            <i class="bi bi-building input-prefix-icon"></i>
+            <select 
+              id="saleParty" 
+              class="form-control" 
+              name="saleParty" 
+              [(ngModel)]="salesForm.partyId" 
+              required>
+              <option value="" disabled>-- Select Registered Customer / Party --</option>
+              <option *ngFor="let p of parties" [value]="p.id">
+                {{ p.partyName }} {{ p.city ? '(' + p.city + ')' : '' }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Field 3: Crate Model / Type -->
+        <div class="form-group">
+          <label class="form-label" for="saleCrateType">
+            Crate Type / Model <span class="required-star">*</span>
+          </label>
+          <div class="input-with-icon">
+            <i class="bi bi-box-seam input-prefix-icon"></i>
+            <select 
+              id="saleCrateType" 
+              class="form-control" 
+              name="saleCrateType" 
+              [(ngModel)]="salesForm.crateType">
+              <option *ngFor="let c of crateTypes" [value]="c">{{ c }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Field 4: Crate Material -->
+        <div class="form-group">
+          <label class="form-label" for="saleCrateMaterial">
+            Material Composition
+          </label>
+          <div class="input-with-icon">
+            <i class="bi bi-layers input-prefix-icon"></i>
+            <select 
+              id="saleCrateMaterial" 
+              class="form-control" 
+              name="saleCrateMaterial" 
+              [(ngModel)]="salesForm.crateMaterial">
+              <option *ngFor="let m of crateMaterials" [value]="m">{{ m }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Field 5: Quantity -->
+        <div class="form-group">
+          <label class="form-label" for="saleQuantity">
+            Quantity (Units) <span class="required-star">*</span>
+          </label>
+          <div class="input-with-icon">
+            <i class="bi bi-123 input-prefix-icon"></i>
+            <input 
+              id="saleQuantity" 
+              type="number" 
+              class="form-control text-right-num" 
+              name="saleQuantity" 
+              [(ngModel)]="salesForm.quantity" 
+              (ngModelChange)="calculateSalesTotal()" 
+              appAutoSelect
+              min="1" 
+              placeholder="e.g. 5000" 
+              required />
+          </div>
+        </div>
+
+        <!-- Field 6: Unit Rate in INR -->
+        <div class="form-group">
+          <label class="form-label" for="saleRate">
+            Unit Rate (₹) <span class="required-star">*</span>
+          </label>
+          <div class="input-with-icon">
+            <i class="bi bi-currency-rupee input-prefix-icon"></i>
+            <input 
+              id="saleRate" 
+              type="number" 
+              step="0.01" 
+              class="form-control text-right-num" 
+              name="saleRate" 
+              [(ngModel)]="salesForm.rate" 
+              (ngModelChange)="calculateSalesTotal()" 
+              appAutoSelect
+              min="0.01" 
+              placeholder="e.g. 245.00" 
+              required />
+          </div>
+        </div>
+
+        <!-- Field 7: Paid / Advance Amount -->
+        <div class="form-group">
+          <label class="form-label" for="salePaid">
+            Advance / Paid (₹)
+          </label>
+          <div class="input-with-icon">
+            <i class="bi bi-cash-stack input-prefix-icon"></i>
+            <input 
+              id="salePaid" 
+              type="number" 
+              step="0.01" 
+              class="form-control text-right-num" 
+              name="salePaid" 
+              [(ngModel)]="salesForm.paid" 
+              (ngModelChange)="calculateSalesTotal()" 
+              appAutoSelect
+              min="0" 
+              placeholder="0.00" />
+          </div>
+        </div>
+
+        <!-- Live Financial Preview Tiles -->
+        <div class="form-financial-preview">
+          <div class="fin-preview-item total">
+            <span class="fin-preview-label">Gross Total</span>
+            <span class="fin-preview-val">{{ salesForm.totalAmount | inr }}</span>
+          </div>
+          <div class="fin-preview-item paid">
+            <span class="fin-preview-label">Amount Paid</span>
+            <span class="fin-preview-val">{{ salesForm.paid | inr }}</span>
+          </div>
+          <div class="fin-preview-item due" [class.danger-highlight]="salesForm.remaining > 0">
+            <span class="fin-preview-label">Balance Due</span>
+            <span class="fin-preview-val">{{ salesForm.remaining | inr }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions-row">
+        <button 
+          type="button" 
+          class="btn-form btn-secondary" 
+          (click)="cancelEditSale()">
+          <i class="bi bi-x-circle"></i>
+          <span>Cancel</span>
+        </button>
+
+        <button 
+          type="submit" 
+          class="btn-form btn-primary">
+          <i class="bi" [ngClass]="editingSaleId ? 'bi-check-circle-fill' : 'bi-save-fill'"></i>
+          <span>{{ editingSaleId ? 'Update Commercial Order' : 'Save Sales Order' }}</span>
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <!-- 5. CONTEXTUAL TOOLBAR & SEARCH FILTERS -->
+  <section class="sales-toolbar-card">
+    <div class="toolbar-left-group">
+      <!-- Search Input -->
+      <div class="search-input-wrapper">
+        <i class="bi bi-search search-icon"></i>
+        <input 
+          type="text" 
+          class="search-input" 
+          placeholder="🔍 Search customer, crate, invoice #..." 
+          [(ngModel)]="searchQuery" 
+          (ngModelChange)="currentPage = 1" />
+        <button 
+          *ngIf="searchQuery" 
+          type="button" 
+          class="btn-clear-search" 
+          (click)="searchQuery = ''; currentPage = 1" 
+          title="Clear search query">
+          <i class="bi bi-x-circle-fill"></i>
+        </button>
+      </div>
+
+      <!-- Filter: Party -->
+      <div class="toolbar-filter-select">
+        <select 
+          class="toolbar-select" 
+          [(ngModel)]="filterPartyId" 
+          (change)="currentPage = 1">
+          <option value="">👥 All Customers</option>
+          <option *ngFor="let p of parties" [value]="p.id">{{ p.partyName }}</option>
+        </select>
+      </div>
+
+      <!-- Filter: Payment Status -->
+      <div class="toolbar-filter-select">
+        <select 
+          class="toolbar-select" 
+          [(ngModel)]="filterPaymentStatus" 
+          (change)="currentPage = 1">
+          <option value="ALL">📑 All Payment Statuses</option>
+          <option value="PENDING">⏳ Pending Balance</option>
+          <option value="PAID">✅ Fully Settled</option>
+        </select>
+      </div>
+
+      <!-- Filter: Crate Type -->
+      <div class="toolbar-filter-select">
+        <select 
+          class="toolbar-select" 
+          [(ngModel)]="filterCrateType" 
+          (change)="currentPage = 1">
+          <option value="">📦 All Crate Types</option>
+          <option *ngFor="let ct of crateTypes" [value]="ct">{{ ct }}</option>
+        </select>
+      </div>
+
+      <!-- Reset Filters Button -->
+      <button 
+        *ngIf="searchQuery || filterPartyId || filterPaymentStatus !== 'ALL' || filterCrateType" 
+        type="button" 
+        class="btn-reset-filters" 
+        (click)="resetFilters()" 
+        title="Reset all search filters">
+        <i class="bi bi-arrow-counterclockwise"></i>
+        <span>🔄 Reset</span>
+      </button>
+    </div>
+
+    <div class="toolbar-right-group">
+      <!-- Table Density Switcher -->
+      <div class="density-switch-group" role="group" aria-label="Table density">
+        <button 
+          type="button" 
+          class="btn-density" 
+          [class.active]="tableDensity === 'compact'" 
+          (click)="tableDensity = 'compact'" 
+          title="Compact row height">
+          <i class="bi bi-distribute-vertical"></i>
+        </button>
+        <button 
+          type="button" 
+          class="btn-density" 
+          [class.active]="tableDensity === 'comfortable'" 
+          (click)="tableDensity = 'comfortable'" 
+          title="Comfortable row height">
+          <i class="bi bi-justify"></i>
+        </button>
+        <button 
+          type="button" 
+          class="btn-density" 
+          [class.active]="tableDensity === 'spacious'" 
+          (click)="tableDensity = 'spacious'" 
+          title="Spacious row height">
+          <i class="bi bi-distribute-horizontal"></i>
+        </button>
+      </div>
+
+      <!-- Column Manager Dropdown -->
+      <div class="column-manager-wrapper">
+        <button 
+          type="button" 
+          class="btn-toolbar-tool" 
+          (click)="toggleColDropdown()"
+          title="Customize visible table columns">
+          <i class="bi bi-columns-gap"></i>
+          <span>Columns</span>
+        </button>
+
+        <div *ngIf="showColDropdown" class="column-dropdown-menu">
+          <div class="col-dropdown-header">
+            <span class="col-dropdown-title">Manage Columns</span>
+            <button type="button" class="btn-text-sm" (click)="resetColumns()">Reset All</button>
+          </div>
+          <div class="col-dropdown-list">
+            <label *ngFor="let col of columnsConfig" class="col-checkbox-item">
+              <input 
+                type="checkbox" 
+                [checked]="col.visible" 
+                [disabled]="col.locked" 
+                (change)="toggleColumn(col.key)" />
+              <span [class.text-muted]="col.locked">{{ col.label }}</span>
+            </label>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
-</div>
+  </section>
 
+  <!-- BATCH ACTIONS FLOATING BAR -->
+  <div *ngIf="hasSelectedSales()" class="sales-batch-bar" role="status">
+    <div class="batch-bar-left">
+      <i class="bi bi-check2-circle text-primary" style="font-size: 18px;"></i>
+      <span class="batch-count"><strong>{{ getSelectedCount() }}</strong> order(s) selected</span>
+    </div>
+    <div class="batch-bar-right">
+      <button type="button" class="btn-batch btn-batch-clear" (click)="clearSelection()">
+        <i class="bi bi-x-circle"></i>
+        <span>Clear Selection</span>
+      </button>
+      <button 
+        *ngIf="canDelete()" 
+        type="button" 
+        class="btn-batch btn-batch-delete" 
+        (click)="batchDeleteSelected()">
+        <i class="bi bi-trash3-fill"></i>
+        <span>Delete Selected</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 6. AUDITED ENTERPRISE DATA TABLE -->
+  <section class="sales-table-card">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="table-loading-container">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Loading sales orders and financial records...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="!isLoading && hasError" class="table-error-container">
+      <i class="bi bi-exclamation-triangle-fill error-icon"></i>
+      <h3>Unable to load sales data</h3>
+      <p>Failed to connect to the backend server. Please verify your connection.</p>
+      <button type="button" class="btn-header-action btn-primary" (click)="loadData()">Retry</button>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && !hasError && getFilteredList().length === 0" class="table-empty-container">
+      <div class="empty-icon-circle">
+        <i class="bi bi-cart-x"></i>
+      </div>
+      <h3>No Sales Orders Found</h3>
+      <p *ngIf="searchQuery || filterPartyId || filterPaymentStatus !== 'ALL' || filterCrateType">
+        No orders match your active search filters.
+      </p>
+      <p *ngIf="!searchQuery && !filterPartyId && filterPaymentStatus === 'ALL' && !filterCrateType">
+        No commercial sales orders have been registered in the system yet.
+      </p>
+      <div class="empty-actions">
+        <button 
+          *ngIf="searchQuery || filterPartyId || filterPaymentStatus !== 'ALL' || filterCrateType" 
+          type="button" 
+          class="btn-header-action btn-secondary" 
+          (click)="resetFilters()">
+          Clear Filters
+        </button>
+        <button 
+          *ngIf="!isViewer()" 
+          type="button" 
+          class="btn-header-action btn-primary" 
+          (click)="toggleFormVisibility()">
+          + Add First Order
+        </button>
+      </div>
+    </div>
+
+    <!-- Data Table Container -->
+    <div 
+      *ngIf="!isLoading && !hasError && getFilteredList().length > 0" 
+      class="table-responsive-viewport" 
+      [ngClass]="'density-' + tableDensity">
+      <table class="enterprise-sales-table" aria-label="Commercial Sales Orders Ledger">
+        <thead>
+          <tr>
+            <!-- Checkbox column -->
+            <th class="col-checkbox no-sort">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="selectAllChecked" 
+                (change)="toggleSelectAll()" 
+                title="Select all orders" />
+            </th>
+
+            <!-- Date -->
+            <th *ngIf="isColVisible('date')" class="sortable-th" (click)="setSort('date')">
+              <div class="th-content">
+                <span>Date</span>
+                <i class="bi" [ngClass]="sortField === 'date' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+              </div>
+            </th>
+
+            <!-- Order Ref -->
+            <th *ngIf="isColVisible('orderRef')" class="sortable-th" (click)="setSort('orderRef')">
+              <div class="th-content">
+                <span>Order Ref</span>
+                <i class="bi" [ngClass]="sortField === 'orderRef' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+              </div>
+            </th>
+
+            <!-- Party / Customer -->
+            <th *ngIf="isColVisible('party')" class="sortable-th" (click)="setSort('party')">
+              <div class="th-content">
+                <span>Customer / Party</span>
+                <i class="bi" [ngClass]="sortField === 'party' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+              </div>
+            </th>
+
+            <!-- Crate Specs -->
+            <th *ngIf="isColVisible('crateSpecs')" class="sortable-th" (click)="setSort('crateType')">
+              <div class="th-content">
+                <span>Crate Model & Material</span>
+                <i class="bi" [ngClass]="sortField === 'crateType' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+              </div>
+            </th>
+
+            <!-- Quantity -->
+            <th *ngIf="isColVisible('quantity')" class="sortable-th th-right" (click)="setSort('quantity')">
+              <div class="th-content th-right-content">
+                <span>Quantity</span>
+                <i class="bi" [ngClass]="sortField === 'quantity' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+              </div>
+            </th>
+
+            <!-- Unit Rate -->
+            <th *ngIf="isColVisible('rate')" class="sortable-th th-right" (click)="setSort('rate')">
+              <div class="th-content th-right-content">
+                <span>Unit Rate</span>
+                <i class="bi" [ngClass]="sortField === 'rate' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+              </div>
+            </th>
+
+            <!-- Total Amount -->
+            <th *ngIf="isColVisible('totalAmount')" class="sortable-th th-right" (click)="setSort('totalAmount')">
+              <div class="th-content th-right-content">
+                <span>Total Value</span>
+                <i class="bi" [ngClass]="sortField === 'totalAmount' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+              </div>
+            </th>
+
+            <!-- Paid -->
+            <th *ngIf="isColVisible('paid')" class="sortable-th th-right" (click)="setSort('paid')">
+              <div class="th-content th-right-content">
+                <span>Paid (₹)</span>
+                <i class="bi" [ngClass]="sortField === 'paid' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+              </div>
+            </th>
+
+            <!-- Balance Remaining -->
+            <th *ngIf="isColVisible('remaining')" class="sortable-th th-right" (click)="setSort('remaining')">
+              <div class="th-content th-right-content">
+                <span>Balance Due</span>
+                <i class="bi" [ngClass]="sortField === 'remaining' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+              </div>
+            </th>
+
+            <!-- Status -->
+            <th *ngIf="isColVisible('status')" class="no-sort">
+              <div class="th-content">
+                <span>Status</span>
+              </div>
+            </th>
+
+            <!-- Actions -->
+            <th *ngIf="isColVisible('actions')" class="th-actions no-sort">
+              <span>Actions</span>
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr 
+            *ngFor="let sale of getPaginatedList(); trackBy: trackBySale" 
+            [class.row-selected]="selectedSaleIds[sale.id || sale.saleId || '']">
+            <!-- Checkbox -->
+            <td class="col-checkbox">
+              <input 
+                type="checkbox" 
+                [checked]="selectedSaleIds[sale.id || sale.saleId || '']" 
+                (change)="toggleSaleSelection(sale.id || sale.saleId || '')" />
+            </td>
+
+            <!-- Date -->
+            <td *ngIf="isColVisible('date')" class="cell-date">
+              <span class="date-badge">{{ sale.date | indianDate }}</span>
+            </td>
+
+            <!-- Order Ref -->
+            <td *ngIf="isColVisible('orderRef')" class="cell-order-ref">
+              <button 
+                type="button" 
+                class="order-ref-link" 
+                (click)="openDrawer(sale)"
+                title="View order details in drawer">
+                #{{ sale.saleId || sale.id }}
+              </button>
+            </td>
+
+            <!-- Customer / Party -->
+            <td *ngIf="isColVisible('party')" class="cell-party">
+              <div class="party-info-cell">
+                <div class="party-avatar">
+                  {{ (sale.party?.partyName || 'C').slice(0, 2).toUpperCase() }}
+                </div>
+                <div class="party-text-group">
+                  <span class="party-name" (click)="openDrawer(sale)" title="Quick view">
+                    {{ sale.party?.partyName || 'Customer ID: ' + (sale.partyId || sale.id) }}
+                  </span>
+                  <span *ngIf="sale.party?.city" class="party-city">
+                    <i class="bi bi-geo-alt"></i> {{ sale.party?.city }}{{ sale.party?.state ? ', ' + sale.party?.state : '' }}
+                  </span>
+                </div>
+              </div>
+            </td>
+
+            <!-- Crate Specs -->
+            <td *ngIf="isColVisible('crateSpecs')" class="cell-specs">
+              <div class="crate-badge-wrap">
+                <span class="crate-type-pill">{{ sale.crateType || 'Apple Crate' }}</span>
+                <span class="crate-material-tag">{{ sale.crateMaterial || 'Plastic' }}</span>
+              </div>
+            </td>
+
+            <!-- Quantity -->
+            <td *ngIf="isColVisible('quantity')" class="cell-numeric th-right">
+              <span class="qty-pill">{{ sale.quantity | number }}</span>
+            </td>
+
+            <!-- Unit Rate -->
+            <td *ngIf="isColVisible('rate')" class="cell-numeric th-right text-muted-num">
+              {{ sale.rate | inr }}
+            </td>
+
+            <!-- Total Amount -->
+            <td *ngIf="isColVisible('totalAmount')" class="cell-numeric th-right cell-bold">
+              {{ sale.totalAmount | inr }}
+            </td>
+
+            <!-- Paid -->
+            <td *ngIf="isColVisible('paid')" class="cell-numeric th-right text-success-num">
+              {{ sale.paid | inr }}
+            </td>
+
+            <!-- Remaining Due -->
+            <td *ngIf="isColVisible('remaining')" class="cell-numeric th-right">
+              <span [class.text-danger-num]="(sale.remaining || 0) > 0" [class.text-success-num]="(sale.remaining || 0) <= 0">
+                {{ sale.remaining | inr }}
+              </span>
+            </td>
+
+            <!-- Status Pill -->
+            <td *ngIf="isColVisible('status')" class="cell-status">
+              <span *ngIf="(sale.remaining || 0) <= 0" class="status-pill settled">
+                <i class="bi bi-check-circle-fill"></i> Settled
+              </span>
+              <span *ngIf="(sale.remaining || 0) > 0 && (sale.paid || 0) > 0" class="status-pill partial">
+                <i class="bi bi-pie-chart"></i> Partial (Due {{ sale.remaining | inr }})
+              </span>
+              <span *ngIf="(sale.remaining || 0) > 0 && (sale.paid || 0) === 0" class="status-pill pending">
+                <i class="bi bi-exclamation-circle-fill"></i> Unpaid
+              </span>
+            </td>
+
+            <!-- Actions Row -->
+            <td *ngIf="isColVisible('actions')" class="cell-actions">
+              <div class="row-actions-group">
+                <!-- Collect Payment Button (If remaining > 0) -->
+                <button 
+                  *ngIf="!isViewer() && (sale.remaining || 0) > 0" 
+                  type="button" 
+                  class="btn-row-action btn-action-pay" 
+                  (click)="payWithRazorpay(sale)" 
+                  title="Collect payment via UPI / Razorpay Gateway">
+                  <i class="bi bi-qr-code"></i>
+                  <span>Pay</span>
+                </button>
+
+                <!-- Receipt Button -->
+                <button 
+                  type="button" 
+                  class="btn-row-action btn-action-receipt" 
+                  (click)="generateReceipt(sale, sale.paid || 0, 'TXN_' + (sale.saleId || sale.id))" 
+                  title="Print commercial payment receipt">
+                  <i class="bi bi-receipt"></i>
+                </button>
+
+                <!-- Edit Button -->
+                <button 
+                  *ngIf="!isViewer()" 
+                  type="button" 
+                  class="btn-row-action btn-action-edit" 
+                  (click)="editSale(sale)" 
+                  title="Edit sales order">
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <!-- Delete Button -->
+                <button 
+                  *ngIf="canDelete()" 
+                  type="button" 
+                  class="btn-row-action btn-action-delete" 
+                  (click)="deleteSale(sale.id || sale.saleId || '')" 
+                  title="Delete sales record">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+
+        <!-- DYNAMIC SUMMARY ACCOUNTING TOTALS TFOOT -->
+        <tfoot class="table-summary-tfoot">
+          <tr>
+            <td class="col-checkbox"></td>
+            <td *ngIf="isColVisible('date')"></td>
+            <td *ngIf="isColVisible('orderRef')"></td>
+            <td *ngIf="isColVisible('party')" class="tfoot-label">
+              <strong>SUBTOTAL ({{ getFilteredList().length }} Orders)</strong>
+            </td>
+            <td *ngIf="isColVisible('crateSpecs')"></td>
+            <!-- Quantity total -->
+            <td *ngIf="isColVisible('quantity')" class="cell-numeric th-right tfoot-val">
+              <strong>{{ getFilteredTotalQuantity() | number }}</strong>
+            </td>
+            <td *ngIf="isColVisible('rate')"></td>
+            <!-- Total amount -->
+            <td *ngIf="isColVisible('totalAmount')" class="cell-numeric th-right tfoot-val text-warning">
+              <strong>{{ getFilteredTotalAmount() | inr }}</strong>
+            </td>
+            <!-- Paid total -->
+            <td *ngIf="isColVisible('paid')" class="cell-numeric th-right tfoot-val text-success">
+              <strong>{{ getFilteredTotalPaid() | inr }}</strong>
+            </td>
+            <!-- Balance due total -->
+            <td *ngIf="isColVisible('remaining')" class="cell-numeric th-right tfoot-val text-danger">
+              <strong>{{ getFilteredTotalRemaining() | inr }}</strong>
+            </td>
+            <td *ngIf="isColVisible('status')"></td>
+            <td *ngIf="isColVisible('actions')"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- 7. PAGINATION CONTROLS -->
+    <div 
+      *ngIf="!isLoading && !hasError && getFilteredList().length > 0" 
+      class="table-pagination-bar">
+      <div class="pagination-info">
+        <span>
+          Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to 
+          <strong>{{ Math.min(currentPage * pageSize, getFilteredList().length) }}</strong> of 
+          <strong>{{ getFilteredList().length }}</strong> orders
+        </span>
+        <div class="page-size-selector">
+          <label for="pageSizeSelect">Rows per page:</label>
+          <select 
+            id="pageSizeSelect" 
+            [(ngModel)]="pageSize" 
+            (change)="currentPage = 1">
+            <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="pagination-controls">
+        <button 
+          type="button" 
+          class="btn-page" 
+          [disabled]="currentPage === 1" 
+          (click)="currentPage = 1" 
+          title="First page">
+          <i class="bi bi-chevron-double-left"></i>
+        </button>
+        <button 
+          type="button" 
+          class="btn-page" 
+          [disabled]="currentPage === 1" 
+          (click)="currentPage = currentPage - 1" 
+          title="Previous page">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        <span class="page-number-indicator">
+          Page <strong>{{ currentPage }}</strong> of <strong>{{ getTotalPages() }}</strong>
+        </span>
+
+        <button 
+          type="button" 
+          class="btn-page" 
+          [disabled]="currentPage >= getTotalPages()" 
+          (click)="currentPage = currentPage + 1" 
+          title="Next page">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+        <button 
+          type="button" 
+          class="btn-page" 
+          [disabled]="currentPage >= getTotalPages()" 
+          (click)="currentPage = getTotalPages()" 
+          title="Last page">
+          <i class="bi bi-chevron-double-right"></i>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. SLIDE-IN ORDER DETAIL & QUICK EDIT DRAWER -->
+  <div 
+    *ngIf="isDrawerOpen" 
+    class="drawer-backdrop" 
+    (click)="closeDrawer()" 
+    aria-hidden="true">
+  </div>
+
+  <aside 
+    *ngIf="isDrawerOpen" 
+    class="sales-drawer" 
+    role="dialog" 
+    aria-label="Order Details Drawer">
+    <div class="drawer-header">
+      <div class="drawer-header-info">
+        <span class="drawer-kicker">COMMERCIAL ORDER PROFILE</span>
+        <h2 class="drawer-title">Order #{{ drawerSaleForm.id }}</h2>
+        <span class="drawer-party-name">{{ drawerSaleForm.partyName }}</span>
+      </div>
+      <button 
+        type="button" 
+        class="btn-close-drawer" 
+        (click)="closeDrawer()" 
+        title="Close Drawer">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+      <!-- Financial Progress Meter -->
+      <div class="drawer-fin-card">
+        <div class="drawer-fin-header">
+          <span>Settlement Progress</span>
+          <strong>{{ drawerSaleForm.totalAmount > 0 ? Math.round((drawerSaleForm.paid / drawerSaleForm.totalAmount) * 100) : 100 }}%</strong>
+        </div>
+        <div class="drawer-progress-track">
+          <div 
+            class="drawer-progress-fill" 
+            [style.width.%]="drawerSaleForm.totalAmount > 0 ? Math.min(100, Math.round((drawerSaleForm.paid / drawerSaleForm.totalAmount) * 100)) : 100">
+          </div>
+        </div>
+        <div class="drawer-fin-grid">
+          <div>
+            <span class="drawer-fin-label">Total Value</span>
+            <span class="drawer-fin-val">{{ drawerSaleForm.totalAmount | inr }}</span>
+          </div>
+          <div>
+            <span class="drawer-fin-label">Paid So Far</span>
+            <span class="drawer-fin-val text-success">{{ drawerSaleForm.paid | inr }}</span>
+          </div>
+          <div>
+            <span class="drawer-fin-label">Remaining Balance</span>
+            <span class="drawer-fin-val text-danger">{{ drawerSaleForm.remaining | inr }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Collect Payment Action Banner in Drawer -->
+      <div *ngIf="!isViewer() && drawerSaleForm.remaining > 0" class="drawer-payment-banner">
+        <div>
+          <strong>Outstanding Due: {{ drawerSaleForm.remaining | inr }}</strong>
+          <p>Collect payment directly using UPI QR or Razorpay.</p>
+        </div>
+        <button 
+          type="button" 
+          class="btn-drawer-pay" 
+          (click)="payWithRazorpay(selectedSaleForDrawer!)">
+          <i class="bi bi-qr-code-scan"></i>
+          <span>Collect Now</span>
+        </button>
+      </div>
+
+      <!-- Form Inputs in Drawer -->
+      <div class="drawer-form-section">
+        <h3 class="drawer-section-title">Order Specifications</h3>
+
+        <div class="drawer-field">
+          <label for="drwDate">Order Date</label>
+          <input 
+            id="drwDate" 
+            type="date" 
+            class="drawer-input" 
+            [(ngModel)]="drawerSaleForm.date" />
+        </div>
+
+        <div class="drawer-field">
+          <label for="drwParty">Customer / Party</label>
+          <select id="drwParty" class="drawer-input" [(ngModel)]="drawerSaleForm.partyId">
+            <option *ngFor="let p of parties" [value]="p.id">{{ p.partyName }}</option>
+          </select>
+        </div>
+
+        <div class="drawer-field-row">
+          <div class="drawer-field">
+            <label for="drwCrateType">Crate Type</label>
+            <select id="drwCrateType" class="drawer-input" [(ngModel)]="drawerSaleForm.crateType">
+              <option *ngFor="let ct of crateTypes" [value]="ct">{{ ct }}</option>
+            </select>
+          </div>
+          <div class="drawer-field">
+            <label for="drwCrateMat">Material</label>
+            <select id="drwCrateMat" class="drawer-input" [(ngModel)]="drawerSaleForm.crateMaterial">
+              <option *ngFor="let cm of crateMaterials" [value]="cm">{{ cm }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="drawer-field-row">
+          <div class="drawer-field">
+            <label for="drwQty">Quantity</label>
+            <input 
+              id="drwQty" 
+              type="number" 
+              class="drawer-input" 
+              [(ngModel)]="drawerSaleForm.quantity" 
+              (ngModelChange)="calculateDrawerTotal()" />
+          </div>
+          <div class="drawer-field">
+            <label for="drwRate">Rate (₹)</label>
+            <input 
+              id="drwRate" 
+              type="number" 
+              step="0.01" 
+              class="drawer-input" 
+              [(ngModel)]="drawerSaleForm.rate" 
+              (ngModelChange)="calculateDrawerTotal()" />
+          </div>
+        </div>
+
+        <div class="drawer-field">
+          <label for="drwPaid">Paid Amount (₹)</label>
+          <input 
+            id="drwPaid" 
+            type="number" 
+            step="0.01" 
+            class="drawer-input" 
+            [(ngModel)]="drawerSaleForm.paid" 
+            (ngModelChange)="calculateDrawerTotal()" />
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-footer">
+      <button 
+        *ngIf="canDelete()" 
+        type="button" 
+        class="btn-drawer btn-drawer-danger" 
+        (click)="deleteSale(drawerSaleForm.id)">
+        <i class="bi bi-trash3"></i>
+        <span>Delete Order</span>
+      </button>
+
+      <div class="drawer-footer-right">
+        <button 
+          type="button" 
+          class="btn-drawer btn-drawer-secondary" 
+          (click)="closeDrawer()">
+          Cancel
+        </button>
+        <button 
+          *ngIf="!isViewer()" 
+          type="button" 
+          class="btn-drawer btn-drawer-primary" 
+          (click)="saveDrawerSale()">
+          <i class="bi bi-check2"></i>
+          <span>Save Changes</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+</div>

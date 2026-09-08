@@ -9,7 +9,7 @@
         <span class="search-icon"><i class="bi bi-search"></i></span>
         <input id="global-search-input" appAutoSelect type="text" class="search-input"
           [(ngModel)]="filters.query" (ngModelChange)="onFilterChange()" 
-          placeholder="Search records... (Ctrl+F)">
+          placeholder="🔍 Search records... (Ctrl+F)">
         <span class="kbd-badge" *ngIf="!filters.query">⌘K</span>
         <button *ngIf="filters.query" (click)="filters.query = ''; onFilterChange()" type="button" class="btn-input-clear" title="Clear Search"><i class="bi bi-x-lg"></i></button>
       </div>
@@ -26,11 +26,11 @@
       <!-- 3. Month & Year Selectors (For Monthly summary / Salaries) -->
       <div class="filter-month-year-group" *ngIf="showMonthYear">
         <select class="compact-select" [(ngModel)]="filters.month" (ngModelChange)="onFilterChange()">
-          <option value="">All Months</option>
+          <option value="">🗓️ All Months</option>
           <option *ngFor="let m of months" [value]="m">{{ m }}</option>
         </select>
         <select class="compact-select" [(ngModel)]="filters.year" (ngModelChange)="onFilterChange()">
-          <option value="">All Years</option>
+          <option value="">📅 All Years</option>
           <option *ngFor="let y of years" [value]="y">{{ y }}</option>
         </select>
       </div>
@@ -62,90 +62,91 @@
 
       <!-- 5. Quick Context Chips (Parties Tab) -->
       <div class="quick-chips-group" *ngIf="activeTab === 'parties'">
-        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('partyType', '')" (click)="setQuickChip('partyType', '')">ALL</button>
-        <button type="button" class="quick-chip" [class.active]="filters.partyType === 'CUSTOMER'" (click)="setQuickChip('partyType', 'CUSTOMER')">CUSTOMERS</button>
-        <button type="button" class="quick-chip" [class.active]="filters.partyType === 'SUPPLIER'" (click)="setQuickChip('partyType', 'SUPPLIER')">SUPPLIERS</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'ACTIVE'" (click)="setQuickChip('status', 'ACTIVE')">ACTIVE</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'INACTIVE'" (click)="setQuickChip('status', 'INACTIVE')">INACTIVE</button>
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('partyType', '')" (click)="setQuickChip('partyType', '')">🌟 ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.partyType === 'CUSTOMER'" (click)="setQuickChip('partyType', 'CUSTOMER')">👥 CUSTOMERS</button>
+        <button type="button" class="quick-chip" [class.active]="filters.partyType === 'SUPPLIER'" (click)="setQuickChip('partyType', 'SUPPLIER')">🏭 SUPPLIERS</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'ACTIVE'" (click)="setQuickChip('status', 'ACTIVE')">🟢 ACTIVE</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'INACTIVE'" (click)="setQuickChip('status', 'INACTIVE')">⚪ INACTIVE</button>
       </div>
 
       <!-- 6. Quick Context Chips (Inventory Tab) -->
       <div class="quick-chips-group" *ngIf="activeTab === 'inventory' || activeTab === 'raw-materials'">
-        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('stockStatus', '')" (click)="setQuickChip('stockStatus', '')">ALL</button>
-        <button type="button" class="quick-chip" [class.active]="filters.stockStatus === 'IN STOCK'" (click)="setQuickChip('stockStatus', 'IN STOCK')">IN STOCK</button>
-        <button type="button" class="quick-chip" [class.active]="filters.stockStatus === 'LOW STOCK'" (click)="setQuickChip('stockStatus', 'LOW STOCK')">LOW STOCK</button>
-        <button type="button" class="quick-chip" [class.active]="filters.stockStatus === 'OUT OF STOCK'" (click)="setQuickChip('stockStatus', 'OUT OF STOCK')">OUT OF STOCK</button>
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('stockStatus', '')" (click)="setQuickChip('stockStatus', '')">🌟 ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.stockStatus === 'IN STOCK'" (click)="setQuickChip('stockStatus', 'IN STOCK')">✅ IN STOCK</button>
+        <button type="button" class="quick-chip" [class.active]="filters.stockStatus === 'LOW STOCK'" (click)="setQuickChip('stockStatus', 'LOW STOCK')">⚠️ LOW STOCK</button>
+        <button type="button" class="quick-chip" [class.active]="filters.stockStatus === 'OUT OF STOCK'" (click)="setQuickChip('stockStatus', 'OUT OF STOCK')">❌ OUT OF STOCK</button>
       </div>
 
       <!-- 7. Quick Context Chips (Machines Tab) -->
       <div class="quick-chips-group" *ngIf="activeTab === 'machines'">
-        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('machineStatus', '')" (click)="setQuickChip('machineStatus', '')">ALL</button>
-        <button type="button" class="quick-chip" [class.active]="filters.machineStatus === 'RUNNING'" (click)="setQuickChip('machineStatus', 'RUNNING')">RUNNING</button>
-        <button type="button" class="quick-chip" [class.active]="filters.machineStatus === 'IDLE'" (click)="setQuickChip('machineStatus', 'IDLE')">IDLE</button>
-        <button type="button" class="quick-chip" [class.active]="filters.machineStatus === 'MAINTENANCE'" (click)="setQuickChip('machineStatus', 'MAINTENANCE')">MAINTENANCE</button>
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('machineStatus', '')" (click)="setQuickChip('machineStatus', '')">🌟 ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.machineStatus === 'RUNNING'" (click)="setQuickChip('machineStatus', 'RUNNING')">⚙️ RUNNING</button>
+        <button type="button" class="quick-chip" [class.active]="filters.machineStatus === 'IDLE'" (click)="setQuickChip('machineStatus', 'IDLE')">⏸️ IDLE</button>
+        <button type="button" class="quick-chip" [class.active]="filters.machineStatus === 'MAINTENANCE'" (click)="setQuickChip('machineStatus', 'MAINTENANCE')">🔧 MAINTENANCE</button>
       </div>
 
       <!-- 8. Quick Context Chips (Sales & Invoices) -->
       <div class="quick-chips-group" *ngIf="activeTab === 'sales' || activeTab === 'invoices'">
-        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">ALL</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'PAID'" (click)="setQuickChip('status', 'PAID')">PAID</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'PENDING'" (click)="setQuickChip('status', 'PENDING')">PENDING</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'PARTIAL'" (click)="setQuickChip('status', 'PARTIAL')">PARTIAL</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'OVERDUE'" (click)="setQuickChip('status', 'OVERDUE')">OVERDUE</button>
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">🌟 ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'PAID'" (click)="setQuickChip('status', 'PAID')">✅ PAID</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'PENDING'" (click)="setQuickChip('status', 'PENDING')">⏳ PENDING</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'PARTIAL'" (click)="setQuickChip('status', 'PARTIAL')">🌓 PARTIAL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'OVERDUE'" (click)="setQuickChip('status', 'OVERDUE')">🚨 OVERDUE</button>
       </div>
 
       <!-- 9. Quick Context Chips (Payments) -->
       <div class="quick-chips-group" *ngIf="activeTab === 'payments'">
-        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('paymentStatus', '')" (click)="setQuickChip('paymentStatus', '')">ALL</button>
-        <button type="button" class="quick-chip" [class.active]="filters.paymentStatus === 'PAID'" (click)="setQuickChip('paymentStatus', 'PAID')">PAID</button>
-        <button type="button" class="quick-chip" [class.active]="filters.paymentStatus === 'PENDING'" (click)="setQuickChip('paymentStatus', 'PENDING')">PENDING</button>
-        <button type="button" class="quick-chip" [class.active]="filters.paymentStatus === 'PARTIAL'" (click)="setQuickChip('paymentStatus', 'PARTIAL')">PARTIAL</button>
-        <button type="button" class="quick-chip" [class.active]="filters.paymentStatus === 'FAILED'" (click)="setQuickChip('paymentStatus', 'FAILED')">FAILED</button>
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('paymentStatus', '')" (click)="setQuickChip('paymentStatus', '')">🌟 ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.paymentStatus === 'PAID'" (click)="setQuickChip('paymentStatus', 'PAID')">✅ PAID</button>
+        <button type="button" class="quick-chip" [class.active]="filters.paymentStatus === 'PENDING'" (click)="setQuickChip('paymentStatus', 'PENDING')">⏳ PENDING</button>
+        <button type="button" class="quick-chip" [class.active]="filters.paymentStatus === 'PARTIAL'" (click)="setQuickChip('paymentStatus', 'PARTIAL')">🌓 PARTIAL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.paymentStatus === 'FAILED'" (click)="setQuickChip('paymentStatus', 'FAILED')">❌ FAILED</button>
       </div>
 
       <!-- 10. Quick Context Chips (Dispatch) -->
       <div class="quick-chips-group" *ngIf="activeTab === 'dispatch'">
-        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">ALL</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'Delivered'" (click)="setQuickChip('status', 'Delivered')">DELIVERED</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'In Transit'" (click)="setQuickChip('status', 'In Transit')">IN TRANSIT</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'Pending'" (click)="setQuickChip('status', 'Pending')">PENDING</button>
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">🌟 ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Delivered'" (click)="setQuickChip('status', 'Delivered')">✅ DELIVERED</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'In Transit'" (click)="setQuickChip('status', 'In Transit')">🚚 IN TRANSIT</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Dispatched'" (click)="setQuickChip('status', 'Dispatched')">📦 DISPATCHED</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Pending'" (click)="setQuickChip('status', 'Pending')">⏳ PENDING</button>
       </div>
 
       <!-- 11. Quick Context Chips (Salaries) -->
       <div class="quick-chips-group" *ngIf="activeTab === 'salaries'">
-        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">ALL</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'Paid'" (click)="setQuickChip('status', 'Paid')">PAID</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'Pending'" (click)="setQuickChip('status', 'Pending')">PENDING</button>
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">🌟 ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Paid'" (click)="setQuickChip('status', 'Paid')">✅ PAID</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Pending'" (click)="setQuickChip('status', 'Pending')">⏳ PENDING</button>
       </div>
 
       <!-- 12. Quick Context Chips (Employees) -->
       <div class="quick-chips-group" *ngIf="activeTab === 'employees'">
-        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">ALL</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'ACTIVE'" (click)="setQuickChip('status', 'ACTIVE')">ACTIVE</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'ON LEAVE'" (click)="setQuickChip('status', 'ON LEAVE')">ON LEAVE</button>
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">🌟 ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'ACTIVE'" (click)="setQuickChip('status', 'ACTIVE')">🟢 ACTIVE</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'ON LEAVE'" (click)="setQuickChip('status', 'ON LEAVE')">🏖️ ON LEAVE</button>
       </div>
 
       <!-- 13. Quick Context Chips (Transports) -->
       <div class="quick-chips-group" *ngIf="activeTab === 'transports'">
-        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">ALL</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'COMPLETED'" (click)="setQuickChip('status', 'COMPLETED')">COMPLETED</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'PENDING'" (click)="setQuickChip('status', 'PENDING')">PENDING</button>
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">🌟 ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'COMPLETED'" (click)="setQuickChip('status', 'COMPLETED')">✅ COMPLETED</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'PENDING'" (click)="setQuickChip('status', 'PENDING')">⏳ PENDING</button>
       </div>
 
       <!-- 14. Quick Context Chips (Bank Ledger) -->
       <div class="quick-chips-group" *ngIf="activeTab === 'bank'">
-        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">ALL</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'Credit'" (click)="setQuickChip('status', 'Credit')">CREDIT</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'Debit'" (click)="setQuickChip('status', 'Debit')">DEBIT</button>
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">🌟 ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Credit'" (click)="setQuickChip('status', 'Credit')">🟢 CREDIT</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Debit'" (click)="setQuickChip('status', 'Debit')">🔴 DEBIT</button>
       </div>
 
       <!-- 15. Quick Context Chips (Expenses) -->
       <div class="quick-chips-group" *ngIf="activeTab === 'expenses'">
-        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">ALL</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'Maintenance'" (click)="setQuickChip('status', 'Maintenance')">MAINTENANCE</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'Diesel'" (click)="setQuickChip('status', 'Diesel')">DIESEL</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'Electricity'" (click)="setQuickChip('status', 'Electricity')">ELECTRICITY</button>
-        <button type="button" class="quick-chip" [class.active]="filters.status === 'Repair'" (click)="setQuickChip('status', 'Repair')">REPAIR</button>
+        <button type="button" class="quick-chip" [class.active]="isQuickChipActive('status', '')" (click)="setQuickChip('status', '')">🌟 ALL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Maintenance'" (click)="setQuickChip('status', 'Maintenance')">🛠️ MAINTENANCE</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Diesel'" (click)="setQuickChip('status', 'Diesel')">⛽ DIESEL</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Electricity'" (click)="setQuickChip('status', 'Electricity')">⚡ ELECTRICITY</button>
+        <button type="button" class="quick-chip" [class.active]="filters.status === 'Repair'" (click)="setQuickChip('status', 'Repair')">🔧 REPAIR</button>
       </div>
 
     </div>
