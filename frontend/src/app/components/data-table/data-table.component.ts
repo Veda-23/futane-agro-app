@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnChanges, OnInit, OnDestroy, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, OnInit, OnDestroy, SimpleChanges, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, Subscription } from 'rxjs';
@@ -51,6 +51,17 @@ export class DataTableComponent implements OnInit, OnChanges, OnDestroy {
   processedData: any[] = [];
   selectedRows: Set<string> = new Set();
   allSelected = false;
+  showExportMenu = false;
+
+  @HostListener('document:click')
+  closeExportMenu() {
+    this.showExportMenu = false;
+  }
+
+  toggleExportMenu(event: Event) {
+    event.stopPropagation();
+    this.showExportMenu = !this.showExportMenu;
+  }
 
   ngOnInit() {
     this.searchSub = this.searchSubject.pipe(

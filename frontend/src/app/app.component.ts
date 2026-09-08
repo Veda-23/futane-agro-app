@@ -231,8 +231,36 @@ export class AppComponent implements OnInit, OnDestroy {
     this.filterDepartment = newFilters.department || '';
   }
 
+  formatModuleName(tab: string): string {
+    const map: { [key: string]: string } = {
+      'dashboard': 'Executive Telemetry',
+      'production': 'Daily Production',
+      'monthly-production': 'Monthly Aggregate',
+      'parties': 'Customer Registry',
+      'sales': 'Sales Ledger',
+      'payments': 'Payment Settlement',
+      'raw-materials': 'Raw Material Supplies',
+      'vendors': 'Vendor Directory',
+      'inventory': 'Finished Goods Stock',
+      'employees': 'Staff Roster',
+      'salaries': 'Payroll Disbursement',
+      'transports': 'Logistics Fleet',
+      'drivers': 'Chauffeur Directory',
+      'invoices': 'Tax Invoices',
+      'reports': 'Audit Analytics',
+      'machines': 'Plant Machinery',
+      'dispatch': 'Dispatch Manifest',
+      'expenses': 'Operating Expenses',
+      'bank': 'Treasury Accounts',
+      'billinghub': 'Unified Billing',
+      'settings': 'Enterprise Control Center',
+      'audit-logs': 'Security Audit Trail'
+    };
+    return map[tab] || (tab.charAt(0).toUpperCase() + tab.slice(1).replace('-', ' '));
+  }
+
   refreshCurrentTab() {
-    this.loadAllData();
+    this.loadAllData(true);
   }
 
   getTotalCount(tab: string): number {
@@ -1194,8 +1222,8 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   // --- Load Database Data ---
-  loadAllData() {
-    this.loadDataForTab(this.activeTab);
+  loadAllData(notify: boolean = false) {
+    this.loadDataForTab(this.activeTab, notify);
     this.pollTelemetryHealth();
     this.apiService.getStats().subscribe({
       next: (res) => {
@@ -1226,8 +1254,15 @@ export class AppComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadDataForTab(tab: string) {
+  loadDataForTab(tab: string, notify: boolean = false) {
     if (!this.isAuthenticated) return;
+
+    if (notify) {
+      setTimeout(() => {
+        const count = this.getTotalCount(tab) || undefined;
+        this.notificationService.showDataRefreshed(this.formatModuleName(tab), count);
+      }, 150);
+    }
     
     switch (tab) {
       case 'parties':
@@ -2407,6 +2442,20 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   // --- Module KPI Helpers ---
+  // 0. Parties KPIs
+  getTotalPartiesCount(): number {
+    return (this.parties || []).length;
+  }
+  getGstRegisteredPartiesCount(): number {
+    return (this.parties || []).filter(p => p.gstNumber && p.gstNumber.trim().length >= 10).length;
+  }
+  getLocalStatePartiesCount(): number {
+    return (this.parties || []).filter(p => {
+      const s = ((p.state || '') + ' ' + (p.city || '') + ' ' + (p.partyAddress || '')).toLowerCase();
+      return s.includes('maharashtra') || s.includes('pune') || s.includes('mumbai') || s.includes('baramati') || s.includes('satara');
+    }).length;
+  }
+
   // 1. Invoice KPIs
   getTotalInvoiceAmount(): number {
     return this.invoicesList.reduce((sum, inv) => sum + (inv.sale?.totalAmount || 0), 0);
@@ -2500,6 +2549,19 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.salariesList.filter(s => s.status !== 'Paid').length;
   }
 
+  // 5b. Employees KPIs
+  getEmployeesTotalPayroll(): number {
+    return (this.employees || []).reduce((sum, e) => sum + (Number(e.salary) || 0), 0);
+  }
+  getEmployeesAvgSalary(): number {
+    const total = (this.employees || []).length;
+    return total > 0 ? this.getEmployeesTotalPayroll() / total : 0;
+  }
+  getEmployeesDistinctRoles(): number {
+    const roles = new Set((this.employees || []).map(e => (e.designation || '').trim().toLowerCase()).filter(Boolean));
+    return roles.size;
+  }
+
   // 6. Bank Ledger KPIs
   getTotalBankCredits(): number {
     return this.bankTransactionsList
@@ -2530,6 +2592,81 @@ export class AppComponent implements OnInit, OnDestroy {
   }
   getPendingDispatchesCount(): number {
     return this.dispatchesList.filter(d => d.dispatchStatus === 'Pending' || !d.dispatchStatus).length;
+  }
+
+  // 8. Machines & Fleet KPIs
+  getTotalMachinesCount(): number {
+    return this.machinesList.length;
+  }
+  getRunningMachinesCount(): number {
+    return this.machinesList.filter(m => (m.status || '').toLowerCase() === 'running').length;
+  }
+  getMaintenanceMachinesCount(): number {
+    return this.machinesList.filter(m => {
+      const s = (m.status || '').toLowerCase();
+      return s === 'under maintenance' || s === 'breakdown' || s === 'maintenance';
+    }).length;
+  }
+  getFleetUtilizationRate(): number {
+    if (!this.machinesList.length) return 0;
+    return Math.round((this.getRunningMachinesCount() / this.machinesList.length) * 100);
+  }
+  getTotalBreakdownDowntime(): number {
+    return this.machineBreakdownsList.reduce((sum, bd) => sum + (bd.downtimeHours || 0), 0);
+  }
+
+  // 9. Raw Materials KPIs
+  getTotalRawMaterialsCount(): number {
+    return this.rawMaterialsList.length;
+  }
+  getTotalRawMaterialsWeight(): number {
+    return this.rawMaterialsList.reduce((sum, rm) => sum + (rm.weight || 0), 0);
+  }
+  getTotalRawMaterialsValue(): number {
+    return this.rawMaterialsList.reduce((sum, rm) => sum + ((rm.weight || 0) * (rm.rate || 0)), 0);
+  }
+  getAverageRawMaterialRate(): number {
+    const totalWt = this.getTotalRawMaterialsWeight();
+    if (!totalWt) return 0;
+    return Math.round((this.getTotalRawMaterialsValue() / totalWt) * 100) / 100;
+  }
+
+  // 10. Transport Logistics KPIs
+  getTotalTransportRent(): number {
+    return this.transportsList.reduce((sum, t) => sum + (t.rent || 0), 0);
+  }
+  getTotalTransportAdvance(): number {
+    return this.transportsList.reduce((sum, t) => sum + (t.advance || 0), 0);
+  }
+  getTotalTransportBalance(): number {
+    return this.getTotalTransportRent() - this.getTotalTransportAdvance();
+  }
+  getTotalTransportsCount(): number {
+    return this.transportsList.length;
+  }
+
+  // 11. Drivers KPIs
+  getTotalDriversCount(): number {
+    return (this.drivers || []).length;
+  }
+  getLicensedDriversCount(): number {
+    return (this.drivers || []).filter(d => d.licenseNumber && d.licenseNumber.trim().length > 3).length;
+  }
+
+  // 12. Vendors KPIs
+  getTotalVendorsCount(): number {
+    return (this.vendors || []).length;
+  }
+  getGstRegisteredVendorsCount(): number {
+    return (this.vendors || []).filter(v => v.gstNumber && v.gstNumber.trim().length >= 10).length;
+  }
+
+  // 13. Inventory Stock KPIs
+  getTotalInventoryStock(): number {
+    return this.inventoryList.reduce((sum, i) => sum + (i.currentStock || i.quantity || 0), 0);
+  }
+  getTotalInventoryValue(): number {
+    return this.inventoryList.reduce((sum, i) => sum + ((i.currentStock || i.quantity || 0) * 160), 0);
   }
 
   // --- Utility Cleaners & Formatters ---

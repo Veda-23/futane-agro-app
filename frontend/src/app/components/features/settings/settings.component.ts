@@ -49,6 +49,16 @@ export class SettingsComponent implements OnInit, OnDestroy {
   fontOptions = ['Inter', 'Plus Jakarta Sans', 'Outfit', 'Roboto', 'JetBrains Mono'];
   isUploadingLogo = false;
 
+  tableDensity: 'compact' | 'comfortable' | 'spacious' = (localStorage.getItem('futane_table_density') as any) || 'comfortable';
+
+  setDensity(density: 'compact' | 'comfortable' | 'spacious') {
+    this.tableDensity = density;
+    this.branding.table_density = density;
+    document.body.classList.remove('density-compact', 'density-comfortable', 'density-spacious');
+    document.body.classList.add('density-' + density);
+    localStorage.setItem('futane_table_density', density);
+  }
+
   // 2. Multi-Company & ERP Business Rules
   companyProfiles: any[] = [
     {
@@ -384,7 +394,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.loadAllControlCenterData();
   }
 
-  loadAllControlCenterData() {
+  loadAllControlCenterData(notify: boolean = false) {
+    if (notify) {
+      this.notificationService.showDataRefreshed('Enterprise Control Center', 10);
+    }
     // Load Branding
     this.apiService.getAdminBranding().subscribe({
       next: (b) => {

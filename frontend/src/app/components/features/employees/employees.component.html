@@ -1,56 +1,130 @@
-<div class="enterprise-header">
-  <div class="enterprise-header-title-group">
-    <div class="enterprise-header-icon"><i class="bi bi-person-badge"></i></div>
-    <div class="enterprise-header-text">
-      <h2>Employee Management</h2>
-      <p>Manage staff profiles, designations, contact records, and payroll data</p>
+<!-- HR / EMPLOYEES TELEMETRY RIBBON -->
+<div class="employee-summary-ribbon" style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+  <div class="ribbon-pill" style="flex: 1; min-width: 140px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+    <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--primary-soft); display: flex; align-items: center; justify-content: center;">
+      <i class="bi bi-people-fill text-primary" style="font-size: 18px;"></i>
+    </div>
+    <div>
+      <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Active Workforce</div>
+      <strong style="font-size: 15px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalEmployees() }} Staff</strong>
+    </div>
+  </div>
+
+  <div class="ribbon-pill" style="flex: 1; min-width: 140px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+    <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(16,185,129,0.12); display: flex; align-items: center; justify-content: center;">
+      <i class="bi bi-cash-stack text-success" style="font-size: 18px;"></i>
+    </div>
+    <div>
+      <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Monthly Payroll</div>
+      <strong style="font-size: 15px; color: var(--color-success); font-family: var(--font-heading);">₹{{ getTotalMonthlyPayroll() | number:'1.0-0' }}</strong>
+    </div>
+  </div>
+
+  <div class="ribbon-pill" style="flex: 1; min-width: 140px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+    <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(59,130,246,0.12); display: flex; align-items: center; justify-content: center;">
+      <i class="bi bi-graph-up-arrow text-info" style="font-size: 18px;"></i>
+    </div>
+    <div>
+      <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Average Compensation</div>
+      <strong style="font-size: 15px; color: var(--primary); font-family: var(--font-heading);">₹{{ getAverageSalary() | number:'1.0-0' }}/mo</strong>
+    </div>
+  </div>
+
+  <div class="ribbon-pill" style="flex: 1; min-width: 140px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+    <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(245,158,11,0.12); display: flex; align-items: center; justify-content: center;">
+      <i class="bi bi-diagram-3-fill text-warning" style="font-size: 18px;"></i>
+    </div>
+    <div>
+      <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Operational Roles</div>
+      <strong style="font-size: 15px; color: var(--text-primary); font-family: var(--font-heading);">{{ getDistinctRolesCount() }} Roles</strong>
     </div>
   </div>
 </div>
 
 <div class="grid-cols-3">
-  <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
-    <h3 style="margin-bottom:14px;font-weight:700;"><i class="bi bi-person-plus me-1"></i>{{ 'hr.add_title' | translate:currentLang }}</h3>
+  <!-- Staff Profile Form -->
+  <div class="glass-panel form-card" [class.editing-mode]="isEditing()" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
+    <div class="card-header-flex" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+      <div class="section-title-badge" style="display: flex; align-items: center; gap: 8px;">
+        <span class="badge-icon"><i class="bi bi-person-badge-fill" style="font-size:18px; color:var(--primary);"></i></span>
+        <div class="badge-text">
+          <h3 style="margin: 0; font-size: 15px; font-weight: 700;">{{ isEditing() ? 'Edit Staff Profile' : ('hr.add_title' | translate:currentLang) }}</h3>
+        </div>
+      </div>
+      <button *ngIf="isEditing()" type="button" class="btn btn-secondary btn-sm" (click)="cancelEdit()">
+        <i class="bi bi-x-circle me-1"></i>Cancel
+      </button>
+    </div>
+
     <form (submit)="saveEmployee()">
       <div class="form-group">
-        <label>{{ 'hr.name' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="employeeForm.empName" name="eName" required placeholder="Worker name">
+        <label>{{ 'hr.name' | translate:currentLang }} <span class="req-star">*</span></label>
+        <input appAutoSelect type="text" [(ngModel)]="employeeForm.empName" name="eName" required placeholder="Full worker name">
       </div>
       <div class="form-group">
-        <label>{{ 'hr.designation' | translate:currentLang }}</label>
+        <label>{{ 'hr.designation' | translate:currentLang }} <span class="req-star">*</span></label>
         <input appAutoSelect type="text" [(ngModel)]="employeeForm.designation" name="eDesig" required placeholder="Role (e.g. Operator, Accountant)">
       </div>
       <div class="form-group">
-        <label>{{ 'hr.mobile' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="employeeForm.empContact" name="eContact" required placeholder="10-digit mobile">
+        <label>{{ 'hr.mobile' | translate:currentLang }} <span class="req-star">*</span></label>
+        <input appAutoSelect type="text" [(ngModel)]="employeeForm.empContact" name="eContact" required placeholder="10-digit mobile number">
       </div>
       <div class="form-group">
-        <label>{{ 'hr.salary' | translate:currentLang }}</label>
-        <input appAutoSelect type="number" [(ngModel)]="employeeForm.salary" name="eSalary" required>
+        <label>{{ 'hr.salary' | translate:currentLang }} (₹/mo) <span class="req-star">*</span></label>
+        <input appAutoSelect type="number" [(ngModel)]="employeeForm.salary" name="eSalary" required placeholder="Monthly base salary">
       </div>
       <div class="form-group">
         <label>{{ 'hr.aadhaar' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="employeeForm.aadhaarNo" name="eAadhaar" required maxlength="12" pattern="[2-9]{1}[0-9]{11}" placeholder="12-digit Aadhaar Card number">
+        <input appAutoSelect type="text" [(ngModel)]="employeeForm.aadhaarNo" name="eAadhaar" maxlength="12" pattern="[2-9]{1}[0-9]{11}" placeholder="12-digit Aadhaar Card number">
       </div>
       <div class="form-group">
         <label>{{ 'hr.bank' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="employeeForm.bankAccount" name="eBank" required placeholder="IFS Code / Account No">
+        <input appAutoSelect type="text" [(ngModel)]="employeeForm.bankAccount" name="eBank" placeholder="IFS Code / Account No">
       </div>
       <div class="form-group">
-        <label>{{ 'hr.joining_date' | translate:currentLang }}</label>
+        <label>{{ 'hr.joining_date' | translate:currentLang }} <span class="req-star">*</span></label>
         <input appAutoSelect type="date" [(ngModel)]="employeeForm.joiningDate" name="eJoin" required>
       </div>
       <div class="form-group">
         <label>{{ 'hr.address' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="employeeForm.address" name="eAddr" required placeholder="Residential address">
+        <input appAutoSelect type="text" [(ngModel)]="employeeForm.address" name="eAddr" placeholder="Residential address">
       </div>
-      <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'hr.register_btn' | translate:currentLang }}</button>
+
+      <!-- Live Profile Readiness Gauge -->
+      <div *ngIf="employeeForm.empName" class="live-efficiency-badge-wrap animate-fade-in" style="margin-bottom: 14px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="bi bi-shield-check me-1 text-primary"></i>Profile Readiness:</span>
+          <strong style="font-size: 12px; font-weight: 700; color: var(--primary);">
+            {{ (employeeForm.aadhaarNo && employeeForm.bankAccount ? 'Verified Staff' : 'Basic Info') }}
+          </strong>
+        </div>
+        <div style="font-size: 10.5px; color: var(--text-muted); display: flex; gap: 8px;">
+          <span [style.color]="employeeForm.aadhaarNo?.length === 12 ? 'var(--color-success)' : 'var(--text-muted)'">
+            {{ employeeForm.aadhaarNo?.length === 12 ? '✓ Aadhaar Valid' : '○ Aadhaar Optional' }}
+          </span>
+          <span>•</span>
+          <span [style.color]="employeeForm.bankAccount?.length ? 'var(--color-success)' : 'var(--text-muted)'">
+            {{ employeeForm.bankAccount?.length ? '✓ Bank Registered' : '○ Bank Optional' }}
+          </span>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%;">
+        <i class="bi bi-person-check me-1"></i>{{ isEditing() ? 'Update Staff Record' : ('hr.register_btn' | translate:currentLang) }}
+      </button>
     </form>
   </div>
+
+  <!-- Table Grid Card -->
   <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
-    <h3>{{ 'hr.records_title' | translate:currentLang }}</h3>
+    <div class="section-title-badge" style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+      <span class="badge-icon"><i class="bi bi-people" style="font-size:18px; color:var(--primary);"></i></span>
+      <div class="badge-text">
+        <h3 style="margin: 0; font-size: 15px; font-weight: 700;">{{ 'hr.records_title' | translate:currentLang }}</h3>
+      </div>
+    </div>
     
-    <div class="table-container" style="margin-top: 15px;">
+    <div class="table-container">
       <app-data-table 
         [data]="employees" 
         [columns]="employeeTableColumns" 
@@ -58,7 +132,7 @@
         [tableId]="'employees_table'"
         (actionClicked)="handleEmployeeAction($event)"
         (batchDelete)="batchDeleteEmployees($event)"
-        searchPlaceholder="Search Employees...">
+        searchPlaceholder="Search Employees by Name, Role or Contact...">
       </app-data-table>
     </div>
   </div>

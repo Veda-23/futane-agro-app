@@ -54,6 +54,9 @@ export class AuditLogsComponent implements OnInit {
   currentPage: number = 1;
   pageSize: number = 15;
 
+  // Export dropdown
+  showExportMenu: boolean = false;
+
   // Selected Log for detail modal
   selectedLogForDetail: AuditLogItem | null = null;
   copiedPayload: boolean = false;
@@ -88,7 +91,7 @@ export class AuditLogsComponent implements OnInit {
     });
   }
 
-  loadData() {
+  loadData(isManual: boolean = false) {
     this.isLoading = true;
     this.apiService.getAuditLogs().subscribe({
       next: (res: any[]) => {
@@ -99,11 +102,17 @@ export class AuditLogsComponent implements OnInit {
           this.auditLogsList = this.getFallbackLogs();
         }
         this.isLoading = false;
+        if (isManual) {
+          this.notificationService.showDataRefreshed('Security Audit Logs', this.auditLogsList.length);
+        }
       },
       error: (err) => {
         console.warn('Audit logs API call fallback:', err);
         this.auditLogsList = this.getFallbackLogs();
         this.isLoading = false;
+        if (isManual) {
+          this.notificationService.showDataRefreshed('Security Audit Logs', this.auditLogsList.length);
+        }
       }
     });
   }

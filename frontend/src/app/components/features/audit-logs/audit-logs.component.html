@@ -61,14 +61,21 @@
         <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious density"><i class="bi bi-grid-3x2-gap"></i> Spacious</button>
       </div>
 
-      <!-- Export CSV -->
-      <button type="button" class="btn btn-secondary btn-sm" (click)="exportCSV()" title="Export audit records to CSV">
-        <i class="bi bi-download me-1"></i> Export
-      </button>
+      <!-- Export -->
+      <div class="export-dropdown-wrapper">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="showExportMenu = !showExportMenu; $event.stopPropagation()" title="Export audit records">
+          <i class="bi bi-download me-1"></i> Export &#x25BE;
+        </button>
+        <div class="export-menu" *ngIf="showExportMenu" (click)="$event.stopPropagation()">
+          <button type="button" class="export-menu-item" (click)="exportCSV(); showExportMenu = false">
+            <i class="bi bi-file-earmark-spreadsheet me-1"></i> CSV (.csv)
+          </button>
+        </div>
+      </div>
 
       <!-- Reload Data -->
-      <button type="button" class="btn btn-secondary btn-sm" (click)="loadData()" title="Reload audit data">
-        <i class="bi bi-arrow-repeat"></i>
+      <button type="button" class="btn btn-secondary btn-sm" (click)="loadData(true)" title="Reload audit data">
+        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
       </button>
     </div>
   </div>
@@ -100,7 +107,7 @@
             <!-- TIMESTAMP -->
             <td>
               <div class="time-cell">
-                <span class="material-symbols-outlined time-icon">schedule</span>
+                <i class="bi bi-clock time-icon"></i>
                 <span>{{ log.timestamp | date:'dd MMM yyyy, HH:mm:ss' }}</span>
               </div>
             </td>
@@ -128,7 +135,7 @@
             <!-- MODULE / RESOURCE -->
             <td>
               <span class="module-tag">
-                <span class="material-symbols-outlined tag-icon">folder</span>
+                <i class="bi bi-folder2-open tag-icon"></i>
                 {{ log.tableName || log.resourceName || 'system' }}
               </span>
             </td>
@@ -136,7 +143,7 @@
             <!-- CLIENT IP -->
             <td>
               <span class="ip-badge">
-                <span class="material-symbols-outlined ip-icon">lan</span>
+                <i class="bi bi-globe ip-icon"></i>
                 {{ log.ipAddress || '127.0.0.1' }}
               </span>
             </td>
@@ -148,7 +155,7 @@
                   {{ log.details || log.newValue || 'System event logged.' }}
                 </span>
                 <button type="button" class="btn-inspect" (click)="openLogDetail(log); $event.stopPropagation()" title="Inspect details">
-                  <span class="material-symbols-outlined">open_in_new</span>
+                  <i class="bi bi-box-arrow-up-right"></i>
                 </button>
               </div>
             </td>
@@ -158,10 +165,10 @@
           <tr *ngIf="paginatedAuditLogs.length === 0">
             <td colspan="7" class="empty-state-cell">
               <div class="empty-audit-box">
-                <span class="material-symbols-outlined empty-icon">manage_search</span>
+                <i class="bi bi-search empty-icon"></i>
                 <h4>No Audit Records Found</h4>
                 <p>No audit activity matching your filter criteria. Try clearing filters.</p>
-                <button type="button" class="btn btn-secondary btn-sm" (click)="clearAuditFilters()">Reset Filters</button>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="clearAuditFilters()"><i class="bi bi-x-lg me-1"></i>Reset Filters</button>
               </div>
             </td>
           </tr>

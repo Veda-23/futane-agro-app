@@ -1,40 +1,85 @@
+<!-- SALARIES / PAYROLL TELEMETRY RIBBON -->
+<div class="salaries-summary-ribbon" style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+  <div class="ribbon-pill" style="flex: 1; min-width: 140px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+    <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(16,185,129,0.12); display: flex; align-items: center; justify-content: center;">
+      <i class="bi bi-cash-stack text-success" style="font-size: 18px;"></i>
+    </div>
+    <div>
+      <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Total Disbursed</div>
+      <strong style="font-size: 15px; color: var(--color-success); font-family: var(--font-heading);">₹{{ getTotalPaidAmount() | number:'1.0-0' }}</strong>
+    </div>
+  </div>
+
+  <div class="ribbon-pill" style="flex: 1; min-width: 140px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+    <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(245,158,11,0.12); display: flex; align-items: center; justify-content: center;">
+      <i class="bi bi-clock-history text-warning" style="font-size: 18px;"></i>
+    </div>
+    <div>
+      <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Pending Payouts</div>
+      <strong style="font-size: 15px; color: var(--color-warning); font-family: var(--font-heading);">₹{{ getTotalPendingAmount() | number:'1.0-0' }}</strong>
+    </div>
+  </div>
+
+  <div class="ribbon-pill" style="flex: 1; min-width: 140px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+    <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--primary-soft); display: flex; align-items: center; justify-content: center;">
+      <i class="bi bi-pie-chart-fill text-primary" style="font-size: 18px;"></i>
+    </div>
+    <div>
+      <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Disbursal Rate</div>
+      <strong style="font-size: 15px; color: var(--primary); font-family: var(--font-heading);">{{ getDisbursalRate() | number:'1.1-1' }}%</strong>
+    </div>
+  </div>
+
+  <div class="ribbon-pill" style="flex: 1; min-width: 140px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+    <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(59,130,246,0.12); display: flex; align-items: center; justify-content: center;">
+      <i class="bi bi-receipt-cutoff text-info" style="font-size: 18px;"></i>
+    </div>
+    <div>
+      <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Payroll Records</div>
+      <strong style="font-size: 15px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalPayoutCount() }} Entries</strong>
+    </div>
+  </div>
+</div>
+
 <div class="grid-cols-3">
-  <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
-    <h3>{{ 'sal.add_title' | translate:currentLang }}</h3>
+  <!-- Payout Entry Form -->
+  <div class="glass-panel form-card" [class.editing-mode]="isEditing()" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
+    <div class="card-header-flex" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+      <div class="section-title-badge" style="display: flex; align-items: center; gap: 8px;">
+        <span class="badge-icon"><i class="bi bi-wallet2" style="font-size:18px; color:var(--primary);"></i></span>
+        <div class="badge-text">
+          <h3 style="margin: 0; font-size: 15px; font-weight: 700;">{{ isEditing() ? 'Edit Payroll Record' : ('sal.add_title' | translate:currentLang) }}</h3>
+        </div>
+      </div>
+      <button *ngIf="isEditing()" type="button" class="btn btn-secondary btn-sm" (click)="cancelEdit()">
+        <i class="bi bi-x-circle me-1"></i>Cancel
+      </button>
+    </div>
+
     <form (submit)="saveSalary()">
       <div class="form-group">
-        <label>{{ 'label.select_employee' | translate:currentLang }}</label>
-        <select [(ngModel)]="salariesForm.id" name="salEmp" required>
+        <label>{{ 'label.select_employee' | translate:currentLang }} <span class="req-star">*</span></label>
+        <select [(ngModel)]="salariesForm.id" name="salEmp" required (change)="onEmployeeSelectChange()">
+          <option value="" disabled selected>-- Select Staff Member --</option>
           <option *ngFor="let emp of employees" [value]="emp.id">{{ emp.empName }} (₹{{ emp.salary }}/mo)</option>
         </select>
       </div>
       <div class="form-group">
-        <label>{{ 'sal.month' | translate:currentLang }}</label>
+        <label>{{ 'sal.month' | translate:currentLang }} <span class="req-star">*</span></label>
         <select [(ngModel)]="salariesForm.month" name="salMonth" required>
-          <option value="January">January</option>
-          <option value="February">February</option>
-          <option value="March">March</option>
-          <option value="April">April</option>
-          <option value="May">May</option>
-          <option value="June">June</option>
-          <option value="July">July</option>
-          <option value="August">August</option>
-          <option value="September">September</option>
-          <option value="October">October</option>
-          <option value="November">November</option>
-          <option value="December">December</option>
+          <option *ngFor="let m of allMonths" [value]="m">{{ m }}</option>
         </select>
       </div>
       <div class="form-group">
-        <label>{{ 'sal.year' | translate:currentLang }}</label>
+        <label>{{ 'sal.year' | translate:currentLang }} <span class="req-star">*</span></label>
         <input appAutoSelect type="number" [(ngModel)]="salariesForm.year" name="salYear" required>
       </div>
       <div class="form-group">
-        <label>{{ 'sal.amount' | translate:currentLang }}</label>
-        <input appAutoSelect type="number" [(ngModel)]="salariesForm.salaryAmount" name="salAmount" required>
+        <label>{{ 'sal.amount' | translate:currentLang }} (₹) <span class="req-star">*</span></label>
+        <input appAutoSelect type="number" [(ngModel)]="salariesForm.salaryAmount" name="salAmount" required placeholder="Salary amount in ₹">
       </div>
       <div class="form-group">
-        <label>{{ 'sal.status' | translate:currentLang }}</label>
+        <label>{{ 'sal.status' | translate:currentLang }} <span class="req-star">*</span></label>
         <select [(ngModel)]="salariesForm.status" name="salStatus" required>
           <option value="Paid">Paid</option>
           <option value="Pending">Pending</option>
@@ -44,11 +89,37 @@
         <label>{{ 'sal.date' | translate:currentLang }}</label>
         <input appAutoSelect type="date" [(ngModel)]="salariesForm.paidDate" name="salPaidDate">
       </div>
-      <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'sal.save_btn' | translate:currentLang }}</button>
+
+      <!-- Live Compensation Preview Badge -->
+      <div *ngIf="salariesForm.salaryAmount > 0" class="live-efficiency-badge-wrap animate-fade-in" style="margin-bottom: 14px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="bi bi-calculator me-1 text-primary"></i>Payout Preview:</span>
+          <strong style="font-size: 13px; font-weight: 800;" [style.color]="salariesForm.status === 'Paid' ? 'var(--color-success)' : 'var(--color-warning)'">
+            ₹{{ salariesForm.salaryAmount | number:'1.0-0' }} ({{ salariesForm.status }})
+          </strong>
+        </div>
+        <div style="font-size: 10.5px; color: var(--text-muted);">
+          Cycle: {{ salariesForm.month }} {{ salariesForm.year }}
+          <span *ngIf="getSelectedEmployee()"> • {{ getSelectedEmployee().empName }} ({{ getSelectedEmployee().designation }})</span>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%;">
+        <i class="bi bi-wallet2 me-1"></i>{{ isEditing() ? 'Update Record' : ('sal.save_btn' | translate:currentLang) }}
+      </button>
     </form>
   </div>
+
+  <!-- Table Grid Card -->
   <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
-    <h3>{{ 'sal.records_title' | translate:currentLang }}</h3>
+    <div class="card-header-flex" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+      <div class="section-title-badge" style="display: flex; align-items: center; gap: 8px;">
+        <span class="badge-icon"><i class="bi bi-cash-stack" style="font-size:18px; color:var(--primary);"></i></span>
+        <div class="badge-text">
+          <h3 style="margin: 0; font-size: 15px; font-weight: 700;">{{ 'sal.records_title' | translate:currentLang }}</h3>
+        </div>
+      </div>
+    </div>
     
     <!-- Skeleton Loader (A-01) -->
     <div *ngIf="isLoading" class="skeleton-container" aria-busy="true" aria-label="Loading salaries...">

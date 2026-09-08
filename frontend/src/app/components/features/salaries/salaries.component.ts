@@ -99,6 +99,50 @@ export class SalariesComponent implements OnInit {
     return this.loggedInUser && (this.loggedInUser.role === 'SUPER_ADMIN' || this.loggedInUser.role === 'ADMIN');
   }
 
+  isEditing(): boolean {
+    return !!(this.salariesForm as any)._editId;
+  }
+
+  cancelEdit() {
+    this.salariesForm = { id: '', month: 'May', year: 2026, salaryAmount: 0, status: 'Pending', paidDate: '' };
+  }
+
+  onEmployeeSelectChange() {
+    if (this.salariesForm.id) {
+      const emp = this.employees.find(e => String(e.id) === String(this.salariesForm.id));
+      if (emp && emp.salary && (!this.salariesForm.salaryAmount || this.salariesForm.salaryAmount === 0)) {
+        this.salariesForm.salaryAmount = emp.salary;
+      }
+    }
+  }
+
+  getSelectedEmployee(): any {
+    if (!this.salariesForm.id) return null;
+    return this.employees.find(e => String(e.id) === String(this.salariesForm.id));
+  }
+
+  getTotalPaidAmount(): number {
+    return (this.salariesList || [])
+      .filter(s => s.status === 'Paid')
+      .reduce((acc, curr) => acc + (Number(curr.salaryAmount) || 0), 0);
+  }
+
+  getTotalPendingAmount(): number {
+    return (this.salariesList || [])
+      .filter(s => s.status === 'Pending')
+      .reduce((acc, curr) => acc + (Number(curr.salaryAmount) || 0), 0);
+  }
+
+  getDisbursalRate(): number {
+    const paid = this.getTotalPaidAmount();
+    const total = paid + this.getTotalPendingAmount();
+    return total > 0 ? (paid / total) * 100 : 100;
+  }
+
+  getTotalPayoutCount(): number {
+    return this.salariesList?.length || 0;
+  }
+
   isSalaryAlreadyPaid(): boolean {
     const empId = parseInt(this.salariesForm.id);
     const month = this.salariesForm.month;

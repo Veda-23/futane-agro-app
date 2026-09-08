@@ -10,6 +10,7 @@ import Swal from 'sweetalert2';
 
 import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-invoices',
@@ -44,11 +45,19 @@ export class InvoicesComponent implements OnInit {
   filterMaxAmount: number | null = null;
   filterPartyId = '';
 
+  tableDensity: 'compact' | 'comfortable' | 'spacious' = 'comfortable';
   defaultColumns = ['ID', 'Invoice No', 'Date', 'Party', 'Description', 'Total Bill', 'Status', 'Actions'];
 
-  constructor(private apiService: ApiService) {}
+  constructor(
+    private apiService: ApiService,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit() {
+    const saved = localStorage.getItem('futane_table_density');
+    if (saved === 'compact' || saved === 'comfortable' || saved === 'spacious') {
+      this.tableDensity = saved;
+    }
     this.loadData();
     this.columnsVisibility['invoices'] = {};
     this.defaultColumns.forEach(col => {
@@ -56,10 +65,27 @@ export class InvoicesComponent implements OnInit {
     });
   }
 
-  loadData() {
-    this.apiService.getInvoices().subscribe((res: any[]) => {
-      this.invoicesList = res;
-      this.tableFilteredCounts['invoices'] = res.length;
+  setDensity(d: 'compact' | 'comfortable' | 'spacious') {
+    this.tableDensity = d;
+    localStorage.setItem('futane_table_density', d);
+    document.body.classList.remove('density-compact', 'density-comfortable', 'density-spacious');
+    document.body.classList.add('density-' + d);
+  }
+
+  loadData(isManual: boolean = false) {
+    this.apiService.getInvoices().subscribe({
+      next: (res: any[]) => {
+        this.invoicesList = res || [];
+        this.tableFilteredCounts['invoices'] = (res || []).length;
+        if (isManual) {
+          this.notificationService.showDataRefreshed('Invoices Registry', this.invoicesList.length);
+        }
+      },
+      error: () => {
+        if (isManual) {
+          this.notificationService.showDataRefreshed('Invoices Registry', 0);
+        }
+      }
     });
   }
 

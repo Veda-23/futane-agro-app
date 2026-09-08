@@ -51,6 +51,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
   filteredReportData: any[] = [];
   reportTotals = { amount: 0, qty: 0, count: 0 };
   private reportChart: Chart | null = null;
+  tableDensity: 'compact' | 'comfortable' | 'spacious' = 'comfortable';
 
   constructor(
     private apiService: ApiService,
@@ -58,7 +59,18 @@ export class ReportsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    const saved = localStorage.getItem('futane_table_density');
+    if (saved === 'compact' || saved === 'comfortable' || saved === 'spacious') {
+      this.tableDensity = saved;
+    }
     this.loadData();
+  }
+
+  setDensity(d: 'compact' | 'comfortable' | 'spacious') {
+    this.tableDensity = d;
+    localStorage.setItem('futane_table_density', d);
+    document.body.classList.remove('density-compact', 'density-comfortable', 'density-spacious');
+    document.body.classList.add('density-' + d);
   }
 
   ngOnDestroy() {
@@ -152,7 +164,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     this.runReport();
   }
 
-  runReport() {
+  runReport(isManual: boolean = false) {
     this.filteredReportData = [];
     const filter = this.reportFilter;
 
@@ -194,6 +206,11 @@ export class ReportsComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.renderReportChart();
     }, 50);
+
+    if (isManual) {
+      const count = this.reportFilter.type === 'party_ledger' ? this.partyLedgerRows.length : this.filteredReportData.length;
+      this.notificationService.showDataRefreshed('Reports Dataset', count);
+    }
   }
 
   // Party Ledger (E-03)

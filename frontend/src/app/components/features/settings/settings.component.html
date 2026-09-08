@@ -4,13 +4,13 @@
   <div class="admin-header-banner">
     <div class="banner-left">
       <div class="banner-icon-box">
-        <span class="material-symbols-outlined">tune</span>
+        <i class="bi bi-sliders"></i>
       </div>
       <div class="banner-titles">
         <h2>
           Super Admin Control Center
           <span class="super-admin-badge">
-            <span class="material-symbols-outlined" style="font-size: 14px;">verified_user</span>
+            <i class="bi bi-shield-check" style="font-size: 14px;"></i>
             SUPER ADMIN
           </span>
           <span class="hud-live-pill">
@@ -23,35 +23,35 @@
         <!-- Futuristic HUD Micro-Telemetry Strip -->
         <div class="hud-telemetry-strip">
           <span class="hud-metric" title="STOMP WebSocket broker live connection">
-            <span class="material-symbols-outlined hud-icon">sensors</span>
+            <i class="bi bi-broadcast hud-icon"></i>
             WS Broker: <strong>Connected</strong>
           </span>
           <span class="hud-divider">|</span>
           <span class="hud-metric" title="In-Memory Cache TTL">
-            <span class="material-symbols-outlined hud-icon">bolt</span>
+            <i class="bi bi-lightning-charge-fill hud-icon"></i>
             Caffeine: <strong>30m TTL Active</strong>
           </span>
           <span class="hud-divider">|</span>
           <span class="hud-metric" title="Database Health Status">
-            <span class="material-symbols-outlined hud-icon" [style.color]="systemHealth?.db === 'HEALTHY' ? '#10b981' : '#ef4444'">database</span>
+            <i class="bi bi-database hud-icon" [style.color]="systemHealth?.db === 'HEALTHY' ? '#10b981' : '#ef4444'"></i>
             DB: <strong [style.color]="systemHealth?.db === 'HEALTHY' ? '#10b981' : '#ef4444'">{{ systemHealth?.db === 'HEALTHY' ? 'Healthy' : 'Degraded' }}</strong>
           </span>
           <span class="hud-divider">|</span>
           <span class="hud-metric" title="Mail Service Connectivity">
-            <span class="material-symbols-outlined hud-icon" [style.color]="systemHealth?.mail === 'CONNECTED' ? '#10b981' : '#ef4444'">mail</span>
+            <i class="bi bi-envelope hud-icon" [style.color]="systemHealth?.mail === 'CONNECTED' ? '#10b981' : '#ef4444'"></i>
             Mail: <strong [style.color]="systemHealth?.mail === 'CONNECTED' ? '#10b981' : '#ef4444'">{{ systemHealth?.mail === 'CONNECTED' ? 'Connected' : 'Disconnected' }}</strong>
           </span>
           <span class="hud-divider">|</span>
           <span class="hud-metric" title="Audit Trail IP Logging">
-            <span class="material-symbols-outlined hud-icon">security</span>
+            <i class="bi bi-shield-lock hud-icon"></i>
             Audit Guard: <strong>IP Logged</strong>
           </span>
         </div>
       </div>
     </div>
     <div class="banner-right">
-      <button class="btn btn-outline-secondary btn-sm hud-sync-btn" (click)="loadAllControlCenterData()" title="Reload settings and evict stale local state">
-        <span class="material-symbols-outlined" style="font-size: 15px; vertical-align: middle;">sync</span> Sync Data
+      <button class="btn btn-outline-secondary btn-sm hud-sync-btn" (click)="loadAllControlCenterData(true)" title="Reload settings and evict stale local state">
+        <i class="bi bi-arrow-clockwise" style="font-size: 15px; vertical-align: middle;"></i> Sync Data
       </button>
     </div>
   </div>
@@ -60,44 +60,44 @@
   <div class="settings-top-navbar">
     <div class="settings-nav-scroll-container">
       <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'branding'" (click)="switchSubNav('branding')">
-        <span class="material-symbols-outlined nav-pill-icon">palette</span>
+        <i class="bi bi-palette nav-pill-icon"></i>
         <span>Branding & Themes</span>
       </button>
       <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'business-rules'" (click)="switchSubNav('business-rules')">
-        <span class="material-symbols-outlined nav-pill-icon">corporate_fare</span>
+        <i class="bi bi-building nav-pill-icon"></i>
         <span>Business Rules</span>
       </button>
       <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'teams'" (click)="switchSubNav('teams')">
-        <span class="material-symbols-outlined nav-pill-icon">apartment</span>
+        <i class="bi bi-buildings nav-pill-icon"></i>
         <span>Teams & Depts</span>
       </button>
       <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'custom_fields'" (click)="switchSubNav('custom_fields')">
-        <span class="material-symbols-outlined nav-pill-icon">extension</span>
+        <i class="bi bi-puzzle nav-pill-icon"></i>
         <span>Extensible Fields</span>
       </button>
       <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'notifications'" (click)="switchSubNav('notifications')">
-        <span class="material-symbols-outlined nav-pill-icon">chat</span>
+        <i class="bi bi-chat-dots nav-pill-icon"></i>
         <span>WhatsApp & Alerts</span>
       </button>
       <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'users'" (click)="switchSubNav('users')">
-        <span class="material-symbols-outlined nav-pill-icon">badge</span>
+        <i class="bi bi-person-badge nav-pill-icon"></i>
         <span>Users & RBAC</span>
       </button>
       <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'features'" (click)="switchSubNav('features')">
-        <span class="material-symbols-outlined nav-pill-icon">toggle_on</span>
+        <i class="bi bi-toggle-on nav-pill-icon"></i>
         <span>Feature Flags</span>
         <span class="badge-count-pill" [ngClass]="featureFlagBadgeClass" *ngIf="featureFlags.length > 0">{{ activeFeatureCount }}/{{ featureFlags.length }}</span>
       </button>
       <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'developer'" (click)="switchSubNav('developer')">
-        <span class="material-symbols-outlined nav-pill-icon">terminal</span>
+        <i class="bi bi-terminal nav-pill-icon"></i>
         <span>Developer Hub</span>
       </button>
       <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'governance'" (click)="switchSubNav('governance')">
-        <span class="material-symbols-outlined nav-pill-icon">memory</span>
+        <i class="bi bi-cpu nav-pill-icon"></i>
         <span>Cache & Gov</span>
       </button>
       <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'password'" (click)="switchSubNav('password')">
-        <span class="material-symbols-outlined nav-pill-icon">lock_reset</span>
+        <i class="bi bi-key nav-pill-icon"></i>
         <span>Security</span>
       </button>
     </div>
@@ -117,7 +117,7 @@
           </div>
           <div style="display: flex; gap: 8px;">
             <button class="btn btn-primary btn-sm" (click)="saveBrandingSettings()">
-              <span class="material-symbols-outlined" style="font-size: 15px;">save</span> Save Branding
+              <i class="bi bi-floppy" style="font-size: 15px;"></i> Save Branding
             </button>
           </div>
         </div>
@@ -125,7 +125,7 @@
         <div class="settings-two-col-grid branding-cards-grid">
           <!-- 1. Logo & Asset System Card -->
           <div class="glass-card settings-card logo-card-panel">
-            <h4><span class="material-symbols-outlined">image</span> Enterprise Logo & Assets</h4>
+            <h4><i class="bi bi-image"></i> Enterprise Logo & Assets</h4>
             <p class="card-desc">Upload company branding mark. Vector SVG or transparent PNG recommended.</p>
             
             <div class="modern-logo-dropzone" (click)="logoFileInput.click()">
@@ -134,7 +134,7 @@
               </div>
               <div class="logo-meta-info">
                 <div class="logo-upload-prompt">
-                  <span class="material-symbols-outlined upload-icon">cloud_upload</span>
+                  <i class="bi bi-cloud-arrow-up upload-icon"></i>
                   <span class="upload-headline">{{ isUploadingLogo ? 'Uploading logo...' : 'Click to Replace Corporate Logo' }}</span>
                 </div>
                 <span class="upload-subtext">Supports vector SVG, high-res PNG, or JPG (Max 2MB)</span>
@@ -154,7 +154,7 @@
 
           <!-- 2. Color Palette & Typography Card -->
           <div class="glass-card settings-card palette-card-panel">
-            <h4><span class="material-symbols-outlined">palette</span> Primary Theme Palette & Typography</h4>
+            <h4><i class="bi bi-palette"></i> Primary Theme Palette & Typography</h4>
             <p class="card-desc">Drives navigation highlights, primary buttons, and metric tokens app-wide.</p>
 
             <!-- Theme Palette Control -->
@@ -172,7 +172,7 @@
                         [class.active-preset]="branding.brand_primary_color === c"
                         (click)="onBrandColorChange(c)"
                         [title]="c">
-                  <span class="material-symbols-outlined checkmark-icon" *ngIf="branding.brand_primary_color === c">check</span>
+                  <i class="bi bi-check-lg checkmark-icon" *ngIf="branding.brand_primary_color === c"></i>
                 </button>
               </div>
             </div>
@@ -221,13 +221,13 @@
           </div>
           <div style="display: flex; gap: 8px;">
             <button class="btn btn-secondary btn-sm" (click)="openAddBankModal()">
-              <span class="material-symbols-outlined" style="font-size: 15px;">account_balance</span> + Add Bank Account
+              <i class="bi bi-bank" style="font-size: 15px;"></i> + Add Bank Account
             </button>
             <button class="btn btn-secondary btn-sm" (click)="openAddCompanyModal()">
-              <span class="material-symbols-outlined" style="font-size: 15px;">domain</span> + Add Legal Entity
+              <i class="bi bi-building" style="font-size: 15px;"></i> + Add Legal Entity
             </button>
             <button class="btn btn-primary btn-sm" (click)="saveBusinessRules()">
-              <span class="material-symbols-outlined" style="font-size: 15px;">save</span> Save Rules
+              <i class="bi bi-floppy" style="font-size: 15px;"></i> Save Rules
             </button>
           </div>
         </div>
@@ -236,7 +236,7 @@
         <div class="business-section-block">
           <div class="block-title-row">
             <h4>
-              <span class="material-symbols-outlined" style="color: #d97706; font-size: 18px;">corporate_fare</span>
+              <i class="bi bi-building" style="color: #d97706; font-size: 18px;"></i>
               Registered Company & Plant Billing Profiles ({{ companyProfiles.length }})
             </h4>
             <span class="section-hint-badge">Multi-Entity B2B Billing</span>
@@ -247,7 +247,7 @@
               <div class="company-card-header">
                 <div class="company-brand-info">
                   <div class="company-icon-avatar" [class.avatar-default]="c.isDefault">
-                    <span class="material-symbols-outlined">factory</span>
+                    <i class="bi bi-buildings"></i>
                   </div>
                   <div>
                     <div class="company-title-row">
@@ -259,13 +259,13 @@
                 </div>
                 <div class="company-actions">
                   <button class="btn-icon-subtle" (click)="openEditCompanyModal(c)" title="Edit Company Details">
-                    <span class="material-symbols-outlined" style="font-size: 17px;">edit</span>
+                    <i class="bi bi-pencil" style="font-size: 17px;"></i>
                   </button>
                   <button class="btn-icon-subtle" *ngIf="!c.isDefault" (click)="setDefaultCompany(c)" title="Set as Default">
-                    <span class="material-symbols-outlined" style="font-size: 17px; color: #d97706;">star</span>
+                    <i class="bi bi-star-fill" style="font-size: 17px; color: #d97706;"></i>
                   </button>
                   <button class="btn-icon-subtle text-danger" *ngIf="!c.isDefault" (click)="deleteCompany(c)" title="Deactivate">
-                    <span class="material-symbols-outlined" style="font-size: 17px;">delete</span>
+                    <i class="bi bi-trash" style="font-size: 17px;"></i>
                   </button>
                 </div>
               </div>
@@ -280,16 +280,16 @@
 
                 <div class="company-address-block">
                   <p class="address-line">
-                    <span class="material-symbols-outlined addr-icon">location_on</span>
+                    <i class="bi bi-geo-alt addr-icon"></i>
                     <span><strong>Regd:</strong> {{ c.registeredAddress || 'Not specified' }}</span>
                   </p>
                   <p class="address-line" *ngIf="c.factoryAddress">
-                    <span class="material-symbols-outlined addr-icon" style="color: #d97706;">precision_manufacturing</span>
+                    <i class="bi bi-gear-wide-connected addr-icon" style="color: #d97706;"></i>
                     <span><strong>Works:</strong> {{ c.factoryAddress }}</span>
                   </p>
                   <div class="contact-meta-row" *ngIf="c.phone || c.email">
-                    <span *ngIf="c.phone"><span class="material-symbols-outlined" style="font-size: 13px;">call</span> {{ c.phone }}</span>
-                    <span *ngIf="c.email"><span class="material-symbols-outlined" style="font-size: 13px;">mail</span> {{ c.email }}</span>
+                    <span *ngIf="c.phone"><i class="bi bi-telephone" style="font-size: 13px;"></i> {{ c.phone }}</span>
+                    <span *ngIf="c.email"><i class="bi bi-envelope" style="font-size: 13px;"></i> {{ c.email }}</span>
                   </div>
                 </div>
               </div>
@@ -301,7 +301,7 @@
         <div class="business-section-block">
           <div class="block-title-row">
             <h4>
-              <span class="material-symbols-outlined" style="color: #059669; font-size: 18px;">account_balance</span>
+              <i class="bi bi-bank" style="color: #059669; font-size: 18px;"></i>
               Corporate Bank & UPI Settlement Accounts ({{ bankProfiles.length }})
             </h4>
             <span class="section-hint-badge" style="background: rgba(5,150,105,0.1); color: #059669; border-color: rgba(5,150,105,0.3);">Invoice QR Ready</span>
@@ -312,7 +312,7 @@
               <div class="bank-card-header">
                 <div style="display: flex; align-items: center; gap: 10px;">
                   <div class="bank-icon-avatar" [class.avatar-primary]="b.isPrimary">
-                    <span class="material-symbols-outlined">payments</span>
+                    <i class="bi bi-cash-stack"></i>
                   </div>
                   <div>
                     <div style="display: flex; align-items: center; gap: 6px;">
@@ -324,13 +324,13 @@
                 </div>
                 <div class="bank-actions">
                   <button class="btn-icon-subtle" (click)="openEditBankModal(b)" title="Edit Bank">
-                    <span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
+                    <i class="bi bi-pencil" style="font-size: 16px;"></i>
                   </button>
                   <button class="btn-icon-subtle" *ngIf="!b.isPrimary" (click)="setPrimaryBank(b)" title="Set Primary">
-                    <span class="material-symbols-outlined" style="font-size: 16px; color: #059669;">check_circle</span>
+                    <i class="bi bi-check-circle-fill" style="font-size: 16px; color: #059669;"></i>
                   </button>
                   <button class="btn-icon-subtle text-danger" *ngIf="!b.isPrimary" (click)="deleteBank(b)" title="Deactivate">
-                    <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
+                    <i class="bi bi-trash" style="font-size: 16px;"></i>
                   </button>
                 </div>
               </div>
@@ -361,7 +361,7 @@
         <div class="settings-two-col-grid" style="margin-bottom: 24px;">
           <!-- GST & Billing Rules -->
           <div class="glass-card settings-card">
-            <h4><span class="material-symbols-outlined">receipt_long</span> GST & Tax Invoice Parameters</h4>
+            <h4><i class="bi bi-receipt"></i> GST & Tax Invoice Parameters</h4>
             <p class="card-desc">Prefix formats, standard HSN code, and customer credit policies.</p>
 
             <div class="form-group" style="margin-top: 12px;">
@@ -389,7 +389,7 @@
 
           <!-- Manufacturing Shifts & Tariffs -->
           <div class="glass-card settings-card">
-            <h4><span class="material-symbols-outlined">precision_manufacturing</span> Plant Shifts & Cost Parameters</h4>
+            <h4><i class="bi bi-gear-wide-connected"></i> Plant Shifts & Cost Parameters</h4>
             <p class="card-desc">Shift hours, electricity power tariff, and raw material safety buffers.</p>
 
             <div class="form-row-grid" style="margin-top: 12px;">
@@ -430,7 +430,7 @@
           <div class="section-top-header" style="margin-bottom: 16px;">
             <div>
               <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 6px;">
-                <span class="material-symbols-outlined" style="color: #d97706; font-size: 20px;">design_services</span>
+                <i class="bi bi-palette2" style="color: #d97706; font-size: 20px;"></i>
                 Live Tax Invoice & Print Layout Designer
               </h4>
               <p style="margin: 4px 0 0 0; font-size: 12px; color: #64748b;">
@@ -439,10 +439,10 @@
             </div>
             <div style="display: flex; gap: 8px;">
               <button class="btn btn-secondary btn-sm" (click)="openPrintPreview()" title="Open A4 Print Preview">
-                <span class="material-symbols-outlined" style="font-size: 15px;">print</span> Print Preview
+                <i class="bi bi-printer" style="font-size: 15px;"></i> Print Preview
               </button>
               <button class="btn btn-primary btn-sm" (click)="saveInvoiceTemplate()">
-                <span class="material-symbols-outlined" style="font-size: 15px;">save</span> Save Layout
+                <i class="bi bi-floppy" style="font-size: 15px;"></i> Save Layout
               </button>
             </div>
           </div>
@@ -455,7 +455,7 @@
                     [ngClass]="selectedDocType === dt.key ? 'btn-primary' : 'btn-secondary'" 
                     (click)="selectDocType(dt.key)"
                     style="display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; padding: 6px 12px; border-radius: 6px;">
-              <span class="material-symbols-outlined" style="font-size: 15px;">{{ dt.icon }}</span>
+              <i class="bi bi-file-earmark-text" style="font-size: 15px;"></i>
               {{ dt.label }}
             </button>
           </div>
@@ -624,7 +624,7 @@
                   <!-- UPI QR Code -->
                   <div class="inv-qr-box" *ngIf="invoiceTemplate.showUpiQrCode">
                     <div class="mock-qr-code">
-                      <span class="material-symbols-outlined" style="font-size: 32px; color: #0f172a;">qr_code_2</span>
+                      <i class="bi bi-qr-code" style="font-size: 32px; color: #0f172a;"></i>
                     </div>
                     <span style="font-size: 8.5px; color: #64748b; font-weight: 600; text-align: center;">Scan to Pay via UPI<br><strong style="color: #059669;">{{ bankProfiles[0]?.upiId || 'futaneagro@okaxis' }}</strong></span>
                   </div>
@@ -633,7 +633,7 @@
                   <div class="inv-sign-box">
                     <div class="sign-for-line">For {{ companyProfiles[0]?.companyName || 'Futane Agro Tech Pvt. Ltd.' }}</div>
                     <div class="sign-stamp-area">
-                      <span class="material-symbols-outlined" style="font-size: 28px; color: rgba(217,119,6,0.4);">verified</span>
+                      <i class="bi bi-patch-check-fill" style="font-size: 28px; color: rgba(217,119,6,0.4);"></i>
                     </div>
                     <div class="sign-title-line">{{ invoiceTemplate.signatoryTitle || 'Authorized Signatory' }}</div>
                   </div>
@@ -663,10 +663,10 @@
           </div>
           <div style="display: flex; gap: 8px;">
             <button class="btn btn-primary btn-sm" (click)="openCreateApiKeyModal()" *ngIf="devHubSubTab === 'apikeys'">
-              <span class="material-symbols-outlined" style="font-size: 15px;">key</span> Generate API Key
+              <i class="bi bi-key" style="font-size: 15px;"></i> Generate API Key
             </button>
             <button class="btn btn-primary btn-sm" (click)="openCreateWebhookModal()" *ngIf="devHubSubTab === 'webhooks'">
-              <span class="material-symbols-outlined" style="font-size: 15px;">webhook</span> Add Webhook
+              <i class="bi bi-link-45deg" style="font-size: 15px;"></i> Add Webhook
             </button>
           </div>
         </div>
@@ -674,13 +674,13 @@
         <!-- Dev Hub Nav Switcher -->
         <div class="user-access-tabs" style="margin-bottom: 16px;">
           <button type="button" class="tab-btn" [class.active]="devHubSubTab === 'apikeys'" (click)="devHubSubTab = 'apikeys'">
-            <span class="material-symbols-outlined" style="font-size: 16px;">key</span> API Bearer Keys ({{ apiKeysList.length }})
+            <i class="bi bi-key" style="font-size: 16px;"></i> API Bearer Keys ({{ apiKeysList.length }})
           </button>
           <button type="button" class="tab-btn" [class.active]="devHubSubTab === 'webhooks'" (click)="devHubSubTab = 'webhooks'">
-            <span class="material-symbols-outlined" style="font-size: 16px;">webhook</span> Event Webhooks ({{ webhooksList.length }})
+            <i class="bi bi-link-45deg" style="font-size: 16px;"></i> Event Webhooks ({{ webhooksList.length }})
           </button>
           <button type="button" class="tab-btn" [class.active]="devHubSubTab === 'observability'" (click)="devHubSubTab = 'observability'">
-            <span class="material-symbols-outlined" style="font-size: 16px;">monitoring</span> Grafana SRE Wallboards (10-Tab L1, L2, L3)
+            <i class="bi bi-activity" style="font-size: 16px;"></i> Grafana SRE Wallboards (10-Tab L1, L2, L3)
           </button>
         </div>
 
@@ -712,7 +712,7 @@
                   <td class="col-actions">
                     <div class="btn-action-group">
                       <button type="button" *ngIf="k.isActive" class="btn btn-danger-subtle btn-xs" (click)="revokeApiKey(k)" title="Revoke API key immediately">
-                        <span class="material-symbols-outlined" style="font-size: 13px;">block</span> Revoke
+                        <i class="bi bi-slash-circle" style="font-size: 13px;"></i> Revoke
                       </button>
                     </div>
                   </td>
@@ -755,10 +755,10 @@
                   <td class="col-actions">
                     <div class="btn-action-group">
                       <button class="btn-test-ping" (click)="testWebhook(w)" title="Send test ping payload">
-                        <span class="material-symbols-outlined" style="font-size: 14px; color: #f59e0b;">bolt</span> Test Ping
+                        <i class="bi bi-lightning-charge-fill" style="font-size: 14px; color: #f59e0b;"></i> Test Ping
                       </button>
                       <button class="btn-delete-action" (click)="deleteWebhook(w)" title="Remove webhook">
-                        <span class="material-symbols-outlined" style="font-size: 14px;">delete</span> Delete
+                        <i class="bi bi-trash" style="font-size: 14px;"></i> Delete
                       </button>
                     </div>
                   </td>
@@ -780,7 +780,7 @@
               Direct integration gateways to Grafana 10-Tab Tiered Observability Dashboards on <a href="http://localhost:3000" target="_blank" style="color: #d97706; font-weight: 700;">http://localhost:3000</a>.
             </p>
             <a href="http://localhost:3000" target="_blank" class="btn btn-secondary btn-xs" style="text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
-              <span class="material-symbols-outlined" style="font-size: 14px;">open_in_new</span> Open Grafana Home
+              <i class="bi bi-box-arrow-up-right" style="font-size: 14px;"></i> Open Grafana Home
             </a>
           </div>
 
@@ -796,7 +796,7 @@
                 NOC Wallboard with application service health clusters, SLA latency histograms, and financial ledgers.
               </p>
               <a href="http://localhost:3000/d/l1_wallboard_master/l1-executive-command-center-noc-wallboard" target="_blank" class="btn btn-primary btn-sm" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                <span class="material-symbols-outlined" style="font-size: 15px;">open_in_new</span> Launch L1 Wallboard
+                <i class="bi bi-box-arrow-up-right" style="font-size: 15px;"></i> Launch L1 Wallboard
               </a>
             </div>
 
@@ -810,7 +810,7 @@
                 Engineering control for MySQL InnoDB, HikariCP pools, Nginx gateways, and Spring Boot APM actuators.
               </p>
               <a href="http://localhost:3000/d/l2_subsystem_control/fd01c25" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                <span class="material-symbols-outlined" style="font-size: 15px;">open_in_new</span> Launch L2 Control
+                <i class="bi bi-box-arrow-up-right" style="font-size: 15px;"></i> Launch L2 Control
               </a>
             </div>
 
@@ -824,7 +824,7 @@
                 SRE diagnostics for slow queries, thread contention, golden signal latency percentiles, and Loki log streams.
               </p>
               <a href="http://localhost:3000/d/l3_root_cause_diagnostics/4253ad8" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                <span class="material-symbols-outlined" style="font-size: 15px;">open_in_new</span> Launch L3 SRE Diagnostics
+                <i class="bi bi-box-arrow-up-right" style="font-size: 15px;"></i> Launch L3 SRE Diagnostics
               </a>
             </div>
           </div>
@@ -832,75 +832,75 @@
           <!-- 10 Domain Dashboards Quick Links Grid -->
           <div class="glass-card settings-card" style="padding: 16px;">
             <h5 style="margin: 0 0 12px 0; font-size: 13px; font-weight: 700; color: #334155; display: flex; align-items: center; gap: 6px;">
-              <span class="material-symbols-outlined" style="color: #d97706; font-size: 18px;">dashboard_customize</span>
+              <i class="bi bi-speedometer2" style="color: #d97706; font-size: 18px;"></i>
               Dedicated Subsystem Observability Dashboards (Standard Suite)
             </h5>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;">
               <a href="http://localhost:3000/d/master_cc/1-master-command-center" target="_blank" class="obs-quick-card">
-                <span class="material-symbols-outlined obs-icon" style="color: #d97706;">dashboard</span>
+                <i class="bi bi-speedometer2 obs-icon" style="color: #d97706;"></i>
                 <div>
                   <strong>1. Master Command Center</strong>
                   <div class="obs-sub">Live NOC Overview</div>
                 </div>
               </a>
               <a href="http://localhost:3000/d/apm_perf/2-application-performance-apm" target="_blank" class="obs-quick-card">
-                <span class="material-symbols-outlined obs-icon" style="color: #2563eb;">speed</span>
+                <i class="bi bi-speedometer obs-icon" style="color: #2563eb;"></i>
                 <div>
                   <strong>2. APM Performance</strong>
                   <div class="obs-sub">JVM & Spring Actuator</div>
                 </div>
               </a>
               <a href="http://localhost:3000/d/db_obs/3-database-observability" target="_blank" class="obs-quick-card">
-                <span class="material-symbols-outlined obs-icon" style="color: #059669;">database</span>
+                <i class="bi bi-database obs-icon" style="color: #059669;"></i>
                 <div>
                   <strong>3. Database Observability</strong>
                   <div class="obs-sub">InnoDB & HikariCP</div>
                 </div>
               </a>
               <a href="http://localhost:3000/d/network_noc/4-network-and-nginx-noc" target="_blank" class="obs-quick-card">
-                <span class="material-symbols-outlined obs-icon" style="color: #7c3aed;">router</span>
+                <i class="bi bi-router obs-icon" style="color: #7c3aed;"></i>
                 <div>
                   <strong>4. Network & Nginx NOC</strong>
                   <div class="obs-sub">QPS & Latency</div>
                 </div>
               </a>
               <a href="http://localhost:3000/d/infra_obs/5-docker-and-server-infrastructure" target="_blank" class="obs-quick-card">
-                <span class="material-symbols-outlined obs-icon" style="color: #0284c7;">dns</span>
+                <i class="bi bi-hdd-network obs-icon" style="color: #0284c7;"></i>
                 <div>
                   <strong>5. Server Infrastructure</strong>
                   <div class="obs-sub">CPU, Memory & Disk</div>
                 </div>
               </a>
               <a href="http://localhost:3000/d/business_erp/6-business-kpi-and-revenue" target="_blank" class="obs-quick-card">
-                <span class="material-symbols-outlined obs-icon" style="color: #10b981;">monetization_on</span>
+                <i class="bi bi-currency-rupee obs-icon" style="color: #10b981;"></i>
                 <div>
                   <strong>6. Business KPI & Ledger</strong>
                   <div class="obs-sub">Sales & Production</div>
                 </div>
               </a>
               <a href="http://localhost:3000/d/payment_obs/7-payment-observability" target="_blank" class="obs-quick-card">
-                <span class="material-symbols-outlined obs-icon" style="color: #f59e0b;">credit_card</span>
+                <i class="bi bi-credit-card obs-icon" style="color: #f59e0b;"></i>
                 <div>
                   <strong>7. Payment Observability</strong>
                   <div class="obs-sub">Razorpay & UPI</div>
                 </div>
               </a>
               <a href="http://localhost:3000/d/security_soc/8-security-and-audit-soc" target="_blank" class="obs-quick-card">
-                <span class="material-symbols-outlined obs-icon" style="color: #ef4444;">security</span>
+                <i class="bi bi-shield-lock obs-icon" style="color: #ef4444;"></i>
                 <div>
                   <strong>8. Security & SOC</strong>
                   <div class="obs-sub">Auth & Failed Logins</div>
                 </div>
               </a>
               <a href="http://localhost:3000/d/logs_events/9-logs-and-realtime-alerts" target="_blank" class="obs-quick-card">
-                <span class="material-symbols-outlined obs-icon" style="color: #8b5cf6;">article</span>
+                <i class="bi bi-file-earmark-text obs-icon" style="color: #8b5cf6;"></i>
                 <div>
                   <strong>9. Logs & Alerts</strong>
                   <div class="obs-sub">Loki Stream Logs</div>
                 </div>
               </a>
               <a href="http://localhost:3000/d/sre_ops/10-sre-operations-and-reliability" target="_blank" class="obs-quick-card">
-                <span class="material-symbols-outlined obs-icon" style="color: #6366f1;">troubleshoot</span>
+                <i class="bi bi-tools obs-icon" style="color: #6366f1;"></i>
                 <div>
                   <strong>10. SRE Operations</strong>
                   <div class="obs-sub">Error Budgets & SLO</div>
@@ -922,10 +922,10 @@
           </div>
           <div style="display: flex; gap: 8px;">
             <button class="btn btn-secondary btn-sm" (click)="loadSystemDiagnostics()" [disabled]="isLoadingDiagnostics">
-              <span class="material-symbols-outlined" style="font-size: 15px;">refresh</span> {{ isLoadingDiagnostics ? 'Probing...' : 'Refresh Telemetry' }}
+              <i class="bi bi-arrow-clockwise" style="font-size: 15px;"></i> {{ isLoadingDiagnostics ? 'Probing...' : 'Refresh Telemetry' }}
             </button>
             <button class="btn btn-primary btn-sm" (click)="downloadEnterpriseBackupSnapshot()" [disabled]="isExportingBackup">
-              <span class="material-symbols-outlined" style="font-size: 15px;">download</span> {{ isExportingBackup ? 'Exporting...' : 'Export Backup Snapshot' }}
+              <i class="bi bi-download" style="font-size: 15px;"></i> {{ isExportingBackup ? 'Exporting...' : 'Export Backup Snapshot' }}
             </button>
           </div>
         </div>
@@ -936,7 +936,7 @@
           <div class="glass-card telemetry-card">
             <div class="telemetry-card-top">
               <div class="telemetry-icon-box" style="background: rgba(217, 119, 6, 0.12); color: #d97706;">
-                <span class="material-symbols-outlined">memory</span>
+                <i class="bi bi-cpu"></i>
               </div>
               <span class="telemetry-badge" [ngClass]="systemDiagnostics.memoryUsagePercent > 80 ? 'badge-danger' : 'badge-success'">
                 {{ systemDiagnostics.memoryUsagePercent || 24.5 }}% ALLOCATED
@@ -953,7 +953,7 @@
           <div class="glass-card telemetry-card">
             <div class="telemetry-card-top">
               <div class="telemetry-icon-box" style="background: rgba(5, 150, 105, 0.12); color: #059669;">
-                <span class="material-symbols-outlined">database</span>
+                <i class="bi bi-database"></i>
               </div>
               <span class="badge-pill badge-success">HEALTHY</span>
             </div>
@@ -966,7 +966,7 @@
           <div class="glass-card telemetry-card">
             <div class="telemetry-card-top">
               <div class="telemetry-icon-box" style="background: rgba(37, 99, 235, 0.12); color: #2563eb;">
-                <span class="material-symbols-outlined">heap_snapshot_multiple</span>
+                <i class="bi bi-stack"></i>
               </div>
               <span class="badge-pill badge-info">THREADS</span>
             </div>
@@ -979,7 +979,7 @@
           <div class="glass-card telemetry-card">
             <div class="telemetry-card-top">
               <div class="telemetry-icon-box" style="background: rgba(124, 58, 237, 0.12); color: #7c3aed;">
-                <span class="material-symbols-outlined">hub</span>
+                <i class="bi bi-diagram-3"></i>
               </div>
               <span class="badge-pill badge-success">LIVE WS</span>
             </div>
@@ -992,7 +992,7 @@
         <div class="settings-two-col-grid">
           <!-- Caffeine Cache Control -->
           <div class="glass-card settings-card">
-            <h4><span class="material-symbols-outlined">bolt</span> Caffeine In-Memory Cache</h4>
+            <h4><i class="bi bi-lightning-charge-fill"></i> Caffeine In-Memory Cache</h4>
             <p class="card-desc">High-performance L1 in-memory caching for branding, role permissions, and feature flags.</p>
             
             <div class="cache-regions-list" style="margin: 14px 0;">
@@ -1028,17 +1028,17 @@
 
             <div style="display: flex; gap: 8px; margin-top: 8px;">
               <button class="btn btn-danger-outline btn-sm" (click)="flushCacheRegion('all')" style="flex: 1;">
-                <span class="material-symbols-outlined" style="font-size: 15px;">delete_sweep</span> Flush All Caches
+                <i class="bi bi-trash3" style="font-size: 15px;"></i> Flush All Caches
               </button>
               <button class="btn btn-danger btn-sm" (click)="forceLogoutAllSessions()" title="Emergency session invalidation">
-                <span class="material-symbols-outlined" style="font-size: 15px;">logout</span> Emergency Reset
+                <i class="bi bi-box-arrow-right" style="font-size: 15px;"></i> Emergency Reset
               </button>
             </div>
           </div>
 
           <!-- Audit Log Retention & Platform Environment -->
           <div class="glass-card settings-card">
-            <h4><span class="material-symbols-outlined">history_toggle_off</span> Audit Log Retention & Environment</h4>
+            <h4><i class="bi bi-clock-history"></i> Audit Log Retention & Environment</h4>
             <p class="card-desc">Configure automated compliance archiving window for security log records.</p>
             
             <div class="form-group" style="margin-top: 14px;">
@@ -1073,7 +1073,7 @@
             <p>Organize ERP operators, plant managers, and accounts staff into distinct operational teams.</p>
           </div>
           <button class="btn btn-primary btn-sm" (click)="openAddTeamModal()">
-            <span class="material-symbols-outlined" style="font-size: 15px;">add</span> Add Team
+            <i class="bi bi-plus-lg" style="font-size: 15px;"></i> Add Team
           </button>
         </div>
 
@@ -1094,7 +1094,7 @@
                 <tr *ngFor="let t of teamsList">
                   <td>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                      <span class="material-symbols-outlined" [style.color]="t.colorTag" style="font-size: 20px;">{{ t.icon || 'groups' }}</span>
+                      <i class="bi bi-people-fill" [style.color]="t.colorTag" style="font-size: 20px;"></i>
                       <strong>{{ t.name }}</strong>
                     </div>
                   </td>
@@ -1119,10 +1119,10 @@
                   <td class="col-actions">
                     <div class="btn-action-group">
                       <button type="button" class="btn btn-action-subtle btn-xs" (click)="openEditTeamModal(t)" title="Edit department">
-                        <span class="material-symbols-outlined" style="font-size: 13px;">edit</span> Edit
+                        <i class="bi bi-pencil" style="font-size: 13px;"></i> Edit
                       </button>
                       <button type="button" *ngIf="t.isActive" class="btn btn-danger-subtle btn-xs" (click)="deactivateTeam(t)" title="Deactivate department">
-                        <span class="material-symbols-outlined" style="font-size: 13px;">delete</span> Deactivate
+                        <i class="bi bi-trash" style="font-size: 13px;"></i> Deactivate
                       </button>
                     </div>
                   </td>
@@ -1148,7 +1148,7 @@
             <p>Extend ERP core schemas (Parties, Items, Invoices, Batches) with custom metadata fields without database migrations.</p>
           </div>
           <button class="btn btn-primary btn-sm" (click)="openAddCustomFieldModal()">
-            <span class="material-symbols-outlined" style="font-size: 15px;">add</span> Add Custom Field
+            <i class="bi bi-plus-lg" style="font-size: 15px;"></i> Add Custom Field
           </button>
         </div>
 
@@ -1159,7 +1159,7 @@
                   *ngFor="let ent of ['PARTIES', 'ITEMS', 'INVOICES', 'PRODUCTION_BATCHES', 'MACHINES']"
                   [class.active]="selectedEntityForCustomFields === ent" 
                   (click)="selectCustomFieldEntity(ent)">
-            <span class="material-symbols-outlined" style="font-size: 15px;">database</span>
+            <i class="bi bi-database" style="font-size: 15px;"></i>
             {{ ent }} ({{ getCustomFieldsCountForEntity(ent) }})
           </button>
         </div>
@@ -1194,7 +1194,7 @@
                   <td class="col-actions">
                     <div class="btn-action-group">
                       <button type="button" class="btn btn-danger-subtle btn-xs" (click)="deleteCustomField(f)" title="Remove custom field definition">
-                        <span class="material-symbols-outlined" style="font-size: 13px;">delete</span> Remove
+                        <i class="bi bi-trash" style="font-size: 13px;"></i> Remove
                       </button>
                     </div>
                   </td>
@@ -1221,7 +1221,7 @@
           </div>
           <div style="display: flex; gap: 8px;">
             <button class="btn btn-primary btn-sm" (click)="saveSelectedNotificationTemplate()" *ngIf="selectedNotificationTemplate">
-              <span class="material-symbols-outlined" style="font-size: 15px;">save</span> Save Template
+              <i class="bi bi-floppy" style="font-size: 15px;"></i> Save Template
             </button>
           </div>
         </div>
@@ -1323,13 +1323,13 @@
             <div class="smartphone-frame">
               <div class="phone-speaker-notch"></div>
               <div class="phone-top-bar">
-                <span class="material-symbols-outlined" style="font-size: 15px;">signal_cellular_4_bar</span>
+                <i class="bi bi-reception-4" style="font-size: 15px;"></i>
                 <span style="font-weight: 700;">12:45</span>
-                <span class="material-symbols-outlined" style="font-size: 15px;">battery_full</span>
+                <i class="bi bi-battery-full" style="font-size: 15px;"></i>
               </div>
               <div class="phone-whatsapp-header">
                 <div class="phone-avatar">
-                  <span class="material-symbols-outlined">factory</span>
+                  <i class="bi bi-buildings"></i>
                 </div>
                 <div class="phone-contact-info">
                   <div class="phone-name">Futane Agro ERP <i class="bi bi-patch-check-fill text-success ms-1"></i></div>
@@ -1342,7 +1342,7 @@
                   <div class="bubble-text">{{ getRenderedPreviewText() }}</div>
                   <div class="bubble-meta">
                     <span>12:45 PM</span>
-                    <span class="material-symbols-outlined bubble-ticks">done_all</span>
+                    <i class="bi bi-check-all bubble-ticks"></i>
                   </div>
                 </div>
               </div>
@@ -1351,13 +1351,13 @@
             <!-- Test Dispatch Simulator -->
             <div class="glass-card test-simulator-card" style="margin-top: 14px;">
               <h5 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 4px;">
-                <span class="material-symbols-outlined" style="font-size: 16px; color: #059669;">send_to_mobile</span>
+                <i class="bi bi-phone" style="font-size: 16px; color: #059669;"></i>
                 Test Message Simulator
               </h5>
               <div style="display: flex; gap: 8px;">
                 <input type="text" [(ngModel)]="testPhoneInput" class="form-control font-mono" style="font-size: 12px;" placeholder="+91 98220 99999">
                 <button class="btn btn-secondary btn-sm" (click)="simulateTestDispatch()" [disabled]="isSimulatingDispatch">
-                  <span class="material-symbols-outlined" style="font-size: 14px;" *ngIf="!isSimulatingDispatch">send</span>
+                  <i class="bi bi-send" style="font-size: 14px;" *ngIf="!isSimulatingDispatch"></i>
                   {{ isSimulatingDispatch ? 'Sending...' : 'Test' }}
                 </button>
               </div>
@@ -1365,7 +1365,7 @@
               <!-- Simulation Output -->
               <div class="simulation-result" *ngIf="testSimulationResult">
                 <div style="font-size: 10px; font-weight: 700; color: #059669; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
-                  <span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>
+                  <i class="bi bi-check-circle-fill" style="font-size: 14px;"></i>
                   DISPATCH SIMULATED ({{ testSimulationResult.channel }})
                 </div>
                 <div style="font-size: 10px; color: #64748b; margin-bottom: 4px;">Delivered to: {{ testSimulationResult.recipient }}</div>
@@ -1385,29 +1385,36 @@
             <h3><i class="bi bi-shield-lock me-2"></i>Users, Roles & Access Control Matrix</h3>
             <p>Manage system users, assign role templates, and configure customized per-user module access.</p>
           </div>
-          <div style="display: flex; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+
+            <!-- Density Toggle -->
+            <div class="density-switch-group">
+              <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact density"><i class="bi bi-distribute-vertical"></i> Compact</button>
+              <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="setDensity('comfortable')" title="Standard density"><i class="bi bi-list-ul"></i> Normal</button>
+              <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious density"><i class="bi bi-grid-3x2-gap"></i> Spacious</button>
+            </div>
             <button class="btn btn-primary btn-sm" (click)="openInviteUserModal()" *ngIf="userAccessSubTab === 'users'">
-              <span class="material-symbols-outlined" style="font-size: 15px;">person_add</span> Invite User
+              <i class="bi bi-person-plus" style="font-size: 15px;"></i> Invite User
             </button>
             <button class="btn btn-primary btn-sm" (click)="savePermissionsMatrix()" *ngIf="userAccessSubTab === 'matrix'">
-              <span class="material-symbols-outlined" style="font-size: 15px;">save</span> Save Matrix
+              <i class="bi bi-floppy" style="font-size: 15px;"></i> Save Matrix
             </button>
           </div>
         </div>
 
         <div class="user-access-tabs" style="margin-bottom: 16px;">
           <button type="button" class="tab-btn" [class.active]="userAccessSubTab === 'users'" (click)="userAccessSubTab = 'users'">
-            <span class="material-symbols-outlined" style="font-size: 16px;">people</span> Users Directory ({{ adminUsersList.length }})
+            <i class="bi bi-people" style="font-size: 16px;"></i> Users Directory ({{ adminUsersList.length }})
           </button>
           <button type="button" class="tab-btn" [class.active]="userAccessSubTab === 'matrix'" (click)="userAccessSubTab = 'matrix'">
-            <span class="material-symbols-outlined" style="font-size: 16px;">table_chart</span> Role Permission Matrix
+            <i class="bi bi-table" style="font-size: 16px;"></i> Role Permission Matrix
           </button>
         </div>
 
         <!-- Users Table -->
         <div *ngIf="userAccessSubTab === 'users'" class="glass-card settings-card user-table-card" style="padding: 0; overflow: hidden; border-radius: 12px;">
           <div class="settings-table-scroll">
-            <table class="table enterprise-table users-directory-table">
+            <table class="table enterprise-table users-directory-table" [class.table-compact]="tableDensity === 'compact'" [class.table-spacious]="tableDensity === 'spacious'">
               <thead>
                 <tr>
                   <th class="col-num">#</th>
@@ -1444,7 +1451,7 @@
                   </td>
                   <td class="col-team">
                     <span class="team-tag-pill" *ngIf="u.teamName" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; padding: 2px 5px; border-radius: 12px; background: rgba(217, 119, 6, 0.1); color: #d97706; font-weight: 600; white-space: nowrap;">
-                      <span class="material-symbols-outlined" style="font-size: 11px;">groups</span>
+                      <i class="bi bi-people-fill" style="font-size: 11px;"></i>
                       {{ u.teamName }}
                     </span>
                     <span class="text-muted" *ngIf="!u.teamName" style="font-size: 10.5px;">—</span>
@@ -1462,30 +1469,30 @@
                     <div class="btn-action-group" style="display: inline-flex; align-items: center; gap: 3px; justify-content: flex-end;">
                       <!-- Custom Access: Icon button -->
                       <button type="button" class="btn btn-action-subtle btn-xs" (click)="openUserAccessModal(u)" title="Custom Permissions" style="padding: 3px 5px; border-radius: 5px;">
-                        <span class="material-symbols-outlined" style="font-size: 13px; color: var(--brand-primary, #d97706);">tune</span>
+                        <i class="bi bi-sliders" style="font-size: 13px; color: var(--brand-primary, #d97706);"></i>
                       </button>
                       <!-- Edit User: Subtle Button -->
                       <button type="button" class="btn btn-action-subtle btn-xs" (click)="openEditUserModal(u)" title="Edit user profile" style="padding: 3px 5px; border-radius: 5px;">
-                        <span class="material-symbols-outlined" style="font-size: 13px; color: #0284c7;">edit</span>
+                        <i class="bi bi-pencil" style="font-size: 13px; color: #0284c7;"></i>
                       </button>
                       <!-- Kebab ⋮ Dropdown -->
                       <div class="kebab-menu-wrapper" style="position: relative; display: inline-block;">
                         <button type="button" class="btn-kebab-trigger" (click)="toggleUserKebab(u, $event)" title="More user actions" style="background: none; border: 1px solid #e2e8f0; border-radius: 5px; padding: 3px 4px; cursor: pointer; color: #64748b; display: flex; align-items: center;">
-                          <span class="material-symbols-outlined" style="font-size: 14px;">more_vert</span>
+                          <i class="bi bi-three-dots-vertical" style="font-size: 14px;"></i>
                         </button>
                         <div class="kebab-dropdown-menu glass-dropdown" [class.kebab-dropup]="i >= adminUsersList.length - 2 && adminUsersList.length > 3" *ngIf="openKebabUserId === u.username" (click)="$event.stopPropagation()">
                           <button type="button" class="kebab-item" (click)="forceResetPassword(u)" style="width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: none; border: none; font-size: 12px; color: #334155; cursor: pointer; text-align: left;">
-                            <span class="material-symbols-outlined" style="font-size: 15px; color: #dc2626;">lock_reset</span> Reset Password
+                            <i class="bi bi-key" style="font-size: 15px; color: #dc2626;"></i> Reset Password
                           </button>
                           <button type="button" class="kebab-item" (click)="openChangeRoleModal(u)" style="width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: none; border: none; font-size: 12px; color: #334155; cursor: pointer; text-align: left;">
-                            <span class="material-symbols-outlined" style="font-size: 15px; color: #d97706;">badge</span> Change Role
+                            <i class="bi bi-person-badge" style="font-size: 15px; color: #d97706;"></i> Change Role
                           </button>
                           <button type="button" class="kebab-item text-danger" (click)="toggleLockUser(u)" style="width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: none; border: none; font-size: 12px; color: #dc2626; cursor: pointer; text-align: left;">
-                            <span class="material-symbols-outlined" style="font-size: 15px;">{{ u.accountLocked ? 'lock_open' : 'block' }}</span> {{ u.accountLocked ? 'Unlock Account' : 'Deactivate User' }}
+                            <i [class]="u.accountLocked ? 'bi bi-unlock' : 'bi bi-slash-circle'" style="font-size: 15px;"></i> {{ u.accountLocked ? 'Unlock Account' : 'Deactivate User' }}
                           </button>
                           <div style="border-top: 1px solid #f1f5f9; margin: 4px 0;"></div>
                           <button type="button" class="kebab-item" (click)="viewUserAudit(u)" style="width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: none; border: none; font-size: 12px; color: #334155; cursor: pointer; text-align: left;">
-                            <span class="material-symbols-outlined" style="font-size: 15px; color: #64748b;">history</span> View Audit History
+                            <i class="bi bi-clock-history" style="font-size: 15px; color: #64748b;"></i> View Audit History
                           </button>
                         </div>
                       </div>
@@ -1558,7 +1565,7 @@
           </div>
           <div style="display: flex; gap: 8px;">
             <button class="btn btn-primary btn-sm" (click)="enableAllFeatures()">
-              <span class="material-symbols-outlined" style="font-size: 15px;">bolt</span> Enable All Modules
+              <i class="bi bi-lightning-charge-fill" style="font-size: 15px;"></i> Enable All Modules
             </button>
           </div>
         </div>
@@ -1571,7 +1578,7 @@
           </div>
 
           <div class="feature-search-box">
-            <span class="material-symbols-outlined search-icon">search</span>
+            <i class="bi bi-search search-icon"></i>
             <input type="text" [(ngModel)]="featureSearchQuery" placeholder="Search module name or key..." class="feature-search-input">
           </div>
         </div>
@@ -1596,7 +1603,7 @@
             <div class="card-left-info">
               <div class="card-title-row">
                 <div class="icon-avatar" [class.icon-active]="f.enabled || f.isEnabled">
-                  <span class="material-symbols-outlined">{{ f.icon || 'star' }}</span>
+                  <i class="bi bi-star-fill"></i>
                 </div>
                 <div>
                   <h4 class="flag-title">{{ f.moduleName }}</h4>
@@ -1635,7 +1642,7 @@
         <div class="settings-two-col-grid" style="align-items: start;">
           <!-- Left Column: Master Password Management -->
           <div class="glass-card settings-card" style="padding: 22px; border-radius: 12px;">
-            <h4><span class="material-symbols-outlined" style="color: var(--primary);">lock</span> Change Super Admin Password</h4>
+            <h4><i class="bi bi-lock" style="color: var(--primary);"></i> Change Super Admin Password</h4>
             <p class="card-desc">Update root administrator authentication credentials with policy enforcement.</p>
 
             <div class="form-group" style="margin-top: 14px;">
@@ -1643,7 +1650,7 @@
               <div class="password-input-wrap" style="position: relative;">
                 <input [type]="changePasswordForm.showCurrent ? 'text' : 'password'" [(ngModel)]="changePasswordForm.currentPassword" class="form-control" placeholder="Enter existing password" style="padding-right: 38px;">
                 <button type="button" class="btn-eye-toggle" (click)="changePasswordForm.showCurrent = !changePasswordForm.showCurrent" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 4px; display: flex; align-items: center;">
-                  <span class="material-symbols-outlined" style="font-size: 18px;">{{ changePasswordForm.showCurrent ? 'visibility_off' : 'visibility' }}</span>
+                  <i [class]="changePasswordForm.showCurrent ? 'bi bi-eye-slash' : 'bi bi-eye'" style="font-size: 18px;"></i>
                 </button>
               </div>
             </div>
@@ -1652,7 +1659,7 @@
               <div class="password-input-wrap" style="position: relative;">
                 <input [type]="changePasswordForm.showNew ? 'text' : 'password'" [(ngModel)]="changePasswordForm.newPassword" class="form-control" placeholder="Minimum 8 characters with symbols" style="padding-right: 38px;">
                 <button type="button" class="btn-eye-toggle" (click)="changePasswordForm.showNew = !changePasswordForm.showNew" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 4px; display: flex; align-items: center;">
-                  <span class="material-symbols-outlined" style="font-size: 18px;">{{ changePasswordForm.showNew ? 'visibility_off' : 'visibility' }}</span>
+                  <i [class]="changePasswordForm.showNew ? 'bi bi-eye-slash' : 'bi bi-eye'" style="font-size: 18px;"></i>
                 </button>
               </div>
             </div>
@@ -1673,7 +1680,7 @@
             </div>
 
             <button class="btn btn-primary" (click)="submitChangePassword()" [disabled]="changingPassword" style="width: 100%; margin-top: 20px; height: 38px; display: flex; align-items: center; justify-content: center; gap: 6px;">
-              <span class="material-symbols-outlined" style="font-size: 16px;">lock_reset</span>
+              <i class="bi bi-key" style="font-size: 16px;"></i>
               {{ changingPassword ? 'Updating Password...' : 'Update Master Password' }}
             </button>
           </div>
@@ -1681,7 +1688,7 @@
           <!-- Right Column: Separated Danger Zone -->
           <div class="glass-card settings-card danger-zone-card" style="padding: 22px; border-radius: 12px; border: 1px solid var(--color-danger); background: var(--bg-card); position: relative; overflow: hidden;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-              <span class="material-symbols-outlined" style="color: var(--color-danger); font-size: 22px;">warning</span>
+              <i class="bi bi-exclamation-triangle" style="color: var(--color-danger); font-size: 22px;"></i>
               <h4 style="margin: 0; color: var(--color-danger); font-size: 15px; font-weight: 800;">Danger Zone</h4>
               <span class="pill-badge pill-danger" style="margin-left: auto; font-size: 10px;">DESTRUCTIVE</span>
             </div>
@@ -1699,7 +1706,7 @@
                   </span>
                 </div>
                 <button type="button" class="btn btn-danger btn-sm" (click)="forceLogoutAllSessions()" style="white-space: nowrap; margin-left: 14px;">
-                  <span class="material-symbols-outlined" style="font-size: 14px;">logout</span> Terminate All
+                  <i class="bi bi-box-arrow-right" style="font-size: 14px;"></i> Terminate All
                 </button>
               </div>
 
@@ -1712,7 +1719,7 @@
                   </span>
                 </div>
                 <button type="button" class="btn btn-secondary btn-sm" (click)="flushCacheRegion('all')" style="white-space: nowrap; margin-left: 14px;">
-                  <span class="material-symbols-outlined" style="font-size: 14px;">delete_sweep</span> Flush Cache
+                  <i class="bi bi-trash3" style="font-size: 14px;"></i> Flush Cache
                 </button>
               </div>
 
@@ -1725,7 +1732,7 @@
                   </span>
                 </div>
                 <button type="button" class="btn btn-secondary btn-sm" (click)="downloadEnterpriseBackupSnapshot()" style="white-space: nowrap; margin-left: 14px;">
-                  <span class="material-symbols-outlined" style="font-size: 14px;">download</span> Backup Now
+                  <i class="bi bi-download" style="font-size: 14px;"></i> Backup Now
                 </button>
               </div>
             </div>
@@ -1742,9 +1749,14 @@
 <div class="modal-backdrop" *ngIf="showUserAccessModal" (click)="showUserAccessModal = false">
   <div class="modal-content" (click)="$event.stopPropagation()" style="max-width: 680px;">
     <div class="modal-header">
-      <div>
-        <h4>Custom Module Access: {{ selectedUserForCustomAccess?.fullName || selectedUserForCustomAccess?.username }}</h4>
-        <span style="font-size: 11.5px; color: var(--text-secondary);">Role: <strong>{{ selectedUserForCustomAccess?.role }}</strong></span>
+      <div class="modal-title-group">
+        <div class="modal-icon-shield" style="background: rgba(217, 119, 6, 0.12); color: var(--brand-primary, #d97706);">
+          <i class="bi bi-shield-lock"></i>
+        </div>
+        <div>
+          <h4>Custom Module Access: {{ selectedUserForCustomAccess?.fullName || selectedUserForCustomAccess?.username }}</h4>
+          <span class="modal-subtitle">Role: <strong>{{ selectedUserForCustomAccess?.role }}</strong></span>
+        </div>
       </div>
       <button class="modal-close-btn" (click)="showUserAccessModal = false" aria-label="Close dialog"><i class="bi bi-x-lg"></i></button>
     </div>
@@ -1756,7 +1768,7 @@
         <div *ngFor="let m of userCustomModules" 
              style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-surface);">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="material-symbols-outlined" style="font-size: 18px; color: var(--brand-primary);">{{ m.icon || 'folder' }}</span>
+            <i class="bi bi-folder" style="font-size: 18px; color: var(--brand-primary);"></i>
             <div>
               <strong style="font-size: 12.5px; display: block;">{{ m.moduleName }}</strong>
               <span style="font-size: 10.5px; color: var(--text-muted);">{{ m.category }}</span>
@@ -1777,7 +1789,15 @@
 <div class="modal-backdrop" *ngIf="showApiKeyModal" (click)="showApiKeyModal = false">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h4>Generate Scoped API Key</h4>
+      <div class="modal-title-group">
+        <div class="modal-icon-shield" style="background: rgba(16, 185, 129, 0.12); color: #059669;">
+          <i class="bi bi-key-fill"></i>
+        </div>
+        <div>
+          <h4>Generate Scoped API Key</h4>
+          <span class="modal-subtitle">Bearer Token Authentication for External Services</span>
+        </div>
+      </div>
       <button class="modal-close-btn" (click)="showApiKeyModal = false" aria-label="Close dialog"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="modal-body" *ngIf="!generatedApiKeyResult">
@@ -1813,7 +1833,15 @@
 <div class="modal-backdrop" *ngIf="showWebhookModal" (click)="showWebhookModal = false">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h4>Register Outbound Webhook</h4>
+      <div class="modal-title-group">
+        <div class="modal-icon-shield" style="background: rgba(37, 99, 235, 0.12); color: #2563eb;">
+          <i class="bi bi-link-45deg"></i>
+        </div>
+        <div>
+          <h4>Register Outbound Webhook</h4>
+          <span class="modal-subtitle">Real-time HTTP Event Broadcast Dispatcher</span>
+        </div>
+      </div>
       <button class="modal-close-btn" (click)="showWebhookModal = false" aria-label="Close dialog"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="modal-body">
@@ -1846,7 +1874,15 @@
 <div class="modal-backdrop" *ngIf="showTeamModal" (click)="showTeamModal = false">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h4>{{ editingTeam ? 'Edit Team' : 'Create Team' }}</h4>
+      <div class="modal-title-group">
+        <div class="modal-icon-shield" style="background: rgba(124, 58, 237, 0.12); color: #7c3aed;">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <div>
+          <h4>{{ editingTeam ? 'Edit Department / Team' : 'Create Department / Team' }}</h4>
+          <span class="modal-subtitle">Organizational Hierarchy & Operational Units</span>
+        </div>
+      </div>
       <button class="modal-close-btn" (click)="showTeamModal = false" aria-label="Close dialog"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="modal-body">
@@ -1874,7 +1910,15 @@
 <div class="modal-backdrop" *ngIf="showCustomFieldModal" (click)="showCustomFieldModal = false">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h4>Add Custom Field to {{ selectedEntityForCustomFields }}</h4>
+      <div class="modal-title-group">
+        <div class="modal-icon-shield" style="background: rgba(16, 185, 129, 0.12); color: #059669;">
+          <i class="bi bi-puzzle-fill"></i>
+        </div>
+        <div>
+          <h4>Add Custom Field to {{ selectedEntityForCustomFields }}</h4>
+          <span class="modal-subtitle">Schema Extension & User-Defined Attributes</span>
+        </div>
+      </div>
       <button class="modal-close-btn" (click)="showCustomFieldModal = false" aria-label="Close dialog"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="modal-body">
@@ -1912,7 +1956,15 @@
 <div class="modal-backdrop" *ngIf="showInviteUserModal" (click)="showInviteUserModal = false">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h4>Invite New ERP User</h4>
+      <div class="modal-title-group">
+        <div class="modal-icon-shield" style="background: rgba(14, 165, 233, 0.12); color: #0ea5e9;">
+          <i class="bi bi-person-plus-fill"></i>
+        </div>
+        <div>
+          <h4>Invite New ERP User</h4>
+          <span class="modal-subtitle">User Credentials & Initial RBAC Role Assignment</span>
+        </div>
+      </div>
       <button class="modal-close-btn" (click)="showInviteUserModal = false" aria-label="Close dialog"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="modal-body">
@@ -1942,7 +1994,15 @@
 <div class="modal-backdrop" *ngIf="showCompanyModal" (click)="showCompanyModal = false">
   <div class="modal-content modal-large" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h4><span class="material-symbols-outlined" style="vertical-align: middle;">domain</span> {{ editingCompany ? 'Edit Company Profile' : 'Add Legal Entity / Plant Profile' }}</h4>
+      <div class="modal-title-group">
+        <div class="modal-icon-shield" style="background: rgba(217, 119, 6, 0.12); color: #d97706;">
+          <i class="bi bi-building"></i>
+        </div>
+        <div>
+          <h4>{{ editingCompany ? 'Edit Company Profile' : 'Add Legal Entity / Plant Profile' }}</h4>
+          <span class="modal-subtitle">GSTIN, CIN, Plant Addresses & Compliance Details</span>
+        </div>
+      </div>
       <button class="modal-close-btn" (click)="showCompanyModal = false" aria-label="Close dialog"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="modal-body">
@@ -2018,7 +2078,15 @@
 <div class="modal-backdrop" *ngIf="showBankModal" (click)="showBankModal = false">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h4><span class="material-symbols-outlined" style="vertical-align: middle;">account_balance</span> {{ editingBank ? 'Edit Bank Account' : 'Add Corporate Bank Account' }}</h4>
+      <div class="modal-title-group">
+        <div class="modal-icon-shield" style="background: rgba(5, 150, 105, 0.12); color: #059669;">
+          <i class="bi bi-bank"></i>
+        </div>
+        <div>
+          <h4>{{ editingBank ? 'Edit Bank Account' : 'Add Corporate Bank Account' }}</h4>
+          <span class="modal-subtitle">IFSC, Account Number & Settlement Gateway Details</span>
+        </div>
+      </div>
       <button class="modal-close-btn" (click)="showBankModal = false" aria-label="Close dialog"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="modal-body">

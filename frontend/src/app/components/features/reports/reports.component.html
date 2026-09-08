@@ -84,7 +84,7 @@
       </button>
       <button class="btn btn-secondary btn-sm" (click)="setCurrentMonth()">This Month</button>
       <button class="btn btn-secondary btn-sm" (click)="clearReportFilters()"><i class="bi bi-arrow-counterclockwise me-1"></i> Clear</button>
-      <button class="btn btn-primary btn-sm" (click)="runReport()"><i class="bi bi-play-fill me-1"></i> Run</button>
+      <button class="btn btn-primary btn-sm" (click)="runReport(true)"><i class="bi bi-play-fill me-1"></i> Run</button>
       <button class="btn btn-secondary btn-sm no-print" (click)="printReport()" [disabled]="filteredReportData.length === 0 && partyLedgerRows.length === 0">
         <i class="bi bi-printer me-1"></i> Print
       </button>
@@ -151,12 +151,18 @@
           </div>
         </div>
       </div>
-      <div class="header-strip-right">
+      <div class="header-strip-right" style="display:flex;align-items:center;gap:10px;">
+        <!-- Density Toggle -->
+        <div class="density-switch-group">
+          <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact density"><i class="bi bi-distribute-vertical"></i> Compact</button>
+          <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="setDensity('comfortable')" title="Standard density"><i class="bi bi-list-ul"></i> Normal</button>
+          <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious density"><i class="bi bi-grid-3x2-gap"></i> Spacious</button>
+        </div>
         <span class="report-audit-tag"><i class="bi bi-shield-check"></i> System Reconciled</span>
       </div>
     </div>
 
-    <div class="table-container">
+    <div class="table-container" [class.table-compact]="tableDensity === 'compact'" [class.table-spacious]="tableDensity === 'spacious'">
       <!-- 1. Daily Production Report -->
       <table class="enterprise-data-table" *ngIf="reportFilter.type === 'production'">
         <thead>

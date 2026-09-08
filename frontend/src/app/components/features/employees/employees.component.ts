@@ -51,6 +51,32 @@ export class EmployeesComponent implements OnInit {
     return this.loggedInUser && this.loggedInUser.role === 'VIEWER';
   }
 
+  isEditing(): boolean {
+    return !!(this.employeeForm as any).id;
+  }
+
+  cancelEdit() {
+    this.employeeForm = { empName: '', empContact: '', salary: 0, address: '', designation: '', joiningDate: '', aadhaarNo: '', bankAccount: '', photoPath: '', aadhaarCardPath: '', bankPassbookPath: '' };
+  }
+
+  getTotalEmployees(): number {
+    return this.employees?.length || 0;
+  }
+
+  getTotalMonthlyPayroll(): number {
+    return (this.employees || []).reduce((acc, curr) => acc + (Number(curr.salary) || 0), 0);
+  }
+
+  getAverageSalary(): number {
+    const total = this.getTotalEmployees();
+    return total > 0 ? this.getTotalMonthlyPayroll() / total : 0;
+  }
+
+  getDistinctRolesCount(): number {
+    const roles = new Set((this.employees || []).map(e => (e.designation || '').trim().toLowerCase()).filter(Boolean));
+    return roles.size;
+  }
+
   canDelete(): boolean {
     return this.loggedInUser && (this.loggedInUser.role === 'SUPER_ADMIN' || this.loggedInUser.role === 'ADMIN');
   }

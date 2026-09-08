@@ -32,6 +32,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
   @Input() dispatchesList: any[] = [];
   @Input() telemetryHealth: any = null;
   @Output() onToggleAlerts = new EventEmitter<void>();
+  @Output() refreshData = new EventEmitter<void>();
+
+  triggerDataSync() {
+    this.refreshData.emit();
+  }
 
   // Live Date & Time Telemetry
   currentDate = '';

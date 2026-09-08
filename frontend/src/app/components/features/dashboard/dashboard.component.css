@@ -1,5 +1,6 @@
 /* ============================================================
    ENTERPRISE DASHBOARD — EXECUTIVE COMMAND CENTER
+   Phase 1 Complete UI/UX Rebuild & Polish
    ============================================================ */
 
 .dashboard-container {
@@ -7,97 +8,199 @@
   max-width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
-/* 1. Command Center Header Strip */
+/* ------------------------------------------------------------
+   1. Command Center Header Strip with Live Telemetry HUD
+   ------------------------------------------------------------ */
 .command-center-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  padding: 14px 18px;
+  padding: 10px 16px;
+  min-height: 56px;
   background: var(--bg-card);
   border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
+  box-sizing: border-box;
 }
 
 .cch-left {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .cch-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--color-success);
   text-transform: uppercase;
 }
 
 .pulse-indicator {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background-color: var(--color-success);
-  box-shadow: 0 0 8px var(--color-success);
+  box-shadow: 0 0 6px var(--color-success);
   animation: livePulse 2s infinite ease-in-out;
 }
 
 @keyframes livePulse {
   0% { transform: scale(0.9); opacity: 0.8; }
-  50% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 10px var(--color-success); }
+  50% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 8px var(--color-success); }
   100% { transform: scale(0.9); opacity: 0.8; }
 }
 
 .cch-titles h2 {
   margin: 0;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 
 .cch-titles p {
   margin: 0;
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+/* Live Plant Telemetry HUD */
+.cch-telemetry-hud {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-hover, #f8fafc);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-sm, 6px);
+  padding: 4px 10px;
+  flex-wrap: wrap;
+}
+
+body.dark-theme .cch-telemetry-hud {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(51, 65, 85, 0.6);
+}
+
+.cch-hud-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.hud-label {
+  color: var(--text-secondary, #64748b);
+  font-weight: 600;
+}
+
+.hud-val {
+  color: var(--text-primary, #0f172a);
+  font-weight: 700;
+}
+
+.hud-progress-bar {
+  width: 44px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+body.dark-theme .hud-progress-bar {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.hud-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary, #059669), #10b981);
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+
+.hud-pct {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--primary, #059669);
+}
+
+.hud-badge-online {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+body.dark-theme .hud-badge-online {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
 }
 
 .cch-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .cch-stat-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 10px;
+  padding: 4px 8px;
   background: var(--bg-hover);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-pill);
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-secondary);
 }
 
-/* 2. Quick Actions Bar (Visually Hierarchical) */
+.refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+
+.spin-refresh {
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ------------------------------------------------------------
+   2. Quick Actions Operations Bar
+   ------------------------------------------------------------ */
 .quick-actions-bar {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px;
+  padding: 8px 14px;
   background: var(--bg-card);
   border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
   overflow-x: auto;
   scrollbar-width: none;
@@ -107,11 +210,15 @@
   display: none;
 }
 
-.qa-label {
-  font-size: 11px;
+.qa-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.05em;
   color: var(--text-muted);
+  padding-right: 10px;
+  border-right: 1px solid var(--border-color);
   white-space: nowrap;
 }
 
@@ -122,16 +229,54 @@
   flex-wrap: nowrap;
 }
 
-.qa-btn-primary {
-  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
-  font-weight: 700 !important;
+.qa-btn {
+  height: 34px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  transition: all 0.15s ease;
 }
 
-/* 3. Alerts & Exceptions Banner Strip */
+.qa-btn:hover {
+  transform: translateY(-1px);
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  background: var(--bg-hover) !important;
+}
+
+.qa-btn-primary {
+  height: 34px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 700 !important;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.qa-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+/* ------------------------------------------------------------
+   3. Operational Attention & Alerts Strip
+   ------------------------------------------------------------ */
 .alerts-exceptions-strip {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 10px;
 }
 
 @media (max-width: 1024px) {
@@ -142,9 +287,9 @@
 
 .alert-pill {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px 12px;
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -181,8 +326,15 @@
   transform: translateY(-1px);
 }
 
+.alert-top-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
 .alert-icon {
-  font-size: 15px;
+  font-size: 14px;
   flex-shrink: 0;
 }
 
@@ -200,14 +352,45 @@
   font-weight: 700;
   color: var(--primary);
   white-space: nowrap;
-  margin-left: 6px;
+  margin-left: auto;
 }
 
-/* 4. Compact Executive KPI Cards */
+.alert-gauge-wrap {
+  width: 100%;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+body.dark-theme .alert-gauge-wrap {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.alert-gauge-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.warning-fill { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.info-fill { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.success-fill { background: linear-gradient(90deg, #10b981, #34d399); }
+.danger-fill { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+.alert-gauge-sub {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------
+   4. Primary Executive KPI Cards
+   ------------------------------------------------------------ */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  gap: 12px;
 }
 
 @media (max-width: 1200px) {
@@ -225,26 +408,27 @@
 .kpi-card {
   background: var(--bg-card);
   border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
-  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
   box-shadow: var(--shadow-card);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .kpi-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-card-hover);
+  border-color: var(--primary);
 }
 
 .kpi-card-inner {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex: 1;
   min-width: 0;
 }
@@ -252,7 +436,7 @@
 .kpi-icon-wrap {
   width: 38px;
   height: 38px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -268,10 +452,11 @@
 .kpi-body {
   flex: 1;
   overflow: hidden;
+  min-width: 0;
 }
 
 .kpi-label {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -287,7 +472,7 @@
   font-weight: 800;
   color: var(--text-primary);
   line-height: 1.2;
-  margin: 2px 0;
+  margin: 1px 0;
 }
 
 .kpi-unit {
@@ -297,31 +482,56 @@
 }
 
 .kpi-meta {
-  font-size: 10.5px;
+  font-size: 10px;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.kpi-sparkline-wrap {
-  width: 58px;
-  height: 30px;
+.kpi-right-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
   flex-shrink: 0;
 }
 
 .kpi-badge-trend {
-  font-size: 10.5px;
-  font-weight: 800;
-  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
   border-radius: var(--radius-pill);
-  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
 }
 
 .kpi-badge-trend.positive {
   background: var(--color-success-bg);
   color: var(--color-success);
   border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.kpi-badge-trend.neutral {
+  background: var(--bg-hover);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+
+.kpi-sparkline-wrap {
+  width: 54px;
+  height: 26px;
+}
+
+/* Stagger Entrance */
+.stagger-1 { animation: kpiEntrance 0.35s ease 0.04s backwards; }
+.stagger-2 { animation: kpiEntrance 0.35s ease 0.08s backwards; }
+.stagger-3 { animation: kpiEntrance 0.35s ease 0.12s backwards; }
+.stagger-4 { animation: kpiEntrance 0.35s ease 0.16s backwards; }
+
+@keyframes kpiEntrance {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 /* Value Color Helpers */
@@ -331,11 +541,13 @@
 .text-red { color: var(--color-danger) !important; }
 .text-yellow { color: var(--color-warning) !important; }
 
-/* 5. Financial P&L Strip */
+/* ------------------------------------------------------------
+   5. Financial P&L Velocity Strip
+   ------------------------------------------------------------ */
 .pl-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  gap: 12px;
 }
 
 @media (max-width: 900px) {
@@ -347,18 +559,24 @@
 .pl-card {
   background: var(--bg-card);
   border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
-  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   box-shadow: var(--shadow-card);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pl-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .pl-card-icon {
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -369,12 +587,43 @@
 .pl-expense .pl-card-icon { background: var(--color-danger-bg); color: var(--color-danger); }
 .pl-profit .pl-card-icon { background: var(--primary-soft); color: var(--primary); }
 
+.pl-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.pl-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
 .pl-label {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-secondary);
+}
+
+.pl-margin-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+body.dark-theme .pl-margin-badge {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.pl-margin-badge.loss {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
 }
 
 .pl-value {
@@ -382,11 +631,11 @@
   font-size: 18px;
   font-weight: 800;
   line-height: 1.2;
-  margin: 2px 0;
+  margin: 1px 0;
 }
 
 .pl-desc {
-  font-size: 10.5px;
+  font-size: 10px;
   color: var(--text-muted);
 }
 
@@ -397,11 +646,13 @@
   margin-left: 4px;
 }
 
-/* 6. Secondary Operational Telemetry Strip */
+/* ------------------------------------------------------------
+   6. Secondary Operational Telemetry Strip
+   ------------------------------------------------------------ */
 .secondary-telemetry-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  gap: 10px;
 }
 
 @media (max-width: 1100px) {
@@ -419,8 +670,8 @@
 .telemetry-pill-card {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: 10px;
+  padding: 10px 12px;
   background: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-md);
@@ -441,7 +692,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
+  font-size: 14px;
   flex-shrink: 0;
 }
 
@@ -450,35 +701,81 @@
   flex-direction: column;
   overflow: hidden;
   min-width: 0;
+  flex: 1;
+}
+
+.tpc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
 }
 
 .tpc-title {
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 700;
   color: var(--text-secondary);
   text-transform: uppercase;
 }
 
+.tpc-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.tpc-badge.warning { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+.tpc-badge.info { background: rgba(59, 130, 246, 0.12); color: #2563eb; }
+.tpc-badge.success { background: rgba(16, 185, 129, 0.12); color: #059669; }
+.tpc-badge.danger { background: rgba(239, 68, 68, 0.12); color: #dc2626; }
+
+body.dark-theme .tpc-badge.warning { color: #fbbf24; }
+body.dark-theme .tpc-badge.info { color: #60a5fa; }
+body.dark-theme .tpc-badge.success { color: #34d399; }
+body.dark-theme .tpc-badge.danger { color: #f87171; }
+
 .tpc-val {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 800;
   color: var(--text-primary);
   white-space: nowrap;
 }
 
+.tpc-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 3px 0 2px 0;
+}
+
+body.dark-theme .tpc-progress-bar {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tpc-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .tpc-sub {
-  font-size: 10px;
+  font-size: 9.5px;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* 7. Charts & Analytics Matrix */
+/* ------------------------------------------------------------
+   7. Charts & Analytics Matrix
+   ------------------------------------------------------------ */
 .charts-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 12px;
 }
 
 @media (max-width: 1024px) {
@@ -490,8 +787,8 @@
 .chart-card {
   background: var(--bg-card);
   border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
-  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
   box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
@@ -500,8 +797,8 @@
 .chart-card-wide {
   background: var(--bg-card);
   border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
-  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
   box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
@@ -511,12 +808,12 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .chart-header h3 {
   margin: 0;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--text-primary);
   display: flex;
@@ -525,18 +822,19 @@
 }
 
 .chart-meta-pill {
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 600;
   padding: 2px 8px;
   border-radius: var(--radius-pill);
   background: var(--bg-hover);
   color: var(--text-muted);
   border: 1px solid var(--border-color);
+  margin-left: auto;
 }
 
 .chart-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   display: inline-block;
   flex-shrink: 0;
@@ -549,17 +847,19 @@
 .canvas-wrapper {
   position: relative;
   width: 100%;
-  height: 230px;
+  height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* 8. Activity Feed & Shortcuts Grid */
+/* ------------------------------------------------------------
+   8. Activity Feed & Operations Shortcuts Grid
+   ------------------------------------------------------------ */
 .dashboard-widget-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 14px;
+  gap: 12px;
 }
 
 @media (max-width: 480px) {
@@ -568,10 +868,85 @@
   }
 }
 
+.widget-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.widget-title {
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s ease;
+}
+
+.activity-item:hover {
+  border-color: var(--primary-light);
+}
+
+.activity-icon {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.activity-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-action {
+  font-weight: 600;
+  font-size: 11.5px;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.activity-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1px;
+}
+
+.activity-user {
+  color: var(--text-secondary);
+}
+
+.activity-empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 20px;
+  font-size: 12px;
+}
+
+/* Operational Shortcuts */
 .shortcuts-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  gap: 8px;
 }
 
 @media (max-width: 420px) {
@@ -581,17 +956,17 @@
 }
 
 .shortcut-btn {
-  padding: 10px 12px;
+  padding: 8px 10px;
   text-align: left;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.15s ease;
-  min-height: 48px;
+  min-height: 44px;
 }
 
 .shortcut-btn:hover {
@@ -602,70 +977,82 @@
 }
 
 .shortcut-icon {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: var(--radius-sm);
   background: var(--bg-surface);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 14px;
+  color: var(--primary);
   flex-shrink: 0;
+}
+
+.shortcut-text {
+  flex: 1;
+  min-width: 0;
 }
 
 .shortcut-title {
   font-weight: 700;
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--text-primary);
 }
 
 .shortcut-desc {
-  font-size: 10.5px;
+  font-size: 10px;
   color: var(--text-muted);
-  margin-top: 1px;
 }
 
-/* Activity Item */
-.activity-item {
+/* ------------------------------------------------------------
+   9. Super Admin Diagnostics Grid
+   ------------------------------------------------------------ */
+.diagnostics-header {
+  margin-bottom: 10px;
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 8px 10px;
-  background: var(--bg-hover);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  transition: border-color 0.15s ease;
+  align-items: center;
+  gap: 6px;
 }
 
-.activity-item:hover {
-  border-color: var(--primary-light);
+.diagnostics-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
 }
 
-/* System Diagnostics Grid */
 .diagnostics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
 }
 
 .diagnostics-item {
-  padding: 8px 12px;
+  padding: 6px 10px;
   background: var(--bg-hover);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .diagnostics-label {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-/* Floating FAB */
+/* Universal Import Hub Wrap */
+.universal-import-wrap {
+  margin-top: 4px;
+}
+
+/* ------------------------------------------------------------
+   10. Quick-Add Floating FAB Menu
+   ------------------------------------------------------------ */
 .fab-container {
   position: fixed;
   bottom: 24px;
@@ -674,37 +1061,48 @@
 }
 
 .fab-menu-items {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   align-items: flex-end;
 }
 
 .fab-item-btn {
   box-shadow: var(--shadow-md);
   border-radius: var(--radius-pill) !important;
-  font-size: 12px;
-  height: 36px;
-  padding: 0 16px !important;
+  font-size: 11.5px;
+  height: 34px;
+  padding: 0 14px !important;
+  display: inline-flex;
+  align-items: center;
 }
 
 .fab-trigger-btn {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   background: var(--primary);
   color: #fff;
   border: none;
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
   box-shadow: var(--shadow-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease;
+  transition: transform 0.15s ease;
 }
 
 .fab-trigger-btn:hover {
-  transform: scale(1.08);
+  transform: scale(1.06);
+}
+
+.fab-trigger-btn:focus-visible,
+.shortcut-btn:focus-visible,
+.qa-btn:focus-visible,
+.qa-btn-primary:focus-visible,
+.refresh-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }

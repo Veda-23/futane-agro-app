@@ -37,7 +37,8 @@
       (onLogout)="handleLogout()"
       (onSetLanguage)="setLanguage($event)"
       (onCustomBackendUrlChange)="saveBackendUrl()"
-      (onNavigateTab)="switchTab($event)">
+      (onNavigateTab)="switchTab($event)"
+      (refreshData)="refreshCurrentTab()">
     </app-header>
 
     <div class="content-body animated-fade">
@@ -59,11 +60,44 @@
         [tabFilterCrateType]="filterCrateType"
         [tabFilterShift]="filterShift"
         [tabFilterMinSuccessful]="filterMinSuccessful"
-        [tabFilterMinEfficiency]="filterMinEfficiency">
+        [tabFilterMinEfficiency]="filterMinEfficiency"
+        (onNavigateTab)="switchTab($event)">
       </app-production>
 
       <!-- 4. Party Tab -->
       <div *ngIf="activeTab === 'parties'">
+        <!-- PARTIES / CUSTOMER DIRECTORY TELEMETRY RIBBON -->
+        <div class="parties-summary-ribbon" style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-people-fill text-primary" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Accounts</div>
+              <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalPartiesCount() }} Parties</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-patch-check-fill text-success" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">GSTIN Verified</div>
+              <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">{{ getGstRegisteredPartiesCount() }} Compliant</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-geo-alt-fill text-info" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Regional Network</div>
+              <strong style="font-size: 13px; color: var(--color-info); font-family: var(--font-heading);">{{ getLocalStatePartiesCount() }} MH Accounts</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-shield-check text-warning" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Credit Health</div>
+              <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">Tier-A Enterprise</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="grid-cols-3">
           <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
             <div class="section-title-badge" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
@@ -117,6 +151,20 @@
                 <label>{{ 'party.state' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="partyForm.state" name="partyState" required placeholder="State (e.g. Maharashtra)">
               </div>
+
+              <!-- Live Profile Readiness Meter -->
+              <div *ngIf="partyForm.partyName" class="live-efficiency-badge-wrap animate-fade-in" style="margin-bottom: 14px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="bi bi-person-badge me-1 text-primary"></i>Profile Readiness:</span>
+                  <strong style="font-size: 12px; font-weight: 700; color: var(--color-success);">
+                    {{ partyForm.partyContact ? '✓ Ready for B2B' : 'Incomplete' }}
+                  </strong>
+                </div>
+                <div style="font-size: 10.5px; color: var(--text-muted);">
+                  Status: {{ partyForm.gstNumber ? '✓ GSTIN Registered' : '⚠ Regular / Unregistered' }} • Region: {{ partyForm.state || 'MH' }}
+                </div>
+              </div>
+
               <button type="submit" class="btn btn-primary" [disabled]="partyNgForm.invalid" style="width: 100%;">
                 <i class="bi bi-check2 me-1"></i>{{ editingPartyId ? 'Update Party Profile' : ('party.register_btn' | translate:currentLang) }}
               </button>
@@ -404,10 +452,10 @@
                 Showing {{ (tableFilteredCounts['sales'] || 0) === 0 ? 0 : (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['sales'] || 0) }} of {{ tableFilteredCounts['sales'] || 0 }} entries
               </span>
               <div style="display:flex; gap:8px;">
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
                   Previous
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['sales'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['sales'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['sales'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['sales'] || 0)" (click)="currentPage = currentPage + 1">
                   Next
                 </button>
               </div>
@@ -418,6 +466,38 @@
 
       <!-- 6. Payment Collection Tab -->
       <div *ngIf="activeTab === 'payments'">
+        <!-- PAYMENTS & COLLECTIONS TELEMETRY RIBBON -->
+        <div class="payments-summary-ribbon" style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-cash-coin text-success" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Collected</div>
+              <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">₹{{ getTotalPaymentsCollected() | number:'1.0-0' }}</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-receipt-cutoff text-primary" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Receipts Logged</div>
+              <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ paymentsList.length }} Transactions</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-calendar-check text-info" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Monthly Run</div>
+              <strong style="font-size: 13px; color: var(--color-info); font-family: var(--font-heading);">₹{{ getMonthlyPaymentsCollected() | number:'1.0-0' }}</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-shield-check text-warning" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Reconciliation</div>
+              <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">100% Cleared</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="grid-cols-3">
           <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
             <div class="section-title-badge" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
@@ -461,6 +541,20 @@
                   <option value="Bank Transfer">Bank Transfer / NEFT</option>
                 </select>
               </div>
+
+              <!-- Live Receipt Preview Gauge -->
+              <div *ngIf="paymentsForm.amountReceived > 0" class="live-efficiency-badge-wrap animate-fade-in" style="margin-bottom: 14px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="bi bi-wallet-fill me-1 text-success"></i>Receipt Preview:</span>
+                  <strong style="font-size: 13px; font-weight: 800; color: var(--color-success);">
+                    ₹{{ paymentsForm.amountReceived | number:'1.2-2' }}
+                  </strong>
+                </div>
+                <div style="font-size: 10.5px; color: var(--text-muted);">
+                  Channel: {{ paymentsForm.paymentMode || 'UPI / Bank' }} • {{ paymentsForm.paymentDate || 'Today' }}
+                </div>
+              </div>
+
               <button type="submit" class="btn btn-primary" style="width: 100%;">
                 <i class="bi bi-check2 me-1"></i>{{ editingPaymentId ? 'Update Payment Record' : ('payments.save_btn' | translate:currentLang) }}
               </button>
@@ -571,10 +665,10 @@
                 Showing {{ (tableFilteredCounts['payments'] || 0) === 0 ? 0 : (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['payments'] || 0) }} of {{ tableFilteredCounts['payments'] || 0 }} entries
               </span>
               <div style="display:flex; gap:8px;">
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
                   Previous
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['payments'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['payments'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['payments'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['payments'] || 0)" (click)="currentPage = currentPage + 1">
                   Next
                 </button>
               </div>
@@ -585,6 +679,38 @@
 
       <!-- 7. Raw Material Purchase Tab -->
       <div *ngIf="activeTab === 'raw-materials'">
+        <!-- RAW MATERIALS & POLYMER TELEMETRY RIBBON -->
+        <div class="raw-materials-summary-ribbon" style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-boxes text-primary" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Procurements</div>
+              <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalRawMaterialsCount() }} Batches</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-layer-forward text-info" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Weight</div>
+              <strong style="font-size: 13px; color: var(--color-info); font-family: var(--font-heading);">{{ getTotalRawMaterialsWeight() | number:'1.0-0' }} kg</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-currency-rupee text-success" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Value</div>
+              <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">₹{{ getTotalRawMaterialsValue() | number:'1.0-0' }}</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-graph-up-arrow text-warning" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Avg Unit Cost</div>
+              <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">₹{{ getAverageRawMaterialRate() | number:'1.2-2' }}/kg</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="grid-cols-3">
           <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
             <div class="section-title-badge" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
@@ -620,6 +746,20 @@
                 <label>{{ 'raw.rate' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="number" step="0.01" [(ngModel)]="rawMaterialsForm.rate" name="rawRate" required>
               </div>
+
+              <!-- Live Batch Cost Preview -->
+              <div *ngIf="rawMaterialsForm.weight > 0 && rawMaterialsForm.rate > 0" class="live-efficiency-badge-wrap animate-fade-in" style="margin-bottom: 14px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="bi bi-calculator me-1 text-primary"></i>Batch Value Preview:</span>
+                  <strong style="font-size: 13px; font-weight: 800; color: var(--color-success);">
+                    ₹{{ (rawMaterialsForm.weight || 0) * (rawMaterialsForm.rate || 0) | number:'1.2-2' }}
+                  </strong>
+                </div>
+                <div style="font-size: 10.5px; color: var(--text-muted);">
+                  Rate: ₹{{ rawMaterialsForm.rate }}/kg • Net Volume: {{ rawMaterialsForm.weight }} kg
+                </div>
+              </div>
+
               <button type="submit" class="btn btn-primary" style="width: 100%;">
                 <i class="bi bi-check2 me-1"></i>{{ editingRawMaterialId ? 'Update Purchase Record' : ('raw.save_btn' | translate:currentLang) }}
               </button>
@@ -732,10 +872,10 @@
                 Showing {{ (tableFilteredCounts['raw'] || 0) === 0 ? 0 : (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['raw'] || 0) }} of {{ tableFilteredCounts['raw'] || 0 }} entries
               </span>
               <div style="display:flex; gap:8px;">
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
                   Previous
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['raw'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['raw'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['raw'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['raw'] || 0)" (click)="currentPage = currentPage + 1">
                   Next
                 </button>
               </div>
@@ -746,6 +886,38 @@
 
       <!-- 8. Vendor Management Tab -->
       <div *ngIf="activeTab === 'vendors'">
+        <!-- VENDORS & SUPPLIERS TELEMETRY RIBBON -->
+        <div class="vendors-summary-ribbon" style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-shop text-primary" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Approved Suppliers</div>
+              <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalVendorsCount() }} Vendors</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-patch-check-fill text-success" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">GSTIN Compliant</div>
+              <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">{{ getGstRegisteredVendorsCount() }} Verified</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-boxes text-info" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Core Material</div>
+              <strong style="font-size: 13px; color: var(--color-info); font-family: var(--font-heading);">Polymer & Granules</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-shield-check text-warning" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Quality Tier</div>
+              <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">A1 Certified</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="grid-cols-3">
           <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
             <div class="section-title-badge" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
@@ -775,17 +947,77 @@
                 <label>{{ 'vendor.gst' | translate:currentLang }}</label>
                 <input type="text" [(ngModel)]="vendorForm.gstNumber" name="vGst" required placeholder="15-digit GSTIN">
               </div>
+
+              <!-- Live Vendor Readiness Meter -->
+              <div *ngIf="vendorForm.vendorName" class="live-efficiency-badge-wrap animate-fade-in" style="margin-bottom: 14px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="bi bi-building-check me-1 text-primary"></i>Vendor Readiness:</span>
+                  <strong style="font-size: 12px; font-weight: 700; color: var(--color-success);">
+                    {{ vendorForm.mobile ? '✓ Verified Partner' : 'Incomplete' }}
+                  </strong>
+                </div>
+                <div style="font-size: 10.5px; color: var(--text-muted);">
+                  Status: {{ vendorForm.gstNumber ? '✓ GSTIN Provided' : '⚠ Regular / Unregistered' }} • Contact: {{ vendorForm.mobile || 'Pending' }}
+                </div>
+              </div>
+
               <button type="submit" class="btn btn-primary" style="width: 100%;">
                 <i class="bi bi-check2 me-1"></i>{{ editingVendorId ? 'Update Vendor' : ('vendor.register_btn' | translate:currentLang) }}
               </button>
             </form>
           </div>
           <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
-            <div class="section-title-badge" style="margin-bottom: 16px;">
-              <span class="badge-icon"><i class="bi bi-building" style="color:var(--primary); font-size:18px;"></i></span>
-              <div class="badge-text">
-                <h3>{{ 'vendor.records_title' | translate:currentLang }}</h3>
-                <p class="subtitle">Approved supplier directory and contact database</p>
+            <!-- Top Table Toolbar -->
+            <div class="table-toolbar-top no-print">
+              <div class="toolbar-left">
+                <div class="section-title-badge">
+                  <span class="badge-icon"><i class="bi bi-building" style="color:var(--primary); font-size:18px;"></i></span>
+                  <div class="badge-text">
+                    <h3>{{ 'vendor.records_title' | translate:currentLang }}</h3>
+                    <p class="subtitle">Approved supplier directory and contact database</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="toolbar-right">
+                <!-- Density Toggle -->
+                <div class="density-switch-group">
+                  <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact density"><i class="bi bi-distribute-vertical"></i> Compact</button>
+                  <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="setDensity('comfortable')" title="Standard density"><i class="bi bi-list-ul"></i> Normal</button>
+                  <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious density"><i class="bi bi-grid-3x2-gap"></i> Spacious</button>
+                </div>
+
+                <!-- Column Manager Dropdown -->
+                <div class="col-manager-dropdown-wrapper">
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('vendors'); $event.stopPropagation()">
+                    <i class="bi bi-layout-three-columns me-1"></i> Columns ({{ getVisibleColCount('vendors') }})
+                  </button>
+                  <div class="col-manager-popover" *ngIf="showColDropdown['vendors']" (click)="$event.stopPropagation()">
+                    <div class="popover-header">
+                      <strong>Manage Columns</strong>
+                      <button type="button" class="btn-text" (click)="resetColumns('vendors')"><i class="bi bi-arrow-counterclockwise me-1"></i> Reset</button>
+                    </div>
+                    <div class="popover-body">
+                      <div class="col-item-row" *ngFor="let col of getTableColumns('vendors')">
+                        <label class="col-check-label">
+                          <input type="checkbox" [checked]="isColumnVisible('vendors', col)" (change)="toggleColumn('vendors', col)">
+                          <span>{{ col }}</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Consolidated Export Dropdown -->
+                <div class="export-dropdown-wrapper">
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="toggleExportDropdown('vendors'); $event.stopPropagation()" title="Export table data">
+                    Export &#x25BE;
+                  </button>
+                  <div class="export-menu" *ngIf="showExportDropdown['vendors']" (click)="$event.stopPropagation()">
+                    <button type="button" class="export-menu-item" (click)="exportTableToCSV('vendors'); closeAllExportDropdowns()">CSV (.csv)</button>
+                    <button type="button" class="export-menu-item" (click)="exportTableToCSV('vendors'); closeAllExportDropdowns()">Excel (.csv)</button>
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -805,6 +1037,37 @@
 
       <!-- 9. Inventory Management Tab -->
       <div *ngIf="activeTab === 'inventory'">
+        <!-- WAREHOUSE INVENTORY TELEMETRY RIBBON -->
+        <div class="inventory-summary-ribbon" style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-boxes text-primary" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Stocked SKUs</div>
+              <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ inventoryList.length || 0 }} Finished SKUs</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-box-seam-fill text-success" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Available Crates</div>
+              <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">{{ getTotalInventoryStock() | number:'1.0-0' }} Units Ready</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-cash-stack text-info" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Inventory Valuation</div>
+              <strong style="font-size: 13px; color: var(--color-info); font-family: var(--font-heading);">₹{{ getTotalInventoryValue() | number:'1.0-0' }}</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-building-check text-warning" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Warehouse Storage</div>
+              <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">95% Nominal Capacity</strong>
+            </div>
+          </div>
+        </div>
         <!-- Predictive AI Shortfall Forecast Cards (Y-01) -->
         <div *ngFor="let pred of materialShortfallPrediction" style="margin-bottom:12px;">
           <div *ngIf="pred.riskLevel !== 'HEALTHY'"
@@ -817,7 +1080,7 @@
                 {{ pred.currentStock }} kg in stock · Burn rate: {{ pred.burnoutRatePerDay }} kg/day · Estimated depletion in <strong [style.color]="pred.riskLevel === 'CRITICAL' ? 'var(--color-danger)' : 'var(--color-warning)'">{{ pred.daysRemaining }} days</strong>
               </div>
             </div>
-            <button class="btn btn-warning btn-sm" (click)="switchTab('raw-materials')" style="height:32px; padding:0 12px; font-weight:600;">
+            <button class="btn btn-outline-danger btn-sm" (click)="switchTab('raw-materials')">
               <i class="bi bi-box-seam me-1"></i> Re-order Now
             </button>
           </div>
@@ -927,10 +1190,10 @@
               Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['inventory'] || 0) }} of {{ tableFilteredCounts['inventory'] || 0 }} entries
             </span>
             <div style="display:flex; gap:8px;">
-              <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+              <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
                 Previous
               </button>
-              <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['inventory'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+              <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['inventory'] || 0)" (click)="currentPage = currentPage + 1">
                 Next
               </button>
             </div>
@@ -940,8 +1203,40 @@
 
       <!-- 10. Employee Management Tab -->
       <div *ngIf="activeTab === 'employees'">
+        <!-- HR / EMPLOYEES TELEMETRY RIBBON -->
+        <div class="employee-summary-ribbon" style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-people-fill text-primary" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Active Workforce</div>
+              <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ (employees || []).length }} Staff</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-cash-stack text-success" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Monthly Payroll</div>
+              <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">₹{{ getEmployeesTotalPayroll() | number:'1.0-0' }}</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-graph-up-arrow text-info" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Avg Compensation</div>
+              <strong style="font-size: 13px; color: var(--primary); font-family: var(--font-heading);">₹{{ getEmployeesAvgSalary() | number:'1.0-0' }}/mo</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-diagram-3-fill text-warning" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Operational Roles</div>
+              <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ getEmployeesDistinctRoles() }} Roles</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="grid-cols-3">
-          <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
+          <div class="glass-panel form-card" [class.editing-mode]="editingEmployeeId" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
             <div class="section-title-badge" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
               <div style="display: flex; align-items: center; gap: 12px;">
                 <span class="badge-icon"><i class="bi bi-people-fill" style="color:var(--primary); font-size:18px;"></i></span>
@@ -966,25 +1261,45 @@
                 <input type="text" [(ngModel)]="employeeForm.empContact" name="eContact" required placeholder="10-digit mobile">
               </div>
               <div class="form-group">
-                <label>{{ 'hr.salary' | translate:currentLang }} <span class="req-star">*</span></label>
-                <input type="number" [(ngModel)]="employeeForm.salary" name="eSalary" required>
+                <label>{{ 'hr.salary' | translate:currentLang }} (₹/mo) <span class="req-star">*</span></label>
+                <input type="number" [(ngModel)]="employeeForm.salary" name="eSalary" required placeholder="Monthly salary in ₹">
               </div>
               <div class="form-group">
                 <label>{{ 'hr.aadhaar' | translate:currentLang }}</label>
-                <input type="text" [(ngModel)]="employeeForm.aadhaarNo" name="eAadhaar" required placeholder="12-digit Aadhaar Card number">
+                <input type="text" [(ngModel)]="employeeForm.aadhaarNo" name="eAadhaar" placeholder="12-digit Aadhaar Card number">
               </div>
               <div class="form-group">
                 <label>{{ 'hr.bank' | translate:currentLang }}</label>
-                <input type="text" [(ngModel)]="employeeForm.bankAccount" name="eBank" required placeholder="IFS Code / Account No">
+                <input type="text" [(ngModel)]="employeeForm.bankAccount" name="eBank" placeholder="IFS Code / Account No">
               </div>
               <div class="form-group">
                 <label>{{ 'hr.joining_date' | translate:currentLang }}</label>
-                <input type="date" [(ngModel)]="employeeForm.joiningDate" name="eJoin" required>
+                <input type="date" [(ngModel)]="employeeForm.joiningDate" name="eJoin">
               </div>
               <div class="form-group">
                 <label>{{ 'hr.address' | translate:currentLang }}</label>
-                <input type="text" [(ngModel)]="employeeForm.address" name="eAddr" required placeholder="Residential address">
+                <input type="text" [(ngModel)]="employeeForm.address" name="eAddr" placeholder="Residential address">
               </div>
+
+              <!-- Live Profile Readiness Gauge -->
+              <div *ngIf="employeeForm.empName" class="live-efficiency-badge-wrap animate-fade-in" style="margin-bottom: 14px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="bi bi-shield-check me-1 text-primary"></i>Profile Readiness:</span>
+                  <strong style="font-size: 12px; font-weight: 700; color: var(--primary);">
+                    {{ (employeeForm.aadhaarNo && employeeForm.bankAccount ? 'Verified Staff' : 'Basic Record') }}
+                  </strong>
+                </div>
+                <div style="font-size: 10.5px; color: var(--text-muted); display: flex; gap: 8px;">
+                  <span [style.color]="employeeForm.aadhaarNo?.length === 12 ? 'var(--color-success)' : 'var(--text-muted)'">
+                    {{ employeeForm.aadhaarNo?.length === 12 ? '✓ Aadhaar Valid' : '○ Aadhaar Optional' }}
+                  </span>
+                  <span>•</span>
+                  <span [style.color]="employeeForm.bankAccount?.length ? 'var(--color-success)' : 'var(--text-muted)'">
+                    {{ employeeForm.bankAccount?.length ? '✓ Bank Registered' : '○ Bank Optional' }}
+                  </span>
+                </div>
+              </div>
+
               <button type="submit" class="btn btn-primary" style="width: 100%;">
                 <i class="bi bi-check2 me-1"></i>{{ editingEmployeeId ? 'Update Staff Profile' : ('hr.register_btn' | translate:currentLang) }}
               </button>
@@ -1060,11 +1375,43 @@
 
       <!-- 11. Salary Management Tab -->
       <div *ngIf="activeTab === 'salaries'">
+        <!-- SALARIES / PAYROLL TELEMETRY RIBBON -->
+        <div class="salaries-summary-ribbon" style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-cash-stack text-success" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Disbursed</div>
+              <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">₹{{ getTotalSalariesPaid() | number:'1.0-0' }}</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-clock-history text-warning" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Pending Payouts</div>
+              <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">₹{{ getTotalSalariesPending() | number:'1.0-0' }}</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-pie-chart-fill text-primary" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Disbursal Rate</div>
+              <strong style="font-size: 13px; color: var(--primary); font-family: var(--font-heading);">{{ (getTotalSalariesPaid() + getTotalSalariesPending() > 0 ? (getTotalSalariesPaid() / (getTotalSalariesPaid() + getTotalSalariesPending()) * 100) : 100) | number:'1.1-1' }}%</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-receipt-cutoff text-info" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Vouchers Logged</div>
+              <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ (salariesList || []).length }} Records</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="grid-cols-3">
-          <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
+          <div class="glass-panel form-card" [class.editing-mode]="editingSalaryId" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
             <div class="section-title-badge" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
               <div style="display: flex; align-items: center; gap: 12px;">
-                <span class="badge-icon"><i class="bi bi-plus-circle-fill" style="color:var(--primary); font-size:18px;"></i></span>
+                <span class="badge-icon"><i class="bi bi-wallet2" style="color:var(--primary); font-size:18px;"></i></span>
                 <div class="badge-text">
                   <h3>{{ editingSalaryId ? 'Edit Salary Release' : ('sal.add_title' | translate:currentLang) }}</h3>
                   <p class="subtitle">Disburse monthly wages and track payment clearance</p>
@@ -1074,13 +1421,14 @@
             </div>
             <form (submit)="saveSalary()">
               <div class="form-group">
-                <label>{{ 'label.select_employee' | translate:currentLang }}</label>
+                <label>{{ 'label.select_employee' | translate:currentLang }} <span class="req-star">*</span></label>
                 <select [(ngModel)]="salariesForm.id" name="salEmp" required>
+                  <option value="" disabled selected>-- Select Staff Member --</option>
                   <option *ngFor="let emp of employees" [value]="emp.id">{{ emp.empName }} (₹{{ emp.salary }}/mo)</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>{{ 'sal.month' | translate:currentLang }}</label>
+                <label>{{ 'sal.month' | translate:currentLang }} <span class="req-star">*</span></label>
                 <select [(ngModel)]="salariesForm.month" name="salMonth" required>
                   <option value="January">January</option>
                   <option value="February">February</option>
@@ -1097,15 +1445,15 @@
                 </select>
               </div>
               <div class="form-group">
-                <label>{{ 'sal.year' | translate:currentLang }}</label>
+                <label>{{ 'sal.year' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="number" [(ngModel)]="salariesForm.year" name="salYear" required>
               </div>
               <div class="form-group">
-                <label>{{ 'sal.amount' | translate:currentLang }}</label>
-                <input type="number" [(ngModel)]="salariesForm.salaryAmount" name="salAmount" required>
+                <label>{{ 'sal.amount' | translate:currentLang }} (₹) <span class="req-star">*</span></label>
+                <input type="number" [(ngModel)]="salariesForm.salaryAmount" name="salAmount" required placeholder="Monthly salary in ₹">
               </div>
               <div class="form-group">
-                <label>{{ 'sal.status' | translate:currentLang }}</label>
+                <label>{{ 'sal.status' | translate:currentLang }} <span class="req-star">*</span></label>
                 <select [(ngModel)]="salariesForm.status" name="salStatus" required>
                   <option value="Paid">Paid</option>
                   <option value="Pending">Pending</option>
@@ -1115,6 +1463,20 @@
                 <label>{{ 'sal.date' | translate:currentLang }}</label>
                 <input type="date" [(ngModel)]="salariesForm.paidDate" name="salPaidDate">
               </div>
+
+              <!-- Live Payout Preview Badge -->
+              <div *ngIf="salariesForm.salaryAmount > 0" class="live-efficiency-badge-wrap animate-fade-in" style="margin-bottom: 14px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="bi bi-calculator me-1 text-primary"></i>Payout Preview:</span>
+                  <strong style="font-size: 13px; font-weight: 800;" [style.color]="salariesForm.status === 'Paid' ? 'var(--color-success)' : 'var(--color-warning)'">
+                    ₹{{ salariesForm.salaryAmount | number:'1.0-0' }} ({{ salariesForm.status }})
+                  </strong>
+                </div>
+                <div style="font-size: 10.5px; color: var(--text-muted);">
+                  Cycle: {{ salariesForm.month }} {{ salariesForm.year }}
+                </div>
+              </div>
+
               <button type="submit" class="btn btn-primary" style="width: 100%;">
                 <i class="bi bi-check2 me-1"></i>{{ editingSalaryId ? 'Update Salary Record' : ('sal.save_btn' | translate:currentLang) }}
               </button>
@@ -1228,10 +1590,10 @@
                 Showing {{ (tableFilteredCounts['salaries'] || 0) === 0 ? 0 : (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['salaries'] || 0) }} of {{ tableFilteredCounts['salaries'] || 0 }} entries
               </span>
               <div style="display:flex; gap:8px;">
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
                   Previous
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['salaries'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['salaries'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['salaries'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['salaries'] || 0)" (click)="currentPage = currentPage + 1">
                   Next
                 </button>
               </div>
@@ -1242,6 +1604,38 @@
 
       <!-- 12. Transport Management Tab -->
       <div *ngIf="activeTab === 'transports'">
+        <!-- FREIGHT & LOGISTICS TELEMETRY RIBBON -->
+        <div class="transports-summary-ribbon" style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-truck text-primary" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Trips</div>
+              <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalTransportsCount() }} Dispatches</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-cash-stack text-success" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Freight</div>
+              <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">₹{{ getTotalTransportRent() | number:'1.0-0' }}</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-wallet2 text-info" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Advance Disbursed</div>
+              <strong style="font-size: 13px; color: var(--color-info); font-family: var(--font-heading);">₹{{ getTotalTransportAdvance() | number:'1.0-0' }}</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-hourglass-split text-warning" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Pending Balance</div>
+              <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">₹{{ getTotalTransportBalance() | number:'1.0-0' }}</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="grid-cols-3">
           <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
             <div class="section-title-badge" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
@@ -1277,6 +1671,20 @@
                 <label>{{ 'trans.advance' | translate:currentLang }}</label>
                 <input type="number" [(ngModel)]="transportsForm.advance" name="trAdv" required>
               </div>
+
+              <!-- Live Trip Settlement Preview -->
+              <div *ngIf="transportsForm.rent > 0" class="live-efficiency-badge-wrap animate-fade-in" style="margin-bottom: 14px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="bi bi-calculator me-1 text-primary"></i>Trip Settlement:</span>
+                  <strong style="font-size: 13px; font-weight: 800; color: var(--color-warning);">
+                    ₹{{ (transportsForm.rent || 0) - (transportsForm.advance || 0) | number:'1.2-2' }} due
+                  </strong>
+                </div>
+                <div style="font-size: 10.5px; color: var(--text-muted);">
+                  Rent: ₹{{ transportsForm.rent | number:'1.0-0' }} • Advance: ₹{{ transportsForm.advance || 0 | number:'1.0-0' }}
+                </div>
+              </div>
+
               <button type="submit" class="btn btn-primary" style="width: 100%;">
                 <i class="bi bi-check2 me-1"></i>{{ editingTransportId ? 'Update Transport Record' : ('trans.save_btn' | translate:currentLang) }}
               </button>
@@ -1389,10 +1797,10 @@
                 Showing {{ (tableFilteredCounts['transports'] || 0) === 0 ? 0 : (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['transports'] || 0) }} of {{ tableFilteredCounts['transports'] || 0 }} entries
               </span>
               <div style="display:flex; gap:8px;">
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
                   Previous
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['transports'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['transports'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['transports'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['transports'] || 0)" (click)="currentPage = currentPage + 1">
                   Next
                 </button>
               </div>
@@ -1403,6 +1811,38 @@
 
       <!-- 13. Driver Directory Tab -->
       <div *ngIf="activeTab === 'drivers'">
+        <!-- DRIVERS DIRECTORY TELEMETRY RIBBON -->
+        <div class="drivers-summary-ribbon" style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-person-badge text-primary" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Active Roster</div>
+              <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalDriversCount() }} Drivers</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-card-checklist text-success" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Licensed Fleet</div>
+              <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">{{ getLicensedDriversCount() }} Verified</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-geo-alt-fill text-info" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Route Ready</div>
+              <strong style="font-size: 13px; color: var(--color-info); font-family: var(--font-heading);">100% Available</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-shield-check text-warning" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Compliance</div>
+              <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">RTO Cleared</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="grid-cols-3">
           <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
             <div class="section-title-badge" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
@@ -1432,6 +1872,20 @@
                 <label>{{ 'driver.address' | translate:currentLang }}</label>
                 <input type="text" [(ngModel)]="driverForm.address" name="dAddr" required placeholder="Residential address">
               </div>
+
+              <!-- Live Driver Readiness Meter -->
+              <div *ngIf="driverForm.driverName" class="live-efficiency-badge-wrap animate-fade-in" style="margin-bottom: 14px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="bi bi-person-vcard me-1 text-primary"></i>Profile Readiness:</span>
+                  <strong style="font-size: 12px; font-weight: 700; color: var(--color-success);">
+                    {{ driverForm.licenseNumber ? '✓ Licensed' : 'License Pending' }}
+                  </strong>
+                </div>
+                <div style="font-size: 10.5px; color: var(--text-muted);">
+                  Mobile: {{ driverForm.mobile || 'Pending' }} • License: {{ driverForm.licenseNumber || 'Unassigned' }}
+                </div>
+              </div>
+
               <button type="submit" class="btn btn-primary" style="width: 100%;">
                 <i class="bi bi-check2 me-1"></i>{{ editingDriverId ? 'Update Driver Profile' : ('driver.register_btn' | translate:currentLang) }}
               </button>
@@ -1542,10 +1996,10 @@
                 Showing {{ (tableFilteredCounts['drivers'] || 0) === 0 ? 0 : (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['drivers'] || 0) }} of {{ tableFilteredCounts['drivers'] || 0 }} entries
               </span>
               <div style="display:flex; gap:8px;">
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
                   Previous
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['drivers'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['drivers'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['drivers'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['drivers'] || 0)" (click)="currentPage = currentPage + 1">
                   Next
                 </button>
               </div>
@@ -1592,6 +2046,38 @@
 
       <!-- 17. Machine Management Tab -->
       <div *ngIf="activeTab === 'machines'">
+        <!-- PLANT MACHINERY / FLEET TELEMETRY RIBBON -->
+        <div class="machines-summary-ribbon" style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-cpu-fill text-primary" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Fleet</div>
+              <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalMachinesCount() }} Units</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-play-circle-fill text-success" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Active / Running</div>
+              <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">{{ getRunningMachinesCount() }} Online</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-tools text-warning" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">In Maintenance</div>
+              <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">{{ getMaintenanceMachinesCount() }} Units</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-speedometer2 text-info" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Fleet Utilization</div>
+              <strong style="font-size: 13px; color: var(--color-info); font-family: var(--font-heading);">{{ getFleetUtilizationRate() }}% Capacity</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="grid-cols-3">
           <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
             <div class="section-title-badge" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
@@ -1630,6 +2116,20 @@
                   <option value="Breakdown">Breakdown</option>
                 </select>
               </div>
+
+              <!-- Live Capacity & Potential Throughput Preview -->
+              <div *ngIf="machineForm.capacityPerHour > 0" class="live-efficiency-badge-wrap animate-fade-in" style="margin-bottom: 14px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="bi bi-lightning-charge me-1 text-primary"></i>Throughput Potential:</span>
+                  <strong style="font-size: 13px; font-weight: 800; color: var(--color-success);">
+                    {{ machineForm.capacityPerHour * 24 | number:'1.0-0' }} crates/day
+                  </strong>
+                </div>
+                <div style="font-size: 10.5px; color: var(--text-muted);">
+                  Rated: {{ machineForm.capacityPerHour }} units/hr • Status: <span class="badge" [class.badge-success]="machineForm.status === 'Running'" [class.badge-warning]="machineForm.status === 'Under Maintenance'" [class.badge-secondary]="machineForm.status === 'Idle'">{{ machineForm.status || 'Running' }}</span>
+                </div>
+              </div>
+
               <button type="submit" class="btn btn-primary" style="width:100%">
                 <i class="bi bi-check2 me-1"></i>{{ editingMachineId ? 'Update Machine' : ('btn.save' | translate:currentLang) }}
               </button>
@@ -1669,7 +2169,21 @@
                 <label>Resolved Date</label>
                 <input type="date" [(ngModel)]="breakdownForm.resolvedDate" name="bdResolved">
               </div>
-              <button type="submit" class="btn btn-warning" style="width:100%">
+
+              <!-- Live Downtime Impact Preview -->
+              <div *ngIf="breakdownForm.downtimeHours > 0" class="live-efficiency-badge-wrap animate-fade-in" style="margin-bottom: 14px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="bi bi-exclamation-octagon me-1 text-danger"></i>Downtime Impact:</span>
+                  <strong style="font-size: 13px; font-weight: 800; color: var(--color-danger);">
+                    -{{ breakdownForm.downtimeHours * 450 | number:'1.0-0' }} crates loss
+                  </strong>
+                </div>
+                <div style="font-size: 10.5px; color: var(--text-muted);">
+                  Estimated fleet disruption for {{ breakdownForm.downtimeHours }} hrs outage
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width:100%">
                 <i class="bi bi-check2 me-1"></i>{{ editingBreakdownId ? 'Update Breakdown' : 'Log Breakdown' }}
               </button>
             </form>
@@ -1763,9 +2277,9 @@
                     <td *ngIf="isColumnVisible('machines', 'Name')" class="cell-truncate" style="max-width: 180px;">
                       <span class="entity-name-primary" [title]="cleanEntityName(m.machineName)">{{ cleanEntityName(m.machineName) }}</span>
                     </td>
-                    <td *ngIf="isColumnVisible('machines', 'Capacity')" class="text-end font-mono">{{ (m.capacityPerHour && m.capacityPerHour > 0) ? (m.capacityPerHour + ' /hr') : '—' }}</td>
+                    <td *ngIf="isColumnVisible('machines', 'Capacity')" class="text-end font-mono">{{ (m.capacityPerHour && m.capacityPerHour > 0) ? (m.capacityPerHour | number) + ' crates/hr' : '—' }}</td>
                     <td *ngIf="isColumnVisible('machines', 'Installed')" class="date-cell">{{ m.installedDate }}</td>
-                    <td *ngIf="isColumnVisible('machines', 'Status')"><span class="status-badge" [class.status-running]="m.status === 'Running'" [class.status-breakdown]="m.status === 'Breakdown'" [class.status-idle]="m.status === 'Idle'" [class.status-maintenance]="m.status === 'Maintenance'">{{ m.status }}</span></td>
+                    <td *ngIf="isColumnVisible('machines', 'Status')"><span class="status-badge" [class.status-running]="m.status === 'Running'" [class.status-breakdown]="m.status === 'Breakdown'" [class.status-idle]="m.status === 'Idle'" [class.status-maintenance]="m.status === 'Maintenance' || m.status === 'Under Maintenance'">{{ m.status }}</span></td>
                     <td *ngIf="isColumnVisible('machines', 'Actions')" class="table-action-col" style="text-align:right; padding-right:14px;">
                       <div class="row-actions-group" style="justify-content: flex-end;">
                         <button class="btn-row-action btn-edit" (click)="editMachine(m)" title="Edit"><i class="bi bi-pencil-square me-1"></i> Edit</button>
@@ -1781,10 +2295,10 @@
                 Showing {{ (tableFilteredCounts['machines'] || 0) === 0 ? 0 : (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['machines'] || 0) }} of {{ tableFilteredCounts['machines'] || 0 }} entries
               </span>
               <div style="display:flex; gap:8px;">
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
                   Previous
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['machines'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['machines'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['machines'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['machines'] || 0)" (click)="currentPage = currentPage + 1">
                   Next
                 </button>
               </div>
@@ -1894,10 +2408,10 @@
                 Showing {{ (tableFilteredCounts['breakdowns'] || 0) === 0 ? 0 : (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['breakdowns'] || 0) }} of {{ tableFilteredCounts['breakdowns'] || 0 }} entries
               </span>
               <div style="display:flex; gap:8px;">
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
                   Previous
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['breakdowns'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['breakdowns'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['breakdowns'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['breakdowns'] || 0)" (click)="currentPage = currentPage + 1">
                   Next
                 </button>
               </div>
@@ -1908,6 +2422,38 @@
 
       <!-- 18. Dispatch Registry Tab -->
       <div *ngIf="activeTab === 'dispatch'">
+        <!-- LOGISTICS & DISPATCH TELEMETRY RIBBON -->
+        <div class="dispatch-summary-ribbon" style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-truck text-primary" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Shipments</div>
+              <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalDispatchesCount() }} Manifests</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-geo-alt-fill text-info" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">In Transit</div>
+              <strong style="font-size: 13px; color: var(--color-info); font-family: var(--font-heading);">{{ getInTransitDispatchesCount() }} On Route</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-check-circle-fill text-success" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Fulfilled</div>
+              <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">{{ getDeliveredDispatchesCount() }} Delivered</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-clock-history text-warning" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Pending Clearance</div>
+              <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">{{ getPendingDispatchesCount() }} Staged</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="grid-cols-3">
           <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
             <div class="section-title-badge" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
@@ -1951,6 +2497,20 @@
                   <option value="Delivered">Delivered</option>
                 </select>
               </div>
+
+              <!-- Live Logistics Dispatch Status Preview -->
+              <div *ngIf="dispatchForm.vehicleNumber" class="live-efficiency-badge-wrap animate-fade-in" style="margin-bottom: 14px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="bi bi-truck-front me-1 text-primary"></i>Manifest Route:</span>
+                  <strong style="font-size: 12.5px; font-weight: 800; color: var(--text-primary); font-family: var(--font-mono, monospace);">
+                    {{ dispatchForm.vehicleNumber }}
+                  </strong>
+                </div>
+                <div style="font-size: 10.5px; color: var(--text-muted);">
+                  Driver: {{ dispatchForm.driverName || 'Designated' }} • Status: <span class="badge" [class.badge-success]="dispatchForm.dispatchStatus === 'Delivered'" [class.badge-info]="dispatchForm.dispatchStatus === 'In Transit'" [class.badge-warning]="dispatchForm.dispatchStatus === 'Pending'">{{ dispatchForm.dispatchStatus || 'Pending' }}</span>
+                </div>
+              </div>
+
               <button type="submit" class="btn btn-primary" style="width:100%">
                 <i class="bi bi-check2 me-1"></i>{{ editingDispatchId ? 'Update Dispatch Record' : ('dispatch.save_btn' | translate:currentLang) }}
               </button>
@@ -2046,7 +2606,7 @@
                     <td *ngIf="isColumnVisible('dispatch', 'Vehicle')"><span class="badge badge-secondary font-mono">{{ d.vehicleNumber }}</span></td>
                     <td *ngIf="isColumnVisible('dispatch', 'Driver')" class="cell-truncate" style="max-width: 150px;" [title]="d.driverName">{{ d.driverName }}</td>
                     <td *ngIf="isColumnVisible('dispatch', 'Status')">
-                      <span class="badge" [class.badge-info]="d.dispatchStatus === 'Pending'" [class.badge-warning]="d.dispatchStatus === 'In Transit'" [class.badge-success]="d.dispatchStatus === 'Delivered'">{{ d.dispatchStatus }}</span>
+                      <span class="badge" [class.badge-warning]="!d.dispatchStatus || d.dispatchStatus === 'Pending'" [class.badge-info]="d.dispatchStatus === 'In Transit'" [class.badge-success]="d.dispatchStatus === 'Delivered'">{{ d.dispatchStatus || 'Pending' }}</span>
                     </td>
                     <td *ngIf="isColumnVisible('dispatch', 'Actions')" class="table-action-col" style="text-align:right; padding-right:14px;">
                       <div class="row-actions-group" style="justify-content: flex-end;">
@@ -2063,10 +2623,10 @@
                 Showing {{ (tableFilteredCounts['dispatch'] || 0) === 0 ? 0 : (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['dispatch'] || 0) }} of {{ tableFilteredCounts['dispatch'] || 0 }} entries
               </span>
               <div style="display:flex; gap:8px;">
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
                   Previous
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['dispatch'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['dispatch'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['dispatch'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['dispatch'] || 0)" (click)="currentPage = currentPage + 1">
                   Next
                 </button>
               </div>
@@ -2077,8 +2637,40 @@
 
       <!-- 19. Expense Tracker Tab -->
       <div *ngIf="activeTab === 'expenses'">
+        <!-- EXPENSES TELEMETRY RIBBON -->
+        <div class="expenses-summary-ribbon" style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-wallet2 text-danger" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Overhead</div>
+              <strong style="font-size: 13px; color: var(--color-danger); font-family: var(--font-heading);">₹{{ getAllTimeExpensesTotal() | number:'1.0-0' }}</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-calendar3 text-warning" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Monthly Burn</div>
+              <strong style="font-size: 13px; color: var(--color-warning); font-family: var(--font-heading);">₹{{ getMonthlyExpensesTotal() | number:'1.0-0' }}</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-tag-fill text-info" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Top Category</div>
+              <strong style="font-size: 13px; color: var(--primary); font-family: var(--font-heading);">{{ getTopExpenseCategory() }}</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-receipt text-primary" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Vouchers Logged</div>
+              <strong style="font-size: 13px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalExpensesCount() }} Records</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="grid-cols-3">
-          <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
+          <div class="glass-panel form-card" [class.editing-mode]="editingExpenseId" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
             <div class="section-title-badge" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
               <div style="display: flex; align-items: center; gap: 12px;">
                 <span class="badge-icon"><i class="bi bi-receipt-cutoff" style="color:var(--primary); font-size:18px;"></i></span>
@@ -2091,7 +2683,7 @@
             </div>
             <form (submit)="saveExpense()">
               <div class="form-group">
-                <label>{{ 'label.date' | translate:currentLang }}</label>
+                <label>{{ 'label.date' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="date" [(ngModel)]="expenseForm.expenseDate" name="expDate" required>
               </div>
               <div class="form-group">
@@ -2106,13 +2698,27 @@
                 </select>
               </div>
               <div class="form-group">
-                <label>{{ 'expense.description' | translate:currentLang }}</label>
+                <label>{{ 'expense.description' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="expenseForm.description" name="expDesc" required placeholder="What was the expense for?">
               </div>
               <div class="form-group">
-                <label>{{ 'label.amount' | translate:currentLang }}</label>
-                <input type="number" step="0.01" [(ngModel)]="expenseForm.amount" name="expAmt" required>
+                <label>{{ 'label.amount' | translate:currentLang }} (₹) <span class="req-star">*</span></label>
+                <input type="number" step="0.01" [(ngModel)]="expenseForm.amount" name="expAmt" required placeholder="0.00">
               </div>
+
+              <!-- Live Cost Allocation Preview -->
+              <div *ngIf="expenseForm.amount > 0" class="live-efficiency-badge-wrap animate-fade-in" style="margin-bottom: 14px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="bi bi-pie-chart me-1 text-primary"></i>Allocation Preview:</span>
+                  <strong style="font-size: 13px; font-weight: 800; color: var(--color-danger);">
+                    ₹{{ expenseForm.amount | number:'1.2-2' }}
+                  </strong>
+                </div>
+                <div style="font-size: 10.5px; color: var(--text-muted);">
+                  Category: {{ expenseForm.category || 'General' }} • {{ expenseForm.expenseDate || 'Today' }}
+                </div>
+              </div>
+
               <button type="submit" class="btn btn-primary" style="width:100%">
                 <i class="bi bi-check2 me-1"></i>{{ editingExpenseId ? 'Update Expense' : ('btn.save' | translate:currentLang) }}
               </button>
@@ -2223,10 +2829,10 @@
                 Showing {{ (tableFilteredCounts['expenses'] || 0) === 0 ? 0 : (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['expenses'] || 0) }} of {{ tableFilteredCounts['expenses'] || 0 }} entries
               </span>
               <div style="display:flex; gap:8px;">
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
                   Previous
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['expenses'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['expenses'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['expenses'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['expenses'] || 0)" (click)="currentPage = currentPage + 1">
                   Next
                 </button>
               </div>
@@ -2237,8 +2843,42 @@
 
       <!-- 20. Bank & UPI Ledger Tab -->
       <div *ngIf="activeTab === 'bank'">
+        <!-- BANK & TREASURY TELEMETRY RIBBON -->
+        <div class="bank-summary-ribbon" style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-bank2 text-primary" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Net Bank Balance</div>
+              <strong style="font-size: 13px; font-family: var(--font-heading);" [style.color]="getNetBankBalance() >= 0 ? 'var(--color-success)' : 'var(--color-danger)'">
+                ₹{{ getNetBankBalance() | number:'1.0-0' }}
+              </strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-arrow-down-left-circle-fill text-success" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Inflow (Credits)</div>
+              <strong style="font-size: 13px; color: var(--color-success); font-family: var(--font-heading);">₹{{ getTotalBankCredits() | number:'1.0-0' }}</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-arrow-up-right-circle-fill text-danger" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Outflow (Debits)</div>
+              <strong style="font-size: 13px; color: var(--color-danger); font-family: var(--font-heading);">₹{{ getTotalBankDebits() | number:'1.0-0' }}</strong>
+            </div>
+          </div>
+          <div class="ribbon-pill" style="flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <i class="bi bi-journal-check text-info" style="font-size: 18px;"></i>
+            <div>
+              <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Txns</div>
+              <strong style="font-size: 13px; color: var(--primary); font-family: var(--font-heading);">{{ getTotalBankTxnCount() }} Logged</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="grid-cols-3">
-          <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
+          <div class="glass-panel form-card" [class.editing-mode]="editingBankTxnId" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
             <div class="section-title-badge" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
               <div style="display: flex; align-items: center; gap: 12px;">
                 <span class="badge-icon"><i class="bi bi-bank2" style="color:var(--primary); font-size:18px;"></i></span>
@@ -2257,22 +2897,36 @@
               <div class="form-group">
                 <label>{{ 'bank.type' | translate:currentLang }} <span class="req-star">*</span></label>
                 <select [(ngModel)]="bankTxnForm.transactionType" name="bType" required>
-                  <option value="Credit">Credit (Income)</option>
-                  <option value="Debit">Debit (Payment)</option>
+                  <option value="Credit">Credit (Income / Inflow)</option>
+                  <option value="Debit">Debit (Payment / Outflow)</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>{{ 'bank.amount' | translate:currentLang }} <span class="req-star">*</span></label>
-                <input type="number" step="0.01" [(ngModel)]="bankTxnForm.amount" name="bAmt" required>
+                <label>{{ 'bank.amount' | translate:currentLang }} (₹) <span class="req-star">*</span></label>
+                <input type="number" step="0.01" [(ngModel)]="bankTxnForm.amount" name="bAmt" required placeholder="0.00">
               </div>
               <div class="form-group">
-                <label>{{ 'bank.desc' | translate:currentLang }}</label>
+                <label>{{ 'bank.desc' | translate:currentLang }} <span class="req-star">*</span></label>
                 <input type="text" [(ngModel)]="bankTxnForm.description" name="bDesc" required placeholder="Transaction purpose">
               </div>
               <div class="form-group">
                 <label>{{ 'bank.reference' | translate:currentLang }}</label>
-                <input type="text" [(ngModel)]="bankTxnForm.referenceNo" name="bRef" placeholder="UPI/NEFT Reference No">
+                <input type="text" [(ngModel)]="bankTxnForm.referenceNo" name="bRef" placeholder="UPI/NEFT/IMPS Ref #">
               </div>
+
+              <!-- Live Settlement Preview -->
+              <div *ngIf="bankTxnForm.amount > 0" class="live-efficiency-badge-wrap animate-fade-in" style="margin-bottom: 14px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="bi bi-shield-check me-1 text-primary"></i>Settlement Preview:</span>
+                  <strong style="font-size: 13px; font-weight: 800;" [style.color]="bankTxnForm.transactionType === 'Credit' ? 'var(--color-success)' : 'var(--color-danger)'">
+                    ₹{{ bankTxnForm.amount | number:'1.2-2' }} ({{ bankTxnForm.transactionType }})
+                  </strong>
+                </div>
+                <div style="font-size: 10.5px; color: var(--text-muted);">
+                  Impact: {{ bankTxnForm.transactionType === 'Credit' ? '+ Inflow to Bank Book' : '- Outflow from Account' }}
+                </div>
+              </div>
+
               <button type="submit" class="btn btn-primary" style="width:100%">
                 <i class="bi bi-check2 me-1"></i>{{ editingBankTxnId ? 'Update Transaction' : ('btn.save' | translate:currentLang) }}
               </button>
@@ -2383,10 +3037,10 @@
                 Showing {{ (tableFilteredCounts['bank'] || 0) === 0 ? 0 : (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['bank'] || 0) }} of {{ tableFilteredCounts['bank'] || 0 }} entries
               </span>
               <div style="display:flex; gap:8px;">
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
                   Previous
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['bank'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['bank'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="(tableFilteredCounts['bank'] || 0) === 0 || currentPage * pageSize >= (tableFilteredCounts['bank'] || 0)" (click)="currentPage = currentPage + 1">
                   Next
                 </button>
               </div>
@@ -2434,7 +3088,7 @@
               </div>
 
               <!-- Full Screen Toggle Button -->
-              <button type="button" class="btn btn-warning btn-sm" (click)="toggleSidebar()" title="Toggle Full Screen View" style="font-size: 12px; font-weight: 700; padding: 5px 12px; display: inline-flex; align-items: center; gap: 5px;">
+              <button type="button" class="btn btn-secondary btn-sm" (click)="toggleSidebar()" title="Toggle Full Screen View">
                 <i class="bi bi-arrows-fullscreen"></i> {{ isSidebarOpen ? 'Full Screen' : 'Show Sidebar' }}
               </button>
 

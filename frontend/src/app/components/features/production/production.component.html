@@ -1,556 +1,517 @@
-<!-- ========================================== -->
-<!-- 2. DAILY PRODUCTION TAB (PPD) -->
-<!-- ========================================== -->
-<div *ngIf="activeTab === 'production'" class="production-view-wrapper">
-  <div class="grid-cols-3">
-    <!-- Quick Entry Form Panel -->
-    <div class="glass-panel form-card" [class.editing-mode]="ppdForm.id" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
-      <div class="card-header-flex">
-        <div class="section-title-badge">
-          <span class="badge-icon"><i class="bi bi-plus-circle-fill" style="font-size:18px; color:var(--primary);"></i></span>
-          <div class="badge-text">
-            <h3>{{ (ppdForm.id ? 'Edit Production Entry' : ('ppd.add_title' | translate:currentLang)) }}</h3>
-          </div>
+<!-- ============================================================ -->
+<!-- 2. DAILY PRODUCTION & SHIFT OPERATIONS (PPD) -->
+<!-- ============================================================ -->
+<div *ngIf="activeTab === 'production'" class="production-screen-wrapper">
+  
+  <!-- 1. COMPACT PROFESSIONAL PAGE HEADER -->
+  <header class="production-page-header">
+    <div class="header-left-col">
+      <div class="header-title-row">
+        <div class="header-icon-box">
+          <i class="bi bi-boxes"></i>
         </div>
-        <button *ngIf="ppdForm.id" class="btn btn-secondary btn-sm" (click)="ppdForm = { id: '', date: '', crateType: 'Apple Crate', totalProduction: 0, successful: 0, rejected: 0, shift: 'Morning Shift' }"><i class="bi bi-x-circle me-1"></i> Cancel Edit</button>
+        <div>
+          <h1 class="header-main-title">{{ 'nav.production' | translate:currentLang }}</h1>
+          <p class="header-subtitle">Daily manufacturing, shift-wise output, rejection rates & quality telemetry</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right-side quick controls: Date, Shift, Refresh, + New Production -->
+    <div class="header-right-col">
+      <!-- Quick Date Selector -->
+      <div class="quick-control-item">
+        <label class="control-mini-label"><i class="bi bi-calendar3 me-1"></i>Date</label>
+        <div class="input-with-clear">
+          <input type="date" [(ngModel)]="filterDate" class="form-control-compact" title="Filter by production date" (change)="currentPage = 1">
+          <button *ngIf="filterDate" type="button" class="btn-input-clear" (click)="filterDate = ''; currentPage = 1" title="Clear date filter" aria-label="Clear date">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
       </div>
 
-      <form (submit)="savePpd()">
-        <div class="form-group">
-          <label>{{ 'label.date' | translate:currentLang }} <span class="req-star">*</span></label>
-          <input appAutoSelect type="date" [(ngModel)]="ppdForm.date" name="ppdDate" required>
+      <!-- Quick Shift Filter Dropdown -->
+      <div class="quick-control-item">
+        <label class="control-mini-label"><i class="bi bi-clock-history me-1"></i>Shift</label>
+        <select [(ngModel)]="tabFilterShift" class="form-select-compact" title="Filter by operational shift" (change)="currentPage = 1">
+          <option value="">All Shifts</option>
+          <option *ngFor="let s of shifts" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+
+      <!-- Refresh Data Button (Utility) -->
+      <button type="button" class="btn btn-secondary btn-header-action" (click)="loadData()" [disabled]="isRefreshing" title="Refresh production data" aria-label="Refresh production data">
+        <i class="bi bi-arrow-clockwise" [class.spin-anim]="isRefreshing"></i>
+        <span class="btn-label-text">Refresh</span>
+      </button>
+
+      <!-- Primary Action Button: + Add Production / Toggle Form -->
+      <button type="button" *ngIf="!isViewer()" class="btn btn-primary btn-header-action" (click)="toggleFormVisibility()" [title]="isFormVisible ? 'Collapse Entry Form' : 'Open Production Entry Form'" aria-label="Add Production Entry">
+        <i class="bi" [ngClass]="isFormVisible ? 'bi-dash-lg' : 'bi-plus-lg'"></i>
+        <span class="btn-label-text">{{ isFormVisible ? 'Hide Form' : '+ Add Production' }}</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 2. PRODUCTION MODULE SUB-NAVIGATION (Tabs) -->
+  <div class="production-subnav-bar">
+    <div class="subnav-tabs-group" role="tablist">
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="activeTab === 'production'" (click)="switchSubTab('production')">
+        <i class="bi bi-calendar2-check"></i>
+        <span>Daily Production (PPD)</span>
+        <span class="tab-badge-pill">{{ ppdList.length }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="activeTab === 'monthly-production'" (click)="switchSubTab('monthly-production')">
+        <i class="bi bi-bar-chart-steps"></i>
+        <span>Monthly Summary (PPM)</span>
+        <span class="tab-badge-pill">{{ ppmList.length }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. PRODUCTION TELEMETRY SUMMARY RIBBON (KPI Area) -->
+  <section class="production-kpi-grid">
+    <div class="kpi-card total-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-boxes"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">TOTAL PRODUCED</span>
+        <strong class="kpi-value">{{ getPpdTotal() | number }} <span class="kpi-unit">crates</span></strong>
+        <span class="kpi-meta"><i class="bi bi-layers me-1"></i>Across {{ ppdList.length }} logged batches</span>
+      </div>
+    </div>
+    <div class="kpi-card success-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-check2-circle"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">SUCCESSFUL CRATES</span>
+        <strong class="kpi-value text-success">{{ getPpdSuccessful() | number }} <span class="kpi-unit">crates</span></strong>
+        <span class="kpi-meta"><i class="bi bi-shield-check me-1"></i>Passed quality gate</span>
+      </div>
+    </div>
+    <div class="kpi-card danger-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-x-octagon"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">REJECTIONS</span>
+        <strong class="kpi-value text-danger">{{ getPpdRejected() | number }} <span class="kpi-unit">crates</span></strong>
+        <span class="kpi-meta"><i class="bi bi-exclamation-triangle me-1"></i>{{ getPpdTotal() > 0 ? ((getPpdRejected() / getPpdTotal()) * 100 | number:'1.1-1') : 0 }}% scrap rate</span>
+      </div>
+    </div>
+    <div class="kpi-card efficiency-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-speedometer2"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">OVERALL BATCH YIELD</span>
+        <strong class="kpi-value text-primary">{{ getPpdEfficiency() | number:'1.1-1' }}%</strong>
+        <div class="kpi-progress-bar">
+          <div class="kpi-progress-fill" [style.width.%]="getPpdEfficiency()"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. ADD / EDIT PRODUCTION ENTRY FORM (Collapsible 2-3 Column Card) -->
+  <div class="glass-panel form-expansion-panel animate-fade-in" *ngIf="!isViewer() && isFormVisible" [class.editing-mode]="ppdForm.id">
+    <div class="form-panel-header">
+      <div class="form-header-title">
+        <span class="form-icon-pill" [class.editing]="ppdForm.id">
+          <i class="bi" [ngClass]="ppdForm.id ? 'bi-pencil-square' : 'bi-plus-circle-fill'"></i>
+        </span>
+        <div>
+          <h4>{{ ppdForm.id ? 'Edit Daily Production Record' : ('ppd.add_title' | translate:currentLang) }}</h4>
+          <span class="form-header-hint" *ngIf="ppdForm.id">Editing entry #{{ ppdForm.id }} • Real-time totals and yield recalculated automatically</span>
+          <span class="form-header-hint" *ngIf="!ppdForm.id">Log shift batch crate count, verify defect count, and commit to manufacturing registry</span>
+        </div>
+      </div>
+      <div class="form-header-actions">
+        <button *ngIf="ppdForm.id" type="button" class="btn btn-secondary btn-sm" (click)="ppdForm = { id: '', date: '', crateType: 'Apple Crate', totalProduction: 0, successful: 0, rejected: 0, shift: 'Morning Shift' }">
+          <i class="bi bi-x-circle me-1"></i> Cancel Edit
+        </button>
+        <button type="button" class="btn-panel-close" (click)="toggleFormVisibility()" title="Collapse form" aria-label="Collapse form">
+          <i class="bi bi-chevron-up"></i>
+        </button>
+      </div>
+    </div>
+
+    <form (submit)="savePpd()" class="production-entry-form">
+      <div class="form-fields-grid">
+        <!-- Date -->
+        <div class="form-field-col">
+          <label class="field-label"><i class="bi bi-calendar-event me-1 text-primary"></i>{{ 'label.date' | translate:currentLang }} <span class="req-star">*</span></label>
+          <input appAutoSelect type="date" [(ngModel)]="ppdForm.date" name="ppdDate" required class="form-input-control">
         </div>
 
-        <div class="form-group">
-          <label>{{ 'ppd.crateType' | translate:currentLang }} <span class="req-star">*</span></label>
-          <select [(ngModel)]="ppdForm.crateType" name="ppdCrateType" required>
+        <!-- Crate Type -->
+        <div class="form-field-col">
+          <label class="field-label"><i class="bi bi-box-seam me-1 text-primary"></i>{{ 'ppd.crateType' | translate:currentLang }} <span class="req-star">*</span></label>
+          <select [(ngModel)]="ppdForm.crateType" name="ppdCrateType" required class="form-input-control">
             <option *ngFor="let c of crateTypes" [value]="c">{{ c }}</option>
           </select>
         </div>
 
-        <div class="form-group">
-          <label>Shift <span class="req-star">*</span></label>
-          <select [(ngModel)]="ppdForm.shift" name="ppdShift" required>
+        <!-- Shift -->
+        <div class="form-field-col">
+          <label class="field-label"><i class="bi bi-clock me-1 text-primary"></i>Shift <span class="req-star">*</span></label>
+          <select [(ngModel)]="ppdForm.shift" name="ppdShift" required class="form-input-control">
             <option *ngFor="let s of shifts" [value]="s">{{ s }}</option>
           </select>
         </div>
 
-        <div class="form-group">
-          <label>{{ 'ppd.successful' | translate:currentLang }} <span class="req-star">*</span></label>
-          <input appAutoSelect type="number" [(ngModel)]="ppdForm.successful" (ngModelChange)="recalculateTotal()" (input)="onProductionFieldChange()" name="ppdSuccessful" required min="0" placeholder="0">
+        <!-- Successful -->
+        <div class="form-field-col">
+          <label class="field-label"><i class="bi bi-check2-circle me-1 text-success"></i>{{ 'ppd.successful' | translate:currentLang }} <span class="req-star">*</span></label>
+          <input appAutoSelect type="number" [(ngModel)]="ppdForm.successful" (ngModelChange)="recalculateTotal()" (input)="onProductionFieldChange()" name="ppdSuccessful" required min="0" placeholder="0" class="form-input-control font-mono">
         </div>
 
-        <div class="form-group">
-          <label>{{ 'ppd.rejected' | translate:currentLang }} <span class="req-star">*</span></label>
-          <input appAutoSelect type="number" [(ngModel)]="ppdForm.rejected" (ngModelChange)="recalculateTotal()" (input)="onProductionFieldChange()" name="ppdRejected" required min="0" placeholder="0">
+        <!-- Rejected -->
+        <div class="form-field-col">
+          <label class="field-label"><i class="bi bi-x-octagon me-1 text-danger"></i>{{ 'ppd.rejected' | translate:currentLang }} <span class="req-star">*</span></label>
+          <input appAutoSelect type="number" [(ngModel)]="ppdForm.rejected" (ngModelChange)="recalculateTotal()" (input)="onProductionFieldChange()" name="ppdRejected" required min="0" placeholder="0" class="form-input-control font-mono">
         </div>
 
-        <div class="form-group">
-          <label>{{ 'ppd.totalProduction' | translate:currentLang }} <span style="color:var(--accent-warning); font-size:11px;">(Auto)</span></label>
-          <input appAutoSelect type="number" [value]="ppdForm.totalProduction" name="ppdTotal" readonly style="background: var(--bg-hover); cursor: not-allowed; font-weight: 700;" placeholder="0">
+        <!-- Total Production (Auto computed) -->
+        <div class="form-field-col">
+          <label class="field-label"><i class="bi bi-calculator me-1 text-muted"></i>{{ 'ppd.totalProduction' | translate:currentLang }} <span class="auto-badge">(Auto)</span></label>
+          <input appAutoSelect type="number" [value]="ppdForm.totalProduction" name="ppdTotal" readonly class="form-input-control readonly-input font-mono" placeholder="0">
         </div>
+      </div>
 
-        <button type="submit" class="btn btn-primary" style="width: 100%;">
-          <i *ngIf="ppdForm.id" class="bi bi-floppy me-1"></i>{{ (ppdForm.id ? 'Update Record' : ('ppd.save_btn' | translate:currentLang)) }}
+      <!-- Live Quality & Batch Yield Telemetry Preview -->
+      <div *ngIf="ppdForm.totalProduction > 0" class="form-live-yield-bar animate-fade-in">
+        <div class="yield-header">
+          <span class="yield-title"><i class="bi bi-speedometer2 me-1 text-primary"></i>Batch Efficiency Preview:</span>
+          <strong class="yield-val" [style.color]="(ppdForm.successful / ppdForm.totalProduction >= 0.95) ? 'var(--primary)' : 'var(--color-warning)'">
+            {{ (ppdForm.successful / ppdForm.totalProduction * 100) | number:'1.1-1' }}%
+          </strong>
+        </div>
+        <div class="yield-track">
+          <div class="yield-progress" [style.width.%]="ppdForm.successful / ppdForm.totalProduction * 100"></div>
+        </div>
+        <div class="yield-meta">
+          <span>Rejections: {{ (ppdForm.rejected / ppdForm.totalProduction * 100) | number:'1.1-1' }}% ({{ ppdForm.rejected }} units)</span>
+          <span class="quality-badge" [class.quality-good]="ppdForm.successful / ppdForm.totalProduction >= 0.95">
+            {{ (ppdForm.successful / ppdForm.totalProduction >= 0.95) ? '● Optimal Quality Gate' : '▲ Higher Than Normal Scrap' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Form Action Buttons -->
+      <div class="form-actions-row">
+        <button type="button" class="btn btn-secondary" (click)="ppdForm = { id: '', date: '', crateType: 'Apple Crate', totalProduction: 0, successful: 0, rejected: 0, shift: 'Morning Shift' }">
+          <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Fields
         </button>
-      </form>
-    </div>
-
-    <!-- Table Grid Panel -->
-    <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
-      
-      <!-- Top Table Toolbar -->
-      <div class="table-toolbar-top no-print">
-        <div class="toolbar-left">
-          <div class="section-title-badge">
-            <span class="badge-icon"><i class="bi bi-building-fill" style="font-size:18px; color:var(--primary);"></i></span>
-            <div class="badge-text">
-              <h3>{{ 'ppd.records_title' | translate:currentLang }}</h3>
-            </div>
-          </div>
-        </div>
-
-        <div class="toolbar-right">
-          <!-- Density Toggle -->
-          <div class="density-switch-group">
-            <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact density"><i class="bi bi-distribute-vertical"></i> Compact</button>
-            <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="setDensity('comfortable')" title="Standard density"><i class="bi bi-list-ul"></i> Normal</button>
-            <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious density"><i class="bi bi-grid-3x2-gap"></i> Spacious</button>
-          </div>
-
-          <!-- Column Manager Dropdown -->
-          <div class="col-manager-dropdown-wrapper" style="position:relative;">
-            <button type="button" class="btn btn-secondary btn-sm" (click)="showColManager['ppd'] = !showColManager['ppd']; $event.stopPropagation()">
-              <i class="bi bi-layout-three-columns me-1"></i> Columns ({{ getVisibleColCount('ppd') }})
-            </button>
-
-            <div class="col-manager-popover" *ngIf="showColManager['ppd']" (click)="$event.stopPropagation()">
-              <div class="popover-header">
-                <strong>Manage Columns</strong>
-                <button type="button" class="btn-text" (click)="resetColumnLayout('ppd')"><i class="bi bi-arrow-counterclockwise me-1"></i> Reset</button>
-              </div>
-              <div class="popover-body">
-                <div class="col-item-row" *ngFor="let col of columnsConfig['ppd']; let idx = index">
-                  <label class="col-check-label">
-                    <input type="checkbox" [checked]="col.visible" (change)="toggleColVisibility('ppd', col.key)">
-                    <span>{{ col.label }}</span>
-                  </label>
-                  <div class="col-reorder-btns" *ngIf="col.key !== 'select' && col.key !== 'actions'">
-                    <button type="button" [disabled]="idx <= 1" (click)="moveColumn('ppd', idx, 'up')"><i class="bi bi-arrow-up"></i></button>
-                    <button type="button" [disabled]="idx >= columnsConfig['ppd'].length - 2" (click)="moveColumn('ppd', idx, 'down')"><i class="bi bi-arrow-down"></i></button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Quick Export Filtered CSV & Excel -->
-          <button type="button" class="btn btn-secondary btn-sm" (click)="exportCurrentFilteredCsv('ppd', getFullFilteredList(ppdList, 'ppd'))" title="Export matching records to CSV">
-            <i class="bi bi-download me-1"></i> Export CSV
-          </button>
-          <button type="button" class="btn btn-secondary btn-sm" (click)="exportCurrentFilteredExcel('ppd', getFullFilteredList(ppdList, 'ppd'))" title="Export matching records to Excel">
-            <i class="bi bi-file-earmark-excel me-1"></i> Excel
-          </button>
-        </div>
+        <button type="submit" class="btn btn-primary btn-save-entry">
+          <i class="bi" [ngClass]="ppdForm.id ? 'bi-floppy-fill' : 'bi-check2-circle'"></i>
+          <span>{{ ppdForm.id ? 'Update Record' : ('ppd.save_btn' | translate:currentLang) }}</span>
+        </button>
       </div>
-
-      <!-- BULK ACTION BAR (Floating Pill at Bottom Center) -->
-      <div class="bulk-action-bar" *ngIf="getSelectedCount('ppd') > 0">
-        <div class="bulk-bar-left">
-          <span class="bulk-count-pill"><i class="bi bi-check-circle-fill"></i> {{ getSelectedCount('ppd') }} row(s) selected</span>
-          <button type="button" class="btn-clear-selection" (click)="clearSelection('ppd')"><i class="bi bi-x-lg me-1"></i> Clear</button>
-        </div>
-        <div class="bulk-bar-right">
-          <button type="button" class="btn-bulk-action btn-export-bulk" (click)="bulkExportSelected('ppd')">
-            <i class="bi bi-download me-1"></i> Export ({{ getSelectedCount('ppd') }})
-          </button>
-          <button type="button" class="btn-bulk-action btn-delete-bulk" *ngIf="canDelete()" (click)="bulkDeleteSelected('ppd')">
-            <i class="bi bi-trash3 me-1"></i> Delete ({{ getSelectedCount('ppd') }})
-          </button>
-        </div>
-      </div>
-
-      <!-- Loading Skeleton -->
-      <div *ngIf="isLoading" class="skeleton-container" aria-busy="true">
-        <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5,6]"></div>
-      </div>
-
-      <!-- Error State -->
-      <div *ngIf="!isLoading && hasError" class="empty-state" style="padding:40px; text-align:center;">
-        <div style="margin-bottom:12px;"><i class="bi bi-exclamation-triangle-fill text-warning" style="font-size:48px;"></i></div>
-        <h3>Failed to Load Daily Production Data</h3>
-        <button class="btn btn-primary" (click)="loadData()"><i class="bi bi-arrow-clockwise me-1"></i> Retry</button>
-      </div>
-
-      <!-- Data Table -->
-      <div *ngIf="!isLoading && !hasError">
-        <div class="table-container table-responsive" [ngClass]="'density-' + tableDensity">
-          <table class="table enterprise-table" appResizableTable tableId="ppd_table">
-            <thead class="sticky-thead">
-              <tr>
-                <ng-container *ngFor="let col of columnsConfig['ppd']">
-                  <!-- Select All Checkbox -->
-                  <th *ngIf="col.visible && col.key === 'select'" style="width: 48px; text-align: center;">
-                    <input type="checkbox" 
-                      class="enterprise-row-checkbox"
-                      [checked]="isAllSelected('ppd', getProcessedList(ppdList, 'ppd'))" 
-                      (change)="toggleSelectAll('ppd', getProcessedList(ppdList, 'ppd'))" 
-                      title="Select All records on current page">
-                  </th>
-
-                  <!-- Date -->
-                  <th *ngIf="col.visible && col.key === 'date'" (click)="setSort('date')" class="sortable-th" style="min-width:110px;">
-                    {{ 'label.date' | translate:currentLang }} 
-                    <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'date' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
-                  </th>
-
-                  <!-- Crate Type -->
-                  <th *ngIf="col.visible && col.key === 'crateType'" (click)="setSort('crateType')" class="sortable-th" style="min-width:160px;">
-                    {{ 'ppd.crateType' | translate:currentLang }} 
-                    <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'crateType' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
-                  </th>
-
-                  <!-- Shift -->
-                  <th *ngIf="col.visible && col.key === 'shift'" (click)="setSort('shift')" class="sortable-th" style="min-width:130px;">
-                    Shift
-                    <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'shift' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
-                  </th>
-
-                  <!-- Total Production -->
-                  <th *ngIf="col.visible && col.key === 'totalProduction'" (click)="setSort('totalProduction')" class="sortable-th text-end" style="min-width:120px;">
-                    {{ 'ppd.totalProduction' | translate:currentLang }} 
-                    <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'totalProduction' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
-                  </th>
-
-                  <!-- Successful -->
-                  <th *ngIf="col.visible && col.key === 'successful'" (click)="setSort('successful')" class="sortable-th text-end" style="min-width:110px;">
-                    {{ 'ppd.successful' | translate:currentLang }} 
-                    <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'successful' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
-                  </th>
-
-                  <!-- Rejected -->
-                  <th *ngIf="col.visible && col.key === 'rejected'" (click)="setSort('rejected')" class="sortable-th text-end" style="min-width:100px;">
-                    {{ 'ppd.rejected' | translate:currentLang }} 
-                    <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'rejected' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
-                  </th>
-
-                  <!-- Efficiency -->
-                  <th *ngIf="col.visible && col.key === 'efficiency'" class="text-end" style="min-width:100px;">Efficiency</th>
-
-                  <!-- Actions -->
-                  <th *ngIf="col.visible && col.key === 'actions'" class="table-action-col" style="min-width:140px; text-align:right; padding-right:16px;">
-                    {{ 'label.actions' | translate:currentLang }}
-                  </th>
-                </ng-container>
-              </tr>
-            </thead>
-
-            <tbody>
-              <!-- Empty Filter State -->
-              <tr *ngIf="getProcessedList(ppdList, 'ppd').length === 0">
-                <td [attr.colspan]="getVisibleColCount('ppd') || 9" style="text-align:center; padding: 40px 20px;">
-                  <div style="margin-bottom:8px;"><i class="bi bi-search" style="font-size:36px; color:var(--text-muted);"></i></div>
-                  <div style="font-weight:700; color:var(--text-primary);">No records match your filters</div>
-                  <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Try clearing some filters or searching for something else.</div>
-                </td>
-              </tr>
-
-              <!-- Data Rows with Multi-select and Inline Edit -->
-              <tr *ngFor="let ppd of getProcessedList(ppdList, 'ppd'); trackBy: trackById" 
-                [class.row-selected]="isRowSelected('ppd', ppd.id)"
-                class="enterprise-data-row">
-
-                <ng-container *ngFor="let col of columnsConfig['ppd']">
-                  <!-- Checkbox Column -->
-                  <td *ngIf="col.visible && col.key === 'select'" style="text-align: center;">
-                    <input type="checkbox" class="enterprise-row-checkbox" [checked]="isRowSelected('ppd', ppd.id)" (change)="toggleSelectRow('ppd', ppd.id)" title="Select row">
-                  </td>
-
-                  <!-- Date -->
-                  <td *ngIf="col.visible && col.key === 'date'" (dblclick)="startInlineEdit('ppd', ppd, 'date')">
-                    <span *ngIf="!(editingCell?.id === ppd.id && editingCell?.field === 'date')" class="date-cell">
-                      {{ ppd.date | indianDate }}
-                    </span>
-                    <div *ngIf="editingCell?.id === ppd.id && editingCell?.field === 'date'" class="inline-edit-box">
-                      <input type="date" [(ngModel)]="inlineEditValue" (keydown.enter)="saveInlineEdit('ppd', ppd)" (keydown.escape)="cancelInlineEdit()">
-                      <button class="btn-check" (click)="saveInlineEdit('ppd', ppd)" title="Save"><i class="bi bi-check2"></i></button>
-                      <button class="btn-cancel" (click)="cancelInlineEdit()" title="Cancel"><i class="bi bi-x-lg"></i></button>
-                    </div>
-                  </td>
-
-                  <!-- Crate Type -->
-                  <td *ngIf="col.visible && col.key === 'crateType'" style="font-weight:600;" (dblclick)="startInlineEdit('ppd', ppd, 'crateType')">
-                    <span *ngIf="!(editingCell?.id === ppd.id && editingCell?.field === 'crateType')">{{ ppd.crateType }}</span>
-                    <div *ngIf="editingCell?.id === ppd.id && editingCell?.field === 'crateType'" class="inline-edit-box">
-                      <select [(ngModel)]="inlineEditValue" (keydown.enter)="saveInlineEdit('ppd', ppd)" (keydown.escape)="cancelInlineEdit()">
-                        <option *ngFor="let c of crateTypes" [value]="c">{{ c }}</option>
-                      </select>
-                      <button class="btn-check" (click)="saveInlineEdit('ppd', ppd)" title="Save"><i class="bi bi-check2"></i></button>
-                      <button class="btn-cancel" (click)="cancelInlineEdit()" title="Cancel"><i class="bi bi-x-lg"></i></button>
-                    </div>
-                  </td>
-
-                  <!-- Shift -->
-                  <td *ngIf="col.visible && col.key === 'shift'" (dblclick)="startInlineEdit('ppd', ppd, 'shift')">
-                    <span *ngIf="!(editingCell?.id === ppd.id && editingCell?.field === 'shift')" class="shift-pill">
-                      {{ ppd.shift || 'Morning Shift' }}
-                    </span>
-                    <div *ngIf="editingCell?.id === ppd.id && editingCell?.field === 'shift'" class="inline-edit-box">
-                      <select [(ngModel)]="inlineEditValue" (keydown.enter)="saveInlineEdit('ppd', ppd)" (keydown.escape)="cancelInlineEdit()">
-                        <option *ngFor="let s of shifts" [value]="s">{{ s }}</option>
-                      </select>
-                      <button class="btn-check" (click)="saveInlineEdit('ppd', ppd)" title="Save"><i class="bi bi-check2"></i></button>
-                      <button class="btn-cancel" (click)="cancelInlineEdit()" title="Cancel"><i class="bi bi-x-lg"></i></button>
-                    </div>
-                  </td>
-
-                  <!-- Total Production (Auto computed) -->
-                  <td *ngIf="col.visible && col.key === 'totalProduction'" class="text-end font-mono" style="font-weight:700;">
-                    {{ ppd.totalProduction | number }}
-                  </td>
-
-                  <!-- Successful -->
-                  <td *ngIf="col.visible && col.key === 'successful'" class="text-end font-mono" (dblclick)="startInlineEdit('ppd', ppd, 'successful')">
-                    <span *ngIf="!(editingCell?.id === ppd.id && editingCell?.field === 'successful')" class="badge badge-success" style="font-weight:700;">
-                      {{ ppd.successful | number }}
-                    </span>
-                    <div *ngIf="editingCell?.id === ppd.id && editingCell?.field === 'successful'" class="inline-edit-box">
-                      <input type="number" [(ngModel)]="inlineEditValue" (keydown.enter)="saveInlineEdit('ppd', ppd)" (keydown.escape)="cancelInlineEdit()" style="width:70px;">
-                      <button class="btn-check" (click)="saveInlineEdit('ppd', ppd)" title="Save"><i class="bi bi-check2"></i></button>
-                      <button class="btn-cancel" (click)="cancelInlineEdit()" title="Cancel"><i class="bi bi-x-lg"></i></button>
-                    </div>
-                  </td>
-
-                  <!-- Rejected -->
-                  <td *ngIf="col.visible && col.key === 'rejected'" class="text-end font-mono" (dblclick)="startInlineEdit('ppd', ppd, 'rejected')">
-                    <span *ngIf="!(editingCell?.id === ppd.id && editingCell?.field === 'rejected')" class="badge badge-danger" style="font-weight:700;">
-                      {{ ppd.rejected | number }}
-                    </span>
-                    <div *ngIf="editingCell?.id === ppd.id && editingCell?.field === 'rejected'" class="inline-edit-box">
-                      <input type="number" [(ngModel)]="inlineEditValue" (keydown.enter)="saveInlineEdit('ppd', ppd)" (keydown.escape)="cancelInlineEdit()" style="width:70px;">
-                      <button class="btn-check" (click)="saveInlineEdit('ppd', ppd)" title="Save"><i class="bi bi-check2"></i></button>
-                      <button class="btn-cancel" (click)="cancelInlineEdit()" title="Cancel"><i class="bi bi-x-lg"></i></button>
-                    </div>
-                  </td>
-
-                  <!-- Efficiency -->
-                  <td *ngIf="col.visible && col.key === 'efficiency'" class="text-end font-mono">
-                    <span class="badge efficiency-badge" [style.background]="getEfficiencyColor(ppd.successful, ppd.totalProduction)">
-                      {{ getEfficiencyPct(ppd.successful, ppd.totalProduction) }}%
-                    </span>
-                  </td>
-
-                  <!-- Actions -->
-                  <td *ngIf="col.visible && col.key === 'actions'" class="table-action-col" style="text-align:right; padding-right:16px;">
-                    <div class="row-actions-group" style="justify-content: flex-end;">
-                      <button class="btn-row-action btn-edit" *ngIf="!isViewer()" (click)="openDrawerEdit('ppd', ppd)" title="Open Drawer Edit">
-                        <i class="bi bi-pencil-square me-1"></i> Edit
-                      </button>
-                      <button class="btn-row-action btn-delete" *ngIf="canDelete()" (click)="deletePpd(ppd.id)" title="Delete Record">
-                        <i class="bi bi-trash3"></i>
-                      </button>
-                    </div>
-                  </td>
-                </ng-container>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Pagination & Page Size Toolbar -->
-        <div class="table-pagination-footer no-print">
-          <div class="pagination-info">
-            <span>Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['ppd'] || 0) }} of {{ tableFilteredCounts['ppd'] || 0 }} records</span>
-          </div>
-
-          <div class="pagination-controls">
-            <div class="page-size-selector">
-              <label>Rows:</label>
-              <select [(ngModel)]="pageSize" (change)="currentPage = 1">
-                <option [ngValue]="10">10</option>
-                <option [ngValue]="25">25</option>
-                <option [ngValue]="50">50</option>
-                <option [ngValue]="100">100</option>
-              </select>
-            </div>
-
-            <div class="page-nav-btns">
-              <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
-                <i class="bi bi-chevron-left me-1"></i> Prev
-              </button>
-              <span class="current-page-pill">Page {{ currentPage }}</span>
-              <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['ppd'] || 0)" (click)="currentPage = currentPage + 1">
-                Next <i class="bi bi-chevron-right ms-1"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
+    </form>
   </div>
-</div>
 
-<!-- ========================================== -->
-<!-- 3. MONTHLY PRODUCTION TAB (PPM) -->
-<!-- ========================================== -->
-<div *ngIf="activeTab === 'monthly-production'" class="production-view-wrapper">
-  
-  <div class="grid-cols-3">
-      <!-- Quick Entry Form -->
-      <div class="glass-panel form-card" [class.editing-mode]="ppmForm.id" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
-      <div class="card-header-flex">
-        <div class="section-title-badge">
-          <span class="badge-icon"><i class="bi bi-plus-circle-fill" style="font-size:18px; color:var(--primary);"></i></span>
-          <div class="badge-text">
-            <h3>{{ (ppmForm.id ? 'Edit Monthly Summary' : ('ppm.add_title' | translate:currentLang)) }}</h3>
-          </div>
+  <!-- 5. PRODUCTION TABLE CARD -->
+  <div class="glass-panel table-panel-card">
+    
+    <!-- Table Toolbar: Search, Filters, Active Filter Pills, Reset, Density, Columns, Exports -->
+    <div class="table-unified-toolbar no-print">
+      
+      <!-- Left side: Search & Filter inputs -->
+      <div class="toolbar-left-group">
+        <!-- Search Input -->
+        <div class="toolbar-search-box">
+          <i class="bi bi-search search-lead-icon"></i>
+          <input type="text" [(ngModel)]="filterSearchQuery" (input)="currentPage = 1" placeholder="Search production records..." class="toolbar-search-input" title="Search by crate type, shift, date, or numbers">
+          <button *ngIf="filterSearchQuery" type="button" class="search-clear-btn" (click)="filterSearchQuery = ''; currentPage = 1" title="Clear search" aria-label="Clear search">
+            <i class="bi bi-x-lg"></i>
+          </button>
         </div>
-        <button *ngIf="ppmForm.id" class="btn btn-secondary btn-sm" (click)="ppmForm = { id: '', month: 'May', year: 2026, cratesProduced: 0, electricityUnits: 0, electricityBill: 0 }"><i class="bi bi-x-circle me-1"></i> Cancel Edit</button>
-      </div>
 
-      <form (submit)="savePpm()">
-        <div class="form-group">
-          <label>{{ 'ppm.month' | translate:currentLang }} <span class="req-star">*</span></label>
-          <select [(ngModel)]="ppmForm.month" name="ppmMonth" required>
-            <option *ngFor="let m of months" [value]="m">{{ m }}</option>
+        <!-- Crate Type Filter -->
+        <div class="toolbar-filter-select">
+          <select [(ngModel)]="tabFilterCrateType" (change)="currentPage = 1" class="toolbar-select" title="Filter by crate product type">
+            <option value="">All Crate Types</option>
+            <option *ngFor="let c of crateTypes" [value]="c">{{ c }}</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>Year <span class="req-star">*</span></label>
-          <input appAutoSelect type="number" [(ngModel)]="ppmForm.year" name="ppmYear" required placeholder="2026">
-        </div>
-        <div class="form-group">
-          <label>{{ 'ppd.totalProduction' | translate:currentLang }} <span class="req-star">*</span></label>
-          <input appAutoSelect type="number" [(ngModel)]="ppmForm.cratesProduced" name="ppmCrates" required placeholder="0">
-        </div>
-        <div class="form-group">
-          <label>{{ 'ppm.units' | translate:currentLang }} <span class="req-star">*</span></label>
-          <input appAutoSelect type="number" step="0.01" [(ngModel)]="ppmForm.electricityUnits" name="ppmUnits" required placeholder="0.00">
-        </div>
-        <div class="form-group">
-          <label>{{ 'ppm.bill' | translate:currentLang }} <span class="req-star">*</span></label>
-          <input appAutoSelect type="number" step="0.01" [(ngModel)]="ppmForm.electricityBill" name="ppmBill" required placeholder="0.00">
-        </div>
-        <button type="submit" class="btn btn-primary" style="width: 100%;">
-          <i *ngIf="ppmForm.id" class="bi bi-floppy me-1"></i>{{ (ppmForm.id ? 'Update Summary' : ('ppm.save_btn' | translate:currentLang)) }}
-        </button>
-      </form>
-    </div>
 
-    <!-- Table Grid Panel -->
-    <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
-      
-      <!-- Top Toolbar -->
-      <div class="table-toolbar-top no-print">
-        <div class="toolbar-left">
-          <div class="section-title-badge">
-            <span class="badge-icon"><i class="bi bi-bar-chart-fill" style="font-size:18px; color:var(--primary);"></i></span>
-            <div class="badge-text">
-              <h3>{{ 'ppm.records_title' | translate:currentLang }}</h3>
+        <!-- Shift Filter -->
+        <div class="toolbar-filter-select">
+          <select [(ngModel)]="tabFilterShift" (change)="currentPage = 1" class="toolbar-select" title="Filter by shift">
+            <option value="">All Shifts</option>
+            <option *ngFor="let s of shifts" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+
+        <!-- Active Filter Indicator & Reset Button -->
+        <div *ngIf="getActiveFilterCount('ppd') > 0" class="active-filter-badge-wrap">
+          <span class="active-filter-pill">
+            <i class="bi bi-funnel-fill me-1"></i>Filtered ({{ getActiveFilterCount('ppd') }})
+          </span>
+          <button type="button" class="btn-filter-reset" (click)="resetFilters('ppd')" title="Reset all applied filters" aria-label="Reset filters">
+            <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+          </button>
+        </div>
+      </div>
+
+      <!-- Right side: Density, Column Manager, Exports -->
+      <div class="toolbar-right-group">
+        
+        <!-- Density Switcher -->
+        <div class="density-switch-group" role="group" aria-label="Table row density">
+          <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact density: 36px rows" aria-label="Compact table density">
+            <i class="bi bi-distribute-vertical"></i> Compact
+          </button>
+          <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="setDensity('comfortable')" title="Standard density: 44px rows" aria-label="Normal table density">
+            <i class="bi bi-list-ul"></i> Normal
+          </button>
+          <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious density: 52px rows" aria-label="Spacious table density">
+            <i class="bi bi-grid-3x2-gap"></i> Spacious
+          </button>
+        </div>
+
+        <!-- Column Manager Dropdown -->
+        <div class="col-manager-dropdown-wrapper">
+          <button type="button" class="btn btn-secondary btn-sm btn-toolbar-action" (click)="showColManager['ppd'] = !showColManager['ppd']; $event.stopPropagation()" title="Customize visible columns" aria-label="Customize columns">
+            <i class="bi bi-layout-three-columns me-1"></i> Columns ({{ getVisibleColCount('ppd') }})
+          </button>
+
+          <!-- Popover -->
+          <div class="col-manager-popover" *ngIf="showColManager['ppd']" (click)="$event.stopPropagation()">
+            <div class="popover-header">
+              <span class="popover-title"><i class="bi bi-sliders me-1"></i>Table Columns</span>
+              <button type="button" class="btn-text-action" (click)="resetColumnLayout('ppd')">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+              </button>
             </div>
-          </div>
-        </div>
-
-        <div class="toolbar-right">
-          <!-- Density Toggle -->
-          <div class="density-switch-group">
-            <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact density"><i class="bi bi-distribute-vertical"></i> Compact</button>
-            <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="setDensity('comfortable')" title="Standard density"><i class="bi bi-list-ul"></i> Normal</button>
-            <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious density"><i class="bi bi-grid-3x2-gap"></i> Spacious</button>
-          </div>
-
-          <!-- Column Manager -->
-          <div class="col-manager-dropdown-wrapper" style="position:relative;">
-            <button type="button" class="btn btn-secondary btn-sm" (click)="showColManager['ppm'] = !showColManager['ppm']; $event.stopPropagation()">
-              <i class="bi bi-layout-three-columns me-1"></i> Columns ({{ getVisibleColCount('ppm') }})
-            </button>
-
-            <div class="col-manager-popover" *ngIf="showColManager['ppm']" (click)="$event.stopPropagation()">
-              <div class="popover-header">
-                <strong>Manage Columns</strong>
-                <button type="button" class="btn-text" (click)="resetColumnLayout('ppm')"><i class="bi bi-arrow-counterclockwise me-1"></i> Reset</button>
-              </div>
-              <div class="popover-body">
-                <div class="col-item-row" *ngFor="let col of columnsConfig['ppm']; let idx = index">
-                  <label class="col-check-label">
-                    <input type="checkbox" [checked]="col.visible" (change)="toggleColVisibility('ppm', col.key)">
-                    <span>{{ col.label }}</span>
-                  </label>
-                  <div class="col-reorder-btns" *ngIf="col.key !== 'select' && col.key !== 'actions'">
-                    <button type="button" [disabled]="idx <= 1" (click)="moveColumn('ppm', idx, 'up')"><i class="bi bi-arrow-up"></i></button>
-                    <button type="button" [disabled]="idx >= columnsConfig['ppm'].length - 2" (click)="moveColumn('ppm', idx, 'down')"><i class="bi bi-arrow-down"></i></button>
-                  </div>
+            <div class="popover-body">
+              <div class="col-item-row" *ngFor="let col of columnsConfig['ppd']; let idx = index">
+                <label class="col-check-label">
+                  <input type="checkbox" [checked]="col.visible" (change)="toggleColVisibility('ppd', col.key)">
+                  <span>{{ col.label }}</span>
+                </label>
+                <div class="col-reorder-btns" *ngIf="col.key !== 'select' && col.key !== 'actions'">
+                  <button type="button" [disabled]="idx <= 1" (click)="moveColumn('ppd', idx, 'up')" title="Move column left" aria-label="Move left"><i class="bi bi-arrow-up"></i></button>
+                  <button type="button" [disabled]="idx >= columnsConfig['ppd'].length - 2" (click)="moveColumn('ppd', idx, 'down')" title="Move column right" aria-label="Move right"><i class="bi bi-arrow-down"></i></button>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- Export CSV & Excel -->
-          <button type="button" class="btn btn-secondary btn-sm" (click)="exportCurrentFilteredCsv('ppm', getFullFilteredList(ppmList, 'ppm'))" title="Export matching records to CSV">
-            <i class="bi bi-download me-1"></i> Export CSV
+        <!-- Export Buttons (CSV & Excel) -->
+        <div class="export-actions-group">
+          <button type="button" class="btn btn-secondary btn-sm btn-toolbar-action" (click)="exportCurrentFilteredCsv('ppd', getFullFilteredList(ppdList, 'ppd'))" title="Export matching records to CSV" aria-label="Export to CSV">
+            <i class="bi bi-filetype-csv me-1 text-primary"></i> CSV
           </button>
-          <button type="button" class="btn btn-secondary btn-sm" (click)="exportCurrentFilteredExcel('ppm', getFullFilteredList(ppmList, 'ppm'))" title="Export matching records to Excel">
-            <i class="bi bi-file-earmark-excel me-1"></i> Excel
+          <button type="button" class="btn btn-secondary btn-sm btn-toolbar-action" (click)="exportCurrentFilteredExcel('ppd', getFullFilteredList(ppdList, 'ppd'))" title="Export matching records to Excel" aria-label="Export to Excel">
+            <i class="bi bi-file-earmark-excel me-1 text-success"></i> Excel
           </button>
         </div>
+
       </div>
 
-      <!-- BULK ACTION BAR (Floating Pill at Bottom Center) -->
-      <div class="bulk-action-bar" *ngIf="getSelectedCount('ppm') > 0">
-        <div class="bulk-bar-left">
-          <span class="bulk-count-pill"><i class="bi bi-check-circle-fill"></i> {{ getSelectedCount('ppm') }} row(s) selected</span>
-          <button type="button" class="btn-clear-selection" (click)="clearSelection('ppm')"><i class="bi bi-x-lg me-1"></i> Clear</button>
-        </div>
-        <div class="bulk-bar-right">
-          <button type="button" class="btn-bulk-action btn-export-bulk" (click)="bulkExportSelected('ppm')">
-            <i class="bi bi-download me-1"></i> Export ({{ getSelectedCount('ppm') }})
-          </button>
-          <button type="button" class="btn-bulk-action btn-delete-bulk" *ngIf="canDelete()" (click)="bulkDeleteSelected('ppm')">
-            <i class="bi bi-trash3 me-1"></i> Delete ({{ getSelectedCount('ppm') }})
-          </button>
-        </div>
-      </div>
+    </div>
 
-      <!-- Data Table -->
-      <div class="table-container table-responsive" [ngClass]="'density-' + tableDensity">
-        <table class="table enterprise-table" appResizableTable tableId="ppm_table">
+    <!-- BULK ACTION BAR (Floating Pill above table when rows selected) -->
+    <div class="bulk-action-bar animate-fade-in" *ngIf="getSelectedCount('ppd') > 0">
+      <div class="bulk-bar-left">
+        <span class="bulk-count-pill"><i class="bi bi-check-circle-fill"></i> {{ getSelectedCount('ppd') }} record(s) selected</span>
+        <button type="button" class="btn-clear-selection" (click)="clearSelection('ppd')"><i class="bi bi-x-lg me-1"></i> Clear</button>
+      </div>
+      <div class="bulk-bar-right">
+        <button type="button" class="btn-bulk-action btn-export-bulk" (click)="bulkExportSelected('ppd')">
+          <i class="bi bi-download me-1"></i> Export ({{ getSelectedCount('ppd') }})
+        </button>
+        <button type="button" class="btn-bulk-action btn-delete-bulk" *ngIf="canDelete()" (click)="bulkDeleteSelected('ppd')">
+          <i class="bi bi-trash3 me-1"></i> Delete ({{ getSelectedCount('ppd') }})
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading Skeleton -->
+    <div *ngIf="isLoading" class="skeleton-container" aria-busy="true">
+      <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5,6]"></div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="!isLoading && hasError" class="empty-state-card" style="padding: 48px; text-align: center;">
+      <div class="state-icon-wrap text-warning"><i class="bi bi-exclamation-triangle-fill" style="font-size: 40px;"></i></div>
+      <h3 class="state-title">Unable to Load Production Records</h3>
+      <p class="state-desc">The manufacturing API server did not return daily records. Check your network or retry.</p>
+      <button type="button" class="btn btn-primary" (click)="loadData()"><i class="bi bi-arrow-clockwise me-1"></i> Retry Connection</button>
+    </div>
+
+    <!-- Table Container (Horizontal Scroll Inside Container Only) -->
+    <div *ngIf="!isLoading && !hasError">
+      <div class="table-responsive table-wrapper-custom" [ngClass]="'density-' + tableDensity">
+        <table class="table enterprise-table" appResizableTable tableId="ppd_table">
           <thead class="sticky-thead">
             <tr>
-              <ng-container *ngFor="let col of columnsConfig['ppm']">
-                <th *ngIf="col.visible && col.key === 'select'" style="width: 48px; text-align: center;">
+              <ng-container *ngFor="let col of columnsConfig['ppd']">
+                <!-- Select Checkbox -->
+                <th *ngIf="col.visible && col.key === 'select'" class="col-th-checkbox" style="width: 44px; text-align: center;">
                   <input type="checkbox" 
                     class="enterprise-row-checkbox"
-                    [checked]="isAllSelected('ppm', getProcessedList(ppmList, 'ppm'))" 
-                    (change)="toggleSelectAll('ppm', getProcessedList(ppmList, 'ppm'))"
-                    title="Select All summaries on current page">
+                    [checked]="isAllSelected('ppd', getProcessedList(ppdList, 'ppd'))" 
+                    (change)="toggleSelectAll('ppd', getProcessedList(ppdList, 'ppd'))" 
+                    title="Select All records on current page"
+                    aria-label="Select all rows">
                 </th>
-                <th *ngIf="col.visible && col.key === 'monthYear'" (click)="setSort('month')" class="sortable-th" style="min-width:130px;">
-                  {{ 'ppm.month_year' | translate:currentLang }} 
-                  <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'month' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
+
+                <!-- Date -->
+                <th *ngIf="col.visible && col.key === 'date'" (click)="setSort('date')" class="sortable-th col-th-date" style="min-width: 120px;">
+                  <span class="th-content">{{ 'label.date' | translate:currentLang }}</span>
+                  <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'date' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
                 </th>
-                <th *ngIf="col.visible && col.key === 'cratesProduced'" (click)="setSort('cratesProduced')" class="sortable-th" style="min-width:130px;">
-                  {{ 'ppd.totalProduction' | translate:currentLang }} 
-                  <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'cratesProduced' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
+
+                <!-- Crate Type -->
+                <th *ngIf="col.visible && col.key === 'crateType'" (click)="setSort('crateType')" class="sortable-th col-th-crate" style="min-width: 170px;">
+                  <span class="th-content">{{ 'ppd.crateType' | translate:currentLang }}</span>
+                  <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'crateType' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
                 </th>
-                <th *ngIf="col.visible && col.key === 'electricityUnits'" (click)="setSort('electricityUnits')" class="sortable-th" style="min-width:130px;">
-                  {{ 'ppm.units' | translate:currentLang }} 
-                  <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'electricityUnits' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
+
+                <!-- Shift -->
+                <th *ngIf="col.visible && col.key === 'shift'" (click)="setSort('shift')" class="sortable-th col-th-shift" style="min-width: 130px;">
+                  <span class="th-content">Shift</span>
+                  <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'shift' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
                 </th>
-                <th *ngIf="col.visible && col.key === 'electricityBill'" (click)="setSort('electricityBill')" class="sortable-th" style="min-width:130px;">
-                  {{ 'ppm.bill' | translate:currentLang }} 
-                  <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'electricityBill' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
+
+                <!-- Total Production -->
+                <th *ngIf="col.visible && col.key === 'totalProduction'" (click)="setSort('totalProduction')" class="sortable-th text-end col-th-total" style="min-width: 130px;">
+                  <span class="th-content">{{ 'ppd.totalProduction' | translate:currentLang }}</span>
+                  <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'totalProduction' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
                 </th>
-                <th *ngIf="col.visible && col.key === 'unitsPerCrate'" style="min-width:110px;">{{ 'ppm.units_crate' | translate:currentLang }}</th>
-                <th *ngIf="col.visible && col.key === 'costPerCrate'" style="min-width:110px;">{{ 'ppm.cost_crate' | translate:currentLang }}</th>
-                <th *ngIf="col.visible && col.key === 'actions'" class="table-action-col" style="min-width:140px; text-align:right; padding-right:16px;">{{ 'label.actions' | translate:currentLang }}</th>
+
+                <!-- Successful -->
+                <th *ngIf="col.visible && col.key === 'successful'" (click)="setSort('successful')" class="sortable-th text-end col-th-success" style="min-width: 120px;">
+                  <span class="th-content">{{ 'ppd.successful' | translate:currentLang }}</span>
+                  <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'successful' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
+                </th>
+
+                <!-- Rejected -->
+                <th *ngIf="col.visible && col.key === 'rejected'" (click)="setSort('rejected')" class="sortable-th text-end col-th-rejected" style="min-width: 110px;">
+                  <span class="th-content">{{ 'ppd.rejected' | translate:currentLang }}</span>
+                  <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'rejected' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
+                </th>
+
+                <!-- Efficiency -->
+                <th *ngIf="col.visible && col.key === 'efficiency'" class="text-center col-th-efficiency" style="min-width: 110px;">
+                  <span class="th-content">Batch Yield</span>
+                </th>
+
+                <!-- Actions -->
+                <th *ngIf="col.visible && col.key === 'actions'" class="table-action-col text-end" style="min-width: 130px; padding-right: 16px;">
+                  <span class="th-content">{{ 'label.actions' | translate:currentLang }}</span>
+                </th>
               </ng-container>
             </tr>
           </thead>
+
           <tbody>
-            <tr *ngFor="let ppm of getProcessedList(ppmList, 'ppm'); trackBy: trackById" 
-              [class.row-selected]="isRowSelected('ppm', ppm.id)"
+            <!-- Empty Records State -->
+            <tr *ngIf="getProcessedList(ppdList, 'ppd').length === 0">
+              <td [attr.colspan]="getVisibleColCount('ppd') || 9" class="empty-table-cell">
+                <div class="empty-table-box">
+                  <i class="bi bi-inbox empty-table-icon"></i>
+                  <h4>No Production Records Found</h4>
+                  <p>No records match your active search or filters.</p>
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="resetFilters('ppd')">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Clear Filters
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Data Rows with Multi-select and Inline Double-click Editing -->
+            <tr *ngFor="let ppd of getProcessedList(ppdList, 'ppd'); trackBy: trackById" 
+              [class.row-selected]="isRowSelected('ppd', ppd.id)"
               class="enterprise-data-row">
 
-              <ng-container *ngFor="let col of columnsConfig['ppm']">
+              <ng-container *ngFor="let col of columnsConfig['ppd']">
+                <!-- Checkbox -->
                 <td *ngIf="col.visible && col.key === 'select'" style="text-align: center;">
-                  <input type="checkbox" class="enterprise-row-checkbox" [checked]="isRowSelected('ppm', ppm.id)" (change)="toggleSelectRow('ppm', ppm.id)" title="Select summary">
+                  <input type="checkbox" class="enterprise-row-checkbox" [checked]="isRowSelected('ppd', ppd.id)" (change)="toggleSelectRow('ppd', ppd.id)" title="Select row" aria-label="Select row">
                 </td>
-                <td *ngIf="col.visible && col.key === 'monthYear'" style="font-weight:700;">
-                  <span class="date-cell">{{ ppm.month | uppercase }} {{ ppm.year }}</span>
-                </td>
-                <td *ngIf="col.visible && col.key === 'cratesProduced'" style="font-weight:700;" (dblclick)="startInlineEdit('ppm', ppm, 'cratesProduced')">
-                  <span *ngIf="!(editingCell?.id === ppm.id && editingCell?.field === 'cratesProduced')">{{ ppm.cratesProduced | number }}</span>
-                  <div *ngIf="editingCell?.id === ppm.id && editingCell?.field === 'cratesProduced'" class="inline-edit-box">
-                    <input type="number" [(ngModel)]="inlineEditValue" (keydown.enter)="saveInlineEdit('ppm', ppm)" (keydown.escape)="cancelInlineEdit()">
-                    <button class="btn-check" (click)="saveInlineEdit('ppm', ppm)" title="Save"><i class="bi bi-check2"></i></button>
-                    <button class="btn-cancel" (click)="cancelInlineEdit()" title="Cancel"><i class="bi bi-x-lg"></i></button>
+
+                <!-- Date -->
+                <td *ngIf="col.visible && col.key === 'date'" (dblclick)="startInlineEdit('ppd', ppd, 'date')">
+                  <span *ngIf="!(editingCell?.id === ppd.id && editingCell?.field === 'date')" class="date-cell">
+                    {{ ppd.date | indianDate }}
+                  </span>
+                  <div *ngIf="editingCell?.id === ppd.id && editingCell?.field === 'date'" class="inline-edit-box">
+                    <input type="date" [(ngModel)]="inlineEditValue" (keydown.enter)="saveInlineEdit('ppd', ppd)" (keydown.escape)="cancelInlineEdit()" class="form-input-inline">
+                    <button type="button" class="btn-inline-save" (click)="saveInlineEdit('ppd', ppd)" title="Save" aria-label="Save"><i class="bi bi-check2"></i></button>
+                    <button type="button" class="btn-inline-cancel" (click)="cancelInlineEdit()" title="Cancel" aria-label="Cancel"><i class="bi bi-x-lg"></i></button>
                   </div>
                 </td>
-                <td *ngIf="col.visible && col.key === 'electricityUnits'" (dblclick)="startInlineEdit('ppm', ppm, 'electricityUnits')">
-                  <span *ngIf="!(editingCell?.id === ppm.id && editingCell?.field === 'electricityUnits')">{{ ppm.electricityUnits | number:'1.2-2' }}</span>
-                  <div *ngIf="editingCell?.id === ppm.id && editingCell?.field === 'electricityUnits'" class="inline-edit-box">
-                    <input type="number" step="0.01" [(ngModel)]="inlineEditValue" (keydown.enter)="saveInlineEdit('ppm', ppm)" (keydown.escape)="cancelInlineEdit()">
-                    <button class="btn-check" (click)="saveInlineEdit('ppm', ppm)" title="Save"><i class="bi bi-check2"></i></button>
-                    <button class="btn-cancel" (click)="cancelInlineEdit()" title="Cancel"><i class="bi bi-x-lg"></i></button>
+
+                <!-- Crate Type -->
+                <td *ngIf="col.visible && col.key === 'crateType'" (dblclick)="startInlineEdit('ppd', ppd, 'crateType')">
+                  <span *ngIf="!(editingCell?.id === ppd.id && editingCell?.field === 'crateType')" class="crate-type-pill">
+                    <i class="bi bi-box-seam me-1 text-muted"></i>{{ ppd.crateType }}
+                  </span>
+                  <div *ngIf="editingCell?.id === ppd.id && editingCell?.field === 'crateType'" class="inline-edit-box">
+                    <select [(ngModel)]="inlineEditValue" (keydown.enter)="saveInlineEdit('ppd', ppd)" (keydown.escape)="cancelInlineEdit()" class="form-input-inline">
+                      <option *ngFor="let c of crateTypes" [value]="c">{{ c }}</option>
+                    </select>
+                    <button type="button" class="btn-inline-save" (click)="saveInlineEdit('ppd', ppd)" title="Save" aria-label="Save"><i class="bi bi-check2"></i></button>
+                    <button type="button" class="btn-inline-cancel" (click)="cancelInlineEdit()" title="Cancel" aria-label="Cancel"><i class="bi bi-x-lg"></i></button>
                   </div>
                 </td>
-                <td *ngIf="col.visible && col.key === 'electricityBill'" style="font-weight:700; color:var(--accent-warning);" (dblclick)="startInlineEdit('ppm', ppm, 'electricityBill')">
-                  <span *ngIf="!(editingCell?.id === ppm.id && editingCell?.field === 'electricityBill')">₹{{ ppm.electricityBill | number:'1.2-2' }}</span>
-                  <div *ngIf="editingCell?.id === ppm.id && editingCell?.field === 'electricityBill'" class="inline-edit-box">
-                    <input type="number" step="0.01" [(ngModel)]="inlineEditValue" (keydown.enter)="saveInlineEdit('ppm', ppm)" (keydown.escape)="cancelInlineEdit()">
-                    <button class="btn-check" (click)="saveInlineEdit('ppm', ppm)" title="Save"><i class="bi bi-check2"></i></button>
-                    <button class="btn-cancel" (click)="cancelInlineEdit()" title="Cancel"><i class="bi bi-x-lg"></i></button>
+
+                <!-- Shift -->
+                <td *ngIf="col.visible && col.key === 'shift'" (dblclick)="startInlineEdit('ppd', ppd, 'shift')">
+                  <span *ngIf="!(editingCell?.id === ppd.id && editingCell?.field === 'shift')" class="shift-badge" [class.shift-morning]="ppd.shift === 'Morning Shift'" [class.shift-afternoon]="ppd.shift === 'Afternoon Shift'" [class.shift-night]="ppd.shift === 'Night Shift'">
+                    <i class="bi bi-clock-history me-1"></i>{{ ppd.shift || 'Morning Shift' }}
+                  </span>
+                  <div *ngIf="editingCell?.id === ppd.id && editingCell?.field === 'shift'" class="inline-edit-box">
+                    <select [(ngModel)]="inlineEditValue" (keydown.enter)="saveInlineEdit('ppd', ppd)" (keydown.escape)="cancelInlineEdit()" class="form-input-inline">
+                      <option *ngFor="let s of shifts" [value]="s">{{ s }}</option>
+                    </select>
+                    <button type="button" class="btn-inline-save" (click)="saveInlineEdit('ppd', ppd)" title="Save" aria-label="Save"><i class="bi bi-check2"></i></button>
+                    <button type="button" class="btn-inline-cancel" (click)="cancelInlineEdit()" title="Cancel" aria-label="Cancel"><i class="bi bi-x-lg"></i></button>
                   </div>
                 </td>
-                <td *ngIf="col.visible && col.key === 'unitsPerCrate'">{{ (ppm.cratesProduced ? (ppm.electricityUnits / ppm.cratesProduced) : 0) | number:'1.2-2' }}</td>
-                <td *ngIf="col.visible && col.key === 'costPerCrate'" style="font-weight:700;">₹{{ (ppm.cratesProduced ? (ppm.electricityBill / ppm.cratesProduced) : 0) | number:'1.2-2' }}</td>
-                <td *ngIf="col.visible && col.key === 'actions'" class="table-action-col" style="text-align:right; padding-right:16px;">
-                  <div class="row-actions-group" style="justify-content: flex-end;">
-                    <button class="btn-row-action btn-edit" *ngIf="!isViewer()" (click)="openDrawerEdit('ppm', ppm)" title="Edit Summary">
+
+                <!-- Total Production -->
+                <td *ngIf="col.visible && col.key === 'totalProduction'" class="text-end font-mono" style="font-weight: 700;">
+                  {{ ppd.totalProduction | number }}
+                </td>
+
+                <!-- Successful -->
+                <td *ngIf="col.visible && col.key === 'successful'" class="text-end font-mono" (dblclick)="startInlineEdit('ppd', ppd, 'successful')">
+                  <span *ngIf="!(editingCell?.id === ppd.id && editingCell?.field === 'successful')" class="badge badge-success-pill">
+                    {{ ppd.successful | number }}
+                  </span>
+                  <div *ngIf="editingCell?.id === ppd.id && editingCell?.field === 'successful'" class="inline-edit-box">
+                    <input type="number" [(ngModel)]="inlineEditValue" (keydown.enter)="saveInlineEdit('ppd', ppd)" (keydown.escape)="cancelInlineEdit()" class="form-input-inline font-mono" style="width: 75px;">
+                    <button type="button" class="btn-inline-save" (click)="saveInlineEdit('ppd', ppd)" title="Save" aria-label="Save"><i class="bi bi-check2"></i></button>
+                    <button type="button" class="btn-inline-cancel" (click)="cancelInlineEdit()" title="Cancel" aria-label="Cancel"><i class="bi bi-x-lg"></i></button>
+                  </div>
+                </td>
+
+                <!-- Rejected -->
+                <td *ngIf="col.visible && col.key === 'rejected'" class="text-end font-mono" (dblclick)="startInlineEdit('ppd', ppd, 'rejected')">
+                  <span *ngIf="!(editingCell?.id === ppd.id && editingCell?.field === 'rejected')" class="badge badge-danger-pill">
+                    {{ ppd.rejected | number }}
+                  </span>
+                  <div *ngIf="editingCell?.id === ppd.id && editingCell?.field === 'rejected'" class="inline-edit-box">
+                    <input type="number" [(ngModel)]="inlineEditValue" (keydown.enter)="saveInlineEdit('ppd', ppd)" (keydown.escape)="cancelInlineEdit()" class="form-input-inline font-mono" style="width: 75px;">
+                    <button type="button" class="btn-inline-save" (click)="saveInlineEdit('ppd', ppd)" title="Save" aria-label="Save"><i class="bi bi-check2"></i></button>
+                    <button type="button" class="btn-inline-cancel" (click)="cancelInlineEdit()" title="Cancel" aria-label="Cancel"><i class="bi bi-x-lg"></i></button>
+                  </div>
+                </td>
+
+                <!-- Efficiency -->
+                <td *ngIf="col.visible && col.key === 'efficiency'" class="text-center font-mono">
+                  <span class="badge efficiency-pill" [style.background]="getEfficiencyColor(ppd.successful, ppd.totalProduction)">
+                    ● {{ getEfficiencyPct(ppd.successful, ppd.totalProduction) }}%
+                  </span>
+                </td>
+
+                <!-- Actions -->
+                <td *ngIf="col.visible && col.key === 'actions'" class="table-action-col text-end" style="padding-right: 16px;">
+                  <div class="row-actions-group">
+                    <button type="button" class="btn-row-action btn-edit" *ngIf="!isViewer()" (click)="openDrawerEdit('ppd', ppd)" title="Open Drawer Edit" aria-label="Edit record">
                       <i class="bi bi-pencil-square me-1"></i> Edit
                     </button>
-                    <button class="btn-row-action btn-delete" *ngIf="canDelete()" (click)="deletePpm(ppm.id)" title="Delete Summary">
+                    <button type="button" class="btn-row-action btn-delete" *ngIf="canDelete()" (click)="deletePpd(ppd.id)" title="Delete Record" aria-label="Delete record">
                       <i class="bi bi-trash3"></i>
                     </button>
                   </div>
@@ -561,42 +522,498 @@
         </table>
       </div>
 
-      <!-- Pagination -->
+      <!-- Pagination Toolbar -->
       <div class="table-pagination-footer no-print">
         <div class="pagination-info">
-          <span>Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['ppm'] || 0) }} of {{ tableFilteredCounts['ppm'] || 0 }} summaries</span>
+          <span>Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['ppd'] || 0) }} of {{ tableFilteredCounts['ppd'] || 0 }} records</span>
         </div>
+
         <div class="pagination-controls">
           <div class="page-size-selector">
-            <label>Rows:</label>
-            <select [(ngModel)]="pageSize" (change)="currentPage = 1">
+            <label>Rows per page:</label>
+            <select [(ngModel)]="pageSize" (change)="currentPage = 1" class="page-size-select" title="Select rows per page">
               <option [ngValue]="10">10</option>
               <option [ngValue]="25">25</option>
               <option [ngValue]="50">50</option>
+              <option [ngValue]="100">100</option>
             </select>
           </div>
+
           <div class="page-nav-btns">
-            <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1"><i class="bi bi-chevron-left me-1"></i> Prev</button>
+            <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" title="Previous page" aria-label="Previous page">
+              <i class="bi bi-chevron-left me-1"></i> Previous
+            </button>
             <span class="current-page-pill">Page {{ currentPage }}</span>
-            <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['ppm'] || 0)" (click)="currentPage = currentPage + 1">Next <i class="bi bi-chevron-right ms-1"></i></button>
+            <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['ppd'] || 0)" (click)="currentPage = currentPage + 1" title="Next page" aria-label="Next page">
+              Next <i class="bi bi-chevron-right ms-1"></i>
+            </button>
           </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- 3. MONTHLY PRODUCTION & ENERGY COST SUMMARY (PPM) -->
+<!-- ============================================================ -->
+<div *ngIf="activeTab === 'monthly-production'" class="production-screen-wrapper">
+  
+  <!-- 1. COMPACT PROFESSIONAL PAGE HEADER -->
+  <header class="production-page-header">
+    <div class="header-left-col">
+      <div class="header-title-row">
+        <div class="header-icon-box">
+          <i class="bi bi-bar-chart-steps"></i>
+        </div>
+        <div>
+          <h1 class="header-main-title">{{ 'nav.monthly-production' | translate:currentLang }}</h1>
+          <p class="header-subtitle">Monthly manufacturing volume, power unit consumption & electricity cost per crate</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right-side quick controls: Month, Year, Refresh, + New Summary -->
+    <div class="header-right-col">
+      <!-- Quick Month Selector -->
+      <div class="quick-control-item">
+        <label class="control-mini-label"><i class="bi bi-calendar-month me-1"></i>Month</label>
+        <select [(ngModel)]="tabFilterPpmMonth" class="form-select-compact" title="Filter by month" (change)="currentPage = 1">
+          <option value="">All Months</option>
+          <option *ngFor="let m of months" [value]="m">{{ m }}</option>
+        </select>
+      </div>
+
+      <!-- Quick Year Selector -->
+      <div class="quick-control-item">
+        <label class="control-mini-label"><i class="bi bi-calendar3 me-1"></i>Year</label>
+        <input type="number" [(ngModel)]="tabFilterPpmYear" class="form-control-compact ppm-year-input" placeholder="Year" (input)="currentPage = 1">
+      </div>
+
+      <!-- Refresh Data Button -->
+      <button type="button" class="btn btn-secondary btn-header-action" (click)="loadData()" [disabled]="isRefreshing" title="Refresh monthly data" aria-label="Refresh monthly data">
+        <i class="bi bi-arrow-clockwise" [class.spin-anim]="isRefreshing"></i>
+        <span class="btn-label-text">Refresh</span>
+      </button>
+
+      <!-- Primary Action: + Add Monthly Summary -->
+      <button type="button" *ngIf="!isViewer()" class="btn btn-primary btn-header-action" (click)="togglePpmFormVisibility()" [title]="isPpmFormVisible ? 'Collapse Summary Form' : 'Add Monthly Summary'" aria-label="Add Monthly Summary">
+        <i class="bi" [ngClass]="isPpmFormVisible ? 'bi-dash-lg' : 'bi-plus-lg'"></i>
+        <span class="btn-label-text">{{ isPpmFormVisible ? 'Hide Form' : '+ Add Summary' }}</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 2. PRODUCTION MODULE SUB-NAVIGATION (Tabs) -->
+  <div class="production-subnav-bar">
+    <div class="subnav-tabs-group" role="tablist">
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="activeTab === 'production'" (click)="switchSubTab('production')">
+        <i class="bi bi-calendar2-check"></i>
+        <span>Daily Production (PPD)</span>
+        <span class="tab-badge-pill">{{ ppdList.length }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="activeTab === 'monthly-production'" (click)="switchSubTab('monthly-production')">
+        <i class="bi bi-bar-chart-steps"></i>
+        <span>Monthly Summary (PPM)</span>
+        <span class="tab-badge-pill">{{ ppmList.length }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. MONTHLY KPI TELEMETRY STRIP -->
+  <section class="production-kpi-grid">
+    <div class="kpi-card total-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-boxes"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">TOTAL CRATES PRODUCED</span>
+        <strong class="kpi-value">{{ getPpmTotalCrates() | number }} <span class="kpi-unit">crates</span></strong>
+        <span class="kpi-meta"><i class="bi bi-calendar3 me-1"></i>Across {{ ppmList.length }} logged months</span>
+      </div>
+    </div>
+    <div class="kpi-card ppm-electricity-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-lightning-charge-fill"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">TOTAL ELECTRICITY</span>
+        <strong class="kpi-value ppm-electricity-value">{{ getPpmTotalUnits() | number:'1.1-1' }} <span class="kpi-unit">kWh</span></strong>
+        <span class="kpi-meta"><i class="bi bi-activity me-1"></i>Power grid meter usage</span>
+      </div>
+    </div>
+    <div class="kpi-card ppm-expense-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-currency-rupee"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">TOTAL POWER EXPENSE</span>
+        <strong class="kpi-value ppm-expense-value">₹{{ getPpmTotalBill() | number:'1.2-2' }}</strong>
+        <span class="kpi-meta"><i class="bi bi-receipt me-1"></i>Accumulated tariff bills</span>
+      </div>
+    </div>
+    <div class="kpi-card ppm-cost-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-pie-chart-fill"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">AVERAGE COST / CRATE</span>
+        <strong class="kpi-value ppm-cost-value">₹{{ getPpmAvgCostPerCrate() | number:'1.2-2' }}</strong>
+        <span class="kpi-meta"><i class="bi bi-lightning me-1"></i>Electricity overhead per unit</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. ADD / EDIT MONTHLY SUMMARY FORM -->
+  <div class="glass-panel form-expansion-panel animate-fade-in" *ngIf="!isViewer() && isPpmFormVisible" [class.editing-mode]="ppmForm.id">
+    <div class="form-panel-header">
+      <div class="form-header-title">
+        <span class="form-icon-pill" [class.editing]="ppmForm.id">
+          <i class="bi" [ngClass]="ppmForm.id ? 'bi-pencil-square' : 'bi-plus-circle-fill'"></i>
+        </span>
+        <div>
+          <h4>{{ ppmForm.id ? 'Edit Monthly Summary' : ('ppm.add_title' | translate:currentLang) }}</h4>
+          <span class="form-header-hint">Record aggregate monthly crate volume and power utility bill</span>
+        </div>
+      </div>
+      <div class="form-header-actions">
+        <button *ngIf="ppmForm.id" type="button" class="btn btn-secondary btn-sm" (click)="ppmForm = { id: '', month: 'May', year: 2026, cratesProduced: 0, electricityUnits: 0, electricityBill: 0 }">
+          <i class="bi bi-x-circle me-1"></i> Cancel Edit
+        </button>
+        <button type="button" class="btn-panel-close" (click)="togglePpmFormVisibility()" title="Collapse form" aria-label="Collapse form">
+          <i class="bi bi-chevron-up"></i>
+        </button>
+      </div>
+    </div>
+
+    <form (submit)="savePpm()" class="production-entry-form">
+      <div class="form-fields-grid">
+        <!-- Month -->
+        <div class="form-field-col">
+          <label class="field-label"><i class="bi bi-calendar-month me-1 text-primary"></i>{{ 'ppm.month' | translate:currentLang }} <span class="req-star">*</span></label>
+          <select [(ngModel)]="ppmForm.month" name="ppmMonth" required class="form-input-control">
+            <option *ngFor="let m of months" [value]="m">{{ m }}</option>
+          </select>
+        </div>
+
+        <!-- Year -->
+        <div class="form-field-col">
+          <label class="field-label"><i class="bi bi-calendar3 me-1 text-primary"></i>Year <span class="req-star">*</span></label>
+          <input appAutoSelect type="number" [(ngModel)]="ppmForm.year" name="ppmYear" required placeholder="2026" class="form-input-control font-mono">
+        </div>
+
+        <!-- Crates Produced -->
+        <div class="form-field-col">
+          <label class="field-label"><i class="bi bi-boxes me-1 text-primary"></i>Crates Produced <span class="req-star">*</span></label>
+          <input appAutoSelect type="number" [(ngModel)]="ppmForm.cratesProduced" name="ppmCrates" required placeholder="0" class="form-input-control font-mono">
+        </div>
+
+        <!-- Electricity Units -->
+        <div class="form-field-col">
+          <label class="field-label"><i class="bi bi-lightning-charge me-1 text-info"></i>{{ 'ppm.units' | translate:currentLang }} <span class="req-star">*</span></label>
+          <input appAutoSelect type="number" step="0.01" [(ngModel)]="ppmForm.electricityUnits" name="ppmUnits" required placeholder="0.00" class="form-input-control font-mono">
+        </div>
+
+        <!-- Electricity Bill -->
+        <div class="form-field-col">
+          <label class="field-label"><i class="bi bi-currency-rupee me-1 text-warning"></i>{{ 'ppm.bill' | translate:currentLang }} (₹) <span class="req-star">*</span></label>
+          <input appAutoSelect type="number" step="0.01" [(ngModel)]="ppmForm.electricityBill" name="ppmBill" required placeholder="0.00" class="form-input-control font-mono">
+        </div>
+
+        <!-- Computed Factor Preview -->
+        <div class="form-field-col">
+          <label class="field-label"><i class="bi bi-calculator me-1 text-muted"></i>Estimated Cost / Crate <span class="auto-badge">(Preview)</span></label>
+          <input type="text" [value]="'₹' + ((ppmForm.cratesProduced ? (ppmForm.electricityBill / ppmForm.cratesProduced) : 0) | number:'1.2-2')" readonly class="form-input-control readonly-input font-mono">
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions-row">
+        <button type="button" class="btn btn-secondary" (click)="ppmForm = { id: '', month: 'May', year: 2026, cratesProduced: 0, electricityUnits: 0, electricityBill: 0 }">
+          <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Fields
+        </button>
+        <button type="submit" class="btn btn-primary btn-save-entry">
+          <i class="bi" [ngClass]="ppmForm.id ? 'bi-floppy-fill' : 'bi-check2-circle'"></i>
+          <span>{{ ppmForm.id ? 'Update Summary' : ('ppm.save_btn' | translate:currentLang) }}</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 5. MONTHLY SUMMARY TABLE CARD -->
+  <div class="glass-panel table-panel-card">
+    
+    <!-- Table Toolbar -->
+    <div class="table-unified-toolbar no-print">
+      
+      <!-- Left side: Search & Filter inputs -->
+      <div class="toolbar-left-group">
+        <!-- Search Input -->
+        <div class="toolbar-search-box">
+          <i class="bi bi-search search-lead-icon"></i>
+          <input type="text" [(ngModel)]="filterSearchQuery" (input)="currentPage = 1" placeholder="Search monthly summaries..." class="toolbar-search-input" title="Search summaries">
+          <button *ngIf="filterSearchQuery" type="button" class="search-clear-btn" (click)="filterSearchQuery = ''; currentPage = 1" title="Clear search" aria-label="Clear search">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <!-- Month Filter -->
+        <div class="toolbar-filter-select">
+          <select [(ngModel)]="tabFilterPpmMonth" (change)="currentPage = 1" class="toolbar-select" title="Filter by month">
+            <option value="">All Months</option>
+            <option *ngFor="let m of months" [value]="m">{{ m }}</option>
+          </select>
+        </div>
+
+        <!-- Min Crates Filter (exposes existing TS filter logic) -->
+        <div class="toolbar-filter-minval" title="Show only months with at least this many crates produced">
+          <input type="number"
+            [(ngModel)]="tabFilterPpmMinCrates"
+            (input)="currentPage = 1"
+            class="toolbar-input-compact"
+            placeholder="Min crates"
+            min="0"
+            aria-label="Minimum crates produced filter">
+        </div>
+
+        <!-- Active Filter Indicator & Reset -->
+        <div *ngIf="getActiveFilterCount('ppm') > 0" class="active-filter-badge-wrap">
+          <span class="active-filter-pill">
+            <i class="bi bi-funnel-fill me-1"></i>Filtered ({{ getActiveFilterCount('ppm') }})
+          </span>
+          <button type="button" class="btn-filter-reset" (click)="resetFilters('ppm')" title="Reset all applied filters" aria-label="Reset filters">
+            <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+          </button>
+        </div>
+      </div>
+
+      <!-- Right side: Density, Column Manager, Exports -->
+      <div class="toolbar-right-group">
+        
+        <!-- Density Switcher -->
+        <div class="density-switch-group" role="group" aria-label="Table row density">
+          <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact density" aria-label="Compact table density">
+            <i class="bi bi-distribute-vertical"></i> Compact
+          </button>
+          <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="setDensity('comfortable')" title="Standard density" aria-label="Normal table density">
+            <i class="bi bi-list-ul"></i> Normal
+          </button>
+          <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious density" aria-label="Spacious table density">
+            <i class="bi bi-grid-3x2-gap"></i> Spacious
+          </button>
+        </div>
+
+        <!-- Column Manager -->
+        <div class="col-manager-dropdown-wrapper">
+          <button type="button" class="btn btn-secondary btn-sm btn-toolbar-action" (click)="showColManager['ppm'] = !showColManager['ppm']; $event.stopPropagation()" title="Customize columns" aria-label="Customize columns">
+            <i class="bi bi-layout-three-columns me-1"></i> Columns ({{ getVisibleColCount('ppm') }})
+          </button>
+
+          <div class="col-manager-popover" *ngIf="showColManager['ppm']" (click)="$event.stopPropagation()">
+            <div class="popover-header">
+              <span class="popover-title"><i class="bi bi-sliders me-1"></i>Table Columns</span>
+              <button type="button" class="btn-text-action" (click)="resetColumnLayout('ppm')"><i class="bi bi-arrow-counterclockwise me-1"></i> Reset</button>
+            </div>
+            <div class="popover-body">
+              <div class="col-item-row" *ngFor="let col of columnsConfig['ppm']; let idx = index">
+                <label class="col-check-label">
+                  <input type="checkbox" [checked]="col.visible" (change)="toggleColVisibility('ppm', col.key)">
+                  <span>{{ col.label }}</span>
+                </label>
+                <div class="col-reorder-btns" *ngIf="col.key !== 'select' && col.key !== 'actions'">
+                  <button type="button" [disabled]="idx <= 1" (click)="moveColumn('ppm', idx, 'up')" title="Move up" aria-label="Move up"><i class="bi bi-arrow-up"></i></button>
+                  <button type="button" [disabled]="idx >= columnsConfig['ppm'].length - 2" (click)="moveColumn('ppm', idx, 'down')" title="Move down" aria-label="Move down"><i class="bi bi-arrow-down"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export Buttons -->
+        <div class="export-actions-group">
+          <button type="button" class="btn btn-secondary btn-sm btn-toolbar-action" (click)="exportCurrentFilteredCsv('ppm', getFullFilteredList(ppmList, 'ppm'))" title="Export matching to CSV" aria-label="Export to CSV">
+            <i class="bi bi-filetype-csv me-1 text-primary"></i> CSV
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm btn-toolbar-action" (click)="exportCurrentFilteredExcel('ppm', getFullFilteredList(ppmList, 'ppm'))" title="Export matching to Excel" aria-label="Export to Excel">
+            <i class="bi bi-file-earmark-excel me-1 text-success"></i> Excel
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Bulk Action Bar -->
+    <div class="bulk-action-bar animate-fade-in" *ngIf="getSelectedCount('ppm') > 0">
+      <div class="bulk-bar-left">
+        <span class="bulk-count-pill"><i class="bi bi-check-circle-fill"></i> {{ getSelectedCount('ppm') }} summary row(s) selected</span>
+        <button type="button" class="btn-clear-selection" (click)="clearSelection('ppm')"><i class="bi bi-x-lg me-1"></i> Clear</button>
+      </div>
+      <div class="bulk-bar-right">
+        <button type="button" class="btn-bulk-action btn-export-bulk" (click)="bulkExportSelected('ppm')">
+          <i class="bi bi-download me-1"></i> Export ({{ getSelectedCount('ppm') }})
+        </button>
+        <button type="button" class="btn-bulk-action btn-delete-bulk" *ngIf="canDelete()" (click)="bulkDeleteSelected('ppm')">
+          <i class="bi bi-trash3 me-1"></i> Delete ({{ getSelectedCount('ppm') }})
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading Skeleton (PPM) -->
+    <div *ngIf="isLoading" class="skeleton-container" aria-busy="true">
+      <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5,6]"></div>
+    </div>
+
+    <!-- Error State (PPM) -->
+    <div *ngIf="!isLoading && hasError" class="empty-state-card" style="padding: 48px; text-align: center;">
+      <div class="state-icon-wrap text-warning"><i class="bi bi-exclamation-triangle-fill" style="font-size: 40px;"></i></div>
+      <h3 class="state-title">Unable to Load Monthly Summaries</h3>
+      <p class="state-desc">The manufacturing API server did not return monthly records. Check your network or retry.</p>
+      <button type="button" class="btn btn-primary" (click)="loadData()"><i class="bi bi-arrow-clockwise me-1"></i> Retry Connection</button>
+    </div>
+
+    <!-- Data Table -->
+    <div *ngIf="!isLoading && !hasError" class="table-responsive table-wrapper-custom" [ngClass]="'density-' + tableDensity">
+      <table class="table enterprise-table" appResizableTable tableId="ppm_table">
+        <thead class="sticky-thead">
+          <tr>
+            <ng-container *ngFor="let col of columnsConfig['ppm']">
+              <th *ngIf="col.visible && col.key === 'select'" class="col-th-checkbox" style="width: 44px; text-align: center;">
+                <input type="checkbox" 
+                  class="enterprise-row-checkbox"
+                  [checked]="isAllSelected('ppm', getProcessedList(ppmList, 'ppm'))" 
+                  (change)="toggleSelectAll('ppm', getProcessedList(ppmList, 'ppm'))"
+                  title="Select All summaries on current page"
+                  aria-label="Select all rows">
+              </th>
+              <th *ngIf="col.visible && col.key === 'monthYear'" (click)="setSort('month')" class="sortable-th" style="min-width: 140px;">
+                <span class="th-content">{{ 'ppm.month_year' | translate:currentLang }}</span>
+                <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'month' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
+              </th>
+              <th *ngIf="col.visible && col.key === 'cratesProduced'" (click)="setSort('cratesProduced')" class="sortable-th text-end" style="min-width: 140px;">
+                <span class="th-content">{{ 'ppd.totalProduction' | translate:currentLang }}</span>
+                <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'cratesProduced' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
+              </th>
+              <th *ngIf="col.visible && col.key === 'electricityUnits'" (click)="setSort('electricityUnits')" class="sortable-th text-end" style="min-width: 140px;">
+                <span class="th-content">{{ 'ppm.units' | translate:currentLang }}</span>
+                <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'electricityUnits' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
+              </th>
+              <th *ngIf="col.visible && col.key === 'electricityBill'" (click)="setSort('electricityBill')" class="sortable-th text-end" style="min-width: 140px;">
+                <span class="th-content">{{ 'ppm.bill' | translate:currentLang }}</span>
+                <span class="sort-indicator"><i class="bi" [ngClass]="sortField === 'electricityBill' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i></span>
+              </th>
+              <th *ngIf="col.visible && col.key === 'unitsPerCrate'" class="text-end" style="min-width: 120px;">
+                <span class="th-content">{{ 'ppm.units_crate' | translate:currentLang }}</span>
+              </th>
+              <th *ngIf="col.visible && col.key === 'costPerCrate'" class="text-end" style="min-width: 120px;">
+                <span class="th-content">{{ 'ppm.cost_crate' | translate:currentLang }}</span>
+              </th>
+              <th *ngIf="col.visible && col.key === 'actions'" class="table-action-col text-end" style="min-width: 130px; padding-right: 16px;">
+                <span class="th-content">{{ 'label.actions' | translate:currentLang }}</span>
+              </th>
+            </ng-container>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Empty State -->
+          <tr *ngIf="getProcessedList(ppmList, 'ppm').length === 0">
+            <td [attr.colspan]="getVisibleColCount('ppm') || 8" class="empty-table-cell">
+              <div class="empty-table-box">
+                <i class="bi bi-inbox empty-table-icon"></i>
+                <h4>No Monthly Summaries Found</h4>
+                <p>No monthly summaries match the selected filters.</p>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="resetFilters('ppm')">
+                  <i class="bi bi-arrow-counterclockwise me-1"></i> Clear Filters
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Data Rows -->
+          <tr *ngFor="let ppm of getProcessedList(ppmList, 'ppm'); trackBy: trackById" 
+            [class.row-selected]="isRowSelected('ppm', ppm.id)"
+            class="enterprise-data-row">
+
+            <ng-container *ngFor="let col of columnsConfig['ppm']">
+              <td *ngIf="col.visible && col.key === 'select'" style="text-align: center;">
+                <input type="checkbox" class="enterprise-row-checkbox" [checked]="isRowSelected('ppm', ppm.id)" (change)="toggleSelectRow('ppm', ppm.id)" title="Select summary" aria-label="Select row">
+              </td>
+              <td *ngIf="col.visible && col.key === 'monthYear'" style="font-weight: 700;">
+                <span class="date-cell"><i class="bi bi-calendar3 me-1 text-muted"></i>{{ ppm.month | uppercase }} {{ ppm.year }}</span>
+              </td>
+              <td *ngIf="col.visible && col.key === 'cratesProduced'" class="text-end font-mono" style="font-weight: 700;" (dblclick)="startInlineEdit('ppm', ppm, 'cratesProduced')">
+                <span *ngIf="!(editingCell?.id === ppm.id && editingCell?.field === 'cratesProduced')">{{ ppm.cratesProduced | number }}</span>
+                <div *ngIf="editingCell?.id === ppm.id && editingCell?.field === 'cratesProduced'" class="inline-edit-box">
+                  <input type="number" [(ngModel)]="inlineEditValue" (keydown.enter)="saveInlineEdit('ppm', ppm)" (keydown.escape)="cancelInlineEdit()" class="form-input-inline font-mono" style="width: 80px;">
+                  <button type="button" class="btn-inline-save" (click)="saveInlineEdit('ppm', ppm)" title="Save" aria-label="Save"><i class="bi bi-check2"></i></button>
+                  <button type="button" class="btn-inline-cancel" (click)="cancelInlineEdit()" title="Cancel" aria-label="Cancel"><i class="bi bi-x-lg"></i></button>
+                </div>
+              </td>
+              <td *ngIf="col.visible && col.key === 'electricityUnits'" class="text-end font-mono" (dblclick)="startInlineEdit('ppm', ppm, 'electricityUnits')">
+                <span *ngIf="!(editingCell?.id === ppm.id && editingCell?.field === 'electricityUnits')">{{ ppm.electricityUnits | number:'1.2-2' }}</span>
+                <div *ngIf="editingCell?.id === ppm.id && editingCell?.field === 'electricityUnits'" class="inline-edit-box">
+                  <input type="number" step="0.01" [(ngModel)]="inlineEditValue" (keydown.enter)="saveInlineEdit('ppm', ppm)" (keydown.escape)="cancelInlineEdit()" class="form-input-inline font-mono" style="width: 80px;">
+                  <button type="button" class="btn-inline-save" (click)="saveInlineEdit('ppm', ppm)" title="Save" aria-label="Save"><i class="bi bi-check2"></i></button>
+                  <button type="button" class="btn-inline-cancel" (click)="cancelInlineEdit()" title="Cancel" aria-label="Cancel"><i class="bi bi-x-lg"></i></button>
+                </div>
+              </td>
+              <td *ngIf="col.visible && col.key === 'electricityBill'" class="text-end font-mono" style="font-weight: 700; color: var(--accent-warning);" (dblclick)="startInlineEdit('ppm', ppm, 'electricityBill')">
+                <span *ngIf="!(editingCell?.id === ppm.id && editingCell?.field === 'electricityBill')">₹{{ ppm.electricityBill | number:'1.2-2' }}</span>
+                <div *ngIf="editingCell?.id === ppm.id && editingCell?.field === 'electricityBill'" class="inline-edit-box">
+                  <input type="number" step="0.01" [(ngModel)]="inlineEditValue" (keydown.enter)="saveInlineEdit('ppm', ppm)" (keydown.escape)="cancelInlineEdit()" class="form-input-inline font-mono" style="width: 80px;">
+                  <button type="button" class="btn-inline-save" (click)="saveInlineEdit('ppm', ppm)" title="Save" aria-label="Save"><i class="bi bi-check2"></i></button>
+                  <button type="button" class="btn-inline-cancel" (click)="cancelInlineEdit()" title="Cancel" aria-label="Cancel"><i class="bi bi-x-lg"></i></button>
+                </div>
+              </td>
+              <td *ngIf="col.visible && col.key === 'unitsPerCrate'" class="text-end font-mono">{{ (ppm.cratesProduced ? (ppm.electricityUnits / ppm.cratesProduced) : 0) | number:'1.2-2' }}</td>
+              <td *ngIf="col.visible && col.key === 'costPerCrate'" class="text-end font-mono" style="font-weight: 700;">₹{{ (ppm.cratesProduced ? (ppm.electricityBill / ppm.cratesProduced) : 0) | number:'1.2-2' }}</td>
+              <td *ngIf="col.visible && col.key === 'actions'" class="table-action-col text-end" style="padding-right: 16px;">
+                <div class="row-actions-group">
+                  <button type="button" class="btn-row-action btn-edit" *ngIf="!isViewer()" (click)="openDrawerEdit('ppm', ppm)" title="Edit Summary" aria-label="Edit summary">
+                    <i class="bi bi-pencil-square me-1"></i> Edit
+                  </button>
+                  <button type="button" class="btn-row-action btn-delete" *ngIf="canDelete()" (click)="deletePpm(ppm.id)" title="Delete Summary" aria-label="Delete summary">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </td>
+            </ng-container>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="table-pagination-footer no-print">
+      <div class="pagination-info">
+        <span>Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['ppm'] || 0) }} of {{ tableFilteredCounts['ppm'] || 0 }} summaries</span>
+      </div>
+      <div class="pagination-controls">
+        <div class="page-size-selector">
+          <label>Rows per page:</label>
+          <select [(ngModel)]="pageSize" (change)="currentPage = 1" class="page-size-select" title="Rows per page">
+            <option [ngValue]="10">10</option>
+            <option [ngValue]="25">25</option>
+            <option [ngValue]="50">50</option>
+          </select>
+        </div>
+        <div class="page-nav-btns">
+          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" title="Previous page" aria-label="Previous page"><i class="bi bi-chevron-left me-1"></i> Previous</button>
+          <span class="current-page-pill">Page {{ currentPage }}</span>
+          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['ppm'] || 0)" (click)="currentPage = currentPage + 1" title="Next page" aria-label="Next page">Next <i class="bi bi-chevron-right ms-1"></i></button>
         </div>
       </div>
     </div>
   </div>
+
 </div>
 
-<!-- ========================================== -->
+<!-- ============================================================ -->
 <!-- SLIDE-IN EDIT DRAWER OVERLAY -->
-<!-- ========================================== -->
-<div class="drawer-backdrop" *ngIf="drawerOpen" (click)="closeDrawerEdit()">
+<!-- ============================================================ -->
+<div class="drawer-backdrop animate-fade-in" *ngIf="drawerOpen" (click)="closeDrawerEdit()">
   <div class="slide-in-drawer" (click)="$event.stopPropagation()">
     <div class="drawer-header">
       <div class="drawer-title">
-        <h3><i class="bi bi-pencil-square me-2"></i>{{ drawerMode === 'ppd' ? 'Edit Daily Production Record' : 'Edit Monthly Production Summary' }}</h3>
-        <p>Modify record fields with live auto-recalculation.</p>
+        <h3><i class="bi bi-pencil-square me-2 text-primary"></i>{{ drawerMode === 'ppd' ? 'Edit Daily Production Record' : 'Edit Monthly Production Summary' }}</h3>
+        <p>Modify record parameters with live auto-recalculation.</p>
       </div>
-      <button class="drawer-close-btn" (click)="closeDrawerEdit()" title="Close"><i class="bi bi-x-lg"></i></button>
+      <button type="button" class="drawer-close-btn" (click)="closeDrawerEdit()" title="Close drawer" aria-label="Close drawer"><i class="bi bi-x-lg"></i></button>
     </div>
 
     <div class="drawer-body" *ngIf="drawerRecord">
@@ -604,58 +1021,63 @@
       <!-- PPD Drawer Fields -->
       <div *ngIf="drawerMode === 'ppd'" class="drawer-fields-grid">
         <div class="form-group">
-          <label>Date</label>
+          <label class="field-label">Date <span class="req-star">*</span></label>
           <input type="date" [(ngModel)]="drawerRecord.date" class="form-control">
         </div>
         <div class="form-group">
-          <label>Crate Type</label>
+          <label class="field-label">Crate Type <span class="req-star">*</span></label>
           <select [(ngModel)]="drawerRecord.crateType" class="form-control">
             <option *ngFor="let c of crateTypes" [value]="c">{{ c }}</option>
           </select>
         </div>
         <div class="form-group">
-          <label>Shift</label>
+          <label class="field-label">Shift <span class="req-star">*</span></label>
           <select [(ngModel)]="drawerRecord.shift" class="form-control">
             <option *ngFor="let s of shifts" [value]="s">{{ s }}</option>
           </select>
         </div>
         <div class="form-group">
-          <label>Successful Units</label>
-          <input type="number" [(ngModel)]="drawerRecord.successful" (input)="drawerRecord.totalProduction = (drawerRecord.successful || 0) + (drawerRecord.rejected || 0)" class="form-control">
+          <label class="field-label">Successful Units <span class="req-star">*</span></label>
+          <input type="number" [(ngModel)]="drawerRecord.successful" (input)="drawerRecord.totalProduction = (drawerRecord.successful || 0) + (drawerRecord.rejected || 0)" class="form-control font-mono">
         </div>
         <div class="form-group">
-          <label>Rejected Units</label>
-          <input type="number" [(ngModel)]="drawerRecord.rejected" (input)="drawerRecord.totalProduction = (drawerRecord.successful || 0) + (drawerRecord.rejected || 0)" class="form-control">
+          <label class="field-label">Rejected Units <span class="req-star">*</span></label>
+          <input type="number" [(ngModel)]="drawerRecord.rejected" (input)="drawerRecord.totalProduction = (drawerRecord.successful || 0) + (drawerRecord.rejected || 0)" class="form-control font-mono">
         </div>
         <div class="form-group">
-          <label>Total Production (Auto)</label>
-          <input type="number" [value]="(drawerRecord.successful || 0) + (drawerRecord.rejected || 0)" readonly class="form-control" style="background: var(--bg-hover); font-weight:700;">
+          <label class="field-label">Total Production (Auto)</label>
+          <input type="number" [value]="(drawerRecord.successful || 0) + (drawerRecord.rejected || 0)" readonly class="form-control readonly-input font-mono">
         </div>
       </div>
 
       <!-- PPM Drawer Fields -->
       <div *ngIf="drawerMode === 'ppm'" class="drawer-fields-grid">
         <div class="form-group">
-          <label>Month</label>
-          <select [(ngModel)]="drawerRecord.month" class="form-control">
+          <label class="field-label"><i class="bi bi-calendar-month me-1 text-primary"></i>Month <span class="req-star">*</span></label>
+          <select [(ngModel)]="drawerRecord.month" class="form-input-control">
             <option *ngFor="let m of months" [value]="m">{{ m }}</option>
           </select>
         </div>
         <div class="form-group">
-          <label>Year</label>
-          <input type="number" [(ngModel)]="drawerRecord.year" class="form-control">
+          <label class="field-label"><i class="bi bi-calendar3 me-1 text-primary"></i>Year <span class="req-star">*</span></label>
+          <input type="number" [(ngModel)]="drawerRecord.year" class="form-input-control font-mono">
         </div>
         <div class="form-group">
-          <label>Crates Produced</label>
-          <input type="number" [(ngModel)]="drawerRecord.cratesProduced" class="form-control">
+          <label class="field-label"><i class="bi bi-boxes me-1 text-primary"></i>Crates Produced <span class="req-star">*</span></label>
+          <input type="number" [(ngModel)]="drawerRecord.cratesProduced" class="form-input-control font-mono">
         </div>
         <div class="form-group">
-          <label>Electricity Units (kWh)</label>
-          <input type="number" step="0.01" [(ngModel)]="drawerRecord.electricityUnits" class="form-control">
+          <label class="field-label"><i class="bi bi-lightning-charge me-1 text-info"></i>Electricity Units <span class="field-label-unit">(kWh)</span> <span class="req-star">*</span></label>
+          <input type="number" step="0.01" [(ngModel)]="drawerRecord.electricityUnits" class="form-input-control font-mono">
         </div>
         <div class="form-group">
-          <label>Electricity Bill (₹)</label>
-          <input type="number" step="0.01" [(ngModel)]="drawerRecord.electricityBill" class="form-control">
+          <label class="field-label"><i class="bi bi-currency-rupee me-1 text-warning"></i>Electricity Bill <span class="field-label-unit">(₹)</span> <span class="req-star">*</span></label>
+          <input type="number" step="0.01" [(ngModel)]="drawerRecord.electricityBill" class="form-input-control font-mono">
+        </div>
+        <!-- Computed preview -->
+        <div class="form-group">
+          <label class="field-label"><i class="bi bi-calculator me-1 text-muted"></i>Estimated Cost / Crate <span class="auto-badge">(Preview)</span></label>
+          <input type="text" [value]="'₹' + ((drawerRecord.cratesProduced ? (drawerRecord.electricityBill / drawerRecord.cratesProduced) : 0) | number:'1.2-2')" readonly class="form-input-control readonly-input font-mono">
         </div>
       </div>
 
@@ -667,4 +1089,3 @@
     </div>
   </div>
 </div>
-

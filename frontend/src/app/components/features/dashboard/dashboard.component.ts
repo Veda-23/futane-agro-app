@@ -40,6 +40,35 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Quick Action FAB Menu (M-03)
   showFabMenu = false;
+  isRefreshing = false;
+
+  // Executive Plant Telemetry (V2)
+  plantTelemetry = {
+    shiftName: 'Shift 1 (Day)',
+    shiftTime: '08:00 - 16:00',
+    shiftProgress: 68,
+    activeLines: 26,
+    totalLines: 26,
+    fleetOee: 94.8,
+    warehouseMaxCap: 50000,
+    polymerBufferMax: 25000,
+    safePolymerThreshold: 10000
+  };
+
+  get operatingMarginPct(): number {
+    if (!this.stats?.totalSalesAmount || this.stats.totalSalesAmount === 0) return 0;
+    return (this.computedNetProfit / this.stats.totalSalesAmount) * 100;
+  }
+
+  get warehouseUtilizationPct(): number {
+    const stock = this.stats?.inventoryStock || 0;
+    return Math.min(100, Math.round((stock / this.plantTelemetry.warehouseMaxCap) * 100));
+  }
+
+  get polymerBufferPct(): number {
+    const stock = this.stats?.rawMaterialStock || 0;
+    return Math.min(100, Math.round((stock / this.plantTelemetry.polymerBufferMax) * 100));
+  }
 
   // Excel Upload State
   excelFile: File | null = null;
@@ -50,7 +79,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   salesChart: any = null;
   customersChart: any = null;
 
-  constructor(private apiService: ApiService) {}
+  constructor(
+    private apiService: ApiService,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit() {
     this.loadDashboardData();
@@ -89,14 +121,30 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.customersChart) this.customersChart.destroy();
   }
 
-  loadDashboardData() {
-    // 1. Fetch Stats & recalculate net profit (Expenses are global, but we can fetch them here or just fetch stats)
-    this.apiService.getStats().subscribe((stats: any) => {
-      this.stats = stats;
-      // Net Profit calculation needs expenses. If dashboard doesn't have expenses, we can fetch them.
-      this.apiService.getExpenses().subscribe((expenses: any) => {
-        this.recalculateNetProfit(stats, expenses);
-      });
+  loadDashboardData(isManual: boolean = false) {
+    if (isManual) {
+      this.isRefreshing = true;
+    }
+    // 1. Fetch Stats & recalculate net profit
+    this.apiService.getStats().subscribe({
+      next: (stats: any) => {
+        this.stats = stats;
+        this.apiService.getExpenses().subscribe({
+          next: (expenses: any) => {
+            this.recalculateNetProfit(stats, expenses);
+          }
+        });
+        if (isManual) {
+          setTimeout(() => { this.isRefreshing = false; }, 600);
+          this.notificationService.showDataRefreshed('Dashboard Telemetry');
+        }
+      },
+      error: () => {
+        if (isManual) {
+          setTimeout(() => { this.isRefreshing = false; }, 600);
+          this.notificationService.showDataRefreshed('Dashboard Telemetry');
+        }
+      }
     });
 
     // 2. Fetch Charts Data

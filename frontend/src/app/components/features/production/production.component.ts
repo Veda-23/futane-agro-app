@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, HostListener } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { AutoSelectDirective } from '../../../directives/auto-select.directive';
 import { FormStateDirective } from '../../../directives/form-state.directive';
 import { NotificationService } from '../../../services/notification.service';
@@ -30,6 +30,7 @@ export class ProductionComponent implements OnInit {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'production';
   @Input() loggedInUser: any = null;
+  @Output() onNavigateTab = new EventEmitter<string>();
 
   // Global Filters passed from parent
   @Input() filterSearchQuery: string = '';
@@ -41,6 +42,9 @@ export class ProductionComponent implements OnInit {
   @Input() filterStatus: string = '';
 
   isLoading = true;
+  isRefreshing = false;
+  isFormVisible = false;
+  isPpmFormVisible = false;
   hasError = false;
   Math = Math;
 
@@ -120,6 +124,24 @@ export class ProductionComponent implements OnInit {
   shifts = ['Morning Shift', 'Afternoon Shift', 'Night Shift'];
   months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
+  getPpdTotal(): number {
+    return (this.ppdList || []).reduce((acc, curr) => acc + (Number(curr.totalProduction) || 0), 0);
+  }
+
+  getPpdSuccessful(): number {
+    return (this.ppdList || []).reduce((acc, curr) => acc + (Number(curr.successful) || 0), 0);
+  }
+
+  getPpdRejected(): number {
+    return (this.ppdList || []).reduce((acc, curr) => acc + (Number(curr.rejected) || 0), 0);
+  }
+
+  getPpdEfficiency(): number {
+    const total = this.getPpdTotal();
+    const successful = this.getPpdSuccessful();
+    return total > 0 ? (successful / total) * 100 : 0;
+  }
+
   constructor(
     private apiService: ApiService,
     private notificationService: NotificationService
@@ -164,6 +186,7 @@ export class ProductionComponent implements OnInit {
   // --- Data Loading ---
   loadData() {
     this.isLoading = true;
+    this.isRefreshing = true;
     this.hasError = false;
     forkJoin({
       ppd: this.apiService.getPpd(),
@@ -173,13 +196,109 @@ export class ProductionComponent implements OnInit {
         this.ppdList = ppd || [];
         this.ppmList = ppm || [];
         this.isLoading = false;
+        setTimeout(() => this.isRefreshing = false, 400);
       },
       error: (err) => {
         this.isLoading = false;
+        this.isRefreshing = false;
         this.hasError = true;
         this.notificationService.error('Load Failed', 'Could not load production data.');
       }
     });
+  }
+
+  toggleFormVisibility() {
+    this.isFormVisible = !this.isFormVisible;
+  }
+
+  togglePpmFormVisibility() {
+    this.isPpmFormVisible = !this.isPpmFormVisible;
+  }
+
+  switchSubTab(tab: string) {
+    this.activeTab = tab;
+    this.onNavigateTab.emit(tab);
+  }
+
+  getActiveFilterCount(tableKey: string): number {
+    let count = 0;
+    if (this.filterSearchQuery && this.filterSearchQuery.trim()) count++;
+    if (this.filterDate) count++;
+    if (tableKey === 'ppd') {
+      if (this.tabFilterCrateType) count++;
+      if (this.tabFilterShift) count++;
+      if (this.tabFilterMinSuccessful !== null && this.tabFilterMinSuccessful > 0) count++;
+      if (this.tabFilterMinEfficiency > 0) count++;
+    } else {
+      if (this.tabFilterPpmMonth) count++;
+      if (this.tabFilterPpmYear) count++;
+      if (this.tabFilterPpmMinCrates !== null && this.tabFilterPpmMinCrates > 0) count++;
+    }
+    return count;
+  }
+
+  resetFilters(tableKey: string) {
+    this.filterSearchQuery = '';
+    this.filterDate = '';
+    this.filterDateFrom = '';
+    this.filterDateTo = '';
+    if (tableKey === 'ppd') {
+      this.tabFilterCrateType = '';
+      this.tabFilterShift = '';
+      this.tabFilterMinSuccessful = null;
+      this.tabFilterMinEfficiency = 0;
+    } else {
+      this.tabFilterPpmMonth = '';
+      this.tabFilterPpmYear = '';
+      this.tabFilterPpmMinCrates = null;
+    }
+    this.currentPage = 1;
+    this.notificationService.info('Filters Reset', 'All search and category filters have been cleared.');
+  }
+
+  startEditInForm(item: any) {
+    this.ppdForm = {
+      id: item.id,
+      date: item.date,
+      crateType: item.crateType,
+      totalProduction: item.totalProduction,
+      successful: item.successful,
+      rejected: item.rejected,
+      shift: item.shift || 'Morning Shift'
+    };
+    this.isFormVisible = true;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  startPpmEditInForm(item: any) {
+    this.ppmForm = {
+      id: item.id,
+      month: item.month,
+      year: item.year,
+      cratesProduced: item.cratesProduced,
+      electricityUnits: item.electricityUnits,
+      electricityBill: item.electricityBill
+    };
+    this.isPpmFormVisible = true;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  getPpmTotalCrates(): number {
+    return (this.ppmList || []).reduce((acc, curr) => acc + (Number(curr.cratesProduced) || 0), 0);
+  }
+
+  getPpmTotalUnits(): number {
+    return (this.ppmList || []).reduce((acc, curr) => acc + (Number(curr.electricityUnits) || 0), 0);
+  }
+
+  getPpmTotalBill(): number {
+    return (this.ppmList || []).reduce((acc, curr) => acc + (Number(curr.electricityBill) || 0), 0);
+  }
+
+  getPpmAvgCostPerCrate(): number {
+    const crates = this.getPpmTotalCrates();
+    const bill = this.getPpmTotalBill();
+    return crates > 0 ? bill / crates : 0;
   }
 
   // --- Role Checkers ---
