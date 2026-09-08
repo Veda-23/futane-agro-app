@@ -21,11 +21,11 @@
         <span class="pill-dot"></span>
         {{ isUat ? 'UAT 8081' : 'PROD 8080' }}
       </span>
-      <span class="telemetry-pill time-pill" title="Indian Standard Time (IST)">
+      <span class="telemetry-pill time-pill" [title]="currentDate + ' • ' + currentTime + ' (IST)'">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
           <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
         </svg>
-        {{ currentDate }} • {{ currentTime }}
+        {{ currentTime }}
       </span>
     </div>
   </div>
@@ -40,7 +40,7 @@
         #searchInput
         type="text" 
         class="omnisearch-input" 
-        placeholder="Search ERP modules, orders..."
+        placeholder="Search ERP..."
         [(ngModel)]="globalSearchQuery"
         (input)="doGlobalSearch()"
         (focus)="doGlobalSearch()">
