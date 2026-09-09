@@ -10,15 +10,23 @@ export class NotificationService {
 
   /**
    * Enterprise Standard Top-Right Toast for Instant User Feedback
-   * Glassmorphic, non-intrusive, positioned gracefully at top-right below the header.
+   * Reusable structure matching design spec:
+   * - 32x32px circular solid badge with centered white icon
+   * - 14px medium title (accent colored) + 13px regular subtitle (secondary gray) with 2px gap
+   * - Top-right dismiss button (muted gray, hover state)
+   * - 2px linear progress bar matching the accent color
    */
-  private showToast(icon: 'success' | 'info' | 'warning' | 'error', title: string, text: string = '') {
-    const isDark = document.body.classList.contains('dark-theme');
+  private showToast(
+    icon: 'success' | 'info' | 'warning' | 'error',
+    title: string,
+    text: string = '',
+    customIconHtml?: string
+  ) {
     const iconHtmlMap = {
-      success: '<i class="bi bi-check-circle-fill"></i>',
-      error: '<i class="bi bi-x-circle-fill"></i>',
-      warning: '<i class="bi bi-exclamation-triangle-fill"></i>',
-      info: '<i class="bi bi-info-circle-fill"></i>'
+      success: '<i class="bi bi-check-lg"></i>',
+      error: '<i class="bi bi-x-lg"></i>',
+      warning: '<i class="bi bi-exclamation-lg"></i>',
+      info: '<i class="bi bi-info-lg"></i>'
     };
 
     const htmlContent = `
@@ -31,7 +39,8 @@ export class NotificationService {
     Swal.fire({
       toast: true,
       position: 'top-end',
-      iconHtml: iconHtmlMap[icon] || iconHtmlMap.info,
+      icon: icon,
+      iconHtml: customIconHtml || iconHtmlMap[icon] || iconHtmlMap.info,
       html: htmlContent,
       showConfirmButton: false,
       showCloseButton: true,
@@ -55,10 +64,19 @@ export class NotificationService {
   }
 
   /**
+   * Executive Telemetry Notification Spec
+   * Title: "Executive telemetry refreshed"
+   * Subtitle: "Latest records pulled from server just now."
+   */
+  showExecutiveTelemetryRefreshed() {
+    this.success('Executive telemetry refreshed', 'Latest records pulled from server just now.');
+  }
+
+  /**
    * Backward-compatible & Enterprise Standard Methods
    */
-  success(title: string, text: string = '') {
-    this.showToast('success', title, text);
+  success(title: string, text: string = '', customIconHtml?: string) {
+    this.showToast('success', title, text, customIconHtml);
   }
 
   error(title: string, text: string = '') {
@@ -97,38 +115,38 @@ export class NotificationService {
     }).then(res => res.isConfirmed);
   }
 
-  showSuccess(message: string = 'Operation completed successfully.') {
-    this.success('Success', message);
+  showSuccess(message: string = 'Operation completed.') {
+    this.success('Action completed', message);
   }
 
   showInfo(message: string = '') {
     this.info('Information', message);
   }
 
-  showSaveSuccess(message: string = 'Record added successfully.') {
-    this.success('Saved Successfully', message);
+  showSaveSuccess(message: string = 'Record added to database.') {
+    this.success('Record saved', message);
   }
 
-  showUpdateSuccess(message: string = 'Record updated successfully.') {
-    this.success('Updated Successfully', message);
+  showUpdateSuccess(message: string = 'Changes saved to database.') {
+    this.success('Record updated', message);
   }
 
-  async showDeleteConfirm(title: string = 'Delete Record?', text: string = 'This action cannot be undone.'): Promise<boolean> {
+  async showDeleteConfirm(title: string = 'Delete record?', text: string = 'This action cannot be undone.'): Promise<boolean> {
     return this.confirmAction(title, text, 'Yes, Delete');
   }
 
-  showDeleteSuccess(message: string = 'Record deleted successfully.') {
-    this.success('Deleted', message);
+  showDeleteSuccess(message: string = 'Record removed from database.') {
+    this.success('Record deleted', message);
   }
 
   showValidationError(message: string, focusElementId?: string) {
     const isDark = document.body.classList.contains('dark-theme');
     Swal.fire({
       icon: 'warning',
-      title: 'Validation Error',
+      title: 'Validation error',
       text: message,
       confirmButtonColor: '#f59e0b',
-      confirmButtonText: 'Fix Issue',
+      confirmButtonText: 'Fix issue',
       showCloseButton: true,
       background: isDark ? '#0f172a' : '#ffffff',
       color: isDark ? '#f8fafc' : '#0f172a',
@@ -162,13 +180,13 @@ export class NotificationService {
     let title = 'Error';
     let message = error?.error?.message || error?.message || 'An unexpected error occurred.';
 
-    if (status === 400) { title = 'Bad Request'; }
+    if (status === 400) { title = 'Bad request'; }
     else if (status === 401) { title = 'Unauthorized'; message = 'Session expired. Please log in again.'; }
-    else if (status === 403) { title = 'Access Denied'; message = 'You do not have permission to perform this action.'; }
-    else if (status === 404) { title = 'Not Found'; message = 'The requested resource was not found.'; }
+    else if (status === 403) { title = 'Access denied'; message = 'You do not have permission to perform this action.'; }
+    else if (status === 404) { title = 'Not found'; message = 'The requested resource was not found.'; }
     else if (status === 409) { title = 'Conflict'; message = 'A duplicate record already exists.'; }
-    else if (status === 422) { title = 'Validation Failed'; }
-    else if (status >= 500) { title = 'Server Error'; message = 'Server is currently unavailable. Please try again later.'; }
+    else if (status === 422) { title = 'Validation failed'; }
+    else if (status >= 500) { title = 'Server error'; message = 'Server is currently unavailable. Please try again later.'; }
 
     this.error(title, message);
   }
@@ -201,9 +219,9 @@ export class NotificationService {
     const isDark = document.body.classList.contains('dark-theme');
     Swal.fire({
       icon: 'warning',
-      title: 'Session Expired',
+      title: 'Session expired',
       text: 'Your session has expired due to inactivity. Please log in again.',
-      confirmButtonText: 'Login Again',
+      confirmButtonText: 'Login again',
       confirmButtonColor: '#d97706',
       showCloseButton: true,
       allowOutsideClick: false,
@@ -221,23 +239,27 @@ export class NotificationService {
   }
 
   showExportStart(type: string = 'Export') {
-    this.info(`${type} Started`, 'Generating document, please wait...');
+    this.info(`${type} started`, 'Generating document, please wait...');
   }
 
   showExportSuccess(type: string = 'Export') {
-    this.success(`${type} Completed`, 'File generated and downloaded successfully.');
+    this.success(`${type} completed`, 'File generated and downloaded to device.');
   }
 
   showExportFailed(type: string = 'Export', errorMsg: string = '') {
-    this.error(`${type} Failed`, errorMsg || 'Could not complete export request.');
+    this.error(`${type} failed`, errorMsg || 'Could not complete export request.');
   }
 
-  showNoRecordsFound(message: string = 'No Records Found') {
-    this.info('No Data', message);
+  showNoRecordsFound(message: string = 'No records found.') {
+    this.info('No data', message);
   }
 
   showDataRefreshed(moduleName: string = 'Data', count?: number) {
-    const text = count !== undefined ? `${count} records synchronized.` : 'Latest records refreshed from server.';
-    this.success(`${moduleName} Refreshed`, text);
+    if (!moduleName || moduleName.toLowerCase().includes('telemetry') || moduleName.toLowerCase().includes('executive')) {
+      this.showExecutiveTelemetryRefreshed();
+      return;
+    }
+    const text = count !== undefined ? `${count} records synchronized.` : 'Latest records pulled from server just now.';
+    this.success(`${moduleName} refreshed`, text);
   }
 }
