@@ -37,8 +37,6 @@ export class NotificationService {
       showCloseButton: true,
       timer: 4000,
       timerProgressBar: true,
-      background: isDark ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.98)',
-      color: isDark ? '#f8fafc' : '#0f172a',
       customClass: {
         container: 'futane-toast-container-top',
         popup: `futane-toast-popup futane-toast-${icon}`,
