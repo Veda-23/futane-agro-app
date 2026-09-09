@@ -1625,28 +1625,22 @@ body.dark-theme .density-btn.active {
    15. ENTERPRISE TOAST & NOTIFICATION SYSTEM (STANDARD TOP-RIGHT)
    ────────────────────────────────────────────────────────────────────────── */
 
-/* Container placement: Standard Top-Right, offset below fixed header (64px + 14px = 78px) */
+/* Container placement: Standard Top-Right, cleanly offset below fixed header (76px) */
 .swal2-container.swal2-top-end,
 .swal2-container.futane-toast-container-top {
-  top: 76px !important;
-  right: 20px !important;
-  padding: 0 !important;
-  overflow: visible !important;
-  z-index: 999999 !important;
-  pointer-events: none !important;
-}
-
-/* Toast Card Base */
-.futane-toast-container-top {
   position: fixed !important;
-  top: 14px !important;
-  right: 18px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-end !important;
-  gap: 10px !important;
-  z-index: 999999 !important;
+  top: 76px !important;
+  right: 24px !important;
+  left: auto !important;
+  bottom: auto !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  z-index: 9999999 !important;
   pointer-events: none !important;
+  background: transparent !important;
 }
 
 /* Toast Card Container & Base Structure */
@@ -1655,22 +1649,38 @@ body.dark-theme .density-btn.active {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
-  width: auto !important;
-  min-width: 320px !important;
-  max-width: 440px !important;
+  width: 390px !important;
+  min-width: 390px !important;
+  max-width: 390px !important;
   padding: 14px 40px 14px 16px !important;
   border-radius: var(--radius-lg, 12px) !important;
   gap: 12px !important;
   background: var(--bg-card, #ffffff) !important;
-  box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05)) !important;
+  box-shadow: 0 10px 25px -3px rgba(15, 23, 42, 0.09), 0 4px 6px -4px rgba(15, 23, 42, 0.04) !important;
   position: relative !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
-  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  margin: 0 0 12px 0 !important;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease !important;
+}
+
+@media (max-width: 440px) {
+  .swal2-container.swal2-top-end,
+  .swal2-container.futane-toast-container-top {
+    right: 16px !important;
+    left: 16px !important;
+    top: 72px !important;
+  }
+  .futane-toast-popup.swal2-toast {
+    width: calc(100vw - 32px) !important;
+    min-width: calc(100vw - 32px) !important;
+    max-width: calc(100vw - 32px) !important;
+  }
 }
 
 .futane-toast-popup.swal2-toast:hover {
-  box-shadow: var(--shadow-lg, 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04)) !important;
+  transform: translateY(-2px) scale(1.008) !important;
+  box-shadow: 0 16px 32px -4px rgba(15, 23, 42, 0.14), 0 6px 12px -2px rgba(15, 23, 42, 0.06) !important;
 }
 
 /* 1. SUCCESS VARIANT (Spec: White/Surface Card, 1px Success-Tinted Border, 14px Medium Green Title) */
@@ -1733,43 +1743,43 @@ body.dark-theme .density-btn.active {
 /* DARK THEME TOAST ACCENTS                                                  */
 /* ========================================================================= */
 body.dark-theme .futane-toast-popup.swal2-toast {
-  background: var(--bg-surface, #1e293b) !important;
-  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45), 0 2px 6px -1px rgba(0, 0, 0, 0.3) !important;
+  background: #0f172a !important;
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.75), 0 4px 12px -2px rgba(0, 0, 0, 0.4) !important;
 }
 
 body.dark-theme .futane-toast-popup.futane-toast-success {
-  border-color: rgba(16, 185, 129, 0.38) !important;
+  border: 1px solid rgba(16, 185, 129, 0.45) !important;
 }
 body.dark-theme .futane-toast-popup.futane-toast-success .futane-toast-heading {
   color: #34d399 !important;
 }
 
 body.dark-theme .futane-toast-popup.futane-toast-error {
-  border-color: rgba(239, 68, 68, 0.38) !important;
+  border: 1px solid rgba(239, 68, 68, 0.45) !important;
 }
 body.dark-theme .futane-toast-popup.futane-toast-error .futane-toast-heading {
   color: #f87171 !important;
 }
 
 body.dark-theme .futane-toast-popup.futane-toast-warning {
-  border-color: rgba(245, 158, 11, 0.38) !important;
+  border: 1px solid rgba(245, 158, 11, 0.45) !important;
 }
 body.dark-theme .futane-toast-popup.futane-toast-warning .futane-toast-heading {
   color: #fbbf24 !important;
 }
 
 body.dark-theme .futane-toast-popup.futane-toast-info {
-  border-color: rgba(59, 130, 246, 0.38) !important;
+  border: 1px solid rgba(59, 130, 246, 0.45) !important;
 }
 body.dark-theme .futane-toast-popup.futane-toast-info .futane-toast-heading {
   color: #60a5fa !important;
 }
 
 body.dark-theme .futane-toast-message {
-  color: var(--text-muted, #94a3b8) !important;
+  color: #94a3b8 !important;
 }
 
-/* Icon Badge: 32x32px Circle, Solid Fill, White Centered Icon */
+/* Icon Badge: 32x32px Circle, Solid Fill, Micro-Bounce Spring */
 .futane-toast-popup .swal2-icon {
   width: 32px !important;
   height: 32px !important;
@@ -1786,16 +1796,13 @@ body.dark-theme .futane-toast-message {
   justify-content: center !important;
   flex-shrink: 0 !important;
   box-shadow: none !important;
+  animation: futaneBadgePop 0.42s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
 }
 
-.futane-toast-popup .swal2-icon i {
-  color: #ffffff !important;
-  font-size: 16px !important;
-  font-weight: 700 !important;
-  line-height: 1 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+.futane-toast-popup .swal2-icon svg {
+  display: block !important;
+  margin: auto !important;
+  pointer-events: none !important;
 }
 
 /* Hide SweetAlert default animated mark elements */
@@ -1824,19 +1831,19 @@ body.dark-theme .futane-toast-message {
   flex: 1 !important;
 }
 
-/* Text Block: Title (14px, Medium 500, Variant Color) */
+/* Text Block: Title (14px, 600 weight, Variant Color) */
 .futane-toast-heading {
-  font-family: var(--font-family, 'Inter', sans-serif) !important;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
   font-size: 14px !important;
-  font-weight: 500 !important;
-  line-height: 1.4 !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
   margin: 0 !important;
-  letter-spacing: -0.1px !important;
+  letter-spacing: -0.15px !important;
 }
 
 /* Text Block: Subtitle (13px, Regular 400, Secondary Gray) */
 .futane-toast-message {
-  font-family: var(--font-family, 'Inter', sans-serif) !important;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
   font-size: 13px !important;
   font-weight: 400 !important;
   line-height: 1.4 !important;
@@ -1844,50 +1851,60 @@ body.dark-theme .futane-toast-message {
   margin: 0 !important;
 }
 
-/* Dismiss Button: Small "x", Muted Gray, Top-Right, No Border/Background, Clickable with Hover */
+/* Dismiss Button: Vector "x", Muted Gray, Top-Right, No Border/Background, Clickable with Hover */
 .futane-toast-popup .futane-toast-close,
 .futane-toast-popup .swal2-close {
   position: absolute !important;
   top: 12px !important;
   right: 12px !important;
-  width: 22px !important;
-  height: 22px !important;
-  font-size: 16px !important;
-  line-height: 1 !important;
+  width: 24px !important;
+  height: 24px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   color: var(--text-muted, #94a3b8) !important;
   background: transparent !important;
   border: none !important;
-  border-radius: 4px !important;
+  border-radius: 6px !important;
   outline: none !important;
   cursor: pointer !important;
   padding: 0 !important;
   margin: 0 !important;
-  transition: color 0.15s ease, background-color 0.15s ease !important;
+  transition: color 0.15s ease, background-color 0.15s ease, transform 0.15s ease !important;
+}
+
+.futane-toast-popup .futane-toast-close svg,
+.futane-toast-popup .swal2-close svg {
+  display: block !important;
+  pointer-events: none !important;
 }
 
 .futane-toast-popup .futane-toast-close:hover,
 .futane-toast-popup .swal2-close:hover {
   color: var(--text-primary, #0f172a) !important;
   background: var(--bg-hover, #f1f5f9) !important;
+  transform: scale(1.1) !important;
 }
 
 body.dark-theme .futane-toast-popup .futane-toast-close:hover,
 body.dark-theme .futane-toast-popup .swal2-close:hover {
   color: #ffffff !important;
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.14) !important;
 }
 
-/* Auto-Dismiss Progress Bar: Thin 2px Bar Directly Under Toast Card, Matching Accent Fill */
+/* Auto-Dismiss Progress Bar: Thin 2.5px Bar Pinned Directly to Bottom Edge */
 .futane-toast-popup .swal2-timer-progress-bar {
   position: absolute !important;
   bottom: 0 !important;
   left: 0 !important;
-  height: 2px !important;
+  right: 0 !important;
+  width: 100% !important;
+  height: 2.5px !important;
   border-radius: 0 0 var(--radius-lg, 12px) var(--radius-lg, 12px) !important;
   opacity: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  z-index: 10 !important;
 }
 
 .futane-toast-popup.futane-toast-success .swal2-timer-progress-bar,
@@ -1910,22 +1927,22 @@ body.dark-theme .futane-toast-popup .swal2-close:hover {
   background: var(--color-info, #3b82f6) !important;
 }
 
-/* Smooth Slide In Animation from Top-Right */
+/* Dynamic Spring Animations */
 .swal2-toast-show {
-  animation: futaneToastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  animation: futaneToastSlideIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
 }
 
 .swal2-toast-hide {
-  animation: futaneToastSlideOut 0.25s ease-in forwards !important;
+  animation: futaneToastSlideOut 0.25s cubic-bezier(0.4, 0, 1, 1) forwards !important;
 }
 
 @keyframes futaneToastSlideIn {
   0% {
-    transform: translateX(110%) scale(0.95);
+    transform: translateX(120%) scale(0.94);
     opacity: 0;
   }
-  70% {
-    transform: translateX(-6px) scale(1.01);
+  65% {
+    transform: translateX(-4px) scale(1.01);
     opacity: 1;
   }
   100% {
@@ -1940,8 +1957,23 @@ body.dark-theme .futane-toast-popup .swal2-close:hover {
     opacity: 1;
   }
   100% {
-    transform: translateX(110%) scale(0.95);
+    transform: translateX(120%) scale(0.92);
     opacity: 0;
+  }
+}
+
+@keyframes futaneBadgePop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  65% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 

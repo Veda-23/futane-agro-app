@@ -16,18 +16,30 @@ export class NotificationService {
    * - Top-right dismiss button (muted gray, hover state)
    * - 2px linear progress bar matching the accent color
    */
+  /**
+   * Enterprise Standard Top-Right Toast for Instant User Feedback
+   * Reusable structure matching design spec:
+   * - 32x32px circular solid badge with crisp white inline vector SVG icon (zero missing font glyphs)
+   * - Fixed 390px uniform width (never jumps or resizes unpredictably)
+   * - 14px 600-weight title (accent colored) + 13px regular subtitle (secondary gray) with 2px gap
+   * - Top-right vector dismiss button with hover animation
+   * - 2.5px linear progress bar pinned directly to the bottom edge
+   * - Interactive: hovering pauses timer and raises card
+   */
   private showToast(
     icon: 'success' | 'info' | 'warning' | 'error',
     title: string,
     text: string = '',
     customIconHtml?: string
   ) {
-    const iconHtmlMap = {
-      success: '<i class="bi bi-check-lg"></i>',
-      error: '<i class="bi bi-x-lg"></i>',
-      warning: '<i class="bi bi-exclamation-lg"></i>',
-      info: '<i class="bi bi-info-lg"></i>'
+    const iconSvgMap = {
+      success: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+      error: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
+      warning: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="13"></line><circle cx="12" cy="17" r="1.2" fill="#ffffff"></circle></svg>`,
+      info: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="1.2" fill="#ffffff"></circle><line x1="12" y1="11" x2="12" y2="17"></line></svg>`
     };
+
+    const closeBtnSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
 
     const htmlContent = `
       <div class="futane-toast-body-wrapper">
@@ -40,12 +52,17 @@ export class NotificationService {
       toast: true,
       position: 'top-end',
       icon: icon,
-      iconHtml: customIconHtml || iconHtmlMap[icon] || iconHtmlMap.info,
+      iconHtml: customIconHtml || iconSvgMap[icon] || iconSvgMap.info,
       html: htmlContent,
       showConfirmButton: false,
       showCloseButton: true,
+      closeButtonHtml: closeBtnSvg,
       timer: 4000,
       timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.onmouseenter = Swal.stopTimer;
+        toast.onmouseleave = Swal.resumeTimer;
+      },
       customClass: {
         container: 'futane-toast-container-top',
         popup: `futane-toast-popup futane-toast-${icon}`,
