@@ -32,22 +32,17 @@ export class NotificationService {
     customIconHtml?: string
   ) {
     const iconSvgMap = {
-      success: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
-      error: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
-      warning: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="13"></line><circle cx="12" cy="17" r="1.2" fill="#ffffff"></circle></svg>`,
-      info: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="1.2" fill="#ffffff"></circle><line x1="12" y1="11" x2="12" y2="17"></line></svg>`
+      success: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+      error: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
+      warning: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="13"></line><circle cx="12" cy="17" r="1.2" fill="#ffffff"></circle></svg>`,
+      info: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="1.2" fill="#ffffff"></circle><line x1="12" y1="11" x2="12" y2="17"></line></svg>`
     };
 
-    const closeBtnSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+    const closeBtnSvg = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
 
     const htmlContent = `
       <div class="futane-toast-body-wrapper">
-        <div class="futane-toast-header-row">
-          <span class="futane-toast-heading">${title}</span>
-          <span class="futane-toast-tag futane-toast-tag-${icon}">
-            <span class="futane-toast-dot"></span>Live
-          </span>
-        </div>
+        <div class="futane-toast-heading">${title}</div>
         ${text ? `<div class="futane-toast-message">${text}</div>` : ''}
       </div>
     `;
@@ -61,7 +56,7 @@ export class NotificationService {
       showConfirmButton: false,
       showCloseButton: true,
       closeButtonHtml: closeBtnSvg,
-      timer: 4200,
+      timer: 3800,
       timerProgressBar: true,
       didOpen: (toast) => {
         toast.onmouseenter = Swal.stopTimer;
@@ -76,10 +71,10 @@ export class NotificationService {
         icon: `futane-toast-icon-wrapper futane-toast-icon-${icon}`
       },
       showClass: {
-        popup: 'swal2-toast-show'
+        popup: 'futane-toast-animate-in swal2-show'
       },
       hideClass: {
-        popup: 'swal2-toast-hide'
+        popup: 'futane-toast-animate-out swal2-hide'
       }
     });
   }
