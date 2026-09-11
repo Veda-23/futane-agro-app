@@ -1,354 +1,228 @@
 <div class="machines-module-container animated-fade">
-  <!-- 1. Breadcrumbs & Telemetry Header -->
-  <header class="module-header-telemetry no-print">
-    <div class="header-title-group">
-      <nav class="breadcrumb-nav" aria-label="Breadcrumb">
-        <ol class="breadcrumb-list">
-          <li class="breadcrumb-item">FACTORY OPERATIONS</li>
-          <li class="breadcrumb-separator"><i class="bi bi-chevron-right"></i></li>
-          <li class="breadcrumb-item active">EQUIPMENT REGISTRY</li>
-        </ol>
-      </nav>
-      <div class="title-with-badge">
-        <div class="header-squircle-icon">
-          <i class="bi bi-cpu-fill"></i>
-        </div>
-        <div>
-          <h1 class="page-title">Machines & Factory Assets</h1>
-          <p class="page-subtitle">Heavy injection moulding units, hourly throughput capacity, and breakdown maintenance ledger.</p>
-        </div>
-      </div>
+  <!-- 1. Enterprise Page Header -->
+  <div class="erp-page-header no-print">
+    <div class="erp-page-header-left">
+      <div class="erp-breadcrumb">FACTORY OPERATIONS <i class="bi bi-chevron-right mx-1"></i> EQUIPMENT REGISTRY</div>
+      <h1 class="erp-page-title"><i class="bi bi-cpu-fill me-2 text-primary"></i> Injection Molding Machines & OEE Metrics</h1>
+      <p class="erp-page-subtitle">Heavy injection moulding units, hourly throughput capacity, and breakdown maintenance ledger.</p>
     </div>
-
-    <div class="header-actions">
-      <div class="telemetry-pill">
-        <span class="telemetry-dot pulse"></span>
-        <span class="telemetry-text">FLEET CAPACITY: {{ fleetCapacityPerHour | number }} CRATES/HR &bull; UTILIZATION: {{ fleetUtilizationRate }}%</span>
+    
+    <div class="erp-page-header-right">
+      <div class="erp-status-badge badge-soft-info me-3">
+        <i class="bi bi-lightning-charge-fill me-1 text-warning"></i> 
+        <span>FLEET CAPACITY: {{ fleetCapacityPerHour | number }} CRATES/HR &bull; UTILIZATION: {{ fleetUtilizationRate }}%</span>
       </div>
-      <button type="button" class="btn btn-secondary btn-sm" (click)="loadData()" [disabled]="isLoading" title="Refresh machinery records">
+      <button type="button" class="btn btn-outline-secondary btn-sm" (click)="loadData()" [disabled]="isLoading" title="Refresh machinery records">
         <i class="bi bi-arrow-clockwise me-1" [class.spin-anim]="isLoading"></i>
         <span>Refresh</span>
       </button>
-    </div>
-  </header>
-
-  <!-- Maintenance Attention Alert Banner -->
-  <div *ngIf="machineDueCount > 0" class="maintenance-alert-banner">
-    <div class="alert-icon-wrap">
-      <i class="bi bi-exclamation-triangle-fill text-warning"></i>
-    </div>
-    <div class="alert-content">
-      <strong>{{ machineDueCount }} Machinery Unit(s) Require Maintenance Attention</strong>
-      <p>Service logs are missing or last preventive overhaul was recorded over 30 days ago. Check unit calibration to avoid production outages.</p>
+      <button *ngIf="!isViewer() && activeSubTab === 'machines'" type="button" class="btn btn-primary btn-sm ms-2" (click)="resetMachineForm(); editingMachineId = null; formMode = 'machine'">
+        <i class="bi bi-plus-lg me-1"></i> Add Machine
+      </button>
+      <button *ngIf="!isViewer() && activeSubTab === 'breakdowns'" type="button" class="btn btn-primary btn-sm ms-2" (click)="resetBreakdownForm(); editingBreakdownId = null; formMode = 'breakdown'">
+        <i class="bi bi-plus-lg me-1"></i> Log Breakdown
+      </button>
     </div>
   </div>
 
-  <!-- 2. 4-Column Responsive KPI Telemetry Cards -->
-  <section class="telemetry-kpi-grid">
+  <!-- Maintenance Attention Alert Banner -->
+  <div *ngIf="machineDueCount > 0" class="erp-alert alert-warning mb-3">
+    <i class="bi bi-exclamation-triangle-fill alert-icon"></i>
+    <div class="alert-content">
+      <strong>{{ machineDueCount }} Machinery Unit(s) Require Maintenance Attention</strong>
+      <p class="mb-0">Service logs are missing or last preventive overhaul was recorded over 30 days ago. Check unit calibration to avoid production outages.</p>
+    </div>
+  </div>
+
+  <!-- 2. Standardized Enterprise KPI Grid -->
+  <section class="erp-kpi-grid mb-4">
     <!-- KPI 1: Total Fleet Units -->
-    <div class="kpi-card glass-panel" (click)="statusFilter = 'ALL'; switchSubTab('machines')">
-      <div class="kpi-header">
-        <span class="kpi-title">Total Equipment Fleet</span>
-        <div class="kpi-icon-squircle icon-blue">
-          <i class="bi bi-cpu-fill"></i>
-        </div>
+    <div class="erp-kpi-card" (click)="statusFilter = 'ALL'; switchSubTab('machines')">
+      <div class="kpi-icon-wrap bg-soft-primary text-primary">
+        <i class="bi bi-cpu-fill"></i>
       </div>
-      <div class="kpi-body">
-        <h3 class="kpi-value">{{ totalMachinesCount }}</h3>
-        <span class="kpi-trend trend-neutral">
-          <i class="bi bi-layers-fill me-1"></i> Registered Units
-        </span>
-      </div>
-      <div class="kpi-footer">
-        <span class="kpi-subtext">Active plant machinery floor</span>
+      <div class="kpi-info">
+        <div class="kpi-label">Total Equipment Fleet</div>
+        <div class="kpi-value">{{ totalMachinesCount }}</div>
+        <div class="kpi-trend text-muted"><i class="bi bi-layers-fill me-1"></i> Registered Units</div>
       </div>
     </div>
 
     <!-- KPI 2: Active / Running -->
-    <div class="kpi-card glass-panel" (click)="statusFilter = 'Running'; switchSubTab('machines')">
-      <div class="kpi-header">
-        <span class="kpi-title">Online &amp; Producing</span>
-        <div class="kpi-icon-squircle icon-emerald">
-          <i class="bi bi-play-circle-fill"></i>
-        </div>
+    <div class="erp-kpi-card" (click)="statusFilter = 'Running'; switchSubTab('machines')">
+      <div class="kpi-icon-wrap bg-soft-success text-success">
+        <i class="bi bi-play-circle-fill"></i>
       </div>
-      <div class="kpi-body">
-        <h3 class="kpi-value text-success">{{ runningMachinesCount }}</h3>
-        <span class="kpi-trend trend-positive">
-          <i class="bi bi-speedometer2 me-1"></i> {{ fleetUtilizationRate }}% In Service
-        </span>
-      </div>
-      <div class="kpi-footer">
-        <span class="kpi-subtext">Running moulding batches</span>
+      <div class="kpi-info">
+        <div class="kpi-label">Online & Producing</div>
+        <div class="kpi-value text-success">{{ runningMachinesCount }}</div>
+        <div class="kpi-trend text-success"><i class="bi bi-speedometer2 me-1"></i> {{ fleetUtilizationRate }}% In Service</div>
       </div>
     </div>
 
-    <!-- KPI 3: Maintenance / Offline -->
-    <div class="kpi-card glass-panel" (click)="statusFilter = 'Under Maintenance'; switchSubTab('machines')">
-      <div class="kpi-header">
-        <span class="kpi-title">Maintenance / Idle</span>
-        <div class="kpi-icon-squircle icon-amber">
-          <i class="bi bi-tools"></i>
-        </div>
+    <!-- KPI 3: Maintenance / Idle -->
+    <div class="erp-kpi-card" (click)="statusFilter = 'Under Maintenance'; switchSubTab('machines')">
+      <div class="kpi-icon-wrap bg-soft-warning text-warning">
+        <i class="bi bi-tools"></i>
       </div>
-      <div class="kpi-body">
-        <h3 class="kpi-value" [class.text-warning]="maintenanceMachinesCount > 0">{{ maintenanceMachinesCount }}</h3>
-        <span class="kpi-trend" [class.trend-negative]="maintenanceMachinesCount > 0" [class.trend-neutral]="maintenanceMachinesCount === 0">
+      <div class="kpi-info">
+        <div class="kpi-label">Maintenance / Idle</div>
+        <div class="kpi-value" [class.text-warning]="maintenanceMachinesCount > 0">{{ maintenanceMachinesCount }}</div>
+        <div class="kpi-trend" [class.text-danger]="maintenanceMachinesCount > 0" [class.text-muted]="maintenanceMachinesCount === 0">
           <i class="bi bi-wrench-adjustable me-1"></i> {{ totalDowntimeHours }} hrs logged
-        </span>
-      </div>
-      <div class="kpi-footer">
-        <span class="kpi-subtext">Idle or under repair</span>
+        </div>
       </div>
     </div>
 
     <!-- KPI 4: Plant Throughput -->
-    <div class="kpi-card glass-panel" (click)="switchSubTab('machines')">
-      <div class="kpi-header">
-        <span class="kpi-title">Rated Plant Throughput</span>
-        <div class="kpi-icon-squircle icon-purple">
-          <i class="bi bi-lightning-charge-fill"></i>
-        </div>
+    <div class="erp-kpi-card" (click)="switchSubTab('machines')">
+      <div class="kpi-icon-wrap bg-soft-info text-info">
+        <i class="bi bi-lightning-charge-fill"></i>
       </div>
-      <div class="kpi-body">
-        <h3 class="kpi-value text-info font-mono">{{ fleetCapacityPerHour | number }}</h3>
-        <span class="kpi-trend trend-neutral">
-          <i class="bi bi-box-seam me-1"></i> Crates / Hour
-        </span>
-      </div>
-      <div class="kpi-footer">
-        <span class="kpi-subtext">Max theoretical capacity</span>
+      <div class="kpi-info">
+        <div class="kpi-label">Rated Plant Throughput</div>
+        <div class="kpi-value text-info font-mono">{{ fleetCapacityPerHour | number }}</div>
+        <div class="kpi-trend text-muted"><i class="bi bi-box-seam me-1"></i> Crates / Hour</div>
       </div>
     </div>
   </section>
 
-  <!-- 3. Unified Control & Filter Bar -->
-  <section class="unified-control-bar glass-panel no-print">
-    <div class="control-left-group">
-      <!-- Sub Tab Switcher Pills -->
-      <div class="sub-tab-switcher">
-        <button type="button" class="sub-tab-btn" [class.active]="activeSubTab === 'machines'" (click)="switchSubTab('machines')">
+  <!-- 3. Unified Control & Filter Bar (Sticky) -->
+  <div class="erp-control-bar sticky-top no-print">
+    <div class="erp-control-left">
+      <!-- Sub Tab Switcher -->
+      <div class="btn-group erp-btn-group">
+        <button type="button" class="btn btn-sm" [class.btn-primary]="activeSubTab === 'machines'" [class.btn-outline-secondary]="activeSubTab !== 'machines'" (click)="switchSubTab('machines')">
           <i class="bi bi-cpu me-1"></i> Machinery Fleet ({{ machinesList.length }})
         </button>
-        <button type="button" class="sub-tab-btn" [class.active]="activeSubTab === 'breakdowns'" (click)="switchSubTab('breakdowns')">
+        <button type="button" class="btn btn-sm" [class.btn-primary]="activeSubTab === 'breakdowns'" [class.btn-outline-secondary]="activeSubTab !== 'breakdowns'" (click)="switchSubTab('breakdowns')">
           <i class="bi bi-wrench-adjustable me-1"></i> Breakdown Ledger ({{ machineBreakdownsList.length }})
         </button>
       </div>
 
       <!-- Live Search -->
-      <div class="search-input-wrapper">
+      <div class="erp-search-wrapper">
         <i class="bi bi-search search-icon"></i>
-        <input
-          type="text"
-          class="table-search-input"
-          [(ngModel)]="searchQuery"
-          (input)="currentPage = 1"
-          placeholder="Search by equipment, code, fault..."
-        />
-        <button *ngIf="searchQuery" class="clear-search-btn" (click)="searchQuery = ''; currentPage = 1" title="Clear search">
-          <i class="bi bi-x-circle-fill"></i>
-        </button>
+        <input type="text" class="erp-input search-input" [(ngModel)]="searchQuery" (input)="currentPage = 1" placeholder="Search equipment or fault...">
+        <button *ngIf="searchQuery" class="clear-search-btn" (click)="searchQuery = ''; currentPage = 1"><i class="bi bi-x-lg"></i></button>
       </div>
 
-      <!-- Status Filter Pills (Active only for machines sub-tab) -->
-      <div *ngIf="activeSubTab === 'machines'" class="status-filter-pills">
-        <button type="button" class="status-pill-btn" [class.active]="statusFilter === 'ALL'" (click)="setStatusFilter('ALL')">
-          All ({{ machinesList.length }})
-        </button>
-        <button type="button" class="status-pill-btn" [class.active]="statusFilter === 'Running'" (click)="setStatusFilter('Running')">
-          Running ({{ runningMachinesCount }})
-        </button>
-        <button type="button" class="status-pill-btn" [class.active]="statusFilter === 'Under Maintenance'" (click)="setStatusFilter('Under Maintenance')">
-          Maintenance
-        </button>
-        <button type="button" class="status-pill-btn" [class.active]="statusFilter === 'Idle'" (click)="setStatusFilter('Idle')">
-          Idle
-        </button>
-        <button type="button" class="status-pill-btn" [class.active]="statusFilter === 'Breakdown'" (click)="setStatusFilter('Breakdown')">
-          Breakdown
-        </button>
+      <!-- Status Filter Pills -->
+      <div *ngIf="activeSubTab === 'machines'" class="erp-filter-pills d-none d-md-flex">
+        <button class="filter-pill" [class.active]="statusFilter === 'ALL'" (click)="setStatusFilter('ALL')">All</button>
+        <button class="filter-pill" [class.active]="statusFilter === 'Running'" (click)="setStatusFilter('Running')">Running</button>
+        <button class="filter-pill" [class.active]="statusFilter === 'Under Maintenance'" (click)="setStatusFilter('Under Maintenance')">Maintenance</button>
+        <button class="filter-pill" [class.active]="statusFilter === 'Idle'" (click)="setStatusFilter('Idle')">Idle</button>
+        <button class="filter-pill" [class.active]="statusFilter === 'Breakdown'" (click)="setStatusFilter('Breakdown')">Breakdown</button>
       </div>
     </div>
 
-    <div class="control-right-group">
-      <!-- Density Toggle -->
-      <div class="density-switch-group">
-        <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact density">
-          <i class="bi bi-distribute-vertical"></i> Compact
-        </button>
-        <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="setDensity('comfortable')" title="Comfortable density">
-          <i class="bi bi-list-ul"></i> Normal
-        </button>
-        <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious density">
-          <i class="bi bi-grid-3x2-gap"></i> Spacious
-        </button>
-      </div>
-
+    <div class="erp-control-right">
       <!-- Column Visibility Dropdown -->
       <div class="col-manager-dropdown-wrapper">
-        <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown(activeSubTab); $event.stopPropagation()">
+        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="toggleColDropdown(activeSubTab); $event.stopPropagation()">
           <i class="bi bi-layout-three-columns me-1"></i> Columns
         </button>
         <div class="col-manager-popover" *ngIf="showColDropdown[activeSubTab]" (click)="$event.stopPropagation()">
           <div class="popover-header">
             <strong>Visible Columns</strong>
-            <button type="button" class="btn-text" (click)="resetColumns(activeSubTab)">Reset</button>
+            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" (click)="resetColumns(activeSubTab)">Reset</button>
           </div>
           <div class="popover-body">
-            <div class="col-item-row" *ngFor="let col of getTableColumns(activeSubTab)">
-              <label class="col-check-label">
-                <input type="checkbox" [checked]="isColumnVisible(activeSubTab, col)" (change)="toggleColumn(activeSubTab, col)" />
-                <span>{{ col }}</span>
-              </label>
+            <div class="form-check" *ngFor="let col of getTableColumns(activeSubTab)">
+              <input class="form-check-input" type="checkbox" [id]="'col-' + col" [checked]="isColumnVisible(activeSubTab, col)" (change)="toggleColumn(activeSubTab, col)">
+              <label class="form-check-label" [for]="'col-' + col">{{ col }}</label>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Consolidated Export Dropdown -->
+      <!-- Export Dropdown -->
       <div class="export-dropdown-wrapper">
-        <button type="button" class="btn btn-secondary btn-sm" (click)="toggleExportMenu(); $event.stopPropagation()" title="Export registry">
-          <i class="bi bi-download me-1"></i> Export &#x25BE;
+        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="toggleExportMenu(); $event.stopPropagation()" title="Export registry">
+          <i class="bi bi-download me-1"></i> Export <i class="bi bi-chevron-down ms-1" style="font-size: 10px;"></i>
         </button>
         <div class="export-menu" *ngIf="showExportMenu" (click)="$event.stopPropagation()">
           <button type="button" class="export-menu-item" (click)="exportData('csv')">
-            <i class="bi bi-filetype-csv me-2 text-primary"></i> Export CSV (.csv)
+            <i class="bi bi-filetype-csv me-2 text-primary"></i> Export CSV
           </button>
           <button type="button" class="export-menu-item" (click)="exportData('excel')">
-            <i class="bi bi-file-earmark-excel me-2 text-success"></i> Export Excel (.csv)
+            <i class="bi bi-file-earmark-excel me-2 text-success"></i> Export Excel
           </button>
         </div>
       </div>
     </div>
-  </section>
+  </div>
 
   <!-- 4. Main Two-Column Interactive Layout -->
-  <div class="feature-main-grid">
+  <div class="erp-page-body">
     <!-- LEFT PANEL: Sticky Configuration & Incident Form -->
-    <aside class="feature-form-panel glass-panel" [class.editing-mode]="editingMachineId || editingBreakdownId" *ngIf="!isViewer()">
+    <aside class="erp-form-panel" [class.editing-mode]="editingMachineId || editingBreakdownId" *ngIf="!isViewer()">
       <!-- Form Mode Switcher -->
-      <div class="form-mode-tabs">
-        <button type="button" class="form-mode-tab-btn" [class.active]="formMode === 'machine'" (click)="switchFormMode('machine')">
+      <div class="nav erp-nav-tabs mb-3">
+        <button class="nav-link" [class.active]="formMode === 'machine'" (click)="switchFormMode('machine')">
           <i class="bi bi-cpu me-1"></i> Machine Asset
         </button>
-        <button type="button" class="form-mode-tab-btn" [class.active]="formMode === 'breakdown'" (click)="switchFormMode('breakdown')">
+        <button class="nav-link" [class.active]="formMode === 'breakdown'" (click)="switchFormMode('breakdown')">
           <i class="bi bi-wrench-adjustable me-1"></i> Log Breakdown
         </button>
       </div>
 
       <!-- A. MACHINE FORM -->
-      <div *ngIf="formMode === 'machine'" class="form-content-area">
-        <div class="panel-header">
-          <div class="panel-title-badge">
-            <span class="badge-icon-sm icon-blue"><i class="bi bi-cpu-fill"></i></span>
-            <div>
-              <h3 class="panel-title">{{ editingMachineId ? 'Edit Equipment Profile' : 'Register Machine' }}</h3>
-              <p class="panel-subtitle">Injection moulding unit configuration &amp; throughput</p>
-            </div>
-          </div>
-          <span *ngIf="editingMachineId" class="editing-indicator-pill">EDITING</span>
+      <div *ngIf="formMode === 'machine'" class="erp-form-content">
+        <div class="erp-form-header">
+          <h3 class="form-title">
+            <i class="bi bi-cpu-fill text-primary me-2"></i>
+            {{ editingMachineId ? 'Edit Equipment Profile' : 'Register Machine' }}
+            <span *ngIf="editingMachineId" class="badge bg-warning text-dark ms-2" style="font-size: 10px;">EDITING</span>
+          </h3>
+          <p class="form-subtitle">Injection moulding unit configuration &amp; throughput</p>
         </div>
 
-        <form (ngSubmit)="saveMachine()" class="modern-feature-form">
-          <div class="form-group">
-            <label class="form-label">
-              Machine Name <span class="required-star">*</span>
-            </label>
-            <div class="input-with-icon">
-              <i class="bi bi-cpu input-icon"></i>
-              <input
-                appAutoSelect
-                type="text"
-                class="form-control"
-                [(ngModel)]="machineForm.machineName"
-                name="mName"
-                required
-                placeholder="e.g. Windsor IMM 180T"
-              />
+        <form (ngSubmit)="saveMachine()">
+          <div class="erp-form-grid">
+            <div class="form-group">
+              <label class="form-label">Machine Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control erp-input" [(ngModel)]="machineForm.machineName" name="mName" required placeholder="e.g. Windsor IMM 180T">
             </div>
-          </div>
 
-          <div class="form-group">
-            <label class="form-label">
-              Equipment Code / Asset Tag <span class="required-star">*</span>
-            </label>
-            <div class="input-with-icon">
-              <i class="bi bi-tag input-icon"></i>
-              <input
-                appAutoSelect
-                type="text"
-                class="form-control text-uppercase"
-                [(ngModel)]="machineForm.machineCode"
-                name="mCode"
-                required
-                placeholder="e.g. IMM-003"
-              />
+            <div class="form-group">
+              <label class="form-label">Equipment Code / Asset Tag <span class="text-danger">*</span></label>
+              <input type="text" class="form-control erp-input text-uppercase" [(ngModel)]="machineForm.machineCode" name="mCode" required placeholder="e.g. IMM-003">
             </div>
-          </div>
 
-          <div class="form-row-2col">
             <div class="form-group">
               <label class="form-label">Rated Capacity (Crates/hr)</label>
-              <div class="input-with-icon">
-                <i class="bi bi-speedometer2 input-icon"></i>
-                <input
-                  appAutoSelect
-                  type="number"
-                  class="form-control"
-                  [(ngModel)]="machineForm.capacityPerHour"
-                  name="mCapacity"
-                  min="0"
-                  step="10"
-                />
-              </div>
+              <input type="number" class="form-control erp-input" [(ngModel)]="machineForm.capacityPerHour" name="mCapacity" min="0" step="10">
             </div>
 
             <div class="form-group">
               <label class="form-label">Installation Date</label>
-              <div class="input-with-icon">
-                <i class="bi bi-calendar3 input-icon"></i>
-                <input
-                  type="date"
-                  class="form-control"
-                  [(ngModel)]="machineForm.installedDate"
-                  name="mDate"
-                />
-              </div>
+              <input type="date" class="form-control erp-input" [(ngModel)]="machineForm.installedDate" name="mDate">
             </div>
-          </div>
 
-          <div class="form-group">
-            <label class="form-label">Operating Status</label>
-            <select class="form-select" [(ngModel)]="machineForm.status" name="mStatus">
-              <option value="Running">Running (Active Production)</option>
-              <option value="Idle">Idle (Ready / Standby)</option>
-              <option value="Under Maintenance">Under Maintenance (Servicing)</option>
-              <option value="Breakdown">Breakdown (Critical Outage)</option>
-            </select>
+            <div class="form-group full-width">
+              <label class="form-label">Operating Status</label>
+              <select class="form-select erp-select" [(ngModel)]="machineForm.status" name="mStatus">
+                <option value="Running">Running (Active Production)</option>
+                <option value="Idle">Idle (Ready / Standby)</option>
+                <option value="Under Maintenance">Under Maintenance (Servicing)</option>
+                <option value="Breakdown">Breakdown (Critical Outage)</option>
+              </select>
+            </div>
           </div>
 
           <!-- Live Output Preview Badge -->
-          <div *ngIf="machineForm.capacityPerHour > 0" class="live-calculation-card animate-fade-in">
-            <div class="calc-row">
-              <span class="calc-label"><i class="bi bi-lightning-charge me-1 text-primary"></i>Daily Rated Output:</span>
-              <strong class="calc-value text-success font-mono">
-                {{ machineForm.capacityPerHour * 24 | number:'1.0-0' }} crates/day
-              </strong>
-            </div>
-            <div class="calc-sub">
-              Continuous 24h cycle &bull; Status:
-              <span class="badge ms-1" [class.badge-success]="machineForm.status === 'Running'" [class.badge-warning]="machineForm.status === 'Under Maintenance'" [class.badge-danger]="machineForm.status === 'Breakdown'">
-                {{ machineForm.status || 'Running' }}
-              </span>
-            </div>
+          <div *ngIf="machineForm.capacityPerHour > 0" class="erp-alert alert-success mt-3 mb-3 p-2 d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-lightning-charge-fill me-1 text-success"></i> Daily Rated Output:</span>
+            <strong class="font-mono">{{ machineForm.capacityPerHour * 24 | number:'1.0-0' }} crates/day</strong>
           </div>
 
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary btn-block">
-              <i class="bi bi-check2-circle me-1"></i>
-              {{ editingMachineId ? 'Update Equipment Profile' : 'Save Machine Unit' }}
+          <div class="erp-form-actions mt-4">
+            <button type="submit" class="btn btn-primary w-100 mb-2">
+              <i class="bi bi-check2-circle me-1"></i> {{ editingMachineId ? 'Update Equipment Profile' : 'Save Machine Unit' }}
             </button>
-            <button *ngIf="editingMachineId" type="button" class="btn btn-secondary btn-block" (click)="cancelEditMachine()">
+            <button *ngIf="editingMachineId" type="button" class="btn btn-outline-secondary w-100" (click)="cancelEditMachine()">
               <i class="bi bi-x-lg me-1"></i> Cancel Edit
             </button>
           </div>
@@ -356,72 +230,59 @@
       </div>
 
       <!-- B. BREAKDOWN FORM -->
-      <div *ngIf="formMode === 'breakdown'" class="form-content-area">
-        <div class="panel-header">
-          <div class="panel-title-badge">
-            <span class="badge-icon-sm icon-amber"><i class="bi bi-wrench-adjustable"></i></span>
-            <div>
-              <h3 class="panel-title">{{ editingBreakdownId ? 'Edit Breakdown Record' : 'Log Maintenance Incident' }}</h3>
-              <p class="panel-subtitle">Record downtime hours &amp; service resolution</p>
-            </div>
-          </div>
-          <span *ngIf="editingBreakdownId" class="editing-indicator-pill">EDITING</span>
+      <div *ngIf="formMode === 'breakdown'" class="erp-form-content">
+        <div class="erp-form-header">
+          <h3 class="form-title">
+            <i class="bi bi-wrench-adjustable text-warning me-2"></i>
+            {{ editingBreakdownId ? 'Edit Breakdown Record' : 'Log Maintenance Incident' }}
+            <span *ngIf="editingBreakdownId" class="badge bg-warning text-dark ms-2" style="font-size: 10px;">EDITING</span>
+          </h3>
+          <p class="form-subtitle">Record downtime hours &amp; service resolution</p>
         </div>
 
-        <form (ngSubmit)="saveBreakdown()" class="modern-feature-form">
-          <div class="form-group">
-            <label class="form-label">
-              Affected Equipment <span class="required-star">*</span>
-            </label>
-            <select class="form-select" [(ngModel)]="breakdownForm.machineId" name="bdMachine" required>
-              <option value="" disabled>-- Select Machine Unit --</option>
-              <option *ngFor="let m of machinesList" [value]="m.id">
-                {{ m.machineName }} ({{ m.machineCode || 'IMM-' + m.id }})
-              </option>
-            </select>
-          </div>
-
-          <div class="form-row-2col">
-            <div class="form-group">
-              <label class="form-label">Incident Date <span class="required-star">*</span></label>
-              <input type="date" class="form-control" [(ngModel)]="breakdownForm.breakdownDate" name="bdDate" required />
+        <form (ngSubmit)="saveBreakdown()">
+          <div class="erp-form-grid">
+            <div class="form-group full-width">
+              <label class="form-label">Affected Equipment <span class="text-danger">*</span></label>
+              <select class="form-select erp-select" [(ngModel)]="breakdownForm.machineId" name="bdMachine" required>
+                <option value="" disabled>-- Select Machine Unit --</option>
+                <option *ngFor="let m of machinesList" [value]="m.id">{{ m.machineName }} ({{ m.machineCode || 'IMM-' + m.id }})</option>
+              </select>
             </div>
+
+            <div class="form-group">
+              <label class="form-label">Incident Date <span class="text-danger">*</span></label>
+              <input type="date" class="form-control erp-input" [(ngModel)]="breakdownForm.breakdownDate" name="bdDate" required>
+            </div>
+
             <div class="form-group">
               <label class="form-label">Downtime (Hours)</label>
-              <input appAutoSelect type="number" class="form-control" [(ngModel)]="breakdownForm.downtimeHours" name="bdHours" min="0" step="0.5" required />
+              <input type="number" class="form-control erp-input" [(ngModel)]="breakdownForm.downtimeHours" name="bdHours" min="0" step="0.5" required>
             </div>
-          </div>
 
-          <div class="form-group">
-            <label class="form-label">Fault / Cause Description <span class="required-star">*</span></label>
-            <textarea class="form-control" [(ngModel)]="breakdownForm.description" name="bdDesc" rows="3" required placeholder="e.g. Hydraulic valve leak, heater band burnout..."></textarea>
-          </div>
+            <div class="form-group full-width">
+              <label class="form-label">Fault / Cause Description <span class="text-danger">*</span></label>
+              <textarea class="form-control erp-input" [(ngModel)]="breakdownForm.description" name="bdDesc" rows="3" required placeholder="e.g. Hydraulic valve leak..."></textarea>
+            </div>
 
-          <div class="form-group">
-            <label class="form-label">Resolution / Restored Date</label>
-            <input type="date" class="form-control" [(ngModel)]="breakdownForm.resolvedDate" name="bdResolved" />
-            <span class="form-hint">Leave blank if unit is still offline undergoing repairs</span>
+            <div class="form-group full-width">
+              <label class="form-label">Resolution / Restored Date</label>
+              <input type="date" class="form-control erp-input" [(ngModel)]="breakdownForm.resolvedDate" name="bdResolved">
+              <div class="form-text mt-1" style="font-size: 11px;">Leave blank if unit is still offline undergoing repairs</div>
+            </div>
           </div>
 
           <!-- Live Disruption Impact Badge -->
-          <div *ngIf="breakdownForm.downtimeHours > 0" class="live-calculation-card animate-fade-in" style="border-left-color: var(--color-danger);">
-            <div class="calc-row">
-              <span class="calc-label"><i class="bi bi-exclamation-octagon me-1 text-danger"></i>Fleet Disruption:</span>
-              <strong class="calc-value text-danger font-mono">
-                -{{ breakdownForm.downtimeHours * 450 | number:'1.0-0' }} crates lost
-              </strong>
-            </div>
-            <div class="calc-sub">
-              Estimated production deficit for {{ breakdownForm.downtimeHours }} hrs outage
-            </div>
+          <div *ngIf="breakdownForm.downtimeHours > 0" class="erp-alert alert-danger mt-3 mb-3 p-2 d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-exclamation-octagon-fill me-1 text-danger"></i> Fleet Disruption:</span>
+            <strong class="font-mono">-{{ breakdownForm.downtimeHours * 450 | number:'1.0-0' }} crates lost</strong>
           </div>
 
-          <div class="form-actions">
-            <button type="submit" class="btn btn-warning btn-block">
-              <i class="bi bi-check2-circle me-1"></i>
-              {{ editingBreakdownId ? 'Update Incident Record' : 'Record Breakdown Log' }}
+          <div class="erp-form-actions mt-4">
+            <button type="submit" class="btn btn-warning w-100 mb-2">
+              <i class="bi bi-check2-circle me-1"></i> {{ editingBreakdownId ? 'Update Incident Record' : 'Record Breakdown Log' }}
             </button>
-            <button *ngIf="editingBreakdownId" type="button" class="btn btn-secondary btn-block" (click)="cancelEditBreakdown()">
+            <button *ngIf="editingBreakdownId" type="button" class="btn btn-outline-secondary w-100" (click)="cancelEditBreakdown()">
               <i class="bi bi-x-lg me-1"></i> Cancel Edit
             </button>
           </div>
@@ -430,91 +291,89 @@
     </aside>
 
     <!-- RIGHT PANEL: Data Ledger Table Card -->
-    <main class="feature-table-panel glass-panel" [class.full-width]="isViewer()">
+    <main class="erp-table-panel" [class.w-100]="isViewer()">
       <!-- Bulk Action Bar -->
-      <div *ngIf="selectedRowIds.size > 0" class="bulk-action-bar no-print">
-        <span class="bulk-count-pill">
-          <i class="bi bi-check-circle-fill me-1"></i>
+      <div *ngIf="selectedRowIds.size > 0" class="erp-bulk-actions no-print">
+        <span class="bulk-count">
+          <i class="bi bi-check-circle-fill text-primary me-1"></i>
           {{ selectedRowIds.size }} record(s) selected
         </span>
-        <div class="bulk-actions-group">
-          <button type="button" class="btn btn-primary btn-sm" (click)="exportData('csv')">
+        <div class="bulk-buttons">
+          <button type="button" class="btn btn-primary btn-sm me-2" (click)="exportData('csv')">
             <i class="bi bi-download me-1"></i> Export Selected
           </button>
-          <button type="button" class="btn btn-secondary btn-sm" (click)="clearSelection()">
-            <i class="bi bi-x-lg me-1"></i> Clear
+          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="clearSelection()">
+            <i class="bi bi-x-lg"></i>
           </button>
         </div>
       </div>
 
       <!-- TABLE A: Machinery Fleet Table -->
-      <div *ngIf="activeSubTab === 'machines'" class="table-content-wrap">
-        <div class="table-container" [class.table-compact]="tableDensity === 'compact'" [class.table-spacious]="tableDensity === 'spacious'">
-          <table class="table enterprise-table" appResizableTable tableId="machines_registry_table">
+      <div *ngIf="activeSubTab === 'machines'" class="erp-table-wrapper">
+        <div class="erp-table-responsive">
+          <table class="table erp-table" appResizableTable tableId="machines_registry_table">
             <thead>
               <tr>
                 <th style="width: 40px; text-align: center;">
                   <input
                     type="checkbox"
-                    class="enterprise-row-checkbox"
+                    class="form-check-input"
                     [checked]="isAllSelected"
                     (change)="toggleSelectAll($any($event.target).checked)"
                   />
                 </th>
                 <th *ngIf="isColumnVisible('machines', 'Code')" (click)="setSort('machineCode')" style="cursor: pointer; min-width: 110px;">
-                  Asset Code <span *ngIf="sortField === 'machineCode'">{{ sortAsc ? '↑' : '↓' }}</span>
+                  Asset Code <i class="bi" [class.bi-arrow-up]="sortAsc" [class.bi-arrow-down]="!sortAsc" *ngIf="sortField === 'machineCode'"></i>
                 </th>
                 <th *ngIf="isColumnVisible('machines', 'Name')" (click)="setSort('machineName')" style="cursor: pointer; min-width: 200px;">
-                  Machine Model &amp; Unit <span *ngIf="sortField === 'machineName'">{{ sortAsc ? '↑' : '↓' }}</span>
+                  Machine Model &amp; Unit <i class="bi" [class.bi-arrow-up]="sortAsc" [class.bi-arrow-down]="!sortAsc" *ngIf="sortField === 'machineName'"></i>
                 </th>
                 <th *ngIf="isColumnVisible('machines', 'Capacity')" class="text-end" (click)="setSort('capacityPerHour')" style="cursor: pointer; min-width: 130px;">
-                  Capacity <span *ngIf="sortField === 'capacityPerHour'">{{ sortAsc ? '↑' : '↓' }}</span>
+                  Capacity <i class="bi" [class.bi-arrow-up]="sortAsc" [class.bi-arrow-down]="!sortAsc" *ngIf="sortField === 'capacityPerHour'"></i>
                 </th>
                 <th *ngIf="isColumnVisible('machines', 'Installed')" (click)="setSort('installedDate')" style="cursor: pointer; min-width: 120px;">
-                  Installed <span *ngIf="sortField === 'installedDate'">{{ sortAsc ? '↑' : '↓' }}</span>
+                  Installed <i class="bi" [class.bi-arrow-up]="sortAsc" [class.bi-arrow-down]="!sortAsc" *ngIf="sortField === 'installedDate'"></i>
                 </th>
                 <th *ngIf="isColumnVisible('machines', 'Status')" (click)="setSort('status')" style="cursor: pointer; min-width: 130px;">
-                  Status <span *ngIf="sortField === 'status'">{{ sortAsc ? '↑' : '↓' }}</span>
+                  Status <i class="bi" [class.bi-arrow-up]="sortAsc" [class.bi-arrow-down]="!sortAsc" *ngIf="sortField === 'status'"></i>
                 </th>
                 <th *ngIf="isColumnVisible('machines', 'Service Health')" style="min-width: 150px;">
                   Service Health
                 </th>
-                <th *ngIf="isColumnVisible('machines', 'Actions')" class="table-action-col text-end" style="min-width: 110px;">
+                <th *ngIf="isColumnVisible('machines', 'Actions')" class="text-end" style="min-width: 110px;">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let m of paginatedMachines; trackBy: trackById" [class.row-selected]="isRowSelected(m.id)">
+              <tr *ngFor="let m of paginatedMachines; trackBy: trackById" [class.table-active]="isRowSelected(m.id)">
                 <td style="text-align: center;">
                   <input
                     type="checkbox"
-                    class="enterprise-row-checkbox"
+                    class="form-check-input"
                     [checked]="isRowSelected(m.id)"
                     (change)="toggleSelectRow(m.id, $any($event.target).checked)"
                   />
                 </td>
-                <td *ngIf="isColumnVisible('machines', 'Code')">
-                  <span class="badge badge-secondary font-mono">{{ m.machineCode || ('IMM-' + (m.id+'').padStart(3, '0')) }}</span>
+                <td *ngIf="isColumnVisible('machines', 'Code')" class="font-mono">
+                  <span class="badge bg-secondary text-white">{{ m.machineCode || ('IMM-' + (m.id+'').padStart(3, '0')) }}</span>
                 </td>
                 <td *ngIf="isColumnVisible('machines', 'Name')">
-                  <div class="entity-name-cell">
-                    <span class="entity-primary">{{ m.machineName }}</span>
-                    <span class="entity-secondary">ID: #{{ m.id }}</span>
-                  </div>
+                  <div class="fw-bold">{{ m.machineName }}</div>
+                  <div class="text-muted" style="font-size: 11px;">ID: #{{ m.id }}</div>
                 </td>
                 <td *ngIf="isColumnVisible('machines', 'Capacity')" class="text-end font-mono">
-                  <strong>{{ (m.capacityPerHour || 0) | number }}</strong> <span class="unit-text">crates/hr</span>
+                  <strong>{{ (m.capacityPerHour || 0) | number }}</strong> <span class="text-muted" style="font-size: 11px;">crates/hr</span>
                 </td>
-                <td *ngIf="isColumnVisible('machines', 'Installed')" class="date-cell font-mono">
+                <td *ngIf="isColumnVisible('machines', 'Installed')" class="font-mono">
                   {{ m.installedDate ? (m.installedDate | indianDate) : '—' }}
                 </td>
                 <td *ngIf="isColumnVisible('machines', 'Status')">
-                  <span class="status-badge"
-                    [class.status-running]="(m.status || '').toLowerCase() === 'running'"
-                    [class.status-idle]="(m.status || '').toLowerCase() === 'idle'"
-                    [class.status-maintenance]="(m.status || '').toLowerCase() === 'under maintenance'"
-                    [class.status-breakdown]="(m.status || '').toLowerCase() === 'breakdown'">
+                  <span class="badge"
+                    [class.bg-success]="(m.status || '').toLowerCase() === 'running'"
+                    [class.bg-secondary]="(m.status || '').toLowerCase() === 'idle'"
+                    [class.bg-warning]="(m.status || '').toLowerCase() === 'under maintenance'" [class.text-dark]="(m.status || '').toLowerCase() === 'under maintenance'"
+                    [class.bg-danger]="(m.status || '').toLowerCase() === 'breakdown'">
                     {{ m.status || 'Running' }}
                   </span>
                 </td>
@@ -525,22 +384,19 @@
                     {{ getMachineStatus(m).label }}
                   </span>
                 </td>
-                <td *ngIf="isColumnVisible('machines', 'Actions')" class="table-action-col text-end">
-                  <div class="row-actions-group">
-                    <button type="button" class="btn-row-action btn-edit" (click)="editMachine(m)" title="Edit equipment profile">
-                      <i class="bi bi-pencil-square me-1"></i> Edit
-                    </button>
-                    <button *ngIf="canDelete()" type="button" class="btn-row-action btn-delete" (click)="deleteMachine(m.id)" title="Decommission machine">
-                      <i class="bi bi-trash3"></i>
-                    </button>
-                  </div>
+                <td *ngIf="isColumnVisible('machines', 'Actions')" class="text-end">
+                  <button type="button" class="btn btn-sm btn-outline-secondary me-1" (click)="editMachine(m)" title="Edit">
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button *ngIf="canDelete()" type="button" class="btn btn-sm btn-outline-danger" (click)="deleteMachine(m.id)" title="Delete">
+                    <i class="bi bi-trash3"></i>
+                  </button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <!-- Empty State for Machines -->
         <app-empty-state
           *ngIf="paginatedMachines.length === 0"
           icon="bi-cpu"
@@ -552,88 +408,83 @@
       </div>
 
       <!-- TABLE B: Breakdown & Maintenance Ledger Table -->
-      <div *ngIf="activeSubTab === 'breakdowns'" class="table-content-wrap">
-        <div class="table-container" [class.table-compact]="tableDensity === 'compact'" [class.table-spacious]="tableDensity === 'spacious'">
-          <table class="table enterprise-table" appResizableTable tableId="breakdowns_registry_table">
+      <div *ngIf="activeSubTab === 'breakdowns'" class="erp-table-wrapper">
+        <div class="erp-table-responsive">
+          <table class="table erp-table" appResizableTable tableId="breakdowns_registry_table">
             <thead>
               <tr>
                 <th style="width: 40px; text-align: center;">
                   <input
                     type="checkbox"
-                    class="enterprise-row-checkbox"
+                    class="form-check-input"
                     [checked]="isAllSelected"
                     (change)="toggleSelectAll($any($event.target).checked)"
                   />
                 </th>
                 <th *ngIf="isColumnVisible('breakdowns', 'Machine')" (click)="setSort('machine.machineName')" style="cursor: pointer; min-width: 180px;">
-                  Machine Unit <span *ngIf="sortField === 'machine.machineName'">{{ sortAsc ? '↑' : '↓' }}</span>
+                  Machine Unit <i class="bi" [class.bi-arrow-up]="sortAsc" [class.bi-arrow-down]="!sortAsc" *ngIf="sortField === 'machine.machineName'"></i>
                 </th>
                 <th *ngIf="isColumnVisible('breakdowns', 'Date')" (click)="setSort('breakdownDate')" style="cursor: pointer; min-width: 120px;">
-                  Breakdown Date <span *ngIf="sortField === 'breakdownDate'">{{ sortAsc ? '↑' : '↓' }}</span>
+                  Breakdown Date <i class="bi" [class.bi-arrow-up]="sortAsc" [class.bi-arrow-down]="!sortAsc" *ngIf="sortField === 'breakdownDate'"></i>
                 </th>
                 <th *ngIf="isColumnVisible('breakdowns', 'Description')" style="min-width: 220px;">
                   Fault / Disruption Details
                 </th>
                 <th *ngIf="isColumnVisible('breakdowns', 'Downtime')" class="text-end" (click)="setSort('downtimeHours')" style="cursor: pointer; min-width: 130px;">
-                  Downtime <span *ngIf="sortField === 'downtimeHours'">{{ sortAsc ? '↑' : '↓' }}</span>
+                  Downtime <i class="bi" [class.bi-arrow-up]="sortAsc" [class.bi-arrow-down]="!sortAsc" *ngIf="sortField === 'downtimeHours'"></i>
                 </th>
                 <th *ngIf="isColumnVisible('breakdowns', 'Resolved')" (click)="setSort('resolvedDate')" style="cursor: pointer; min-width: 130px;">
-                  Resolved Date <span *ngIf="sortField === 'resolvedDate'">{{ sortAsc ? '↑' : '↓' }}</span>
+                  Resolved Date <i class="bi" [class.bi-arrow-up]="sortAsc" [class.bi-arrow-down]="!sortAsc" *ngIf="sortField === 'resolvedDate'"></i>
                 </th>
-                <th *ngIf="isColumnVisible('breakdowns', 'Actions')" class="table-action-col text-end" style="min-width: 110px;">
+                <th *ngIf="isColumnVisible('breakdowns', 'Actions')" class="text-end" style="min-width: 110px;">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let bd of paginatedBreakdowns; trackBy: trackById" [class.row-selected]="isRowSelected(bd.id || bd.breakdownId)">
+              <tr *ngFor="let bd of paginatedBreakdowns; trackBy: trackById" [class.table-active]="isRowSelected(bd.id || bd.breakdownId)">
                 <td style="text-align: center;">
                   <input
                     type="checkbox"
-                    class="enterprise-row-checkbox"
+                    class="form-check-input"
                     [checked]="isRowSelected(bd.id || bd.breakdownId)"
                     (change)="toggleSelectRow(bd.id || bd.breakdownId, $any($event.target).checked)"
                   />
                 </td>
                 <td *ngIf="isColumnVisible('breakdowns', 'Machine')">
-                  <div class="entity-name-cell">
-                    <span class="entity-primary">{{ bd.machine?.machineName || 'Machine #' + bd.machineId }}</span>
-                    <span class="entity-secondary font-mono">{{ bd.machine?.machineCode || 'IMM-' + (bd.machine?.id || '') }}</span>
-                  </div>
+                  <div class="fw-bold">{{ bd.machine?.machineName || 'Machine #' + bd.machineId }}</div>
+                  <div class="text-muted font-mono" style="font-size: 11px;">{{ bd.machine?.machineCode || 'IMM-' + (bd.machine?.id || '') }}</div>
                 </td>
-                <td *ngIf="isColumnVisible('breakdowns', 'Date')" class="date-cell font-mono">
+                <td *ngIf="isColumnVisible('breakdowns', 'Date')" class="font-mono">
                   {{ bd.breakdownDate ? (bd.breakdownDate | indianDate) : '—' }}
                 </td>
-                <td *ngIf="isColumnVisible('breakdowns', 'Description')" class="cell-truncate" [title]="bd.description">
-                  <span class="desc-text">{{ bd.description }}</span>
+                <td *ngIf="isColumnVisible('breakdowns', 'Description')" class="text-truncate" style="max-width: 220px;" [title]="bd.description">
+                  {{ bd.description }}
                 </td>
                 <td *ngIf="isColumnVisible('breakdowns', 'Downtime')" class="text-end font-mono">
-                  <span class="badge badge-danger">{{ bd.downtimeHours }} hrs</span>
+                  <span class="badge bg-danger">{{ bd.downtimeHours }} hrs</span>
                 </td>
                 <td *ngIf="isColumnVisible('breakdowns', 'Resolved')">
-                  <span *ngIf="bd.resolvedDate" class="badge badge-soft-success font-mono">
+                  <span *ngIf="bd.resolvedDate" class="badge bg-success font-mono">
                     <i class="bi bi-check2 me-1"></i> {{ bd.resolvedDate | indianDate }}
                   </span>
-                  <span *ngIf="!bd.resolvedDate" class="badge badge-soft-danger pulse">
+                  <span *ngIf="!bd.resolvedDate" class="badge bg-warning text-dark font-mono">
                     <i class="bi bi-clock-history me-1"></i> Pending Repair
                   </span>
                 </td>
-                <td *ngIf="isColumnVisible('breakdowns', 'Actions')" class="table-action-col text-end">
-                  <div class="row-actions-group">
-                    <button type="button" class="btn-row-action btn-edit" (click)="editBreakdown(bd)" title="Edit breakdown entry">
-                      <i class="bi bi-pencil-square me-1"></i> Edit
-                    </button>
-                    <button *ngIf="canDelete()" type="button" class="btn-row-action btn-delete" (click)="deleteBreakdown(bd.id || bd.breakdownId)" title="Delete breakdown log">
-                      <i class="bi bi-trash3"></i>
-                    </button>
-                  </div>
+                <td *ngIf="isColumnVisible('breakdowns', 'Actions')" class="text-end">
+                  <button type="button" class="btn btn-sm btn-outline-secondary me-1" (click)="editBreakdown(bd)" title="Edit">
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button *ngIf="canDelete()" type="button" class="btn btn-sm btn-outline-danger" (click)="deleteBreakdown(bd.id || bd.breakdownId)" title="Delete">
+                    <i class="bi bi-trash3"></i>
+                  </button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <!-- Empty State for Breakdowns -->
         <app-empty-state
           *ngIf="paginatedBreakdowns.length === 0"
           icon="bi-wrench-adjustable"
@@ -645,35 +496,20 @@
       </div>
 
       <!-- Pagination Footer -->
-      <footer class="table-pagination-footer no-print">
+      <div class="erp-pagination no-print">
         <div class="pagination-info">
-          <span>
-            Showing
-            <strong class="font-mono">
-              {{ totalFilteredCount === 0 ? 0 : (currentPage - 1) * pageSize + 1 }}
-            </strong>
-            to
-            <strong class="font-mono">
-              {{ Math.min(currentPage * pageSize, totalFilteredCount) }}
-            </strong>
-            of
-            <strong class="font-mono">{{ totalFilteredCount }}</strong>
-            entries
-          </span>
+          Showing <strong>{{ totalFilteredCount === 0 ? 0 : (currentPage - 1) * pageSize + 1 }}</strong> to <strong>{{ Math.min(currentPage * pageSize, totalFilteredCount) }}</strong> of <strong>{{ totalFilteredCount }}</strong> entries
         </div>
-
-        <div class="pagination-controls">
-          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="setPage(currentPage - 1)">
-            <i class="bi bi-chevron-left me-1"></i> Previous
+        <div class="pagination-actions">
+          <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="currentPage === 1" (click)="setPage(currentPage - 1)">
+            <i class="bi bi-chevron-left"></i>
           </button>
-          <span class="page-indicator font-mono">
-            Page {{ currentPage }} of {{ totalPages }}
-          </span>
-          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage >= totalPages || totalFilteredCount === 0" (click)="setPage(currentPage + 1)">
-            Next <i class="bi bi-chevron-right ms-1"></i>
+          <span class="page-indicator">Page {{ currentPage }} of {{ totalPages }}</span>
+          <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="currentPage >= totalPages || totalFilteredCount === 0" (click)="setPage(currentPage + 1)">
+            <i class="bi bi-chevron-right"></i>
           </button>
         </div>
-      </footer>
+      </div>
     </main>
   </div>
 </div>
