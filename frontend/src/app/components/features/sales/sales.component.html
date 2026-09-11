@@ -101,193 +101,170 @@
     </div>
 
     <form class="sales-form-body" (ngSubmit)="saveSales()">
-      <div class="form-sections-wrapper">
-        <!-- Section 1: Order & Customer Information -->
-        <div class="form-section-block">
-          <h4 class="form-section-legend"><i class="bi bi-info-circle me-2"></i>1. Order & Customer Information</h4>
-          <div class="form-grid-layout">
-            <!-- Field 1: Order Date -->
-            <div class="form-group">
-              <label class="form-label" for="saleDate">
-                Order Date <span class="required-star">*</span>
-              </label>
-              <div class="input-with-icon">
-                <i class="bi bi-calendar3 input-prefix-icon"></i>
-                <input 
-                  id="saleDate" 
-                  type="date" 
-                  class="form-control" 
-                  name="saleDate" 
-                  [(ngModel)]="salesForm.date" 
-                  required />
-              </div>
-            </div>
-
-            <!-- Field 2: Customer / Party Selection -->
-            <div class="form-group party-select-group">
-              <label class="form-label" for="saleParty">
-                Customer / Company <span class="required-star">*</span>
-              </label>
-              <div class="input-with-icon">
-                <i class="bi bi-building input-prefix-icon"></i>
-                <select 
-                  id="saleParty" 
-                  class="form-control" 
-                  name="saleParty" 
-                  [(ngModel)]="salesForm.partyId" 
-                  required>
-                  <option value="" disabled>-- Select Registered Customer / Party --</option>
-                  <option *ngFor="let p of parties" [value]="p.id">
-                    {{ p.partyName }} {{ p.city ? '(' + p.city + ')' : '' }}
-                  </option>
-                </select>
-              </div>
-            </div>
+      <div class="sales-enterprise-grid">
+        <!-- Row 1: Date (Col 1) | Party (Cols 2-3) | Crate Type (Col 4) -->
+        <div class="form-group">
+          <label class="form-label" for="saleDate">
+            Order Date <span class="required-star">*</span>
+          </label>
+          <div class="input-with-icon">
+            <i class="bi bi-calendar3 input-prefix-icon"></i>
+            <input 
+              id="saleDate" 
+              type="date" 
+              class="form-control" 
+              name="saleDate" 
+              [(ngModel)]="salesForm.date" 
+              required />
           </div>
         </div>
 
-        <!-- Section 2: Product Specifications -->
-        <div class="form-section-block">
-          <h4 class="form-section-legend"><i class="bi bi-box-seam me-2"></i>2. Product & Material Specifications</h4>
-          <div class="form-grid-layout">
-            <!-- Field 3: Crate Model / Type -->
-            <div class="form-group">
-              <label class="form-label" for="saleCrateType">
-                Crate Type / Model <span class="required-star">*</span>
-              </label>
-              <div class="input-with-icon">
-                <i class="bi bi-box-seam input-prefix-icon"></i>
-                <select 
-                  id="saleCrateType" 
-                  class="form-control" 
-                  name="saleCrateType" 
-                  [(ngModel)]="salesForm.crateType">
-                  <option *ngFor="let c of crateTypes" [value]="c">{{ c }}</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Field 4: Crate Material -->
-            <div class="form-group">
-              <label class="form-label" for="saleCrateMaterial">
-                Material Composition
-              </label>
-              <div class="input-with-icon">
-                <i class="bi bi-layers input-prefix-icon"></i>
-                <select 
-                  id="saleCrateMaterial" 
-                  class="form-control" 
-                  name="saleCrateMaterial" 
-                  [(ngModel)]="salesForm.crateMaterial">
-                  <option *ngFor="let m of crateMaterials" [value]="m">{{ m }}</option>
-                </select>
-              </div>
-            </div>
+        <div class="form-group col-span-2">
+          <label class="form-label" for="saleParty">
+            Customer / Company Account <span class="required-star">*</span>
+          </label>
+          <div class="input-with-icon">
+            <i class="bi bi-building input-prefix-icon"></i>
+            <select 
+              id="saleParty" 
+              class="form-control" 
+              name="saleParty" 
+              [(ngModel)]="salesForm.partyId" 
+              required>
+              <option value="" disabled>-- Select Registered Customer / Party --</option>
+              <option *ngFor="let p of parties" [value]="p.id">
+                {{ p.partyName }} {{ p.city ? '(' + p.city + ')' : '' }}
+              </option>
+            </select>
           </div>
         </div>
 
-        <!-- Section 3: Commercial Volume & Payment Terms -->
-        <div class="form-section-block">
-          <h4 class="form-section-legend"><i class="bi bi-currency-rupee me-2"></i>3. Commercial Volume & Payment Terms</h4>
-          <div class="form-grid-layout">
-            <!-- Field 5: Quantity -->
-            <div class="form-group">
-              <label class="form-label" for="saleQuantity">
-                Quantity (Units) <span class="required-star">*</span>
-              </label>
-              <div class="input-with-icon">
-                <i class="bi bi-123 input-prefix-icon"></i>
-                <input 
-                  id="saleQuantity" 
-                  type="number" 
-                  class="form-control text-right-num" 
-                  name="saleQuantity" 
-                  [(ngModel)]="salesForm.quantity" 
-                  (ngModelChange)="calculateSalesTotal()" 
-                  appAutoSelect
-                  min="1" 
-                  placeholder="e.g. 5000" 
-                  required />
-              </div>
-            </div>
-
-            <!-- Field 6: Unit Rate in INR -->
-            <div class="form-group">
-              <label class="form-label" for="saleRate">
-                Unit Rate (₹) <span class="required-star">*</span>
-              </label>
-              <div class="input-with-icon">
-                <i class="bi bi-currency-rupee input-prefix-icon"></i>
-                <input 
-                  id="saleRate" 
-                  type="number" 
-                  step="0.01" 
-                  class="form-control text-right-num" 
-                  name="saleRate" 
-                  [(ngModel)]="salesForm.rate" 
-                  (ngModelChange)="calculateSalesTotal()" 
-                  appAutoSelect
-                  min="0.01" 
-                  placeholder="e.g. 245.00" 
-                  required />
-              </div>
-            </div>
-
-            <!-- Field 7: Paid / Advance Amount -->
-            <div class="form-group">
-              <label class="form-label" for="salePaid">
-                Advance / Paid (₹)
-              </label>
-              <div class="input-with-icon">
-                <i class="bi bi-cash-stack input-prefix-icon"></i>
-                <input 
-                  id="salePaid" 
-                  type="number" 
-                  step="0.01" 
-                  class="form-control text-right-num" 
-                  name="salePaid" 
-                  [(ngModel)]="salesForm.paid" 
-                  (ngModelChange)="calculateSalesTotal()" 
-                  appAutoSelect
-                  min="0" 
-                  placeholder="0.00" />
-              </div>
-            </div>
-
-            <!-- Live Financial Preview Tiles -->
-            <div class="form-financial-preview">
-              <div class="fin-preview-item total">
-                <span class="fin-preview-label">Gross Total</span>
-                <span class="fin-preview-val">{{ salesForm.totalAmount | inr }}</span>
-              </div>
-              <div class="fin-preview-item paid">
-                <span class="fin-preview-label">Amount Paid</span>
-                <span class="fin-preview-val">{{ salesForm.paid | inr }}</span>
-              </div>
-              <div class="fin-preview-item due" [class.danger-highlight]="salesForm.remaining > 0">
-                <span class="fin-preview-label">Balance Due</span>
-                <span class="fin-preview-val">{{ salesForm.remaining | inr }}</span>
-              </div>
-            </div>
+        <div class="form-group">
+          <label class="form-label" for="saleCrateType">
+            Crate Type / Model <span class="required-star">*</span>
+          </label>
+          <div class="input-with-icon">
+            <i class="bi bi-box-seam input-prefix-icon"></i>
+            <select 
+              id="saleCrateType" 
+              class="form-control" 
+              name="saleCrateType" 
+              [(ngModel)]="salesForm.crateType">
+              <option *ngFor="let c of crateTypes" [value]="c">{{ c }}</option>
+            </select>
           </div>
         </div>
-      </div>
 
-      <div class="form-actions-row">
-        <button 
-          type="button" 
-          class="btn-form btn-secondary" 
-          (click)="cancelEditSale()">
-          <i class="bi bi-x-circle"></i>
-          <span>Cancel</span>
-        </button>
+        <!-- Row 2: Material (Col 1) | Quantity (Col 2) | Rate (Col 3) | Advance (Col 4) -->
+        <div class="form-group">
+          <label class="form-label" for="saleCrateMaterial">
+            Material Composition
+          </label>
+          <div class="input-with-icon">
+            <i class="bi bi-layers input-prefix-icon"></i>
+            <select 
+              id="saleCrateMaterial" 
+              class="form-control" 
+              name="saleCrateMaterial" 
+              [(ngModel)]="salesForm.crateMaterial">
+              <option *ngFor="let m of crateMaterials" [value]="m">{{ m }}</option>
+            </select>
+          </div>
+        </div>
 
-        <button 
-          type="submit" 
-          class="btn-form btn-primary">
-          <i class="bi" [ngClass]="editingSaleId ? 'bi-check-circle-fill' : 'bi-save-fill'"></i>
-          <span>{{ editingSaleId ? 'Update Commercial Order' : 'Save Sales Order' }}</span>
-        </button>
+        <div class="form-group">
+          <label class="form-label" for="saleQuantity">
+            Volume (Crates) <span class="required-star">*</span>
+          </label>
+          <div class="input-with-icon">
+            <i class="bi bi-123 input-prefix-icon"></i>
+            <input 
+              id="saleQuantity" 
+              type="number" 
+              class="form-control text-right-num font-mono" 
+              name="saleQuantity" 
+              [(ngModel)]="salesForm.quantity" 
+              (ngModelChange)="calculateSalesTotal()" 
+              appAutoSelect
+              min="1" 
+              placeholder="e.g. 5000" 
+              required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="saleRate">
+            Unit Rate (₹/crate) <span class="required-star">*</span>
+          </label>
+          <div class="input-with-icon">
+            <i class="bi bi-currency-rupee input-prefix-icon"></i>
+            <input 
+              id="saleRate" 
+              type="number" 
+              step="0.01" 
+              class="form-control text-right-num font-mono" 
+              name="saleRate" 
+              [(ngModel)]="salesForm.rate" 
+              (ngModelChange)="calculateSalesTotal()" 
+              appAutoSelect
+              min="0.01" 
+              placeholder="e.g. 245.00" 
+              required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="salePaid">
+            Advance / Paid (₹)
+          </label>
+          <div class="input-with-icon">
+            <i class="bi bi-cash-stack input-prefix-icon"></i>
+            <input 
+              id="salePaid" 
+              type="number" 
+              step="0.01" 
+              class="form-control text-right-num font-mono" 
+              name="salePaid" 
+              [(ngModel)]="salesForm.paid" 
+              (ngModelChange)="calculateSalesTotal()" 
+              appAutoSelect
+              min="0" 
+              placeholder="0.00" />
+          </div>
+        </div>
+
+        <!-- Row 3: Live Financial Preview Computation Strip (Cols 1-3) & Actions (Col 4) -->
+        <div class="form-financial-preview-strip col-span-3">
+          <div class="fin-preview-cell total">
+            <span class="fin-lbl">Gross Order Value</span>
+            <strong class="fin-val font-mono">{{ salesForm.totalAmount | inr }}</strong>
+          </div>
+          <div class="fin-preview-cell paid">
+            <span class="fin-lbl">Advance Received</span>
+            <strong class="fin-val font-mono text-success">{{ salesForm.paid | inr }}</strong>
+          </div>
+          <div class="fin-preview-cell due" [class.danger-highlight]="salesForm.remaining > 0">
+            <span class="fin-lbl">Outstanding Balance</span>
+            <strong class="fin-val font-mono" [class.text-danger]="salesForm.remaining > 0">{{ salesForm.remaining | inr }}</strong>
+          </div>
+        </div>
+
+        <div class="form-actions-cell">
+          <button 
+            type="button" 
+            class="btn-form btn-secondary" 
+            (click)="cancelEditSale()">
+            <i class="bi bi-x-circle"></i>
+            <span>Cancel</span>
+          </button>
+
+          <button 
+            type="submit" 
+            class="btn-form btn-primary">
+            <i class="bi" [ngClass]="editingSaleId ? 'bi-check-circle-fill' : 'bi-save-fill'"></i>
+            <span>{{ editingSaleId ? 'Update' : 'Save Order' }}</span>
+          </button>
+        </div>
       </div>
     </form>
   </section>

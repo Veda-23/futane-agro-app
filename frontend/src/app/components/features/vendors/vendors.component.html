@@ -211,73 +211,104 @@
     </div>
 
     <form class="form-panel-body" (ngSubmit)="saveVendor()">
-      <div class="form-sections-grid">
-        <!-- Section A: Identity & Category -->
-        <div class="form-section-card">
-          <h4 class="form-section-subtitle">
-            <i class="bi bi-building me-1"></i> Supplier Identity & Category
-          </h4>
-          <div class="form-group-row">
-            <div class="form-field col-12">
-              <label class="form-label required">Company / Supplier Name</label>
-              <input type="text" 
-                     class="form-control" 
-                     placeholder="e.g. Reliance Polymers Ltd / Nilkamal Crates" 
-                     name="vendorName" 
-                     [(ngModel)]="vendorForm.vendorName" 
-                     required>
-            </div>
-            <div class="form-field col-12 col-md-6">
-              <label class="form-label">Supply Category</label>
-              <select class="form-select" name="category" [(ngModel)]="vendorForm.category">
-                <option *ngFor="let cat of supplierCategories" [value]="cat">{{ cat }}</option>
-              </select>
-            </div>
-            <div class="form-field col-12 col-md-6">
-              <label class="form-label required">Primary Mobile / Telephone</label>
-              <input type="tel" 
-                     class="form-control" 
-                     placeholder="10-digit Mobile or Landline" 
-                     name="mobile" 
-                     [(ngModel)]="vendorForm.mobile" 
-                     required>
-            </div>
+      <div class="vendor-enterprise-grid">
+        <!-- Row 1: Company Name (cols 1-2) | Category (col 3) -->
+        <div class="form-field col-span-2">
+          <label class="form-label required">Company / Supplier Name</label>
+          <div class="input-with-icon">
+            <i class="bi bi-building input-prefix-icon"></i>
+            <input type="text" 
+                   class="form-control with-prefix" 
+                   placeholder="e.g. Reliance Polymers Ltd / Nilkamal Crates" 
+                   name="vendorName" 
+                   [(ngModel)]="vendorForm.vendorName" 
+                   required>
           </div>
         </div>
 
-        <!-- Section B: Compliance & Location -->
-        <div class="form-section-card">
-          <h4 class="form-section-subtitle">
-            <i class="bi bi-geo-alt-fill me-1"></i> Tax Compliance & Registered Address
-          </h4>
-          <div class="form-group-row">
-            <div class="form-field col-12 col-md-6">
-              <label class="form-label">GSTIN Identification Number</label>
-              <input type="text" 
-                     class="form-control text-uppercase font-monospace" 
-                     placeholder="e.g. 27AAAAA0000A1Z5" 
-                     name="gstNumber" 
-                     maxlength="15"
-                     (input)="formatGstInput()"
-                     [(ngModel)]="vendorForm.gstNumber">
-              <span class="field-hint">15-digit alphanumeric GSTIN code</span>
-            </div>
-            <div class="form-field col-12 col-md-6">
-              <label class="form-label">Contact Person / Sales Manager</label>
-              <input type="text" 
-                     class="form-control" 
-                     placeholder="e.g. Rajesh Sharma" 
-                     name="contactPerson" 
-                     [(ngModel)]="vendorForm.contactPerson">
-            </div>
-            <div class="form-field col-12">
-              <label class="form-label">Registered Office / Warehouse Address</label>
-              <textarea class="form-control" 
-                        rows="2" 
-                        placeholder="Plant location, MIDC Industrial Area, City, PIN Code..." 
-                        name="address" 
-                        [(ngModel)]="vendorForm.address"></textarea>
-            </div>
+        <div class="form-field">
+          <label class="form-label required">Supply Category</label>
+          <div class="input-with-icon">
+            <i class="bi bi-tag-fill input-prefix-icon"></i>
+            <select class="form-select with-prefix" name="category" [(ngModel)]="vendorForm.category">
+              <option *ngFor="let cat of supplierCategories" [value]="cat">{{ cat }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Row 2: Mobile (col 1) | GSTIN (col 2) | Contact Person (col 3) -->
+        <div class="form-field">
+          <label class="form-label required">Primary Mobile / Telephone</label>
+          <div class="input-with-icon">
+            <i class="bi bi-telephone-fill input-prefix-icon"></i>
+            <input type="tel" 
+                   class="form-control with-prefix" 
+                   placeholder="10-digit Mobile or Landline" 
+                   name="mobile" 
+                   [(ngModel)]="vendorForm.mobile" 
+                   required>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">GSTIN Identification Number</label>
+          <div class="input-with-icon">
+            <i class="bi bi-patch-check-fill input-prefix-icon" [ngClass]="vendorForm.gstNumber?.length === 15 ? 'text-success' : ''"></i>
+            <input type="text" 
+                   class="form-control with-prefix text-uppercase font-monospace" 
+                   placeholder="e.g. 27AAAAA0000A1Z5" 
+                   name="gstNumber" 
+                   maxlength="15"
+                   (input)="formatGstInput()"
+                   [(ngModel)]="vendorForm.gstNumber">
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">Contact Person / Sales Manager</label>
+          <div class="input-with-icon">
+            <i class="bi bi-person-badge-fill input-prefix-icon"></i>
+            <input type="text" 
+                   class="form-control with-prefix" 
+                   placeholder="e.g. Rajesh Sharma" 
+                   name="contactPerson" 
+                   [(ngModel)]="vendorForm.contactPerson">
+          </div>
+        </div>
+
+        <!-- Row 3: Registered Address (cols 1-2) | Verification & Readiness Card (col 3) -->
+        <div class="form-field col-span-2">
+          <label class="form-label">Registered Office / Warehouse Address</label>
+          <div class="input-with-icon textarea-wrapper">
+            <i class="bi bi-geo-alt-fill input-prefix-icon textarea-icon"></i>
+            <textarea class="form-control with-prefix" 
+                      rows="2" 
+                      placeholder="Plant location, MIDC Industrial Area, City, PIN Code..." 
+                      name="address" 
+                      [(ngModel)]="vendorForm.address"></textarea>
+          </div>
+        </div>
+
+        <div class="vendor-readiness-card">
+          <div class="readiness-header">
+            <span class="readiness-title"><i class="bi bi-shield-check text-primary me-1"></i> Supplier Profile Readiness</span>
+            <span class="readiness-status" [ngClass]="vendorForm.vendorName && vendorForm.mobile ? 'status-ready' : 'status-draft'">
+              {{ vendorForm.vendorName && vendorForm.mobile ? 'Ready to Save' : 'Incomplete' }}
+            </span>
+          </div>
+          <div class="readiness-checklist">
+            <span class="check-pill" [class.done]="vendorForm.vendorName">
+              <i class="bi" [ngClass]="vendorForm.vendorName ? 'bi-check2 text-success' : 'bi-dash'"></i> Name
+            </span>
+            <span class="check-pill" [class.done]="vendorForm.mobile">
+              <i class="bi" [ngClass]="vendorForm.mobile ? 'bi-check2 text-success' : 'bi-dash'"></i> Contact
+            </span>
+            <span class="check-pill" [class.done]="vendorForm.gstNumber?.length === 15">
+              <i class="bi" [ngClass]="vendorForm.gstNumber?.length === 15 ? 'bi-check2 text-success' : 'bi-dash'"></i> GSTIN
+            </span>
+            <span class="check-pill" [class.done]="vendorForm.address">
+              <i class="bi" [ngClass]="vendorForm.address ? 'bi-check2 text-success' : 'bi-dash'"></i> Address
+            </span>
           </div>
         </div>
       </div>

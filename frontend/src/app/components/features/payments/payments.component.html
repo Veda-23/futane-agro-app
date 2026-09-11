@@ -92,151 +92,135 @@
     </div>
 
     <form (ngSubmit)="savePayment()" class="payments-form-content">
-      <div class="form-sections-wrapper">
-        <!-- Section 1: Customer & Invoice Reference -->
-        <div class="form-section-block">
-          <h4 class="form-section-legend"><i class="bi bi-person-badge me-2"></i>1. Customer & Account Reference</h4>
-          <div class="form-grid-layout">
-            <!-- Field 1: Customer / Party Selection -->
-            <div class="form-group party-select-group">
-              <label class="form-label" for="payParty">
-                Customer / Party <span class="required-star">*</span>
-              </label>
-              <app-searchable-select
-                id="payParty"
-                [items]="parties"
-                bindLabel="partyName"
-                bindValue="id"
-                subLabelKey="city"
-                [(ngModel)]="paymentsForm.partyId"
-                name="payParty"
-                placeholder="-- Select Customer Account --"
-                searchPlaceholder="Type customer name or city..."
-                [allowClear]="true">
-              </app-searchable-select>
+      <div class="payments-enterprise-grid">
+        <!-- Row 1: Customer (Cols 1-2) | Linked Invoice (Col 3) -->
+        <div class="form-group party-select-group col-span-2">
+          <label class="form-label" for="payParty">
+            Customer / Party Account <span class="required-star">*</span>
+          </label>
+          <app-searchable-select
+            id="payParty"
+            [items]="parties"
+            bindLabel="partyName"
+            bindValue="id"
+            subLabelKey="city"
+            [(ngModel)]="paymentsForm.partyId"
+            name="payParty"
+            placeholder="-- Select Customer Account --"
+            searchPlaceholder="Type customer name or city..."
+            [allowClear]="true">
+          </app-searchable-select>
 
-              <!-- Live Outstanding Balance Badge -->
-              <div *ngIf="paymentsForm.partyId" class="party-outstanding-badge">
-                <span class="lbl"><i class="bi bi-clock-history me-1"></i>Current Receivables Due:</span>
-                <strong class="val" [class.text-danger]="getOutstandingBalance(paymentsForm.partyId) > 0">
-                  {{ getOutstandingBalance(paymentsForm.partyId) | inr }}
-                </strong>
-              </div>
-            </div>
-
-            <!-- Field 2: Invoice Reference -->
-            <div class="form-group">
-              <label class="form-label" for="payInvoice">
-                Linked Invoice (Optional)
-              </label>
-              <app-searchable-select
-                id="payInvoice"
-                [items]="selectableInvoices"
-                bindLabel="displayLabel"
-                bindValue="invoiceNo"
-                subLabelKey="dueText"
-                [(ngModel)]="paymentsForm.invoiceNo"
-                name="payInvoice"
-                placeholder="General On-Account Receipt (No Invoice)"
-                searchPlaceholder="Search invoice # or customer..."
-                [allowClear]="true">
-              </app-searchable-select>
-            </div>
+          <!-- Live Outstanding Balance Badge -->
+          <div *ngIf="paymentsForm.partyId" class="party-outstanding-badge">
+            <span class="lbl"><i class="bi bi-clock-history me-1"></i>Current Receivables Due:</span>
+            <strong class="val font-mono" [class.text-danger]="getOutstandingBalance(paymentsForm.partyId) > 0">
+              {{ getOutstandingBalance(paymentsForm.partyId) | inr }}
+            </strong>
           </div>
         </div>
 
-        <!-- Section 2: Payment Details -->
-        <div class="form-section-block">
-          <h4 class="form-section-legend"><i class="bi bi-credit-card me-2"></i>2. Transaction & Payment Details</h4>
-          <div class="form-grid-layout">
-            <!-- Field 3: Receipt Date -->
-            <div class="form-group">
-              <label class="form-label" for="payDate">
-                Receipt Date <span class="required-star">*</span>
-              </label>
-              <div class="input-with-icon">
-                <i class="bi bi-calendar3 input-prefix-icon"></i>
-                <input 
-                  type="date" 
-                  id="payDate" 
-                  class="form-control" 
-                  name="payDate" 
-                  [(ngModel)]="paymentsForm.paymentDate" 
-                  required />
-              </div>
-            </div>
+        <div class="form-group">
+          <label class="form-label" for="payInvoice">
+            Linked Invoice (Optional)
+          </label>
+          <app-searchable-select
+            id="payInvoice"
+            [items]="selectableInvoices"
+            bindLabel="displayLabel"
+            bindValue="invoiceNo"
+            subLabelKey="dueText"
+            [(ngModel)]="paymentsForm.invoiceNo"
+            name="payInvoice"
+            placeholder="General On-Account (No Invoice)"
+            searchPlaceholder="Search invoice #..."
+            [allowClear]="true">
+          </app-searchable-select>
+        </div>
 
-            <!-- Field 4: Payment Channel / Mode -->
-            <div class="form-group">
-              <label class="form-label" for="payMode">
-                Payment Channel <span class="required-star">*</span>
-              </label>
-              <div class="input-with-icon">
-                <i class="bi bi-wallet2 input-prefix-icon"></i>
-                <select 
-                  id="payMode" 
-                  class="form-control" 
-                  name="payMode" 
-                  [(ngModel)]="paymentsForm.paymentMode" 
-                  required>
-                  <option *ngFor="let m of paymentModes" [value]="m.id">{{ m.label }}</option>
-                </select>
-              </div>
-            </div>
+        <!-- Row 2: Date (Col 1) | Mode (Col 2) | Amount (Col 3) -->
+        <div class="form-group">
+          <label class="form-label" for="payDate">
+            Receipt Date <span class="required-star">*</span>
+          </label>
+          <div class="input-with-icon">
+            <i class="bi bi-calendar3 input-prefix-icon"></i>
+            <input 
+              type="date" 
+              id="payDate" 
+              class="form-control" 
+              name="payDate" 
+              [(ngModel)]="paymentsForm.paymentDate" 
+              required />
+          </div>
+        </div>
 
-            <!-- Field 5: Amount Received -->
-            <div class="form-group">
-              <label class="form-label" for="payAmount">
-                Amount Received (₹) <span class="required-star">*</span>
-              </label>
-              <div class="input-with-icon">
-                <span class="currency-prefix-box">₹</span>
-                <input 
-                  type="number" 
-                  id="payAmount" 
-                  class="form-control font-mono bold-text" 
-                  name="payAmount" 
-                  [(ngModel)]="paymentsForm.amountReceived" 
-                  appAutoSelect
-                  min="1" 
-                  step="0.01" 
-                  placeholder="0.00" 
-                  required />
-              </div>
-            </div>
+        <div class="form-group">
+          <label class="form-label" for="payMode">
+            Payment Channel <span class="required-star">*</span>
+          </label>
+          <div class="input-with-icon">
+            <i class="bi bi-wallet2 input-prefix-icon"></i>
+            <select 
+              id="payMode" 
+              class="form-control" 
+              name="payMode" 
+              [(ngModel)]="paymentsForm.paymentMode" 
+              required>
+              <option *ngFor="let m of paymentModes" [value]="m.id">{{ m.label }}</option>
+            </select>
+          </div>
+        </div>
 
-            <!-- Field 6: Transaction Reference / UTR -->
-            <div class="form-group">
-              <label class="form-label" for="payRef">
-                Reference / UTR / Cheque #
-              </label>
-              <div class="input-with-icon">
-                <i class="bi bi-hash input-prefix-icon"></i>
-                <input 
-                  type="text" 
-                  id="payRef" 
-                  class="form-control" 
-                  name="payRef" 
-                  [(ngModel)]="paymentsForm.referenceNo" 
-                  placeholder="e.g. UTR12345678 or CHQ-9901" />
-              </div>
-            </div>
+        <div class="form-group">
+          <label class="form-label" for="payAmount">
+            Amount Received (₹) <span class="required-star">*</span>
+          </label>
+          <div class="input-with-icon">
+            <span class="currency-prefix-box">₹</span>
+            <input 
+              type="number" 
+              id="payAmount" 
+              class="form-control font-mono bold-text" 
+              name="payAmount" 
+              [(ngModel)]="paymentsForm.amountReceived" 
+              appAutoSelect
+              min="1" 
+              step="0.01" 
+              placeholder="0.00" 
+              required />
+          </div>
+        </div>
 
-            <!-- Live Financial Preview Strip -->
-            <div class="form-receipt-preview-strip full-span">
-              <div class="prev-item amt">
-                <span class="prev-label">Received Amount</span>
-                <span class="prev-val text-success">{{ paymentsForm.amountReceived | inr }}</span>
-              </div>
-              <div class="prev-item words">
-                <span class="prev-label">Amount in Words</span>
-                <span class="prev-val words-val">{{ getAmountInWords(paymentsForm.amountReceived) }}</span>
-              </div>
-              <div class="prev-item mode">
-                <span class="prev-label">Channel</span>
-                <span class="prev-val">{{ paymentsForm.paymentMode || 'UPI / QR' }}</span>
-              </div>
-            </div>
+        <!-- Row 3: Reference / UTR (Col 1) | Live Receipt Preview Strip (Cols 2-3) -->
+        <div class="form-group">
+          <label class="form-label" for="payRef">
+            Reference / UTR / Cheque #
+          </label>
+          <div class="input-with-icon">
+            <i class="bi bi-hash input-prefix-icon"></i>
+            <input 
+              type="text" 
+              id="payRef" 
+              class="form-control font-mono" 
+              name="payRef" 
+              [(ngModel)]="paymentsForm.referenceNo" 
+              placeholder="e.g. UTR12345678 or CHQ-9901" />
+          </div>
+        </div>
+
+        <div class="form-receipt-preview-strip col-span-2">
+          <div class="prev-item amt">
+            <span class="prev-label">Received Amount</span>
+            <span class="prev-val font-mono text-success">{{ paymentsForm.amountReceived | inr }}</span>
+          </div>
+          <div class="prev-item words">
+            <span class="prev-label">Amount in Words</span>
+            <span class="prev-val words-val">{{ getAmountInWords(paymentsForm.amountReceived) }}</span>
+          </div>
+          <div class="prev-item mode">
+            <span class="prev-label">Channel</span>
+            <span class="prev-val">{{ paymentsForm.paymentMode || 'UPI / QR' }}</span>
           </div>
         </div>
       </div>
@@ -254,7 +238,7 @@
           type="submit" 
           class="btn-form btn-primary">
           <i class="bi" [ngClass]="editingPaymentId ? 'bi-check-circle-fill' : 'bi-save-fill'"></i>
-          <span>{{ editingPaymentId ? 'Update Payment Record' : 'Save Payment Collection' }}</span>
+          <span>{{ editingPaymentId ? 'Update Payment' : 'Save Payment Receipt' }}</span>
         </button>
       </div>
     </form>

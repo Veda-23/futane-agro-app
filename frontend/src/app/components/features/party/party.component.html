@@ -58,95 +58,99 @@
     </div>
 
     <form #partyNgForm="ngForm" (submit)="saveParty()" class="party-form-container">
-      <!-- Section 1: Basic Account Information -->
-      <div class="form-section-block">
-        <h4 class="form-section-legend"><i class="bi bi-info-circle me-2"></i>1. Basic Account Information</h4>
-        <div class="form-row-grid">
-          <!-- Field 1: Party / Company Name -->
-          <div class="form-group-item">
-            <label class="form-item-label">Company / Party Name <span class="req-star">*</span></label>
+      <div class="party-enterprise-grid">
+        <!-- Field 1: Party / Company Name (Cols 1-2) -->
+        <div class="form-group-item col-span-2">
+          <label class="form-item-label">Company / Party Name <span class="req-star">*</span></label>
+          <div class="input-icon-box">
+            <i class="bi bi-building input-lead-ico"></i>
             <input type="text" [(ngModel)]="partyForm.partyName" name="partyName" #partyNameRef="ngModel" required minlength="2" class="form-control-standard" placeholder="e.g. Heritage Foods Retail Ltd.">
-            <div *ngIf="partyNameRef.invalid && (partyNameRef.dirty || partyNameRef.touched)" class="field-error-msg">
-              <small *ngIf="partyNameRef.errors?.['required']">Party name is required.</small>
-              <small *ngIf="partyNameRef.errors?.['minlength']">Name must be at least 2 characters.</small>
-            </div>
           </div>
-
-          <!-- Field 2: Mobile / Contact Phone -->
-          <div class="form-group-item">
-            <label class="form-item-label">Mobile / Contact Phone <span class="req-star">*</span></label>
-            <input type="text" [(ngModel)]="partyForm.partyContact" name="partyContact" #partyContactRef="ngModel" required pattern="^\d{10}$" class="form-control-standard" placeholder="10-digit mobile (e.g. 9876543210)">
-            <div *ngIf="partyContactRef.invalid && (partyContactRef.dirty || partyContactRef.touched)" class="field-error-msg">
-              <small *ngIf="partyContactRef.errors?.['required']">Contact number is required.</small>
-              <small *ngIf="partyContactRef.errors?.['pattern']">Must be exactly 10 digits.</small>
-            </div>
+          <div *ngIf="partyNameRef.invalid && (partyNameRef.dirty || partyNameRef.touched)" class="field-error-msg">
+            <small *ngIf="partyNameRef.errors?.['required']">Party name is required.</small>
+            <small *ngIf="partyNameRef.errors?.['minlength']">Name must be at least 2 characters.</small>
           </div>
         </div>
-      </div>
 
-      <!-- Section 2: Contact & Tax Information -->
-      <div class="form-section-block">
-        <h4 class="form-section-legend"><i class="bi bi-shield-check me-2"></i>2. Tax & Commercial Registry</h4>
-        <div class="form-row-grid">
-          <!-- Field 3: GSTIN Number -->
-          <div class="form-group-item">
-            <label class="form-item-label">GSTIN Tax Number</label>
-            <input type="text" [(ngModel)]="partyForm.gstNumber" name="partyGst" #partyGstRef="ngModel" pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$" class="form-control-standard" placeholder="15-digit GSTIN (e.g. 27ABCDE1234F1Z5)">
-            <div *ngIf="partyGstRef.invalid && (partyGstRef.dirty || partyGstRef.touched)" class="field-error-msg">
-              <small *ngIf="partyGstRef.errors?.['pattern']">Invalid GST Number format (15 characters required).</small>
-            </div>
+        <!-- Field 2: Mobile / Contact Phone (Col 3) -->
+        <div class="form-group-item">
+          <label class="form-item-label">Mobile / Contact Phone <span class="req-star">*</span></label>
+          <div class="input-icon-box">
+            <i class="bi bi-telephone input-lead-ico"></i>
+            <input type="text" [(ngModel)]="partyForm.partyContact" name="partyContact" #partyContactRef="ngModel" required pattern="^\d{10}$" class="form-control-standard font-mono" placeholder="10-digit mobile (e.g. 9876543210)">
           </div>
+          <div *ngIf="partyContactRef.invalid && (partyContactRef.dirty || partyContactRef.touched)" class="field-error-msg">
+            <small *ngIf="partyContactRef.errors?.['required']">Contact number is required.</small>
+            <small *ngIf="partyContactRef.errors?.['pattern']">Must be exactly 10 digits.</small>
+          </div>
+        </div>
 
-          <!-- Field 4: Business Email -->
-          <div class="form-group-item">
-            <label class="form-item-label">Business Email Address</label>
+        <!-- Field 3: GSTIN Tax Number (Col 1) -->
+        <div class="form-group-item">
+          <label class="form-item-label">GSTIN Tax Number</label>
+          <div class="input-icon-box">
+            <i class="bi bi-shield-check input-lead-ico"></i>
+            <input type="text" [(ngModel)]="partyForm.gstNumber" name="partyGst" #partyGstRef="ngModel" pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$" class="form-control-standard font-mono text-uppercase" placeholder="15-digit GSTIN (e.g. 27ABCDE1234F1Z5)">
+          </div>
+          <div *ngIf="partyGstRef.invalid && (partyGstRef.dirty || partyGstRef.touched)" class="field-error-msg">
+            <small *ngIf="partyGstRef.errors?.['pattern']">Invalid GST Number (15 chars required).</small>
+          </div>
+        </div>
+
+        <!-- Field 4: Business Email (Col 2) -->
+        <div class="form-group-item">
+          <label class="form-item-label">Business Email Address</label>
+          <div class="input-icon-box">
+            <i class="bi bi-envelope input-lead-ico"></i>
             <input type="email" [(ngModel)]="partyForm.email" name="partyEmail" #partyEmailRef="ngModel" email class="form-control-standard" placeholder="procurement@company.com">
-            <div *ngIf="partyEmailRef.invalid && (partyEmailRef.dirty || partyEmailRef.touched)" class="field-error-msg">
-              <small *ngIf="partyEmailRef.errors?.['email']">Invalid Email format.</small>
-            </div>
+          </div>
+          <div *ngIf="partyEmailRef.invalid && (partyEmailRef.dirty || partyEmailRef.touched)" class="field-error-msg">
+            <small *ngIf="partyEmailRef.errors?.['email']">Invalid Email format.</small>
           </div>
         </div>
-      </div>
 
-      <!-- Section 3: Geographic & Billing Location -->
-      <div class="form-section-block">
-        <h4 class="form-section-legend"><i class="bi bi-geo-alt me-2"></i>3. Geographic & Billing Location</h4>
-        <div class="form-row-grid">
-          <!-- Field 5: City -->
-          <div class="form-group-item">
-            <label class="form-item-label">City / Town</label>
-            <input type="text" [(ngModel)]="partyForm.city" name="partyCity" class="form-control-standard" placeholder="e.g. Pune, Baramati, Mumbai">
-          </div>
-
-          <!-- Field 6: State -->
-          <div class="form-group-item">
-            <label class="form-item-label">State / Region <span class="req-star">*</span></label>
+        <!-- Field 5: State / Region (Col 3) -->
+        <div class="form-group-item">
+          <label class="form-item-label">State / Region <span class="req-star">*</span></label>
+          <div class="input-icon-box">
+            <i class="bi bi-geo-alt input-lead-ico"></i>
             <input type="text" [(ngModel)]="partyForm.state" name="partyState" required class="form-control-standard" placeholder="e.g. Maharashtra">
           </div>
+        </div>
 
-          <!-- Field 7: Full Address (Spans full row) -->
-          <div class="form-group-item full-width-item">
-            <label class="form-item-label">Registered Office / Billing Address</label>
-            <input type="text" [(ngModel)]="partyForm.partyAddress" name="partyAddress" class="form-control-standard" placeholder="Full street address, MIDC Industrial Area, landmark...">
+        <!-- Field 6: City / Town (Col 1) -->
+        <div class="form-group-item">
+          <label class="form-item-label">City / Town</label>
+          <div class="input-icon-box">
+            <i class="bi bi-pin-map input-lead-ico"></i>
+            <input type="text" [(ngModel)]="partyForm.city" name="partyCity" class="form-control-standard" placeholder="e.g. Pune, Baramati, Mumbai">
           </div>
         </div>
-      </div>
 
-      <!-- Live Profile Quality Status -->
-      <div *ngIf="partyForm.partyName" class="form-readiness-banner">
-        <div class="readiness-status-row">
-          <span class="readiness-label"><i class="bi bi-shield-check text-primary me-1"></i>Profile Quality:</span>
-          <strong class="readiness-value" [class.text-success]="partyForm.partyContact" [class.text-warning]="!partyForm.partyContact">
-            <i class="bi" [ngClass]="partyForm.partyContact ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'" style="margin-right: 4px;"></i>
-            {{ partyForm.partyContact ? 'Ready for Commercial Billing' : 'Incomplete Phone Contact' }}
-          </strong>
+        <!-- Field 7: Full Address (Col 2) -->
+        <div class="form-group-item">
+          <label class="form-item-label">Registered Office / Billing Address</label>
+          <div class="input-icon-box">
+            <i class="bi bi-signpost-2 input-lead-ico"></i>
+            <input type="text" [(ngModel)]="partyForm.partyAddress" name="partyAddress" class="form-control-standard" placeholder="Street address, MIDC Industrial Area, landmark...">
+          </div>
         </div>
-        <div class="readiness-meta-row">
-          <span class="badge-mini" [class.badge-mini-success]="isGstCompliant(partyForm.gstNumber)" [class.badge-mini-muted]="!isGstCompliant(partyForm.gstNumber)">
-            <i *ngIf="isGstCompliant(partyForm.gstNumber)" class="bi bi-check2 me-1"></i>
-            {{ isGstCompliant(partyForm.gstNumber) ? 'GSTIN Validated' : 'Regular / Non-GST' }}
-          </span>
-          <span class="badge-mini badge-mini-info">Region: {{ partyForm.state || 'Maharashtra' }}</span>
+
+        <!-- Live Profile Quality & Readiness Card (Col 3) -->
+        <div class="party-readiness-card">
+          <div class="readiness-header">
+            <span class="readiness-lbl"><i class="bi bi-shield-check text-primary me-1"></i>Profile Quality:</span>
+            <span class="readiness-status-tag" [class.status-ready]="partyForm.partyContact" [class.status-pending]="!partyForm.partyContact">
+              <i class="bi" [ngClass]="partyForm.partyContact ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
+              {{ partyForm.partyContact ? 'Ready for Billing' : 'Incomplete' }}
+            </span>
+          </div>
+          <div class="readiness-badges">
+            <span class="badge-tag" [class.badge-tag-success]="isGstCompliant(partyForm.gstNumber)" [class.badge-tag-muted]="!isGstCompliant(partyForm.gstNumber)">
+              {{ isGstCompliant(partyForm.gstNumber) ? 'GSTIN Validated' : 'Non-GST / Regular' }}
+            </span>
+            <span class="badge-tag badge-tag-info">{{ partyForm.state || 'Maharashtra' }}</span>
+          </div>
         </div>
       </div>
 
