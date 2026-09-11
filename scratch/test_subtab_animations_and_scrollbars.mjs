@@ -15,6 +15,7 @@ async function testAnimations() {
   const browser = await puppeteer.launch({
     executablePath: EDGE_PATH,
     headless: 'new',
+    protocolTimeout: 300000,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--window-size=1600,1050']
   });
 
@@ -22,7 +23,7 @@ async function testAnimations() {
   await page.setViewport({ width: 1600, height: 1050, deviceScaleFactor: 1.25 });
 
   console.log('🔑 Authenticating...');
-  await page.goto(`${BASE_URL}/#/login`, { waitUntil: 'networkidle2' });
+  await page.goto(`${BASE_URL}/#/login`, { waitUntil: 'networkidle2', timeout: 60000 });
   await new Promise(r => setTimeout(r, 1000));
 
   await page.evaluate(() => {

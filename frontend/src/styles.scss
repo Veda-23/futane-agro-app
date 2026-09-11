@@ -1399,14 +1399,44 @@ body.dark-theme .density-btn.active {
   gap: 6px;
 }
 
+.page-nav-btns button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid var(--border-color, #cbd5e1);
+  background: var(--bg-card, #ffffff);
+  color: var(--text-primary, #0f172a);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.page-nav-btns button:hover:not(:disabled) {
+  border-color: #0B47D4;
+  color: #0B47D4;
+  background: rgba(11, 71, 212, 0.06);
+  transform: translateY(-1px);
+}
+
+.page-nav-btns button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .current-page-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
   font-size: 12px;
   font-weight: 700;
-  color: var(--text-primary);
-  padding: 4px 10px;
-  background: var(--bg-hover);
-  border-radius: var(--radius-sm, 6px);
-  border: 1px solid var(--border-color);
+  color: #0B47D4;
+  padding: 0 12px;
+  background: rgba(11, 71, 212, 0.08);
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid rgba(11, 71, 212, 0.2);
 }
 
 /* Row Action Buttons */
@@ -2821,39 +2851,148 @@ textarea:focus,
 .kpi-card:hover,
 .glass-card:hover {
   transform: translateY(-2.5px) !important;
-  box-shadow: 0 10px 25px -4px rgba(11, 71, 212, 0.1), 0 4px 8px -2px rgba(0, 0, 0, 0.04) !important;
+  box-shadow: 0 10px 25px -4px rgba(11, 71, 212, 0.12), 0 4px 8px -2px rgba(0, 0, 0, 0.04) !important;
 }
 
-/* Data Table Row Subtle Hover Lift */
+.telemetry-card:hover .header-icon-box,
+.kpi-card:hover .header-icon-box,
+.kpi-card:hover .kpi-icon,
+.telemetry-card:hover .card-icon-box {
+  transform: scale(1.08) rotate(2deg) !important;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* Data Table Row Subtle Hover Lift with Electric Cobalt Left Accent */
 table.table tbody tr,
-.enterprise-table tbody tr {
-  transition: background-color 0.15s ease, transform 0.12s ease !important;
+.enterprise-table tbody tr,
+.modern-table tbody tr {
+  transition: background-color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease !important;
 }
 
 table.table tbody tr:hover,
-.enterprise-table tbody tr:hover {
+.enterprise-table tbody tr:hover,
+.modern-table tbody tr:hover {
   background-color: rgba(11, 71, 212, 0.035) !important;
+  box-shadow: inset 3px 0 0 #0B47D4 !important;
+}
+
+/* Tactile Spring Press for all Interactive Buttons */
+button:active:not(:disabled),
+.btn:active:not(:disabled),
+.action-btn:active:not(:disabled),
+.btn-icon:active:not(:disabled),
+.btn-row-action:active:not(:disabled) {
+  transform: scale(0.96) !important;
+  transition: transform 0.08s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.btn-primary:not(:disabled):hover,
+.btn-action-primary:not(:disabled):hover,
+.btn-save-record:not(:disabled):hover,
+.enterprise-primary-btn:not(:disabled):hover {
+  transform: translateY(-1.5px) !important;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.32) !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease !important;
+}
+
+/* Action Table Buttons Micro-Hover */
+.action-btn:hover,
+.btn-table-action:hover,
+.btn-row-action:hover {
+  transform: scale(1.12) translateY(-1px) !important;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* Universal Electric Cobalt Input Focus Ring */
+input:focus:not([type="checkbox"]):not([type="radio"]),
+select:focus,
+textarea:focus,
+.search-input:focus,
+.erp-input:focus {
+  border-color: #0B47D4 !important;
+  box-shadow: 0 0 0 3px rgba(11, 71, 212, 0.16), 0 2px 8px rgba(11, 71, 212, 0.06) !important;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+/* Status Chips with Radiant Live Pulse */
+.status-badge.running::before,
+.status-pill.status-paid::before,
+.status-badge.verified::before,
+.badge-status.badge-success::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background-color: #10B981;
+  box-shadow: 0 0 6px #10B981;
+  animation: livePulseRadian 2s infinite ease-out !important;
 }
 
 /* ── F. Modal Window Elevations & Backdrop (Checklist #15, #19, #25, #26) ── */
+@keyframes modalSpringPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.01) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes universalDrawerSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  70% {
+    opacity: 1;
+    transform: translateX(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes backdropSoftFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+}
+
 .modal-backdrop,
+.drawer-backdrop,
 .invoice-modal-overlay {
   position: fixed !important;
   inset: 0 !important;
-  background: rgba(15, 23, 42, 0.65) !important;
-  backdrop-filter: blur(4px) !important;
-  -webkit-backdrop-filter: blur(4px) !important;
+  background: rgba(15, 23, 42, 0.6) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
   z-index: 1060 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   padding: 16px !important;
+  animation: backdropSoftFadeIn 0.22s ease both !important;
 }
 
 .modal-dialog,
 .modal-card,
 .invoice-modal-card,
-.importer-modal {
+.importer-modal,
+.audit-modal-content {
   background: var(--bg-surface) !important;
   border: 1px solid var(--border-card) !important;
   border-radius: var(--radius-xl) !important;
@@ -2862,6 +3001,14 @@ table.table tbody tr:hover,
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
+  animation: modalSpringPop 0.28s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+}
+
+.slide-drawer,
+.drawer-panel,
+.erp-drawer,
+.side-drawer {
+  animation: universalDrawerSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both !important;
 }
 
 .modal-header {
