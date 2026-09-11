@@ -9,7 +9,9 @@ import { InrPipe } from '../../../pipes/inr-currency.pipe';
 import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { QrCodeComponent } from '../../shared/qr-code/qr-code.component';
 import { FilterBarComponent } from '../../shared/filter-bar/filter-bar.component';
+import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 import { DataFilterService, FilterCriteria } from '../../../services/data-filter.service';
+import { NotificationService } from '../../../services/notification.service';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -19,7 +21,7 @@ import html2canvas from 'html2canvas';
   imports: [
     CommonModule, FormsModule, TranslatePipe, DecimalPipe,
     AutoSelectDirective, FormStateDirective, InrPipe, IndianDatePipe,
-    QrCodeComponent, FilterBarComponent
+    QrCodeComponent, FilterBarComponent, EmptyStateComponent
   ],
   templateUrl: './billing-hub.component.html',
   styleUrls: ['./billing-hub.component.css']
@@ -65,6 +67,12 @@ export class BillingHubComponent implements OnInit, OnChanges {
     { name: 'December', value: '12' }
   ];
 
+  // Telemetry & Load State
+  isLoading = false;
+  hasError = false;
+  errorMessage = '';
+  isExportingPdf = false;
+
   // Standardized Enterprise Document Color Themes
   docThemes: { [key: string]: { primary: string; secondary: string; title: string; prefix: string; accent: string } } = {
     tax_invoice: { primary: '#C2410C', secondary: '#FFF7ED', accent: '#EA580C', title: 'TAX INVOICE', prefix: 'FA/24-25/' },
@@ -78,7 +86,8 @@ export class BillingHubComponent implements OnInit, OnChanges {
 
   constructor(
     private apiService: ApiService,
-    private filterService: DataFilterService
+    private filterService: DataFilterService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit() {
@@ -123,57 +132,90 @@ export class BillingHubComponent implements OnInit, OnChanges {
     this.years = Array.from(yearSet).sort((a, b) => b - a);
   }
 
-  loadAllSources() {
-    if (!this.salesList || this.salesList.length === 0) {
-      this.apiService.getSales().subscribe(res => { 
-        if (res) { 
-          this.salesList = res; 
-          this.extractAvailableYears();
-          this.autoSelectFirst(); 
-        } 
+  loadAllSources(isManual: boolean = false) {
+    this.isLoading = true;
+    this.hasError = false;
+    this.errorMessage = '';
+
+    if (!this.salesList || this.salesList.length === 0 || isManual) {
+      this.apiService.getSales().subscribe({
+        next: res => { 
+          if (res) { 
+            this.salesList = res; 
+            this.extractAvailableYears();
+            this.autoSelectFirst(); 
+          } 
+        },
+        error: () => { this.hasError = true; }
       });
     }
-    if (!this.dispatchesList || this.dispatchesList.length === 0) {
-      this.apiService.getDispatches().subscribe(res => { 
-        if (res) { 
-          this.dispatchesList = res; 
-          this.extractAvailableYears();
-        } 
+    if (!this.dispatchesList || this.dispatchesList.length === 0 || isManual) {
+      this.apiService.getDispatches().subscribe({
+        next: res => { 
+          if (res) { 
+            this.dispatchesList = res; 
+            this.extractAvailableYears();
+          } 
+        },
+        error: () => { this.hasError = true; }
       });
     }
-    if (!this.paymentsList || this.paymentsList.length === 0) {
-      this.apiService.getPayments().subscribe(res => { 
-        if (res) { 
-          this.paymentsList = res; 
-          this.extractAvailableYears();
-        } 
+    if (!this.paymentsList || this.paymentsList.length === 0 || isManual) {
+      this.apiService.getPayments().subscribe({
+        next: res => { 
+          if (res) { 
+            this.paymentsList = res; 
+            this.extractAvailableYears();
+          } 
+        },
+        error: () => { this.hasError = true; }
       });
     }
-    if (!this.rawMaterialsList || this.rawMaterialsList.length === 0) {
-      this.apiService.getRawMaterials().subscribe(res => { 
-        if (res) { 
-          this.rawMaterialsList = res; 
-          this.extractAvailableYears();
-        } 
+    if (!this.rawMaterialsList || this.rawMaterialsList.length === 0 || isManual) {
+      this.apiService.getRawMaterials().subscribe({
+        next: res => { 
+          if (res) { 
+            this.rawMaterialsList = res; 
+            this.extractAvailableYears();
+          } 
+        },
+        error: () => { this.hasError = true; }
       });
     }
-    if (!this.transportsList || this.transportsList.length === 0) {
-      this.apiService.getTransports().subscribe(res => { 
-        if (res) { 
-          this.transportsList = res; 
-          this.extractAvailableYears();
-        } 
+    if (!this.transportsList || this.transportsList.length === 0 || isManual) {
+      this.apiService.getTransports().subscribe({
+        next: res => { 
+          if (res) { 
+            this.transportsList = res; 
+            this.extractAvailableYears();
+          } 
+        },
+        error: () => { this.hasError = true; }
       });
     }
-    if (!this.salariesList || this.salariesList.length === 0) {
-      this.apiService.getSalaries().subscribe(res => { 
-        if (res) { 
-          this.salariesList = res; 
-          this.extractAvailableYears();
-        } 
+    if (!this.salariesList || this.salariesList.length === 0 || isManual) {
+      this.apiService.getSalaries().subscribe({
+        next: res => { 
+          if (res) { 
+            this.salariesList = res; 
+            this.extractAvailableYears();
+          } 
+        },
+        error: () => { this.hasError = true; }
       });
     }
-    this.autoSelectFirst();
+
+    setTimeout(() => {
+      this.isLoading = false;
+      this.autoSelectFirst();
+      if (isManual) {
+        if (this.hasError) {
+          this.notificationService.error('Sync Incomplete', 'Could not retrieve some document records.');
+        } else {
+          this.notificationService.success('Documents Refreshed', 'Billing Hub records synchronized.');
+        }
+      }
+    }, 600);
   }
 
   get currentTheme() {
@@ -442,12 +484,21 @@ export class BillingHubComponent implements OnInit, OnChanges {
   async downloadPDF() {
     const el = document.getElementById('printable-document-sheet');
     if (!el) return;
-    const canvas = await html2canvas(el, { scale: 2, useCORS: true });
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const imgWidth = 210;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-    pdf.save(`${this.activeBillType}_${this.currentDocumentNumber.replace(/\//g, '-')}.pdf`);
+    this.isExportingPdf = true;
+    try {
+      const canvas = await html2canvas(el, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save(`${this.activeBillType}_${this.currentDocumentNumber.replace(/\//g, '-')}.pdf`);
+      this.notificationService.success('PDF Exported', `Generated ${this.currentTheme.title} successfully.`);
+    } catch (err) {
+      console.error('PDF Export failed', err);
+      this.notificationService.error('Export Failed', 'Could not generate PDF document. Please try printing directly.');
+    } finally {
+      this.isExportingPdf = false;
+    }
   }
 }

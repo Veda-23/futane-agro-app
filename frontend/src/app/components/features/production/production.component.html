@@ -11,7 +11,7 @@
           <i class="bi bi-boxes"></i>
         </div>
         <div>
-          <h1 class="header-main-title">🏭 {{ 'nav.production' | translate:currentLang }}</h1>
+          <h1 class="header-main-title">{{ 'nav.production' | translate:currentLang }}</h1>
           <p class="header-subtitle">Daily manufacturing, shift-wise output, rejection rates & quality telemetry</p>
         </div>
       </div>
@@ -74,7 +74,7 @@
     <div class="kpi-card total-card">
       <div class="kpi-icon-wrap"><i class="bi bi-boxes"></i></div>
       <div class="kpi-content">
-        <span class="kpi-label">🏭 TOTAL PRODUCED</span>
+        <span class="kpi-label">TOTAL PRODUCED</span>
         <strong class="kpi-value">{{ getPpdTotal() | number }} <span class="kpi-unit">crates</span></strong>
         <span class="kpi-meta"><i class="bi bi-layers me-1"></i>Across {{ ppdList.length }} logged batches</span>
       </div>
@@ -82,7 +82,7 @@
     <div class="kpi-card success-card">
       <div class="kpi-icon-wrap"><i class="bi bi-check2-circle"></i></div>
       <div class="kpi-content">
-        <span class="kpi-label">✅ SUCCESSFUL CRATES</span>
+        <span class="kpi-label">SUCCESSFUL CRATES</span>
         <strong class="kpi-value text-success">{{ getPpdSuccessful() | number }} <span class="kpi-unit">crates</span></strong>
         <span class="kpi-meta"><i class="bi bi-shield-check me-1"></i>Passed quality gate</span>
       </div>
@@ -90,7 +90,7 @@
     <div class="kpi-card danger-card">
       <div class="kpi-icon-wrap"><i class="bi bi-x-octagon"></i></div>
       <div class="kpi-content">
-        <span class="kpi-label">⚠️ REJECTIONS</span>
+        <span class="kpi-label">REJECTIONS</span>
         <strong class="kpi-value text-danger">{{ getPpdRejected() | number }} <span class="kpi-unit">crates</span></strong>
         <span class="kpi-meta"><i class="bi bi-exclamation-triangle me-1"></i>{{ getPpdTotal() > 0 ? ((getPpdRejected() / getPpdTotal()) * 100 | number:'1.1-1') : 0 }}% scrap rate</span>
       </div>
@@ -98,7 +98,7 @@
     <div class="kpi-card efficiency-card">
       <div class="kpi-icon-wrap"><i class="bi bi-speedometer2"></i></div>
       <div class="kpi-content">
-        <span class="kpi-label">⚡ OVERALL BATCH YIELD</span>
+        <span class="kpi-label">OVERALL BATCH YIELD</span>
         <strong class="kpi-value text-primary">{{ getPpdEfficiency() | number:'1.1-1' }}%</strong>
         <div class="kpi-progress-bar">
           <div class="kpi-progress-fill" [style.width.%]="getPpdEfficiency()"></div>
@@ -225,7 +225,7 @@
         <!-- Crate Type Filter -->
         <div class="toolbar-filter-select">
           <select [(ngModel)]="tabFilterCrateType" (change)="currentPage = 1" class="toolbar-select" title="Filter by crate product type">
-            <option value="">📦 All Crate Types</option>
+            <option value="">All Crate Types</option>
             <option *ngFor="let c of crateTypes" [value]="c">{{ c }}</option>
           </select>
         </div>
@@ -233,7 +233,7 @@
         <!-- Shift Filter -->
         <div class="toolbar-filter-select">
           <select [(ngModel)]="tabFilterShift" (change)="currentPage = 1" class="toolbar-select" title="Filter by shift">
-            <option value="">⏱️ All Shifts</option>
+            <option value="">All Shifts</option>
             <option *ngFor="let s of shifts" [value]="s">{{ s }}</option>
           </select>
         </div>
@@ -570,7 +570,7 @@
           <i class="bi bi-bar-chart-steps"></i>
         </div>
         <div>
-          <h1 class="header-main-title">📅 {{ 'nav.monthly-production' | translate:currentLang }}</h1>
+          <h1 class="header-main-title">{{ 'nav.monthly-production' | translate:currentLang }}</h1>
           <p class="header-subtitle">Monthly manufacturing volume, power unit consumption & electricity cost per crate</p>
         </div>
       </div>
@@ -587,12 +587,12 @@
           </button>
           
           <select [(ngModel)]="tabFilterPpmMonth" class="header-select-month" (change)="currentPage = 1; updatePpmChart()" title="Select month" aria-label="Select month">
-            <option value="">🗓️ All Months</option>
+            <option value="">All Months</option>
             <option *ngFor="let m of months" [value]="m">{{ m }}</option>
           </select>
 
           <select [(ngModel)]="tabFilterPpmYear" class="header-select-year" (change)="currentPage = 1; updatePpmChart()" title="Select year" aria-label="Select year">
-            <option value="">📅 All Years</option>
+            <option value="">All Years</option>
             <option *ngFor="let y of getPpmYears()" [value]="y">{{ y }}</option>
           </select>
 
@@ -638,7 +638,7 @@
     <div class="kpi-card total-card">
       <div class="kpi-icon-wrap"><i class="bi bi-boxes"></i></div>
       <div class="kpi-content">
-        <span class="kpi-label">🏭 TOTAL PRODUCTION</span>
+        <span class="kpi-label">TOTAL PRODUCTION</span>
         <strong class="kpi-value">{{ getPpmTotalCrates() | number }} <span class="kpi-unit">crates</span></strong>
         <span class="kpi-meta"><i class="bi bi-calendar-check me-1"></i>Across {{ ppmList.length }} logged months</span>
       </div>
@@ -648,7 +648,7 @@
     <div class="kpi-card success-card">
       <div class="kpi-icon-wrap"><i class="bi bi-lightning-charge-fill"></i></div>
       <div class="kpi-content">
-        <span class="kpi-label">⚡ TOTAL ELECTRICITY</span>
+        <span class="kpi-label">TOTAL ELECTRICITY</span>
         <strong class="kpi-value text-info">{{ getPpmTotalUnits() | number:'1.1-1' }} <span class="kpi-unit">kWh</span></strong>
         <span class="kpi-meta"><i class="bi bi-speedometer2 me-1"></i>{{ getPpmAverageUnitsPerMonth() | number:'1.0-0' }} kWh / mo avg</span>
       </div>
@@ -658,7 +658,7 @@
     <div class="kpi-card danger-card">
       <div class="kpi-icon-wrap"><i class="bi bi-currency-rupee"></i></div>
       <div class="kpi-content">
-        <span class="kpi-label">💡 POWER UTILITY BILL</span>
+        <span class="kpi-label">POWER UTILITY BILL</span>
         <strong class="kpi-value text-warning">₹{{ getPpmTotalBill() | number:'1.2-2' }}</strong>
         <span class="kpi-meta"><i class="bi bi-receipt me-1"></i>₹{{ getPpmAverageBillPerMonth() | number:'1.0-0' }} / mo avg</span>
       </div>
@@ -668,7 +668,7 @@
     <div class="kpi-card efficiency-card">
       <div class="kpi-icon-wrap"><i class="bi bi-pie-chart-fill"></i></div>
       <div class="kpi-content">
-        <span class="kpi-label">📊 OVERHEAD / CRATE</span>
+        <span class="kpi-label">OVERHEAD / CRATE</span>
         <strong class="kpi-value text-primary">₹{{ getPpmAvgCostPerCrate() | number:'1.2-2' }}</strong>
         <span class="kpi-meta"><i class="bi bi-cpu me-1"></i>{{ getPpmAvgUnitsPerCrate() | number:'1.2-2' }} kWh per finished crate</span>
       </div>
@@ -678,7 +678,7 @@
     <div class="kpi-card peak-card">
       <div class="kpi-icon-wrap"><i class="bi bi-trophy-fill"></i></div>
       <div class="kpi-content">
-        <span class="kpi-label">🏆 PEAK OUTPUT MONTH</span>
+        <span class="kpi-label">PEAK OUTPUT MONTH</span>
         <strong class="kpi-value text-success font-compact">{{ getPpmPeakMonth() }}</strong>
         <span class="kpi-meta"><i class="bi bi-graph-up-arrow me-1"></i>Record manufacturing batch</span>
       </div>
@@ -824,7 +824,7 @@
         <!-- Month Filter -->
         <div class="toolbar-filter-select">
           <select [(ngModel)]="tabFilterPpmMonth" (change)="currentPage = 1; updatePpmChart()" class="toolbar-select" title="Filter by month">
-            <option value="">🗓️ All Months</option>
+            <option value="">All Months</option>
             <option *ngFor="let m of months" [value]="m">{{ m }}</option>
           </select>
         </div>
@@ -832,7 +832,7 @@
         <!-- Year Filter -->
         <div class="toolbar-filter-select">
           <select [(ngModel)]="tabFilterPpmYear" (change)="currentPage = 1; updatePpmChart()" class="toolbar-select" title="Filter by year">
-            <option value="">📅 All Years</option>
+            <option value="">All Years</option>
             <option *ngFor="let y of getPpmYears()" [value]="y">{{ y }}</option>
           </select>
         </div>

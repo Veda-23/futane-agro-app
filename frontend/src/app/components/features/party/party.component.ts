@@ -52,12 +52,14 @@ export class PartyComponent implements OnInit {
   selectedPartyForDrawer: PartyRecord | null = null;
 
   // Active Subtab filter
-  subTab: 'all' | 'gst' | 'mh' | 'interstate' = 'all';
+  subTab: 'all' | 'wholesalers' | 'gst' | 'mh' | 'interstate' = 'all';
 
   // Toolbar & Search Filters
   searchQuery: string = '';
+  filterPartyType: string = '';
   filterState: string = '';
   filterGstStatus: string = '';
+  isFilterPopoverOpen: boolean = false;
 
   // Density & Pagination
   tableDensity: 'compact' | 'comfortable' | 'spacious' = 'comfortable';
@@ -73,12 +75,13 @@ export class PartyComponent implements OnInit {
   showColDropdown: boolean = false;
   columnsConfig = [
     { key: 'partyName', label: 'Company / Party Name', visible: true, locked: true },
+    { key: 'partyType', label: 'Party / Business Type', visible: true },
     { key: 'partyContact', label: 'Contact Details', visible: true },
     { key: 'gstNumber', label: 'GSTIN / Tax ID', visible: true },
     { key: 'location', label: 'Location & State', visible: true },
     { key: 'email', label: 'Business Email', visible: true },
     { key: 'status', label: 'B2B Readiness', visible: true },
-    { key: 'createdDate', label: 'Registered On', visible: true }
+    { key: 'createdDate', label: 'Registered On', visible: false }
   ];
 
   // Add / Edit Form State
@@ -136,11 +139,50 @@ export class PartyComponent implements OnInit {
   }
 
   // --- Subtab Navigation ---
-  setSubTab(tab: 'all' | 'gst' | 'mh' | 'interstate') {
+  setSubTab(tab: 'all' | 'wholesalers' | 'gst' | 'mh' | 'interstate') {
     this.subTab = tab;
     this.currentPage = 1;
     this.selectedPartyIds = {};
     this.selectAllChecked = false;
+  }
+
+  // --- Party Type Classification ---
+  getPartyType(party: PartyRecord): 'Wholesaler' | 'Distributor' | 'Retailer' | 'Commercial' {
+    if (!party || !party.partyName) return 'Commercial';
+    const name = party.partyName.toLowerCase();
+    if (name.includes('distribut') || name.includes('logistics') || name.includes('supply') || name.includes('cold chain') || name.includes('depot') || name.includes('agency')) {
+      return 'Distributor';
+    }
+    if (name.includes('agro') || name.includes('trade') || name.includes('wholesale') || name.includes('mandi') || name.includes('krishi') || name.includes('bulk')) {
+      return 'Wholesaler';
+    }
+    if (name.includes('retail') || name.includes('foods') || name.includes('mart') || name.includes('fresh') || name.includes('hyper') || name.includes('store') || name.includes('super')) {
+      return 'Retailer';
+    }
+    return 'Commercial';
+  }
+
+  getWholesalerDistributorCount(): number {
+    return (this.parties || []).filter(p => {
+      const t = this.getPartyType(p);
+      return t === 'Wholesaler' || t === 'Distributor';
+    }).length;
+  }
+
+  getActiveFilterCount(): number {
+    let count = 0;
+    if (this.filterPartyType) count++;
+    if (this.filterState) count++;
+    if (this.filterGstStatus) count++;
+    return count;
+  }
+
+  toggleFilterPopover() {
+    this.isFilterPopoverOpen = !this.isFilterPopoverOpen;
+  }
+
+  closeFilterPopover() {
+    this.isFilterPopoverOpen = false;
   }
 
   // --- KPI Telemetry Computations ---
@@ -209,7 +251,12 @@ export class PartyComponent implements OnInit {
     let list = this.parties || [];
 
     // 1. Subtab filter
-    if (this.subTab === 'gst') {
+    if (this.subTab === 'wholesalers') {
+      list = list.filter(p => {
+        const t = this.getPartyType(p);
+        return t === 'Wholesaler' || t === 'Distributor';
+      });
+    } else if (this.subTab === 'gst') {
       list = list.filter(p => this.isGstCompliant(p.gstNumber));
     } else if (this.subTab === 'mh') {
       list = list.filter(p => this.isMaharashtra(p));
@@ -226,16 +273,22 @@ export class PartyComponent implements OnInit {
         (p.gstNumber && p.gstNumber.toLowerCase().includes(q)) ||
         (p.city && p.city.toLowerCase().includes(q)) ||
         (p.state && p.state.toLowerCase().includes(q)) ||
-        (p.email && p.email.toLowerCase().includes(q))
+        (p.email && p.email.toLowerCase().includes(q)) ||
+        this.getPartyType(p).toLowerCase().includes(q)
       );
     }
 
-    // 3. State filter
+    // 3. Party Type filter
+    if (this.filterPartyType) {
+      list = list.filter(p => this.getPartyType(p) === this.filterPartyType);
+    }
+
+    // 4. State filter
     if (this.filterState) {
       list = list.filter(p => p.state && p.state.trim().toLowerCase() === this.filterState.toLowerCase());
     }
 
-    // 4. GST status filter
+    // 5. GST status filter
     if (this.filterGstStatus === 'gst_yes') {
       list = list.filter(p => this.isGstCompliant(p.gstNumber));
     } else if (this.filterGstStatus === 'gst_no') {
@@ -264,12 +317,14 @@ export class PartyComponent implements OnInit {
 
   resetFilters() {
     this.searchQuery = '';
+    this.filterPartyType = '';
     this.filterState = '';
     this.filterGstStatus = '';
     this.subTab = 'all';
     this.currentPage = 1;
     this.selectedPartyIds = {};
     this.selectAllChecked = false;
+    this.isFilterPopoverOpen = false;
   }
 
   // --- Multi-Selection ---

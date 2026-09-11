@@ -1,115 +1,141 @@
-<!-- Quick-Access Financial KPIs (E-10) -->
+<!-- 1. Enterprise Page Header -->
+<div class="erp-page-header no-print">
+  <div class="erp-page-header-left">
+    <div class="erp-breadcrumb">ERP <i class="bi bi-chevron-right mx-1"></i> Business Intelligence <i class="bi bi-chevron-right mx-1"></i> Executive Reports</div>
+    <h1 class="erp-page-title"><i class="bi bi-graph-up-arrow me-2 text-primary"></i> Comprehensive Executive Business Reports</h1>
+    <p class="erp-page-subtitle">Centralized analytics, P&L, sales tracking, and operational intelligence</p>
+  </div>
+</div>
+
+<!-- 2. Sticky Report Controls -->
+<div class="sticky-report-controls no-print">
+  <div class="report-filter-bar glass-panel">
+    <div class="filter-bar-inner">
+
+      <!-- LEFT: Primary Selectors -->
+      <div class="filter-group-left">
+        <div class="form-group mb-0" style="min-width: 220px;">
+          <label class="filter-label"><i class="bi bi-file-earmark-text me-1"></i> Report Type</label>
+          <select [(ngModel)]="reportFilter.type" name="repType" (change)="runReport()" class="form-control form-control-sm" style="font-weight: 600;">
+            <option value="production">Production (Daily)</option>
+            <option value="production_monthly">Production (Monthly)</option>
+            <option value="sales">Sales & Revenue</option>
+            <option value="party_ledger">Party Ledger</option>
+            <option value="inventory">Inventory Stock</option>
+            <option value="salary">Payroll Released</option>
+            <option value="expense">Expense Summary</option>
+            <option value="transport">Transport Logistics</option>
+          </select>
+        </div>
+
+        <div class="form-group mb-0" style="width: 140px;" *ngIf="reportFilter.type !== 'inventory'">
+          <label class="filter-label"><i class="bi bi-calendar3 me-1"></i> From Date</label>
+          <input type="date" [(ngModel)]="reportFilter.fromDate" name="repFrom" (change)="runReport()" class="form-control form-control-sm">
+        </div>
+
+        <div class="form-group mb-0" style="width: 140px;" *ngIf="reportFilter.type !== 'inventory'">
+          <label class="filter-label"><i class="bi bi-calendar3 me-1"></i> To Date</label>
+          <input type="date" [(ngModel)]="reportFilter.toDate" name="repTo" (change)="runReport()" class="form-control form-control-sm">
+        </div>
+      </div>
+
+      <!-- CENTER: Secondary Filters -->
+      <div class="filter-group-center">
+        <div class="form-group mb-0" style="width: 220px;" *ngIf="['sales','party_ledger'].includes(reportFilter.type)">
+          <label class="filter-label"><i class="bi bi-building me-1"></i> Customer</label>
+          <select [(ngModel)]="reportFilter.partyId" name="repParty" (change)="runReport()" class="form-control form-control-sm">
+            <option value="">{{ reportFilter.type === 'party_ledger' ? '— Select Customer —' : 'All Customers' }}</option>
+            <option *ngFor="let p of parties" [value]="p.id">{{ p.partyName }}</option>
+          </select>
+        </div>
+
+        <div class="btn-group-sm d-flex align-items-end gap-1 pb-1" *ngIf="reportFilter.type !== 'inventory'">
+          <button class="btn btn-outline-secondary btn-sm" (click)="setCurrentFY()" title="Current Financial Year">FY {{ getCurrentFYLabel() }}</button>
+          <button class="btn btn-outline-secondary btn-sm" (click)="setCurrentMonth()">This Month</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: Actions -->
+      <div class="filter-group-right">
+        <button class="btn btn-outline-secondary btn-sm me-2" (click)="clearReportFilters()" title="Reset Filters"><i class="bi bi-arrow-counterclockwise"></i></button>
+        <button class="btn btn-primary btn-sm me-3" (click)="runReport(true)"><i class="bi bi-play-fill me-1"></i> Run</button>
+        
+        <div class="btn-group">
+          <button class="btn btn-secondary btn-sm" (click)="printReport()" [disabled]="filteredReportData.length === 0 && partyLedgerRows.length === 0" title="Print Document">
+            <i class="bi bi-printer"></i>
+          </button>
+          <button class="btn btn-danger btn-sm" (click)="exportReportToPdf()" [disabled]="filteredReportData.length === 0 && partyLedgerRows.length === 0" title="Download PDF">
+            <i class="bi bi-file-earmark-pdf"></i>
+          </button>
+          <button class="btn btn-success btn-sm" (click)="downloadTallyXml()" title="Export Sales to Tally Prime XML">
+            <i class="bi bi-file-earmark-code"></i> Tally
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Summary Indicator Bar -->
+    <div class="report-summary-strip" *ngIf="filteredReportData.length > 0 || partyLedgerRows.length > 0">
+      <span><i class="bi bi-bar-chart-line me-1"></i> <strong>{{ reportFilter.type === 'party_ledger' ? partyLedgerRows.length : filteredReportData.length }}</strong> records found</span>
+      <span *ngIf="reportTotals.amount > 0">
+        <i class="bi bi-cash-stack me-1 text-muted"></i> Amount: <strong class="text-success">{{ reportTotals.amount | inr }}</strong>
+      </span>
+      <span *ngIf="reportTotals.qty > 0">
+        <i class="bi bi-box-seam me-1 text-muted"></i> Units: <strong>{{ reportTotals.qty | number }}</strong>
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Executive Summary KPIs -->
 <div class="report-kpi-grid">
   <!-- Total Revenue -->
-  <div class="glass-panel" style="padding:16px; text-align:center; position:relative; overflow:hidden;">
-    <div style="margin-bottom:6px;"><i class="bi bi-currency-rupee" style="font-size:24px; color:var(--color-success);"></i></div>
-    <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Total Sales Revenue</div>
-    <div style="font-size:22px; font-weight:800; color:var(--color-success);">
-      {{ totalRevenue | inr }}
+  <div class="report-kpi-card">
+    <div class="report-kpi-icon icon-emerald">
+      <i class="bi bi-currency-rupee"></i>
+    </div>
+    <div class="report-kpi-info">
+      <div class="report-kpi-label">Total Sales Revenue</div>
+      <div class="report-kpi-val text-success">{{ totalRevenue | inr }}</div>
     </div>
   </div>
 
   <!-- Total Outstanding -->
-  <div class="glass-panel" style="padding:16px; text-align:center; position:relative; overflow:hidden;">
-    <div style="margin-bottom:6px;"><i class="bi bi-exclamation-triangle-fill" style="font-size:24px; color:var(--color-danger);"></i></div>
-    <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Total Outstanding</div>
-    <div style="font-size:22px; font-weight:800; color:var(--color-danger);">
-      {{ totalOutstanding | inr }}
+  <div class="report-kpi-card">
+    <div class="report-kpi-icon icon-rose">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+    </div>
+    <div class="report-kpi-info">
+      <div class="report-kpi-label">Total Outstanding</div>
+      <div class="report-kpi-val text-danger">{{ totalOutstanding | inr }}</div>
     </div>
   </div>
 
   <!-- Production This Month -->
-  <div class="glass-panel" style="padding:16px; text-align:center; position:relative; overflow:hidden;">
-    <div style="margin-bottom:6px;"><i class="bi bi-building-fill" style="font-size:24px; color:var(--primary);"></i></div>
-    <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Production This Month</div>
-    <div style="font-size:22px; font-weight:800; color:var(--primary);">
-      {{ monthlyProductionTotal | number }} <span style="font-size:13px; font-weight:500;">crates</span>
+  <div class="report-kpi-card">
+    <div class="report-kpi-icon icon-blue">
+      <i class="bi bi-building-fill"></i>
+    </div>
+    <div class="report-kpi-info">
+      <div class="report-kpi-label">Production This Month</div>
+      <div class="report-kpi-val text-primary">{{ monthlyProductionTotal | number }} <span class="unit-span">crates</span></div>
     </div>
   </div>
 
   <!-- Expenses This Month -->
-  <div class="glass-panel" style="padding:16px; text-align:center; position:relative; overflow:hidden;">
-    <div style="margin-bottom:6px;"><i class="bi bi-cash-coin" style="font-size:24px; color:var(--color-warning);"></i></div>
-    <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Expenses This Month</div>
-    <div style="font-size:22px; font-weight:800; color:var(--color-warning);">
-      {{ monthlyExpenseTotal | inr }}
+  <div class="report-kpi-card">
+    <div class="report-kpi-icon icon-amber">
+      <i class="bi bi-cash-coin"></i>
+    </div>
+    <div class="report-kpi-info">
+      <div class="report-kpi-label">Expenses This Month</div>
+      <div class="report-kpi-val text-warning">{{ monthlyExpenseTotal | inr }}</div>
     </div>
   </div>
 </div>
 
-<!-- Filter Toolbar (E-01) -->
-<div class="report-filter-bar glass-panel">
-  <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
-
-    <!-- Report Type -->
-    <div class="form-group" style="margin:0; min-width:200px; flex:1;">
-      <label style="font-size:11px; font-weight:600; text-transform:uppercase; margin-bottom:4px; display:block;"><i class="bi bi-file-earmark-text me-1"></i> Report Type</label>
-      <select [(ngModel)]="reportFilter.type" name="repType" (change)="runReport()" style="width:100%;">
-        <option value="production">🏭 Production (Daily)</option>
-        <option value="production_monthly">📅 Production (Monthly)</option>
-        <option value="sales">📈 Sales & Revenue</option>
-        <option value="party_ledger">👥 Party Ledger</option>
-        <option value="inventory">📦 Inventory Stock</option>
-        <option value="salary">💵 Payroll Released</option>
-        <option value="expense">💸 Expense Summary</option>
-        <option value="transport">🚚 Transport Logistics</option>
-      </select>
-    </div>
-
-    <!-- From Date -->
-    <div class="form-group" style="margin:0; min-width:140px;" *ngIf="reportFilter.type !== 'inventory'">
-      <label style="font-size:11px; font-weight:600; text-transform:uppercase; margin-bottom:4px; display:block;"><i class="bi bi-calendar3 me-1"></i> From Date</label>
-      <input type="date" [(ngModel)]="reportFilter.fromDate" name="repFrom" (change)="runReport()" style="width:100%;">
-    </div>
-
-    <!-- To Date -->
-    <div class="form-group" style="margin:0; min-width:140px;" *ngIf="reportFilter.type !== 'inventory'">
-      <label style="font-size:11px; font-weight:600; text-transform:uppercase; margin-bottom:4px; display:block;"><i class="bi bi-calendar3 me-1"></i> To Date</label>
-      <input type="date" [(ngModel)]="reportFilter.toDate" name="repTo" (change)="runReport()" style="width:100%;">
-    </div>
-
-    <!-- Customer Filter -->
-    <div class="form-group" style="margin:0; min-width:180px;" *ngIf="['sales','party_ledger'].includes(reportFilter.type)">
-      <label style="font-size:11px; font-weight:600; text-transform:uppercase; margin-bottom:4px; display:block;"><i class="bi bi-building me-1"></i> Customer</label>
-      <select [(ngModel)]="reportFilter.partyId" name="repParty" (change)="runReport()" style="width:100%;">
-        <option value="">{{ reportFilter.type === 'party_ledger' ? '— Select Customer —' : 'All Customers' }}</option>
-        <option *ngFor="let p of parties" [value]="p.id">{{ p.partyName }}</option>
-      </select>
-    </div>
-
-    <!-- Action Buttons -->
-    <div style="display:flex; gap:8px; flex-wrap:wrap; align-self:flex-end;">
-      <button class="btn btn-secondary btn-sm" (click)="setCurrentFY()" title="Current Financial Year">
-        FY {{ getCurrentFYLabel() }}
-      </button>
-      <button class="btn btn-secondary btn-sm" (click)="setCurrentMonth()">This Month</button>
-      <button class="btn btn-secondary btn-sm" (click)="clearReportFilters()"><i class="bi bi-arrow-counterclockwise me-1"></i> Clear</button>
-      <button class="btn btn-primary btn-sm" (click)="runReport(true)"><i class="bi bi-play-fill me-1"></i> Run</button>
-      <button class="btn btn-secondary btn-sm no-print" (click)="printReport()" [disabled]="filteredReportData.length === 0 && partyLedgerRows.length === 0">
-        <i class="bi bi-printer me-1"></i> Print
-      </button>
-      <button class="btn btn-danger btn-sm no-print" (click)="exportReportToPdf()" [disabled]="filteredReportData.length === 0 && partyLedgerRows.length === 0">
-        <i class="bi bi-file-earmark-pdf me-1"></i> PDF
-      </button>
-      <button class="btn btn-success btn-sm no-print" (click)="downloadTallyXml()" title="Export Sales to Tally Prime XML">
-        <i class="bi bi-file-earmark-code me-1"></i> Tally XML
-      </button>
-    </div>
-
-  </div>
-
-  <!-- Summary Indicator Bar -->
-  <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border-glass); display:flex; flex-wrap:wrap; gap:20px; font-size:13px; color:var(--text-secondary);"
-       *ngIf="filteredReportData.length > 0 || partyLedgerRows.length > 0">
-    <span><i class="bi bi-bar-chart-line me-1"></i> <strong>{{ reportFilter.type === 'party_ledger' ? partyLedgerRows.length : filteredReportData.length }}</strong> records found</span>
-    <span *ngIf="reportTotals.amount > 0">
-      <i class="bi bi-cash-stack me-1"></i> Total Amount: <strong style="color:var(--accent-success, #10b981);">{{ reportTotals.amount | inr }}</strong>
-    </span>
-    <span *ngIf="reportTotals.qty > 0">
-      <i class="bi bi-box-seam me-1"></i> Total Units: <strong>{{ reportTotals.qty | number }}</strong>
-    </span>
-  </div>
-</div>
+<!-- 4. Chart Analytics Panel -->
 
 <!-- Chart Panel (E-05) -->
 <div class="glass-panel" *ngIf="['production','sales','production_monthly'].includes(reportFilter.type) && filteredReportData.length > 0"
@@ -162,7 +188,7 @@
       </div>
     </div>
 
-    <div class="table-container" [class.table-compact]="tableDensity === 'compact'" [class.table-spacious]="tableDensity === 'spacious'">
+    <div class="report-table-responsive" [class.table-compact]="tableDensity === 'compact'" [class.table-spacious]="tableDensity === 'spacious'">
       <!-- 1. Daily Production Report -->
       <table class="enterprise-data-table" *ngIf="reportFilter.type === 'production'">
         <thead>

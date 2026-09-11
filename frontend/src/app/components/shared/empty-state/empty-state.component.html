@@ -1,0 +1,21 @@
+<div class="empty-state-card" [ngClass]="['variant-' + variant, compact ? 'compact-state' : '']">
+  <div class="empty-state-icon-badge">
+    <i class="bi" [ngClass]="icon"></i>
+  </div>
+  
+  <div class="empty-state-text-group">
+    <h3 class="empty-state-heading">{{ title }}</h3>
+    <p class="empty-state-desc" *ngIf="description">{{ description }}</p>
+  </div>
+
+  <div class="empty-state-actions" *ngIf="actionLabel">
+    <button type="button" class="btn empty-state-btn" (click)="onActionClick()">
+      <i class="bi me-1.5" [ngClass]="actionIcon" *ngIf="actionIcon"></i>
+      <span>{{ actionLabel }}</span>
+    </button>
+  </div>
+
+  <div class="empty-state-extra">
+    <ng-content></ng-content>
+  </div>
+</div>

@@ -1,39 +1,853 @@
-<div class="grid-cols-3">
-  <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
-    <h3>{{ 'vendor.add_title' | translate:currentLang }}</h3>
-    <form (submit)="saveVendor()">
-      <div class="form-group">
-        <label>{{ 'vendor.name' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="vendorForm.vendorName" name="vName" required placeholder="Company/Supplier name">
+<div class="vendors-enterprise-container">
+
+  <!-- ── 1. UNIFIED BREADCRUMB & STABLE HEADER ────────────────────── -->
+  <div class="header-section-wrapper no-print">
+    <div class="breadcrumb-nav">
+      <span class="breadcrumb-item"><i class="bi bi-house-door me-1"></i>Futane Agro ERP</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item">Procurement & Supply Chain</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item active">Polymer Suppliers & Vendor Directory</span>
+    </div>
+
+    <div class="stable-page-header">
+      <div class="header-left">
+        <div class="header-icon-badge">
+          <i class="bi bi-shop"></i>
+        </div>
+        <div class="header-text-group">
+          <h1 class="header-main-title">Polymer Suppliers & Vendor Directory</h1>
+          <p class="header-desc-text">Approved raw polymer resin suppliers, packaging partners, GSTIN compliance & procurement commercial linkages</p>
+        </div>
       </div>
-      <div class="form-group">
-        <label>{{ 'vendor.mobile' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="vendorForm.mobile" name="vMobile" required placeholder="10-digit mobile">
+
+      <div class="header-right-actions">
+        <!-- Refresh Button -->
+        <button type="button" class="btn btn-secondary btn-action-compact" (click)="loadData(true)" title="Refresh supplier records">
+          <i class="bi bi-arrow-clockwise me-1" [class.spin-anim]="isLoading"></i>
+          <span class="btn-label-desktop">Refresh</span>
+        </button>
+
+        <!-- Consolidated Export Dropdown -->
+        <div class="export-dropdown-wrapper" (click)="$event.stopPropagation()">
+          <button type="button" class="btn btn-secondary btn-action-compact" (click)="toggleExportDropdown()" title="Export vendor directory">
+            <i class="bi bi-download me-1"></i>
+            <span>Export ▾</span>
+          </button>
+          <div class="export-menu shadow-lg animate-fade-in" *ngIf="showExportDropdown">
+            <button type="button" class="export-menu-item" (click)="exportTableToCSV()">
+              <i class="bi bi-file-earmark-spreadsheet text-success me-2"></i>Export CSV (.csv)
+            </button>
+            <button type="button" class="export-menu-item" (click)="exportTableToExcel()">
+              <i class="bi bi-file-earmark-excel text-primary me-2"></i>Export Excel (.xlsx)
+            </button>
+          </div>
+        </div>
+
+        <!-- Primary Action: Register Supplier -->
+        <button type="button" 
+                class="btn btn-primary btn-action-primary" 
+                *ngIf="!isViewer()"
+                (click)="toggleAddForm()" 
+                [title]="isAddFormOpen ? 'Close registration form' : 'Register new vendor / supplier'">
+          <i class="bi" [ngClass]="isAddFormOpen ? 'bi-x-lg' : 'bi-plus-circle-fill'"></i>
+          <span>{{ isAddFormOpen ? 'Close Form' : '+ Register Supplier' }}</span>
+        </button>
       </div>
-      <div class="form-group">
-        <label>{{ 'vendor.address' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="vendorForm.address" name="vAddress" required placeholder="Office street address">
+    </div>
+
+    <!-- ── 2. SUBTABS CLASSIFICATION RIBBON ──────────────────────────── -->
+    <div class="subtabs-classification-bar">
+      <div class="subtabs-scroll-container">
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="selectedSubtab === 'all'"
+                (click)="setSubtab('all')">
+          <i class="bi bi-grid-fill me-1"></i>
+          <span>All Suppliers</span>
+          <span class="tab-count-badge">{{ getSubtabCount('all') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="selectedSubtab === 'gst'"
+                (click)="setSubtab('gst')">
+          <i class="bi bi-patch-check-fill text-success me-1"></i>
+          <span>Verified GSTIN</span>
+          <span class="tab-count-badge">{{ getSubtabCount('gst') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="selectedSubtab === 'polymer'"
+                (click)="setSubtab('polymer')">
+          <i class="bi bi-boxes text-primary me-1"></i>
+          <span>Polymer & Resin</span>
+          <span class="tab-count-badge">{{ getSubtabCount('polymer') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="selectedSubtab === 'packaging'"
+                (click)="setSubtab('packaging')">
+          <i class="bi bi-box-seam text-info me-1"></i>
+          <span>Packaging & Crates</span>
+          <span class="tab-count-badge">{{ getSubtabCount('packaging') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="selectedSubtab === 'additives'"
+                (click)="setSubtab('additives')">
+          <i class="bi bi-palette-fill text-warning me-1"></i>
+          <span>Color & Additives</span>
+          <span class="tab-count-badge">{{ getSubtabCount('additives') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="selectedSubtab === 'unregistered'"
+                (click)="setSubtab('unregistered')">
+          <i class="bi bi-exclamation-triangle-fill text-secondary me-1"></i>
+          <span>Unregistered / Direct</span>
+          <span class="tab-count-badge">{{ getSubtabCount('unregistered') }}</span>
+        </button>
       </div>
-      <div class="form-group">
-        <label>{{ 'vendor.gst' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="vendorForm.gstNumber" name="vGst" required placeholder="15-digit GSTIN">
-      </div>
-      <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'vendor.register_btn' | translate:currentLang }}</button>
-    </form>
-  </div>
-  <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
-    <h3>🏭 {{ 'vendor.records_title' | translate:currentLang }}</h3>
-    
-    <div class="table-container" style="margin-top: 15px;">
-      <app-data-table 
-        [data]="vendors" 
-        [columns]="vendorTableColumns" 
-        [actions]="vendorTableActions" 
-        [tableId]="'vendors_table'"
-        (actionClicked)="handleVendorAction($event)"
-        (batchDelete)="batchDeleteVendors($event)"
-        searchPlaceholder="🔍 Search Vendors...">
-      </app-data-table>
     </div>
   </div>
+
+  <!-- ── 3. 5-CARD TELEMETRY RIBBON ─────────────────────────────────── -->
+  <div class="telemetry-ribbon-grid no-print">
+    <!-- Card 1: Total Approved Suppliers -->
+    <div class="telemetry-card">
+      <div class="telemetry-icon-box bg-blue-light text-primary">
+        <i class="bi bi-building-check"></i>
+      </div>
+      <div class="telemetry-body">
+        <span class="telemetry-label">Approved Suppliers</span>
+        <div class="telemetry-val-group">
+          <span class="telemetry-value">{{ totalVendorsCount }}</span>
+          <span class="telemetry-unit">Vendors</span>
+        </div>
+        <span class="telemetry-subtext">Active Master Registry</span>
+      </div>
+    </div>
+
+    <!-- Card 2: GSTIN Compliance -->
+    <div class="telemetry-card">
+      <div class="telemetry-icon-box bg-green-light text-success">
+        <i class="bi bi-shield-lock-fill"></i>
+      </div>
+      <div class="telemetry-body">
+        <span class="telemetry-label">GST Compliance</span>
+        <div class="telemetry-val-group">
+          <span class="telemetry-value text-success">{{ gstCompliancePercentage }}%</span>
+          <span class="telemetry-unit">({{ gstRegisteredCount }}/{{ totalVendorsCount }})</span>
+        </div>
+        <div class="telemetry-progress-track">
+          <div class="telemetry-progress-fill bg-success" [style.width.%]="gstCompliancePercentage"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Active Procuring Partners -->
+    <div class="telemetry-card">
+      <div class="telemetry-icon-box bg-indigo-light text-indigo">
+        <i class="bi bi-truck-front-fill"></i>
+      </div>
+      <div class="telemetry-body">
+        <span class="telemetry-label">Active Partners</span>
+        <div class="telemetry-val-group">
+          <span class="telemetry-value text-indigo">{{ activeSuppliersCount }}</span>
+          <span class="telemetry-unit">Vendors</span>
+        </div>
+        <span class="telemetry-subtext">Supplied Material Batches</span>
+      </div>
+    </div>
+
+    <!-- Card 4: Total Procured Volume -->
+    <div class="telemetry-card">
+      <div class="telemetry-icon-box bg-amber-light text-warning">
+        <i class="bi bi-boxes"></i>
+      </div>
+      <div class="telemetry-body">
+        <span class="telemetry-label">Procured Volume</span>
+        <div class="telemetry-val-group">
+          <span class="telemetry-value">{{ totalProcurementVolumeKg | number:'1.0-0' }}</span>
+          <span class="telemetry-unit">kg</span>
+        </div>
+        <span class="telemetry-subtext">Raw Polymers & Additives</span>
+      </div>
+    </div>
+
+    <!-- Card 5: Cumulative Commercial Value -->
+    <div class="telemetry-card">
+      <div class="telemetry-icon-box bg-emerald-light text-emerald">
+        <i class="bi bi-currency-rupee"></i>
+      </div>
+      <div class="telemetry-body">
+        <span class="telemetry-label">Procurement Value</span>
+        <div class="telemetry-val-group">
+          <span class="telemetry-value text-emerald">₹{{ totalProcurementSpend | number:'1.0-0' }}</span>
+        </div>
+        <span class="telemetry-subtext">Total Linked Supplier Spend</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 4. COLLAPSIBLE ADD / EDIT SUPPLIER DRAWER/PANEL ────────────── -->
+  <div id="vendor-form-container" class="vendor-form-panel card shadow-sm mb-4 animate-slide-down no-print" *ngIf="isAddFormOpen && !isViewer()">
+    <div class="form-panel-header">
+      <div class="form-title-group">
+        <i class="bi" [ngClass]="editingVendorId ? 'bi-pencil-square text-warning' : 'bi-plus-circle text-primary'"></i>
+        <h3 class="form-title-text">{{ editingVendorId ? 'Edit Supplier Profile' : 'Register New Vendor / Supplier' }}</h3>
+        <span class="form-mode-badge" [ngClass]="editingVendorId ? 'badge-editing' : 'badge-new'">
+          {{ editingVendorId ? 'Editing ID #' + editingVendorId : 'New Master Record' }}
+        </span>
+      </div>
+      <button type="button" class="btn-close-panel" (click)="cancelEdit()" title="Close Form">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <form class="form-panel-body" (ngSubmit)="saveVendor()">
+      <div class="form-sections-grid">
+        <!-- Section A: Identity & Category -->
+        <div class="form-section-card">
+          <h4 class="form-section-subtitle">
+            <i class="bi bi-building me-1"></i> Supplier Identity & Category
+          </h4>
+          <div class="form-group-row">
+            <div class="form-field col-12">
+              <label class="form-label required">Company / Supplier Name</label>
+              <input type="text" 
+                     class="form-control" 
+                     placeholder="e.g. Reliance Polymers Ltd / Nilkamal Crates" 
+                     name="vendorName" 
+                     [(ngModel)]="vendorForm.vendorName" 
+                     required>
+            </div>
+            <div class="form-field col-12 col-md-6">
+              <label class="form-label">Supply Category</label>
+              <select class="form-select" name="category" [(ngModel)]="vendorForm.category">
+                <option *ngFor="let cat of supplierCategories" [value]="cat">{{ cat }}</option>
+              </select>
+            </div>
+            <div class="form-field col-12 col-md-6">
+              <label class="form-label required">Primary Mobile / Telephone</label>
+              <input type="tel" 
+                     class="form-control" 
+                     placeholder="10-digit Mobile or Landline" 
+                     name="mobile" 
+                     [(ngModel)]="vendorForm.mobile" 
+                     required>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section B: Compliance & Location -->
+        <div class="form-section-card">
+          <h4 class="form-section-subtitle">
+            <i class="bi bi-geo-alt-fill me-1"></i> Tax Compliance & Registered Address
+          </h4>
+          <div class="form-group-row">
+            <div class="form-field col-12 col-md-6">
+              <label class="form-label">GSTIN Identification Number</label>
+              <input type="text" 
+                     class="form-control text-uppercase font-monospace" 
+                     placeholder="e.g. 27AAAAA0000A1Z5" 
+                     name="gstNumber" 
+                     maxlength="15"
+                     (input)="formatGstInput()"
+                     [(ngModel)]="vendorForm.gstNumber">
+              <span class="field-hint">15-digit alphanumeric GSTIN code</span>
+            </div>
+            <div class="form-field col-12 col-md-6">
+              <label class="form-label">Contact Person / Sales Manager</label>
+              <input type="text" 
+                     class="form-control" 
+                     placeholder="e.g. Rajesh Sharma" 
+                     name="contactPerson" 
+                     [(ngModel)]="vendorForm.contactPerson">
+            </div>
+            <div class="form-field col-12">
+              <label class="form-label">Registered Office / Warehouse Address</label>
+              <textarea class="form-control" 
+                        rows="2" 
+                        placeholder="Plant location, MIDC Industrial Area, City, PIN Code..." 
+                        name="address" 
+                        [(ngModel)]="vendorForm.address"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-panel-actions">
+        <div class="action-left-info">
+          <span class="text-muted small">Fields marked <strong class="text-danger">*</strong> are mandatory for supplier master registration.</span>
+        </div>
+        <div class="action-buttons-group">
+          <button type="button" class="btn btn-secondary" (click)="cancelEdit()">
+            Cancel
+          </button>
+          <button type="button" class="btn btn-outline-secondary" (click)="resetForm()">
+            Reset
+          </button>
+          <button type="submit" class="btn btn-primary btn-save">
+            <i class="bi bi-check2-circle me-1"></i>
+            {{ editingVendorId ? 'Update Supplier Profile' : 'Save Supplier Record' }}
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- ── 5. SEARCH & FILTER TOOLBAR ─────────────────────────────────── -->
+  <div class="toolbar-section card shadow-sm mb-3 no-print">
+    <div class="toolbar-flex-container">
+      <!-- Search Box -->
+      <div class="toolbar-search-wrapper">
+        <i class="bi bi-search search-icon"></i>
+        <input type="text" 
+               class="toolbar-search-input" 
+               placeholder="Search by vendor name, code, GSTIN, phone, city..." 
+               [(ngModel)]="searchQuery" 
+               (input)="applyFilters()">
+        <button type="button" class="search-clear-btn" *ngIf="searchQuery" (click)="searchQuery = ''; applyFilters()">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+
+      <!-- Toolbar Actions Right -->
+      <div class="toolbar-right-controls">
+        <!-- Advanced Filter Button + Popover -->
+        <div class="filter-popover-wrapper" (click)="$event.stopPropagation()">
+          <button type="button" 
+                  class="btn btn-secondary btn-toolbar-compact" 
+                  [class.btn-active-filter]="activeFilterCount > 0"
+                  (click)="showFilterPopover = !showFilterPopover">
+            <i class="bi bi-funnel me-1"></i>
+            <span>Filters</span>
+            <span class="active-filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
+          </button>
+
+          <!-- Popover Modal Content -->
+          <div class="filter-popover-card shadow-lg animate-fade-in" *ngIf="showFilterPopover">
+            <div class="popover-header">
+              <span class="popover-title"><i class="bi bi-sliders me-1"></i>Filter Suppliers</span>
+              <button type="button" class="popover-close-btn" (click)="showFilterPopover = false"><i class="bi bi-x"></i></button>
+            </div>
+            <div class="popover-body">
+              <div class="popover-field">
+                <label class="popover-label">GST Compliance</label>
+                <select class="form-select form-select-sm" [(ngModel)]="filterGstStatus">
+                  <option value="">All Suppliers</option>
+                  <option value="registered">Verified GSTIN Only</option>
+                  <option value="unregistered">Unregistered Only</option>
+                </select>
+              </div>
+              <div class="popover-field">
+                <label class="popover-label">Category</label>
+                <select class="form-select form-select-sm" [(ngModel)]="filterCategory">
+                  <option value="">All Categories</option>
+                  <option value="polymer">Polymer & Resin</option>
+                  <option value="packaging">Packaging & Crates</option>
+                  <option value="additives">Color & Additives</option>
+                  <option value="general">General Industrial</option>
+                </select>
+              </div>
+              <div class="popover-field">
+                <label class="popover-label">Procurement Linkage</label>
+                <select class="form-select form-select-sm" [(ngModel)]="filterHasProcurements">
+                  <option value="">All</option>
+                  <option value="yes">With Active RM Batches</option>
+                  <option value="no">No Procurements Yet</option>
+                </select>
+              </div>
+              <div class="popover-field">
+                <label class="popover-label">Location / MIDC</label>
+                <input type="text" class="form-control form-control-sm" placeholder="e.g. Pune, Chakan, Mumbai" [(ngModel)]="filterLocation">
+              </div>
+            </div>
+            <div class="popover-footer">
+              <button type="button" class="btn btn-outline-secondary btn-sm" (click)="resetFilters()">Reset All</button>
+              <button type="button" class="btn btn-primary btn-sm" (click)="applyFilters()">Apply Filters</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Density Selector -->
+        <div class="density-switch-group">
+          <button type="button" 
+                  class="btn-density" 
+                  [class.active]="tableDensity === 'compact'" 
+                  (click)="setDensity('compact')" 
+                  title="Compact Density">
+            <i class="bi bi-view-list"></i>
+          </button>
+          <button type="button" 
+                  class="btn-density" 
+                  [class.active]="tableDensity === 'comfortable'" 
+                  (click)="setDensity('comfortable')" 
+                  title="Comfortable Density">
+            <i class="bi bi-list-ul"></i>
+          </button>
+          <button type="button" 
+                  class="btn-density" 
+                  [class.active]="tableDensity === 'spacious'" 
+                  (click)="setDensity('spacious')" 
+                  title="Spacious Density">
+            <i class="bi bi-distribute-vertical"></i>
+          </button>
+        </div>
+
+        <!-- Column Visibility Dropdown -->
+        <div class="col-manager-dropdown-wrapper" (click)="$event.stopPropagation()">
+          <button type="button" class="btn btn-secondary btn-toolbar-compact" (click)="toggleColDropdown()" title="Manage Visible Columns">
+            <i class="bi bi-layout-three-columns me-1"></i>
+            <span class="btn-label-desktop">Columns</span>
+          </button>
+          <div class="col-manager-menu shadow-lg animate-fade-in" *ngIf="showColDropdown">
+            <div class="col-manager-header">
+              <span>Show / Hide Columns</span>
+              <button type="button" class="btn-link-reset" (click)="resetColumns()">Reset</button>
+            </div>
+            <div class="col-manager-list">
+              <label class="col-toggle-item" *ngFor="let col of defaultColumns">
+                <input type="checkbox" [checked]="isColumnVisible(col)" (change)="toggleColumn(col)">
+                <span>{{ col }}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bulk Selection Action -->
+        <button type="button" 
+                class="btn btn-outline-primary btn-toolbar-compact" 
+                *ngIf="selectedRows.size > 0"
+                (click)="bulkExportSelected()"
+                title="Export selected suppliers">
+          <i class="bi bi-check-all me-1"></i>
+          <span>Export ({{ selectedRows.size }})</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 6. ENTERPRISE DATA TABLE ───────────────────────────────────── -->
+  <div class="table-container card shadow-sm mb-3">
+    <!-- Loading State Skeleton -->
+    <div class="table-loading-overlay" *ngIf="isLoading">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <span class="loading-text ms-2">Loading supplier directory master data...</span>
+    </div>
+
+    <!-- Scrollable Table Wrapper -->
+    <div class="table-responsive-wrapper" [ngClass]="'density-' + tableDensity">
+      <table class="table vendor-data-table mb-0" appResizableTable>
+        <thead>
+          <tr class="table-header-row">
+            <!-- Col: Checkbox Selection -->
+            <th *ngIf="isColumnVisible('Select')" class="th-checkbox text-center" style="width: 44px;">
+              <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()" title="Select All On Page">
+            </th>
+
+            <!-- Col: Code / ID -->
+            <th *ngIf="isColumnVisible('Code')" class="th-code sortable" (click)="setSort('vendorId')" style="width: 110px;">
+              <div class="th-content">
+                <span>Code</span>
+                <i class="bi" [ngClass]="sortField === 'vendorId' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+              </div>
+            </th>
+
+            <!-- Col: Supplier Name -->
+            <th *ngIf="isColumnVisible('Supplier')" class="th-supplier sortable" (click)="setSort('vendorName')" style="min-width: 220px;">
+              <div class="th-content">
+                <span>Supplier / Vendor Name</span>
+                <i class="bi" [ngClass]="sortField === 'vendorName' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+              </div>
+            </th>
+
+            <!-- Col: Category -->
+            <th *ngIf="isColumnVisible('Category')" class="th-category" style="width: 170px;">
+              <div class="th-content">
+                <span>Category</span>
+              </div>
+            </th>
+
+            <!-- Col: Contact -->
+            <th *ngIf="isColumnVisible('Contact')" class="th-contact" style="width: 150px;">
+              <div class="th-content">
+                <span>Contact Phone</span>
+              </div>
+            </th>
+
+            <!-- Col: Location -->
+            <th *ngIf="isColumnVisible('Location')" class="th-location" style="min-width: 160px;">
+              <div class="th-content">
+                <span>Plant / Address</span>
+              </div>
+            </th>
+
+            <!-- Col: GSTIN -->
+            <th *ngIf="isColumnVisible('GSTIN')" class="th-gst" style="width: 170px;">
+              <div class="th-content">
+                <span>GSTIN Status</span>
+              </div>
+            </th>
+
+            <!-- Col: Procurements -->
+            <th *ngIf="isColumnVisible('Procurements')" class="th-procurements text-center" style="width: 140px;">
+              <div class="th-content text-center">
+                <span>Procurements</span>
+              </div>
+            </th>
+
+            <!-- Col: Commercial Spend -->
+            <th *ngIf="isColumnVisible('Spend')" class="th-spend text-end sortable" (click)="setSort('procurementAmount')" style="width: 150px;">
+              <div class="th-content text-end">
+                <span>Total Spend (₹)</span>
+                <i class="bi" [ngClass]="sortField === 'procurementAmount' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
+              </div>
+            </th>
+
+            <!-- Col: Actions -->
+            <th *ngIf="isColumnVisible('Actions')" class="th-actions text-end no-print" style="width: 130px;">
+              <div class="th-content text-end">
+                <span>Actions</span>
+              </div>
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <!-- Empty State -->
+          <tr *ngIf="!isLoading && paginatedList.length === 0" class="empty-state-row">
+            <td [attr.colspan]="visibleColumnsCount" class="text-center py-5">
+              <div class="empty-state-container">
+                <i class="bi bi-inbox empty-icon text-muted"></i>
+                <h5 class="empty-title mt-2">No Suppliers Found</h5>
+                <p class="empty-desc text-muted">
+                  {{ searchQuery || activeFilterCount > 0 ? 'No suppliers match your current filter criteria.' : 'No vendors currently registered in database.' }}
+                </p>
+                <div class="empty-actions mt-2" *ngIf="searchQuery || activeFilterCount > 0">
+                  <button type="button" class="btn btn-outline-secondary btn-sm" (click)="resetFilters()">
+                    <i class="bi bi-x-circle me-1"></i>Clear Filters
+                  </button>
+                </div>
+                <div class="empty-actions mt-2" *ngIf="!searchQuery && activeFilterCount === 0 && !isViewer()">
+                  <button type="button" class="btn btn-primary btn-sm" (click)="toggleAddForm()">
+                    <i class="bi bi-plus-circle me-1"></i>Register First Supplier
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Data Rows -->
+          <tr *ngFor="let v of paginatedList; trackBy: trackById" 
+              class="table-data-row" 
+              [class.row-selected]="isRowSelected(v.id || String(v.vendorId))">
+            
+            <!-- Checkbox Selection -->
+            <td *ngIf="isColumnVisible('Select')" class="td-checkbox text-center">
+              <input type="checkbox" [checked]="isRowSelected(v.id || String(v.vendorId))" (change)="toggleSelectRow(v.id || String(v.vendorId))">
+            </td>
+
+            <!-- Vendor Code -->
+            <td *ngIf="isColumnVisible('Code')" class="td-code">
+              <span class="code-badge">#VND-{{ v.vendorId || v.id }}</span>
+            </td>
+
+            <!-- Supplier Name & Info -->
+            <td *ngIf="isColumnVisible('Supplier')" class="td-supplier">
+              <div class="supplier-name-cell">
+                <strong class="vendor-primary-name" [title]="v.vendorName">
+                  {{ getCleanVendorName(v.vendorName) }}
+                </strong>
+                <span class="vendor-secondary-meta" *ngIf="v.contactPerson">
+                  <i class="bi bi-person text-muted me-1"></i>{{ v.contactPerson }}
+                </span>
+              </div>
+            </td>
+
+            <!-- Category -->
+            <td *ngIf="isColumnVisible('Category')" class="td-category">
+              <span class="cat-pill" [ngClass]="getSupplierCategory(v).badgeClass">
+                <i class="bi me-1" [ngClass]="getSupplierCategory(v).icon"></i>
+                {{ getSupplierCategory(v).label }}
+              </span>
+            </td>
+
+            <!-- Contact -->
+            <td *ngIf="isColumnVisible('Contact')" class="td-contact font-monospace">
+              <a *ngIf="v.mobile" [href]="'tel:' + v.mobile" class="contact-link" title="Click to call">
+                <i class="bi bi-telephone-fill me-1 text-primary"></i>{{ v.mobile }}
+              </a>
+              <span *ngIf="!v.mobile" class="text-muted small">N/A</span>
+            </td>
+
+            <!-- Location -->
+            <td *ngIf="isColumnVisible('Location')" class="td-location">
+              <span class="location-truncate" [title]="v.address || 'Address not registered'">
+                <i class="bi bi-geo-alt me-1 text-muted"></i>{{ v.address || 'Not Provided' }}
+              </span>
+            </td>
+
+            <!-- GSTIN Status -->
+            <td *ngIf="isColumnVisible('GSTIN')" class="td-gst">
+              <div class="gst-badge-wrapper" *ngIf="v.gstNumber && v.gstNumber.trim().length >= 10">
+                <span class="badge-gst-verified font-monospace" [title]="'Verified GSTIN: ' + v.gstNumber">
+                  <i class="bi bi-patch-check-fill text-success me-1"></i>{{ v.gstNumber }}
+                </span>
+              </div>
+              <div class="gst-badge-wrapper" *ngIf="!v.gstNumber || v.gstNumber.trim().length < 10">
+                <span class="badge-gst-unregistered">
+                  <i class="bi bi-dash-circle me-1 text-secondary"></i>Unregistered
+                </span>
+              </div>
+            </td>
+
+            <!-- Procurements -->
+            <td *ngIf="isColumnVisible('Procurements')" class="td-procurements text-center">
+              <span class="procurement-batches-badge" 
+                    [class.has-batches]="getVendorProcurementSummary(v.id || v.vendorId).batchesCount > 0"
+                    [title]="getVendorProcurementSummary(v.id || v.vendorId).materialsList.join(', ')">
+                <i class="bi bi-boxes me-1"></i>
+                {{ getVendorProcurementSummary(v.id || v.vendorId).batchesCount }} Batches
+              </span>
+            </td>
+
+            <!-- Spend (₹) -->
+            <td *ngIf="isColumnVisible('Spend')" class="td-spend text-end font-monospace">
+              <span class="spend-amount-text" [class.text-muted]="getVendorProcurementSummary(v.id || v.vendorId).totalSpendAmount === 0">
+                ₹{{ getVendorProcurementSummary(v.id || v.vendorId).totalSpendAmount | number:'1.2-2' }}
+              </span>
+            </td>
+
+            <!-- Row Actions -->
+            <td *ngIf="isColumnVisible('Actions')" class="td-actions text-end no-print">
+              <div class="action-btn-group">
+                <!-- Dossier / Details Button -->
+                <button type="button" 
+                        class="btn-row-action btn-dossier" 
+                        (click)="openDossierModal(v)" 
+                        title="View Full Supplier Dossier Profile">
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                <!-- Edit Button -->
+                <button type="button" 
+                        class="btn-row-action btn-edit" 
+                        *ngIf="!isViewer()"
+                        (click)="editVendor(v)" 
+                        title="Edit Supplier Profile">
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <!-- Delete Button -->
+                <button type="button" 
+                        class="btn-row-action btn-delete" 
+                        *ngIf="canDelete()"
+                        (click)="deleteVendor(v.id || v.vendorId)" 
+                        title="Remove Supplier">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+
+        <!-- ── Accounting Summary Table Footer ── -->
+        <tfoot class="table-summary-footer" *ngIf="!isLoading && paginatedList.length > 0">
+          <tr>
+            <td *ngIf="isColumnVisible('Select')"></td>
+            <td *ngIf="isColumnVisible('Code')" class="text-muted small"><strong>TOTALS</strong></td>
+            <td *ngIf="isColumnVisible('Supplier')" class="text-muted small">
+              <strong>{{ filteredList.length }} Suppliers</strong> (Filtered)
+            </td>
+            <td *ngIf="isColumnVisible('Category')"></td>
+            <td *ngIf="isColumnVisible('Contact')"></td>
+            <td *ngIf="isColumnVisible('Location')"></td>
+            <td *ngIf="isColumnVisible('GSTIN')" class="small text-success">
+              <strong>{{ filteredGstCount }} GST Compliant</strong>
+            </td>
+            <td *ngIf="isColumnVisible('Procurements')" class="text-center text-muted small">
+              <strong>Summary</strong>
+            </td>
+            <td *ngIf="isColumnVisible('Spend')" class="text-end font-monospace text-emerald">
+              <strong>₹{{ filteredTotalSpend | number:'1.2-2' }}</strong>
+            </td>
+            <td *ngIf="isColumnVisible('Actions')" class="no-print"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- ── 7. PAGINATION TOOLBAR ───────────────────────────────────── -->
+    <div class="table-pagination-footer no-print" *ngIf="!isLoading && filteredList.length > 0">
+      <div class="pagination-left-info">
+        <span class="text-muted small">
+          Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to 
+          <strong>{{ Math.min(currentPage * pageSize, filteredList.length) }}</strong> of 
+          <strong>{{ filteredList.length }}</strong> vendors
+        </span>
+      </div>
+
+      <div class="pagination-right-controls">
+        <div class="page-size-selector">
+          <label class="page-size-label">Rows per page:</label>
+          <select class="form-select form-select-sm page-size-select" [(ngModel)]="pageSize" (change)="currentPage = 1">
+            <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+          </select>
+        </div>
+
+        <div class="pagination-pager-buttons">
+          <button type="button" 
+                  class="btn-pager" 
+                  [disabled]="currentPage === 1" 
+                  (click)="currentPage = currentPage - 1" 
+                  title="Previous Page">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <span class="pager-status-text">Page {{ currentPage }} of {{ totalPages }}</span>
+          <button type="button" 
+                  class="btn-pager" 
+                  [disabled]="currentPage === totalPages" 
+                  (click)="currentPage = currentPage + 1" 
+                  title="Next Page">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 8. OFFICIAL PRINTABLE SUPPLIER DOSSIER MODAL ───────────────── -->
+  <div class="dossier-modal-backdrop" *ngIf="showDossierModal && selectedVendorForDossier" (click)="closeDossierModal()">
+    <div class="dossier-voucher-dialog card shadow-2xl animate-scale-up" (click)="$event.stopPropagation()">
+      <!-- Dossier Header -->
+      <div class="dossier-header-bar">
+        <div class="dossier-title-group">
+          <div class="dossier-icon-box">
+            <i class="bi bi-building text-primary"></i>
+          </div>
+          <div>
+            <h3 class="dossier-title-main">{{ getCleanVendorName(selectedVendorForDossier.vendorName) }}</h3>
+            <span class="dossier-subtitle">Approved Supplier Commercial Dossier • ID #{{ selectedVendorForDossier.vendorId || selectedVendorForDossier.id }}</span>
+          </div>
+        </div>
+        <div class="dossier-header-actions no-print">
+          <button type="button" class="btn btn-outline-secondary btn-sm me-2" (click)="printDossier()">
+            <i class="bi bi-printer me-1"></i>Print Dossier
+          </button>
+          <button type="button" class="btn-close-dossier" (click)="closeDossierModal()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Dossier Body -->
+      <div class="dossier-body-content">
+        <!-- Banner Info Card -->
+        <div class="dossier-info-banner">
+          <div class="banner-cell">
+            <span class="banner-label">Category</span>
+            <strong class="banner-value text-primary">{{ getSupplierCategory(selectedVendorForDossier).label }}</strong>
+          </div>
+          <div class="banner-cell">
+            <span class="banner-label">GST Compliance</span>
+            <strong class="banner-value" [ngClass]="selectedVendorForDossier.gstNumber ? 'text-success' : 'text-secondary'">
+              {{ selectedVendorForDossier.gstNumber ? 'Verified Active' : 'Unregistered' }}
+            </strong>
+          </div>
+          <div class="banner-cell">
+            <span class="banner-label">Batches Supplied</span>
+            <strong class="banner-value">{{ getVendorProcurementSummary(selectedVendorForDossier.id || selectedVendorForDossier.vendorId).batchesCount }}</strong>
+          </div>
+          <div class="banner-cell">
+            <span class="banner-label">Total Spend</span>
+            <strong class="banner-value text-emerald">₹{{ getVendorProcurementSummary(selectedVendorForDossier.id || selectedVendorForDossier.vendorId).totalSpendAmount | number:'1.2-2' }}</strong>
+          </div>
+        </div>
+
+        <!-- Two Column Detailed Breakdown -->
+        <div class="dossier-details-grid mt-3">
+          <!-- Column 1: Supplier Identity & Contact -->
+          <div class="dossier-section-card">
+            <h5 class="section-title"><i class="bi bi-person-badge me-2 text-primary"></i>Company & Contact Details</h5>
+            <div class="detail-row">
+              <span class="detail-key">Supplier Code:</span>
+              <span class="detail-val font-monospace">#VND-{{ selectedVendorForDossier.vendorId || selectedVendorForDossier.id }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Primary Phone:</span>
+              <span class="detail-val font-monospace">{{ selectedVendorForDossier.mobile || 'Not Registered' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Contact Person:</span>
+              <span class="detail-val">{{ selectedVendorForDossier.contactPerson || 'Direct Plant Office' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Plant / Address:</span>
+              <span class="detail-val">{{ selectedVendorForDossier.address || 'Address on file not provided' }}</span>
+            </div>
+          </div>
+
+          <!-- Column 2: Commercial Procurement Statistics -->
+          <div class="dossier-section-card">
+            <h5 class="section-title"><i class="bi bi-receipt-cutoff me-2 text-success"></i>Procurement Commercials</h5>
+            <div class="detail-row">
+              <span class="detail-key">GSTIN Number:</span>
+              <span class="detail-val font-monospace text-uppercase">{{ selectedVendorForDossier.gstNumber || 'UNREGISTERED' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Total Volume:</span>
+              <span class="detail-val font-monospace">{{ getVendorProcurementSummary(selectedVendorForDossier.id || selectedVendorForDossier.vendorId).totalWeightKg | number:'1.0-0' }} kg</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Materials Supplied:</span>
+              <span class="detail-val">
+                <span class="badge bg-light text-dark me-1" *ngFor="let m of getVendorProcurementSummary(selectedVendorForDossier.id || selectedVendorForDossier.vendorId).materialsList">
+                  {{ m }}
+                </span>
+                <span *ngIf="getVendorProcurementSummary(selectedVendorForDossier.id || selectedVendorForDossier.vendorId).materialsList.length === 0" class="text-muted">None recorded</span>
+              </span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Total Billing:</span>
+              <span class="detail-val font-monospace text-emerald fw-bold">₹{{ getVendorProcurementSummary(selectedVendorForDossier.id || selectedVendorForDossier.vendorId).totalSpendAmount | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Official Sign-off Block for Print -->
+        <div class="dossier-signoff-block mt-4">
+          <div class="signoff-column">
+            <div class="signoff-line"></div>
+            <span class="signoff-title">Prepared By / ERP Clerk</span>
+          </div>
+          <div class="signoff-column">
+            <div class="signoff-line"></div>
+            <span class="signoff-title">Procurement Officer</span>
+          </div>
+          <div class="signoff-column">
+            <div class="signoff-line"></div>
+            <span class="signoff-title">Authorized Factory Signatory</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dossier Footer -->
+      <div class="dossier-footer-bar no-print">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="closeDossierModal()">Close</button>
+        <button type="button" class="btn btn-primary btn-sm" (click)="printDossier()">
+          <i class="bi bi-printer-fill me-1"></i>Print Official Dossier
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>

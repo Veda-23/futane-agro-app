@@ -31,7 +31,7 @@ export class DataTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() data: any[] = [];
   @Input() columns: TableColumn[] = [];
   @Input() actions: ActionConfig[] = [];
-  @Input() searchPlaceholder: string = '🔍 Search...';
+  @Input() searchPlaceholder: string = 'Search records...';
   @Input() enableMultiSelect: boolean = true;
   @Input() tableId: string = 'data_table';
   @Input() hideToolbarSearch: boolean = false;

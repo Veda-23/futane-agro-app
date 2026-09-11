@@ -1,193 +1,247 @@
-<!-- Login Screen — Enterprise Glassmorphism -->
-<div class="login-wrapper login-animated-bg">
+<!-- Futane Agro ERP — Professional Enterprise Authentication -->
+<div class="login-page-root">
+  <div class="login-card-container">
 
-  <!-- Animated background ambient orbs -->
-  <div class="login-orb orb-1"></div>
-  <div class="login-orb orb-2"></div>
-  <div class="login-orb orb-3"></div>
-
-  <div class="login-split-layout">
-
-    <!-- ── Left Info Panel ────────────────────── -->
-    <div class="login-info-panel">
-      <div class="login-brand">
-        <div class="login-logo-ring">
-          <img src="assets/logo.svg" alt="Futane Agro Logo" class="brand-logo-img">
+    <!-- ── Left Enterprise Brand & Overview Panel ──────────────── -->
+    <div class="brand-overview-panel">
+      <div class="brand-top-section">
+        <div class="brand-identity-row">
+          <div class="brand-emblem-box">
+            <img src="assets/logo.svg" alt="Futane Agro Emblem" class="brand-emblem-img">
+          </div>
+          <div class="brand-identity-titles">
+            <h1 class="brand-main-title">Futane Agro <span>Industries</span></h1>
+            <p class="brand-sub-title">Pvt. Ltd. — Enterprise Resource Planning</p>
+          </div>
         </div>
-        <div>
-          <h1>Futane Agro <span>Industries</span></h1>
-          <p>Pvt. Ltd. — Enterprise Resource Planning</p>
+
+        <div class="brand-modules-list">
+          <div class="module-item">
+            <div class="module-icon-box"><i class="bi bi-box-seam"></i></div>
+            <div class="module-text">
+              <span class="module-title">Inventory &amp; Silo Control</span>
+              <span class="module-desc">Real-time stock ledger and material tracking</span>
+            </div>
+          </div>
+
+          <div class="module-item">
+            <div class="module-icon-box"><i class="bi bi-receipt-cutoff"></i></div>
+            <div class="module-text">
+              <span class="module-title">Sales &amp; GST Invoicing</span>
+              <span class="module-desc">Compliant billing, e-way bills &amp; receivables</span>
+            </div>
+          </div>
+
+          <div class="module-item">
+            <div class="module-icon-box"><i class="bi bi-gear-wide-connected"></i></div>
+            <div class="module-text">
+              <span class="module-title">Production Monitoring</span>
+              <span class="module-desc">Plant extruder operations, shifts &amp; batch runs</span>
+            </div>
+          </div>
+
+          <div class="module-item">
+            <div class="module-icon-box"><i class="bi bi-people"></i></div>
+            <div class="module-text">
+              <span class="module-title">HR &amp; Payroll Management</span>
+              <span class="module-desc">Attendance, biometric logs &amp; salary computation</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="login-feature-cards">
-        <div class="lf-card">
-          <span class="lf-icon"><i class="bi bi-box-seam"></i></span>
-          <div>
-            <strong>Inventory Control</strong>
-            <p>Real-time stock tracking</p>
-          </div>
+      <div class="brand-bottom-section">
+        <div class="system-environment-pill">
+          <span class="status-indicator-dot" [class.uat]="isUat" [class.prod]="!isUat"></span>
+          <span class="status-text">{{ isUat ? 'UAT Test Environment (Port 8081)' : 'Production Cluster v2.4 (Port 8080)' }}</span>
         </div>
-        <div class="lf-card">
-          <span class="lf-icon"><i class="bi bi-graph-up-arrow"></i></span>
-          <div>
-            <strong>Sales &amp; Revenue</strong>
-            <p>GST invoicing &amp; collections</p>
-          </div>
+        <div class="system-security-note">
+          <i class="bi bi-shield-lock-fill me-1"></i> 256-Bit TLS Secured Enterprise Portal
         </div>
-        <div class="lf-card">
-          <span class="lf-icon"><i class="bi bi-gear-wide-connected"></i></span>
-          <div>
-            <strong>Production</strong>
-            <p>Machine &amp; shift monitoring</p>
-          </div>
-        </div>
-        <div class="lf-card">
-          <span class="lf-icon"><i class="bi bi-people-fill"></i></span>
-          <div>
-            <strong>HR &amp; Payroll</strong>
-            <p>Employee salary management</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="login-env-badge">
-        <span class="env-dot" [style.background]="isUat ? '#f59e0b' : '#10b981'"></span>
-        <span>{{ isUat ? 'UAT Test Environment (Port 8081)' : 'System Online | v2.0 PROD (Port 8080)' }}</span>
       </div>
     </div>
 
-    <!-- ── Right Form Panel ───────────────────── -->
-    <div class="login-form-panel">
+    <!-- ── Right Action Form Panel ───────────────────────────── -->
+    <div class="action-form-panel">
 
-      <!-- Dynamic Header based on Step -->
-      <div class="login-form-header" style="text-align: left;">
-        <div class="login-form-logo">
-          <img src="assets/logo.svg" alt="Futane Agro Logo" *ngIf="!showOtpScreen">
-          <span *ngIf="showOtpScreen" class="otp-shield-icon"><i class="bi bi-shield-lock" style="font-size:24px; color:var(--primary);"></i></span>
+      <!-- Form Header -->
+      <div class="form-header-area">
+        <div class="form-logo-badge">
+          <img src="assets/logo.svg" alt="Futane Logo" *ngIf="!showOtpScreen">
+          <i class="bi bi-shield-check" *ngIf="showOtpScreen"></i>
         </div>
-        <h2>{{ showOtpScreen ? 'Two-Factor Auth' : 'Welcome back' }}</h2>
-        <p>{{ showOtpScreen ? 'OTP sent for ' + loginCredentials.username : 'Sign in to Futane Agro ERP dashboard' }}</p>
+        <h2 class="form-main-heading">{{ showOtpScreen ? 'Two-Factor Authentication' : 'Welcome back' }}</h2>
+        <p class="form-sub-heading">
+          {{ showOtpScreen ? 'Enter the 6-digit security code for ' + loginCredentials.username : 'Sign in to access the Futane Agro ERP portal' }}
+        </p>
       </div>
 
-      <!-- ── Credentials Form (Step 1) ──────────────────── -->
-      <form *ngIf="!showOtpScreen" (ngSubmit)="handleLogin()" class="login-form-body animated-fade-in">
+      <!-- ── Step 1: Username & Password ─────────────────────── -->
+      <form *ngIf="!showOtpScreen" (ngSubmit)="handleLogin()" class="login-form-content" novalidate>
 
-        <div class="form-group login-field">
-          <label for="username">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-            </svg>
-            Username <small>(case-insensitive)</small>
+        <div class="form-group-field">
+          <label for="username" class="field-label">
+            <i class="bi bi-person me-1"></i> Username or Employee ID
           </label>
-          <div class="input-wrapper">
-            <input appAutoSelect type="text"
-                   id="username" name="username"
+          <div class="field-input-box">
+            <input appAutoSelect
+                   type="text"
+                   id="username"
+                   name="username"
                    [(ngModel)]="loginCredentials.username"
                    required
-                   placeholder="e.g. admin"
+                   placeholder="e.g. SUPER_ADMIN"
                    autocomplete="username"
-                   class="login-input">
+                   class="enterprise-input">
           </div>
         </div>
 
-        <div class="form-group login-field">
-          <div class="label-row">
-            <label for="password">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-              Password
+        <div class="form-group-field">
+          <div class="field-label-row">
+            <label for="password" class="field-label">
+              <i class="bi bi-key me-1"></i> Password
             </label>
-            <a href="javascript:void(0)" (click)="forgotPassword()" class="forgot-link">Forgot Password?</a>
+            <button type="button" (click)="forgotPassword()" class="link-btn-subtle">
+              Forgot Password?
+            </button>
           </div>
-          <div class="input-wrapper">
+          <div class="field-input-box password-box">
             <input appAutoSelect
                    [type]="showPassword ? 'text' : 'password'"
-                   id="password" name="password"
+                   id="password"
+                   name="password"
                    [(ngModel)]="loginCredentials.password"
                    required
                    placeholder="Enter your password"
                    autocomplete="current-password"
-                   class="login-input">
-            <button type="button" class="toggle-password" (click)="showPassword = !showPassword" aria-label="Toggle password">
+                   class="enterprise-input">
+            <button type="button"
+                    class="password-visibility-btn"
+                    (click)="showPassword = !showPassword"
+                    [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
               <i *ngIf="!showPassword" class="bi bi-eye"></i>
               <i *ngIf="showPassword" class="bi bi-eye-slash"></i>
             </button>
           </div>
         </div>
 
-        <div *ngIf="loginError" class="login-error-box">
-          <i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> {{ loginError }}
+        <!-- Error Feedback Banner -->
+        <div *ngIf="loginError" class="enterprise-alert-banner">
+          <i class="bi bi-exclamation-circle-fill alert-icon"></i>
+          <span class="alert-message">{{ loginError }}</span>
         </div>
 
-        <button type="submit" class="login-submit-btn" id="login-submit-btn">
-          <span>Sign In to ERP</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M5 12h14M12 5l7 7-7 7"/>
-          </svg>
+        <!-- Submit Button -->
+        <button type="submit"
+                id="login-submit-btn"
+                class="enterprise-primary-btn"
+                [disabled]="isSubmitting">
+          <span *ngIf="!isSubmitting">Sign In to ERP</span>
+          <span *ngIf="isSubmitting" class="d-flex align-items-center justify-content-center">
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            Authenticating...
+          </span>
+          <i *ngIf="!isSubmitting" class="bi bi-arrow-right ms-2"></i>
         </button>
       </form>
 
-      <!-- ── OTP Form (Step 2) ──────────────────────────── -->
-      <form *ngIf="showOtpScreen" (ngSubmit)="verifyOtp()" class="login-form-body animated-fade-in">
+      <!-- ── Step 2: Two-Factor Authentication (OTP) ─────────── -->
+      <form *ngIf="showOtpScreen" (ngSubmit)="verifyOtp()" class="login-form-content" novalidate>
 
-        <!-- OTP Helper / Auto-fill Box -->
-        <div class="otp-display-box" *ngIf="tempOtp" (click)="otpValue = tempOtp" role="button" tabindex="0" title="Click to auto-fill OTP">
-          <div class="otp-display-label"><i class="bi bi-key-fill me-1"></i> Your OTP (click to auto-fill)</div>
-          <div class="otp-display-code">{{ tempOtp }}</div>
-          <div class="otp-display-hint">Valid for {{ formatCountdown() }} · Click to fill automatically</div>
-        </div>
-
-        <div class="form-group login-field">
-          <div class="label-row">
-            <label for="otp">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              </svg>
-              Enter 6-Digit OTP
-            </label>
-            <span class="countdown-tag"><i class="bi bi-clock me-1"></i> {{ formatCountdown() }}</span>
+        <!-- UAT Helper Banner (Only visible if tempOtp is provided) -->
+        <div *ngIf="tempOtp"
+             class="uat-otp-helper-card"
+             (click)="fillOtpFromHelper(tempOtp)"
+             role="button"
+             tabindex="0"
+             title="Click to populate OTP code">
+          <div class="helper-top">
+            <span class="helper-tag"><i class="bi bi-info-circle me-1"></i> Test Environment Code</span>
+            <span class="helper-action">Click to Fill <i class="bi bi-box-arrow-in-down-right"></i></span>
           </div>
-          <input appAutoSelect type="text"
-                 id="otp" name="otp"
-                 [(ngModel)]="otpValue"
-                 required
-                 placeholder="● ● ● ● ● ●"
-                 maxlength="6"
-                 class="login-input otp-input"
-                 autocomplete="one-time-code">
+          <div class="helper-code">{{ tempOtp }}</div>
         </div>
 
-        <div *ngIf="loginError" class="login-error-box">
-          <i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> {{ loginError }}
+        <div class="form-group-field">
+          <div class="field-label-row">
+            <label class="field-label">
+              <i class="bi bi-lock me-1"></i> Security Verification Code (6 Digits)
+            </label>
+            <span class="timer-badge">
+              <i class="bi bi-clock me-1"></i> Expires in {{ formatCountdown() }}
+            </span>
+          </div>
+
+          <!-- 6 Discrete Input Boxes -->
+          <div class="otp-inputs-row" (paste)="onDigitPaste($event)">
+            <input *ngFor="let digit of otpDigits; let i = index"
+                   #otpInputRef
+                   type="text"
+                   inputmode="numeric"
+                   maxlength="1"
+                   pattern="[0-9]*"
+                   [value]="otpDigits[i]"
+                   (input)="onDigitInput($event, i)"
+                   (keydown)="onDigitKeydown($event, i)"
+                   class="otp-box-cell"
+                   [class.cell-filled]="otpDigits[i] !== ''"
+                   autocomplete="off">
+          </div>
         </div>
 
-        <button type="submit" class="login-submit-btn">
-          <span>Verify &amp; Login</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
+        <!-- Error Feedback Banner -->
+        <div *ngIf="loginError" class="enterprise-alert-banner">
+          <i class="bi bi-exclamation-circle-fill alert-icon"></i>
+          <span class="alert-message">{{ loginError }}</span>
+        </div>
+
+        <!-- Verify Button -->
+        <button type="submit"
+                class="enterprise-primary-btn"
+                [disabled]="isSubmitting || otpValue.length < 6">
+          <span *ngIf="!isSubmitting">Verify &amp; Enter Portal</span>
+          <span *ngIf="isSubmitting" class="d-flex align-items-center justify-content-center">
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            Verifying Code...
+          </span>
+          <i *ngIf="!isSubmitting" class="bi bi-check2-circle ms-2"></i>
         </button>
 
-        <div class="otp-actions">
-          <button type="button" class="login-secondary-btn" [disabled]="otpCountdown > 0" (click)="resendOtp()">
-            <i class="bi bi-arrow-clockwise me-1"></i> Resend OTP
+        <!-- Secondary Actions -->
+        <div class="otp-actions-row">
+          <button type="button"
+                  class="enterprise-secondary-btn"
+                  [disabled]="otpCountdown > 0 || isSubmitting"
+                  (click)="resendOtp()">
+            <i class="bi bi-arrow-clockwise me-1"></i> Resend Code
           </button>
-          <button type="button" class="login-secondary-btn" (click)="backToLogin()">
-            <i class="bi bi-arrow-left me-1"></i> Back
+          <button type="button"
+                  class="enterprise-secondary-btn"
+                  (click)="backToLogin()"
+                  [disabled]="isSubmitting">
+            <i class="bi bi-arrow-left me-1"></i> Back to Sign In
           </button>
         </div>
       </form>
 
-      <!-- Language Selector -->
-      <div class="login-form-footer">
-        <div class="lang-pill-group">
-          <button type="button" class="lang-btn" [class.lang-active]="currentLang === 'en'" (click)="setLanguage('en')">EN</button>
-          <span class="lang-sep">|</span>
-          <button type="button" class="lang-btn" [class.lang-active]="currentLang === 'mr'" (click)="setLanguage('mr')">मराठी</button>
-          <span class="lang-sep">|</span>
-          <button type="button" class="lang-btn" [class.lang-active]="currentLang === 'hi'" (click)="setLanguage('hi')">हिंदी</button>
+      <!-- Language & Help Footer -->
+      <div class="form-footer-area">
+        <div class="language-selection-group">
+          <button type="button"
+                  class="lang-pill"
+                  [class.active]="currentLang === 'en'"
+                  (click)="setLanguage('en')">English</button>
+          <button type="button"
+                  class="lang-pill"
+                  [class.active]="currentLang === 'mr'"
+                  (click)="setLanguage('mr')">मराठी</button>
+          <button type="button"
+                  class="lang-pill"
+                  [class.active]="currentLang === 'hi'"
+                  (click)="setLanguage('hi')">हिंदी</button>
+        </div>
+        <div class="footer-copyright-text">
+          &copy; 2026 Futane Agro Industries Pvt. Ltd. All rights reserved.
         </div>
       </div>
 

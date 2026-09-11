@@ -1,98 +1,395 @@
-<div class="grid-cols-3">
-  <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
-    <h3><i class="bi bi-bank me-2"></i>{{ 'bank.title' | translate:currentLang }}</h3>
-    <form (submit)="saveBankTransaction()">
-      <div class="form-group">
-        <label>{{ 'bank.date' | translate:currentLang }}</label>
-        <input appAutoSelect type="date" [(ngModel)]="bankTxnForm.transactionDate" name="bDate" required>
-      </div>
-      <div class="form-group">
-        <label>{{ 'bank.type' | translate:currentLang }}</label>
-        <select [(ngModel)]="bankTxnForm.transactionType" name="bType" required>
-          <option value="Credit">Credit (Income)</option>
-          <option value="Debit">Debit (Payment)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>{{ 'bank.amount' | translate:currentLang }}</label>
-        <input appAutoSelect type="number" step="0.01" [(ngModel)]="bankTxnForm.amount" name="bAmt" required>
-      </div>
-      <div class="form-group">
-        <label>{{ 'bank.desc' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="bankTxnForm.description" name="bDesc" required placeholder="Transaction purpose">
-      </div>
-      <div class="form-group">
-        <label>{{ 'bank.reference' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="bankTxnForm.referenceNo" name="bRef" placeholder="UPI/NEFT Reference No">
-      </div>
-      <button type="submit" class="btn btn-success" style="width:100%">{{ 'btn.save' | translate:currentLang }}</button>
-    </form>
+<div class="bank-module-container">
+
+  <!-- 1. BREADCRUMB BAR -->
+  <div class="bank-breadcrumb-bar">
+    <div class="breadcrumb-trail">
+      <span class="breadcrumb-item">ERP</span>
+      <i class="bi bi-chevron-right breadcrumb-separator"></i>
+      <span class="breadcrumb-item">Financial Management</span>
+      <i class="bi bi-chevron-right breadcrumb-separator"></i>
+      <span class="breadcrumb-item active">Bank & Cash Ledger</span>
+    </div>
   </div>
-  <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
-    <h3>{{ 'bank.records_title' | translate:currentLang }}</h3>
-    
-    <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
-      <div class="column-visibility-dropdown" style="position:relative;">
-        <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('bank')" style="padding: 6px 12px; font-size: 13px;">
-          <i class="bi bi-layout-three-columns me-1"></i>Columns
+
+  <!-- 2. ENTERPRISE HEADER -->
+  <div class="enterprise-header">
+    <div class="header-left">
+      <div class="header-icon-squircle bank-squircle">
+        <i class="bi bi-bank2"></i>
+      </div>
+      <div class="header-titles">
+        <h1 class="header-main-title">{{ 'bank.title' | translate:currentLang }}</h1>
+        <p class="header-subtitle">Treasury accounts, liquidity tracking, and financial reconciliation</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn btn-outline btn-sm" (click)="loadData(true)" [disabled]="isLoading" title="Refresh Bank Ledger">
+        <i class="bi bi-arrow-clockwise" [class.spin-animate]="isLoading"></i>
+        <span>Refresh</span>
+      </button>
+      <button type="button" class="btn btn-outline btn-sm" (click)="exportCSV()" [disabled]="bankTransactionsList.length === 0" title="Export Ledger as CSV">
+        <i class="bi bi-file-earmark-spreadsheet"></i>
+        <span>Export CSV</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. TREASURY KPI SURFACE CARDS -->
+  <div class="bank-kpi-grid">
+    <!-- KPI 1: Total Inflow (Credit) -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge kpi-emerald">
+        <i class="bi bi-arrow-down-left-circle-fill"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-label">Total Inflow (Credits)</span>
+        <span class="kpi-value text-emerald">₹{{ totalInflow | number:'1.2-2' }}</span>
+        <span class="kpi-meta">{{ creditCount }} credit entries</span>
+      </div>
+    </div>
+
+    <!-- KPI 2: Total Outflow (Debit) -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge kpi-rose">
+        <i class="bi bi-arrow-up-right-circle-fill"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-label">Total Outflow (Debits)</span>
+        <span class="kpi-value text-rose">₹{{ totalOutflow | number:'1.2-2' }}</span>
+        <span class="kpi-meta">{{ debitCount }} debit entries</span>
+      </div>
+    </div>
+
+    <!-- KPI 3: Net Treasury Balance -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge" [ngClass]="netBalance >= 0 ? 'kpi-blue' : 'kpi-rose'">
+        <i class="bi bi-wallet2"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-label">Net Treasury Balance</span>
+        <span class="kpi-value" [ngClass]="netBalance >= 0 ? 'text-primary' : 'text-rose'">
+          ₹{{ netBalance | number:'1.2-2' }}
+        </span>
+        <span class="kpi-meta">
+          <span class="badge" [ngClass]="netBalance >= 0 ? 'badge-success-subtle' : 'badge-danger-subtle'">
+            {{ netBalance >= 0 ? 'Surplus' : 'Deficit' }}
+          </span>
+        </span>
+      </div>
+    </div>
+
+    <!-- KPI 4: Total Transactions -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge kpi-indigo">
+        <i class="bi bi-receipt-cutoff"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-label">Total Transactions</span>
+        <span class="kpi-value">{{ bankTransactionsList.length }}</span>
+        <span class="kpi-meta">Reconciled entries</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. NETWORK / API ERROR STATE -->
+  <app-empty-state *ngIf="hasError"
+                   variant="error"
+                   icon="bi-exclamation-triangle-fill"
+                   title="Unable to Load Bank Ledger"
+                   [description]="errorMessage || 'Failed to connect to the financial ledger service. Please check your network and retry.'"
+                   actionLabel="Retry Connection"
+                   actionIcon="bi-arrow-clockwise"
+                   (action)="loadData(true)">
+  </app-empty-state>
+
+  <!-- 5. MAIN WORKSPACE (Form + Data Table) -->
+  <div class="bank-workspace-grid" *ngIf="!hasError">
+
+    <!-- LEFT: Transaction Entry / Edit Form -->
+    <div class="glass-panel bank-form-card" *ngIf="!isViewer()">
+      <div class="form-card-header">
+        <div class="form-title-group">
+          <div class="form-header-icon" [class.editing-pulse]="editingId">
+            <i class="bi" [ngClass]="editingId ? 'bi-pencil-square' : 'bi-plus-circle-fill'"></i>
+          </div>
+          <div>
+            <h3 class="form-title">{{ editingId ? 'Edit Transaction' : 'Record Transaction' }}</h3>
+            <p class="form-subtitle">{{ editingId ? 'Update existing transaction details' : 'Log a new cash or bank entry' }}</p>
+          </div>
+        </div>
+        <button *ngIf="editingId" type="button" class="btn btn-outline btn-sm btn-cancel-top" (click)="cancelEdit()" title="Cancel editing">
+          <i class="bi bi-x-lg"></i>
         </button>
-        <div class="dropdown-menu" *ngIf="showColDropdown['bank']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
-          <label *ngFor="let col of getTableColumns('bank')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-            <input appAutoSelect type="checkbox" [checked]="isColumnVisible('bank', col)" (change)="toggleColumn('bank', col)" style="width:auto; margin:0; cursor:pointer;">
-            {{col}}
-          </label>
+      </div>
+
+      <form (submit)="saveBankTransaction()" class="bank-entry-form">
+        <!-- Date field -->
+        <div class="form-field-group">
+          <label class="form-label required">{{ 'bank.date' | translate:currentLang }}</label>
+          <div class="input-with-icon">
+            <i class="bi bi-calendar3 input-lead-icon"></i>
+            <input appAutoSelect type="date" [(ngModel)]="bankTxnForm.transactionDate" name="bDate" class="form-control" required>
+          </div>
+        </div>
+
+        <!-- Type field (Segmented Switcher) -->
+        <div class="form-field-group">
+          <label class="form-label required">{{ 'bank.type' | translate:currentLang }}</label>
+          <div class="type-segmented-pill">
+            <button type="button" class="type-pill-opt credit-opt"
+                    [class.active]="bankTxnForm.transactionType === 'Credit'"
+                    (click)="bankTxnForm.transactionType = 'Credit'">
+              <i class="bi bi-arrow-down-left"></i>
+              <span>Credit (Inflow)</span>
+            </button>
+            <button type="button" class="type-pill-opt debit-opt"
+                    [class.active]="bankTxnForm.transactionType === 'Debit'"
+                    (click)="bankTxnForm.transactionType = 'Debit'">
+              <i class="bi bi-arrow-up-right"></i>
+              <span>Debit (Outflow)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Amount field -->
+        <div class="form-field-group">
+          <label class="form-label required">{{ 'bank.amount' | translate:currentLang }}</label>
+          <div class="input-with-icon currency-input-group">
+            <span class="currency-symbol">₹</span>
+            <input appAutoSelect type="number" step="0.01" min="0.01" [(ngModel)]="bankTxnForm.amount" name="bAmt"
+                   class="form-control currency-control" placeholder="0.00" required>
+          </div>
+        </div>
+
+        <!-- Description field -->
+        <div class="form-field-group">
+          <label class="form-label required">{{ 'bank.desc' | translate:currentLang }}</label>
+          <div class="input-with-icon">
+            <i class="bi bi-card-text input-lead-icon"></i>
+            <input appAutoSelect type="text" [(ngModel)]="bankTxnForm.description" name="bDesc"
+                   class="form-control" placeholder="Purpose or beneficiary name" required>
+          </div>
+        </div>
+
+        <!-- Reference No field -->
+        <div class="form-field-group">
+          <label class="form-label">{{ 'bank.reference' | translate:currentLang }}</label>
+          <div class="input-with-icon">
+            <i class="bi bi-hash input-lead-icon"></i>
+            <input appAutoSelect type="text" [(ngModel)]="bankTxnForm.referenceNo" name="bRef"
+                   class="form-control" placeholder="UPI / NEFT / Cheque #">
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions-row">
+          <button type="submit" class="btn btn-primary btn-save" [class.btn-update]="editingId">
+            <i class="bi" [ngClass]="editingId ? 'bi-check2-circle' : 'bi-plus-lg'"></i>
+            <span>{{ editingId ? 'Update Record' : ('btn.save' | translate:currentLang) }}</span>
+          </button>
+          <button *ngIf="editingId" type="button" class="btn btn-secondary btn-cancel" (click)="cancelEdit()">
+            <i class="bi bi-x-circle me-1"></i>
+            <span>Cancel</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- RIGHT: Data Table Card -->
+    <div class="glass-panel bank-table-card" [class.full-width]="isViewer()">
+      
+      <!-- Table Header Bar -->
+      <div class="table-card-top-bar">
+        <div class="table-title-group">
+          <h3 class="table-card-title">{{ 'bank.records_title' | translate:currentLang }}</h3>
+          <span class="table-count-pill">{{ filteredList.length }} records</span>
+        </div>
+
+        <!-- Type Filter Pills -->
+        <div class="type-filter-pills no-print">
+          <button type="button" class="pill-btn" [class.active]="filterType === 'ALL'" (click)="setFilterType('ALL')">
+            All ({{ bankTransactionsList.length }})
+          </button>
+          <button type="button" class="pill-btn pill-credit" [class.active]="filterType === 'Credit'" (click)="setFilterType('Credit')">
+            <i class="bi bi-arrow-down-left me-1"></i>Credits ({{ creditCount }})
+          </button>
+          <button type="button" class="pill-btn pill-debit" [class.active]="filterType === 'Debit'" (click)="setFilterType('Debit')">
+            <i class="bi bi-arrow-up-right me-1"></i>Debits ({{ debitCount }})
+          </button>
         </div>
       </div>
-    </div>
-    <div class="table-container table-responsive">
-      <table class="table" appResizableTable [tableId]="'bank_table'">
-        <thead>
-          <tr>
-            <th *ngIf="isColumnVisible('bank', 'Date')" (click)="setSort('transactionDate')" style="cursor:pointer; min-width: 130px;">{{ 'bank.date' | translate:currentLang }} <span *ngIf="sortField === 'transactionDate'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-            <th *ngIf="isColumnVisible('bank', 'Type')" (click)="setSort('transactionType')" style="cursor:pointer; min-width: 100px;">{{ 'bank.type' | translate:currentLang }} <span *ngIf="sortField === 'transactionType'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-            <th *ngIf="isColumnVisible('bank', 'Amount')" (click)="setSort('amount')" style="cursor:pointer; min-width: 120px;">{{ 'bank.amount' | translate:currentLang }} <span *ngIf="sortField === 'amount'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-            <th *ngIf="isColumnVisible('bank', 'Description')" style="min-width: 160px;">{{ 'bank.desc' | translate:currentLang }}</th>
-            <th *ngIf="isColumnVisible('bank', 'Reference')" (click)="setSort('referenceNo')" style="cursor:pointer; min-width: 130px;">{{ 'bank.reference' | translate:currentLang }} <span *ngIf="sortField === 'referenceNo'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-            <th *ngIf="isColumnVisible('bank', 'Actions')" style="min-width: 130px;">{{ 'label.actions' | translate:currentLang }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let bt of getProcessedList(bankTransactionsList, 'bank'); trackBy: trackById">
-            <td *ngIf="isColumnVisible('bank', 'Date')">
-              <span class="date-cell">{{ bt.transactionDate | indianDate }}</span>
-            </td>
-            <td *ngIf="isColumnVisible('bank', 'Type')">
-              <span class="badge badge-success" *ngIf="bt.transactionType === 'Credit'">Credit</span>
-              <span class="badge badge-danger" *ngIf="bt.transactionType === 'Debit'">Debit</span>
-            </td>
-            <td *ngIf="isColumnVisible('bank', 'Amount')">
-              <strong [style.color]="bt.transactionType === 'Credit' ? 'var(--accent-success, #10b981)' : 'var(--accent-danger, #ef4444)'">
-                ₹{{ bt.amount | number:'1.2-2' }}
-              </strong>
-            </td>
-            <td *ngIf="isColumnVisible('bank', 'Description')">{{ bt.description }}</td>
-            <td *ngIf="isColumnVisible('bank', 'Reference')"><code>{{ bt.referenceNo || 'N/A' }}</code></td>
-            <td *ngIf="isColumnVisible('bank', 'Actions')">
-              <button class="btn btn-outline btn-sm" style="margin-right: 5px; font-weight: 700; font-size: 11.5px; padding: 4px 8px;" (click)="editBankTransaction(bt)"><i class="bi bi-pencil me-1"></i>Edit</button>
-              <button class="btn btn-danger btn-sm" style="font-size: 11.5px; padding: 4px 8px;" *ngIf="canDelete()" (click)="deleteBankTransaction(bt.id)">{{ 'btn.delete' | translate:currentLang }}</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
-      <span style="font-size:13px; color:var(--text-secondary);">
-        Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['bank'] || 0) }} of {{ tableFilteredCounts['bank'] || 0 }} entries
-      </span>
-      <div style="display:flex; gap:8px;">
-        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
-          Previous
-        </button>
-        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['bank'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
-          Next
-        </button>
+
+      <!-- Smart Filter & Search Toolbar -->
+      <div class="table-unified-toolbar no-print">
+        <div class="toolbar-left-group">
+          <!-- Search input -->
+          <div class="toolbar-search-box">
+            <i class="bi bi-search search-lead-icon"></i>
+            <input type="text" [(ngModel)]="searchQuery" (input)="currentPage = 1"
+                   placeholder="Search description, reference no..." class="toolbar-search-input">
+            <button *ngIf="searchQuery" type="button" class="search-clear-btn" (click)="searchQuery = ''; currentPage = 1" title="Clear search">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+
+          <!-- Date From -->
+          <div class="toolbar-date-field">
+            <label>From:</label>
+            <input type="date" [(ngModel)]="filterDateFrom" (change)="currentPage = 1" class="toolbar-date-input">
+          </div>
+
+          <!-- Date To -->
+          <div class="toolbar-date-field">
+            <label>To:</label>
+            <input type="date" [(ngModel)]="filterDateTo" (change)="currentPage = 1" class="toolbar-date-input">
+          </div>
+
+          <!-- Reset button -->
+          <button *ngIf="filterType !== 'ALL' || searchQuery || filterDateFrom || filterDateTo"
+                  type="button" class="btn btn-outline btn-sm btn-clear-filters" (click)="resetFilters()" title="Reset all filters">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>
+            <span>Reset</span>
+          </button>
+        </div>
+
+        <div class="toolbar-right-group">
+          <!-- Table Density Segmented Toggle -->
+          <div class="density-toggle-group">
+            <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'"
+                    (click)="setTableDensity('compact')" title="Compact density">
+              <i class="bi bi-distribute-vertical"></i>
+            </button>
+            <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'"
+                    (click)="setTableDensity('comfortable')" title="Comfortable density">
+              <i class="bi bi-list"></i>
+            </button>
+            <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'"
+                    (click)="setTableDensity('spacious')" title="Spacious density">
+              <i class="bi bi-distribute-horizontal"></i>
+            </button>
+          </div>
+
+          <!-- Columns Visibility Dropdown -->
+          <div class="column-visibility-dropdown" style="position:relative;">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('bank')">
+              <i class="bi bi-layout-three-columns me-1"></i>Columns
+            </button>
+            <div class="dropdown-menu-columns" *ngIf="showColDropdown['bank']">
+              <label *ngFor="let col of getTableColumns('bank')" class="col-checkbox-label">
+                <input type="checkbox" [checked]="isColumnVisible('bank', col)" (change)="toggleColumn('bank', col)">
+                <span>{{ col }}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Table -->
+      <div class="table-container table-responsive" *ngIf="filteredList.length > 0">
+        <table class="table bank-data-table" [ngClass]="'density-' + tableDensity" appResizableTable [tableId]="'bank_table'">
+          <thead>
+            <tr>
+              <th *ngIf="isColumnVisible('bank', 'Date')" (click)="setSort('transactionDate')" class="sortable-th" style="min-width: 120px;">
+                <div class="th-content">
+                  <span>{{ 'bank.date' | translate:currentLang }}</span>
+                  <i class="bi ms-1" [ngClass]="sortField === 'transactionDate' ? (sortAsc ? 'bi-chevron-up' : 'bi-chevron-down') : 'bi-arrow-down-up opacity-40'"></i>
+                </div>
+              </th>
+              <th *ngIf="isColumnVisible('bank', 'Type')" (click)="setSort('transactionType')" class="sortable-th" style="min-width: 110px;">
+                <div class="th-content">
+                  <span>{{ 'bank.type' | translate:currentLang }}</span>
+                  <i class="bi ms-1" [ngClass]="sortField === 'transactionType' ? (sortAsc ? 'bi-chevron-up' : 'bi-chevron-down') : 'bi-arrow-down-up opacity-40'"></i>
+                </div>
+              </th>
+              <th *ngIf="isColumnVisible('bank', 'Amount')" (click)="setSort('amount')" class="sortable-th amount-th" style="min-width: 130px; text-align: right;">
+                <div class="th-content justify-content-end">
+                  <span>{{ 'bank.amount' | translate:currentLang }}</span>
+                  <i class="bi ms-1" [ngClass]="sortField === 'amount' ? (sortAsc ? 'bi-chevron-up' : 'bi-chevron-down') : 'bi-arrow-down-up opacity-40'"></i>
+                </div>
+              </th>
+              <th *ngIf="isColumnVisible('bank', 'Description')" style="min-width: 180px;">
+                <span>{{ 'bank.desc' | translate:currentLang }}</span>
+              </th>
+              <th *ngIf="isColumnVisible('bank', 'Reference')" (click)="setSort('referenceNo')" class="sortable-th" style="min-width: 130px;">
+                <div class="th-content">
+                  <span>{{ 'bank.reference' | translate:currentLang }}</span>
+                  <i class="bi ms-1" [ngClass]="sortField === 'referenceNo' ? (sortAsc ? 'bi-chevron-up' : 'bi-chevron-down') : 'bi-arrow-down-up opacity-40'"></i>
+                </div>
+              </th>
+              <th *ngIf="isColumnVisible('bank', 'Actions')" class="text-end" style="min-width: 110px;">
+                <span>{{ 'label.actions' | translate:currentLang }}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let bt of paginatedList; trackBy: trackById" class="bank-row">
+              <td *ngIf="isColumnVisible('bank', 'Date')">
+                <span class="date-cell">{{ bt.transactionDate | indianDate }}</span>
+              </td>
+              <td *ngIf="isColumnVisible('bank', 'Type')">
+                <span class="badge-role" [ngClass]="bt.transactionType === 'Credit' ? 'badge-credit' : 'badge-debit'">
+                  <i class="bi" [ngClass]="bt.transactionType === 'Credit' ? 'bi-arrow-down-left' : 'bi-arrow-up-right'"></i>
+                  <span>{{ bt.transactionType }}</span>
+                </span>
+              </td>
+              <td *ngIf="isColumnVisible('bank', 'Amount')" class="text-end font-tabular">
+                <strong [class.text-emerald]="bt.transactionType === 'Credit'" [class.text-rose]="bt.transactionType === 'Debit'">
+                  {{ bt.transactionType === 'Credit' ? '+' : '-' }}₹{{ bt.amount | number:'1.2-2' }}
+                </strong>
+              </td>
+              <td *ngIf="isColumnVisible('bank', 'Description')">
+                <div class="desc-cell">{{ bt.description }}</div>
+              </td>
+              <td *ngIf="isColumnVisible('bank', 'Reference')">
+                <span class="ref-badge" *ngIf="bt.referenceNo">
+                  <code>{{ bt.referenceNo }}</code>
+                </span>
+                <span class="text-muted" *ngIf="!bt.referenceNo">—</span>
+              </td>
+              <td *ngIf="isColumnVisible('bank', 'Actions')" class="text-end">
+                <div class="row-actions-group">
+                  <button type="button" class="btn-action-icon edit-btn" (click)="editBankTransaction(bt)" title="Edit Transaction">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button *ngIf="canDelete()" type="button" class="btn-action-icon delete-btn" (click)="deleteBankTransaction(bt.id)" title="Delete Transaction">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty Search State -->
+      <app-empty-state *ngIf="filteredList.length === 0"
+                       variant="search"
+                       icon="bi-search"
+                       title="No Bank Transactions Found"
+                       description="No records match your selected type filter, date range, or search criteria."
+                       actionLabel="Clear Filters"
+                       actionIcon="bi-arrow-counterclockwise"
+                       [compact]="true"
+                       (action)="resetFilters()">
+      </app-empty-state>
+
+      <!-- Table Pagination Footer -->
+      <div class="table-pagination no-print" *ngIf="filteredList.length > 0">
+        <span class="pagination-info">
+          Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, filteredList.length) }} of {{ filteredList.length }} entries
+        </span>
+        <div class="pagination-controls">
+          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1"
+                  (click)="currentPage = currentPage - 1">
+            <i class="bi bi-chevron-left me-1"></i>Previous
+          </button>
+          <span class="pagination-page-indicator">Page {{ currentPage }} of {{ totalPages }}</span>
+          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage >= totalPages"
+                  (click)="currentPage = currentPage + 1">
+            Next<i class="bi bi-chevron-right ms-1"></i>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </div>
-

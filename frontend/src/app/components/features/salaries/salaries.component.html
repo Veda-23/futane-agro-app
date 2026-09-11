@@ -1,198 +1,778 @@
-<!-- SALARIES / PAYROLL TELEMETRY RIBBON -->
-<div class="salaries-summary-ribbon" style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-  <div class="ribbon-pill" style="flex: 1; min-width: 140px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
-    <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(16,185,129,0.12); display: flex; align-items: center; justify-content: center;">
-      <i class="bi bi-cash-stack text-success" style="font-size: 18px;"></i>
-    </div>
-    <div>
-      <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Total Disbursed</div>
-      <strong style="font-size: 15px; color: var(--color-success); font-family: var(--font-heading);">₹{{ getTotalPaidAmount() | number:'1.0-0' }}</strong>
-    </div>
-  </div>
+<div class="salaries-enterprise-container">
 
-  <div class="ribbon-pill" style="flex: 1; min-width: 140px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
-    <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(245,158,11,0.12); display: flex; align-items: center; justify-content: center;">
-      <i class="bi bi-clock-history text-warning" style="font-size: 18px;"></i>
+  <!-- ── 1. UNIFIED BREADCRUMB & STABLE HEADER ────────────────────── -->
+  <div class="header-section-wrapper no-print">
+    <!-- Row 1a: Breadcrumbs -->
+    <div class="breadcrumb-nav">
+      <span class="breadcrumb-item"><i class="bi bi-house-door me-1"></i>Futane Agro ERP</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item">Financial Management</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item active">Payroll &amp; Staff Salary Vouchers</span>
     </div>
-    <div>
-      <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Pending Payouts</div>
-      <strong style="font-size: 15px; color: var(--color-warning); font-family: var(--font-heading);">₹{{ getTotalPendingAmount() | number:'1.0-0' }}</strong>
-    </div>
-  </div>
 
-  <div class="ribbon-pill" style="flex: 1; min-width: 140px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
-    <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--primary-soft); display: flex; align-items: center; justify-content: center;">
-      <i class="bi bi-pie-chart-fill text-primary" style="font-size: 18px;"></i>
-    </div>
-    <div>
-      <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Disbursal Rate</div>
-      <strong style="font-size: 15px; color: var(--primary); font-family: var(--font-heading);">{{ getDisbursalRate() | number:'1.1-1' }}%</strong>
-    </div>
-  </div>
-
-  <div class="ribbon-pill" style="flex: 1; min-width: 140px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
-    <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(59,130,246,0.12); display: flex; align-items: center; justify-content: center;">
-      <i class="bi bi-receipt-cutoff text-info" style="font-size: 18px;"></i>
-    </div>
-    <div>
-      <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Payroll Records</div>
-      <strong style="font-size: 15px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalPayoutCount() }} Entries</strong>
-    </div>
-  </div>
-</div>
-
-<div class="grid-cols-3">
-  <!-- Payout Entry Form -->
-  <div class="glass-panel form-card" [class.editing-mode]="isEditing()" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
-    <div class="card-header-flex" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-      <div class="section-title-badge" style="display: flex; align-items: center; gap: 8px;">
-        <span class="badge-icon"><i class="bi bi-wallet2" style="font-size:18px; color:var(--primary);"></i></span>
-        <div class="badge-text">
-          <h3 style="margin: 0; font-size: 15px; font-weight: 700;">{{ isEditing() ? 'Edit Payroll Record' : ('sal.add_title' | translate:currentLang) }}</h3>
+    <!-- Row 1b: Stable Header with Title & Primary Actions -->
+    <div class="stable-page-header">
+      <div class="header-left">
+        <div class="header-icon-badge">
+          <i class="bi bi-cash-coin"></i>
         </div>
-      </div>
-      <button *ngIf="isEditing()" type="button" class="btn btn-secondary btn-sm" (click)="cancelEdit()">
-        <i class="bi bi-x-circle me-1"></i>Cancel
-      </button>
-    </div>
-
-    <form (submit)="saveSalary()">
-      <div class="form-group">
-        <label>{{ 'label.select_employee' | translate:currentLang }} <span class="req-star">*</span></label>
-        <select [(ngModel)]="salariesForm.id" name="salEmp" required (change)="onEmployeeSelectChange()">
-          <option value="" disabled selected>-- Select Staff Member --</option>
-          <option *ngFor="let emp of employees" [value]="emp.id">{{ emp.empName }} (₹{{ emp.salary }}/mo)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>{{ 'sal.month' | translate:currentLang }} <span class="req-star">*</span></label>
-        <select [(ngModel)]="salariesForm.month" name="salMonth" required>
-          <option *ngFor="let m of allMonths" [value]="m">{{ m }}</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>{{ 'sal.year' | translate:currentLang }} <span class="req-star">*</span></label>
-        <input appAutoSelect type="number" [(ngModel)]="salariesForm.year" name="salYear" required>
-      </div>
-      <div class="form-group">
-        <label>{{ 'sal.amount' | translate:currentLang }} (₹) <span class="req-star">*</span></label>
-        <input appAutoSelect type="number" [(ngModel)]="salariesForm.salaryAmount" name="salAmount" required placeholder="Salary amount in ₹">
-      </div>
-      <div class="form-group">
-        <label>{{ 'sal.status' | translate:currentLang }} <span class="req-star">*</span></label>
-        <select [(ngModel)]="salariesForm.status" name="salStatus" required>
-          <option value="Paid">Paid</option>
-          <option value="Pending">Pending</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>{{ 'sal.date' | translate:currentLang }}</label>
-        <input appAutoSelect type="date" [(ngModel)]="salariesForm.paidDate" name="salPaidDate">
-      </div>
-
-      <!-- Live Compensation Preview Badge -->
-      <div *ngIf="salariesForm.salaryAmount > 0" class="live-efficiency-badge-wrap animate-fade-in" style="margin-bottom: 14px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-          <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="bi bi-calculator me-1 text-primary"></i>Payout Preview:</span>
-          <strong style="font-size: 13px; font-weight: 800;" [style.color]="salariesForm.status === 'Paid' ? 'var(--color-success)' : 'var(--color-warning)'">
-            ₹{{ salariesForm.salaryAmount | number:'1.0-0' }} ({{ salariesForm.status }})
-          </strong>
-        </div>
-        <div style="font-size: 10.5px; color: var(--text-muted);">
-          Cycle: {{ salariesForm.month }} {{ salariesForm.year }}
-          <span *ngIf="getSelectedEmployee()"> • {{ getSelectedEmployee().empName }} ({{ getSelectedEmployee().designation }})</span>
+        <div class="header-text-group">
+          <h1 class="header-main-title">Payroll &amp; Staff Salary Vouchers</h1>
+          <p class="header-desc-text">
+            Disburse employee monthly compensation, audit settlement records, and manage payment vouchers
+          </p>
         </div>
       </div>
 
-      <button type="submit" class="btn btn-primary" style="width: 100%;">
-        <i class="bi bi-wallet2 me-1"></i>{{ isEditing() ? 'Update Record' : ('sal.save_btn' | translate:currentLang) }}
-      </button>
-    </form>
-  </div>
-
-  <!-- Table Grid Card -->
-  <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
-    <div class="card-header-flex" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-      <div class="section-title-badge" style="display: flex; align-items: center; gap: 8px;">
-        <span class="badge-icon"><i class="bi bi-cash-stack" style="font-size:18px; color:var(--primary);"></i></span>
-        <div class="badge-text">
-          <h3 style="margin: 0; font-size: 15px; font-weight: 700;">{{ 'sal.records_title' | translate:currentLang }}</h3>
-        </div>
+      <div class="header-right-actions">
+        <!-- Primary Action: Create Salary Voucher -->
+        <button type="button" 
+                class="btn btn-primary btn-action-primary" 
+                *ngIf="!isViewer()"
+                (click)="openAddDrawer()" 
+                title="Disburse wages and generate a salary voucher">
+          <i class="bi bi-wallet2 me-1"></i>
+          <span>+ Create Salary Voucher</span>
+        </button>
       </div>
     </div>
-    
-    <!-- Skeleton Loader (A-01) -->
-    <div *ngIf="isLoading" class="skeleton-container" aria-busy="true" aria-label="Loading salaries...">
-      <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5,6]"></div>
+
+    <!-- ── 2. SUBTABS CLASSIFICATION RIBBON ──────────────────────────── -->
+    <div class="subtabs-classification-bar">
+      <div class="subtabs-scroll-container">
+        <!-- All Vouchers -->
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="filterStatus === 'ALL'"
+                (click)="setSubtabStatus('ALL')">
+          <i class="bi bi-receipt-cutoff me-1"></i>
+          <span>All Vouchers</span>
+          <span class="tab-count-badge">{{ getSubtabCount('ALL') }}</span>
+        </button>
+
+        <!-- Paid / Disbursed -->
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="filterStatus === 'Paid'"
+                (click)="setSubtabStatus('Paid')">
+          <i class="bi bi-check-circle-fill text-success me-1"></i>
+          <span>Disbursed / Paid</span>
+          <span class="tab-count-badge">{{ getSubtabCount('Paid') }}</span>
+        </button>
+
+        <!-- Pending Clearance -->
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="filterStatus === 'Pending'"
+                (click)="setSubtabStatus('Pending')">
+          <i class="bi bi-clock-fill text-warning me-1"></i>
+          <span>Pending Clearance</span>
+          <span class="tab-count-badge">{{ getSubtabCount('Pending') }}</span>
+        </button>
+
+        <!-- Quick Current Month Shortcut -->
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="isCurrentMonthFiltered()"
+                (click)="setCurrentMonthFilter()"
+                title="Toggle filtering for current month only">
+          <i class="bi bi-calendar2-check text-primary me-1"></i>
+          <span>Current Month Cycle</span>
+          <span class="tab-indicator-badge" *ngIf="isCurrentMonthFiltered()">Active</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Error State -->
-    <div *ngIf="!isLoading && hasError" class="empty-state" style="padding:40px; text-align:center;">
-      <div style="margin-bottom:12px;"><i class="bi bi-exclamation-triangle text-danger" style="font-size:48px;"></i></div>
-      <h3 style="color: var(--text-primary);">Failed to Load Salaries</h3>
-      <p style="color: var(--text-secondary); margin-bottom:16px;">Could not connect to the server. Please check your connection.</p>
-      <button class="btn btn-primary" (click)="loadData()"><i class="bi bi-arrow-repeat me-1"></i>Retry</button>
-    </div>
-
-    <div *ngIf="!isLoading && !hasError">
-      <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
-        <div class="column-visibility-dropdown" style="position:relative;">
-          <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('salaries')" style="padding: 6px 12px; font-size: 13px;">
-            <i class="bi bi-layout-three-columns me-1"></i>Columns
+    <!-- ── 3. SEARCH & FILTERS TOOLBAR ──────────────────────────────── -->
+    <div class="filters-toolbar-wrapper">
+      <div class="filters-left-group">
+        <!-- Search Input -->
+        <div class="toolbar-search-box">
+          <i class="bi bi-search search-icon"></i>
+          <input type="text" 
+                 class="search-input" 
+                 [(ngModel)]="filterSearchQuery" 
+                 (input)="currentPage = 1" 
+                 placeholder="Search staff name, ID, month, status..." 
+                 aria-label="Search payroll ledger">
+          <button *ngIf="filterSearchQuery" 
+                  type="button" 
+                  class="btn-clear-search" 
+                  (click)="filterSearchQuery = ''; currentPage = 1"
+                  title="Clear search query">
+            <i class="bi bi-x"></i>
           </button>
-          <div class="dropdown-menu" *ngIf="showColDropdown['salaries']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
-            <label *ngFor="let col of getTableColumns('salaries')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-              <input appAutoSelect type="checkbox" [checked]="isColumnVisible('salaries', col)" (change)="toggleColumn('salaries', col)" style="width:auto; margin:0; cursor:pointer;">
-              {{col}}
+        </div>
+
+        <!-- Wage Month Filter -->
+        <div class="filter-select-wrapper">
+          <select class="toolbar-select" 
+                  [(ngModel)]="filterMonth" 
+                  (change)="currentPage = 1" 
+                  title="Filter by Wage Month">
+            <option value="ALL">All Months</option>
+            <option *ngFor="let m of allMonths" [value]="m">{{ m }}</option>
+          </select>
+        </div>
+
+        <!-- Wage Year Filter -->
+        <div class="filter-select-wrapper">
+          <select class="toolbar-select" 
+                  [(ngModel)]="filterYear" 
+                  (change)="currentPage = 1" 
+                  title="Filter by Wage Year">
+            <option value="ALL">All Years</option>
+            <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+          </select>
+        </div>
+
+        <!-- Staff Member Dropdown Filter -->
+        <div class="filter-select-wrapper">
+          <select class="toolbar-select" 
+                  [(ngModel)]="filterEmployee" 
+                  (change)="currentPage = 1" 
+                  title="Filter by Staff Member">
+            <option value="ALL">All Staff Members</option>
+            <option *ngFor="let emp of employees" [value]="emp.id">
+              {{ emp.empName }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Reset Filters Trigger -->
+        <button *ngIf="hasActiveFilters()" 
+                type="button" 
+                class="btn-reset-filters" 
+                (click)="resetFilters()" 
+                title="Reset all search queries and filters">
+          <i class="bi bi-x-circle me-1"></i>Reset
+        </button>
+      </div>
+
+      <div class="filters-right-group">
+        <!-- Staff Directory Navigation Shortcut -->
+        <button type="button" 
+                class="btn btn-secondary btn-action-compact" 
+                (click)="goToEmployees()" 
+                title="View Employee Master Directory">
+          <i class="bi bi-people me-1 text-primary"></i>
+          <span class="btn-label-desktop">Staff Directory</span>
+        </button>
+
+        <!-- Refresh Button -->
+        <button type="button" 
+                class="btn btn-secondary btn-action-compact" 
+                (click)="loadData(true)" 
+                [disabled]="isLoading || isRefreshing" 
+                title="Refresh payroll ledger from database">
+          <i class="bi bi-arrow-clockwise me-1" [class.spin-anim]="isRefreshing"></i>
+          <span class="btn-label-desktop">Refresh</span>
+        </button>
+
+        <!-- Consolidated Export Dropdown -->
+        <div class="export-dropdown-wrapper" (click)="$event.stopPropagation()">
+          <button type="button" 
+                  class="btn btn-secondary btn-action-compact" 
+                  (click)="toggleExportDropdown($event)" 
+                  title="Export payroll records">
+            <i class="bi bi-download me-1"></i>
+            <span>Export ▾</span>
+          </button>
+          <div class="export-menu shadow-lg animate-fade-in" *ngIf="showExportDropdown">
+            <button type="button" class="export-menu-item" (click)="exportCsv()">
+              <i class="bi bi-file-earmark-spreadsheet text-success me-2"></i>Export CSV (.csv)
+            </button>
+            <button type="button" class="export-menu-item" (click)="exportExcel()">
+              <i class="bi bi-file-earmark-excel text-primary me-2"></i>Export Excel (.xlsx)
+            </button>
+          </div>
+        </div>
+
+        <!-- Table Density Selector -->
+        <div class="density-group" role="group" aria-label="Table Density">
+          <button type="button" 
+                  class="density-btn" 
+                  [class.active]="tableDensity === 'compact'" 
+                  (click)="setDensity('compact')" 
+                  title="Compact rows">
+            <i class="bi bi-view-list"></i>
+          </button>
+          <button type="button" 
+                  class="density-btn" 
+                  [class.active]="tableDensity === 'normal'" 
+                  (click)="setDensity('normal')" 
+                  title="Standard rows">
+            <i class="bi bi-distribute-vertical"></i>
+          </button>
+          <button type="button" 
+                  class="density-btn" 
+                  [class.active]="tableDensity === 'spacious'" 
+                  (click)="setDensity('spacious')" 
+                  title="Spacious rows">
+            <i class="bi bi-arrows-expand"></i>
+          </button>
+        </div>
+
+        <!-- Columns Visibility Dropdown -->
+        <div class="columns-dropdown-wrap" (click)="$event.stopPropagation()">
+          <button type="button" 
+                  class="btn btn-secondary btn-sm btn-columns-toggle" 
+                  (click)="toggleColDropdown('salaries', $event)" 
+                  title="Configure Visible Columns">
+            <i class="bi bi-layout-three-columns me-1"></i>Columns ▾
+          </button>
+          <div class="columns-dropdown-menu shadow-lg animate-fade-in" *ngIf="showColDropdown['salaries']">
+            <label *ngFor="let col of getTableColumns('salaries')" class="column-checkbox-label">
+              <input type="checkbox" 
+                     [checked]="isColumnVisible('salaries', col)" 
+                     (change)="toggleColumn('salaries', col)">
+              <span>{{ col }}</span>
             </label>
           </div>
         </div>
       </div>
-      <div class="table-container table-responsive">
-        <table class="table" appResizableTable [tableId]="'salaries_table'">
+    </div>
+  </div>
+
+  <!-- ── 4. 4-COLUMN SUMMARY FINANCIAL KPI METRICS ─────────────────── -->
+  <section class="salaries-kpi-grid no-print" aria-label="Payroll Financial Metrics">
+    <!-- Total Disbursed -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge kpi-emerald">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Total Disbursed</span>
+        <div class="kpi-value font-mono">₹{{ totalPaidAmount | number:'1.0-0' }}</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag tag-success">{{ paidCount }} Disbursed</span>
+          <span class="kpi-subtext-muted">Paid vouchers</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Settlements -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge kpi-amber">
+        <i class="bi bi-clock-history"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Pending Clearance</span>
+        <div class="kpi-value font-mono">₹{{ totalPendingAmount | number:'1.0-0' }}</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag tag-warning">{{ pendingCount }} Pending</span>
+          <span class="kpi-subtext-muted">Awaiting release</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clearance Rate -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge kpi-blue">
+        <i class="bi bi-pie-chart-fill"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Clearance Rate</span>
+        <div class="kpi-value font-mono">{{ disbursalRate | number:'1.1-1' }}%</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag" [ngClass]="disbursalRate >= 80 ? 'tag-success' : 'tag-warning'">
+            {{ disbursalRate >= 80 ? 'Optimal Flow' : 'Pending Action' }}
+          </span>
+          <span class="kpi-subtext-muted">Disbursal ratio</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Workforce & Payouts -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge kpi-violet">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Active Payroll Roster</span>
+        <div class="kpi-value font-mono">{{ employees.length }} Staff</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag tag-primary">{{ totalPayoutCount }} Vouchers</span>
+          <span class="kpi-subtext-muted">Total logged</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 5. FULL-WIDTH ENTERPRISE FINANCIAL TABLE ──────────────────── -->
+  <section class="salaries-table-section no-print">
+    <div class="glass-panel table-surface">
+
+      <!-- Skeleton Loader -->
+      <div *ngIf="isLoading" class="skeleton-container" aria-busy="true" aria-label="Loading salary records...">
+        <div class="skeleton-row" *ngFor="let i of [1, 2, 3, 4, 5]"></div>
+      </div>
+
+      <!-- Error State -->
+      <app-empty-state 
+        *ngIf="!isLoading && hasError"
+        variant="error"
+        title="Payroll Ledger Connection Failed"
+        description="Could not connect to the payroll database service. Please verify your connection or retry."
+        actionText="Retry Connection"
+        (onAction)="loadData()">
+      </app-empty-state>
+
+      <!-- Empty Search State -->
+      <app-empty-state 
+        *ngIf="!isLoading && !hasError && filteredSalaries.length === 0"
+        variant="search"
+        title="No Salary Records Found"
+        [description]="hasActiveFilters() ? 'No payroll entries matched your search criteria or status filter.' : 'No salary disbursals have been logged yet. Click + Create Salary Voucher to release wages.'"
+        [actionText]="hasActiveFilters() ? 'Clear Filters' : ''"
+        (onAction)="resetFilters()">
+      </app-empty-state>
+
+      <!-- Main Ledger Table -->
+      <div *ngIf="!isLoading && !hasError && filteredSalaries.length > 0">
+        <div class="table-container table-responsive">
+          <table class="table modern-table" [ngClass]="'density-' + tableDensity" appResizableTable [tableId]="'salaries_table'">
+            <thead>
+              <tr>
+                <th *ngIf="isColumnVisible('salaries', 'Employee')" (click)="setSort('employee.empName')" class="sortable-th">
+                  Staff Member
+                  <i class="bi ms-1" [ngClass]="sortField === 'employee.empName' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-chevron-expand opacity-40'"></i>
+                </th>
+                <th *ngIf="isColumnVisible('salaries', 'Designation')" class="min-w-110">Designation</th>
+                <th *ngIf="isColumnVisible('salaries', 'Cycle')" (click)="setSort('month')" class="sortable-th min-w-110">
+                  Wage Cycle
+                  <i class="bi ms-1" [ngClass]="sortField === 'month' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-chevron-expand opacity-40'"></i>
+                </th>
+                <th *ngIf="isColumnVisible('salaries', 'Salary Amount')" (click)="setSort('salaryAmount')" class="sortable-th min-w-130 text-end">
+                  Disbursed Amount (₹)
+                  <i class="bi ms-1" [ngClass]="sortField === 'salaryAmount' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-chevron-expand opacity-40'"></i>
+                </th>
+                <th *ngIf="isColumnVisible('salaries', 'Paid Date')" (click)="setSort('paidDate')" class="sortable-th min-w-120">
+                  Release Date
+                  <i class="bi ms-1" [ngClass]="sortField === 'paidDate' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-chevron-expand opacity-40'"></i>
+                </th>
+                <th *ngIf="isColumnVisible('salaries', 'Status')" (click)="setSort('status')" class="sortable-th min-w-110">
+                  Payment Status
+                  <i class="bi ms-1" [ngClass]="sortField === 'status' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-chevron-expand opacity-40'"></i>
+                </th>
+                <th *ngIf="isColumnVisible('salaries', 'Actions')" class="min-w-120 text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let sal of getProcessedList(filteredSalaries, 'salaries'); trackBy: trackById" class="ledger-row">
+                <!-- Employee Name + Avatar -->
+                <td *ngIf="isColumnVisible('salaries', 'Employee')">
+                  <div class="emp-cell-group">
+                    <div class="emp-avatar-circle">
+                      {{ (sal.employee?.empName || 'Staff').charAt(0).toUpperCase() }}
+                    </div>
+                    <div class="emp-info-wrap">
+                      <span class="emp-name-text">{{ sal.employee?.empName || 'Staff #' + (sal.employee?.id || sal.employeeId) }}</span>
+                      <span class="emp-id-text font-mono">ID: #{{ sal.employee?.id || sal.employeeId || '—' }}</span>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Designation -->
+                <td *ngIf="isColumnVisible('salaries', 'Designation')">
+                  <span class="designation-badge">{{ sal.employee?.designation || 'Staff Member' }}</span>
+                </td>
+
+                <!-- Cycle (Month / Year) -->
+                <td *ngIf="isColumnVisible('salaries', 'Cycle')">
+                  <span class="cycle-pill">
+                    <i class="bi bi-calendar2-month me-1 text-primary"></i>{{ sal.month }} {{ sal.year }}
+                  </span>
+                </td>
+
+                <!-- Amount -->
+                <td *ngIf="isColumnVisible('salaries', 'Salary Amount')" class="text-end">
+                  <span class="amount-val font-mono">₹{{ sal.salaryAmount | number:'1.2-2' }}</span>
+                </td>
+
+                <!-- Paid Date -->
+                <td *ngIf="isColumnVisible('salaries', 'Paid Date')">
+                  <span class="date-val font-mono" *ngIf="sal.paidDate">
+                    <i class="bi bi-clock me-1 text-secondary"></i>{{ sal.paidDate | indianDate }}
+                  </span>
+                  <span class="date-val text-muted" *ngIf="!sal.paidDate">—</span>
+                </td>
+
+                <!-- Status -->
+                <td *ngIf="isColumnVisible('salaries', 'Status')">
+                  <span class="status-pill pill-status-paid" *ngIf="sal.status === 'Paid'">
+                    <i class="bi bi-check-circle-fill"></i> Paid
+                  </span>
+                  <span class="status-pill pill-status-pending" *ngIf="sal.status === 'Pending'">
+                    <i class="bi bi-clock-fill"></i> Pending
+                  </span>
+                </td>
+
+                <!-- Actions -->
+                <td *ngIf="isColumnVisible('salaries', 'Actions')" class="text-end">
+                  <div class="row-actions">
+                    <!-- View Voucher Receipt -->
+                    <button type="button" 
+                            class="btn-row-action btn-view" 
+                            (click)="openViewModal(sal)" 
+                            title="View and Print Salary Voucher">
+                      <i class="bi bi-receipt"></i>
+                    </button>
+
+                    <!-- Edit Salary Record -->
+                    <button *ngIf="!isViewer()" 
+                            type="button" 
+                            class="btn-row-action btn-edit" 
+                            (click)="editSalary(sal)" 
+                            title="Edit payroll record">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+
+                    <!-- Delete Salary Record -->
+                    <button *ngIf="canDelete()" 
+                            type="button" 
+                            class="btn-row-action btn-delete" 
+                            (click)="deleteSalary(sal.id)" 
+                            title="Delete payroll record">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Bar -->
+        <div class="table-pagination-bar no-print">
+          <div class="pagination-left-wrap">
+            <span class="pagination-info">
+              Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['salaries'] || 0) }} of {{ tableFilteredCounts['salaries'] || 0 }} payroll entries
+            </span>
+            <div class="page-size-selector">
+              <label for="salariesPageSize">Per page:</label>
+              <select id="salariesPageSize" [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)" aria-label="Entries per page">
+                <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="pagination-controls">
+            <button type="button" 
+                    class="btn-page" 
+                    [disabled]="currentPage === 1" 
+                    (click)="currentPage = currentPage - 1">
+              <i class="bi bi-chevron-left me-1"></i>Previous
+            </button>
+            <span class="page-indicator font-mono">Page {{ currentPage }}</span>
+            <button type="button" 
+                    class="btn-page" 
+                    [disabled]="currentPage * pageSize >= (tableFilteredCounts['salaries'] || 0)" 
+                    (click)="currentPage = currentPage + 1">
+              Next<i class="bi bi-chevron-right ms-1"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── 6. SLIDE-OVER DRAWER: CREATE / EDIT SALARY VOUCHER ────────── -->
+  <div class="drawer-backdrop animate-fade-in" *ngIf="isFormDrawerOpen" (click)="closeFormDrawer()">
+    <div class="slide-drawer shadow-2xl" (click)="$event.stopPropagation()">
+      <!-- Drawer Header -->
+      <div class="drawer-header">
+        <div class="drawer-title-group">
+          <div class="drawer-icon-badge" [class.editing-badge]="isEditing()">
+            <i class="bi" [ngClass]="isEditing() ? 'bi-pencil-square' : 'bi-wallet2'"></i>
+          </div>
+          <div>
+            <h2 class="drawer-title">{{ isEditing() ? 'Edit Payroll Record' : 'Create Salary Voucher' }}</h2>
+            <p class="drawer-subtitle">
+              {{ isEditing() ? 'Modify recorded wage disbursal parameters' : 'Disburse wages and generate a payment voucher slip' }}
+            </p>
+          </div>
+        </div>
+        <button type="button" class="btn-drawer-close" (click)="closeFormDrawer()" title="Close drawer">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <!-- Drawer Content Scroll Area -->
+      <div class="drawer-content">
+        <form id="salaryDrawerForm" (submit)="saveSalary()" class="drawer-form">
+          <!-- Section 1: Staff & Wage Period -->
+          <div class="form-section-card">
+            <div class="section-title">
+              <i class="bi bi-person-badge text-primary me-2"></i>1. Staff Member &amp; Wage Cycle
+            </div>
+
+            <!-- Employee Select -->
+            <div class="form-group mb-3">
+              <label class="form-label" for="salEmployee">
+                Staff Member <span class="req-star">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="bi bi-person select-icon"></i>
+                <select id="salEmployee" 
+                        class="form-control form-select-custom" 
+                        [(ngModel)]="salariesForm.id" 
+                        name="salEmp" 
+                        required 
+                        (change)="onEmployeeSelectChange()">
+                  <option value="" disabled selected>-- Select Staff Member --</option>
+                  <option *ngFor="let emp of employees" [value]="emp.id">
+                    {{ emp.empName }} (₹{{ emp.salary | number:'1.0-0' }}/mo) — {{ emp.designation || 'Staff' }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Month & Year in 2 Columns -->
+            <div class="form-row-2col">
+              <div class="form-group">
+                <label class="form-label" for="salMonth">
+                  Wage Month <span class="req-star">*</span>
+                </label>
+                <select id="salMonth" class="form-control" [(ngModel)]="salariesForm.month" name="salMonth" required>
+                  <option *ngFor="let m of allMonths" [value]="m">{{ m }}</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="salYear">
+                  Wage Year <span class="req-star">*</span>
+                </label>
+                <input id="salYear" 
+                       appAutoSelect 
+                       type="number" 
+                       class="form-control font-mono" 
+                       [(ngModel)]="salariesForm.year" 
+                       name="salYear" 
+                       required 
+                       min="2020" 
+                       max="2035">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Salary Amount & Settlement -->
+          <div class="form-section-card">
+            <div class="section-title">
+              <i class="bi bi-currency-rupee text-success me-2"></i>2. Disbursement &amp; Payment Details
+            </div>
+
+            <!-- Salary Amount with INR Currency Adornment -->
+            <div class="form-group mb-3">
+              <label class="form-label" for="salAmount">
+                Salary / Disbursal Amount <span class="req-star">*</span>
+              </label>
+              <div class="currency-input-wrap">
+                <span class="currency-prefix">₹</span>
+                <input id="salAmount" 
+                       appAutoSelect 
+                       type="number" 
+                       class="form-control font-mono currency-input" 
+                       [(ngModel)]="salariesForm.salaryAmount" 
+                       name="salAmount" 
+                       required 
+                       placeholder="0.00" 
+                       min="1">
+              </div>
+            </div>
+
+            <!-- Status Switcher Segmented Pills -->
+            <div class="form-group mb-3">
+              <label class="form-label">Payment Status <span class="req-star">*</span></label>
+              <div class="status-segmented-group">
+                <button type="button" 
+                        class="status-segment-btn" 
+                        [class.active-paid]="salariesForm.status === 'Paid'" 
+                        (click)="salariesForm.status = 'Paid'">
+                  <i class="bi bi-check-circle-fill me-1"></i>Paid (Disbursed)
+                </button>
+                <button type="button" 
+                        class="status-segment-btn" 
+                        [class.active-pending]="salariesForm.status === 'Pending'" 
+                        (click)="salariesForm.status = 'Pending'">
+                  <i class="bi bi-clock-fill me-1"></i>Pending Clearance
+                </button>
+              </div>
+            </div>
+
+            <!-- Payment Date -->
+            <div class="form-group">
+              <label class="form-label" for="salDate">
+                Disbursement Date <span class="req-star" *ngIf="salariesForm.status === 'Paid'">*</span>
+              </label>
+              <input id="salDate" 
+                     appAutoSelect 
+                     type="date" 
+                     class="form-control font-mono" 
+                     [(ngModel)]="salariesForm.paidDate" 
+                     name="salPaidDate" 
+                     [required]="salariesForm.status === 'Paid'">
+            </div>
+          </div>
+
+          <!-- Live Compensation Preview Badge -->
+          <div *ngIf="salariesForm.salaryAmount > 0" class="live-preview-badge animate-fade-in">
+            <div class="preview-header">
+              <span class="preview-tag"><i class="bi bi-calculator me-1"></i>Voucher Summary</span>
+              <span class="preview-amount font-mono" [ngClass]="salariesForm.status === 'Paid' ? 'text-success' : 'text-warning'">
+                ₹{{ salariesForm.salaryAmount | number:'1.2-2' }}
+              </span>
+            </div>
+            <div class="preview-meta">
+              <span><strong>Cycle:</strong> {{ salariesForm.month }} {{ salariesForm.year }}</span>
+              <span *ngIf="getSelectedEmployee()"> • <strong>Staff:</strong> {{ getSelectedEmployee().empName }}</span>
+              <span *ngIf="getSelectedEmployee()?.designation"> ({{ getSelectedEmployee().designation }})</span>
+            </div>
+          </div>
+
+          <!-- Safeguard notice -->
+          <div class="safeguard-notice">
+            <i class="bi bi-shield-check text-primary me-2"></i>
+            <span>ERP Financial Protocol: Duplicate payments for the same employee and wage cycle are automatically blocked.</span>
+          </div>
+        </form>
+      </div>
+
+      <!-- Drawer Fixed Footer -->
+      <div class="drawer-footer">
+        <button type="button" class="btn btn-secondary btn-action-compact" (click)="closeFormDrawer()">
+          Cancel
+        </button>
+        <button type="submit" form="salaryDrawerForm" class="btn btn-primary btn-action-primary btn-submit-salary" [disabled]="isLoading">
+          <i class="bi me-1" [ngClass]="isEditing() ? 'bi-check-lg' : 'bi-cash-coin'"></i>
+          <span>{{ isEditing() ? 'Update Payroll Record' : 'Disburse &amp; Record' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 7. VIEW SALARY VOUCHER MODAL & PRINTABLE SLIP ─────────────── -->
+  <div class="modal-backdrop-custom animate-fade-in" *ngIf="isViewModalOpen" (click)="closeViewModal()">
+    <div class="modal-dialog-voucher shadow-2xl" (click)="$event.stopPropagation()">
+      <!-- Modal Toolbar (Hidden when printing) -->
+      <div class="modal-header-toolbar no-print">
+        <div class="voucher-title-wrap">
+          <span class="voucher-badge"><i class="bi bi-receipt me-1"></i>Salary Payment Voucher</span>
+          <span class="voucher-id-tag font-mono">Ref #VCH-{{ selectedVoucher?.id || 'NEW' }}</span>
+        </div>
+        <div class="modal-header-actions">
+          <button type="button" class="btn btn-primary btn-sm" (click)="printVoucher()" title="Print salary slip">
+            <i class="bi bi-printer me-1"></i>Print Slip
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeViewModal()" title="Close voucher preview">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Salary Voucher Slip -->
+      <div class="voucher-slip-container" id="printableVoucherSlip">
+        <!-- Voucher Header -->
+        <div class="slip-header">
+          <div class="company-brand">
+            <h2 class="company-name">Futane Agro Products Pvt. Ltd.</h2>
+            <p class="company-address">Plot No. E-24, Kagal MIDC, Kolhapur, Maharashtra — 416236</p>
+            <p class="company-contact">Phone: +91 98220 12345 | GSTIN: 27AABCF1234F1Z8</p>
+          </div>
+          <div class="slip-doc-badge">
+            <span class="slip-type">PAYMENT VOUCHER</span>
+            <span class="slip-ref font-mono">#VCH-{{ selectedVoucher?.id || 'RECORD' }}</span>
+          </div>
+        </div>
+
+        <div class="slip-divider"></div>
+
+        <!-- Voucher Details 2-Column Grid -->
+        <div class="slip-info-grid">
+          <div class="slip-info-col">
+            <div class="info-row">
+              <span class="info-lbl">Staff Member:</span>
+              <span class="info-val fw-bold">{{ selectedVoucher?.employee?.empName || 'Staff #' + (selectedVoucher?.employee?.id || selectedVoucher?.employeeId) }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-lbl">Employee ID:</span>
+              <span class="info-val font-mono">#{{ selectedVoucher?.employee?.id || selectedVoucher?.employeeId || '—' }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-lbl">Designation:</span>
+              <span class="info-val">{{ selectedVoucher?.employee?.designation || 'Staff Member' }}</span>
+            </div>
+          </div>
+
+          <div class="slip-info-col">
+            <div class="info-row">
+              <span class="info-lbl">Wage Cycle:</span>
+              <span class="info-val fw-bold text-primary">{{ selectedVoucher?.month }} {{ selectedVoucher?.year }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-lbl">Disbursement Date:</span>
+              <span class="info-val font-mono">{{ selectedVoucher?.paidDate ? (selectedVoucher?.paidDate | indianDate) : 'Pending' }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-lbl">Payment Status:</span>
+              <span class="info-val">
+                <span class="status-pill" [ngClass]="selectedVoucher?.status === 'Paid' ? 'pill-status-paid' : 'pill-status-pending'">
+                  {{ selectedVoucher?.status }}
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Financial Breakdown Table -->
+        <table class="slip-breakdown-table">
           <thead>
             <tr>
-              <th *ngIf="isColumnVisible('salaries', 'Name')" (click)="setSort('employee.empName')" style="cursor:pointer; min-width: 140px;">{{ 'hr.name' | translate:currentLang }} <span *ngIf="sortField === 'employee.empName'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('salaries', 'Month/Year')" (click)="setSort('month')" style="cursor:pointer; min-width: 120px;">{{ 'sal.month' | translate:currentLang }} <span *ngIf="sortField === 'month'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('salaries', 'Amount')" (click)="setSort('salaryAmount')" style="cursor:pointer; min-width: 120px;">{{ 'sal.amount' | translate:currentLang }} <span *ngIf="sortField === 'salaryAmount'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('salaries', 'Date')" (click)="setSort('paidDate')" style="cursor:pointer; min-width: 130px;">{{ 'sal.date' | translate:currentLang }} <span *ngIf="sortField === 'paidDate'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('salaries', 'Status')" (click)="setSort('status')" style="cursor:pointer; min-width: 100px;">{{ 'label.status' | translate:currentLang }} <span *ngIf="sortField === 'status'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('salaries', 'Actions')" style="min-width: 130px;">{{ 'label.actions' | translate:currentLang }}</th>
+              <th>Description</th>
+              <th class="text-center">Wage Cycle</th>
+              <th class="text-end">Amount (INR)</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let sal of getProcessedList(salariesList, 'salaries'); trackBy: trackById">
-              <td *ngIf="isColumnVisible('salaries', 'Name')"><strong>{{ sal.employee?.empName || 'Employee #' + (sal.employee?.id || sal.employeeId) }}</strong></td>
-              <td *ngIf="isColumnVisible('salaries', 'Month/Year')">{{ sal.month }} / {{ sal.year }}</td>
-              <td *ngIf="isColumnVisible('salaries', 'Amount')"><strong>₹{{ sal.salaryAmount | number:'1.2-2' }}</strong></td>
-              <td *ngIf="isColumnVisible('salaries', 'Date')">
-                <span class="date-cell">{{ sal.paidDate | indianDate }}</span>
+            <tr>
+              <td>
+                <div class="fw-bold">Monthly Base Wages / Disbursal</div>
+                <div class="text-muted fs-xs">Net compensation for factory staff personnel</div>
               </td>
-              <td *ngIf="isColumnVisible('salaries', 'Status')">
-                <span class="badge badge-success" *ngIf="sal.status === 'Paid'">Paid</span>
-                <span class="badge badge-warning" *ngIf="sal.status === 'Pending'">Pending</span>
-              </td>
-              <td *ngIf="isColumnVisible('salaries', 'Actions')">
-                <button class="btn btn-outline btn-sm" style="margin-right: 5px; font-weight:700; font-size: 11.5px; padding: 4px 8px;" (click)="editSalary(sal)"><i class="bi bi-pencil me-1"></i>Edit</button>
-                <button class="btn btn-danger btn-sm" style="font-size: 11.5px; padding: 4px 8px;" *ngIf="canDelete()" (click)="deleteSalary(sal.id)">{{ 'btn.delete' | translate:currentLang }}</button>
-              </td>
+              <td class="text-center font-mono">{{ selectedVoucher?.month }} {{ selectedVoucher?.year }}</td>
+              <td class="text-end font-mono fw-bold">₹{{ selectedVoucher?.salaryAmount | number:'1.2-2' }}</td>
             </tr>
           </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="2" class="text-end fw-bold">Total Net Disbursed:</td>
+              <td class="text-end font-mono fw-bold total-amount">₹{{ selectedVoucher?.salaryAmount | number:'1.2-2' }}</td>
+            </tr>
+          </tfoot>
         </table>
-      </div>
-      <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
-        <span style="font-size:13px; color:var(--text-secondary);">
-          Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['salaries'] || 0) }} of {{ tableFilteredCounts['salaries'] || 0 }} entries
-        </span>
-        <div style="display:flex; gap:8px;">
-          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
-            Previous
-          </button>
-          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['salaries'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
-            Next
-          </button>
+
+        <!-- Sign-off Protocol -->
+        <div class="slip-signoff-grid">
+          <div class="signoff-box">
+            <div class="signoff-line"></div>
+            <span class="signoff-label">Prepared By (HR &amp; Payroll)</span>
+          </div>
+          <div class="signoff-box">
+            <div class="signoff-line"></div>
+            <span class="signoff-label">Verified By (Accounts / Finance)</span>
+          </div>
+          <div class="signoff-box">
+            <div class="signoff-line"></div>
+            <span class="signoff-label">Staff Signature / Receiver</span>
+          </div>
+        </div>
+
+        <div class="slip-footer-note">
+          <span>This is an official computer-generated payroll voucher slip from Futane Agro Products ERP. Valid for audit and accounts reconciliation.</span>
         </div>
       </div>
     </div>
   </div>
+
 </div>

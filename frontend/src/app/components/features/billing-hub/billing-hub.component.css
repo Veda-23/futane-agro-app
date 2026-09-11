@@ -1,34 +1,162 @@
-/* Document Tab Switchers */
-.doc-tab-btn {
-  background: var(--bg-hover);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 7px 13px;
-  font-size: 11.5px;
+/* ── 1. Breadcrumb & Enterprise Header ──────────────────────────────── */
+.billing-breadcrumb-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted, #64748b);
+  margin-bottom: 12px;
+}
+
+.crumb-sep {
+  font-size: 10px;
+  opacity: 0.6;
+}
+
+.crumb-current {
+  color: var(--text-primary, #0f172a);
+  font-weight: 600;
+}
+
+.enterprise-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.enterprise-header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.enterprise-header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-pod, 14px);
+  background: linear-gradient(135deg, #1E1B4B 0%, #0B47D4 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+.enterprise-header-icon::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 60%;
+  height: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 100%);
+  border-radius: 0 var(--radius-pod, 14px) 0 80px;
+  pointer-events: none;
+}
+
+.enterprise-header-text h2 {
+  font-size: 20px;
   font-weight: 700;
-  color: var(--text-secondary);
+  color: var(--text-primary, #0f172a);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.enterprise-header-text p {
+  font-size: 13px;
+  color: var(--text-secondary, #64748b);
+  margin: 2px 0 0 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spin-animate {
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ── 2. Top Controls & Document Tabs ────────────────────────────────── */
+.billing-header-bar {
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  border-radius: var(--radius-card, 18px);
+  box-shadow: var(--shadow-card);
+}
+
+.doc-type-tabs-container {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.doc-type-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.doc-tab-btn {
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: var(--radius-pill, 9999px);
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary, #64748b);
   cursor: pointer;
-  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s var(--ease-spring);
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .doc-tab-btn:hover {
-  background: var(--bg-active);
-  border-color: var(--text-muted);
-  color: var(--text-primary);
+  background: var(--bg-hover, #f8fafc);
+  border-color: #0B47D4;
+  color: #0B47D4;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(11, 71, 212, 0.12);
 }
 
 .doc-tab-btn.active {
-  background: var(--tab-color);
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%);
   color: #ffffff !important;
-  border-color: var(--tab-color);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border-color: #0B47D4;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.32);
+  transform: scale(1.02);
 }
 
-/* Smart Filter Toolbar */
+.doc-tab-btn.active i {
+  color: #ffffff;
+}
+
+/* ── 3. Smart Filter Toolbar ────────────────────────────────────────── */
+.doc-filter-toolbar {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-glass, rgba(226, 232, 240, 0.8));
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .doc-filter-toolbar .filter-field {
   display: flex;
   align-items: center;
@@ -38,43 +166,91 @@
 .doc-filter-toolbar .filter-field label {
   font-size: 11.5px;
   font-weight: 700;
-  color: var(--text-secondary, #94a3b8);
+  color: var(--text-secondary, #64748b);
   white-space: nowrap;
 }
 
-.doc-filter-toolbar .filter-field select,
-.doc-filter-toolbar .filter-field input {
-  padding: 5px 9px;
-  font-size: 12px;
-  font-weight: 600;
-  border-radius: 6px;
-  border: 1px solid var(--border-glass, rgba(226, 232, 240, 0.2));
-  background: var(--bg-input, #ffffff);
+.filter-select,
+.filter-input {
+  height: 36px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  border-radius: var(--radius-sm, 7px);
+  border: 1px solid var(--border-color, #cbd5e1);
+  background: var(--bg-surface, #ffffff);
   color: var(--text-primary, #0f172a);
   outline: none;
-  transition: border-color 0.15s ease;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
 }
 
-.doc-filter-toolbar .filter-field select:focus,
-.doc-filter-toolbar .filter-field input:focus {
-  border-color: var(--doc-theme, #2563eb);
+.filter-select:focus,
+.filter-input:focus {
+  border-color: #c2410c;
+  box-shadow: 0 0 0 3px rgba(194, 65, 12, 0.12);
+}
+
+.filter-search-field {
+  flex: 1 1 200px;
+  min-width: 180px;
+}
+
+.filter-search-field input {
+  width: 100%;
 }
 
 .btn-clear-filters {
-  background: rgba(239, 68, 68, 0.12);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  padding: 5px 12px;
-  border-radius: 6px;
-  font-size: 11.5px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease;
+  height: 36px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-sm, 7px);
   white-space: nowrap;
 }
 
-.btn-clear-filters:hover {
-  background: rgba(239, 68, 68, 0.22);
+/* ── 4. Document Linked Record Selector ──────────────────────────────── */
+.doc-selector-section {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.doc-selector-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary, #64748b);
+}
+
+.selector-count-pill {
+  color: #0B47D4;
+  font-weight: 700;
+  font-size: 11.5px;
+  background: rgba(11, 71, 212, 0.08);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.doc-record-select {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-md, 10px);
+  border: 1px solid var(--border-color, #cbd5e1);
+  background: var(--bg-surface, #ffffff);
+  color: var(--text-primary, #0f172a);
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.doc-record-select:focus {
+  border-color: #0B47D4;
+  box-shadow: 0 0 0 3px rgba(11, 71, 212, 0.16);
 }
 
 /* Printable A4 Paper Wrapper */

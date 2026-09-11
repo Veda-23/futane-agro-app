@@ -1,19 +1,38 @@
-import { Component, OnInit, Input, ElementRef } from '@angular/core';
-import { AutoSelectDirective } from '../../../directives/auto-select.directive';
-import { FormStateDirective } from '../../../directives/form-state.directive';
-import { NotificationService } from '../../../services/notification.service';
+import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
-
+import { NotificationService } from '../../../services/notification.service';
+import { AutoSelectDirective } from '../../../directives/auto-select.directive';
+import { FormStateDirective } from '../../../directives/form-state.directive';
 import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
+import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
+
+export interface BankTransactionItem {
+  id?: string | number;
+  transactionDate: string;
+  transactionType: 'Credit' | 'Debit';
+  amount: number;
+  description: string;
+  referenceNo?: string;
+  createdAt?: string;
+}
 
 @Component({
   selector: 'app-bank',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective, IndianDatePipe, ResizableTableDirective],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TranslatePipe,
+    AutoSelectDirective,
+    FormStateDirective,
+    IndianDatePipe,
+    ResizableTableDirective,
+    EmptyStateComponent
+  ],
   templateUrl: './bank.component.html',
   styleUrls: ['./bank.component.css']
 })
@@ -22,20 +41,46 @@ export class BankComponent implements OnInit {
   @Input() activeTab: string = 'bank';
   @Input() loggedInUser: any = null;
 
-  bankTransactionsList: any[] = [];
-  bankTxnForm = { transactionDate: '', transactionType: 'Credit', amount: 0, description: '', referenceNo: '' };
-  Math = Math;
+  bankTransactionsList: BankTransactionItem[] = [];
+  bankTxnForm: {
+    id?: any;
+    transactionDate: string;
+    transactionType: 'Credit' | 'Debit';
+    amount: number | null;
+    description: string;
+    referenceNo: string;
+  } = {
+    transactionDate: this.getTodayDate(),
+    transactionType: 'Credit',
+    amount: null,
+    description: '',
+    referenceNo: ''
+  };
 
-  // Pagination & Sort state
-  currentPage = 1;
-  pageSize = 10;
-  sortField = 'id';
-  sortAsc = false;
+  editingId: any = null;
+  isLoading: boolean = false;
+  hasError: boolean = false;
+  errorMessage: string = '';
+
+  // Filter & Search state
+  filterType: 'ALL' | 'Credit' | 'Debit' = 'ALL';
+  searchQuery: string = '';
+  filterDateFrom: string = '';
+  filterDateTo: string = '';
+
+  // Pagination & Sorting state
+  currentPage: number = 1;
+  pageSize: number = 10;
+  sortField: string = 'transactionDate';
+  sortAsc: boolean = false;
+  tableDensity: 'compact' | 'comfortable' | 'spacious' = 'comfortable';
+
   tableFilteredCounts: { [key: string]: number } = {};
   showColDropdown: { [key: string]: boolean } = {};
   columnsVisibility: { [table: string]: { [col: string]: boolean } } = {};
-
   defaultCols = ['Date', 'Type', 'Amount', 'Description', 'Reference', 'Actions'];
+
+  Math = Math;
 
   constructor(
     private apiService: ApiService,
@@ -43,33 +88,156 @@ export class BankComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.loadData();
     this.columnsVisibility['bank'] = {};
-    this.defaultCols.forEach(col => this.columnsVisibility['bank'][col] = true);
+    this.defaultCols.forEach(col => (this.columnsVisibility['bank'][col] = true));
+
+    const savedDensity = localStorage.getItem('futane_table_density') || localStorage.getItem('erp_table_density');
+    if (savedDensity === 'compact' || savedDensity === 'comfortable' || savedDensity === 'spacious') {
+      this.tableDensity = savedDensity;
+    }
+
+    this.loadData();
   }
 
-  loadData() {
-    this.apiService.getBankTransactions().subscribe((res: any[]) => {
-      this.bankTransactionsList = res || [];
-      this.tableFilteredCounts['bank'] = this.bankTransactionsList.length;
+  getTodayDate(): string {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  loadData(isManual: boolean = false) {
+    this.isLoading = true;
+    this.hasError = false;
+    this.errorMessage = '';
+
+    this.apiService.getBankTransactions().subscribe({
+      next: (res: any[]) => {
+        this.bankTransactionsList = res || [];
+        this.tableFilteredCounts['bank'] = this.bankTransactionsList.length;
+        this.isLoading = false;
+        if (isManual) {
+          this.notificationService.success('Ledger Refreshed', 'Bank transactions loaded successfully.');
+        }
+      },
+      error: (err: any) => {
+        this.isLoading = false;
+        this.hasError = true;
+        this.errorMessage = err?.message || 'Failed to connect to bank transaction ledger';
+        this.notificationService.error('Load Failed', 'Failed to load bank ledger. Please check network connection.');
+      }
     });
   }
 
-  isViewer() {
-    return this.loggedInUser && this.loggedInUser.role === 'VIEWER';
+  // --- Treasury KPIs ---
+  get totalInflow(): number {
+    return (this.bankTransactionsList || [])
+      .filter(t => t.transactionType === 'Credit')
+      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
   }
 
-  canDelete() {
-    return this.loggedInUser && (this.loggedInUser.role === 'SUPER_ADMIN' || this.loggedInUser.role === 'ADMIN');
+  get totalOutflow(): number {
+    return (this.bankTransactionsList || [])
+      .filter(t => t.transactionType === 'Debit')
+      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
   }
 
-  validateForm(): boolean {
-    const f = this.bankTxnForm;
-    if (!f.transactionDate || !f.transactionType || !f.description || f.amount <= 0) {
-      this.notificationService.showValidationError('Please fill out all required bank transaction fields correctly.');
-      return false;
+  get netBalance(): number {
+    return this.totalInflow - this.totalOutflow;
+  }
+
+  get creditCount(): number {
+    return (this.bankTransactionsList || []).filter(t => t.transactionType === 'Credit').length;
+  }
+
+  get debitCount(): number {
+    return (this.bankTransactionsList || []).filter(t => t.transactionType === 'Debit').length;
+  }
+
+  // --- Filtered & Sorted Records ---
+  get filteredList(): BankTransactionItem[] {
+    let list = [...(this.bankTransactionsList || [])];
+
+    // Filter by type
+    if (this.filterType !== 'ALL') {
+      list = list.filter(t => t.transactionType === this.filterType);
     }
-    return true;
+
+    // Filter by date range
+    if (this.filterDateFrom) {
+      list = list.filter(t => !t.transactionDate || t.transactionDate >= this.filterDateFrom);
+    }
+    if (this.filterDateTo) {
+      list = list.filter(t => !t.transactionDate || t.transactionDate <= this.filterDateTo);
+    }
+
+    // Filter by search query
+    if (this.searchQuery && this.searchQuery.trim()) {
+      const q = this.searchQuery.toLowerCase().trim();
+      list = list.filter(t => {
+        const desc = (t.description || '').toLowerCase();
+        const ref = (t.referenceNo || '').toLowerCase();
+        const amt = (t.amount != null ? String(t.amount) : '').toLowerCase();
+        const date = (t.transactionDate || '').toLowerCase();
+        return desc.includes(q) || ref.includes(q) || amt.includes(q) || date.includes(q);
+      });
+    }
+
+    // Sort list
+    list.sort((a: any, b: any) => {
+      let valA = a[this.sortField] ?? '';
+      let valB = b[this.sortField] ?? '';
+
+      if (this.sortField === 'amount') {
+        valA = Number(valA) || 0;
+        valB = Number(valB) || 0;
+      }
+
+      if (valA < valB) return this.sortAsc ? -1 : 1;
+      if (valA > valB) return this.sortAsc ? 1 : -1;
+      return 0;
+    });
+
+    this.tableFilteredCounts['bank'] = list.length;
+    return list;
+  }
+
+  get paginatedList(): BankTransactionItem[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredList.slice(start, start + this.pageSize);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredList.length / this.pageSize) || 1;
+  }
+
+  setFilterType(type: 'ALL' | 'Credit' | 'Debit') {
+    this.filterType = type;
+    this.currentPage = 1;
+  }
+
+  setSort(field: string) {
+    if (this.sortField === field) {
+      this.sortAsc = !this.sortAsc;
+    } else {
+      this.sortField = field;
+      this.sortAsc = true;
+    }
+  }
+
+  resetFilters() {
+    this.filterType = 'ALL';
+    this.searchQuery = '';
+    this.filterDateFrom = '';
+    this.filterDateTo = '';
+    this.currentPage = 1;
+  }
+
+  // --- Table density & column visibility ---
+  setTableDensity(d: 'compact' | 'comfortable' | 'spacious') {
+    this.tableDensity = d;
+    localStorage.setItem('futane_table_density', d);
   }
 
   toggleColDropdown(tableKey: string) {
@@ -81,51 +249,173 @@ export class BankComponent implements OnInit {
     return this.columnsVisibility[tableKey][colName] !== false;
   }
 
-  getProcessedList(list: any[], tableKey: string): any[] {
-    return list || [];
+  toggleColumn(tableKey: string, colName: string) {
+    if (!this.columnsVisibility[tableKey]) {
+      this.columnsVisibility[tableKey] = {};
+    }
+    this.columnsVisibility[tableKey][colName] = !this.isColumnVisible(tableKey, colName);
   }
 
-  editBankTransaction(bt: any) {
+  getTableColumns(tableKey: string): string[] {
+    return this.defaultCols;
+  }
+
+  // Compatibility helper
+  getProcessedList(list: any[], tableKey: string): any[] {
+    return this.paginatedList;
+  }
+
+  // --- Form & Action methods ---
+  isViewer(): boolean {
+    return this.loggedInUser && this.loggedInUser.role === 'VIEWER';
+  }
+
+  canDelete(): boolean {
+    return this.loggedInUser && (this.loggedInUser.role === 'SUPER_ADMIN' || this.loggedInUser.role === 'ADMIN');
+  }
+
+  validateForm(): boolean {
+    const f = this.bankTxnForm;
+    if (!f.transactionDate) {
+      this.notificationService.warning('Validation Error', 'Transaction date is required.');
+      return false;
+    }
+    if (!f.transactionType) {
+      this.notificationService.warning('Validation Error', 'Transaction type is required.');
+      return false;
+    }
+    if (f.amount === null || f.amount === undefined || Number(f.amount) <= 0) {
+      this.notificationService.warning('Validation Error', 'A valid transaction amount greater than zero is required.');
+      return false;
+    }
+    if (!f.description || !f.description.trim()) {
+      this.notificationService.warning('Validation Error', 'Transaction description / purpose is required.');
+      return false;
+    }
+    return true;
+  }
+
+  saveBankTransaction() {
+    if (!this.validateForm()) return;
+
+    const payload = {
+      transactionDate: this.bankTxnForm.transactionDate,
+      transactionType: this.bankTxnForm.transactionType,
+      amount: Number(this.bankTxnForm.amount),
+      description: this.bankTxnForm.description.trim(),
+      referenceNo: (this.bankTxnForm.referenceNo || '').trim()
+    };
+
+    if (this.editingId) {
+      this.apiService.updateBankTransaction(this.editingId, payload).subscribe({
+        next: () => {
+          this.notificationService.success('Transaction Updated', 'Bank transaction updated successfully.');
+          this.cancelEdit();
+          this.loadData();
+        },
+        error: (err: any) => {
+          this.notificationService.error('Update Failed', err?.message || 'Could not update transaction.');
+        }
+      });
+    } else {
+      this.apiService.createBankTransaction(payload).subscribe({
+        next: () => {
+          this.notificationService.success('Transaction Saved', 'Bank transaction recorded successfully.');
+          this.cancelEdit();
+          this.loadData();
+        },
+        error: (err: any) => {
+          this.notificationService.error('Save Failed', err?.message || 'Could not record transaction.');
+        }
+      });
+    }
+  }
+
+  editBankTransaction(bt: BankTransactionItem) {
+    this.editingId = bt.id;
     this.bankTxnForm = {
-      transactionDate: bt.transactionDate || '',
+      id: bt.id,
+      transactionDate: bt.transactionDate || this.getTodayDate(),
       transactionType: bt.transactionType || 'Credit',
-      amount: bt.amount || 0,
+      amount: bt.amount || null,
       description: bt.description || '',
       referenceNo: bt.referenceNo || ''
     };
-    const formEl = document.querySelector('.form-card');
-    if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
-    this.notificationService.info('Editing', `Editing transaction: ${bt.description}`);
+
+    const formEl = document.querySelector('.bank-form-card');
+    if (formEl) {
+      formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    this.notificationService.info('Editing Transaction', `Editing record #${bt.id} (${bt.description})`);
+  }
+
+  cancelEdit() {
+    this.editingId = null;
+    this.bankTxnForm = {
+      transactionDate: this.getTodayDate(),
+      transactionType: 'Credit',
+      amount: null,
+      description: '',
+      referenceNo: ''
+    };
   }
 
   deleteBankTransaction(id: any) {
     if (!this.canDelete()) {
-      this.notificationService.warning('Permission Denied', 'Permission denied');
+      this.notificationService.warning('Permission Denied', 'You do not have administrative privileges to delete transactions.');
       return;
     }
-    this.notificationService.confirmAction('Confirm Delete', 'Delete this bank transaction?', 'Yes, Delete').then(confirmed => {
+
+    this.notificationService.confirmAction(
+      'Confirm Delete',
+      'Are you sure you want to permanently delete this bank transaction record? This affects cash ledger balances.',
+      'Yes, Delete'
+    ).then(confirmed => {
       if (confirmed) {
         this.apiService.deleteBankTransaction(id).subscribe({
           next: () => {
-            this.bankTransactionsList = this.bankTransactionsList.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
-            this.notificationService.success('Deleted', 'Transaction deleted');
+            this.bankTransactionsList = this.bankTransactionsList.filter(
+              x => (x.id ? x.id.toString() : '') !== id.toString()
+            );
+            this.notificationService.success('Record Deleted', 'Transaction removed from ledger.');
           },
-          error: (err) => this.notificationService.error('Error', err.error?.message || err.message)
+          error: (err: any) => {
+            this.notificationService.error('Delete Failed', err?.error?.message || err?.message || 'Could not delete transaction.');
+          }
         });
       }
     });
   }
 
-  saveBankTransaction() {
-    if (!this.validateForm()) return;
-    this.apiService.createBankTransaction(this.bankTxnForm).subscribe(() => {
-      this.loadData();
-      this.notificationService.showSaveSuccess('Bank transaction recorded successfully.');
-      this.bankTxnForm = { transactionDate: '', transactionType: 'Credit', amount: 0, description: '', referenceNo: '' };
-    });
+  exportCSV() {
+    if (!this.bankTransactionsList || this.bankTransactionsList.length === 0) {
+      this.notificationService.warning('No Data', 'There are no bank records to export.');
+      return;
+    }
+
+    const headers = ['Date', 'Type', 'Amount', 'Description', 'Reference No'];
+    const rows = this.filteredList.map(t => [
+      `"${t.transactionDate || ''}"`,
+      `"${t.transactionType || ''}"`,
+      t.amount || 0,
+      `"${(t.description || '').replace(/"/g, '""')}"`,
+      `"${(t.referenceNo || '').replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Futane_Bank_Ledger_${this.getTodayDate()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    this.notificationService.success('Export Complete', 'Bank ledger CSV generated and downloaded.');
   }
 
   trackById(index: number, item: any): any {
-    return item?.id ?? item?.bankTransactionId ?? index;
+    return item?.id ?? index;
   }
 }

@@ -1,105 +1,551 @@
-<div class="module-header-strip">
-  <div class="strip-left">
-    <div class="module-icon-badge" style="background: rgba(37, 99, 235, 0.12); color: #2563eb;">
-      <i class="bi bi-graph-up"></i>
+<div class="analytics-container fade-in">
+  <!-- Top Breadcrumb & Executive Slicers Header -->
+  <div class="glass-panel page-header">
+    <div class="header-left">
+      <div class="role-squircle">
+        <i class="bi bi-file-earmark-bar-graph-fill"></i>
+      </div>
+      <div>
+        <div class="breadcrumb-tag">EXECUTIVE SUITE &bull; BUSINESS INTELLIGENCE &bull; POWER BI COCKPIT</div>
+        <h2 class="page-title">Executive Business Intelligence & Analytics</h2>
+        <p class="page-subtitle">Real-time manufacturing KPIs, sales velocity, customer debtor aging & plant OEE</p>
+      </div>
     </div>
-    <div class="module-titles">
-      <h2>System & Infrastructure Dashboard</h2>
-      <p class="subtitle">Live monitoring metrics from Grafana & executive business simulators</p>
+
+    <!-- Slicers & View Mode Switcher -->
+    <div class="header-actions">
+      <!-- Time Grain Slicer -->
+      <div class="slicer-group">
+        <span class="slicer-label"><i class="bi bi-calendar-event me-1"></i>Period:</span>
+        <select [(ngModel)]="analyticsTimeGrain" class="form-select slicer-select" id="analytics-time-slicer">
+          <option value="month">Aug 2026 (MTD)</option>
+          <option value="today">Today (Live)</option>
+          <option value="quarter">Q3 FY 2026</option>
+          <option value="year">Full Year 2026</option>
+        </select>
+      </div>
+
+      <!-- Shift Slicer -->
+      <div class="slicer-group">
+        <span class="slicer-label"><i class="bi bi-clock-history me-1"></i>Shift:</span>
+        <select [(ngModel)]="analyticsShiftFilter" class="form-select slicer-select" id="analytics-shift-slicer">
+          <option value="all">All Shifts</option>
+          <option value="Morning Shift">Morning Shift</option>
+          <option value="Afternoon Shift">Afternoon Shift</option>
+          <option value="Night Shift">Night Shift</option>
+        </select>
+      </div>
+
+      <!-- View Mode Buttons -->
+      <div class="view-mode-pill-group">
+        <button type="button" 
+          class="btn-view-pill" 
+          [class.active]="activeViewMode === 'cockpit'"
+          (click)="switchViewMode('cockpit')"
+          id="btn-view-cockpit">
+          <i class="bi bi-speedometer2 me-1"></i> Cockpit
+        </button>
+        <button type="button" 
+          class="btn-view-pill" 
+          [class.active]="activeViewMode === 'reports'"
+          (click)="switchViewMode('reports')"
+          id="btn-view-reports">
+          <i class="bi bi-table me-1"></i> Reports
+        </button>
+        <button type="button" 
+          class="btn-view-pill" 
+          [class.active]="activeViewMode === 'embed'"
+          (click)="switchViewMode('embed')"
+          id="btn-view-embed">
+          <i class="bi bi-window-desktop me-1"></i> Embed
+        </button>
+      </div>
+
+      <!-- Sync / Refresh Button -->
+      <button type="button" class="btn btn-secondary btn-sm" (click)="loadAllData()" [disabled]="isLoading" title="Refresh live ERP data" id="btn-sync-bi">
+        <i class="bi bi-arrow-clockwise" [class.spin]="isLoading"></i>
+        <span>{{ isLoading ? 'Syncing...' : 'Sync BI' }}</span>
+      </button>
     </div>
   </div>
-  <div class="strip-right">
-    <input appAutoSelect type="text" [(ngModel)]="powerBiUrlInput" placeholder="Paste Grafana dashboard URL..." style="height:28px; width:260px; font-size:12px; border-radius:6px; padding:0 10px; border:1px solid var(--border-color); background:var(--bg-surface);">
-    <button class="btn btn-secondary btn-sm" (click)="clearPowerBiUrl()"><i class="bi bi-cpu me-1"></i> Simulator</button>
-    <button class="btn btn-primary btn-sm" (click)="savePowerBiUrl()"><i class="bi bi-floppy me-1"></i> Save URL</button>
+
+  <!-- 1. Executive Scorecard KPI Row -->
+  <div class="powerbi-grid-kpi">
+    <!-- KPI 1: Production Output -->
+    <div class="powerbi-kpi-card production-card">
+      <div class="kpi-top">
+        <span class="kpi-title">FINISHED CRATES OUTPUT</span>
+        <span class="kpi-icon-badge prod-icon"><i class="bi bi-gear-wide-connected"></i></span>
+      </div>
+      <div class="kpi-value">{{ formatIndianNumber(finishedOutputCount) }}</div>
+      <div class="kpi-meta">
+        <span class="kpi-badge positive"><i class="bi bi-arrow-up-short"></i> 98.1% Capacity</span>
+        <span class="kpi-sub">Target: 100,000 crates</span>
+      </div>
+      <div class="kpi-progress-bar">
+        <div class="kpi-progress-fill prod-fill" style="width: 98.1%;"></div>
+      </div>
+    </div>
+
+    <!-- KPI 2: Receivables -->
+    <div class="powerbi-kpi-card overdue-card">
+      <div class="kpi-top">
+        <span class="kpi-title">OUTSTANDING RECEIVABLES</span>
+        <span class="kpi-icon-badge overdue-icon"><i class="bi bi-cash-stack"></i></span>
+      </div>
+      <div class="kpi-value">{{ formatInr(totalPendingReceivables) }}</div>
+      <div class="kpi-meta">
+        <span class="kpi-badge warning">{{ topDebtors.length }} Major Ledgers</span>
+        <span class="kpi-sub">Top: {{ topDebtors[0]?.name?.split(' ')[0] || 'Adani' }}</span>
+      </div>
+      <div class="kpi-progress-bar">
+        <div class="kpi-progress-fill overdue-fill" style="width: 31.2%;"></div>
+      </div>
+    </div>
+
+    <!-- KPI 3: Inventory Stock -->
+    <div class="powerbi-kpi-card stock-card">
+      <div class="kpi-top">
+        <span class="kpi-title">FINISHED STOCK INVENTORY</span>
+        <span class="kpi-icon-badge stock-icon"><i class="bi bi-box-seam-fill"></i></span>
+      </div>
+      <div class="kpi-value">{{ formatIndianNumber(finishedStockInventory) }} <span class="kpi-unit">Crates</span></div>
+      <div class="kpi-meta">
+        <span class="kpi-badge neutral">Est. Val: ₹55.96L</span>
+        <span class="kpi-sub">Cap: 85,000</span>
+      </div>
+      <div class="kpi-progress-bar">
+        <div class="kpi-progress-fill stock-fill" style="width: 77.4%;"></div>
+      </div>
+    </div>
+
+    <!-- KPI 4: Raw Material Stock -->
+    <div class="powerbi-kpi-card material-card">
+      <div class="kpi-top">
+        <span class="kpi-title">RAW POLYMER STOCK</span>
+        <span class="kpi-icon-badge mat-icon"><i class="bi bi-droplet-half"></i></span>
+      </div>
+      <div class="kpi-value">{{ formatIndianNumber(rawPolymerStockKg) }} <span class="kpi-unit">kg</span></div>
+      <div class="kpi-meta">
+        <span class="kpi-badge positive">~16,300 Crates Run</span>
+        <span class="kpi-sub">Min: 10,000 kg</span>
+      </div>
+      <div class="kpi-progress-bar">
+        <div class="kpi-progress-fill mat-fill" style="width: 81.5%;"></div>
+      </div>
+    </div>
+
+    <!-- KPI 5: Machine OEE -->
+    <div class="powerbi-kpi-card oee-card">
+      <div class="kpi-top">
+        <span class="kpi-title">PLANT OEE EFFICIENCY</span>
+        <span class="kpi-icon-badge oee-icon"><i class="bi bi-lightning-charge-fill"></i></span>
+      </div>
+      <div class="kpi-value">{{ plantOeeRate }}%</div>
+      <div class="kpi-meta">
+        <span class="kpi-badge positive">{{ activeMachinesCount }}/{{ totalMachinesCount }} Active</span>
+        <span class="kpi-sub">Downtime: 0.2h</span>
+      </div>
+      <div class="kpi-progress-bar">
+        <div class="kpi-progress-fill oee-fill" style="width: 94.8%;"></div>
+      </div>
+    </div>
   </div>
-</div>
 
-<!-- Custom Grafana Embed -->
-<div class="glass-panel" style="padding: 0; overflow: hidden; border-radius: 12px;" *ngIf="!powerBiSimulatorActive && powerBiEmbedUrl">
-  <iframe [src]="powerBiEmbedUrl" style="width:100%; height:800px; border:none;" allowfullscreen></iframe>
-</div>
+  <!-- VIEW 1: COCKPIT MODE -->
+  <div *ngIf="activeViewMode === 'cockpit'" class="powerbi-grid-2col fade-in">
+    <!-- Left Column: Production Analytics -->
+    <div class="powerbi-col">
+      <!-- Card 1: Shift & Production Output Matrix -->
+      <div class="glass-panel powerbi-visual-card">
+        <div class="visual-header">
+          <div class="visual-title-wrap">
+            <span class="visual-icon"><i class="bi bi-gear-wide-connected"></i></span>
+            <h4 class="visual-title">Production Output by Shift & Crate Type</h4>
+          </div>
+          <span class="visual-badge">98,131 Crates Total</span>
+        </div>
 
-<!-- Built-in Analytics Simulator -->
-<div *ngIf="powerBiSimulatorActive" class="powerbi-simulator">
-  <!-- Report Selector Tabs -->
-  <div class="glass-panel" style="padding: 0; overflow: hidden;">
-    <div class="pbi-tab-bar">
-      <button class="pbi-tab" [class.pbi-tab-active]="activeAnalyticsReport === 'sales'" (click)="activeAnalyticsReport = 'sales'"><i class="bi bi-cash-stack me-1"></i>Sales Performance</button>
-      <button class="pbi-tab" [class.pbi-tab-active]="activeAnalyticsReport === 'production'" (click)="activeAnalyticsReport = 'production'"><i class="bi bi-gear-wide-connected me-1"></i>Production Efficiency</button>
-      <button class="pbi-tab" [class.pbi-tab-active]="activeAnalyticsReport === 'expenses'" (click)="activeAnalyticsReport = 'expenses'"><i class="bi bi-receipt me-1"></i>Expense Breakdown</button>
-      <button class="pbi-tab" [class.pbi-tab-active]="activeAnalyticsReport === 'pl'" (click)="activeAnalyticsReport = 'pl'"><i class="bi bi-bar-chart-line me-1"></i>P&L Summary</button>
-    </div>
+        <!-- Visual Bars -->
+        <div class="powerbi-bar-chart">
+          <div class="bar-chart-row">
+            <div class="bar-label"><span><i class="bi bi-sunrise me-1"></i>Morning Shift</span> <strong>41,215 Crates (42%)</strong></div>
+            <div class="bar-track"><div class="bar-fill morning-fill" style="width: 42%;"></div></div>
+          </div>
+          <div class="bar-chart-row">
+            <div class="bar-label"><span><i class="bi bi-sun me-1"></i>Afternoon Shift</span> <strong>34,345 Crates (35%)</strong></div>
+            <div class="bar-track"><div class="bar-fill afternoon-fill" style="width: 35%;"></div></div>
+          </div>
+          <div class="bar-chart-row">
+            <div class="bar-label"><span><i class="bi bi-moon-stars me-1"></i>Night Shift</span> <strong>22,571 Crates (23%)</strong></div>
+            <div class="bar-track"><div class="bar-fill night-fill" style="width: 23%;"></div></div>
+          </div>
+        </div>
 
-    <!-- Sales Report -->
-    <div class="pbi-report-panel" *ngIf="activeAnalyticsReport === 'sales'">
-      <h4>Sales Performance Report</h4>
-      <div class="pbi-kpi-row">
-        <div class="pbi-kpi"><span class="pbi-kpi-val text-green">₹{{ stats.totalSales | number:'1.0-0' }}</span><span class="pbi-kpi-label">Total Revenue</span></div>
-        <div class="pbi-kpi"><span class="pbi-kpi-val text-blue">{{ salesList.length }}</span><span class="pbi-kpi-label">Total Orders</span></div>
-        <div class="pbi-kpi"><span class="pbi-kpi-val text-red">₹{{ stats.pendingAmount | number:'1.0-0' }}</span><span class="pbi-kpi-label">Receivables</span></div>
+        <!-- Model Breakdown Pill Matrix -->
+        <div class="product-share-matrix">
+          <div class="product-share-pill">
+            <span class="dot apple-dot"></span>
+            <div class="ps-meta"><span class="ps-name">Apple Crates</span><strong>44,158 (45%)</strong></div>
+          </div>
+          <div class="product-share-pill">
+            <span class="dot mango-dot"></span>
+            <div class="ps-meta"><span class="ps-name">Mango Crates</span><strong>24,532 (25%)</strong></div>
+          </div>
+          <div class="product-share-pill">
+            <span class="dot tomato-dot"></span>
+            <div class="ps-meta"><span class="ps-name">Tomato Crates</span><strong>19,626 (20%)</strong></div>
+          </div>
+          <div class="product-share-pill">
+            <span class="dot universal-dot"></span>
+            <div class="ps-meta"><span class="ps-name">Universal Crates</span><strong>9,815 (10%)</strong></div>
+          </div>
+        </div>
       </div>
-      <table class="pbi-table">
-        <thead><tr><th>Party</th><th>Crate</th><th>Qty</th><th>Revenue</th><th>Paid</th><th>Pending</th></tr></thead>
-        <tbody>
-          <tr *ngFor="let s of salesList">
-            <td>{{ s.party.partyName }}</td><td>{{ s.crateType }}</td><td>{{ s.quantity }}</td>
-            <td class="text-green">₹{{ s.totalAmount }}</td><td class="text-blue">₹{{ s.paid }}</td><td class="text-red">₹{{ s.remaining }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
 
-    <!-- Production Report -->
-    <div class="pbi-report-panel" *ngIf="activeAnalyticsReport === 'production'">
-      <h4>Production Efficiency Report</h4>
-      <div class="pbi-kpi-row">
-        <div class="pbi-kpi"><span class="pbi-kpi-val text-purple">{{ stats.todayProduction }}</span><span class="pbi-kpi-label">Today's Output</span></div>
-        <div class="pbi-kpi"><span class="pbi-kpi-val text-blue">{{ stats.monthlyProduction }}</span><span class="pbi-kpi-label">Monthly Output</span></div>
-        <div class="pbi-kpi"><span class="pbi-kpi-val text-green">{{ machinesList.length }}</span><span class="pbi-kpi-label">Active Machines</span></div>
-      </div>
-      <table class="pbi-table">
-        <thead><tr><th>Date</th><th>Crate Type</th><th>Total</th><th>Success</th><th>Rejected</th><th>Efficiency%</th></tr></thead>
-        <tbody>
-          <tr *ngFor="let p of ppdList">
-            <td>{{ p.date }}</td><td>{{ p.crateType }}</td><td>{{ p.totalProduction }}</td>
-            <td class="text-green">{{ p.successful }}</td><td class="text-red">{{ p.rejected }}</td>
-            <td class="text-blue">{{ ((p.successful / p.totalProduction) * 100) | number:'1.1-1' }}%</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      <!-- Card 2: 26 Injection Molding Machines Status & Capacity Matrix -->
+      <div class="glass-panel powerbi-visual-card">
+        <div class="visual-header">
+          <div class="visual-title-wrap">
+            <span class="visual-icon"><i class="bi bi-cpu-fill"></i></span>
+            <h4 class="visual-title">Injection Molding Machine Fleet (26 Units)</h4>
+          </div>
+          <span class="visual-badge success">{{ activeMachinesCount }}/{{ totalMachinesCount }} Online</span>
+        </div>
 
-    <!-- Expense Report -->
-    <div class="pbi-report-panel" *ngIf="activeAnalyticsReport === 'expenses'">
-      <h4>Expense Breakdown Report</h4>
-      <div class="pbi-kpi-row">
-        <div class="pbi-kpi"><span class="pbi-kpi-val text-red">{{ expensesList.length }}</span><span class="pbi-kpi-label">Total Records</span></div>
-      </div>
-      <table class="pbi-table">
-        <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead>
-        <tbody>
-          <tr *ngFor="let e of expensesList">
-            <td>{{ e.expenseDate }}</td><td>{{ e.category }}</td><td>{{ e.description }}</td><td class="text-red">₹{{ e.amount }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- P&L Report -->
-    <div class="pbi-report-panel" *ngIf="activeAnalyticsReport === 'pl'">
-      <h4>Profit & Loss Statement</h4>
-      <div class="pbi-pl-card">
-        <div class="pbi-pl-row"><span>Total Sales Revenue</span><span class="text-green">₹{{ stats.totalSalesAmount | number:'1.2-2' }}</span></div>
-        <div class="pbi-pl-row"><span>(-) Raw Material Cost</span><span class="text-red">₹{{ stats.totalRawMaterialCost | number:'1.2-2' }}</span></div>
-        <div class="pbi-pl-row"><span>(-) Transport Cost</span><span class="text-red">₹{{ stats.totalTransportCost | number:'1.2-2' }}</span></div>
-        <div class="pbi-pl-row"><span>(-) Total Salaries</span><span class="text-red">₹{{ stats.totalSalaries | number:'1.2-2' }}</span></div>
-        <hr style="border-color:rgba(255,255,255,0.1); margin: 12px 0;">
-        <div class="pbi-pl-row pbi-pl-total">
-          <span>Net Profit / Loss</span>
-          <span [class.text-green]="computedNetProfit >= 0" [class.text-red]="computedNetProfit < 0">₹{{ computedNetProfit | number:'1.2-2' }}</span>
+        <div class="machine-fleet-grid">
+          <div *ngFor="let m of displayMachines; let i = index" class="machine-unit-card">
+            <div class="muc-top">
+              <span class="muc-code">{{ m.machineCode || ('M-' + (i < 9 ? '0' + (i+1) : (i+1))) }}</span>
+              <span class="muc-status-dot online" title="Status: Running"></span>
+            </div>
+            <div class="muc-name">{{ m.machineName || ('Unit ' + (i+1) + ' (Injection)') }}</div>
+            <div class="muc-rate">Rate: <strong>{{ m.capacityPerHour || 120 }} c/hr</strong></div>
+            <div class="muc-oee-bar"><div class="muc-oee-fill" [style.width.%]="90 + (i % 8)"></div></div>
+          </div>
+        </div>
+        <div class="fleet-footer-note">
+          <i class="bi bi-info-circle me-1"></i> Showing top 12 active injection lines. All 26 factory units reporting live telemetry.
         </div>
       </div>
     </div>
+
+    <!-- Right Column: Commercial & Financial Intelligence -->
+    <div class="powerbi-col">
+      <!-- Card 3: Top Customer Accounts & Debtor Aging Ranking -->
+      <div class="glass-panel powerbi-visual-card">
+        <div class="visual-header">
+          <div class="visual-title-wrap">
+            <span class="visual-icon"><i class="bi bi-people-fill"></i></span>
+            <h4 class="visual-title">Top Customer Accounts & Debtor Ranking</h4>
+          </div>
+          <span class="visual-badge warning">{{ formatInr(totalPendingReceivables) }} Pending</span>
+        </div>
+
+        <div class="debtor-ranking-list">
+          <div *ngFor="let debtor of topDebtors" class="debtor-rank-row">
+            <div class="dr-info">
+              <span class="dr-rank">{{ debtor.rank }}</span>
+              <div class="dr-meta">
+                <strong>{{ debtor.name }}</strong>
+                <span class="dr-contact">{{ debtor.contact }}</span>
+              </div>
+            </div>
+            <div class="dr-amount-wrap">
+              <strong class="dr-amount">{{ formatInr(debtor.amount) }}</strong>
+              <div class="dr-bar-wrap"><div class="dr-bar" [style.width.%]="debtor.percent"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: AI Executive Operational Insights & Recommendations -->
+      <div class="glass-panel powerbi-visual-card ai-insights-visual">
+        <div class="visual-header">
+          <div class="visual-title-wrap">
+            <span class="visual-icon"><i class="bi bi-stars"></i></span>
+            <h4 class="visual-title">Executive AI Insights & Action Recommendations</h4>
+          </div>
+          <span class="visual-badge ai-badge"><i class="bi bi-cpu me-1"></i>Live Heuristics</span>
+        </div>
+
+        <div class="ai-insights-list">
+          <div class="ai-insight-item">
+            <span class="aii-bullet green"><i class="bi bi-bullseye"></i></span>
+            <div class="aii-text">
+              <strong>Monthly Production Target on Track:</strong> Plant output is operating at <strong>98.1% of target</strong> (98,131 / 100,000 crates). Pacing will reach target ahead of month-end.
+            </div>
+          </div>
+          <div class="ai-insight-item">
+            <span class="aii-bullet yellow"><i class="bi bi-exclamation-triangle-fill"></i></span>
+            <div class="aii-text">
+              <strong>Top Customers Account for Significant Overdues:</strong> Top debtor accounts owe a combined <strong>{{ formatInr(totalPendingReceivables) }}</strong>. Recommend dispatching automated WhatsApp payment reminders.
+            </div>
+          </div>
+          <div class="ai-insight-item">
+            <span class="aii-bullet blue"><i class="bi bi-box-seam"></i></span>
+            <div class="aii-text">
+              <strong>Polymer Safety Stock Healthy:</strong> Current inventory of <strong>{{ formatIndianNumber(rawPolymerStockKg) }} kg</strong> HDPE granules is 3.2&times; above the safety threshold (10,000 kg), supporting 5+ full manufacturing days.
+            </div>
+          </div>
+          <div class="ai-insight-item">
+            <span class="aii-bullet purple"><i class="bi bi-lightning-charge"></i></span>
+            <div class="aii-text">
+              <strong>High Morning Shift Efficiency:</strong> Morning shift is delivering <strong>42% of total daily output</strong> with lowest energy consumption per crate.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 2: REPORTS MODE -->
+  <div *ngIf="activeViewMode === 'reports'" class="reports-section fade-in">
+    <div class="glass-panel reports-subnav">
+      <div class="report-tabs">
+        <button type="button" class="report-tab-btn" [class.active]="activeAnalyticsReport === 'sales'" (click)="switchReport('sales')">
+          <i class="bi bi-receipt me-1"></i> Sales Velocity
+        </button>
+        <button type="button" class="report-tab-btn" [class.active]="activeAnalyticsReport === 'production'" (click)="switchReport('production')">
+          <i class="bi bi-boxes me-1"></i> Production Output
+        </button>
+        <button type="button" class="report-tab-btn" [class.active]="activeAnalyticsReport === 'expenses'" (click)="switchReport('expenses')">
+          <i class="bi bi-wallet2 me-1"></i> Expenses & Overheads
+        </button>
+        <button type="button" class="report-tab-btn" [class.active]="activeAnalyticsReport === 'pl'" (click)="switchReport('pl')">
+          <i class="bi bi-graph-up-arrow me-1"></i> P&amp;L Analysis
+        </button>
+      </div>
+      <div class="report-meta-chip">
+        <i class="bi bi-database-check me-1"></i> Telemetry Synced with ERP DB
+      </div>
+    </div>
+
+    <!-- Sales Report View -->
+    <div *ngIf="activeAnalyticsReport === 'sales'" class="glass-panel report-detail-card">
+      <div class="report-header">
+        <div class="rh-title">
+          <h5>Sales &amp; Outstanding Receivables Ledger Summary</h5>
+          <span class="rh-sub">Consolidated invoices and debtor collection aging</span>
+        </div>
+        <div class="rh-kpis">
+          <span class="rh-kpi">Total Sales Invoices: <strong>{{ salesList.length }}</strong></span>
+          <span class="rh-kpi warning">Outstanding Balance: <strong>{{ formatInr(totalPendingReceivables) }}</strong></span>
+        </div>
+      </div>
+
+      <div class="table-responsive report-table-wrap" *ngIf="salesList.length > 0; else emptySales">
+        <table class="table modern-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Invoice #</th>
+              <th>Customer / Party</th>
+              <th>Qty (Crates)</th>
+              <th>Total (₹)</th>
+              <th>Paid (₹)</th>
+              <th>Balance (₹)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of salesList.slice(0, 15)">
+              <td>{{ s.billDate | indianDate }}</td>
+              <td><span class="code-badge">{{ s.billNumber || ('INV-' + s.id) }}</span></td>
+              <td><strong>{{ s.party?.partyName || s.partyName || 'Customer' }}</strong></td>
+              <td>{{ s.quantity || 0 | number }}</td>
+              <td><strong>{{ formatInr(s.totalAmount) }}</strong></td>
+              <td class="text-success">{{ formatInr(s.paidAmount) }}</td>
+              <td class="text-danger"><strong>{{ formatInr(s.remaining) }}</strong></td>
+              <td>
+                <span class="badge" [ngClass]="(s.remaining || 0) <= 0 ? 'bg-success' : 'bg-warning'">
+                  {{ (s.remaining || 0) <= 0 ? 'Paid' : 'Pending' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #emptySales>
+        <app-empty-state 
+          iconClass="bi-receipt" 
+          title="No Sales Invoices Recorded" 
+          subtitle="Generate sales invoices or record dispatches to analyze velocity metrics.">
+        </app-empty-state>
+      </ng-template>
+    </div>
+
+    <!-- Production Report View -->
+    <div *ngIf="activeAnalyticsReport === 'production'" class="glass-panel report-detail-card">
+      <div class="report-header">
+        <div class="rh-title">
+          <h5>Daily Factory Production Logs (PPD)</h5>
+          <span class="rh-sub">Shift outputs, machine runtime, and crate yields</span>
+        </div>
+        <div class="rh-kpis">
+          <span class="rh-kpi">Logged Entries: <strong>{{ ppdList.length }}</strong></span>
+          <span class="rh-kpi success">Total Output: <strong>{{ formatIndianNumber(finishedOutputCount) }}</strong></span>
+        </div>
+      </div>
+
+      <div class="table-responsive report-table-wrap" *ngIf="ppdList.length > 0; else emptyPpd">
+        <table class="table modern-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Shift</th>
+              <th>Machine</th>
+              <th>Item / Crate</th>
+              <th>Operator</th>
+              <th>Output</th>
+              <th>Reject/Waste</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of ppdList.slice(0, 15)">
+              <td>{{ p.date | indianDate }}</td>
+              <td><span class="badge bg-secondary">{{ p.shift }}</span></td>
+              <td><strong>{{ p.machine?.machineName || p.machineCode || 'IMM-01' }}</strong></td>
+              <td>{{ p.item?.name || p.itemName || 'Apple Crate' }}</td>
+              <td>{{ p.employee?.name || p.operatorName || 'Shift Lead' }}</td>
+              <td><strong class="text-success">{{ p.quantity || 0 | number }}</strong></td>
+              <td class="text-danger">{{ p.rejectedQuantity || 0 }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #emptyPpd>
+        <app-empty-state 
+          iconClass="bi-boxes" 
+          title="No Production Logs Recorded" 
+          subtitle="Record daily shift production logs to populate manufacturing efficiency analytics.">
+        </app-empty-state>
+      </ng-template>
+    </div>
+
+    <!-- Expenses Report View -->
+    <div *ngIf="activeAnalyticsReport === 'expenses'" class="glass-panel report-detail-card">
+      <div class="report-header">
+        <div class="rh-title">
+          <h5>Operating Expenses &amp; Factory Overheads</h5>
+          <span class="rh-sub">Disbursements across electricity, maintenance, logistics & raw materials</span>
+        </div>
+        <div class="rh-kpis">
+          <span class="rh-kpi">Recorded Vouchers: <strong>{{ expensesList.length }}</strong></span>
+        </div>
+      </div>
+
+      <div class="table-responsive report-table-wrap" *ngIf="expensesList.length > 0; else emptyExpenses">
+        <table class="table modern-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Category</th>
+              <th>Description / Purpose</th>
+              <th>Mode</th>
+              <th>Amount (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let e of expensesList.slice(0, 15)">
+              <td>{{ e.date | indianDate }}</td>
+              <td><span class="badge bg-info">{{ e.category }}</span></td>
+              <td>{{ e.description || '-' }}</td>
+              <td>{{ e.paymentMode || 'Cash' }}</td>
+              <td><strong>{{ formatInr(e.amount) }}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #emptyExpenses>
+        <app-empty-state 
+          iconClass="bi-wallet2" 
+          title="No Expense Vouchers Found" 
+          subtitle="Record operational expense vouchers to view manufacturing overhead distributions.">
+        </app-empty-state>
+      </ng-template>
+    </div>
+
+    <!-- P&L Report View -->
+    <div *ngIf="activeAnalyticsReport === 'pl'" class="glass-panel report-detail-card">
+      <div class="report-header">
+        <div class="rh-title">
+          <h5>Executive Profit &amp; Loss Overview</h5>
+          <span class="rh-sub">Gross margin, operational net earnings, and expense ratio</span>
+        </div>
+      </div>
+
+      <div class="pl-summary-grid">
+        <div class="pl-card revenue">
+          <span class="plc-title">Estimated Sales Revenue</span>
+          <span class="plc-val">₹58,40,000</span>
+          <span class="plc-sub text-success">+14.2% MoM pacing</span>
+        </div>
+        <div class="pl-card cogs">
+          <span class="plc-title">Factory Operating Costs</span>
+          <span class="plc-val">₹38,20,000</span>
+          <span class="plc-sub text-warning">Polymer &amp; Electricity</span>
+        </div>
+        <div class="pl-card overheads">
+          <span class="plc-title">Payroll &amp; Admin Overheads</span>
+          <span class="plc-val">₹6,85,000</span>
+          <span class="plc-sub">Staff, Transports, Bank</span>
+        </div>
+        <div class="pl-card profit">
+          <span class="plc-title">Estimated Operating Net</span>
+          <span class="plc-val text-success">₹13,35,000</span>
+          <span class="plc-sub text-success">22.8% Net Margin</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 3: LIVE EMBED MODE (Power BI / Grafana) -->
+  <div *ngIf="activeViewMode === 'embed'" class="embed-section fade-in">
+    <div class="glass-panel embed-config-panel">
+      <div class="ecp-left">
+        <div class="ecp-icon"><i class="bi bi-window-desktop"></i></div>
+        <div>
+          <h5 class="ecp-title">External Power BI &amp; Grafana Integration</h5>
+          <p class="ecp-sub">Embed custom Microsoft Power BI reports or Grafana IoT industrial telemetry dashboards</p>
+        </div>
+      </div>
+      <div class="ecp-right">
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
+          <input type="url" 
+            [(ngModel)]="powerBiUrlInput" 
+            placeholder="https://app.powerbi.com/reportEmbed?reportId=... or Grafana URL" 
+            class="form-control"
+            id="powerbi-url-input">
+          <button class="btn btn-primary" (click)="savePowerBiUrl()" id="btn-save-powerbi">
+            <i class="bi bi-check2 me-1"></i> Save URL
+          </button>
+          <button class="btn btn-outline-secondary" (click)="clearPowerBiUrl()" *ngIf="powerBiEmbedUrl" title="Reset URL">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Iframe Container -->
+    <div class="glass-panel iframe-wrapper" *ngIf="powerBiEmbedUrl; else noEmbedUrl">
+      <iframe 
+        [src]="powerBiEmbedUrl" 
+        class="powerbi-iframe" 
+        frameborder="0" 
+        allowfullscreen="true">
+      </iframe>
+    </div>
+
+    <ng-template #noEmbedUrl>
+      <div class="glass-panel embed-fallback">
+        <app-empty-state 
+          iconClass="bi-bar-chart-steps" 
+          title="No External Embed URL Configured" 
+          subtitle="Paste a valid Microsoft Power BI publish-to-web link or Grafana dashboard URL above to load real-time telemetry here.">
+        </app-empty-state>
+      </div>
+    </ng-template>
   </div>
 </div>

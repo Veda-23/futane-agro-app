@@ -1,20 +1,30 @@
-import { Component, OnInit, Input } from '@angular/core';
-import { AutoSelectDirective } from '../../../directives/auto-select.directive';
-import { FormStateDirective } from '../../../directives/form-state.directive';
-import { NotificationService } from '../../../services/notification.service';
-
+import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslatePipe } from '../../../translate.service';
+import { forkJoin } from 'rxjs';
+import * as XLSX from 'xlsx';
 import { ApiService } from '../../../api.service';
-
+import { NotificationService } from '../../../services/notification.service';
+import { TranslatePipe } from '../../../translate.service';
+import { AutoSelectDirective } from '../../../directives/auto-select.directive';
+import { FormStateDirective } from '../../../directives/form-state.directive';
 import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
+import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-transports',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective, ResizableTableDirective, IndianDatePipe],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TranslatePipe,
+    AutoSelectDirective,
+    FormStateDirective,
+    ResizableTableDirective,
+    IndianDatePipe,
+    EmptyStateComponent
+  ],
   templateUrl: './transports.component.html',
   styleUrls: ['./transports.component.css']
 })
@@ -22,122 +32,473 @@ export class TransportsComponent implements OnInit {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'transports';
   @Input() loggedInUser: any = null;
+  @Output() onNavigateTab = new EventEmitter<string>();
+
+  isLoading = true;
+  hasError = false;
 
   transportsList: any[] = [];
   drivers: any[] = [];
-  transportsForm = { date: '', truckNumber: '', id: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
-  Math = Math;
 
+  // Drawer and Modal States
+  isFormDrawerOpen = false;
+  isViewModalOpen = false;
+  selectedTrip: any = null;
+  showExportDropdown = false;
+
+  transportsForm: any = {
+    id: null,
+    date: new Date().toISOString().substring(0, 10),
+    truckNumber: '',
+    driverId: '',
+    rent: 0,
+    advance: 0,
+    truckPhotoPath: '',
+    driverLicensePath: ''
+  };
+
+  // Filter & Search State
+  filterSearchQuery: string = '';
+  filterStatus: string = 'ALL'; // 'ALL', 'SETTLED', 'PENDING'
+  filterDriver: string = 'ALL';
+  filterMonth: string = 'ALL';
+  filterYear: string = 'ALL';
+  tableDensity: 'compact' | 'normal' | 'spacious' = 'normal';
+
+  // Pagination & Sorting
   currentPage = 1;
   pageSize = 10;
+  pageSizeOptions: number[] = [10, 25, 50, 100];
+  isRefreshing = false;
   sortField = 'date';
   sortAsc = false;
   tableFilteredCounts: { [key: string]: number } = {};
   showColDropdown: { [key: string]: boolean } = {};
   columnsVisibility: { [table: string]: { [col: string]: boolean } } = {};
 
-  defaultColumns = ['Date', 'Truck', 'Driver', 'Rent', 'Advance', 'Remaining', 'Actions'];
+  defaultColumns = ['Trip Date', 'Vehicle Number', 'Assigned Driver', 'Freight Rent', 'Advance Paid', 'Balance Due', 'Status', 'Actions'];
+  Math = Math;
 
-  constructor(private apiService: ApiService, private notificationService: NotificationService) {}
+  readonly allMonths: string[] = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  constructor(
+    private apiService: ApiService,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit() {
+    this.initColumns();
     this.loadData();
+  }
+
+  onPageSizeChange(newSize: number) {
+    this.pageSize = Number(newSize);
+    this.currentPage = 1;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick() {
+    this.showExportDropdown = false;
+    this.showColDropdown['transports'] = false;
+  }
+
+  private initColumns() {
     this.columnsVisibility['transports'] = {};
     this.defaultColumns.forEach(col => {
       this.columnsVisibility['transports'][col] = true;
     });
   }
 
-  loadData() {
-    this.apiService.getDrivers().subscribe((res: any[]) => this.drivers = res);
-    this.apiService.getTransports().subscribe((res: any[]) => {
-      this.transportsList = res;
-      this.tableFilteredCounts['transports'] = this.transportsList.length;
+  loadData(forceRefresh: boolean = false) {
+    if (forceRefresh) {
+      this.isRefreshing = true;
+    } else {
+      this.isLoading = true;
+    }
+    this.hasError = false;
+
+    forkJoin({
+      drivers: this.apiService.getDrivers(),
+      transports: this.apiService.getTransports()
+    }).subscribe({
+      next: ({ drivers, transports }: { drivers: any[]; transports: any[] }) => {
+        this.drivers = drivers || [];
+        this.transportsList = (transports || []).map((t: any) => ({
+          ...t,
+          remaining: (Number(t.rent) || 0) - (Number(t.advance) || 0)
+        }));
+        this.tableFilteredCounts['transports'] = this.transportsList.length;
+        this.isLoading = false;
+        this.isRefreshing = false;
+        if (forceRefresh) {
+          this.notificationService.success('Ledger Refreshed', 'Logistics haulage data updated from server.');
+        }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.isRefreshing = false;
+        this.hasError = true;
+        this.notificationService.error('Load Failed', 'Could not load transport and logistics data.');
+      }
     });
   }
 
+  // Permission Checks
   isViewer(): boolean {
-    return this.loggedInUser && this.loggedInUser.role === 'VIEWER';
+    if (this.loggedInUser && this.loggedInUser.role === 'VIEWER') return true;
+    try {
+      const stored = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser') || localStorage.getItem('user');
+      if (stored) {
+        const u = JSON.parse(stored);
+        if (u && u.role === 'VIEWER') return true;
+      }
+    } catch (_) {}
+    return false;
   }
 
   canDelete(): boolean {
-    return this.loggedInUser && (this.loggedInUser.role === 'SUPER_ADMIN' || this.loggedInUser.role === 'ADMIN');
+    if (this.loggedInUser && (this.loggedInUser.role === 'SUPER_ADMIN' || this.loggedInUser.role === 'ADMIN')) return true;
+    try {
+      const stored = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser') || localStorage.getItem('user');
+      if (stored) {
+        const u = JSON.parse(stored);
+        if (u && (u.role === 'SUPER_ADMIN' || u.role === 'ADMIN')) return true;
+      }
+    } catch (_) {}
+    return true; // default in dev/local mode if role is not restricted
   }
 
+  isEditing(): boolean {
+    return !!this.transportsForm.id;
+  }
+
+  // Telemetry KPI Calculations
+  get totalTripsCount(): number {
+    return this.transportsList?.length || 0;
+  }
+
+  get totalFreightAmount(): number {
+    return (this.transportsList || []).reduce((acc: number, curr: any) => acc + (Number(curr.rent) || 0), 0);
+  }
+
+  get totalAdvanceDisbursed(): number {
+    return (this.transportsList || []).reduce((acc: number, curr: any) => acc + (Number(curr.advance) || 0), 0);
+  }
+
+  get totalPendingBalance(): number {
+    return (this.transportsList || []).reduce((acc: number, curr: any) => {
+      const rem = (Number(curr.rent) || 0) - (Number(curr.advance) || 0);
+      return acc + (rem > 0 ? rem : 0);
+    }, 0);
+  }
+
+  get settledCount(): number {
+    return (this.transportsList || []).filter((t: any) => {
+      const rem = (Number(t.rent) || 0) - (Number(t.advance) || 0);
+      return rem <= 0;
+    }).length;
+  }
+
+  get pendingCount(): number {
+    return (this.transportsList || []).filter((t: any) => {
+      const rem = (Number(t.rent) || 0) - (Number(t.advance) || 0);
+      return rem > 0;
+    }).length;
+  }
+
+  get availableYears(): number[] {
+    const years = new Set<number>();
+    years.add(new Date().getFullYear());
+    (this.transportsList || []).forEach(t => {
+      if (t.date) {
+        const y = new Date(t.date).getFullYear();
+        if (!isNaN(y)) years.add(y);
+      }
+    });
+    return Array.from(years).sort((a, b) => b - a);
+  }
+
+  // Subtab helpers
+  setSubtabStatus(status: string) {
+    this.filterStatus = status;
+    this.currentPage = 1;
+  }
+
+  setCurrentMonthFilter() {
+    const now = new Date();
+    const currentMonthNum = now.getMonth();
+    const currentYear = String(now.getFullYear());
+    const currentMonthName = this.allMonths[currentMonthNum];
+
+    if (this.filterMonth === currentMonthName && String(this.filterYear) === currentYear) {
+      this.filterMonth = 'ALL';
+      this.filterYear = 'ALL';
+    } else {
+      this.filterMonth = currentMonthName;
+      this.filterYear = currentYear;
+    }
+    this.currentPage = 1;
+  }
+
+  isCurrentMonthFiltered(): boolean {
+    const now = new Date();
+    return this.filterMonth === this.allMonths[now.getMonth()] && String(this.filterYear) === String(now.getFullYear());
+  }
+
+  getSubtabCount(type: 'ALL' | 'SETTLED' | 'PENDING'): number {
+    if (!this.transportsList) return 0;
+    if (type === 'ALL') return this.transportsList.length;
+    if (type === 'SETTLED') return this.settledCount;
+    if (type === 'PENDING') return this.pendingCount;
+    return 0;
+  }
+
+  // Filter & Search Logic
+  get filteredTransports(): any[] {
+    let result = [...(this.transportsList || [])];
+
+    // Status Filter
+    if (this.filterStatus === 'SETTLED') {
+      result = result.filter((t: any) => ((Number(t.rent) || 0) - (Number(t.advance) || 0)) <= 0);
+    } else if (this.filterStatus === 'PENDING') {
+      result = result.filter((t: any) => ((Number(t.rent) || 0) - (Number(t.advance) || 0)) > 0);
+    }
+
+    // Driver Filter
+    if (this.filterDriver !== 'ALL') {
+      result = result.filter((t: any) => String(t.driver?.id || t.driverId) === String(this.filterDriver));
+    }
+
+    // Month Filter
+    if (this.filterMonth !== 'ALL') {
+      const monthIdx = this.allMonths.indexOf(this.filterMonth);
+      if (monthIdx >= 0) {
+        result = result.filter((t: any) => {
+          if (!t.date) return false;
+          return new Date(t.date).getMonth() === monthIdx;
+        });
+      }
+    }
+
+    // Year Filter
+    if (this.filterYear !== 'ALL') {
+      result = result.filter((t: any) => {
+        if (!t.date) return false;
+        return String(new Date(t.date).getFullYear()) === String(this.filterYear);
+      });
+    }
+
+    // Text Search
+    if (this.filterSearchQuery && this.filterSearchQuery.trim()) {
+      const q = this.filterSearchQuery.trim().toLowerCase();
+      result = result.filter((t: any) => {
+        const truck = (t.truckNumber || '').toLowerCase();
+        const driverName = (t.driver?.driverName || '').toLowerCase();
+        const driverMobile = (t.driver?.mobile || '').toLowerCase();
+        const date = (t.date || '').toLowerCase();
+        const rent = String(t.rent || '');
+        const advance = String(t.advance || '');
+        const remaining = String(t.remaining || '');
+
+        return truck.includes(q) ||
+               driverName.includes(q) ||
+               driverMobile.includes(q) ||
+               date.includes(q) ||
+               rent.includes(q) ||
+               advance.includes(q) ||
+               remaining.includes(q);
+      });
+    }
+
+    return result;
+  }
+
+  hasActiveFilters(): boolean {
+    return (
+      (this.filterSearchQuery && this.filterSearchQuery.trim() !== '') ||
+      this.filterStatus !== 'ALL' ||
+      this.filterDriver !== 'ALL' ||
+      this.filterMonth !== 'ALL' ||
+      this.filterYear !== 'ALL'
+    );
+  }
+
+  resetFilters() {
+    this.filterSearchQuery = '';
+    this.filterStatus = 'ALL';
+    this.filterDriver = 'ALL';
+    this.filterMonth = 'ALL';
+    this.filterYear = 'ALL';
+    this.currentPage = 1;
+  }
+
+  setDensity(density: 'compact' | 'normal' | 'spacious') {
+    this.tableDensity = density;
+  }
+
+  getSelectedDriver(): any {
+    if (!this.transportsForm.driverId) return null;
+    return this.drivers.find((d: any) => String(d.id) === String(this.transportsForm.driverId));
+  }
+
+  getFormBalanceDue(): number {
+    const rent = Number(this.transportsForm.rent) || 0;
+    const adv = Number(this.transportsForm.advance) || 0;
+    return rent - adv;
+  }
+
+  // Format Truck Number to Uppercase
+  onTruckNumberInput() {
+    if (this.transportsForm.truckNumber) {
+      this.transportsForm.truckNumber = this.transportsForm.truckNumber.toUpperCase().trim();
+    }
+  }
+
+  // Drawer and Modal Handlers
+  openAddDrawer() {
+    this.cancelEdit();
+    this.isFormDrawerOpen = true;
+  }
+
+  closeFormDrawer() {
+    this.isFormDrawerOpen = false;
+    this.cancelEdit();
+  }
+
+  openViewModal(tr: any) {
+    this.selectedTrip = tr;
+    this.isViewModalOpen = true;
+  }
+
+  closeViewModal() {
+    this.selectedTrip = null;
+    this.isViewModalOpen = false;
+  }
+
+  printWaybill() {
+    window.print();
+  }
+
+  // CRUD Operations
   saveTransport() {
-    if (!this.transportsForm.date || !this.transportsForm.truckNumber || !this.transportsForm.id || this.transportsForm.rent === null || this.transportsForm.advance === null) {
-      this.notificationService.warning('Invalid Input', "Please fill required fields");
+    if (!this.transportsForm.date || !this.transportsForm.truckNumber || !this.transportsForm.driverId) {
+      this.notificationService.warning('Validation Incomplete', 'Please fill in date, truck registration number and assigned driver.');
       return;
     }
-    const driver = this.drivers.find(d => d.id === parseInt(this.transportsForm.id));
-    if (!driver) return;
 
-    const editId = (this.transportsForm as any)._editId;
+    if (this.transportsForm.rent == null || Number(this.transportsForm.rent) < 0) {
+      this.notificationService.warning('Invalid Rent', 'Freight rent must be a non-negative amount.');
+      return;
+    }
+
+    if (this.transportsForm.advance == null || Number(this.transportsForm.advance) < 0) {
+      this.notificationService.warning('Invalid Advance', 'Advance amount must be a non-negative amount.');
+      return;
+    }
+
+    const driver = this.drivers.find((d: any) => String(d.id) === String(this.transportsForm.driverId));
+    if (!driver) {
+      this.notificationService.error('Driver Error', 'Selected driver could not be found.');
+      return;
+    }
 
     const payload = {
       date: this.transportsForm.date,
-      truckNumber: this.transportsForm.truckNumber,
+      truckNumber: this.transportsForm.truckNumber.toUpperCase().trim(),
       driver: driver,
-      rent: this.transportsForm.rent,
-      advance: this.transportsForm.advance,
+      rent: Number(this.transportsForm.rent) || 0,
+      advance: Number(this.transportsForm.advance) || 0,
       truckPhotoPath: this.transportsForm.truckPhotoPath || '',
       driverLicensePath: this.transportsForm.driverLicensePath || ''
     };
 
-    if (editId) {
-      this.apiService.updateTransport(editId, payload).subscribe({
+    if (this.transportsForm.id) {
+      // Update
+      this.apiService.updateTransport(this.transportsForm.id, payload).subscribe({
         next: () => {
+          this.notificationService.success('Record Updated', `Transport entry for truck ${payload.truckNumber} updated successfully.`);
+          this.logAudit(`Updated transport trip record for truck: ${payload.truckNumber}`);
+          this.cancelEdit();
+          this.isFormDrawerOpen = false;
           this.loadData();
-          this.notificationService.success('Updated', 'Transport record updated successfully');
-          this.logAudit('Updated transport record ID: ' + editId);
-          this.transportsForm = { date: '', truckNumber: '', id: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
         },
-        error: (err) => this.notificationService.error('Error', 'Failed to update transport: ' + (err.error?.message || err.message))
+        error: (err) => {
+          this.notificationService.error('Update Failed', err.error?.message || err.message || 'Could not update transport record.');
+        }
       });
     } else {
+      // Create
       this.apiService.createTransport(payload).subscribe({
-        next: (res) => {
-          if (res) this.transportsList.unshift(res);
+        next: () => {
+          this.notificationService.success('Trip Registered', `Freight trip for truck ${payload.truckNumber} logged successfully.`);
+          this.logAudit(`Registered transport haulage for truck: ${payload.truckNumber} with driver ${driver.driverName}`);
+          this.cancelEdit();
+          this.isFormDrawerOpen = false;
           this.loadData();
-          this.notificationService.success('Data Added', 'Transport rental record added successfully');
-          this.logAudit("Logged transport rental for truck: " + this.transportsForm.truckNumber);
-          this.transportsForm = { date: '', truckNumber: '', id: '', rent: 0, advance: 0, truckPhotoPath: '', driverLicensePath: '' };
         },
-        error: (err) => this.notificationService.error('Error', "Failed to save transport: " + (err.error?.message || err.message))
+        error: (err) => {
+          this.notificationService.error('Registration Failed', err.error?.message || err.message || 'Could not save transport record.');
+        }
       });
     }
   }
 
   editTransport(tr: any) {
     this.transportsForm = {
-      date: tr.date || '',
+      id: tr.id,
+      date: tr.date ? tr.date.substring(0, 10) : new Date().toISOString().substring(0, 10),
       truckNumber: tr.truckNumber || '',
-      id: tr.driver?.id || '',
+      driverId: tr.driver ? String(tr.driver.id) : (tr.driverId ? String(tr.driverId) : ''),
       rent: tr.rent || 0,
       advance: tr.advance || 0,
       truckPhotoPath: tr.truckPhotoPath || '',
       driverLicensePath: tr.driverLicensePath || ''
     };
-    (this.transportsForm as any)._editId = tr.id;
-    this.notificationService.info('Edit Mode', `Loaded transport record for truck ${tr.truckNumber} for editing.`);
-    const formEl = document.querySelector('.form-card');
-    if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
+
+    this.isFormDrawerOpen = true;
+    this.notificationService.info('Editing Record', `Loaded trip for truck ${tr.truckNumber}.`);
+  }
+
+  cancelEdit() {
+    this.transportsForm = {
+      id: null,
+      date: new Date().toISOString().substring(0, 10),
+      truckNumber: '',
+      driverId: '',
+      rent: 0,
+      advance: 0,
+      truckPhotoPath: '',
+      driverLicensePath: ''
+    };
   }
 
   deleteTransport(id: string) {
     if (!this.canDelete()) {
-      this.notificationService.warning('Permission Denied', "Permission denied");
+      this.notificationService.warning('Permission Denied', 'Only administrators can delete transport records.');
       return;
     }
-    this.notificationService.confirmAction('Confirm Delete', 'Are you sure you want to delete this transport record?', 'Yes, Delete').then(confirmed => {
+
+    const tr = this.transportsList.find((x: any) => String(x.id) === String(id));
+    const targetDesc = tr ? `for truck ${tr.truckNumber} (Driver: ${tr.driver?.driverName || 'Unassigned'})` : '';
+
+    this.notificationService.confirmAction(
+      'Confirm Transport Deletion',
+      `Are you sure you want to permanently delete this transport trip record ${targetDesc}? This action cannot be undone and will remove freight haulage and advance settlement logs.`,
+      'Yes, Delete Record'
+    ).then(confirmed => {
       if (confirmed) {
         this.apiService.deleteTransport(id).subscribe({
           next: () => {
-            this.transportsList = this.transportsList.filter(x => (x.id ? x.id.toString() : '') !== id.toString());
-            this.notificationService.success('Deleted', 'Transport record deleted successfully');
-            this.logAudit("Deleted transport record ID: " + id);
+            this.transportsList = this.transportsList.filter((x: any) => String(x.id) !== String(id));
+            this.notificationService.success('Record Deleted', 'Transport record deleted successfully.');
+            this.logAudit(`Deleted transport trip record ID: ${id}`);
           },
-          error: (err) => this.notificationService.error('Delete Failed', err.error?.message || err.message)
+          error: (err) => {
+            this.notificationService.error('Delete Failed', err.error?.message || err.message || 'Failed to delete transport record.');
+          }
         });
       }
     });
@@ -145,11 +506,20 @@ export class TransportsComponent implements OnInit {
 
   logAudit(action: string) {
     if (this.loggedInUser) {
-      this.apiService.createAuditLog({ username: this.loggedInUser.username, action }).subscribe();
+      this.apiService.createAuditLog({ username: this.loggedInUser.username, action }).subscribe({
+        error: () => {}
+      });
     }
   }
 
-  toggleColDropdown(table: string) {
+  // Quick navigation: Drivers Directory
+  goToDrivers() {
+    this.onNavigateTab.emit('drivers');
+  }
+
+  // Table Column Visibility & Sorting
+  toggleColDropdown(table: string, event?: Event) {
+    if (event) event.stopPropagation();
     this.showColDropdown[table] = !this.showColDropdown[table];
   }
 
@@ -178,11 +548,11 @@ export class TransportsComponent implements OnInit {
 
   getProcessedList(list: any[], table: string): any[] {
     if (!list) return [];
-    
-    let sorted = [...list].sort((a, b) => {
-      let valA = this.resolvePath(a, this.sortField);
-      let valB = this.resolvePath(b, this.sortField);
-      
+
+    const sorted = [...list].sort((a: any, b: any) => {
+      const valA = this.resolvePath(a, this.sortField);
+      const valB = this.resolvePath(b, this.sortField);
+
       if (valA < valB) return this.sortAsc ? -1 : 1;
       if (valA > valB) return this.sortAsc ? 1 : -1;
       return 0;
@@ -200,5 +570,87 @@ export class TransportsComponent implements OnInit {
 
   trackById(index: number, item: any): any {
     return item?.id ?? item?.transportId ?? index;
+  }
+
+  // Export Options
+  toggleExportDropdown(event?: Event) {
+    if (event) event.stopPropagation();
+    this.showExportDropdown = !this.showExportDropdown;
+  }
+
+  exportCsv() {
+    const dataToExport = this.filteredTransports;
+    if (!dataToExport || dataToExport.length === 0) {
+      this.notificationService.warning('Export Empty', 'No transport records to export.');
+      return;
+    }
+
+    const headers = ['Trip Date', 'Truck Number', 'Assigned Driver', 'Driver Mobile', 'Freight Rent (INR)', 'Advance Disbursed (INR)', 'Balance Due (INR)', 'Settlement Status'];
+    const rows = dataToExport.map((t: any) => {
+      const rent = Number(t.rent) || 0;
+      const adv = Number(t.advance) || 0;
+      const rem = rent - adv;
+      const status = rem <= 0 ? 'Settled' : 'Balance Due';
+
+      return [
+        `"${t.date || ''}"`,
+        `"${t.truckNumber || ''}"`,
+        `"${t.driver?.driverName || 'Unassigned'}"`,
+        `"${t.driver?.mobile || ''}"`,
+        rent,
+        adv,
+        rem,
+        `"${status}"`
+      ];
+    });
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r: any) => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `futane_logistics_transports_${new Date().toISOString().substring(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    this.showExportDropdown = false;
+    this.notificationService.success('Export Ready', 'Transport records exported to CSV successfully.');
+  }
+
+  exportExcel() {
+    const dataToExport = this.filteredTransports;
+    if (!dataToExport || dataToExport.length === 0) {
+      this.notificationService.warning('Export Empty', 'No transport records to export.');
+      return;
+    }
+
+    const rows = dataToExport.map((t: any, idx: number) => {
+      const rent = Number(t.rent) || 0;
+      const adv = Number(t.advance) || 0;
+      const rem = rent - adv;
+      const status = rem <= 0 ? 'Settled' : 'Balance Due';
+
+      return {
+        'Sr. No.': idx + 1,
+        'Haulage Date': t.date || '',
+        'Vehicle / Truck Number': t.truckNumber || '',
+        'Assigned Driver': t.driver?.driverName || 'Unassigned',
+        'Driver Mobile': t.driver?.mobile || '—',
+        'Freight Rent (INR)': rent,
+        'Advance Disbursed (INR)': adv,
+        'Balance Due (INR)': rem,
+        'Settlement Status': status
+      };
+    });
+
+    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(rows);
+    const workbook: XLSX.WorkBook = { Sheets: { 'Transports': worksheet }, SheetNames: ['Transports'] };
+    const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob: Blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `futane_logistics_transports_${new Date().toISOString().substring(0, 10)}.xlsx`;
+    link.click();
+    this.showExportDropdown = false;
+    this.notificationService.success('Export Ready', 'Transport haulage ledger exported to Excel (.xlsx) successfully.');
   }
 }

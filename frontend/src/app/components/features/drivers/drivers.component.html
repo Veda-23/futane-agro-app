@@ -1,90 +1,605 @@
-<div class="grid-cols-3">
-  <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
-    <h3>{{ 'driver.add_title' | translate:currentLang }}</h3>
-    <form (submit)="saveDriver()">
-      <div class="form-group">
-        <label>{{ 'driver.name' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="driverForm.driverName" name="dName" required placeholder="Driver full name">
+<div class="drivers-enterprise-container">
+
+  <!-- ── 1. UNIFIED BREADCRUMB & STABLE HEADER ────────────────────── -->
+  <div class="header-section-wrapper no-print">
+    <!-- Row 1a: Breadcrumbs -->
+    <div class="breadcrumb-nav">
+      <span class="breadcrumb-item"><i class="bi bi-house-door me-1"></i>Futane Agro ERP</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item">Supply Chain</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item active">Commercial Vehicle Drivers Directory</span>
+    </div>
+
+    <!-- Row 1b: Stable Header with Title & Primary Actions -->
+    <div class="stable-page-header">
+      <div class="header-left">
+        <div class="header-icon-badge">
+          <i class="bi bi-person-badge"></i>
+        </div>
+        <div class="header-text-group">
+          <h1 class="header-main-title">Commercial Vehicle Drivers Directory</h1>
+          <p class="header-desc-text">
+            Manage commercial haulage drivers, RTO license compliance, trip dispatches and cumulative earnings
+          </p>
+        </div>
       </div>
-      <div class="form-group">
-        <label>{{ 'driver.mobile' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="driverForm.mobile" name="dMobile" required placeholder="10-digit mobile">
-      </div>
-      <div class="form-group">
-        <label>{{ 'driver.license' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="driverForm.licenseNumber" name="dLic" required placeholder="Driver License ID">
-      </div>
-      <div class="form-group">
-        <label>{{ 'driver.address' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="driverForm.address" name="dAddr" required placeholder="Residential address">
-      </div>
-      <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'driver.register_btn' | translate:currentLang }}</button>
-    </form>
-  </div>
-  <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
-    <h3>{{ 'driver.records_title' | translate:currentLang }}</h3>
-    
-    <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
-      <div class="column-visibility-dropdown" style="position:relative;">
-        <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('drivers')" style="padding: 6px 12px; font-size: 13px;">
-          <i class="bi bi-layout-three-columns me-1"></i>Columns
+
+      <div class="header-right-actions">
+        <!-- Primary Action: Enroll Driver -->
+        <button type="button" 
+                class="btn btn-primary btn-action-primary" 
+                *ngIf="!isViewer()"
+                (click)="openEnrollDrawer()" 
+                title="Enroll a new commercial vehicle driver to the fleet roster">
+          <i class="bi bi-person-plus-fill me-1"></i>
+          <span>+ Enroll Commercial Driver</span>
         </button>
-        <div class="dropdown-menu" *ngIf="showColDropdown['drivers']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
-          <label *ngFor="let col of getTableColumns('drivers')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-            <input appAutoSelect type="checkbox" [checked]="isColumnVisible('drivers', col)" (change)="toggleColumn('drivers', col)" style="width:auto; margin:0; cursor:pointer;">
-            {{col}}
-          </label>
+      </div>
+    </div>
+
+    <!-- ── 2. SUBTABS CLASSIFICATION RIBBON ──────────────────────────── -->
+    <div class="subtabs-classification-bar">
+      <div class="subtabs-scroll-container">
+        <!-- All Drivers -->
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="filterStatus === 'ALL'"
+                (click)="setSubtabStatus('ALL')">
+          <i class="bi bi-people-fill me-1"></i>
+          <span>All Drivers</span>
+          <span class="tab-count-badge">{{ getSubtabCount('ALL') }}</span>
+        </button>
+
+        <!-- Active on Trips -->
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="filterStatus === 'ACTIVE'"
+                (click)="setSubtabStatus('ACTIVE')">
+          <i class="bi bi-truck text-primary me-1"></i>
+          <span>Active on Trips</span>
+          <span class="tab-count-badge">{{ getSubtabCount('ACTIVE') }}</span>
+        </button>
+
+        <!-- Licensed & Verified -->
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="filterStatus === 'LICENSED'"
+                (click)="setSubtabStatus('LICENSED')">
+          <i class="bi bi-shield-check text-success me-1"></i>
+          <span>Licensed &amp; Verified</span>
+          <span class="tab-count-badge">{{ getSubtabCount('LICENSED') }}</span>
+        </button>
+
+        <!-- Standby -->
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="filterStatus === 'STANDBY'"
+                (click)="setSubtabStatus('STANDBY')">
+          <i class="bi bi-clock-history text-secondary me-1"></i>
+          <span>Standby / Unassigned</span>
+          <span class="tab-count-badge">{{ getSubtabCount('STANDBY') }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── 3. FILTER & SEARCH TOOLBAR ────────────────────────────────── -->
+    <div class="table-unified-toolbar">
+      <div class="toolbar-left-group">
+        <!-- Search Box -->
+        <div class="toolbar-search-box">
+          <i class="bi bi-search search-icon"></i>
+          <input type="text" 
+                 class="search-input" 
+                 [(ngModel)]="filterSearchQuery" 
+                 (input)="currentPage = 1" 
+                 placeholder="Search driver, phone, license, depot..." 
+                 aria-label="Search commercial vehicle drivers">
+          <button *ngIf="filterSearchQuery" 
+                  type="button" 
+                  class="btn-clear-search" 
+                  (click)="filterSearchQuery = ''; currentPage = 1"
+                  aria-label="Clear search input">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+
+        <!-- Reset Filters Trigger -->
+        <button *ngIf="hasActiveFilters()" 
+                type="button" 
+                class="btn-reset-filters" 
+                (click)="resetFilters()" 
+                title="Reset active search and filters">
+          <i class="bi bi-x-circle me-1"></i>Reset
+        </button>
+      </div>
+
+      <div class="toolbar-right-group">
+        <!-- Quick navigation to Freight Transport -->
+        <button type="button" 
+                class="btn btn-secondary btn-sm" 
+                (click)="goToTransports()" 
+                title="Navigate to Freight Transport Trips">
+          <i class="bi bi-truck me-1"></i>
+          <span>Log Transport Trip</span>
+        </button>
+
+        <!-- Refresh Button -->
+        <button type="button" 
+                class="btn btn-secondary btn-sm" 
+                (click)="loadData(true)" 
+                [disabled]="isRefreshing"
+                title="Reload driver records and trip logs from server">
+          <i class="bi bi-arrow-clockwise me-1" [class.spin-anim]="isRefreshing"></i>
+          <span>Refresh</span>
+        </button>
+
+        <!-- Export CSV Button -->
+        <button type="button" 
+                class="btn btn-secondary btn-sm" 
+                (click)="exportCsv()" 
+                title="Export filtered roster to CSV">
+          <i class="bi bi-download me-1"></i>
+          <span>Export CSV</span>
+        </button>
+
+        <!-- Table Density Selector -->
+        <div class="density-switch-group" role="group" aria-label="Table row density">
+          <button type="button" 
+                  class="density-btn" 
+                  [class.active]="tableDensity === 'compact'" 
+                  (click)="setDensity('compact')" 
+                  title="Compact Density">
+            <i class="bi bi-distribute-vertical"></i>
+          </button>
+          <button type="button" 
+                  class="density-btn" 
+                  [class.active]="tableDensity === 'normal'" 
+                  (click)="setDensity('normal')" 
+                  title="Normal Density">
+            <i class="bi bi-list-ul"></i>
+          </button>
+          <button type="button" 
+                  class="density-btn" 
+                  [class.active]="tableDensity === 'spacious'" 
+                  (click)="setDensity('spacious')" 
+                  title="Spacious Density">
+            <i class="bi bi-grid-3x2-gap"></i>
+          </button>
+        </div>
+
+        <!-- Columns Visibility Dropdown -->
+        <div class="col-manager-dropdown-wrapper">
+          <button type="button" 
+                  class="btn btn-secondary btn-sm" 
+                  (click)="toggleColDropdown('drivers'); $event.stopPropagation()" 
+                  title="Configure Visible Columns">
+            <i class="bi bi-layout-three-columns me-1"></i>
+            <span>Columns</span>
+          </button>
+          <div class="col-manager-popover" *ngIf="showColDropdown['drivers']" (click)="$event.stopPropagation()">
+            <div class="popover-header">
+              <strong>Visible Columns</strong>
+            </div>
+            <div class="popover-body">
+              <div class="col-item-row" *ngFor="let col of defaultColumns">
+                <label class="col-check-label">
+                  <input type="checkbox" 
+                         [checked]="isColumnVisible('drivers', col)" 
+                         (change)="toggleColumn('drivers', col)">
+                  <span>{{ col }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="table-container table-responsive">
-      <table class="table" appResizableTable [tableId]="'drivers_table'">
+  </div>
+
+  <!-- ── 4. 4-COLUMN TELEMETRY KPI METRICS GRID ────────────────────── -->
+  <section class="drivers-kpi-grid no-print" aria-label="Commercial Drivers Key Performance Indicators">
+    <!-- Card 1: Active Fleet Roster -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge kpi-blue">
+        <i class="bi bi-person-badge"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Active Fleet Roster</span>
+        <div class="kpi-value font-mono">{{ totalDriversCount }} Drivers</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag tag-primary">Registered Drivers</span>
+          <span class="kpi-subtext-muted">Commercial fleet roster</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Licensed & Verified -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge kpi-emerald">
+        <i class="bi bi-shield-check"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Licensed &amp; Verified</span>
+        <div class="kpi-value font-mono">{{ licensedDriversCount }} Verified</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag tag-success">RTO Compliant</span>
+          <span class="kpi-subtext-muted">Valid commercial licenses</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Total Trips Logged -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge kpi-purple">
+        <i class="bi bi-truck"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Total Trips Logged</span>
+        <div class="kpi-value font-mono">{{ totalTripsLogged }} Dispatches</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag tag-purple">Haulage Trips</span>
+          <span class="kpi-subtext-muted">Transport trip dispatches</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: Cumulative Freight Volume -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge kpi-amber">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Cumulative Freight Volume</span>
+        <div class="kpi-value font-mono">₹{{ totalFreightVolume | number:'1.0-0' }}</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag tag-warning">Gross Freight</span>
+          <span class="kpi-subtext-muted">Total freight revenue handled</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 5. FULL-WIDTH ENTERPRISE TABLE WORKSPACE ──────────────────── -->
+  <div class="table-master-card glass-panel">
+    <!-- TABLE CONTAINER -->
+    <div class="table-responsive-wrapper" 
+         [class.table-compact]="tableDensity === 'compact'" 
+         [class.table-spacious]="tableDensity === 'spacious'">
+
+      <!-- Error State -->
+      <app-empty-state 
+        *ngIf="hasError" 
+        variant="error" 
+        title="Could Not Load Drivers Roster" 
+        message="Failed to connect to the fleet registry server. Please verify your network connection." 
+        actionLabel="Retry" 
+        (actionClicked)="loadData(true)">
+      </app-empty-state>
+
+      <!-- Empty Search State -->
+      <app-empty-state 
+        *ngIf="!hasError && filteredDrivers.length === 0" 
+        variant="search" 
+        title="No Commercial Drivers Found" 
+        message="No driver records match your search criteria or active filter selection." 
+        actionLabel="Clear Filters" 
+        (actionClicked)="resetFilters()">
+      </app-empty-state>
+
+      <!-- Enterprise Table -->
+      <table *ngIf="!hasError && filteredDrivers.length > 0" 
+             class="table enterprise-table" 
+             appResizableTable 
+             [tableId]="'drivers_table'">
         <thead>
           <tr>
-            <th *ngIf="isColumnVisible('drivers', 'ID')" (click)="setSort('id')" style="cursor:pointer; min-width: 100px;">Driver ID <span *ngIf="sortField === 'id'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-            <th *ngIf="isColumnVisible('drivers', 'Name')" (click)="setSort('driverName')" style="cursor:pointer; min-width: 140px;">{{ 'driver.name' | translate:currentLang }} <span *ngIf="sortField === 'driverName'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-            <th *ngIf="isColumnVisible('drivers', 'Mobile')" (click)="setSort('mobile')" style="cursor:pointer; min-width: 120px;">{{ 'driver.mobile' | translate:currentLang }} <span *ngIf="sortField === 'mobile'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-            <th *ngIf="isColumnVisible('drivers', 'License')" (click)="setSort('licenseNumber')" style="cursor:pointer; min-width: 130px;">{{ 'driver.license' | translate:currentLang }} <span *ngIf="sortField === 'licenseNumber'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-            <th *ngIf="isColumnVisible('drivers', 'Address')" style="min-width: 150px;">{{ 'driver.address' | translate:currentLang }}</th>
-            <th *ngIf="isColumnVisible('drivers', 'Trips')" style="min-width: 80px;">Trips</th>
-            <th *ngIf="isColumnVisible('drivers', 'Earnings')" style="min-width: 110px;">Earnings</th>
-            <th *ngIf="isColumnVisible('drivers', 'Actions')" style="min-width: 130px;">{{ 'label.actions' | translate:currentLang }}</th>
+            <th *ngIf="isColumnVisible('drivers', 'Driver')" 
+                (click)="setSort('driverName')" 
+                class="sortable-th col-driver">
+              <span class="th-content">
+                Driver
+                <span class="sort-icon" *ngIf="sortField === 'driverName'">{{ sortAsc ? '↑' : '↓' }}</span>
+              </span>
+            </th>
+
+            <th *ngIf="isColumnVisible('drivers', 'Mobile Contact')" 
+                (click)="setSort('mobile')" 
+                class="sortable-th col-mobile">
+              <span class="th-content">
+                Mobile Contact
+                <span class="sort-icon" *ngIf="sortField === 'mobile'">{{ sortAsc ? '↑' : '↓' }}</span>
+              </span>
+            </th>
+
+            <th *ngIf="isColumnVisible('drivers', 'Driving License')" 
+                (click)="setSort('licenseNumber')" 
+                class="sortable-th col-dl">
+              <span class="th-content">
+                Driving License (DL)
+                <span class="sort-icon" *ngIf="sortField === 'licenseNumber'">{{ sortAsc ? '↑' : '↓' }}</span>
+              </span>
+            </th>
+
+            <th *ngIf="isColumnVisible('drivers', 'Base Depot / Address')" 
+                (click)="setSort('address')" 
+                class="sortable-th col-depot">
+              <span class="th-content">
+                Base Depot / Address
+                <span class="sort-icon" *ngIf="sortField === 'address'">{{ sortAsc ? '↑' : '↓' }}</span>
+              </span>
+            </th>
+
+            <th *ngIf="isColumnVisible('drivers', 'Trips Logged')" 
+                (click)="setSort('trips')" 
+                class="sortable-th text-center col-trips">
+              <span class="th-content justify-content-center">
+                Trips
+                <span class="sort-icon" *ngIf="sortField === 'trips'">{{ sortAsc ? '↑' : '↓' }}</span>
+              </span>
+            </th>
+
+            <th *ngIf="isColumnVisible('drivers', 'Gross Earnings')" 
+                (click)="setSort('earnings')" 
+                class="sortable-th text-end col-earnings">
+              <span class="th-content justify-content-end">
+                Gross Earnings (₹)
+                <span class="sort-icon" *ngIf="sortField === 'earnings'">{{ sortAsc ? '↑' : '↓' }}</span>
+              </span>
+            </th>
+
+            <th *ngIf="isColumnVisible('drivers', 'Status')" class="text-center col-status">
+              Status
+            </th>
+
+            <th *ngIf="isColumnVisible('drivers', 'Actions')" class="table-action-col text-center col-actions">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let driver of getProcessedList(drivers, 'drivers'); trackBy: trackById">
-            <td *ngIf="isColumnVisible('drivers', 'ID')">{{ driver.id }}</td>
-            <td *ngIf="isColumnVisible('drivers', 'Name')"><strong>{{ driver.driverName }}</strong></td>
-            <td *ngIf="isColumnVisible('drivers', 'Mobile')">{{ driver.mobile }}</td>
-            <td *ngIf="isColumnVisible('drivers', 'License')"><code>{{ driver.licenseNumber }}</code></td>
-            <td *ngIf="isColumnVisible('drivers', 'Address')">{{ driver.address }}</td>
-            <td *ngIf="isColumnVisible('drivers', 'Trips')">
-              <span class="badge badge-info">{{ getDriverStats(driver.id).trips }}</span>
+          <tr *ngFor="let driver of getProcessedList(filteredDrivers, 'drivers'); trackBy: trackById" class="ledger-row">
+            <!-- Driver Profile & Avatar -->
+            <td *ngIf="isColumnVisible('drivers', 'Driver')" class="driver-profile-cell">
+              <div class="driver-avatar-circle">
+                {{ getDriverInitials(driver.driverName) }}
+              </div>
+              <div class="driver-name-details">
+                <strong class="driver-name">{{ driver.driverName }}</strong>
+                <span class="driver-id-tag">ID: #{{ driver.id }}</span>
+              </div>
             </td>
-            <td *ngIf="isColumnVisible('drivers', 'Earnings')" style="font-weight:600; color:var(--accent-success, #10b981);">
-              ₹{{ getDriverStats(driver.id).earnings | number:'1.0-0' }}
+
+            <!-- Mobile Contact -->
+            <td *ngIf="isColumnVisible('drivers', 'Mobile Contact')">
+              <a [href]="'tel:' + driver.mobile" class="driver-phone-link" title="Call Driver">
+                <i class="bi bi-telephone-fill me-1 text-primary"></i>
+                <span class="font-mono">{{ driver.mobile }}</span>
+              </a>
             </td>
-            <td *ngIf="isColumnVisible('drivers', 'Actions')">
-              <button class="btn btn-outline btn-sm" style="margin-right: 5px; font-weight:700; font-size: 11.5px; padding: 4px 8px;" (click)="editDriver(driver)"><i class="bi bi-pencil me-1"></i>Edit</button>
-              <button class="btn btn-danger btn-sm" style="font-size: 11.5px; padding: 4px 8px;" *ngIf="canDelete()" (click)="deleteDriver(driver.id)">{{ 'btn.delete' | translate:currentLang }}</button>
+
+            <!-- Driving License -->
+            <td *ngIf="isColumnVisible('drivers', 'Driving License')">
+              <span class="badge badge-license font-mono" [class.badge-license-empty]="!driver.licenseNumber">
+                <i class="bi bi-shield-check me-1" [class.text-success]="driver.licenseNumber"></i>
+                {{ driver.licenseNumber || 'Not Provided' }}
+              </span>
+            </td>
+
+            <!-- Depot / Address -->
+            <td *ngIf="isColumnVisible('drivers', 'Base Depot / Address')" class="cell-truncate" [title]="driver.address">
+              <i class="bi bi-geo-alt me-1 text-muted"></i>
+              <span>{{ driver.address || '—' }}</span>
+            </td>
+
+            <!-- Lifetime Trips -->
+            <td *ngIf="isColumnVisible('drivers', 'Trips Logged')" class="text-center">
+              <span class="badge badge-trips font-mono">
+                <i class="bi bi-truck me-1"></i> {{ getDriverStats(driver.id).trips }}
+              </span>
+            </td>
+
+            <!-- Cumulative Earnings -->
+            <td *ngIf="isColumnVisible('drivers', 'Gross Earnings')" class="text-end font-mono">
+              <strong class="earnings-value">₹{{ getDriverStats(driver.id).earnings | number:'1.2-2' }}</strong>
+            </td>
+
+            <!-- Status -->
+            <td *ngIf="isColumnVisible('drivers', 'Status')" class="text-center">
+              <span class="status-badge" [ngClass]="getDriverStats(driver.id).trips > 0 ? 'status-active' : 'status-standby'">
+                <span class="status-dot"></span>
+                {{ getDriverStats(driver.id).trips > 0 ? 'Active Fleet' : 'Standby' }}
+              </span>
+            </td>
+
+            <!-- Row Actions -->
+            <td *ngIf="isColumnVisible('drivers', 'Actions')" class="table-action-col text-center col-actions">
+              <div class="row-actions-group">
+                <!-- Log Transport Trip Shortcut -->
+                <button type="button" 
+                        class="btn-row-action btn-trip" 
+                        (click)="goToTransports()" 
+                        title="Log Transport Trip with this Driver"
+                        aria-label="Log transport trip">
+                  <i class="bi bi-truck"></i>
+                </button>
+
+                <!-- Edit Profile -->
+                <button type="button" 
+                        class="btn-row-action btn-edit" 
+                        (click)="editDriver(driver)" 
+                        title="Edit Driver Credentials"
+                        aria-label="Edit driver">
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+
+                <!-- Delete Driver -->
+                <button type="button" 
+                        class="btn-row-action btn-delete" 
+                        *ngIf="canDelete()" 
+                        (click)="deleteDriver(driver.id)" 
+                        title="Remove Driver from Fleet"
+                        aria-label="Remove driver">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
-      <span style="font-size:13px; color:var(--text-secondary);">
-        Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['drivers'] || 0) }} of {{ tableFilteredCounts['drivers'] || 0 }} entries
-      </span>
-      <div style="display:flex; gap:8px;">
-        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
-          Previous
+
+    <!-- PAGINATION FOOTER -->
+    <div class="table-pagination no-print" *ngIf="!hasError && filteredDrivers.length > 0">
+      <div class="pagination-info-group">
+        <span class="pagination-info">
+          Showing {{ filteredDrivers.length === 0 ? 0 : (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, filteredDrivers.length) }} of {{ filteredDrivers.length }} driver entries
+        </span>
+        <div class="page-size-selector">
+          <label class="page-size-label">Per page:</label>
+          <select class="page-size-select" [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
+            <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="pagination-controls">
+        <button type="button" 
+                class="btn btn-secondary btn-sm btn-page" 
+                [disabled]="currentPage === 1" 
+                (click)="currentPage = currentPage - 1"
+                aria-label="Previous page">
+          <i class="bi bi-chevron-left me-1"></i> Previous
         </button>
-        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['drivers'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
-          Next
+        <span class="page-indicator">Page {{ currentPage }}</span>
+        <button type="button" 
+                class="btn btn-secondary btn-sm btn-page" 
+                [disabled]="currentPage * pageSize >= filteredDrivers.length" 
+                (click)="currentPage = currentPage + 1"
+                aria-label="Next page">
+          Next <i class="bi bi-chevron-right ms-1"></i>
         </button>
       </div>
     </div>
   </div>
-</div>
 
+  <!-- ── 6. SLIDE-OVER ENROLLMENT / EDIT DRAWER ─────────────────────── -->
+  <div class="drawer-backdrop" *ngIf="isFormDrawerOpen" (click)="closeFormDrawer()">
+    <div class="slide-drawer" (click)="$event.stopPropagation()">
+      <div class="drawer-header">
+        <div class="drawer-title-group">
+          <div class="drawer-icon-badge" [class.editing-badge]="isEditing()">
+            <i class="bi" [ngClass]="isEditing() ? 'bi-pencil-square' : 'bi-person-plus-fill'"></i>
+          </div>
+          <div>
+            <h3 class="drawer-title">{{ isEditing() ? 'Edit Driver Profile' : 'Enroll Commercial Driver' }}</h3>
+            <p class="drawer-subtitle">
+              {{ isEditing() ? 'Update commercial driving license & contact records' : 'Register haulage driver to fleet roster with RTO credentials' }}
+            </p>
+          </div>
+        </div>
+        <button type="button" class="btn-drawer-close" (click)="closeFormDrawer()" title="Close drawer" aria-label="Close drawer">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="drawer-content">
+        <form (submit)="saveDriver()" class="driver-form">
+          <!-- Full Driver Name -->
+          <div class="form-group">
+            <label class="field-label">
+              Driver Full Name <span class="required-star">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="bi bi-person input-leading-icon"></i>
+              <input type="text" 
+                     class="form-control" 
+                     [(ngModel)]="driverForm.driverName" 
+                     name="driverName" 
+                     placeholder="e.g. Sanjay B. Shinde" 
+                     required
+                     appAutoSelect>
+            </div>
+          </div>
+
+          <!-- Mobile Phone Number -->
+          <div class="form-group">
+            <label class="field-label">
+              Mobile Contact (+91) <span class="required-star">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="bi bi-telephone input-leading-icon"></i>
+              <input type="tel" 
+                     class="form-control font-mono" 
+                     [(ngModel)]="driverForm.mobile" 
+                     name="mobile" 
+                     placeholder="98XXXXXXXX" 
+                     maxlength="14"
+                     required>
+            </div>
+          </div>
+
+          <!-- Commercial Driving License Number -->
+          <div class="form-group">
+            <label class="field-label">
+              Commercial Driving License (DL) <span class="required-star">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="bi bi-card-text input-leading-icon"></i>
+              <input type="text" 
+                     class="form-control font-mono text-uppercase" 
+                     [(ngModel)]="driverForm.licenseNumber" 
+                     (input)="onLicenseInput()" 
+                     name="licenseNumber" 
+                     placeholder="MH-12-2018-0012345" 
+                     required>
+            </div>
+          </div>
+
+          <!-- Depot / Residential Address -->
+          <div class="form-group">
+            <label class="field-label">
+              Base Depot / Residential Address <span class="required-star">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="bi bi-geo-alt input-leading-icon"></i>
+              <textarea class="form-control address-textarea" 
+                        [(ngModel)]="driverForm.address" 
+                        name="address" 
+                        rows="3" 
+                        placeholder="Depot location, town, district..." 
+                        required></textarea>
+            </div>
+          </div>
+
+          <!-- Live Driver Verification Gauge -->
+          <div class="profile-gauge-box">
+            <div class="gauge-header">
+              <span class="gauge-title"><i class="bi bi-shield-check me-1 text-primary"></i>Compliance Status</span>
+              <span class="badge" [ngClass]="getProfileReadiness().tagClass">
+                {{ getProfileReadiness().label }}
+              </span>
+            </div>
+            <div class="gauge-caption">
+              Valid RTO commercial driving license is required before dispatching trucks.
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="drawer-footer">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="closeFormDrawer()">
+          Cancel
+        </button>
+        <button type="button" 
+                class="btn btn-primary btn-sm" 
+                [class.btn-amber]="isEditing()" 
+                (click)="saveDriver()">
+          <i class="bi" [ngClass]="isEditing() ? 'bi-check2-circle' : 'bi-person-plus-fill'"></i>
+          <span>{{ isEditing() ? 'Update Driver Profile' : 'Enroll Driver to Fleet' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -1,89 +1,404 @@
-<div class="grid-cols-3">
-  <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
-    <h3><i class="bi bi-receipt me-2"></i>{{ 'expense.title' | translate:currentLang }}</h3>
-    <form (submit)="saveExpense()">
-      <div class="form-group">
-        <label>{{ 'label.date' | translate:currentLang }}</label>
-        <input appAutoSelect type="date" [(ngModel)]="expenseForm.expenseDate" name="expDate" required>
-      </div>
-      <div class="form-group">
-        <label>{{ 'expense.category' | translate:currentLang }}</label>
-        <select [(ngModel)]="expenseForm.category" name="expCat" required>
-          <option value="Maintenance">Maintenance</option>
-          <option value="Office">Office</option>
-          <option value="Utilities">Utilities</option>
-          <option value="Labour">Labour</option>
-          <option value="Marketing">Marketing</option>
-          <option value="Miscellaneous">Miscellaneous</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>{{ 'expense.description' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="expenseForm.description" name="expDesc" required placeholder="What was the expense for?">
-      </div>
-      <div class="form-group">
-        <label>{{ 'label.amount' | translate:currentLang }}</label>
-        <input appAutoSelect type="number" step="0.01" [(ngModel)]="expenseForm.amount" name="expAmt" required>
-      </div>
-      <button type="submit" class="btn btn-success" style="width:100%">{{ 'btn.save' | translate:currentLang }}</button>
-    </form>
+<div class="expenses-module-container">
+
+  <!-- 1. BREADCRUMB BAR -->
+  <div class="expenses-breadcrumb-bar">
+    <div class="breadcrumb-trail">
+      <span class="breadcrumb-item">ERP</span>
+      <i class="bi bi-chevron-right breadcrumb-separator"></i>
+      <span class="breadcrumb-item">Financial Management</span>
+      <i class="bi bi-chevron-right breadcrumb-separator"></i>
+      <span class="breadcrumb-item active">Expenses Registry</span>
+    </div>
   </div>
-  <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
-    <h3>{{ 'expense.records_title' | translate:currentLang }}</h3>
-    
-    <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
-      <div class="column-visibility-dropdown" style="position:relative;">
-        <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('expenses')" style="padding: 6px 12px; font-size: 13px;">
-          <i class="bi bi-layout-three-columns me-1"></i>Columns
+
+  <!-- 2. ENTERPRISE HEADER -->
+  <div class="enterprise-header">
+    <div class="header-left">
+      <div class="header-icon-squircle expenses-squircle">
+        <i class="bi bi-receipt-cutoff"></i>
+      </div>
+      <div class="header-titles">
+        <h1 class="header-main-title">{{ 'expense.title' | translate:currentLang }}</h1>
+        <p class="header-subtitle">Operational expenditures, factory utilities, maintenance logs, and overhead tracking</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn btn-outline btn-sm" (click)="loadData(true)" [disabled]="isLoading" title="Refresh Expenses Registry">
+        <i class="bi bi-arrow-clockwise" [class.spin-animate]="isLoading"></i>
+        <span>Refresh</span>
+      </button>
+      <button type="button" class="btn btn-outline btn-sm" (click)="exportCSV()" [disabled]="expensesList.length === 0" title="Export Ledger as CSV">
+        <i class="bi bi-file-earmark-spreadsheet"></i>
+        <span>Export CSV</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. EXPENDITURE KPI SURFACE CARDS -->
+  <div class="expenses-kpi-grid">
+    <!-- KPI 1: Total Expenditure -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge kpi-rose">
+        <i class="bi bi-wallet2"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-label">Total Expenditure</span>
+        <span class="kpi-value text-rose">₹{{ totalExpenses | number:'1.2-2' }}</span>
+        <span class="kpi-meta">All-time recorded spend</span>
+      </div>
+    </div>
+
+    <!-- KPI 2: Current Month Burn -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge kpi-amber">
+        <i class="bi bi-calendar2-week-fill"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-label">Monthly Burn Rate</span>
+        <span class="kpi-value text-amber">₹{{ currentMonthBurn | number:'1.2-2' }}</span>
+        <span class="kpi-meta">Active billing cycle</span>
+      </div>
+    </div>
+
+    <!-- KPI 3: Top Cost Category -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge kpi-indigo">
+        <i class="bi bi-pie-chart-fill"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-label">Top Cost Category</span>
+        <span class="kpi-value text-indigo">{{ topCategoryInfo.name }}</span>
+        <span class="kpi-meta">
+          <span class="badge badge-info-subtle">{{ topCategoryInfo.percentage }}%</span>
+          <span> of total (₹{{ topCategoryInfo.amount | number:'1.0-0' }})</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- KPI 4: Total Expense Vouchers -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge kpi-slate">
+        <i class="bi bi-receipt"></i>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-label">Expense Vouchers</span>
+        <span class="kpi-value">{{ expensesList.length }}</span>
+        <span class="kpi-meta">Reconciled vouchers</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. NETWORK / API ERROR STATE -->
+  <app-empty-state *ngIf="hasError"
+                   variant="error"
+                   icon="bi-exclamation-triangle-fill"
+                   title="Unable to Load Expenses Registry"
+                   [description]="errorMessage || 'Failed to connect to the expense registry service. Please check your network and retry.'"
+                   actionLabel="Retry Connection"
+                   actionIcon="bi-arrow-clockwise"
+                   (action)="loadData(true)">
+  </app-empty-state>
+
+  <!-- 5. MAIN WORKSPACE (Form + Data Table) -->
+  <div class="expenses-workspace-grid" *ngIf="!hasError">
+
+    <!-- LEFT: Expense Entry / Edit Form -->
+    <div class="glass-panel expense-form-card" *ngIf="!isViewer()">
+      <div class="form-card-header">
+        <div class="form-title-group">
+          <div class="form-header-icon" [class.editing-pulse]="editingId">
+            <i class="bi" [ngClass]="editingId ? 'bi-pencil-square' : 'bi-plus-circle-fill'"></i>
+          </div>
+          <div>
+            <h3 class="form-title">{{ editingId ? 'Edit Expense Voucher' : 'Log Expense Voucher' }}</h3>
+            <p class="form-subtitle">{{ editingId ? 'Update existing expense allocation' : 'Log operational costs & overheads' }}</p>
+          </div>
+        </div>
+        <button *ngIf="editingId" type="button" class="btn btn-outline btn-sm btn-cancel-top" (click)="cancelEdit()" title="Cancel editing">
+          <i class="bi bi-x-lg"></i>
         </button>
-        <div class="dropdown-menu" *ngIf="showColDropdown['expenses']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
-          <label *ngFor="let col of getTableColumns('expenses')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-            <input appAutoSelect type="checkbox" [checked]="isColumnVisible('expenses', col)" (change)="toggleColumn('expenses', col)" style="width:auto; margin:0; cursor:pointer;">
-            {{col}}
-          </label>
+      </div>
+
+      <form (submit)="saveExpense()" class="expense-entry-form">
+        <!-- Date field -->
+        <div class="form-field-group">
+          <label class="form-label required">{{ 'label.date' | translate:currentLang }}</label>
+          <div class="input-with-icon">
+            <i class="bi bi-calendar3 input-lead-icon"></i>
+            <input appAutoSelect type="date" [(ngModel)]="expenseForm.expenseDate" name="expDate" class="form-control" required>
+          </div>
+        </div>
+
+        <!-- Category field -->
+        <div class="form-field-group">
+          <label class="form-label required">{{ 'expense.category' | translate:currentLang }}</label>
+          <div class="input-with-icon">
+            <i class="bi bi-tag input-lead-icon"></i>
+            <select [(ngModel)]="expenseForm.category" name="expCat" class="form-control form-select-custom" required>
+              <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Amount field -->
+        <div class="form-field-group">
+          <label class="form-label required">{{ 'label.amount' | translate:currentLang }}</label>
+          <div class="input-with-icon currency-input-group">
+            <span class="currency-symbol">₹</span>
+            <input appAutoSelect type="number" step="0.01" min="0.01" [(ngModel)]="expenseForm.amount" name="expAmt"
+                   class="form-control currency-control" placeholder="0.00" required>
+          </div>
+        </div>
+
+        <!-- Description field -->
+        <div class="form-field-group">
+          <label class="form-label required">{{ 'expense.description' | translate:currentLang }}</label>
+          <div class="input-with-icon">
+            <i class="bi bi-card-text input-lead-icon"></i>
+            <input appAutoSelect type="text" [(ngModel)]="expenseForm.description" name="expDesc"
+                   class="form-control" placeholder="e.g. Machine Oil Lubricant batch" required>
+          </div>
+        </div>
+
+        <!-- Paid By field -->
+        <div class="form-field-group">
+          <label class="form-label">{{ 'expense.paidBy' | translate:currentLang }}</label>
+          <div class="input-with-icon">
+            <i class="bi bi-person input-lead-icon"></i>
+            <input appAutoSelect type="text" [(ngModel)]="expenseForm.paidBy" name="expPaidBy"
+                   class="form-control" placeholder="Staff or department name">
+          </div>
+        </div>
+
+        <!-- Payment Mode (Segmented Pills) -->
+        <div class="form-field-group">
+          <label class="form-label">Payment Mode</label>
+          <div class="payment-mode-segmented">
+            <button *ngFor="let mode of paymentModes" type="button" class="mode-pill-btn"
+                    [class.active]="expenseForm.paymentMode === mode"
+                    (click)="expenseForm.paymentMode = mode">
+              {{ mode }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions-row">
+          <button type="submit" class="btn btn-primary btn-save" [class.btn-update]="editingId">
+            <i class="bi" [ngClass]="editingId ? 'bi-check2-circle' : 'bi-plus-lg'"></i>
+            <span>{{ editingId ? 'Update Voucher' : ('btn.save' | translate:currentLang) }}</span>
+          </button>
+          <button *ngIf="editingId" type="button" class="btn btn-secondary btn-cancel" (click)="cancelEdit()">
+            <i class="bi bi-x-circle me-1"></i>
+            <span>Cancel</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- RIGHT: Data Table Card -->
+    <div class="glass-panel expense-table-card" [class.full-width]="isViewer()">
+      
+      <!-- Table Header Bar -->
+      <div class="table-card-top-bar">
+        <div class="table-title-group">
+          <h3 class="table-card-title">{{ 'expense.records_title' | translate:currentLang }}</h3>
+          <span class="table-count-pill">{{ filteredList.length }} vouchers</span>
+        </div>
+
+        <!-- Category Filter Pills -->
+        <div class="category-filter-pills no-print">
+          <button type="button" class="pill-btn" [class.active]="selectedCategory === 'ALL'" (click)="setCategoryFilter('ALL')">
+            All ({{ expensesList.length }})
+          </button>
+          <button *ngFor="let cat of ['Maintenance', 'Utilities', 'Factory Overhead', 'Office & Admin']"
+                  type="button" class="pill-btn"
+                  [class.active]="selectedCategory === cat"
+                  (click)="setCategoryFilter(cat)">
+            {{ cat }} ({{ categoryCounts[cat] || 0 }})
+          </button>
         </div>
       </div>
-    </div>
-    <div class="table-container table-responsive">
-      <table class="table" appResizableTable tableId="expenses_table">
-        <thead>
-          <tr>
-            <th *ngIf="isColumnVisible('expenses', 'Date')" (click)="setSort('expenseDate')" style="cursor:pointer; min-width:110px;">{{ 'label.date' | translate:currentLang }} <span *ngIf="sortField === 'expenseDate'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-            <th *ngIf="isColumnVisible('expenses', 'Category')" (click)="setSort('category')" style="cursor:pointer; min-width:140px;">{{ 'expense.category' | translate:currentLang }} <span *ngIf="sortField === 'category'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-            <th *ngIf="isColumnVisible('expenses', 'Description')" style="min-width:180px;">{{ 'expense.description' | translate:currentLang }}</th>
-            <th *ngIf="isColumnVisible('expenses', 'Amount')" (click)="setSort('amount')" style="cursor:pointer; min-width:120px;">{{ 'label.amount' | translate:currentLang }} <span *ngIf="sortField === 'amount'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-            <th *ngIf="isColumnVisible('expenses', 'Paid By')" (click)="setSort('paidBy')" style="cursor:pointer; min-width:130px;">{{ 'expense.paidBy' | translate:currentLang }} <span *ngIf="sortField === 'paidBy'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-            <th *ngIf="isColumnVisible('expenses', 'Actions')" style="min-width:120px;">{{ 'label.actions' | translate:currentLang }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let e of getProcessedList(expensesList, 'expenses'); trackBy: trackById">
-            <td *ngIf="isColumnVisible('expenses', 'Date')"><span class="date-cell">{{ e.expenseDate | indianDate }}</span></td>
-            <td *ngIf="isColumnVisible('expenses', 'Category')"><span class="badge badge-info" style="font-weight:700;">{{ e.category }}</span></td>
-            <td *ngIf="isColumnVisible('expenses', 'Description')">{{ e.description }}</td>
-            <td *ngIf="isColumnVisible('expenses', 'Amount')"><strong style="color:var(--accent-red, #ef4444); font-size:13.5px;">₹{{ e.amount | number:'1.2-2' }}</strong></td>
-            <td *ngIf="isColumnVisible('expenses', 'Paid By')" style="font-weight:600;">{{ e.paidBy }}</td>
-            <td *ngIf="isColumnVisible('expenses', 'Actions')" style="display:flex; gap:6px;">
-              <button class="btn btn-secondary btn-sm" (click)="editExpense(e)"><i class="bi bi-pencil me-1"></i>Edit</button>
-              <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteExpense(e.id)">{{ 'btn.delete' | translate:currentLang }}</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
-      <span style="font-size:13px; color:var(--text-secondary);">
-        Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['expenses'] || 0) }} of {{ tableFilteredCounts['expenses'] || 0 }} entries
-      </span>
-      <div style="display:flex; gap:8px;">
-        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
-          Previous
-        </button>
-        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['expenses'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
-          Next
-        </button>
+
+      <!-- Smart Filter & Search Toolbar -->
+      <div class="table-unified-toolbar no-print">
+        <div class="toolbar-left-group">
+          <!-- Search input -->
+          <div class="toolbar-search-box">
+            <i class="bi bi-search search-lead-icon"></i>
+            <input type="text" [(ngModel)]="searchQuery" (input)="currentPage = 1"
+                   placeholder="Search purpose, payee, category..." class="toolbar-search-input">
+            <button *ngIf="searchQuery" type="button" class="search-clear-btn" (click)="searchQuery = ''; currentPage = 1" title="Clear search">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+
+          <!-- Category dropdown for mobile/narrow screens -->
+          <div class="toolbar-cat-select-wrap">
+            <select [(ngModel)]="selectedCategory" (change)="currentPage = 1" class="toolbar-select">
+              <option value="ALL">All Categories</option>
+              <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+            </select>
+          </div>
+
+          <!-- Date From -->
+          <div class="toolbar-date-field">
+            <label>From:</label>
+            <input type="date" [(ngModel)]="filterDateFrom" (change)="currentPage = 1" class="toolbar-date-input">
+          </div>
+
+          <!-- Date To -->
+          <div class="toolbar-date-field">
+            <label>To:</label>
+            <input type="date" [(ngModel)]="filterDateTo" (change)="currentPage = 1" class="toolbar-date-input">
+          </div>
+
+          <!-- Reset button -->
+          <button *ngIf="selectedCategory !== 'ALL' || searchQuery || filterDateFrom || filterDateTo"
+                  type="button" class="btn btn-outline btn-sm btn-clear-filters" (click)="resetFilters()" title="Reset all filters">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>
+            <span>Reset</span>
+          </button>
+        </div>
+
+        <div class="toolbar-right-group">
+          <!-- Table Density Segmented Toggle -->
+          <div class="density-toggle-group">
+            <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'"
+                    (click)="setTableDensity('compact')" title="Compact density">
+              <i class="bi bi-distribute-vertical"></i>
+            </button>
+            <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'"
+                    (click)="setTableDensity('comfortable')" title="Comfortable density">
+              <i class="bi bi-list"></i>
+            </button>
+            <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'"
+                    (click)="setTableDensity('spacious')" title="Spacious density">
+              <i class="bi bi-distribute-horizontal"></i>
+            </button>
+          </div>
+
+          <!-- Columns Visibility Dropdown -->
+          <div class="column-visibility-dropdown" style="position:relative;">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('expenses')">
+              <i class="bi bi-layout-three-columns me-1"></i>Columns
+            </button>
+            <div class="dropdown-menu-columns" *ngIf="showColDropdown['expenses']">
+              <label *ngFor="let col of getTableColumns('expenses')" class="col-checkbox-label">
+                <input type="checkbox" [checked]="isColumnVisible('expenses', col)" (change)="toggleColumn('expenses', col)">
+                <span>{{ col }}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Table -->
+      <div class="table-container table-responsive" *ngIf="filteredList.length > 0">
+        <table class="table expenses-data-table" [ngClass]="'density-' + tableDensity" appResizableTable [tableId]="'expenses_table'">
+          <thead>
+            <tr>
+              <th *ngIf="isColumnVisible('expenses', 'Date')" (click)="setSort('expenseDate')" class="sortable-th" style="min-width: 120px;">
+                <div class="th-content">
+                  <span>{{ 'label.date' | translate:currentLang }}</span>
+                  <i class="bi ms-1" [ngClass]="sortField === 'expenseDate' ? (sortAsc ? 'bi-chevron-up' : 'bi-chevron-down') : 'bi-arrow-down-up opacity-40'"></i>
+                </div>
+              </th>
+              <th *ngIf="isColumnVisible('expenses', 'Category')" (click)="setSort('category')" class="sortable-th" style="min-width: 140px;">
+                <div class="th-content">
+                  <span>{{ 'expense.category' | translate:currentLang }}</span>
+                  <i class="bi ms-1" [ngClass]="sortField === 'category' ? (sortAsc ? 'bi-chevron-up' : 'bi-chevron-down') : 'bi-arrow-down-up opacity-40'"></i>
+                </div>
+              </th>
+              <th *ngIf="isColumnVisible('expenses', 'Description')" style="min-width: 180px;">
+                <span>{{ 'expense.description' | translate:currentLang }}</span>
+              </th>
+              <th *ngIf="isColumnVisible('expenses', 'Amount')" (click)="setSort('amount')" class="sortable-th amount-th" style="min-width: 130px; text-align: right;">
+                <div class="th-content justify-content-end">
+                  <span>{{ 'label.amount' | translate:currentLang }}</span>
+                  <i class="bi ms-1" [ngClass]="sortField === 'amount' ? (sortAsc ? 'bi-chevron-up' : 'bi-chevron-down') : 'bi-arrow-down-up opacity-40'"></i>
+                </div>
+              </th>
+              <th *ngIf="isColumnVisible('expenses', 'Paid By')" (click)="setSort('paidBy')" class="sortable-th" style="min-width: 130px;">
+                <div class="th-content">
+                  <span>{{ 'expense.paidBy' | translate:currentLang }}</span>
+                  <i class="bi ms-1" [ngClass]="sortField === 'paidBy' ? (sortAsc ? 'bi-chevron-up' : 'bi-chevron-down') : 'bi-arrow-down-up opacity-40'"></i>
+                </div>
+              </th>
+              <th *ngIf="isColumnVisible('expenses', 'Mode')" style="min-width: 100px;">
+                <span>Mode</span>
+              </th>
+              <th *ngIf="isColumnVisible('expenses', 'Actions')" class="text-end" style="min-width: 100px;">
+                <span>{{ 'label.actions' | translate:currentLang }}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let e of paginatedList; trackBy: trackById" class="expense-row">
+              <td *ngIf="isColumnVisible('expenses', 'Date')">
+                <span class="date-cell">{{ e.expenseDate | indianDate }}</span>
+              </td>
+              <td *ngIf="isColumnVisible('expenses', 'Category')">
+                <span class="cat-pill" [ngClass]="getCategoryBadgeClass(e.category)">
+                  {{ e.category }}
+                </span>
+              </td>
+              <td *ngIf="isColumnVisible('expenses', 'Description')">
+                <div class="desc-cell" [title]="e.description">{{ e.description }}</div>
+              </td>
+              <td *ngIf="isColumnVisible('expenses', 'Amount')" class="text-end font-tabular">
+                <strong class="text-rose">₹{{ e.amount | number:'1.2-2' }}</strong>
+              </td>
+              <td *ngIf="isColumnVisible('expenses', 'Paid By')">
+                <span class="payer-badge">{{ e.paidBy || '—' }}</span>
+              </td>
+              <td *ngIf="isColumnVisible('expenses', 'Mode')">
+                <span class="mode-badge">{{ e.paymentMode || 'Cash' }}</span>
+              </td>
+              <td *ngIf="isColumnVisible('expenses', 'Actions')" class="text-end">
+                <div class="row-actions-group">
+                  <button type="button" class="btn-action-icon edit-btn" (click)="editExpense(e)" title="Edit Voucher">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button *ngIf="canDelete()" type="button" class="btn-action-icon delete-btn" (click)="deleteExpense(e.id)" title="Delete Voucher">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty Search State -->
+      <app-empty-state *ngIf="filteredList.length === 0"
+                       variant="search"
+                       icon="bi-search"
+                       title="No Expense Vouchers Found"
+                       description="No records match your selected cost category, date range, or search criteria."
+                       actionLabel="Clear Filters"
+                       actionIcon="bi-arrow-counterclockwise"
+                       [compact]="true"
+                       (action)="resetFilters()">
+      </app-empty-state>
+
+      <!-- Table Pagination Footer -->
+      <div class="table-pagination no-print" *ngIf="filteredList.length > 0">
+        <span class="pagination-info">
+          Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, filteredList.length) }} of {{ filteredList.length }} entries
+        </span>
+        <div class="pagination-controls">
+          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1"
+                  (click)="currentPage = currentPage - 1">
+            <i class="bi bi-chevron-left me-1"></i>Previous
+          </button>
+          <span class="pagination-page-indicator">Page {{ currentPage }} of {{ totalPages }}</span>
+          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage >= totalPages"
+                  (click)="currentPage = currentPage + 1">
+            Next<i class="bi bi-chevron-right ms-1"></i>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </div>
-

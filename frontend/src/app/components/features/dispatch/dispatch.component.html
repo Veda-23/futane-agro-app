@@ -1,134 +1,505 @@
-<div class="enterprise-header">
-  <div class="enterprise-header-title-group">
-    <div class="enterprise-header-icon"><i class="bi bi-truck"></i></div>
-    <div class="enterprise-header-text">
-      <h2>Logistics & Dispatch</h2>
-      <p>Logistics tracking, vehicle assignments, challan records, and gate passes</p>
-    </div>
-  </div>
-</div>
-
-<div class="grid-cols-3">
-  <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-      <h3 style="margin:0; font-weight:700;"><i class="bi bi-box-arrow-up-right me-2"></i>{{ 'dispatch.title' | translate:currentLang }}</h3>
-      <button type="button" class="btn btn-secondary btn-sm" (click)="openScanner()" style="font-size:11px; display:inline-flex; align-items:center; gap:4px;">
-        <i class="bi bi-qr-code-scan me-1"></i>Scan QR
-      </button>
-    </div>
-    <form (submit)="saveDispatch()">
-      <div class="form-group">
-        <label>{{ 'label.select_sale' | translate:currentLang }}</label>
-        <select [(ngModel)]="dispatchForm.id" name="dSale" required>
-          <option value="">-- Select Sale --</option>
-          <option *ngFor="let s of availableSalesForDispatch" [value]="s.id">{{ s.party?.partyName || s.partyName || 'Sale #' + s.id }} - {{ s.crateType }} ({{ s.date }})</option>
-        </select>
-        <small *ngIf="availableSalesForDispatch.length === 0" style="color:var(--accent-warning); font-size: 11px; display: block; margin-top: 4px;">
-          <i class="bi bi-info-circle me-1"></i>All sales have been dispatched already.
-        </small>
-      </div>
-      <div class="form-group">
-        <label>{{ 'dispatch.date' | translate:currentLang }}</label>
-        <input appAutoSelect type="date" [(ngModel)]="dispatchForm.dispatchDate" name="dDate" required>
-      </div>
-      <div class="form-group">
-        <label>{{ 'dispatch.vehicle' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="dispatchForm.vehicleNumber" name="dVehicle" required placeholder="MH-12-AB-1234">
-      </div>
-      <div class="form-group">
-        <label>{{ 'dispatch.driver' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="dispatchForm.driverName" name="dDriver" required placeholder="Driver full name">
-      </div>
-      <div class="form-group">
-        <label>{{ 'dispatch.address' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="dispatchForm.deliveryAddress" name="dAddress" required placeholder="Full delivery address">
-      </div>
-      <div class="form-group">
-        <label>{{ 'dispatch.status' | translate:currentLang }}</label>
-        <select [(ngModel)]="dispatchForm.dispatchStatus" name="dStatus" required>
-          <option value="Pending">Pending</option>
-          <option value="In Transit">In Transit</option>
-          <option value="Delivered">Delivered</option>
-        </select>
-      </div>
-      <button type="submit" class="btn btn-success" style="width:100%">{{ 'dispatch.save_btn' | translate:currentLang }}</button>
-    </form>
-  </div>
-  <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
-    <h3>{{ 'dispatch.records_title' | translate:currentLang }}</h3>
-    
-    <!-- Skeleton Loader (A-01) -->
-    <div *ngIf="isLoading" class="skeleton-container" aria-busy="true" aria-label="Loading dispatch data...">
-      <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5,6]"></div>
-    </div>
-
-    <!-- Error State -->
-    <div *ngIf="!isLoading && hasError" class="empty-state" style="padding:40px; text-align:center;">
-      <div style="margin-bottom:12px;"><i class="bi bi-exclamation-triangle text-danger" style="font-size:48px;"></i></div>
-      <h3 style="color: var(--text-primary);">Failed to Load Dispatch Data</h3>
-      <p style="color: var(--text-secondary); margin-bottom:16px;">Could not connect to the server. Please check your connection.</p>
-      <button class="btn btn-primary" (click)="loadData()"><i class="bi bi-arrow-repeat me-1"></i>Retry</button>
-    </div>
-
-    <div *ngIf="!isLoading && !hasError">
-      <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
-      <div class="column-visibility-dropdown" style="position:relative;">
-        <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('dispatch')" style="padding: 6px 12px; font-size: 13px;">
-          <i class="bi bi-layout-three-columns me-1"></i>Columns
-        </button>
-        <div class="dropdown-menu" *ngIf="showColDropdown['dispatch']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
-          <label *ngFor="let col of getTableColumns('dispatch')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-            <input appAutoSelect type="checkbox" [checked]="isColumnVisible('dispatch', col)" (change)="toggleColumn('dispatch', col)" style="width:auto; margin:0; cursor:pointer;">
-            {{col}}
-          </label>
+<div class="dispatch-module-container animated-fade">
+  <!-- 1. Breadcrumbs & Telemetry Header -->
+  <header class="module-header-telemetry no-print">
+    <div class="header-title-group">
+      <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+        <ol class="breadcrumb-list">
+          <li class="breadcrumb-item">SUPPLY CHAIN</li>
+          <li class="breadcrumb-separator"><i class="bi bi-chevron-right"></i></li>
+          <li class="breadcrumb-item active">LOGISTICS &amp; DISPATCH</li>
+        </ol>
+      </nav>
+      <div class="title-with-badge">
+        <div class="header-squircle-icon">
+          <i class="bi bi-truck"></i>
+        </div>
+        <div>
+          <h1 class="page-title">Logistics &amp; Dispatch Registry</h1>
+          <p class="page-subtitle">Outbound finished goods consignments, delivery tracking, vehicle manifests, and QR verification.</p>
         </div>
       </div>
     </div>
-    <div class="table-container table-responsive">
-      <table class="table" appResizableTable tableId="dispatch_table">
-        <thead>
-          <tr>
-            <th *ngIf="isColumnVisible('dispatch', 'Sale')" (click)="setSort('sale.party.partyName')" style="cursor:pointer; min-width:180px;">Sale <span *ngIf="sortField === 'sale.party.partyName'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-            <th *ngIf="isColumnVisible('dispatch', 'Date')" (click)="setSort('dispatchDate')" style="cursor:pointer; min-width:110px;">{{ 'dispatch.date' | translate:currentLang }} <span *ngIf="sortField === 'dispatchDate'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-            <th *ngIf="isColumnVisible('dispatch', 'Vehicle')" (click)="setSort('vehicleNumber')" style="cursor:pointer; min-width:140px;">{{ 'dispatch.vehicle' | translate:currentLang }} <span *ngIf="sortField === 'vehicleNumber'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-            <th *ngIf="isColumnVisible('dispatch', 'Driver')" (click)="setSort('driverName')" style="cursor:pointer; min-width:140px;">{{ 'dispatch.driver' | translate:currentLang }} <span *ngIf="sortField === 'driverName'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-            <th *ngIf="isColumnVisible('dispatch', 'Status')" (click)="setSort('dispatchStatus')" style="cursor:pointer; min-width:120px;">{{ 'dispatch.status' | translate:currentLang }} <span *ngIf="sortField === 'dispatchStatus'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-            <th *ngIf="isColumnVisible('dispatch', 'Actions')" style="min-width:120px;">{{ 'label.actions' | translate:currentLang }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let d of getProcessedList(dispatchesList, 'dispatch'); trackBy: trackById">
-            <td *ngIf="isColumnVisible('dispatch', 'Sale')" style="font-weight:700;">{{ d.sale?.party?.partyName || 'Customer' }} - <small style="color:var(--text-secondary);">{{ d.sale?.crateType }}</small></td>
-            <td *ngIf="isColumnVisible('dispatch', 'Date')"><span class="date-cell">{{ d.dispatchDate | indianDate }}</span></td>
-            <td *ngIf="isColumnVisible('dispatch', 'Vehicle')"><code>{{ d.vehicleNumber }}</code></td>
-            <td *ngIf="isColumnVisible('dispatch', 'Driver')">{{ d.driverName }}</td>
-            <td *ngIf="isColumnVisible('dispatch', 'Status')">
-              <span class="badge" [class.badge-info]="d.dispatchStatus === 'Pending'" [class.badge-warning]="d.dispatchStatus === 'In Transit'" [class.badge-success]="d.dispatchStatus === 'Delivered'">{{ d.dispatchStatus }}</span>
-            </td>
-            <td *ngIf="isColumnVisible('dispatch', 'Actions')" style="display:flex; gap:6px;">
-              <button class="btn btn-secondary btn-sm" (click)="editDispatch(d)"><i class="bi bi-pencil me-1"></i>Edit</button>
-              <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteDispatch(d.id)">{{ 'btn.delete' | translate:currentLang }}</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+
+    <div class="header-actions">
+      <div class="telemetry-pill">
+        <span class="telemetry-dot pulse"></span>
+        <span class="telemetry-text">TOTAL MANIFESTS: {{ totalDispatchesCount }} &bull; IN TRANSIT: {{ inTransitDispatchesCount }} &bull; DELIVERED: {{ deliveredDispatchesCount }}</span>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" (click)="openScanner()" title="Scan QR Code / Barcode">
+        <i class="bi bi-qr-code-scan me-1 text-primary"></i>
+        <span>Scan QR</span>
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" (click)="loadData()" [disabled]="isLoading" title="Refresh dispatch records">
+        <i class="bi bi-arrow-clockwise me-1" [class.spin-anim]="isLoading"></i>
+        <span>Refresh</span>
+      </button>
     </div>
-    <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
-      <span style="font-size:13px; color:var(--text-secondary);">
-        Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['dispatch'] || 0) }} of {{ tableFilteredCounts['dispatch'] || 0 }} entries
-      </span>
-      <div style="display:flex; gap:8px;">
-        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
-          Previous
+  </header>
+
+  <!-- 2. 4-Column Responsive KPI Telemetry Cards -->
+  <section class="telemetry-kpi-grid">
+    <!-- KPI 1: Total Consignments -->
+    <div class="kpi-card glass-panel" (click)="statusFilter = 'ALL'">
+      <div class="kpi-header">
+        <span class="kpi-title">Total Dispatches</span>
+        <div class="kpi-icon-squircle icon-blue">
+          <i class="bi bi-box-seam-fill"></i>
+        </div>
+      </div>
+      <div class="kpi-body">
+        <h3 class="kpi-value">{{ totalDispatchesCount }}</h3>
+        <span class="kpi-trend trend-neutral">
+          <i class="bi bi-receipt me-1"></i> Recorded Manifests
+        </span>
+      </div>
+      <div class="kpi-footer">
+        <span class="kpi-subtext">All logged shipments</span>
+      </div>
+    </div>
+
+    <!-- KPI 2: In Transit -->
+    <div class="kpi-card glass-panel" (click)="statusFilter = 'In Transit'">
+      <div class="kpi-header">
+        <span class="kpi-title">In Transit</span>
+        <div class="kpi-icon-squircle icon-cyan">
+          <i class="bi bi-truck"></i>
+        </div>
+      </div>
+      <div class="kpi-body">
+        <h3 class="kpi-value text-info">{{ inTransitDispatchesCount }}</h3>
+        <span class="kpi-trend trend-positive">
+          <i class="bi bi-geo-alt-fill me-1"></i> Active On Route
+        </span>
+      </div>
+      <div class="kpi-footer">
+        <span class="kpi-subtext">En route to consignees</span>
+      </div>
+    </div>
+
+    <!-- KPI 3: Delivered -->
+    <div class="kpi-card glass-panel" (click)="statusFilter = 'Delivered'">
+      <div class="kpi-header">
+        <span class="kpi-title">Delivered Consignments</span>
+        <div class="kpi-icon-squircle icon-emerald">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+      </div>
+      <div class="kpi-body">
+        <h3 class="kpi-value text-success">{{ deliveredDispatchesCount }}</h3>
+        <span class="kpi-trend trend-positive">
+          <i class="bi bi-patch-check-fill me-1"></i> Fulfilled Orders
+        </span>
+      </div>
+      <div class="kpi-footer">
+        <span class="kpi-subtext">Gate entry verified</span>
+      </div>
+    </div>
+
+    <!-- KPI 4: Pending Clearance -->
+    <div class="kpi-card glass-panel" (click)="statusFilter = 'Pending'">
+      <div class="kpi-header">
+        <span class="kpi-title">Pending Staging</span>
+        <div class="kpi-icon-squircle icon-amber">
+          <i class="bi bi-clock-history"></i>
+        </div>
+      </div>
+      <div class="kpi-body">
+        <h3 class="kpi-value" [class.text-warning]="pendingDispatchesCount > 0">{{ pendingDispatchesCount }}</h3>
+        <span class="kpi-trend" [class.trend-negative]="pendingDispatchesCount > 0" [class.trend-neutral]="pendingDispatchesCount === 0">
+          <i class="bi bi-hourglass-split me-1"></i> Awaiting Vehicle
+        </span>
+      </div>
+      <div class="kpi-footer">
+        <span class="kpi-subtext">Dock staging area</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Unified Control & Filter Bar -->
+  <section class="unified-control-bar glass-panel no-print">
+    <div class="control-left-group">
+      <!-- Live Search -->
+      <div class="search-input-wrapper">
+        <i class="bi bi-search search-icon"></i>
+        <input
+          type="text"
+          class="table-search-input"
+          [(ngModel)]="searchQuery"
+          (input)="currentPage = 1"
+          placeholder="Search by vehicle, driver, customer, manifest ID..."
+        />
+        <button *ngIf="searchQuery" class="clear-search-btn" (click)="searchQuery = ''; currentPage = 1" title="Clear search">
+          <i class="bi bi-x-circle-fill"></i>
         </button>
-        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['dispatch'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
-          Next
+      </div>
+
+      <!-- Status Filter Pills -->
+      <div class="status-filter-pills">
+        <button type="button" class="status-pill-btn" [class.active]="statusFilter === 'ALL'" (click)="setStatusFilter('ALL')">
+          All ({{ totalDispatchesCount }})
+        </button>
+        <button type="button" class="status-pill-btn" [class.active]="statusFilter === 'In Transit'" (click)="setStatusFilter('In Transit')">
+          In Transit ({{ inTransitDispatchesCount }})
+        </button>
+        <button type="button" class="status-pill-btn" [class.active]="statusFilter === 'Delivered'" (click)="setStatusFilter('Delivered')">
+          Delivered ({{ deliveredDispatchesCount }})
+        </button>
+        <button type="button" class="status-pill-btn" [class.active]="statusFilter === 'Pending'" (click)="setStatusFilter('Pending')">
+          Pending ({{ pendingDispatchesCount }})
         </button>
       </div>
     </div>
-  </div>
+
+    <div class="control-right-group">
+      <!-- Density Toggle -->
+      <div class="density-switch-group">
+        <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact density">
+          <i class="bi bi-distribute-vertical"></i> Compact
+        </button>
+        <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="setDensity('comfortable')" title="Comfortable density">
+          <i class="bi bi-list-ul"></i> Normal
+        </button>
+        <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious density">
+          <i class="bi bi-grid-3x2-gap"></i> Spacious
+        </button>
+      </div>
+
+      <!-- Column Visibility Dropdown -->
+      <div class="col-manager-dropdown-wrapper">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown(); $event.stopPropagation()">
+          <i class="bi bi-layout-three-columns me-1"></i> Columns
+        </button>
+        <div class="col-manager-popover" *ngIf="showColDropdown" (click)="$event.stopPropagation()">
+          <div class="popover-header">
+            <strong>Visible Columns</strong>
+            <button type="button" class="btn-text" (click)="resetColumns()">Reset</button>
+          </div>
+          <div class="popover-body">
+            <div class="col-item-row" *ngFor="let col of defaultCols">
+              <label class="col-check-label">
+                <input type="checkbox" [checked]="isColumnVisible(col)" (change)="toggleColumn(col)" />
+                <span>{{ col }}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Consolidated Export Dropdown -->
+      <div class="export-dropdown-wrapper">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="toggleExportMenu(); $event.stopPropagation()" title="Export registry">
+          <i class="bi bi-download me-1"></i> Export &#x25BE;
+        </button>
+        <div class="export-menu" *ngIf="showExportMenu" (click)="$event.stopPropagation()">
+          <button type="button" class="export-menu-item" (click)="exportData('csv')">
+            <i class="bi bi-filetype-csv me-2 text-primary"></i> Export CSV (.csv)
+          </button>
+          <button type="button" class="export-menu-item" (click)="exportData('excel')">
+            <i class="bi bi-file-earmark-excel me-2 text-success"></i> Export Excel (.csv)
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Main Two-Column Layout -->
+  <div class="feature-main-grid">
+    <!-- LEFT PANEL: Sticky Manifest Registration Form -->
+    <aside class="feature-form-panel glass-panel" [class.editing-mode]="editingDispatchId" *ngIf="!isViewer()">
+      <div class="panel-header">
+        <div class="panel-title-badge">
+          <span class="badge-icon-sm icon-blue"><i class="bi bi-box-arrow-up-right"></i></span>
+          <div>
+            <h3 class="panel-title">{{ editingDispatchId ? 'Edit Dispatch Manifest' : 'Create Dispatch Manifest' }}</h3>
+            <p class="panel-subtitle">Vehicle registration, driver assignment &amp; consignment notes</p>
+          </div>
+        </div>
+        <span *ngIf="editingDispatchId" class="editing-indicator-pill">EDITING</span>
+      </div>
+
+      <form (ngSubmit)="saveDispatch()" class="modern-feature-form">
+        <!-- Select Sale Order -->
+        <div class="form-group">
+          <div class="label-with-action">
+            <label class="form-label">
+              Customer Sales Order <span class="required-star">*</span>
+            </label>
+            <button type="button" class="quick-qr-link" (click)="openScanner()" title="Scan QR Code to identify sale">
+              <i class="bi bi-qr-code me-1"></i>Scan QR
+            </button>
+          </div>
+          <select class="form-select" [(ngModel)]="dispatchForm.saleId" name="dSale" (change)="onSaleSelected()" required>
+            <option value="" disabled>-- Select Sales Order --</option>
+            <option *ngFor="let s of availableSales" [value]="s.id">
+              {{ s.party?.partyName || s.partyName || 'Customer #' + s.id }} &bull; {{ s.crateType }} ({{ s.date || s.saleDate }})
+            </option>
+          </select>
+          <small *ngIf="availableSales.length === 0 && !editingDispatchId" class="form-hint text-warning">
+            <i class="bi bi-info-circle me-1"></i>All current sales orders have already been dispatched.
+          </small>
+        </div>
+
+        <div class="form-row-2col">
+          <!-- Dispatch Date -->
+          <div class="form-group">
+            <label class="form-label">Dispatch Date <span class="required-star">*</span></label>
+            <div class="input-with-icon">
+              <i class="bi bi-calendar3 input-icon"></i>
+              <input
+                type="date"
+                class="form-control"
+                [(ngModel)]="dispatchForm.dispatchDate"
+                name="dDate"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- Vehicle Number -->
+          <div class="form-group">
+            <label class="form-label">Vehicle Registration <span class="required-star">*</span></label>
+            <div class="input-with-icon">
+              <i class="bi bi-truck input-icon"></i>
+              <input
+                appAutoSelect
+                type="text"
+                class="form-control text-uppercase"
+                [(ngModel)]="dispatchForm.vehicleNumber"
+                name="dVehicle"
+                required
+                placeholder="MH-12-RN-4819"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Driver Name -->
+        <div class="form-group">
+          <label class="form-label">Assigned Driver <span class="required-star">*</span></label>
+          <div class="input-with-icon">
+            <i class="bi bi-person-badge input-icon"></i>
+            <input
+              appAutoSelect
+              type="text"
+              class="form-control"
+              [(ngModel)]="dispatchForm.driverName"
+              name="dDriver"
+              required
+              placeholder="Driver full name"
+            />
+          </div>
+        </div>
+
+        <!-- Destination Address -->
+        <div class="form-group">
+          <label class="form-label">Delivery Destination <span class="required-star">*</span></label>
+          <textarea
+            appAutoSelect
+            class="form-control"
+            [(ngModel)]="dispatchForm.deliveryAddress"
+            name="dAddress"
+            rows="2"
+            required
+            placeholder="Consignee destination address & depot"
+          ></textarea>
+        </div>
+
+        <!-- Status -->
+        <div class="form-group">
+          <label class="form-label">Consignment Status</label>
+          <select class="form-select" [(ngModel)]="dispatchForm.dispatchStatus" name="dStatus">
+            <option value="Pending">Pending (Staged for Loading)</option>
+            <option value="In Transit">In Transit (Dispatched / On Route)</option>
+            <option value="Delivered">Delivered (Gate Entry Verified)</option>
+          </select>
+        </div>
+
+        <!-- Live Consignment Preview Card -->
+        <div *ngIf="selectedSaleDetails" class="live-calculation-card animate-fade-in">
+          <div class="calc-row">
+            <span class="calc-label"><i class="bi bi-box-seam me-1 text-primary"></i>Consignment Payload:</span>
+            <strong class="calc-value text-primary font-mono">
+              {{ selectedSaleDetails.quantity || selectedSaleDetails.cratesCount || 100 }} crates
+            </strong>
+          </div>
+          <div class="calc-sub">
+            Party: <strong>{{ selectedSaleDetails.party?.partyName || 'Customer' }}</strong> &bull; {{ selectedSaleDetails.crateType }}
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary btn-block">
+            <i class="bi bi-check2-circle me-1"></i>
+            {{ editingDispatchId ? 'Update Manifest Record' : 'Create Dispatch Manifest' }}
+          </button>
+          <button *ngIf="editingDispatchId" type="button" class="btn btn-secondary btn-block" (click)="cancelEditDispatch()">
+            <i class="bi bi-x-lg me-1"></i> Cancel Edit
+          </button>
+        </div>
+      </form>
+    </aside>
+
+    <!-- RIGHT PANEL: Data Ledger Table Card -->
+    <main class="feature-table-panel glass-panel" [class.full-width]="isViewer()">
+      <!-- Bulk Action Bar -->
+      <div *ngIf="selectedRowIds.size > 0" class="bulk-action-bar no-print">
+        <span class="bulk-count-pill">
+          <i class="bi bi-check-circle-fill me-1"></i>
+          {{ selectedRowIds.size }} manifest(s) selected
+        </span>
+        <div class="bulk-actions-group">
+          <button type="button" class="btn btn-primary btn-sm" (click)="exportData('csv')">
+            <i class="bi bi-download me-1"></i> Export Selected
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="clearSelection()">
+            <i class="bi bi-x-lg me-1"></i> Clear
+          </button>
+        </div>
+      </div>
+
+      <div class="table-content-wrap">
+        <div class="table-container" [class.table-compact]="tableDensity === 'compact'" [class.table-spacious]="tableDensity === 'spacious'">
+          <table class="table enterprise-table" appResizableTable tableId="dispatch_registry_table">
+            <thead>
+              <tr>
+                <th style="width: 40px; text-align: center;">
+                  <input
+                    type="checkbox"
+                    class="enterprise-row-checkbox"
+                    [checked]="isAllSelected"
+                    (change)="toggleSelectAll($any($event.target).checked)"
+                  />
+                </th>
+                <th *ngIf="isColumnVisible('Manifest ID')" (click)="setSort('id')" style="cursor: pointer; min-width: 100px;">
+                  Manifest # <span *ngIf="sortField === 'id'">{{ sortAsc ? '↑' : '↓' }}</span>
+                </th>
+                <th *ngIf="isColumnVisible('Consignee & Order')" (click)="setSort('sale.party.partyName')" style="cursor: pointer; min-width: 200px;">
+                  Consignee &amp; Order <span *ngIf="sortField === 'sale.party.partyName'">{{ sortAsc ? '↑' : '↓' }}</span>
+                </th>
+                <th *ngIf="isColumnVisible('Date')" (click)="setSort('dispatchDate')" style="cursor: pointer; min-width: 110px;">
+                  Date <span *ngIf="sortField === 'dispatchDate'">{{ sortAsc ? '↑' : '↓' }}</span>
+                </th>
+                <th *ngIf="isColumnVisible('Vehicle')" (click)="setSort('vehicleNumber')" style="cursor: pointer; min-width: 130px;">
+                  Vehicle # <span *ngIf="sortField === 'vehicleNumber'">{{ sortAsc ? '↑' : '↓' }}</span>
+                </th>
+                <th *ngIf="isColumnVisible('Driver')" (click)="setSort('driverName')" style="cursor: pointer; min-width: 140px;">
+                  Assigned Driver <span *ngIf="sortField === 'driverName'">{{ sortAsc ? '↑' : '↓' }}</span>
+                </th>
+                <th *ngIf="isColumnVisible('Destination')" style="min-width: 180px;">
+                  Destination
+                </th>
+                <th *ngIf="isColumnVisible('Status')" (click)="setSort('dispatchStatus')" style="cursor: pointer; min-width: 120px;">
+                  Status <span *ngIf="sortField === 'dispatchStatus'">{{ sortAsc ? '↑' : '↓' }}</span>
+                </th>
+                <th *ngIf="isColumnVisible('Actions')" class="table-action-col text-end" style="min-width: 110px;">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let d of paginatedDispatches; trackBy: trackById" [class.row-selected]="isRowSelected(d.id)">
+                <td style="text-align: center;">
+                  <input
+                    type="checkbox"
+                    class="enterprise-row-checkbox"
+                    [checked]="isRowSelected(d.id)"
+                    (change)="toggleSelectRow(d.id, $any($event.target).checked)"
+                  />
+                </td>
+                <td *ngIf="isColumnVisible('Manifest ID')">
+                  <span class="badge badge-secondary font-mono">DSP-{{ (d.id+'').padStart(3, '0') }}</span>
+                </td>
+                <td *ngIf="isColumnVisible('Consignee & Order')">
+                  <div class="entity-name-cell">
+                    <span class="entity-primary">{{ d.sale?.party?.partyName || d.sale?.partyName || 'Customer #' + (d.sale?.id || d.saleId || '—') }}</span>
+                    <span class="entity-secondary font-mono">{{ d.sale?.crateType || 'Standard Crate' }}</span>
+                  </div>
+                </td>
+                <td *ngIf="isColumnVisible('Date')" class="date-cell font-mono">
+                  {{ (d.dispatchDate || d.date) ? ((d.dispatchDate || d.date) | indianDate) : '—' }}
+                </td>
+                <td *ngIf="isColumnVisible('Vehicle')">
+                  <span class="badge badge-secondary font-mono">{{ d.vehicleNumber }}</span>
+                </td>
+                <td *ngIf="isColumnVisible('Driver')">
+                  <div class="driver-cell">
+                    <i class="bi bi-person-fill text-muted me-1"></i>
+                    <span>{{ d.driverName }}</span>
+                  </div>
+                </td>
+                <td *ngIf="isColumnVisible('Destination')" class="cell-truncate" [title]="d.deliveryAddress">
+                  <span class="desc-text">{{ d.deliveryAddress || '—' }}</span>
+                </td>
+                <td *ngIf="isColumnVisible('Status')">
+                  <span class="status-badge"
+                    [class.status-running]="(d.dispatchStatus || d.status || '').toLowerCase() === 'delivered'"
+                    [class.status-transit]="(d.dispatchStatus || d.status || '').toLowerCase() === 'in transit'"
+                    [class.status-idle]="!(d.dispatchStatus || d.status) || (d.dispatchStatus || d.status || '').toLowerCase() === 'pending'">
+                    <i class="bi bi-truck me-1" *ngIf="(d.dispatchStatus || d.status || '').toLowerCase() === 'in transit'"></i>
+                    <i class="bi bi-check2-circle me-1" *ngIf="(d.dispatchStatus || d.status || '').toLowerCase() === 'delivered'"></i>
+                    <i class="bi bi-clock me-1" *ngIf="!(d.dispatchStatus || d.status) || (d.dispatchStatus || d.status || '').toLowerCase() === 'pending'"></i>
+                    {{ d.dispatchStatus || d.status || 'Pending' }}
+                  </span>
+                </td>
+                <td *ngIf="isColumnVisible('Actions')" class="table-action-col text-end">
+                  <div class="row-actions-group">
+                    <button type="button" class="btn-row-action btn-edit" (click)="editDispatch(d)" title="Edit dispatch manifest">
+                      <i class="bi bi-pencil-square me-1"></i> Edit
+                    </button>
+                    <button *ngIf="canDelete()" type="button" class="btn-row-action btn-delete" (click)="deleteDispatch(d.id)" title="Delete manifest">
+                      <i class="bi bi-trash3"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty State for Dispatches -->
+        <app-empty-state
+          *ngIf="paginatedDispatches.length === 0"
+          icon="bi-truck"
+          [title]="searchQuery || statusFilter !== 'ALL' ? 'No Manifests Matched Search' : 'No Dispatch Manifests Registered'"
+          [description]="searchQuery || statusFilter !== 'ALL' ? 'No shipment records matched your active query. Reset filters to view all manifests.' : 'Create your first delivery manifest to track outbound finished goods shipments.'"
+          [actionButtonLabel]="searchQuery || statusFilter !== 'ALL' ? 'Clear Filters' : ''"
+          (actionClick)="searchQuery = ''; statusFilter = 'ALL'; currentPage = 1">
+        </app-empty-state>
+
+        <!-- Pagination Footer -->
+        <footer class="table-pagination-footer no-print">
+          <div class="pagination-info">
+            <span>
+              Showing
+              <strong class="font-mono">
+                {{ filteredDispatches.length === 0 ? 0 : (currentPage - 1) * pageSize + 1 }}
+              </strong>
+              to
+              <strong class="font-mono">
+                {{ Math.min(currentPage * pageSize, filteredDispatches.length) }}
+              </strong>
+              of
+              <strong class="font-mono">{{ filteredDispatches.length }}</strong>
+              entries
+            </span>
+          </div>
+
+          <div class="pagination-controls">
+            <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="setPage(currentPage - 1)">
+              <i class="bi bi-chevron-left me-1"></i> Previous
+            </button>
+            <span class="page-indicator font-mono">
+              Page {{ currentPage }} of {{ totalPages }}
+            </span>
+            <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage >= totalPages || filteredDispatches.length === 0" (click)="setPage(currentPage + 1)">
+              Next <i class="bi bi-chevron-right ms-1"></i>
+            </button>
+          </div>
+        </footer>
+      </div>
+    </main>
   </div>
 </div>
 
+<!-- QR Scanner Modal -->
 <app-qr-scanner-modal *ngIf="showScannerModal" (scanned)="onQrScanned($event)" (close)="closeScanner()"></app-qr-scanner-modal>
-

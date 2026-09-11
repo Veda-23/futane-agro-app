@@ -1,93 +1,1170 @@
-<div class="enterprise-header">
-  <div class="enterprise-header-title-group">
-    <div class="enterprise-header-icon"><i class="bi bi-boxes" style="font-size:22px; color:#ffffff;"></i></div>
-    <div class="enterprise-header-text">
-      <h2>Inventory & Crate Stock</h2>
-      <p>Finished goods inventory, production stock formulas, and warehouse allocation</p>
-    </div>
-  </div>
-  <span
-    title="Stock calculations are formula-driven: Opening + Produced − Dispatched = Closing Stock"
-    style="cursor:help; font-size:16px; color:var(--text-muted); opacity:0.6; line-height:1;"
-    aria-label="Stock formula info"><i class="bi bi-info-circle"></i></span>
-</div>
+<div class="inventory-enterprise-container">
 
-<!-- Predictive AI Shortfall Forecast Cards (Y-01) -->
-<div *ngFor="let pred of materialShortfallPrediction" style="margin-bottom:12px;">
-  <div *ngIf="pred.riskLevel !== 'HEALTHY'"
-       class="glass-panel"
-       [style.border-left]="pred.riskLevel === 'CRITICAL' ? '4px solid #ef4444' : '4px solid #f59e0b'"
-       style="padding:14px 18px; display:flex; justify-content:space-between; align-items:center; background:var(--card-bg, rgba(255,255,255,0.05)); border-radius:10px;">
-    <div>
-      <span style="font-weight:700; font-size:14px;"><i class="bi bi-robot" style="margin-right:6px; color:#d97706;"></i>AI Stock Forecast: {{ pred.material }}</span>
-      <div style="font-size:12px; color:var(--text-secondary, #94a3b8); margin-top:2px;">
-        {{ pred.currentStock }} kg in stock · Burn rate: {{ pred.burnoutRatePerDay }} kg/day · Estimated depletion in <strong [style.color]="pred.riskLevel === 'CRITICAL' ? '#ef4444' : '#f59e0b'">{{ pred.daysRemaining }} days</strong>
+  <!-- ── 1. UNIFIED BREADCRUMB & STABLE HEADER ────────────────────── -->
+  <div class="header-section-wrapper no-print">
+    <div class="breadcrumb-nav">
+      <span class="breadcrumb-item"><i class="bi bi-house-door me-1"></i>Futane Agro ERP</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item">Warehouse &amp; Logistics</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item active">Finished Goods Crates Warehouse Stock</span>
+    </div>
+
+    <div class="stable-page-header">
+      <div class="header-left">
+        <div class="header-icon-badge">
+          <i class="bi bi-boxes"></i>
+        </div>
+        <div class="header-text-group">
+          <h1 class="header-main-title">Finished Goods Crates Warehouse Stock</h1>
+          <p class="header-desc-text">
+            Operational crate SKU inventory ledger, stock formula reconciliation, warehouse bay allocation &amp; valuation
+          </p>
+        </div>
+      </div>
+
+      <div class="header-right-actions">
+        <!-- Live Formula Hint -->
+        <span class="header-formula-badge" title="Stock Calculation Formula: Opening + Produced - Sold = Available Stock">
+          <i class="bi bi-calculator me-1"></i>
+          <span>Opening + Produced &minus; Sold = Available</span>
+        </span>
+
+        <!-- Refresh Button -->
+        <button type="button" class="btn btn-secondary btn-action-compact" (click)="loadData(true)" title="Refresh inventory records from server">
+          <i class="bi bi-arrow-clockwise me-1" [class.spin-anim]="isLoading"></i>
+          <span class="btn-label-desktop">Refresh</span>
+        </button>
+
+        <!-- Consolidated Export Dropdown -->
+        <div class="export-dropdown-wrapper" (click)="$event.stopPropagation()">
+          <button type="button" class="btn btn-secondary btn-action-compact" (click)="toggleExportDropdown($event)" title="Export finished goods stock records">
+            <i class="bi bi-download me-1"></i>
+            <span>Export ▾</span>
+          </button>
+          <div class="export-menu shadow-lg animate-fade-in" *ngIf="showExportDropdown">
+            <button type="button" class="export-menu-item" (click)="exportToCSV()">
+              <i class="bi bi-file-earmark-spreadsheet text-success me-2"></i>Export CSV (.csv)
+            </button>
+            <button type="button" class="export-menu-item" (click)="exportToExcel()">
+              <i class="bi bi-file-earmark-excel text-primary me-2"></i>Export Excel (.xlsx)
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Stock Adjustment -->
+        <button type="button" 
+                class="btn btn-secondary btn-action-compact" 
+                *ngIf="!isViewer() && inventoryList.length > 0"
+                (click)="openAdjustmentModal()" 
+                title="Perform physical stock audit or crate count adjustment">
+          <i class="bi bi-sliders2-vertical me-1"></i>
+          <span>Quick Adjust</span>
+        </button>
+
+        <!-- Primary Action: Log Crate Entry -->
+        <button type="button" 
+                class="btn btn-primary btn-action-primary" 
+                *ngIf="!isViewer()"
+                (click)="openAddForm()" 
+                title="Register a new finished goods crate SKU entry">
+          <i class="bi bi-plus-circle-fill me-1"></i>
+          <span>+ Log Crate Entry</span>
+        </button>
       </div>
     </div>
-    <span class="badge" [class.badge-danger]="pred.riskLevel === 'CRITICAL'" [class.badge-warning]="pred.riskLevel === 'WARNING'">
-      {{ pred.riskLevel }}
-    </span>
-  </div>
-</div>
 
-<div class="glass-panel" style="padding: 20px;">
-  <div class="flex-header" style="display:flex; justify-content:space-between; margin-bottom: 15px;">
-    <h3 style="font-weight:700; display:flex; align-items:center; gap:8px;"><i class="bi bi-box-seam-fill" style="color:#d97706;"></i> {{ 'inv.records_title' | translate:currentLang }}</h3>
-  </div>
-  
-  <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
-    <div class="column-visibility-dropdown" style="position:relative;">
-      <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('inventory')" style="padding: 6px 12px; font-size: 13px;">
-        <i class="bi bi-layout-three-columns me-1"></i>Columns
-      </button>
-      <div class="dropdown-menu" *ngIf="showColDropdown['inventory']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
-        <label *ngFor="let col of getTableColumns('inventory')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-          <input appAutoSelect type="checkbox" [checked]="isColumnVisible('inventory', col)" (change)="toggleColumn('inventory', col)" style="width:auto; margin:0; cursor:pointer;">
-          {{col}}
-        </label>
+    <!-- ── 2. SUBTABS CLASSIFICATION RIBBON ──────────────────────────── -->
+    <div class="subtabs-classification-bar">
+      <div class="subtabs-scroll-container">
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="selectedSubtab === 'all'"
+                (click)="setSubtab('all')">
+          <i class="bi bi-grid-fill me-1"></i>
+          <span>All Crates</span>
+          <span class="tab-count-badge">{{ getSubtabCount('all') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="selectedSubtab === 'in-stock'"
+                (click)="setSubtab('in-stock')">
+          <i class="bi bi-check-circle-fill text-success me-1"></i>
+          <span>In Stock</span>
+          <span class="tab-count-badge">{{ getSubtabCount('in-stock') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn subtab-pill-alert" 
+                [class.active]="selectedSubtab === 'low'"
+                (click)="setSubtab('low')">
+          <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
+          <span>Low / Critical (&lt;200)</span>
+          <span class="tab-count-badge badge-warning">{{ getSubtabCount('low') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="selectedSubtab === 'vegetable'"
+                (click)="setSubtab('vegetable')">
+          <i class="bi bi-basket2-fill text-primary me-1"></i>
+          <span>Vegetable Crates</span>
+          <span class="tab-count-badge">{{ getSubtabCount('vegetable') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="selectedSubtab === 'dairy'"
+                (click)="setSubtab('dairy')">
+          <i class="bi bi-box2-heart-fill text-info me-1"></i>
+          <span>Universal &amp; Storage</span>
+          <span class="tab-count-badge">{{ getSubtabCount('dairy') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn subtab-pill-danger" 
+                [class.active]="selectedSubtab === 'stockout'"
+                (click)="setSubtab('stockout')">
+          <i class="bi bi-x-circle-fill text-danger me-1"></i>
+          <span>Out of Stock</span>
+          <span class="tab-count-badge badge-danger">{{ getSubtabCount('stockout') }}</span>
+        </button>
       </div>
     </div>
   </div>
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th *ngIf="isColumnVisible('inventory', 'ID')" (click)="setSort('id')" style="cursor:pointer;">Inventory ID <span *ngIf="sortField === 'id'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-          <th *ngIf="isColumnVisible('inventory', 'Crate Type')" (click)="setSort('crateType')" style="cursor:pointer;">{{ 'inv.crate_type' | translate:currentLang }} <span *ngIf="sortField === 'crateType'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-          <th *ngIf="isColumnVisible('inventory', 'Material')" (click)="setSort('materialType')" style="cursor:pointer;">{{ 'inv.material' | translate:currentLang }} <span *ngIf="sortField === 'materialType'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-          <th *ngIf="isColumnVisible('inventory', 'Opening')" (click)="setSort('openingStock')" style="cursor:pointer;">Opening Stock <span *ngIf="sortField === 'openingStock'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-          <th *ngIf="isColumnVisible('inventory', 'Produced')" (click)="setSort('producedStock')" style="cursor:pointer;">Produced Stock (+) <span *ngIf="sortField === 'producedStock'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-          <th *ngIf="isColumnVisible('inventory', 'Sold')" (click)="setSort('soldStock')" style="cursor:pointer;">Sold Stock (-) <span *ngIf="sortField === 'soldStock'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-          <th *ngIf="isColumnVisible('inventory', 'Available')" (click)="setSort('currentStock')" style="cursor:pointer;">{{ 'inv.available' | translate:currentLang }} <span *ngIf="sortField === 'currentStock'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-          <th *ngIf="isColumnVisible('inventory', 'Last Updated')" (click)="setSort('lastUpdated')" style="cursor:pointer;">{{ 'inv.last_updated' | translate:currentLang }} <span *ngIf="sortField === 'lastUpdated'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let inv of getProcessedList(inventoryList, 'inventory'); trackBy: trackById">
-          <td *ngIf="isColumnVisible('inventory', 'ID')">{{ inv.id }}</td>
-          <td *ngIf="isColumnVisible('inventory', 'Crate Type')"><strong>{{ inv.crateType }}</strong></td>
-          <td *ngIf="isColumnVisible('inventory', 'Material')">{{ inv.materialType }}</td>
-          <td *ngIf="isColumnVisible('inventory', 'Opening')">{{ inv.openingStock }}</td>
-          <td *ngIf="isColumnVisible('inventory', 'Produced')"><span class="badge badge-success">+ {{ inv.producedStock }}</span></td>
-          <td *ngIf="isColumnVisible('inventory', 'Sold')"><span class="badge badge-danger">- {{ inv.soldStock }}</span></td>
-          <td *ngIf="isColumnVisible('inventory', 'Available')"><strong class="text-purple" style="font-size: 16px;">{{ inv.currentStock }}</strong></td>
-          <td *ngIf="isColumnVisible('inventory', 'Last Updated')">{{ inv.lastUpdated || 'N/A' }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-  <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
-    <span style="font-size:13px; color:var(--text-secondary);">
-      Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['inventory'] || 0) }} of {{ tableFilteredCounts['inventory'] || 0 }} entries
-    </span>
-    <div style="display:flex; gap:8px;">
-      <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
-        Previous
-      </button>
-      <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['inventory'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
-        Next
-      </button>
+
+  <!-- ── 3. COMPACT KPI TELEMETRY CARDS ────────────────────────────── -->
+  <div class="inv-telemetry-grid no-print">
+    <!-- Total Finished SKUs -->
+    <div class="inv-kpi-card">
+      <div class="inv-kpi-icon kpi-blue">
+        <i class="bi bi-boxes"></i>
+      </div>
+      <div class="inv-kpi-body">
+        <div class="inv-kpi-label">Finished SKUs</div>
+        <div class="inv-kpi-value">{{ inventoryList.length }}</div>
+        <div class="inv-kpi-sub">Active Crate Profiles</div>
+      </div>
+    </div>
+
+    <!-- Total Available Stock -->
+    <div class="inv-kpi-card">
+      <div class="inv-kpi-icon kpi-green">
+        <i class="bi bi-box-seam-fill"></i>
+      </div>
+      <div class="inv-kpi-body">
+        <div class="inv-kpi-label">Available Crates</div>
+        <div class="inv-kpi-value">{{ totalAvailableStock | number:'1.0-0' }}</div>
+        <div class="inv-kpi-sub">Units ready in warehouse</div>
+      </div>
+    </div>
+
+    <!-- Total Inventory Valuation -->
+    <div class="inv-kpi-card">
+      <div class="inv-kpi-icon kpi-amber">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+      <div class="inv-kpi-body">
+        <div class="inv-kpi-label">Inventory Asset Value</div>
+        <div class="inv-kpi-value">₹{{ totalInventoryValuation | number:'1.0-0' }}</div>
+        <div class="inv-kpi-sub">Formula Rate: ₹{{ CRATE_RATE }}/crate</div>
+      </div>
+    </div>
+
+    <!-- Low Stock Alert -->
+    <div class="inv-kpi-card" [class.kpi-card--alert]="lowStockCount > 0">
+      <div class="inv-kpi-icon" [class.kpi-red]="lowStockCount > 0" [class.kpi-slate]="lowStockCount === 0">
+        <i class="bi" [ngClass]="lowStockCount > 0 ? 'bi-exclamation-triangle-fill' : 'bi-shield-check'"></i>
+      </div>
+      <div class="inv-kpi-body">
+        <div class="inv-kpi-label">Stock Threshold Alerts</div>
+        <div class="inv-kpi-value" [class.text-danger]="lowStockCount > 0">{{ lowStockCount }}</div>
+        <div class="inv-kpi-sub">{{ lowStockCount > 0 ? 'SKUs need production runs' : 'All crate stocks safe' }}</div>
+      </div>
+    </div>
+
+    <!-- Warehouse Capacity Utilization -->
+    <div class="inv-kpi-card">
+      <div class="inv-kpi-icon kpi-purple">
+        <i class="bi bi-building-check"></i>
+      </div>
+      <div class="inv-kpi-body">
+        <div class="inv-kpi-label">Warehouse Capacity</div>
+        <div class="inv-kpi-value">{{ warehouseCapacityPct }}%</div>
+        <div class="inv-kpi-progress-bar">
+          <div class="inv-kpi-progress-fill" 
+               [style.width.%]="warehouseCapacityPct"
+               [class.fill-green]="warehouseCapacityPct < 70"
+               [class.fill-amber]="warehouseCapacityPct >= 70 && warehouseCapacityPct < 90"
+               [class.fill-red]="warehouseCapacityPct >= 90"></div>
+        </div>
+        <div class="inv-kpi-sub">{{ totalAvailableStock | number:'1.0-0' }} / {{ WAREHOUSE_CAPACITY | number:'1.0-0' }} max capacity</div>
+      </div>
     </div>
   </div>
-</div>
 
+  <!-- ── 4. AI SHORTFALL PREDICTION BANNER (IF CRITICAL) ───────────── -->
+  <ng-container *ngFor="let pred of materialShortfallPrediction">
+    <div *ngIf="pred.riskLevel !== 'HEALTHY'" class="inv-alert-banner no-print"
+         [class.alert-critical]="pred.riskLevel === 'CRITICAL'"
+         [class.alert-warning]="pred.riskLevel === 'WARNING'">
+      <div class="alert-banner-left">
+        <div class="alert-banner-icon-wrap">
+          <i class="bi bi-cpu-fill alert-icon"></i>
+        </div>
+        <div>
+          <div class="alert-title">AI Polymer Burn Alert: {{ pred.material }}</div>
+          <div class="alert-detail">
+            {{ pred.currentStock }} kg available in stock • Est. daily crate burn: {{ pred.burnoutRatePerDay }} kg/day •
+            Projected raw material stockout in <strong>{{ pred.daysRemaining }} days</strong>
+          </div>
+        </div>
+      </div>
+      <div class="alert-banner-right">
+        <span class="badge" [class.badge-danger]="pred.riskLevel === 'CRITICAL'" [class.badge-warning]="pred.riskLevel === 'WARNING'">
+          <i class="bi bi-exclamation-circle me-1"></i>{{ pred.riskLevel }} RISK
+        </span>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="navigateToRawMaterials()">
+          <i class="bi bi-arrow-right-short me-1"></i>Raw Materials
+        </button>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ── 5. MAIN INVENTORY GLASS PANEL ─────────────────────────────── -->
+  <div class="glass-panel inv-main-panel">
+
+    <!-- Panel Header & Formula Legend -->
+    <div class="inv-panel-header">
+      <div class="inv-panel-title">
+        <i class="bi bi-boxes text-success me-2"></i>
+        <span>Finished Goods Crate Ledger</span>
+        <span class="inv-count-pill">{{ filteredList.length }} of {{ inventoryList.length }} SKUs</span>
+      </div>
+
+      <div class="inv-panel-actions">
+        <!-- Density Switcher -->
+        <div class="density-switcher" title="Adjust table row density">
+          <button type="button" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact density">
+            <i class="bi bi-list-ul"></i>
+          </button>
+          <button type="button" [class.active]="tableDensity === 'comfortable'" (click)="setDensity('comfortable')" title="Comfortable density">
+            <i class="bi bi-layout-three-columns"></i>
+          </button>
+          <button type="button" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious density">
+            <i class="bi bi-layout-split"></i>
+          </button>
+        </div>
+
+        <!-- Columns Dropdown -->
+        <div class="col-manager-dropdown-wrapper" (click)="$event.stopPropagation()">
+          <button type="button" class="btn btn-secondary btn-action-compact" (click)="toggleColDropdown()" title="Manage visible table columns">
+            <i class="bi bi-layout-three-columns me-1"></i>
+            <span>Columns</span>
+            <span class="badge-count ms-1">{{ visibleColumnCount }}</span>
+          </button>
+          <div class="col-manager-dropdown shadow-lg animate-fade-in" *ngIf="showColDropdown">
+            <div class="col-manager-header">
+              <span>Visible Columns</span>
+              <button type="button" class="btn-link-sm" (click)="resetColumns()">Reset All</button>
+            </div>
+            <div class="col-manager-body">
+              <label *ngFor="let col of defaultColumns" class="col-manager-item">
+                <input type="checkbox" [checked]="isColumnVisible(col)" (change)="toggleColumn(col)">
+                <span>{{ col }}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 6. UNIFIED SEARCH & FILTER TOOLBAR ────────────────────────── -->
+    <div class="inv-toolbar">
+      <!-- Search Box -->
+      <div class="inv-search-box">
+        <i class="bi bi-search inv-search-icon"></i>
+        <input appAutoSelect 
+               type="text" 
+               class="inv-search-input" 
+               [(ngModel)]="searchQuery"
+               (ngModelChange)="currentPage = 1"
+               placeholder="Search crate SKU, material, category, ID or warehouse zone...">
+        <button type="button" class="inv-search-clear" *ngIf="searchQuery" (click)="searchQuery = ''; currentPage = 1;" title="Clear search">
+          <i class="bi bi-x-circle-fill"></i>
+        </button>
+      </div>
+
+      <!-- Quick Material Filter -->
+      <div class="toolbar-filter-select">
+        <select class="form-control form-control-sm" [(ngModel)]="filterMaterial" (ngModelChange)="applyFilters()" title="Filter by polymer material">
+          <option value="">All Materials</option>
+          <option value="Plastic">Plastic</option>
+          <option value="HDPE">HDPE</option>
+          <option value="PP">PP / Polypropylene</option>
+          <option value="Mixed">Mixed Polymer</option>
+        </select>
+      </div>
+
+      <!-- Quick Health Filter -->
+      <div class="toolbar-filter-select">
+        <select class="form-control form-control-sm" [(ngModel)]="filterStockHealth" (ngModelChange)="applyFilters()" title="Filter by stock health">
+          <option value="">All Health Levels</option>
+          <option value="optimal">Optimal Stock</option>
+          <option value="surplus">Surplus</option>
+          <option value="low">Low Stock (&lt;600)</option>
+          <option value="critical">Critical (&lt;200)</option>
+          <option value="stockout">Out of Stock (0)</option>
+        </select>
+      </div>
+
+      <!-- Quick Warehouse Zone Filter -->
+      <div class="toolbar-filter-select">
+        <select class="form-control form-control-sm" [(ngModel)]="filterWarehouseZone" (ngModelChange)="applyFilters()" title="Filter by warehouse bay / zone">
+          <option value="">All Warehouse Bays</option>
+          <option value="Zone A">Zone A - Vegetable Crate Staging</option>
+          <option value="Zone B">Zone B - Dairy Perforated Bay</option>
+          <option value="Zone C">Zone C - Heavy Duty Warehouse</option>
+          <option value="Zone D">Zone D - Finished Goods Yard</option>
+        </select>
+      </div>
+
+      <!-- Reset Filters Button -->
+      <button type="button" 
+              class="btn btn-secondary btn-action-compact" 
+              *ngIf="searchQuery || filterMaterial || filterStockHealth || filterWarehouseZone || selectedSubtab !== 'all'"
+              (click)="resetFilters(); setSubtab('all')" 
+              title="Reset all active filters">
+        <i class="bi bi-arrow-counterclockwise me-1"></i>
+        <span>Clear Filters</span>
+      </button>
+
+      <!-- Page Size Selector -->
+      <div class="page-size-selector">
+        <label class="page-size-label">Show:</label>
+        <select class="form-control form-control-sm" [(ngModel)]="pageSize" (ngModelChange)="currentPage = 1">
+          <option *ngFor="let ps of pageSizeOptions" [value]="ps">{{ ps }} / page</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ── 7. LOADING SKELETON STATE ─────────────────────────────────── -->
+    <div class="inv-loading-state" *ngIf="isLoading">
+      <div class="spinner-ring"></div>
+      <p class="loading-text">Loading finished goods warehouse inventory...</p>
+    </div>
+
+    <!-- ── 8. ERROR STATE ────────────────────────────────────────────── -->
+    <div class="inv-error-state" *ngIf="!isLoading && hasError">
+      <div class="error-icon-box">
+        <i class="bi bi-cloud-slash"></i>
+      </div>
+      <h3>Unable to Load Finished Goods Inventory</h3>
+      <p>A network or server connectivity error occurred while fetching the crate warehouse ledger.</p>
+      <button type="button" class="btn btn-primary btn-action-compact" (click)="loadData()">
+        <i class="bi bi-arrow-clockwise me-1"></i>Retry Connection
+      </button>
+    </div>
+
+    <!-- ── 9. EMPTY STATE: ZERO INVENTORY RECORDS ────────────────────── -->
+    <div class="inv-empty-state" *ngIf="!isLoading && !hasError && inventoryList.length === 0">
+      <div class="empty-icon-box">
+        <i class="bi bi-boxes"></i>
+      </div>
+      <h3>No Crate Inventory Records Found</h3>
+      <p>There are no finished goods crate profiles logged in the warehouse ledger yet.</p>
+      <button type="button" class="btn btn-primary btn-action-primary" *ngIf="!isViewer()" (click)="openAddForm()">
+        <i class="bi bi-plus-circle-fill me-1"></i>Log First Crate Entry
+      </button>
+    </div>
+
+    <!-- ── 10. EMPTY STATE: FILTERED OUT ─────────────────────────────── -->
+    <div class="inv-empty-state" *ngIf="!isLoading && !hasError && inventoryList.length > 0 && filteredList.length === 0">
+      <div class="empty-icon-box">
+        <i class="bi bi-funnel"></i>
+      </div>
+      <h3>No Crate SKUs Match Filter Criteria</h3>
+      <p>We could not find any finished crate records matching your search query or selected filters.</p>
+      <button type="button" class="btn btn-secondary btn-action-compact" (click)="resetFilters(); setSubtab('all')">
+        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset All Filters
+      </button>
+    </div>
+
+    <!-- ── 11. FINISHED GOODS TABLE ──────────────────────────────────── -->
+    <div class="table-container" *ngIf="!isLoading && !hasError && filteredList.length > 0" [class]="'density-' + tableDensity">
+      <table class="inv-table">
+        <thead>
+          <tr>
+            <th *ngIf="isColumnVisible('ID')" class="col-id" (click)="setSort('id')">
+              <div class="th-content">
+                <span>SKU ID</span>
+                <i class="bi sort-icon" *ngIf="sortField === 'id'" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+              </div>
+            </th>
+
+            <th *ngIf="isColumnVisible('Crate Type')" class="col-crate" (click)="setSort('crateType')">
+              <div class="th-content">
+                <span>Crate Profile / Description</span>
+                <i class="bi sort-icon" *ngIf="sortField === 'crateType'" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+              </div>
+            </th>
+
+            <th *ngIf="isColumnVisible('Material')" class="col-material" (click)="setSort('materialType')">
+              <div class="th-content">
+                <span>Polymer Material</span>
+                <i class="bi sort-icon" *ngIf="sortField === 'materialType'" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+              </div>
+            </th>
+
+            <th *ngIf="isColumnVisible('Opening')" class="col-num" (click)="setSort('openingStock')" title="Opening balance recorded at cycle start">
+              <div class="th-content justify-end">
+                <span>Opening</span>
+                <i class="bi sort-icon" *ngIf="sortField === 'openingStock'" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+              </div>
+            </th>
+
+            <th *ngIf="isColumnVisible('Produced')" class="col-num" (click)="setSort('producedStock')" title="Total finished crates received from production plant">
+              <div class="th-content justify-end">
+                <span>Produced (+)</span>
+                <i class="bi sort-icon" *ngIf="sortField === 'producedStock'" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+              </div>
+            </th>
+
+            <th *ngIf="isColumnVisible('Sold')" class="col-num" (click)="setSort('soldStock')" title="Total crates dispatched & sold to parties">
+              <div class="th-content justify-end">
+                <span>Dispatched (&minus;)</span>
+                <i class="bi sort-icon" *ngIf="sortField === 'soldStock'" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+              </div>
+            </th>
+
+            <th *ngIf="isColumnVisible('Available')" class="col-num col-available" (click)="setSort('currentStock')" title="Current physically available warehouse stock">
+              <div class="th-content justify-end">
+                <span>Available Stock</span>
+                <i class="bi sort-icon" *ngIf="sortField === 'currentStock'" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+              </div>
+            </th>
+
+            <th *ngIf="isColumnVisible('Valuation')" class="col-num" (click)="setSort('valuation')" title="Estimated inventory asset value (Available × ₹85/unit)">
+              <div class="th-content justify-end">
+                <span>Valuation</span>
+                <i class="bi sort-icon" *ngIf="sortField === 'valuation'" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+              </div>
+            </th>
+
+            <th *ngIf="isColumnVisible('Health')" class="col-badge">
+              <div class="th-content">
+                <span>Stock Health</span>
+              </div>
+            </th>
+
+            <th *ngIf="isColumnVisible('Warehouse Zone')" class="col-location">
+              <div class="th-content">
+                <span>Warehouse Location</span>
+              </div>
+            </th>
+
+            <th *ngIf="isColumnVisible('Last Updated')" class="col-date" (click)="setSort('lastUpdated')">
+              <div class="th-content">
+                <span>Last Updated</span>
+                <i class="bi sort-icon" *ngIf="sortField === 'lastUpdated'" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+              </div>
+            </th>
+
+            <th *ngIf="isColumnVisible('Actions')" class="col-actions text-center">
+              <span>Actions</span>
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let inv of paginatedList; trackBy: trackById" class="inv-table-row">
+            <!-- ID / SKU -->
+            <td *ngIf="isColumnVisible('ID')" class="col-id">
+              <span class="sku-id-badge">#{{ inv.id ?? inv.inventoryId }}</span>
+            </td>
+
+            <!-- Crate Type / Description -->
+            <td *ngIf="isColumnVisible('Crate Type')" class="col-crate">
+              <div class="crate-type-cell">
+                <div class="crate-avatar-icon">
+                  <i class="bi bi-box-seam"></i>
+                </div>
+                <div class="crate-title-group">
+                  <span class="crate-title">{{ inv.crateType }}</span>
+                  <span class="crate-category-sub">{{ inv.category || 'Standard Heavy Duty Crate' }}</span>
+                </div>
+              </div>
+            </td>
+
+            <!-- Polymer Material -->
+            <td *ngIf="isColumnVisible('Material')" class="col-material">
+              <span class="material-pill">{{ inv.materialType }}</span>
+            </td>
+
+            <!-- Opening Stock -->
+            <td *ngIf="isColumnVisible('Opening')" class="col-num formula-cell">
+              <span class="qty-num">{{ inv.openingStock | number:'1.0-0' }}</span>
+              <span class="qty-unit">crates</span>
+            </td>
+
+            <!-- Produced (+) Receipts -->
+            <td *ngIf="isColumnVisible('Produced')" class="col-num formula-cell">
+              <span class="delta-badge delta-add">+{{ inv.producedStock | number:'1.0-0' }}</span>
+            </td>
+
+            <!-- Sold (-) Dispatches -->
+            <td *ngIf="isColumnVisible('Sold')" class="col-num formula-cell">
+              <span class="delta-badge delta-sub">&minus;{{ inv.soldStock | number:'1.0-0' }}</span>
+            </td>
+
+            <!-- Available Stock -->
+            <td *ngIf="isColumnVisible('Available')" class="col-num col-available">
+              <div class="closing-stock-wrapper">
+                <span class="closing-stock" 
+                      [class.text-danger]="inv.currentStock === 0 || inv.currentStock < 200"
+                      [class.text-warning]="inv.currentStock >= 200 && inv.currentStock < 600"
+                      [class.text-success]="inv.currentStock >= 600">
+                  {{ inv.currentStock | number:'1.0-0' }}
+                </span>
+                <span class="qty-unit">crates</span>
+              </div>
+            </td>
+
+            <!-- Valuation -->
+            <td *ngIf="isColumnVisible('Valuation')" class="col-num valuation-cell">
+              <span class="valuation-value">₹{{ (inv.currentStock * (inv.unitPrice || CRATE_RATE)) | number:'1.0-0' }}</span>
+            </td>
+
+            <!-- Health Status -->
+            <td *ngIf="isColumnVisible('Health')" class="col-badge">
+              <span class="health-badge" [ngClass]="getStockHealth(inv).badgeClass">
+                <i class="bi me-1" [ngClass]="getStockHealth(inv).icon"></i>
+                {{ getStockHealth(inv).label }}
+              </span>
+            </td>
+
+            <!-- Warehouse Location / Bay -->
+            <td *ngIf="isColumnVisible('Warehouse Zone')" class="col-location">
+              <div class="location-cell">
+                <i class="bi bi-geo-alt text-muted me-1"></i>
+                <span>{{ inv.warehouseZone }}</span>
+              </div>
+            </td>
+
+            <!-- Last Updated -->
+            <td *ngIf="isColumnVisible('Last Updated')" class="col-date">
+              <span class="date-text">{{ inv.lastUpdated ? (inv.lastUpdated | slice:0:10) : '--' }}</span>
+            </td>
+
+            <!-- Row Actions -->
+            <td *ngIf="isColumnVisible('Actions')" class="col-actions">
+              <div class="row-actions-group">
+                <!-- View Details -->
+                <button type="button" 
+                        class="btn-icon-action btn-view" 
+                        (click)="openDetails(inv)" 
+                        title="View SKU Ledger &amp; Burn Forecast" 
+                        aria-label="View Details">
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                <!-- Stock Adjustment -->
+                <button type="button" 
+                        class="btn-icon-action btn-adjust" 
+                        *ngIf="!isViewer()" 
+                        (click)="openAdjustmentModal(inv)" 
+                        title="Adjust Stock Count" 
+                        aria-label="Adjust Stock">
+                  <i class="bi bi-sliders2"></i>
+                </button>
+
+                <!-- Edit Crate Record -->
+                <button type="button" 
+                        class="btn-icon-action btn-edit" 
+                        *ngIf="!isViewer()" 
+                        (click)="openEditForm(inv)" 
+                        title="Edit Crate Entry" 
+                        aria-label="Edit Crate">
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <!-- Delete Crate Record (Admin only) -->
+                <button type="button" 
+                        class="btn-icon-action btn-delete" 
+                        *ngIf="canDelete()" 
+                        (click)="deleteStockEntry(inv)" 
+                        title="Delete Crate Profile" 
+                        aria-label="Delete Crate">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+
+        <!-- Table Summary Totals Footer -->
+        <tfoot>
+          <tr class="summary-row">
+            <td *ngIf="isColumnVisible('ID')"></td>
+            <td *ngIf="isColumnVisible('Crate Type')">
+              <strong>Filtered Totals ({{ filteredList.length }} SKUs)</strong>
+            </td>
+            <td *ngIf="isColumnVisible('Material')"></td>
+            <td *ngIf="isColumnVisible('Opening')" class="col-num"></td>
+            <td *ngIf="isColumnVisible('Produced')" class="col-num"></td>
+            <td *ngIf="isColumnVisible('Sold')" class="col-num"></td>
+            <td *ngIf="isColumnVisible('Available')" class="col-num col-available">
+              <div class="closing-stock-wrapper">
+                <strong class="total-qty">{{ filteredTotalAvailable | number:'1.0-0' }}</strong>
+                <span class="qty-unit">crates</span>
+              </div>
+            </td>
+            <td *ngIf="isColumnVisible('Valuation')" class="col-num valuation-cell">
+              <strong class="total-val">₹{{ filteredTotalValuation | number:'1.0-0' }}</strong>
+            </td>
+            <td *ngIf="isColumnVisible('Health')"></td>
+            <td *ngIf="isColumnVisible('Warehouse Zone')"></td>
+            <td *ngIf="isColumnVisible('Last Updated')"></td>
+            <td *ngIf="isColumnVisible('Actions')"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- ── 12. ENTERPRISE PAGINATION FOOTER ──────────────────────────── -->
+    <div class="inv-pagination" *ngIf="!isLoading && !hasError && filteredList.length > 0">
+      <span class="inv-pagination-info">
+        Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> &ndash; <strong>{{ Math.min(currentPage * pageSize, filteredList.length) }}</strong> of <strong>{{ filteredList.length }}</strong> crate records
+      </span>
+
+      <div class="inv-pagination-nav">
+        <button type="button" class="btn btn-secondary btn-pagination" [disabled]="currentPage === 1" (click)="currentPage = 1" title="First Page">
+          <i class="bi bi-chevron-double-left"></i>
+        </button>
+        <button type="button" class="btn btn-secondary btn-pagination" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" title="Previous Page">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <span class="inv-page-indicator">Page {{ currentPage }} of {{ totalPages }}</span>
+        <button type="button" class="btn btn-secondary btn-pagination" [disabled]="currentPage >= totalPages" (click)="currentPage = currentPage + 1" title="Next Page">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+        <button type="button" class="btn btn-secondary btn-pagination" [disabled]="currentPage >= totalPages" (click)="currentPage = totalPages" title="Last Page">
+          <i class="bi bi-chevron-double-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 13. SLIDE-OVER DRAWER: ADD / EDIT CRATE ENTRY ─────────────── -->
+  <div class="drawer-backdrop" *ngIf="isFormOpen" (click)="closeForm()">
+    <div class="drawer-panel animate-slide-left" (click)="$event.stopPropagation()">
+      <!-- Drawer Header -->
+      <div class="drawer-header">
+        <div class="drawer-header-left">
+          <div class="drawer-header-icon">
+            <i class="bi" [ngClass]="isEditing ? 'bi-pencil-square' : 'bi-plus-circle-fill'"></i>
+          </div>
+          <div>
+            <h2 class="drawer-title">{{ isEditing ? 'Edit Crate Inventory Record' : 'Log Finished Crate Entry' }}</h2>
+            <p class="drawer-subtitle">
+              {{ isEditing ? 'Update stock ledger values and warehouse bay location' : 'Register a new crate profile and initialize warehouse stock balances' }}
+            </p>
+          </div>
+        </div>
+        <button type="button" class="drawer-close-btn" (click)="closeForm()" title="Close drawer">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <!-- Drawer Content -->
+      <div class="drawer-content">
+        <form (ngSubmit)="saveStockEntry()">
+          <!-- Section 1: Crate Specifications -->
+          <div class="form-section-card">
+            <div class="form-section-title">
+              <i class="bi bi-box-seam me-2 text-primary"></i>Crate Specification &amp; Profile
+            </div>
+
+            <div class="form-grid-2col">
+              <!-- Crate Type Name -->
+              <div class="form-group">
+                <label class="form-label">Crate Type / Name <span class="text-danger">*</span></label>
+                <input appAutoSelect 
+                       type="text" 
+                       class="form-control" 
+                       [(ngModel)]="formData.crateType" 
+                       name="crateType"
+                       placeholder="e.g. 20kg Tomato Vegetable Crate"
+                       [class.is-invalid]="formErrors['crateType']">
+                <div class="invalid-feedback" *ngIf="formErrors['crateType']">{{ formErrors['crateType'] }}</div>
+              </div>
+
+              <!-- Polymer Material -->
+              <div class="form-group">
+                <label class="form-label">Polymer Material <span class="text-danger">*</span></label>
+                <select class="form-control" [(ngModel)]="formData.materialType" name="materialType">
+                  <option value="HDPE Plastic">HDPE Virgin Plastic</option>
+                  <option value="PP Copolymer">PP Copolymer</option>
+                  <option value="Recycled Compound">Recycled Polymer Compound</option>
+                  <option value="Plastic">Generic Industrial Plastic</option>
+                  <option value="Mixed">Mixed Polymer</option>
+                </select>
+              </div>
+
+              <!-- Warehouse Bay / Zone -->
+              <div class="form-group">
+                <label class="form-label">Warehouse Storage Bay</label>
+                <select class="form-control" [(ngModel)]="formData.warehouseZone" name="warehouseZone">
+                  <option value="Zone A - Vegetable Crate Staging">Zone A - Vegetable Crate Staging</option>
+                  <option value="Zone B - Dairy Perforated Bay">Zone B - Dairy Perforated Bay</option>
+                  <option value="Zone C - Heavy Duty Warehouse">Zone C - Heavy Duty Warehouse</option>
+                  <option value="Zone D - Finished Goods Yard">Zone D - Finished Goods Yard</option>
+                </select>
+              </div>
+
+              <!-- Unit Valuation Rate -->
+              <div class="form-group">
+                <label class="form-label">Unit Rate (₹ per Crate)</label>
+                <input appAutoSelect 
+                       type="number" 
+                       class="form-control" 
+                       [(ngModel)]="formData.unitPrice" 
+                       name="unitPrice"
+                       min="0"
+                       step="1">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Stock Balances & Production Ledger -->
+          <div class="form-section-card">
+            <div class="form-section-title">
+              <i class="bi bi-calculator me-2 text-success"></i>Stock Formula &amp; Warehouse Ledger
+            </div>
+
+            <div class="form-grid-3col">
+              <!-- Opening Stock -->
+              <div class="form-group">
+                <label class="form-label">Opening Stock</label>
+                <input appAutoSelect 
+                       type="number" 
+                       class="form-control" 
+                       [(ngModel)]="formData.openingStock" 
+                       name="openingStock" 
+                       min="0"
+                       [class.is-invalid]="formErrors['openingStock']">
+                <span class="field-hint">Initial cycle balance</span>
+              </div>
+
+              <!-- Produced Stock (+) -->
+              <div class="form-group">
+                <label class="form-label">Total Produced (+)</label>
+                <input appAutoSelect 
+                       type="number" 
+                       class="form-control text-success font-semibold" 
+                       [(ngModel)]="formData.producedStock" 
+                       name="producedStock" 
+                       min="0"
+                       [class.is-invalid]="formErrors['producedStock']">
+                <span class="field-hint">Receipts from plant</span>
+              </div>
+
+              <!-- Sold Stock (-) -->
+              <div class="form-group">
+                <label class="form-label">Total Dispatched (&minus;)</label>
+                <input appAutoSelect 
+                       type="number" 
+                       class="form-control text-warning font-semibold" 
+                       [(ngModel)]="formData.soldStock" 
+                       name="soldStock" 
+                       min="0"
+                       [class.is-invalid]="formErrors['soldStock']">
+                <span class="field-hint">Dispatched out</span>
+              </div>
+            </div>
+
+            <!-- Live Calculation Preview -->
+            <div class="formula-preview-box">
+              <div class="formula-preview-label">Live Available Stock Calculation:</div>
+              <div class="formula-calc-display">
+                <span>{{ formData.openingStock || 0 }} (Opening)</span>
+                <span class="math-op">+</span>
+                <span class="text-success">{{ formData.producedStock || 0 }} (Produced)</span>
+                <span class="math-op">&minus;</span>
+                <span class="text-warning">{{ formData.soldStock || 0 }} (Sold)</span>
+                <span class="math-op">=</span>
+                <strong class="calculated-stock-badge">{{ calculatedAvailable | number:'1.0-0' }} crates ready</strong>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Drawer Footer -->
+      <div class="drawer-footer">
+        <button type="button" class="btn btn-secondary btn-action-compact" (click)="closeForm()">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-primary btn-action-primary" (click)="saveStockEntry()" [disabled]="isSaving">
+          <i class="bi me-1" [ngClass]="isSaving ? 'bi-hourglass-split spin-anim' : 'bi-check2-circle'"></i>
+          <span>{{ isSaving ? 'Saving...' : (isEditing ? 'Update Crate Stock' : 'Create Crate Entry') }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 14. MODAL: FOCUSED STOCK ADJUSTMENT ────────────────────────── -->
+  <div class="modal-backdrop" *ngIf="isAdjustmentOpen" (click)="closeAdjustmentModal()">
+    <div class="modal-dialog-box animate-scale-in" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <div class="modal-header-icon">
+            <i class="bi bi-sliders2-vertical"></i>
+          </div>
+          <div>
+            <h3 class="modal-title">Warehouse Stock Adjustment</h3>
+            <p class="modal-subtitle">Physical stock audit &amp; inventory reconciliation</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" (click)="closeAdjustmentModal()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Target SKU Info -->
+        <div class="adjust-sku-banner" *ngIf="adjustItem">
+          <div class="sku-info-left">
+            <span class="sku-id">#{{ adjustItem.id ?? adjustItem.inventoryId }}</span>
+            <strong class="sku-name">{{ adjustItem.crateType }}</strong>
+            <span class="sku-zone">{{ adjustItem.warehouseZone }}</span>
+          </div>
+          <div class="sku-stock-current">
+            <span class="stock-label">Current Available</span>
+            <span class="stock-val">{{ adjustItem.currentStock | number:'1.0-0' }} crates</span>
+          </div>
+        </div>
+
+        <!-- Adjustment Mode Switcher -->
+        <div class="adjust-mode-nav">
+          <button type="button" 
+                  class="adjust-mode-btn" 
+                  [class.active]="adjustMode === 'add'" 
+                  (click)="adjustMode = 'add'">
+            <i class="bi bi-plus-circle-fill text-success me-1"></i>
+            Add Stock (+)
+          </button>
+          <button type="button" 
+                  class="adjust-mode-btn" 
+                  [class.active]="adjustMode === 'deduct'" 
+                  (click)="adjustMode = 'deduct'">
+            <i class="bi bi-dash-circle-fill text-danger me-1"></i>
+            Deduct Stock (&minus;)
+          </button>
+          <button type="button" 
+                  class="adjust-mode-btn" 
+                  [class.active]="adjustMode === 'reconcile'" 
+                  (click)="adjustMode = 'reconcile'">
+            <i class="bi bi-check-circle-fill text-primary me-1"></i>
+            Reconcile Count (=)
+          </button>
+        </div>
+
+        <!-- Adjustment Inputs -->
+        <div class="form-grid-2col mt-3">
+          <div class="form-group">
+            <label class="form-label">
+              {{ adjustMode === 'reconcile' ? 'New Verified Physical Count' : 'Quantity to ' + (adjustMode === 'add' ? 'Add' : 'Deduct') }}
+            </label>
+            <input appAutoSelect 
+                   type="number" 
+                   class="form-control" 
+                   [(ngModel)]="adjustQuantity" 
+                   min="0"
+                   placeholder="Enter quantity">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Adjustment Reason</label>
+            <select class="form-control" [(ngModel)]="adjustReason">
+              <option value="Physical stocktake audit">Physical stocktake audit</option>
+              <option value="Damage / Broken crates">Damage / Broken crates</option>
+              <option value="Production scrap return">Production scrap return</option>
+              <option value="Customer return / Replacement">Customer return / Replacement</option>
+              <option value="Inter-bay transfer">Inter-bay transfer</option>
+              <option value="Found excess warehouse stock">Found excess warehouse stock</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Adjustment Calculation Diff Card -->
+        <div class="adjust-preview-card" *ngIf="adjustItem">
+          <div class="preview-metric">
+            <span class="preview-label">Starting Stock</span>
+            <span class="preview-val">{{ adjustItem.currentStock | number:'1.0-0' }}</span>
+          </div>
+          <div class="preview-arrow">
+            <i class="bi bi-arrow-right"></i>
+          </div>
+          <div class="preview-metric">
+            <span class="preview-label">Adjustment</span>
+            <span class="preview-val" [class.text-success]="adjustMode === 'add'" [class.text-danger]="adjustMode === 'deduct'">
+              {{ adjustMode === 'add' ? '+' : adjustMode === 'deduct' ? '-' : '=' }}{{ adjustQuantity || 0 }}
+            </span>
+          </div>
+          <div class="preview-arrow">
+            <i class="bi bi-arrow-right"></i>
+          </div>
+          <div class="preview-metric">
+            <span class="preview-label">Final Stock</span>
+            <strong class="preview-val text-success">{{ calculatedAdjustedStock | number:'1.0-0' }} crates</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-action-compact" (click)="closeAdjustmentModal()">
+          Cancel
+        </button>
+        <button type="button" 
+                class="btn btn-primary btn-action-primary" 
+                (click)="confirmStockAdjustment()" 
+                [disabled]="isAdjusting">
+          <i class="bi me-1" [ngClass]="isAdjusting ? 'bi-hourglass-split spin-anim' : 'bi-check-lg'"></i>
+          <span>{{ isAdjusting ? 'Adjusting...' : 'Confirm Stock Adjustment' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 15. SLIDE-OVER DRAWER: SKU VIEW DETAILS ───────────────────── -->
+  <div class="drawer-backdrop" *ngIf="isDetailsOpen" (click)="closeDetails()">
+    <div class="drawer-panel drawer-panel-wide animate-slide-left" (click)="$event.stopPropagation()">
+      <!-- Details Header -->
+      <div class="drawer-header" *ngIf="selectedItem">
+        <div class="drawer-header-left">
+          <div class="drawer-header-icon">
+            <i class="bi bi-boxes"></i>
+          </div>
+          <div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="sku-id-badge">#{{ selectedItem.id ?? selectedItem.inventoryId }}</span>
+              <h2 class="drawer-title mb-0">{{ selectedItem.crateType }}</h2>
+            </div>
+            <p class="drawer-subtitle">{{ selectedItem.materialType }} • {{ selectedItem.warehouseZone }}</p>
+          </div>
+        </div>
+        <button type="button" class="drawer-close-btn" (click)="closeDetails()" title="Close details">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <!-- Details Subtab Navigation -->
+      <div class="details-tab-nav" *ngIf="selectedItem">
+        <button type="button" 
+                class="details-tab-btn" 
+                [class.active]="detailsActiveTab === 'overview'"
+                (click)="detailsActiveTab = 'overview'">
+          <i class="bi bi-info-circle me-1"></i>Overview
+        </button>
+        <button type="button" 
+                class="details-tab-btn" 
+                [class.active]="detailsActiveTab === 'ledger'"
+                (click)="detailsActiveTab = 'ledger'">
+          <i class="bi bi-calculator me-1"></i>Stock Formula Ledger
+        </button>
+        <button type="button" 
+                class="details-tab-btn" 
+                [class.active]="detailsActiveTab === 'burn'"
+                (click)="detailsActiveTab = 'burn'">
+          <i class="bi bi-fire me-1"></i>Polymer Consumption
+        </button>
+        <button type="button" 
+                class="details-tab-btn" 
+                [class.active]="detailsActiveTab === 'valuation'"
+                (click)="detailsActiveTab = 'valuation'">
+          <i class="bi bi-cash-coin me-1"></i>Valuation &amp; Audit
+        </button>
+      </div>
+
+      <!-- Details Body -->
+      <div class="drawer-content" *ngIf="selectedItem">
+        <!-- TAB 1: OVERVIEW -->
+        <div *ngIf="detailsActiveTab === 'overview'" class="details-tab-content">
+          <div class="details-metrics-grid">
+            <div class="metric-box">
+              <span class="metric-box-label">Current Available</span>
+              <span class="metric-box-val text-success">{{ selectedItem.currentStock | number:'1.0-0' }}</span>
+              <span class="metric-box-sub">crates in bay</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-box-label">Stock Status</span>
+              <span class="health-badge mt-1" [ngClass]="getStockHealth(selectedItem).badgeClass">
+                <i class="bi me-1" [ngClass]="getStockHealth(selectedItem).icon"></i>
+                {{ getStockHealth(selectedItem).label }}
+              </span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-box-label">Asset Value</span>
+              <span class="metric-box-val text-primary">₹{{ (selectedItem.currentStock * (selectedItem.unitPrice || CRATE_RATE)) | number:'1.0-0' }}</span>
+              <span class="metric-box-sub">&#64; ₹{{ selectedItem.unitPrice || CRATE_RATE }}/unit</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-box-label">Storage Zone</span>
+              <span class="metric-box-val text-muted" style="font-size:14px;">{{ selectedItem.warehouseZone }}</span>
+              <span class="metric-box-sub">Allocated rack</span>
+            </div>
+          </div>
+
+          <div class="details-card mt-3">
+            <h4 class="details-card-title"><i class="bi bi-clipboard2-check me-2"></i>SKU Specification</h4>
+            <div class="details-kv-list">
+              <div class="details-kv-row">
+                <span class="kv-key">Crate Description:</span>
+                <span class="kv-val font-semibold">{{ selectedItem.crateType }}</span>
+              </div>
+              <div class="details-kv-row">
+                <span class="kv-key">Polymer Formulation:</span>
+                <span class="kv-val">{{ selectedItem.materialType }}</span>
+              </div>
+              <div class="details-kv-row">
+                <span class="kv-key">Standard Crate Tare Weight:</span>
+                <span class="kv-val">1.85 kg / crate</span>
+              </div>
+              <div class="details-kv-row">
+                <span class="kv-key">Warehouse Location:</span>
+                <span class="kv-val">{{ selectedItem.warehouseZone }}</span>
+              </div>
+              <div class="details-kv-row">
+                <span class="kv-key">Last Stock Audit / Modification:</span>
+                <span class="kv-val">{{ selectedItem.lastUpdated || 'Initial setup' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: STOCK FORMULA LEDGER -->
+        <div *ngIf="detailsActiveTab === 'ledger'" class="details-tab-content">
+          <div class="ledger-flow-card">
+            <h4 class="details-card-title"><i class="bi bi-calculator me-2"></i>Mathematical Stock Balance</h4>
+            <div class="ledger-flow-steps">
+              <div class="ledger-step">
+                <div class="step-num-badge">1</div>
+                <div class="step-info">
+                  <span class="step-label">Opening Stock</span>
+                  <span class="step-value">{{ selectedItem.openingStock | number:'1.0-0' }} crates</span>
+                  <span class="step-hint">Carried from previous period</span>
+                </div>
+              </div>
+
+              <div class="ledger-step-operator text-success">+</div>
+
+              <div class="ledger-step">
+                <div class="step-num-badge badge-green">2</div>
+                <div class="step-info">
+                  <span class="step-label">Produced (+)</span>
+                  <span class="step-value text-success">+{{ selectedItem.producedStock | number:'1.0-0' }} crates</span>
+                  <span class="step-hint">Receipts from plant floor</span>
+                </div>
+              </div>
+
+              <div class="ledger-step-operator text-warning">&minus;</div>
+
+              <div class="ledger-step">
+                <div class="step-num-badge badge-amber">3</div>
+                <div class="step-info">
+                  <span class="step-label">Dispatched (&minus;)</span>
+                  <span class="step-value text-warning">&minus;{{ selectedItem.soldStock | number:'1.0-0' }} crates</span>
+                  <span class="step-hint">Sold &amp; shipped to parties</span>
+                </div>
+              </div>
+
+              <div class="ledger-step-operator">=</div>
+
+              <div class="ledger-step step-result">
+                <div class="step-num-badge badge-emerald">4</div>
+                <div class="step-info">
+                  <span class="step-label">Available Closing</span>
+                  <span class="step-value font-bold text-success">{{ selectedItem.currentStock | number:'1.0-0' }} crates</span>
+                  <span class="step-hint">Verified physically</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: POLYMER BURN CONSUMPTION -->
+        <div *ngIf="detailsActiveTab === 'burn'" class="details-tab-content">
+          <div class="details-card">
+            <h4 class="details-card-title"><i class="bi bi-fire me-2"></i>Polymer Raw Material Burn Profile</h4>
+            <p class="text-secondary text-sm">
+              Each {{ selectedItem.crateType }} uses approximately <strong>1.85 kg</strong> of polymer compound.
+            </p>
+            <div class="details-kv-list">
+              <div class="details-kv-row">
+                <span class="kv-key">Polymer Consumed in Produced Stock:</span>
+                <span class="kv-val font-semibold">{{ (selectedItem.producedStock * 1.85) | number:'1.0-1' }} kg</span>
+              </div>
+              <div class="details-kv-row">
+                <span class="kv-key">Polymer Stored in Warehouse Inventory:</span>
+                <span class="kv-val font-semibold text-success">{{ (selectedItem.currentStock * 1.85) | number:'1.0-1' }} kg</span>
+              </div>
+              <div class="details-kv-row">
+                <span class="kv-key">Polymer Dispatched via Sales:</span>
+                <span class="kv-val text-warning">{{ (selectedItem.soldStock * 1.85) | number:'1.0-1' }} kg</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: VALUATION & AUDIT -->
+        <div *ngIf="detailsActiveTab === 'valuation'" class="details-tab-content">
+          <div class="details-card">
+            <h4 class="details-card-title"><i class="bi bi-cash-coin me-2"></i>Financial &amp; Asset Valuation</h4>
+            <div class="details-kv-list">
+              <div class="details-kv-row">
+                <span class="kv-key">Inventory Unit Rate:</span>
+                <span class="kv-val">₹{{ selectedItem.unitPrice || CRATE_RATE }} / crate</span>
+              </div>
+              <div class="details-kv-row">
+                <span class="kv-key">Total Produced Value (Cost basis):</span>
+                <span class="kv-val">₹{{ (selectedItem.producedStock * (selectedItem.unitPrice || CRATE_RATE)) | number:'1.0-0' }}</span>
+              </div>
+              <div class="details-kv-row">
+                <span class="kv-key">Dispatched Sales Value:</span>
+                <span class="kv-val">₹{{ (selectedItem.soldStock * (selectedItem.unitPrice || CRATE_RATE)) | number:'1.0-0' }}</span>
+              </div>
+              <div class="details-kv-row">
+                <span class="kv-key">Total Available Warehouse Asset:</span>
+                <span class="kv-val font-bold text-success" style="font-size:16px;">
+                  ₹{{ (selectedItem.currentStock * (selectedItem.unitPrice || CRATE_RATE)) | number:'1.0-0' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Details Footer -->
+      <div class="drawer-footer" *ngIf="selectedItem">
+        <button type="button" class="btn btn-secondary btn-action-compact" (click)="closeDetails()">
+          Close
+        </button>
+        <button type="button" 
+                class="btn btn-secondary btn-action-compact" 
+                *ngIf="!isViewer()" 
+                (click)="openAdjustmentModal(selectedItem); closeDetails()">
+          <i class="bi bi-sliders2 me-1"></i>Adjust Stock
+        </button>
+        <button type="button" 
+                class="btn btn-primary btn-action-primary" 
+                *ngIf="!isViewer()" 
+                (click)="openEditForm(selectedItem); closeDetails()">
+          <i class="bi bi-pencil me-1"></i>Edit Record
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

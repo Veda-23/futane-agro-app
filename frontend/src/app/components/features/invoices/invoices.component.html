@@ -1,182 +1,372 @@
-<div class="enterprise-header">
+<!-- ── 0. Breadcrumb Navigation ───────────────────────────────────────────── -->
+<div class="invoices-breadcrumb-bar no-print" aria-label="Breadcrumb">
+  <span class="crumb-root">ERP</span>
+  <i class="bi bi-chevron-right crumb-sep"></i>
+  <span class="crumb-section">Financial Management</span>
+  <i class="bi bi-chevron-right crumb-sep"></i>
+  <span class="crumb-current">GST Billing Hub &amp; Tax Invoices</span>
+</div>
+
+<!-- ── 1. Enterprise Header ─────────────────────────────────────────────── -->
+<div class="enterprise-header no-print">
   <div class="enterprise-header-title-group">
-    <div class="enterprise-header-icon"><i class="bi bi-receipt" style="font-size: 24px; color: var(--primary);"></i></div>
-    <div class="enterprise-header-text">
-      <h2>Invoice Registry & Ledger</h2>
-      <p>GST compliant invoice records, party billing totals, collections, and PDF downloads</p>
+    <div class="enterprise-header-icon">
+      <i class="bi bi-receipt-cutoff"></i>
     </div>
+    <div class="enterprise-header-text">
+      <h2>GST Billing Hub &amp; Tax Invoices</h2>
+      <p>GST-compliant tax invoices, party billing ledgers, receivables &amp; PDF documentation</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="loadData(true)" [disabled]="isLoading" title="Reload invoices">
+      <i class="bi bi-arrow-clockwise me-1" [class.spin-animate]="isLoading"></i>
+      <span>{{ isLoading ? 'Syncing...' : 'Refresh' }}</span>
+    </button>
+    <button type="button" class="btn btn-primary btn-sm btn-create-invoice" (click)="openCreateDrawer()" title="Create and generate new GST tax invoice">
+      <i class="bi bi-plus-lg me-1"></i>
+      <span>Create Invoice</span>
+    </button>
   </div>
 </div>
 
-<div class="glass-panel" style="padding: 20px;">
+<!-- ── 2. Subtabs Bar (Document Status Filter) ─────────────────────────── -->
+<div class="inv-subtabs-strip no-print">
+  <div class="inv-subtabs-nav">
+    <button type="button" class="inv-subtab-btn" [class.active]="activeSubtab === 'all'" (click)="setSubtab('all')">
+      <i class="bi bi-collection me-1"></i>
+      <span>All Invoices</span>
+      <span class="subtab-count-pill">{{ getCountBySubtab('all') }}</span>
+    </button>
+    <button type="button" class="inv-subtab-btn" [class.active]="activeSubtab === 'paid'" (click)="setSubtab('paid')">
+      <i class="bi bi-check2-circle me-1"></i>
+      <span>Fully Paid</span>
+      <span class="subtab-count-pill pill-paid">{{ getCountBySubtab('paid') }}</span>
+    </button>
+    <button type="button" class="inv-subtab-btn" [class.active]="activeSubtab === 'partial'" (click)="setSubtab('partial')">
+      <i class="bi bi-pie-chart me-1"></i>
+      <span>Pending / Partial</span>
+      <span class="subtab-count-pill pill-partial">{{ getCountBySubtab('partial') }}</span>
+    </button>
+    <button type="button" class="inv-subtab-btn" [class.active]="activeSubtab === 'unpaid'" (click)="setSubtab('unpaid')">
+      <i class="bi bi-exclamation-circle me-1"></i>
+      <span>Unpaid / Overdue</span>
+      <span class="subtab-count-pill pill-unpaid">{{ getCountBySubtab('unpaid') }}</span>
+    </button>
+    <button type="button" class="inv-subtab-btn" [class.active]="activeSubtab === 'high_value'" (click)="setSubtab('high_value')">
+      <i class="bi bi-shield-check me-1"></i>
+      <span>High Value (&ge; ₹50k e-Way)</span>
+      <span class="subtab-count-pill pill-high">{{ getCountBySubtab('high_value') }}</span>
+    </button>
+  </div>
+</div>
 
-  <!-- KPI Cards -->
-  <div class="grid-cols-4" style="margin-bottom:16px;">
-    <div class="kpi-card" style="padding:14px 18px !important;">
-      <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">🧾 Total Invoices</div>
-      <div style="font-size:24px;font-weight:800;color:var(--text-primary);margin-top:4px;">{{ invoicesList.length }}</div>
+<!-- ── 3. Glass Panel Main Container ──────────────────────────────────────── -->
+<div class="glass-panel invoices-main-panel">
+
+  <!-- KPI Summary Cards (4 Columns Responsive) -->
+  <div class="inv-kpi-grid no-print">
+    <!-- Card 1: Total Invoices -->
+    <div class="inv-kpi-card" (click)="filterByKpi('all')" title="Click to show all invoices">
+      <div class="inv-kpi-icon-badge kpi-blue">
+        <i class="bi bi-receipt"></i>
+      </div>
+      <div class="inv-kpi-content">
+        <span class="inv-kpi-label">Total Invoices</span>
+        <strong class="inv-kpi-value">{{ invoicesList.length | number }}</strong>
+        <span class="inv-kpi-meta">All-time generated ledger</span>
+      </div>
     </div>
-    <div class="kpi-card" style="padding:14px 18px !important;">
-      <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">💰 Total Billed</div>
-      <div style="font-size:22px;font-weight:800;color:var(--primary);margin-top:4px;">₹{{ getTotalInvoiceAmount() | number:'1.0-0' }}</div>
+
+    <!-- Card 2: Total Billed -->
+    <div class="inv-kpi-card" (click)="filterByKpi('all')" title="Gross cumulative billed amount">
+      <div class="inv-kpi-icon-badge kpi-indigo">
+        <i class="bi bi-cash-coin"></i>
+      </div>
+      <div class="inv-kpi-content">
+        <span class="inv-kpi-label">Total Billed</span>
+        <strong class="inv-kpi-value text-primary">₹{{ getTotalInvoiceAmount() | number:'1.0-0' }}</strong>
+        <span class="inv-kpi-meta">Tax: ₹{{ getTotalTaxAmount() | number:'1.0-0' }} (18% GST)</span>
+      </div>
     </div>
-    <div class="kpi-card" style="padding:14px 18px !important;">
-      <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">✅ Collected</div>
-      <div style="font-size:22px;font-weight:800;color:var(--color-success);margin-top:4px;">₹{{ getTotalInvoicePaid() | number:'1.0-0' }}</div>
+
+    <!-- Card 3: Collected -->
+    <div class="inv-kpi-card" (click)="filterByKpi('paid')" title="Click to filter paid invoices">
+      <div class="inv-kpi-icon-badge kpi-emerald">
+        <i class="bi bi-check2-circle"></i>
+      </div>
+      <div class="inv-kpi-content">
+        <span class="inv-kpi-label">Collected</span>
+        <strong class="inv-kpi-value text-success">₹{{ getTotalInvoicePaid() | number:'1.0-0' }}</strong>
+        <span class="inv-kpi-meta">Realized cash / bank revenue</span>
+      </div>
     </div>
-    <div class="kpi-card" style="padding:14px 18px !important;">
-      <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">⏳ Pending</div>
-      <div style="font-size:22px;font-weight:800;color:var(--color-danger);margin-top:4px;">₹{{ getTotalInvoicePending() | number:'1.0-0' }}</div>
+
+    <!-- Card 4: Pending -->
+    <div class="inv-kpi-card" (click)="filterByKpi('pending')" title="Click to filter pending receivables">
+      <div class="inv-kpi-icon-badge kpi-rose">
+        <i class="bi bi-hourglass-split"></i>
+      </div>
+      <div class="inv-kpi-content">
+        <span class="inv-kpi-label">Receivables Balance</span>
+        <strong class="inv-kpi-value text-danger">₹{{ getTotalInvoicePending() | number:'1.0-0' }}</strong>
+        <span class="inv-kpi-meta">Outstanding party balance</span>
+      </div>
     </div>
   </div>
 
-  <!-- Filter Bar -->
-  <div class="no-print" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:12px 14px;
-       background:var(--bg-canvas);border-radius:var(--radius-md);border:1px solid var(--border-color);">
-    <div style="flex:2 1 200px;min-width:160px;position:relative;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"
-           style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;">
-        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-      </svg>
+  <!-- Filter & Search Bar -->
+  <div class="inv-filter-bar no-print">
+    <!-- Search Query -->
+    <div class="inv-filter-field search-field">
+      <i class="bi bi-search search-icon"></i>
       <input type="text" appAutoSelect [(ngModel)]="filterSearchQuery" name="invSearch"
-             placeholder="🔍 Search party, invoice no…" (input)="currentPage=1"
-             style="padding-left:32px;height:36px;font-size:13px;width:100%;">
+             placeholder="Search party, invoice no, GSTIN, crate..." (input)="currentPage=1"
+             class="inv-control inv-search-input">
+      <button *ngIf="filterSearchQuery" (click)="filterSearchQuery=''; currentPage=1" class="search-clear-btn" title="Clear search">
+        <i class="bi bi-x"></i>
+      </button>
     </div>
-    <div style="flex:1 1 130px;min-width:120px;">
+
+    <!-- Date Picker -->
+    <div class="inv-filter-field date-field">
       <input type="date" appAutoSelect [(ngModel)]="filterDate" name="invDate" (change)="currentPage=1"
-             title="Filter by date" style="height:36px;font-size:13px;width:100%;">
+             title="Filter by invoice date" class="inv-control">
     </div>
-    <div style="flex:1 1 90px;min-width:80px;">
-      <input type="number" appAutoSelect [(ngModel)]="filterMinAmount" name="invMin" placeholder="Min ₹"
-             min="0" (input)="currentPage=1" style="height:36px;font-size:13px;width:100%;">
-    </div>
-    <div style="flex:1 1 90px;min-width:80px;">
-      <input type="number" appAutoSelect [(ngModel)]="filterMaxAmount" name="invMax" placeholder="Max ₹"
-             min="0" (input)="currentPage=1" style="height:36px;font-size:13px;width:100%;">
-    </div>
-    <div style="flex:1 1 150px;min-width:130px;">
-      <select [(ngModel)]="filterPartyId" name="invParty" (change)="currentPage=1"
-              style="height:36px;font-size:13px;width:100%;">
-        <option value="">🏢 All Parties</option>
+
+    <!-- Party Dropdown -->
+    <div class="inv-filter-field party-field">
+      <select [(ngModel)]="filterPartyId" name="invParty" (change)="currentPage=1" class="inv-control inv-select">
+        <option value="">All Parties</option>
         <option *ngFor="let p of parties" [value]="p.id">{{ p.partyName }}</option>
       </select>
     </div>
-    <button class="btn btn-outline" style="height:36px;padding:0 12px;font-size:12px;flex-shrink:0;"
-            (click)="filterSearchQuery='';filterDate='';filterMinAmount=null;filterMaxAmount=null;filterPartyId='';currentPage=1;">
-      <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
-    </button>
-    <button type="button" class="btn btn-secondary" (click)="exportTableCSV('invoices')"
-            style="height:36px;padding:0 12px;font-size:12px;flex-shrink:0;">
-      <i class="bi bi-download me-1"></i> CSV
-    </button>
-  </div>
 
-  <!-- Table Toolbar with Density & Column Controls -->
-  <div class="table-toolbar no-print" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
-    <!-- Density Toggle -->
-    <div class="density-switch-group">
-      <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact density"><i class="bi bi-distribute-vertical"></i> Compact</button>
-      <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="setDensity('comfortable')" title="Standard density"><i class="bi bi-list-ul"></i> Normal</button>
-      <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious density"><i class="bi bi-grid-3x2-gap"></i> Spacious</button>
+    <!-- Payment Status Dropdown -->
+    <div class="inv-filter-field status-field">
+      <select [(ngModel)]="filterPaymentStatus" name="invPaymentStatus" (change)="currentPage=1" class="inv-control inv-select">
+        <option value="all">All Statuses</option>
+        <option value="paid">Fully Paid</option>
+        <option value="partial">Partially Paid</option>
+        <option value="unpaid">Unpaid Only</option>
+      </select>
     </div>
 
-    <div style="display:flex;align-items:center;gap:8px;">
-      <!-- Reload Data -->
-      <button type="button" class="btn btn-secondary btn-sm" (click)="loadData(true)" title="Reload invoices">
-        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
-      </button>
+    <!-- Min Amount -->
+    <div class="inv-filter-field amount-field">
+      <input type="number" appAutoSelect [(ngModel)]="filterMinAmount" name="invMin" placeholder="Min ₹"
+             min="0" (input)="currentPage=1" class="inv-control">
+    </div>
 
-      <!-- Column Toggle -->
-      <div class="column-visibility-dropdown" style="position:relative;">
-        <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('invoices')">
-          <i class="bi bi-layout-three-columns me-1"></i> Columns
+    <!-- Max Amount -->
+    <div class="inv-filter-field amount-field">
+      <input type="number" appAutoSelect [(ngModel)]="filterMaxAmount" name="invMax" placeholder="Max ₹"
+             min="0" (input)="currentPage=1" class="inv-control">
+    </div>
+
+    <!-- Actions: Reset, CSV, Print -->
+    <div class="inv-filter-actions">
+      <button type="button" class="btn btn-outline btn-sm inv-btn-action" (click)="clearFilters()" title="Reset all filters">
+        <i class="bi bi-arrow-counterclockwise me-1"></i>
+        <span>Reset</span>
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm inv-btn-action" (click)="printRegistry()" title="Print current ledger table">
+        <i class="bi bi-printer me-1"></i>
+        <span>Print</span>
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm inv-btn-action" (click)="exportTableCSV('invoices')" title="Export filtered invoices to CSV">
+        <i class="bi bi-download me-1"></i>
+        <span>CSV</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Table Toolbar (Density & Columns) -->
+  <div class="table-toolbar no-print">
+    <!-- Density Toggle -->
+    <div class="density-switch-group">
+      <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact density">
+        <i class="bi bi-distribute-vertical"></i> Compact
+      </button>
+      <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="setDensity('comfortable')" title="Standard density">
+        <i class="bi bi-list-ul"></i> Normal
+      </button>
+      <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious density">
+        <i class="bi bi-grid-3x2-gap"></i> Spacious
+      </button>
+    </div>
+
+    <div class="toolbar-right-controls">
+      <!-- Column Toggle Dropdown -->
+      <div class="column-visibility-dropdown">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('invoices')" title="Toggle table columns">
+          <i class="bi bi-layout-three-columns me-1"></i>
+          <span>Columns</span>
         </button>
-        <div class="dropdown-menu" *ngIf="showColDropdown['invoices']"
-             style="position:absolute;right:0;top:35px;background:var(--bg-secondary);border:1px solid var(--border-glass);
-                    border-radius:8px;padding:10px;z-index:200;box-shadow:0 4px 20px rgba(0,0,0,.25);
-                    display:flex;flex-direction:column;gap:6px;min-width:160px;max-height:260px;overflow-y:auto;">
-          <label *ngFor="let col of getTableColumns('invoices')"
-                 style="display:flex;align-items:center;gap:8px;margin:0;text-transform:none;font-size:13px;
-                        font-weight:normal;color:var(--text-primary);cursor:pointer;">
-            <input type="checkbox" [checked]="isColumnVisible('invoices',col)" (change)="toggleColumn('invoices',col)"
-                   style="width:auto;margin:0;cursor:pointer;">{{ col }}
+        <div class="dropdown-menu column-menu" *ngIf="showColDropdown['invoices']">
+          <div class="column-menu-header">Table Columns</div>
+          <label *ngFor="let col of getTableColumns('invoices')" class="column-checkbox-item">
+            <input type="checkbox" [checked]="isColumnVisible('invoices',col)" (change)="toggleColumn('invoices',col)">
+            <span>{{ col }}</span>
           </label>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Table -->
-  <div class="table-container table-responsive" [class.table-compact]="tableDensity === 'compact'" [class.table-spacious]="tableDensity === 'spacious'">
+  <!-- ── 4. States & Data Table ─────────────────────────────────────────── -->
+
+  <!-- Error State -->
+  <app-empty-state *ngIf="hasError"
+                   variant="error"
+                   icon="bi-exclamation-triangle-fill"
+                   title="Unable to Load Invoices"
+                   [description]="errorMessage"
+                   actionLabel="Retry"
+                   actionIcon="bi-arrow-clockwise"
+                   (action)="loadData(true)">
+  </app-empty-state>
+
+  <!-- Empty Registry (No data on server) -->
+  <app-empty-state *ngIf="!hasError && invoicesList.length === 0 && !isLoading"
+                   variant="default"
+                   icon="bi-receipt-cutoff"
+                   title="No Invoices Recorded Yet"
+                   description="Invoices will be automatically created whenever sales entries are generated or dispatched."
+                   actionLabel="Create Invoice"
+                   actionIcon="bi-plus-lg"
+                   (action)="openCreateDrawer()">
+  </app-empty-state>
+
+  <!-- Empty Search Results (Filtered list is empty) -->
+  <app-empty-state *ngIf="!hasError && invoicesList.length > 0 && getProcessedList(invoicesList, 'invoices').length === 0"
+                   variant="search"
+                   icon="bi-search"
+                   title="No Matching Invoices Found"
+                   description="No invoices match your active filters or search terms. Try resetting filters."
+                   actionLabel="Clear Filters"
+                   actionIcon="bi-arrow-counterclockwise"
+                   (action)="clearFilters()">
+  </app-empty-state>
+
+  <!-- Active Data Table -->
+  <div class="table-container table-responsive"
+       *ngIf="!hasError && getProcessedList(invoicesList, 'invoices').length > 0"
+       [class.table-compact]="tableDensity === 'compact'"
+       [class.table-spacious]="tableDensity === 'spacious'">
     <table class="table enterprise-table" appResizableTable tableId="invoices_table">
       <thead>
         <tr>
-          <th *ngIf="isColumnVisible('invoices','ID')" (click)="setSort('id')" style="cursor:pointer; min-width:90px;">
+          <th *ngIf="isColumnVisible('invoices','ID')" (click)="setSort('id')" class="sortable-th th-id">
             # <span *ngIf="sortField==='id'"><i class="bi" [ngClass]="sortAsc ? 'bi-arrow-up' : 'bi-arrow-down'"></i></span>
           </th>
-          <th *ngIf="isColumnVisible('invoices','Invoice No')" (click)="setSort('invoiceNo')" style="cursor:pointer; min-width:140px;">
+          <th *ngIf="isColumnVisible('invoices','Invoice No')" (click)="setSort('invoiceNo')" class="sortable-th th-invoice">
             {{ 'inv.no' | translate:currentLang }} <span *ngIf="sortField==='invoiceNo'"><i class="bi" [ngClass]="sortAsc ? 'bi-arrow-up' : 'bi-arrow-down'"></i></span>
           </th>
-          <th *ngIf="isColumnVisible('invoices','Date')" (click)="setSort('createdDate')" style="cursor:pointer; min-width:110px;">
+          <th *ngIf="isColumnVisible('invoices','Date')" (click)="setSort('createdDate')" class="sortable-th th-date">
             {{ 'inv.date' | translate:currentLang }} <span *ngIf="sortField==='createdDate'"><i class="bi" [ngClass]="sortAsc ? 'bi-arrow-up' : 'bi-arrow-down'"></i></span>
           </th>
-          <th *ngIf="isColumnVisible('invoices','Party')" (click)="setSort('sale.party.partyName')" style="cursor:pointer; min-width:160px;">
+          <th *ngIf="isColumnVisible('invoices','Party')" (click)="setSort('sale.party.partyName')" class="sortable-th th-party">
             {{ 'inv.party_name' | translate:currentLang }} <span *ngIf="sortField==='sale.party.partyName'"><i class="bi" [ngClass]="sortAsc ? 'bi-arrow-up' : 'bi-arrow-down'"></i></span>
           </th>
-          <th *ngIf="isColumnVisible('invoices','Description')" style="min-width:160px;">Description</th>
-          <th *ngIf="isColumnVisible('invoices','Total Bill')" (click)="setSort('sale.totalAmount')" style="cursor:pointer; min-width:120px;">
+          <th *ngIf="isColumnVisible('invoices','Description')" class="th-desc">Description</th>
+          <th *ngIf="isColumnVisible('invoices','Taxable Val')" (click)="setSort('taxable')" class="sortable-th th-taxable text-right">
+            Taxable (₹) <span *ngIf="sortField==='taxable'"><i class="bi" [ngClass]="sortAsc ? 'bi-arrow-up' : 'bi-arrow-down'"></i></span>
+          </th>
+          <th *ngIf="isColumnVisible('invoices','GST 18%')" (click)="setSort('gst')" class="sortable-th th-gst text-right">
+            GST 18% (₹) <span *ngIf="sortField==='gst'"><i class="bi" [ngClass]="sortAsc ? 'bi-arrow-up' : 'bi-arrow-down'"></i></span>
+          </th>
+          <th *ngIf="isColumnVisible('invoices','Total Bill')" (click)="setSort('sale.totalAmount')" class="sortable-th th-total text-right">
             {{ 'inv.total_bill' | translate:currentLang }} <span *ngIf="sortField==='sale.totalAmount'"><i class="bi" [ngClass]="sortAsc ? 'bi-arrow-up' : 'bi-arrow-down'"></i></span>
           </th>
-          <th *ngIf="isColumnVisible('invoices','Status')" style="min-width:110px;">Status</th>
-          <th *ngIf="isColumnVisible('invoices','Actions')" style="min-width:130px;">{{ 'label.actions' | translate:currentLang }}</th>
+          <th *ngIf="isColumnVisible('invoices','Status')" class="th-status text-center">Status</th>
+          <th *ngIf="isColumnVisible('invoices','Actions')" class="th-actions text-right">{{ 'label.actions' | translate:currentLang }}</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let inv of getProcessedList(invoicesList, 'invoices'); trackBy: trackByInvoiceId">
+          <!-- ID -->
           <td *ngIf="isColumnVisible('invoices','ID')">
-            <span [title]="inv.id" style="font-family:monospace;font-size:11px;background:var(--bg-canvas);
-                  padding:2px 6px;border-radius:4px;color:var(--text-muted);cursor:help;">
+            <span [title]="inv.id" class="id-badge">
               #{{ inv.id?.toString().slice(-6).toUpperCase() }}
             </span>
           </td>
+
+          <!-- Invoice No -->
           <td *ngIf="isColumnVisible('invoices','Invoice No')">
-            <span [title]="inv.invoiceNo" style="font-family:monospace;font-size:12px;font-weight:700;color:var(--accent);">
-              {{ inv.invoiceNo?.length > 20 ? (inv.invoiceNo | slice:0:20) + '…' : inv.invoiceNo }}
+            <span [title]="inv.invoiceNo" class="invoice-no-pill" (click)="viewInvoice(inv)">
+              {{ inv.invoiceNo }}
             </span>
           </td>
-          <td *ngIf="isColumnVisible('invoices','Date')"><span class="date-cell">{{ (inv.createdDate || inv.date) | indianDate }}</span></td>
-          <td *ngIf="isColumnVisible('invoices','Party')"><strong>{{ inv.sale?.party?.partyName }}</strong></td>
-          <td *ngIf="isColumnVisible('invoices','Description')"
-              style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
-              [title]="inv.sale?.crateType + ' | ' + inv.sale?.crateMaterial + ' | Qty: ' + inv.sale?.quantity">
-            {{ inv.sale?.crateType }} ({{ inv.sale?.quantity }})
+
+          <!-- Date -->
+          <td *ngIf="isColumnVisible('invoices','Date')">
+            <span class="date-cell">{{ (inv.createdDate || inv.date) | indianDate }}</span>
           </td>
-          <td *ngIf="isColumnVisible('invoices','Total Bill')"><strong style="color:var(--text-primary);">₹{{ inv.sale?.totalAmount | number:'1.2-2' }}</strong></td>
-          <td *ngIf="isColumnVisible('invoices','Status')">
-            <span class="badge"
-              [class.badge-success]="inv.sale?.remaining === 0"
-              [class.badge-warning]="inv.sale?.remaining > 0 && inv.sale?.remaining < inv.sale?.totalAmount"
-              [class.badge-danger]="inv.sale?.remaining >= inv.sale?.totalAmount && inv.sale?.remaining > 0">
-              {{ inv.sale?.remaining === 0 ? 'Paid' : inv.sale?.remaining >= inv.sale?.totalAmount ? 'Unpaid' : 'Partial' }}
-            </span>
-          </td>
-          <td *ngIf="isColumnVisible('invoices','Actions')" style="text-align:right; padding-right:14px;">
-            <div class="row-actions-group" style="justify-content: flex-end;">
-              <button class="btn-row-action btn-edit" (click)="viewInvoice(inv)" title="View Invoice">
-                <i class="bi bi-eye me-1"></i> View
-              </button>
-              <button class="btn-row-action" (click)="downloadPDFInvoice(inv)" title="Download PDF">
-                <i class="bi bi-file-earmark-pdf me-1"></i> PDF
-              </button>
+
+          <!-- Party -->
+          <td *ngIf="isColumnVisible('invoices','Party')">
+            <div class="party-cell-group">
+              <strong class="party-name">{{ inv.sale?.party?.partyName || '—' }}</strong>
+              <span class="party-gst-sub" *ngIf="inv.sale?.party?.gstNumber">
+                <i class="bi bi-shield-check me-1"></i>{{ inv.sale?.party?.gstNumber }}
+              </span>
             </div>
           </td>
-        </tr>
-        <!-- Empty state -->
-        <tr *ngIf="getProcessedList(invoicesList, 'invoices').length === 0">
-          <td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted);">
-            <div style="margin-bottom:8px;"><i class="bi bi-inbox" style="font-size:36px; color:var(--text-muted);"></i></div>
-            <div style="font-size:14px;font-weight:600;">No invoices found</div>
-            <div style="font-size:12px;margin-top:4px;">Try adjusting your search or filters</div>
+
+          <!-- Description -->
+          <td *ngIf="isColumnVisible('invoices','Description')" class="desc-cell"
+              [title]="inv.sale?.crateType + ' | ' + (inv.sale?.crateMaterial || 'HDPE') + ' | Qty: ' + inv.sale?.quantity">
+            <span class="desc-tag">{{ inv.sale?.crateType || 'Crate' }}</span>
+            <span class="desc-qty">({{ inv.sale?.quantity | number }} pcs)</span>
+          </td>
+
+          <!-- Taxable Value -->
+          <td *ngIf="isColumnVisible('invoices','Taxable Val')" class="text-right">
+            <span class="amount-mono">₹{{ getTaxableAmount(inv) | number:'1.2-2' }}</span>
+          </td>
+
+          <!-- GST 18% -->
+          <td *ngIf="isColumnVisible('invoices','GST 18%')" class="text-right">
+            <span class="amount-mono text-tax">₹{{ getGstAmount(inv) | number:'1.2-2' }}</span>
+          </td>
+
+          <!-- Total Bill -->
+          <td *ngIf="isColumnVisible('invoices','Total Bill')" class="text-right">
+            <strong class="total-amount">₹{{ inv.sale?.totalAmount | number:'1.2-2' }}</strong>
+          </td>
+
+          <!-- Status Badge -->
+          <td *ngIf="isColumnVisible('invoices','Status')" class="text-center">
+            <span class="status-badge"
+                  [class.badge-paid]="inv.sale?.remaining === 0"
+                  [class.badge-partial]="inv.sale?.remaining > 0 && inv.sale?.remaining < inv.sale?.totalAmount"
+                  [class.badge-unpaid]="inv.sale?.remaining >= inv.sale?.totalAmount && inv.sale?.remaining > 0">
+              <i class="bi" [ngClass]="{
+                'bi-check-circle-fill': inv.sale?.remaining === 0,
+                'bi-pie-chart-fill': inv.sale?.remaining > 0 && inv.sale?.remaining < inv.sale?.totalAmount,
+                'bi-exclamation-circle-fill': inv.sale?.remaining >= inv.sale?.totalAmount && inv.sale?.remaining > 0
+              }"></i>
+              <span>{{ inv.sale?.remaining === 0 ? 'Paid' : inv.sale?.remaining >= inv.sale?.totalAmount ? 'Unpaid' : 'Partial' }}</span>
+            </span>
+          </td>
+
+          <!-- Actions -->
+          <td *ngIf="isColumnVisible('invoices','Actions')" class="text-right">
+            <div class="row-actions-group">
+              <button type="button" class="btn-row-action btn-view" (click)="viewInvoice(inv)" title="View Tax Invoice">
+                <i class="bi bi-eye me-1"></i>
+                <span>View</span>
+              </button>
+              <button type="button" class="btn-row-action btn-print" (click)="printInvoice(inv)" title="Print Tax Invoice">
+                <i class="bi bi-printer me-1"></i>
+                <span>Print</span>
+              </button>
+              <button type="button" class="btn-row-action btn-pdf" (click)="downloadPDFInvoice(inv)" title="Download PDF">
+                <i class="bi bi-file-earmark-pdf me-1"></i>
+                <span>PDF</span>
+              </button>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -184,166 +374,367 @@
   </div>
 
   <!-- Pagination -->
-  <div class="table-pagination no-print"
-       style="display:flex;justify-content:space-between;align-items:center;margin-top:15px;
-              padding-top:10px;border-top:1px solid var(--border-glass);">
-    <span style="font-size:13px;color:var(--text-secondary);">
-      Showing {{ (currentPage-1)*pageSize+1 }}–{{ Math.min(currentPage*pageSize, tableFilteredCounts['invoices']||0) }}
-      of {{ tableFilteredCounts['invoices']||0 }}
-    </span>
-    <div style="display:flex;gap:8px;">
-      <button class="btn btn-secondary btn-sm" [disabled]="currentPage===1"
-              (click)="currentPage=currentPage-1" style="padding:6px 12px;font-size:13px;"><i class="bi bi-chevron-left me-1"></i> Prev</button>
-      <button class="btn btn-secondary btn-sm"
+  <div class="table-pagination no-print" *ngIf="!hasError && getProcessedList(invoicesList, 'invoices').length > 0">
+    <div class="pagination-left">
+      <span class="pagination-info">
+        Showing {{ (currentPage-1)*pageSize+1 }}–{{ Math.min(currentPage*pageSize, tableFilteredCounts['invoices']||0) }}
+        of {{ tableFilteredCounts['invoices']||0 }} records
+      </span>
+      <div class="page-size-selector">
+        <label for="invPageSize">Rows:</label>
+        <select id="invPageSize" [ngModel]="pageSize" (ngModelChange)="setPageSize($event)" class="page-size-select">
+          <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="pagination-controls">
+      <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage===1"
+              (click)="currentPage=currentPage-1" title="Previous page">
+        <i class="bi bi-chevron-left me-1"></i> Prev
+      </button>
+      <span class="pagination-page-badge">Page {{ currentPage }}</span>
+      <button type="button" class="btn btn-secondary btn-sm"
               [disabled]="currentPage*pageSize>=(tableFilteredCounts['invoices']||0)"
-              (click)="currentPage=currentPage+1" style="padding:6px 12px;font-size:13px;">Next <i class="bi bi-chevron-right ms-1"></i></button>
+              (click)="currentPage=currentPage+1" title="Next page">
+        Next <i class="bi bi-chevron-right ms-1"></i>
+      </button>
     </div>
   </div>
+
 </div>
 
-<!-- ── Premium Invoice Modal ─────────────────────────────────────────────────── -->
+<!-- ── 5. Premium Tax Invoice Modal ────────────────────────────────────────── -->
 <div class="invoice-modal-overlay" *ngIf="selectedInvoice" (click)="closeInvoiceModalOnBackdrop($event)">
   <div class="invoice-modal-card" (click)="$event.stopPropagation()">
 
-
     <!-- Header -->
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;
-                border-bottom:1px solid var(--border-color);background:var(--bg-canvas);flex-shrink:0;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:34px;height:34px;background:linear-gradient(135deg,#d97706,#f59e0b);border-radius:8px;
-                    display:flex;align-items:center;justify-content:center;">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-          </svg>
+    <div class="invoice-modal-header no-print">
+      <div class="modal-header-left">
+        <div class="modal-header-icon-pill">
+          <i class="bi bi-receipt-cutoff"></i>
         </div>
         <div>
-          <div style="font-weight:700;font-size:15px;color:var(--text-primary);">Invoice Preview</div>
-          <div style="font-size:11px;color:var(--text-muted);font-family:monospace;">{{ selectedInvoice?.invoiceNo }}</div>
+          <div class="modal-header-title">GST Tax Invoice Preview</div>
+          <div class="modal-header-subtitle">{{ selectedInvoice?.invoiceNo }}</div>
         </div>
       </div>
-      <button (click)="closeInvoiceModal()" title="Close (Esc)"
-              style="width:30px;height:30px;border-radius:50%;background:rgba(239,68,68,.12);border:none;
-                     cursor:pointer;display:flex;align-items:center;justify-content:center;color:#ef4444;font-size:14px;"><i class="bi bi-x-lg"></i></button>
+      <button type="button" (click)="closeInvoiceModal()" title="Close (Esc)" class="modal-close-btn" aria-label="Close invoice preview">
+        <i class="bi bi-x-lg"></i>
+      </button>
     </div>
 
-    <!-- Scrollable body / bill content -->
-    <div class="invoice-bill-content" style="padding:24px 32px;overflow-y:auto;flex:1;background:#fff;color:#1f2937;">
+    <!-- Printable Bill Content -->
+    <div class="invoice-bill-content">
 
       <!-- Company Header -->
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
-        <div style="display:flex;align-items:center;gap:14px;">
-          <img src="assets/logo.svg" alt="Futane Agro" style="width:50px;height:50px;object-fit:contain;flex-shrink:0;">
+      <div class="invoice-company-header">
+        <div class="company-brand-group">
+          <img src="assets/logo.svg" alt="Futane Agro" class="company-logo">
           <div>
-            <h2 style="margin:0;font-size:17px;font-weight:800;color:#111;">FUTANE AGRO INDUSTRIES PVT. LTD.</h2>
-            <p style="margin:2px 0 0;font-size:11px;color:#555;">Manufacturers of Premium Plastic Crates & Trays</p>
-            <p style="margin:2px 0 0;font-size:10px;color:#888;">Hadapsar Industrial Area, Pune - 411028 | +91 98234 56789</p>
+            <h2 class="company-name">FUTANE AGRO INDUSTRIES PVT. LTD.</h2>
+            <p class="company-tagline">Manufacturers of Premium Plastic Crates &amp; Material Handling Trays</p>
+            <p class="company-address">Gate No 144, Hadapsar Industrial Area, Pune - 411028 | Tel: +91 98234 56789</p>
           </div>
         </div>
-        <div style="text-align:right;font-size:11px;color:#555;line-height:1.9;flex-shrink:0;">
+        <div class="company-tax-credentials">
           <div><strong>GSTIN:</strong> 27AAACF2920A1ZX</div>
           <div><strong>PAN:</strong> AAACF2920A</div>
           <div><strong>TAN:</strong> PNEF02910D</div>
+          <div><strong>State:</strong> Maharashtra (27)</div>
         </div>
       </div>
-      <div style="border-top:2px solid #d97706;margin-bottom:16px;"></div>
-      <div style="text-align:center;margin-bottom:16px;">
-        <span style="font-size:13px;font-weight:800;letter-spacing:.12em;color:#d97706;
-                     border:2px solid #d97706;padding:3px 18px;border-radius:4px;">TAX INVOICE</span>
+
+      <!-- Tax Invoice Title Tag -->
+      <div class="tax-invoice-tag-container">
+        <span class="tax-invoice-tag">TAX INVOICE</span>
       </div>
 
       <!-- Meta Grid -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
-        <div style="background:#f9fafb;border-radius:8px;padding:14px 16px;">
-          <div style="font-size:10px;font-weight:800;color:#d97706;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">Invoice Details</div>
-          <div style="font-size:13px;line-height:2;color:#374151;">
-            <div><strong>No:</strong> {{ selectedInvoice?.invoiceNo }}</div>
-            <div><strong>Date:</strong> {{ formatDate(selectedInvoice?.createdDate) }}</div>
+      <div class="invoice-meta-grid">
+        <div class="meta-card">
+          <div class="meta-card-title">Invoice Details</div>
+          <div class="meta-card-rows">
+            <div><span class="meta-field">Invoice No:</span> <strong class="font-mono">{{ selectedInvoice?.invoiceNo }}</strong></div>
+            <div><span class="meta-field">Date of Issue:</span> {{ formatDate(selectedInvoice?.createdDate || selectedInvoice?.date) }}</div>
+            <div><span class="meta-field">Place of Supply:</span> Maharashtra (27)</div>
+            <div><span class="meta-field">Document Type:</span> Tax Invoice under Sec 31 GST Act</div>
           </div>
         </div>
-        <div style="background:#f9fafb;border-radius:8px;padding:14px 16px;">
-          <div style="font-size:10px;font-weight:800;color:#d97706;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">Billed To</div>
-          <div style="font-size:13px;line-height:2;color:#374151;">
-            <div><strong>{{ selectedInvoice?.sale?.party?.partyName }}</strong></div>
-            <div>GST: {{ selectedInvoice?.sale?.party?.gstNumber || 'N/A' }}</div>
-            <div>Email: {{ selectedInvoice?.sale?.party?.email || '—' }}</div>
+        <div class="meta-card">
+          <div class="meta-card-title">Billed To (Customer Details)</div>
+          <div class="meta-card-rows">
+            <div><strong class="party-title">{{ selectedInvoice?.sale?.party?.partyName || 'Cash Sale' }}</strong></div>
+            <div><span class="meta-field">GSTIN / UIN:</span> <strong>{{ selectedInvoice?.sale?.party?.gstNumber || 'N/A / Unregistered' }}</strong></div>
+            <div><span class="meta-field">Address:</span> {{ selectedInvoice?.sale?.party?.address || 'Maharashtra, India' }}</div>
+            <div><span class="meta-field">Contact / Email:</span> {{ selectedInvoice?.sale?.party?.phone || selectedInvoice?.sale?.party?.email || '—' }}</div>
           </div>
         </div>
       </div>
 
       <!-- Line Items Table -->
-      <table style="width:100%;border-collapse:collapse;margin-bottom:18px;font-size:13px;">
+      <table class="invoice-items-table">
         <thead>
-          <tr style="background:#d97706;color:#fff;">
-            <th style="padding:10px 12px;text-align:left;">Description</th>
-            <th style="padding:10px 12px;text-align:left;">Material</th>
-            <th style="padding:10px 12px;text-align:right;">Qty</th>
-            <th style="padding:10px 12px;text-align:right;">Rate (₹)</th>
-            <th style="padding:10px 12px;text-align:right;">CGST 9%</th>
-            <th style="padding:10px 12px;text-align:right;">SGST 9%</th>
-            <th style="padding:10px 12px;text-align:right;">Total (₹)</th>
+          <tr>
+            <th class="text-left">Item Description</th>
+            <th class="text-left">HSN / Material</th>
+            <th class="text-right">Qty (Nos)</th>
+            <th class="text-right">Rate (₹)</th>
+            <th class="text-right">Taxable (₹)</th>
+            <th class="text-right">CGST 9%</th>
+            <th class="text-right">SGST 9%</th>
+            <th class="text-right">Total (₹)</th>
           </tr>
         </thead>
         <tbody>
-          <tr style="border-bottom:1px solid #e5e7eb;color:#374151;">
-            <td style="padding:10px 12px;">{{ selectedInvoice?.sale?.crateType }}</td>
-            <td style="padding:10px 12px;">{{ selectedInvoice?.sale?.crateMaterial }}</td>
-            <td style="padding:10px 12px;text-align:right;">{{ selectedInvoice?.sale?.quantity }}</td>
-            <td style="padding:10px 12px;text-align:right;">₹{{ selectedInvoice?.sale?.rate | number:'1.2-2' }}</td>
-            <td style="padding:10px 12px;text-align:right;">₹{{ (selectedInvoice?.sale?.cgst || 0) | number:'1.2-2' }}</td>
-            <td style="padding:10px 12px;text-align:right;">₹{{ (selectedInvoice?.sale?.sgst || 0) | number:'1.2-2' }}</td>
-            <td style="padding:10px 12px;text-align:right;"><strong>₹{{ selectedInvoice?.sale?.totalAmount | number:'1.2-2' }}</strong></td>
+          <tr>
+            <td>
+              <div class="item-title">{{ selectedInvoice?.sale?.crateType }}</div>
+              <small class="text-muted">Heavy Duty Injection Moulded</small>
+            </td>
+            <td>
+              <span class="font-mono">3923 / {{ selectedInvoice?.sale?.crateMaterial || 'HDPE' }}</span>
+            </td>
+            <td class="text-right font-mono">{{ selectedInvoice?.sale?.quantity | number }}</td>
+            <td class="text-right font-mono">₹{{ selectedInvoice?.sale?.rate | number:'1.2-2' }}</td>
+            <td class="text-right font-mono">₹{{ ((selectedInvoice?.sale?.quantity || 0) * (selectedInvoice?.sale?.rate || 0)) | number:'1.2-2' }}</td>
+            <td class="text-right font-mono">₹{{ (selectedInvoice?.sale?.cgst || 0) | number:'1.2-2' }}</td>
+            <td class="text-right font-mono">₹{{ (selectedInvoice?.sale?.sgst || 0) | number:'1.2-2' }}</td>
+            <td class="text-right font-mono"><strong>₹{{ selectedInvoice?.sale?.totalAmount | number:'1.2-2' }}</strong></td>
           </tr>
         </tbody>
       </table>
 
-      <!-- Summary -->
-      <div style="display:flex;justify-content:flex-end;">
-        <div style="min-width:280px;background:#f9fafb;border-radius:8px;padding:16px 20px;font-size:13px;line-height:2.2;color:#374151;">
-          <div style="display:flex;justify-content:space-between;">
+      <!-- Summary & Balance Due -->
+      <div class="invoice-summary-container">
+        <div class="invoice-summary-box">
+          <div class="summary-line">
             <span>Taxable Subtotal:</span>
-            <span>₹{{ (selectedInvoice?.sale?.quantity * selectedInvoice?.sale?.rate) | number:'1.2-2' }}</span>
+            <span class="font-mono">₹{{ ((selectedInvoice?.sale?.quantity || 0) * (selectedInvoice?.sale?.rate || 0)) | number:'1.2-2' }}</span>
           </div>
-          <div style="display:flex;justify-content:space-between;">
-            <span>Total GST (18%):</span>
-            <span>₹{{ ((selectedInvoice?.sale?.cgst||0) + (selectedInvoice?.sale?.sgst||0)) | number:'1.2-2' }}</span>
+          <div class="summary-line">
+            <span>Central GST (CGST 9%):</span>
+            <span class="font-mono">₹{{ (selectedInvoice?.sale?.cgst || 0) | number:'1.2-2' }}</span>
           </div>
-          <div style="display:flex;justify-content:space-between;border-top:2px solid #d97706;padding-top:6px;
-                      font-size:15px;font-weight:800;color:#d97706;">
+          <div class="summary-line">
+            <span>State GST (SGST 9%):</span>
+            <span class="font-mono">₹{{ (selectedInvoice?.sale?.sgst || 0) | number:'1.2-2' }}</span>
+          </div>
+          <div class="summary-line font-semibold">
+            <span>Total GST Applicable (18%):</span>
+            <span class="font-mono">₹{{ ((selectedInvoice?.sale?.cgst || 0) + (selectedInvoice?.sale?.sgst || 0)) | number:'1.2-2' }}</span>
+          </div>
+          <div class="summary-line grand-total-line">
             <span>Grand Total:</span>
-            <span>₹{{ selectedInvoice?.sale?.totalAmount | number:'1.2-2' }}</span>
+            <span class="font-mono">₹{{ selectedInvoice?.sale?.totalAmount | number:'1.2-2' }}</span>
           </div>
-          <div style="display:flex;justify-content:space-between;margin-top:4px;color:#059669;">
+          <div class="summary-line paid-line">
             <span>Amount Paid:</span>
-            <span>₹{{ selectedInvoice?.sale?.paid | number:'1.2-2' }}</span>
+            <span class="font-mono">₹{{ selectedInvoice?.sale?.paid | number:'1.2-2' }}</span>
           </div>
-          <div style="display:flex;justify-content:space-between;margin-top:4px;"
-               [style.color]="selectedInvoice?.sale?.remaining===0 ? '#059669' : '#dc2626'">
+          <div class="summary-line balance-line" [class.balance-cleared]="selectedInvoice?.sale?.remaining === 0">
             <strong>Balance Due:</strong>
-            <strong>₹{{ selectedInvoice?.sale?.remaining | number:'1.2-2' }}</strong>
+            <strong class="font-mono">₹{{ selectedInvoice?.sale?.remaining | number:'1.2-2' }}</strong>
           </div>
-          <div style="text-align:center;margin-top:10px;">
-            <span class="badge"
-              [class.badge-success]="selectedInvoice?.sale?.remaining===0"
-              [class.badge-danger]="selectedInvoice?.sale?.remaining>=selectedInvoice?.sale?.totalAmount && selectedInvoice?.sale?.remaining>0"
-              [class.badge-warning]="selectedInvoice?.sale?.remaining>0 && selectedInvoice?.sale?.remaining<selectedInvoice?.sale?.totalAmount"
-              style="font-size:12px;padding:4px 16px;">
-              {{ selectedInvoice?.sale?.remaining===0 ? 'FULLY PAID' :
-                 selectedInvoice?.sale?.remaining>=selectedInvoice?.sale?.totalAmount ? 'UNPAID' : 'PARTIAL PAYMENT' }}
+          <div class="summary-badge-wrap">
+            <span class="status-badge"
+                  [class.badge-paid]="selectedInvoice?.sale?.remaining === 0"
+                  [class.badge-partial]="selectedInvoice?.sale?.remaining > 0 && selectedInvoice?.sale?.remaining < selectedInvoice?.sale?.totalAmount"
+                  [class.badge-unpaid]="selectedInvoice?.sale?.remaining >= selectedInvoice?.sale?.totalAmount && selectedInvoice?.sale?.remaining > 0">
+              <i class="bi" [ngClass]="{
+                'bi-check-circle-fill': selectedInvoice?.sale?.remaining === 0,
+                'bi-pie-chart-fill': selectedInvoice?.sale?.remaining > 0 && selectedInvoice?.sale?.remaining < selectedInvoice?.sale?.totalAmount,
+                'bi-exclamation-circle-fill': selectedInvoice?.sale?.remaining >= selectedInvoice?.sale?.totalAmount && selectedInvoice?.sale?.remaining > 0
+              }"></i>
+              <span>{{ selectedInvoice?.sale?.remaining === 0 ? 'FULLY PAID' :
+                     selectedInvoice?.sale?.remaining >= selectedInvoice?.sale?.totalAmount ? 'UNPAID' : 'PARTIAL PAYMENT' }}</span>
             </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Legal Declaration -->
+      <div class="invoice-legal-note">
+        <p><strong>Declaration:</strong> We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct. Goods once sold will not be taken back without valid authorization.</p>
+        <div class="invoice-signatory-wrap">
+          <div class="signatory-box">
+            <span>For FUTANE AGRO INDUSTRIES PVT. LTD.</span>
+            <div class="signatory-line">Authorized Signatory</div>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Footer -->
-    <div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 24px;
-                border-top:1px solid var(--border-color);background:var(--bg-canvas);flex-shrink:0;">
-      <button class="btn btn-secondary" (click)="closeInvoiceModal()" style="height:38px;"><i class="bi bi-x-circle me-1"></i> Close</button>
-      <button class="btn btn-success" (click)="downloadPDFInvoice(selectedInvoice)" style="height:38px;">
-        <i class="bi bi-download me-1"></i> Download PDF
+    <div class="invoice-modal-footer no-print">
+      <button type="button" class="btn btn-secondary" (click)="closeInvoiceModal()">
+        <i class="bi bi-x-circle me-1"></i> Close
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="printCurrentInvoice()">
+        <i class="bi bi-printer me-1"></i> Print Invoice
+      </button>
+      <button type="button" class="btn btn-primary" (click)="downloadPDFInvoice(selectedInvoice)">
+        <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF
       </button>
     </div>
 
+  </div>
+</div>
+
+<!-- ── 6. Create / Generate Invoice Slide-Over Drawer ──────────────────────── -->
+<div class="invoice-drawer-backdrop" *ngIf="isCreateDrawerOpen" (click)="closeCreateDrawer()">
+  <div class="invoice-drawer-panel" (click)="$event.stopPropagation()">
+
+    <!-- Drawer Header -->
+    <div class="invoice-drawer-header">
+      <div class="drawer-header-title-wrap">
+        <div class="drawer-header-icon">
+          <i class="bi bi-receipt"></i>
+        </div>
+        <div>
+          <h3>Create GST Tax Invoice</h3>
+          <p class="drawer-header-sub">
+            Doc No: <strong class="font-mono text-primary">{{ getPreviewInvoiceNumber() }}</strong> &bull; CGST 9% + SGST 9% (18%)
+          </p>
+        </div>
+      </div>
+      <button type="button" class="drawer-close-btn" (click)="closeCreateDrawer()" title="Close drawer (Esc)">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Drawer Form Body -->
+    <form (ngSubmit)="submitCreateInvoice()" class="invoice-drawer-body">
+
+      <!-- Section 1: Customer & Date -->
+      <div class="drawer-form-section">
+        <div class="section-title-tag">
+          <i class="bi bi-person-check me-1"></i> 1. Customer &amp; Billing Entity
+        </div>
+
+        <div class="drawer-form-grid">
+          <div class="drawer-form-group col-span-2">
+            <label for="invPartySelect" class="form-label">Customer / Party Name <span class="text-danger">*</span></label>
+            <select id="invPartySelect" [(ngModel)]="newInvoice.partyId" name="partyId" (change)="onPartySelectChange()" class="form-select drawer-control" required>
+              <option value="" disabled>Select billing party...</option>
+              <option *ngFor="let p of parties" [value]="p.id">
+                {{ p.partyName }} ({{ p.gstNumber || 'No GSTIN' }})
+              </option>
+            </select>
+          </div>
+
+          <div class="drawer-form-group">
+            <label for="invDateInput" class="form-label">Invoice Date <span class="text-danger">*</span></label>
+            <input id="invDateInput" type="date" [(ngModel)]="newInvoice.invoiceDate" name="invoiceDate" class="form-control drawer-control" required>
+          </div>
+
+          <div class="drawer-form-group" *ngIf="selectedPartyDetails">
+            <label class="form-label">Party GSTIN</label>
+            <input type="text" [value]="selectedPartyDetails.gstNumber || 'Unregistered'" readonly class="form-control drawer-control bg-readonly font-mono">
+          </div>
+        </div>
+
+        <!-- Party Address Banner if available -->
+        <div class="party-info-banner" *ngIf="selectedPartyDetails">
+          <div class="party-info-row">
+            <i class="bi bi-geo-alt me-1 text-primary"></i>
+            <span>{{ selectedPartyDetails.address || 'Address on record' }}</span>
+          </div>
+          <div class="party-info-row" *ngIf="selectedPartyDetails.phone">
+            <i class="bi bi-telephone me-1 text-primary"></i>
+            <span>{{ selectedPartyDetails.phone }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Items & Specifications -->
+      <div class="drawer-form-section">
+        <div class="section-title-tag">
+          <i class="bi bi-box-seam me-1"></i> 2. Product Line Item &amp; Rates
+        </div>
+
+        <div class="drawer-form-grid">
+          <div class="drawer-form-group col-span-2">
+            <label for="invCrateType" class="form-label">Crate / Product Specification <span class="text-danger">*</span></label>
+            <select id="invCrateType" [(ngModel)]="newInvoice.crateType" name="crateType" class="form-select drawer-control">
+              <option *ngFor="let c of crateOptions" [value]="c">{{ c }}</option>
+            </select>
+          </div>
+
+          <div class="drawer-form-group">
+            <label for="invCrateMaterial" class="form-label">Material Composition</label>
+            <select id="invCrateMaterial" [(ngModel)]="newInvoice.crateMaterial" name="crateMaterial" class="form-select drawer-control">
+              <option *ngFor="let m of materialOptions" [value]="m">{{ m }}</option>
+            </select>
+          </div>
+
+          <div class="drawer-form-group">
+            <label for="invQty" class="form-label">Quantity (Units) <span class="text-danger">*</span></label>
+            <input id="invQty" type="number" [(ngModel)]="newInvoice.quantity" name="quantity" min="1" class="form-control drawer-control font-mono" required>
+          </div>
+
+          <div class="drawer-form-group">
+            <label for="invRate" class="form-label">Rate per Unit (₹) <span class="text-danger">*</span></label>
+            <input id="invRate" type="number" [(ngModel)]="newInvoice.rate" name="rate" min="0.01" step="0.01" class="form-control drawer-control font-mono" required>
+          </div>
+
+          <div class="drawer-form-group">
+            <label for="invPaid" class="form-label">Upfront Payment Received (₹)</label>
+            <input id="invPaid" type="number" [(ngModel)]="newInvoice.paid" name="paid" min="0" step="0.01" class="form-control drawer-control font-mono">
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Live Tax & Settlement Computation -->
+      <div class="drawer-form-section">
+        <div class="section-title-tag">
+          <i class="bi bi-calculator me-1"></i> 3. Tax Breakdown &amp; Grand Total
+        </div>
+
+        <div class="drawer-calc-card">
+          <div class="calc-row">
+            <span>Taxable Subtotal (Qty &times; Rate):</span>
+            <strong class="font-mono">₹{{ getNewInvoiceSubtotal() | number:'1.2-2' }}</strong>
+          </div>
+          <div class="calc-row">
+            <span>Central GST (CGST 9%):</span>
+            <span class="font-mono text-muted">₹{{ getNewInvoiceCgst() | number:'1.2-2' }}</span>
+          </div>
+          <div class="calc-row">
+            <span>State GST (SGST 9%):</span>
+            <span class="font-mono text-muted">₹{{ getNewInvoiceSgst() | number:'1.2-2' }}</span>
+          </div>
+          <div class="calc-row text-primary">
+            <span>Total GST (18%):</span>
+            <strong class="font-mono">₹{{ getNewInvoiceTotalTax() | number:'1.2-2' }}</strong>
+          </div>
+          <div class="calc-divider"></div>
+          <div class="calc-row grand-row">
+            <span>Invoice Grand Total:</span>
+            <strong class="font-mono text-primary fs-5">₹{{ getNewInvoiceTotal() | number:'1.2-2' }}</strong>
+          </div>
+          <div class="calc-row paid-row">
+            <span>Upfront Payment:</span>
+            <span class="font-mono text-success">₹{{ (newInvoice.paid || 0) | number:'1.2-2' }}</span>
+          </div>
+          <div class="calc-row balance-row">
+            <span>Remaining Balance Due:</span>
+            <strong class="font-mono text-danger">₹{{ getNewInvoiceBalance() | number:'1.2-2' }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drawer Actions Footer -->
+      <div class="invoice-drawer-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeCreateDrawer()" [disabled]="isSubmitting">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary btn-save-invoice" [disabled]="isSubmitting || !newInvoice.partyId">
+          <i class="bi me-1" [ngClass]="isSubmitting ? 'bi-hourglass-split spin-animate' : 'bi-check2-circle'"></i>
+          <span>{{ isSubmitting ? 'Generating Invoice...' : 'Generate & Save Tax Invoice' }}</span>
+        </button>
+      </div>
+
+    </form>
   </div>
 </div>

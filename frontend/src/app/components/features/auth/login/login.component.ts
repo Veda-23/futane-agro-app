@@ -1,11 +1,10 @@
-import { Component, EventEmitter, Input, Output, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnDestroy, ViewChildren, QueryList, ElementRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AutoSelectDirective } from '../../../../directives/auto-select.directive';
 import { FormStateDirective } from '../../../../directives/form-state.directive';
 import { NotificationService } from '../../../../services/notification.service';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../../api.service';
-
 import { environment } from '../../../../../environments/environment';
 
 @Component({
@@ -16,6 +15,8 @@ import { environment } from '../../../../../environments/environment';
   styleUrl: './login.component.css'
 })
 export class LoginComponent implements OnDestroy {
+  @ViewChildren('otpInputRef') otpInputRefs!: QueryList<ElementRef<HTMLInputElement>>;
+
   isUat: boolean = environment.uat;
   isProd: boolean = environment.production && !environment.uat;
   @Input() currentLang: string = 'en';
@@ -24,10 +25,11 @@ export class LoginComponent implements OnDestroy {
 
   loginError = '';
   loginCredentials = { username: '', password: '' };
+  isSubmitting = false;
 
-  // OTP Login Flow State
+  // OTP State
   showOtpScreen = false;
-  otpValue = '';
+  otpDigits: string[] = ['', '', '', '', '', ''];
   tempOtp = '';
   otpCountdown = 120;
   otpTimerInterval: any = null;
@@ -38,8 +40,15 @@ export class LoginComponent implements OnDestroy {
     private notificationService: NotificationService
   ) {}
 
+  get otpValue(): string {
+    return this.otpDigits.join('');
+  }
+
   forgotPassword() {
-    this.notificationService.showWarning('Password Reset', 'Please contact the system administrator to reset your password.');
+    this.notificationService.showWarning(
+      'Password Assistance',
+      'Please contact your Futane Agro System Administrator or IT Helpdesk to initiate a password reset.'
+    );
   }
 
   fillCredentials(username: string, password: string, autoSubmit = false) {
@@ -51,7 +60,18 @@ export class LoginComponent implements OnDestroy {
   }
 
   handleLogin() {
+    if (!this.loginCredentials.username?.trim()) {
+      this.loginError = 'Please enter your username or employee ID.';
+      return;
+    }
+    if (!this.loginCredentials.password) {
+      this.loginError = 'Please enter your password.';
+      return;
+    }
+
     this.loginError = '';
+    this.isSubmitting = true;
+
     // Clear any obsolete legacy backend URL from older versions
     const saved = localStorage.getItem('backend_url');
     if (saved && saved.includes(':8080')) {
@@ -60,35 +80,96 @@ export class LoginComponent implements OnDestroy {
 
     this.apiService.login(this.loginCredentials).subscribe({
       next: (res) => {
+        this.isSubmitting = false;
         if (res.status === 'OTP_REQUIRED' || res.status === 'OTP_SENT') {
           this.showOtpScreen = true;
           this.tempOtp = res.tempOtp || '';
-          this.otpValue = this.tempOtp; // Auto-fill 6-digit OTP in UAT/Test environment
+          this.otpDigits = ['', '', '', '', '', ''];
           this.startOtpTimer();
-          if (this.tempOtp) {
-            setTimeout(() => this.verifyOtp(), 250);
-          }
+          setTimeout(() => {
+            const firstInput = this.otpInputRefs?.first?.nativeElement;
+            if (firstInput) firstInput.focus();
+          }, 100);
         } else if (res.token) {
           this.completeLoginLocal(res);
         } else {
-          this.loginError = 'Unexpected login response. Please try again.';
+          this.loginError = 'Unexpected response received from authentication server.';
         }
       },
       error: (err) => {
+        this.isSubmitting = false;
         console.error('Login request failed:', err);
         if (err.status === 0) {
-          this.loginError = 'Cannot reach ERP backend server. Please verify backend is running on port 8082 (UAT) / 8081 and refresh.';
+          this.loginError = 'Unable to connect to Futane Agro ERP backend. Please verify your network connection.';
+        } else if (err.status === 500 && (!err.error?.message || err.error?.message.includes('Proxy error'))) {
+          this.loginError = 'Authentication service is currently offline. Please notify the administrator.';
         } else if (err.status === 423 || err.status === 403) {
-          this.loginError = err.error?.message || 'Account is locked due to multiple failed attempts. Please wait 30 minutes.';
+          this.loginError = err.error?.message || 'Account is locked due to multiple failed login attempts. Please wait 30 minutes.';
         } else if (err.status === 429) {
-          this.loginError = err.error?.message || 'Too many login attempts. Please wait 60 seconds.';
+          this.loginError = err.error?.message || 'Rate limit exceeded. Please wait a moment before trying again.';
         } else if (err.status === 401) {
-          this.loginError = err.error?.message || 'Invalid username or password.';
+          this.loginError = err.error?.message || 'Invalid username or password. Please verify your credentials.';
         } else {
-          this.loginError = err.error?.message || `Server error (${err.status}): ${err.statusText || 'Please try again'}`;
+          this.loginError = err.error?.message || `Authentication error (${err.status}): ${err.statusText || 'Please try again.'}`;
         }
       }
     });
+  }
+
+  onDigitInput(event: Event, index: number) {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+
+    if (value.length > 0) {
+      this.otpDigits[index] = value.charAt(value.length - 1);
+      input.value = this.otpDigits[index];
+
+      if (index < 5) {
+        const inputs = this.otpInputRefs.toArray();
+        inputs[index + 1]?.nativeElement.focus();
+      }
+    }
+  }
+
+  onDigitKeydown(event: KeyboardEvent, index: number) {
+    if (event.key === 'Backspace') {
+      if (!this.otpDigits[index] && index > 0) {
+        const inputs = this.otpInputRefs.toArray();
+        inputs[index - 1]?.nativeElement.focus();
+      } else {
+        this.otpDigits[index] = '';
+      }
+    } else if (event.key === 'ArrowLeft' && index > 0) {
+      this.otpInputRefs.toArray()[index - 1]?.nativeElement.focus();
+    } else if (event.key === 'ArrowRight' && index < 5) {
+      this.otpInputRefs.toArray()[index + 1]?.nativeElement.focus();
+    } else if (event.key === 'Enter') {
+      if (this.otpValue.length === 6) {
+        this.verifyOtp();
+      }
+    }
+  }
+
+  onDigitPaste(event: ClipboardEvent) {
+    event.preventDefault();
+    const pastedData = event.clipboardData?.getData('text') || '';
+    const cleanNumbers = pastedData.replace(/\D/g, '').slice(0, 6);
+    if (cleanNumbers.length > 0) {
+      for (let i = 0; i < 6; i++) {
+        this.otpDigits[i] = cleanNumbers[i] || '';
+      }
+      const nextIndex = Math.min(cleanNumbers.length, 5);
+      this.otpInputRefs.toArray()[nextIndex]?.nativeElement.focus();
+    }
+  }
+
+  fillOtpFromHelper(code: string) {
+    const digits = code.split('').slice(0, 6);
+    for (let i = 0; i < 6; i++) {
+      this.otpDigits[i] = digits[i] || '';
+    }
+    const inputs = this.otpInputRefs.toArray();
+    inputs[5]?.nativeElement.focus();
   }
 
   startOtpTimer() {
@@ -99,7 +180,7 @@ export class LoginComponent implements OnDestroy {
         this.otpCountdown--;
       } else {
         this.clearOtpTimer();
-        this.loginError = 'OTP has expired. Please request a new one.';
+        this.loginError = 'Security code has expired. Please request a new code.';
       }
     }, 1000);
   }
@@ -118,43 +199,52 @@ export class LoginComponent implements OnDestroy {
   }
 
   verifyOtp() {
+    if (this.otpValue.length < 6) {
+      this.loginError = 'Please enter all 6 digits of the verification code.';
+      return;
+    }
+
     this.loginError = '';
+    this.isSubmitting = true;
+
     this.apiService.verifyOtp({
       username: this.loginCredentials.username,
       otp: this.otpValue
     }).subscribe({
       next: (res) => {
+        this.isSubmitting = false;
         this.completeLoginLocal(res);
       },
       error: (err) => {
+        this.isSubmitting = false;
         console.error('OTP verification failed:', err);
         if (err.status === 0) {
-          this.loginError = 'Cannot reach ERP backend server. Please check your connection.';
+          this.loginError = 'Connection failed. Please check your network and try again.';
         } else if (err.status === 429) {
-          this.loginError = err.error?.message || 'Too many verification attempts. Please wait 60 seconds.';
+          this.loginError = err.error?.message || 'Too many attempts. Please wait 60 seconds.';
         } else {
-          this.loginError = err.error?.message || 'Invalid or expired OTP.';
+          this.loginError = err.error?.message || 'Invalid or expired verification code. Please check and try again.';
         }
       }
     });
   }
 
   resendOtp() {
+    this.otpDigits = ['', '', '', '', '', ''];
     this.handleLogin();
   }
 
   backToLogin() {
     this.showOtpScreen = false;
-    this.otpValue = '';
+    this.otpDigits = ['', '', '', '', '', ''];
     this.tempOtp = '';
     this.loginError = '';
-    this.loginCredentials.password = '';
     this.clearOtpTimer();
   }
 
   completeLoginLocal(res: any) {
     this.showOtpScreen = false;
-    this.otpValue = '';
+    this.otpDigits = ['', '', '', '', '', ''];
     this.tempOtp = '';
     this.clearOtpTimer();
     this.onLoginSuccess.emit(res);

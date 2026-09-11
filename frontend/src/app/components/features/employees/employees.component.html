@@ -1,139 +1,958 @@
-<!-- HR / EMPLOYEES TELEMETRY RIBBON -->
-<div class="employee-summary-ribbon" style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-  <div class="ribbon-pill" style="flex: 1; min-width: 140px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
-    <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--primary-soft); display: flex; align-items: center; justify-content: center;">
-      <i class="bi bi-people-fill text-primary" style="font-size: 18px;"></i>
-    </div>
-    <div>
-      <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Active Workforce</div>
-      <strong style="font-size: 15px; color: var(--text-primary); font-family: var(--font-heading);">{{ getTotalEmployees() }} Staff</strong>
-    </div>
-  </div>
+<div class="employees-enterprise-container">
 
-  <div class="ribbon-pill" style="flex: 1; min-width: 140px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
-    <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(16,185,129,0.12); display: flex; align-items: center; justify-content: center;">
-      <i class="bi bi-cash-stack text-success" style="font-size: 18px;"></i>
+  <!-- ── 1. UNIFIED BREADCRUMB & STABLE HEADER ────────────────────── -->
+  <div class="header-section-wrapper no-print">
+    <!-- Row 1a: Breadcrumbs -->
+    <div class="breadcrumb-nav">
+      <span class="breadcrumb-item"><i class="bi bi-house-door me-1"></i>Futane Agro ERP</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item">Factory Workforce &amp; HR</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item active">Personnel &amp; Staff Directory</span>
     </div>
-    <div>
-      <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Monthly Payroll</div>
-      <strong style="font-size: 15px; color: var(--color-success); font-family: var(--font-heading);">₹{{ getTotalMonthlyPayroll() | number:'1.0-0' }}</strong>
-    </div>
-  </div>
 
-  <div class="ribbon-pill" style="flex: 1; min-width: 140px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
-    <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(59,130,246,0.12); display: flex; align-items: center; justify-content: center;">
-      <i class="bi bi-graph-up-arrow text-info" style="font-size: 18px;"></i>
-    </div>
-    <div>
-      <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Average Compensation</div>
-      <strong style="font-size: 15px; color: var(--primary); font-family: var(--font-heading);">₹{{ getAverageSalary() | number:'1.0-0' }}/mo</strong>
-    </div>
-  </div>
-
-  <div class="ribbon-pill" style="flex: 1; min-width: 140px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
-    <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(245,158,11,0.12); display: flex; align-items: center; justify-content: center;">
-      <i class="bi bi-diagram-3-fill text-warning" style="font-size: 18px;"></i>
-    </div>
-    <div>
-      <div style="font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Operational Roles</div>
-      <strong style="font-size: 15px; color: var(--text-primary); font-family: var(--font-heading);">{{ getDistinctRolesCount() }} Roles</strong>
-    </div>
-  </div>
-</div>
-
-<div class="grid-cols-3">
-  <!-- Staff Profile Form -->
-  <div class="glass-panel form-card" [class.editing-mode]="isEditing()" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
-    <div class="card-header-flex" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-      <div class="section-title-badge" style="display: flex; align-items: center; gap: 8px;">
-        <span class="badge-icon"><i class="bi bi-person-badge-fill" style="font-size:18px; color:var(--primary);"></i></span>
-        <div class="badge-text">
-          <h3 style="margin: 0; font-size: 15px; font-weight: 700;">{{ isEditing() ? 'Edit Staff Profile' : ('hr.add_title' | translate:currentLang) }}</h3>
+    <!-- Row 1b: Stable Header with Title & Primary Actions -->
+    <div class="stable-page-header">
+      <div class="header-left">
+        <div class="header-icon-badge">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="header-text-group">
+          <h1 class="header-main-title">Factory Personnel &amp; Staff Directory</h1>
+          <p class="header-desc-text">
+            Master employee registry, operational job designations, monthly wage benchmarks, and compliance credentials
+          </p>
         </div>
       </div>
-      <button *ngIf="isEditing()" type="button" class="btn btn-secondary btn-sm" (click)="cancelEdit()">
-        <i class="bi bi-x-circle me-1"></i>Cancel
+
+      <div class="header-right-actions">
+        <!-- Payroll & Salaries Navigation Shortcut -->
+        <button type="button" 
+                class="btn btn-secondary btn-action-compact" 
+                (click)="goToSalaries()" 
+                title="Navigate to Salaries &amp; Payroll Ledger">
+          <i class="bi bi-wallet2 me-1 text-primary"></i>
+          <span class="btn-label-desktop">Payroll &amp; Salaries</span>
+        </button>
+
+        <!-- Refresh Button -->
+        <button type="button" 
+                class="btn btn-secondary btn-action-compact" 
+                (click)="loadData(true)" 
+                [disabled]="isLoading" 
+                title="Refresh workforce roster from server">
+          <i class="bi bi-arrow-clockwise me-1" [class.spin-anim]="isLoading"></i>
+          <span class="btn-label-desktop">Refresh</span>
+        </button>
+
+        <!-- Consolidated Export Dropdown -->
+        <div class="export-dropdown-wrapper" (click)="$event.stopPropagation()">
+          <button type="button" 
+                  class="btn btn-secondary btn-action-compact" 
+                  (click)="toggleExportDropdown($event)" 
+                  title="Export staff records">
+            <i class="bi bi-download me-1"></i>
+            <span>Export ▾</span>
+          </button>
+          <div class="export-menu shadow-lg animate-fade-in" *ngIf="showExportDropdown">
+            <button type="button" class="export-menu-item" (click)="exportCsv()">
+              <i class="bi bi-file-earmark-spreadsheet text-success me-2"></i>Export CSV (.csv)
+            </button>
+            <button type="button" class="export-menu-item" (click)="exportExcel()">
+              <i class="bi bi-file-earmark-excel text-primary me-2"></i>Export Excel (.xlsx)
+            </button>
+          </div>
+        </div>
+
+        <!-- Primary Action: Enroll Staff Member -->
+        <button type="button" 
+                class="btn btn-primary btn-action-primary" 
+                *ngIf="!isViewer()"
+                (click)="openAddDrawer()" 
+                title="Enroll a new staff member into factory roster">
+          <i class="bi bi-person-plus-fill me-1"></i>
+          <span>+ Enroll Staff Member</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── 2. SUBTABS CLASSIFICATION RIBBON ──────────────────────────── -->
+    <div class="subtabs-classification-bar">
+      <div class="subtabs-scroll-container">
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="filterRole === 'ALL'"
+                (click)="setSubtabRole('ALL')">
+          <i class="bi bi-people-fill me-1"></i>
+          <span>All Personnel</span>
+          <span class="tab-count-badge">{{ getSubtabCount('ALL') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="filterRole === 'Operator'"
+                (click)="setSubtabRole('Operator')">
+          <i class="bi bi-gear-wide-connected text-primary me-1"></i>
+          <span>Machine Operators</span>
+          <span class="tab-count-badge">{{ getSubtabCount('Operator') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="filterRole === 'Quality'"
+                (click)="setSubtabRole('Quality')">
+          <i class="bi bi-shield-check text-success me-1"></i>
+          <span>Quality &amp; Inspection</span>
+          <span class="tab-count-badge">{{ getSubtabCount('Quality') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="filterRole === 'Warehouse'"
+                (click)="setSubtabRole('Warehouse')">
+          <i class="bi bi-box-seam text-warning me-1"></i>
+          <span>Warehouse &amp; Loading</span>
+          <span class="tab-count-badge">{{ getSubtabCount('Warehouse') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="filterRole === 'Maintenance'"
+                (click)="setSubtabRole('Maintenance')">
+          <i class="bi bi-tools text-info me-1"></i>
+          <span>Maintenance &amp; Tech</span>
+          <span class="tab-count-badge">{{ getSubtabCount('Maintenance') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="filterRole === 'Supervisor'"
+                (click)="setSubtabRole('Supervisor')">
+          <i class="bi bi-person-badge text-purple me-1"></i>
+          <span>Supervisors &amp; Office</span>
+          <span class="tab-count-badge">{{ getSubtabCount('Supervisor') }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 3. COMPACT HR KPI METRICS GRID ────────────────────────────── -->
+  <section class="employees-kpi-grid no-print" aria-label="Human Resources Metrics">
+    <!-- Active Headcount -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge kpi-blue">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Total Workforce</span>
+        <div class="kpi-value font-mono">{{ totalEmployees }} Staff</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag tag-primary">Factory Roster</span>
+          <span class="kpi-subtext-muted">Active personnel</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly Direct Payroll Commitment -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge kpi-emerald">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Monthly Payroll</span>
+        <div class="kpi-value font-mono">₹{{ totalMonthlyPayroll | number:'1.0-0' }}</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag tag-success">Base Salary</span>
+          <span class="kpi-subtext-muted">Direct compensation</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Average Benchmark Salary -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge kpi-violet">
+        <i class="bi bi-calculator"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Avg Compensation</span>
+        <div class="kpi-value font-mono">₹{{ averageSalary | number:'1.0-0' }}</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag tag-purple">Benchmark Wage</span>
+          <span class="kpi-subtext-muted">Per active worker</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Distinct Operational Roles -->
+    <div class="kpi-card">
+      <div class="kpi-icon-badge kpi-amber">
+        <i class="bi bi-diagram-3-fill"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Operational Roles</span>
+        <div class="kpi-value font-mono">{{ distinctRolesCount }} Designations</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag tag-warning">Active Titles</span>
+          <span class="kpi-subtext-muted">Job classifications</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 4. MAIN WORKFORCE DIRECTORY GLASS PANEL ────────────────────── -->
+  <div class="glass-panel table-surface">
+
+    <!-- ── 5. UNIFIED SEARCH & FILTER TOOLBAR ────────────────────────── -->
+    <div class="table-unified-toolbar no-print">
+      <!-- Search Box -->
+      <div class="toolbar-search-box">
+        <i class="bi bi-search search-icon"></i>
+        <input 
+          appAutoSelect
+          type="text" 
+          class="search-input" 
+          [(ngModel)]="filterSearchQuery" 
+          (input)="currentPage = 1" 
+          placeholder="Search staff name, designation, mobile, Aadhaar or EMP-ID..." 
+          aria-label="Search employees directory">
+        <button 
+          *ngIf="filterSearchQuery" 
+          type="button" 
+          class="btn-clear-search" 
+          (click)="filterSearchQuery = ''; currentPage = 1"
+          title="Clear search query">
+          <i class="bi bi-x-circle-fill"></i>
+        </button>
+      </div>
+
+      <!-- Quick Role Filter Dropdown -->
+      <div class="toolbar-filter-select">
+        <select class="form-control form-control-sm" [(ngModel)]="filterRole" (ngModelChange)="currentPage = 1" title="Filter by designation">
+          <option value="ALL">All Designations</option>
+          <option *ngFor="let role of distinctRoles" [value]="role">{{ role }}</option>
+        </select>
+      </div>
+
+      <!-- Compliance Credential Filter -->
+      <div class="toolbar-filter-select">
+        <select class="form-control form-control-sm" [(ngModel)]="filterCompliance" (ngModelChange)="currentPage = 1" title="Filter by compliance verification">
+          <option value="ALL">All Compliance</option>
+          <option value="VERIFIED">Fully Compliant (UID + Bank)</option>
+          <option value="PENDING_AADHAAR">Pending Aadhaar</option>
+          <option value="PENDING_BANK">Pending Bank Account</option>
+        </select>
+      </div>
+
+      <!-- Reset Filters Trigger -->
+      <button 
+        *ngIf="hasActiveFilters()" 
+        type="button" 
+        class="btn btn-secondary btn-action-compact" 
+        (click)="resetFilters()" 
+        title="Reset all active search and filters">
+        <i class="bi bi-arrow-counterclockwise me-1"></i>Clear Filters
       </button>
+
+      <!-- Density Switcher -->
+      <div class="density-group ms-auto" role="group" aria-label="Table Density">
+        <button 
+          type="button" 
+          class="density-btn" 
+          [class.active]="tableDensity === 'compact'" 
+          (click)="setDensity('compact')" 
+          title="Compact row density">
+          <i class="bi bi-list-ul"></i>
+        </button>
+        <button 
+          type="button" 
+          class="density-btn" 
+          [class.active]="tableDensity === 'normal'" 
+          (click)="setDensity('normal')" 
+          title="Comfortable row density">
+          <i class="bi bi-layout-three-columns"></i>
+        </button>
+        <button 
+          type="button" 
+          class="density-btn" 
+          [class.active]="tableDensity === 'spacious'" 
+          (click)="setDensity('spacious')" 
+          title="Spacious row density">
+          <i class="bi bi-layout-split"></i>
+        </button>
+      </div>
+
+      <!-- Columns Visibility Dropdown -->
+      <div class="columns-dropdown-wrap" (click)="$event.stopPropagation()">
+        <button 
+          type="button" 
+          class="btn btn-secondary btn-action-compact" 
+          (click)="toggleColDropdown('employees', $event)" 
+          title="Toggle visible table columns">
+          <i class="bi bi-layout-three-columns me-1"></i>
+          <span>Columns</span>
+          <span class="badge-count ms-1">{{ visibleColumnCount }}</span>
+        </button>
+        <div class="columns-dropdown-menu shadow-lg animate-fade-in" *ngIf="showColDropdown['employees']">
+          <div class="col-dropdown-header">
+            <span>Visible Columns</span>
+            <button type="button" class="btn-link-sm" (click)="resetColumns()">Reset All</button>
+          </div>
+          <div class="col-dropdown-body">
+            <label *ngFor="let col of getTableColumns('employees')" class="column-checkbox-label">
+              <input 
+                type="checkbox" 
+                [checked]="isColumnVisible('employees', col)" 
+                (change)="toggleColumn('employees', col)">
+              <span>{{ col }}</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page Size Selector -->
+      <div class="page-size-selector">
+        <label class="page-size-label">Show:</label>
+        <select class="form-control form-control-sm" [(ngModel)]="pageSize" (ngModelChange)="currentPage = 1">
+          <option *ngFor="let ps of pageSizeOptions" [value]="ps">{{ ps }} / page</option>
+        </select>
+      </div>
     </div>
 
-    <form (submit)="saveEmployee()">
-      <div class="form-group">
-        <label>{{ 'hr.name' | translate:currentLang }} <span class="req-star">*</span></label>
-        <input appAutoSelect type="text" [(ngModel)]="employeeForm.empName" name="eName" required placeholder="Full worker name">
-      </div>
-      <div class="form-group">
-        <label>{{ 'hr.designation' | translate:currentLang }} <span class="req-star">*</span></label>
-        <input appAutoSelect type="text" [(ngModel)]="employeeForm.designation" name="eDesig" required placeholder="Role (e.g. Operator, Accountant)">
-      </div>
-      <div class="form-group">
-        <label>{{ 'hr.mobile' | translate:currentLang }} <span class="req-star">*</span></label>
-        <input appAutoSelect type="text" [(ngModel)]="employeeForm.empContact" name="eContact" required placeholder="10-digit mobile number">
-      </div>
-      <div class="form-group">
-        <label>{{ 'hr.salary' | translate:currentLang }} (₹/mo) <span class="req-star">*</span></label>
-        <input appAutoSelect type="number" [(ngModel)]="employeeForm.salary" name="eSalary" required placeholder="Monthly base salary">
-      </div>
-      <div class="form-group">
-        <label>{{ 'hr.aadhaar' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="employeeForm.aadhaarNo" name="eAadhaar" maxlength="12" pattern="[2-9]{1}[0-9]{11}" placeholder="12-digit Aadhaar Card number">
-      </div>
-      <div class="form-group">
-        <label>{{ 'hr.bank' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="employeeForm.bankAccount" name="eBank" placeholder="IFS Code / Account No">
-      </div>
-      <div class="form-group">
-        <label>{{ 'hr.joining_date' | translate:currentLang }} <span class="req-star">*</span></label>
-        <input appAutoSelect type="date" [(ngModel)]="employeeForm.joiningDate" name="eJoin" required>
-      </div>
-      <div class="form-group">
-        <label>{{ 'hr.address' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="employeeForm.address" name="eAddr" placeholder="Residential address">
+    <!-- ── 6. LOADING SKELETON STATE ─────────────────────────────────── -->
+    <div *ngIf="isLoading" class="skeleton-container" aria-busy="true" aria-label="Loading staff records...">
+      <div class="spinner-ring"></div>
+      <p class="loading-text">Loading workforce directory roster...</p>
+    </div>
+
+    <!-- ── 7. ERROR STATE ────────────────────────────────────────────── -->
+    <app-empty-state 
+      *ngIf="!isLoading && hasError"
+      variant="error"
+      title="Workforce Directory Connection Failed"
+      description="Could not connect to the employees database service. Please verify server connectivity."
+      actionText="Retry Connection"
+      (onAction)="loadData(true)">
+    </app-empty-state>
+
+    <!-- ── 8. EMPTY STATE ────────────────────────────────────────────── -->
+    <app-empty-state 
+      *ngIf="!isLoading && !hasError && filteredEmployees.length === 0"
+      variant="search"
+      title="No Staff Records Found"
+      [description]="hasActiveFilters() ? 'No staff members match the active search query or role filter.' : 'No personnel registered on the factory roster yet. Enroll your first staff member to get started.'"
+      [actionText]="hasActiveFilters() ? 'Clear Filters' : '+ Enroll First Staff Member'"
+      (onAction)="hasActiveFilters() ? resetFilters() : openAddDrawer()">
+    </app-empty-state>
+
+    <!-- ── 9. MAIN WORKFORCE LEDGER TABLE ────────────────────────────── -->
+    <div *ngIf="!isLoading && !hasError && filteredEmployees.length > 0">
+      <div class="table-container table-responsive">
+        <table class="table modern-table" [ngClass]="'density-' + tableDensity" appResizableTable [tableId]="'employees_table'">
+          <thead>
+            <tr>
+              <th *ngIf="isColumnVisible('employees', 'Staff Member')" (click)="setSort('empName')" class="sortable-th min-w-160">
+                <div class="th-content">
+                  <span>Staff Member</span>
+                  <i class="bi ms-1" [ngClass]="sortField === 'empName' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-chevron-expand opacity-40'"></i>
+                </div>
+              </th>
+
+              <th *ngIf="isColumnVisible('employees', 'Role / Designation')" (click)="setSort('designation')" class="sortable-th min-w-130">
+                <div class="th-content">
+                  <span>Role / Designation</span>
+                  <i class="bi ms-1" [ngClass]="sortField === 'designation' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-chevron-expand opacity-40'"></i>
+                </div>
+              </th>
+
+              <th *ngIf="isColumnVisible('employees', 'Mobile Contact')" class="min-w-120">
+                <div class="th-content">
+                  <span>Contact Number</span>
+                </div>
+              </th>
+
+              <th *ngIf="isColumnVisible('employees', 'Base Salary')" (click)="setSort('salary')" class="sortable-th min-w-120 text-end">
+                <div class="th-content justify-end">
+                  <span>Base Salary (₹/mo)</span>
+                  <i class="bi ms-1" [ngClass]="sortField === 'salary' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-chevron-expand opacity-40'"></i>
+                </div>
+              </th>
+
+              <th *ngIf="isColumnVisible('employees', 'Joining Date')" (click)="setSort('joiningDate')" class="sortable-th min-w-110">
+                <div class="th-content">
+                  <span>Joining Date</span>
+                  <i class="bi ms-1" [ngClass]="sortField === 'joiningDate' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-chevron-expand opacity-40'"></i>
+                </div>
+              </th>
+
+              <th *ngIf="isColumnVisible('employees', 'Credentials')" class="min-w-110">
+                <div class="th-content">
+                  <span>Compliance Verification</span>
+                </div>
+              </th>
+
+              <th *ngIf="isColumnVisible('employees', 'Actions')" class="min-w-120 text-end">
+                <span>Actions</span>
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let emp of getProcessedList(filteredEmployees, 'employees'); trackBy: trackById" class="ledger-row">
+              <!-- Staff Member Name + Avatar + ID -->
+              <td *ngIf="isColumnVisible('employees', 'Staff Member')">
+                <div class="emp-cell-group">
+                  <div class="emp-avatar-circle">
+                    {{ (emp.empName || 'Staff').charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="emp-info-wrap">
+                    <span class="emp-name-text">{{ emp.empName }}</span>
+                    <span class="emp-id-text">EMP-{{ emp.id }}</span>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Designation Pill Badge -->
+              <td *ngIf="isColumnVisible('employees', 'Role / Designation')">
+                <span class="designation-badge">{{ emp.designation || 'Staff Member' }}</span>
+              </td>
+
+              <!-- Mobile Contact Link -->
+              <td *ngIf="isColumnVisible('employees', 'Mobile Contact')">
+                <a [href]="'tel:' + emp.empContact" class="contact-link font-mono" title="Click to call staff member">
+                  <i class="bi bi-telephone me-1 text-primary"></i>+91 {{ emp.empContact }}
+                </a>
+              </td>
+
+              <!-- Monthly Base Salary -->
+              <td *ngIf="isColumnVisible('employees', 'Base Salary')" class="text-end">
+                <span class="amount-val font-mono">₹{{ emp.salary | number:'1.2-2' }}</span>
+              </td>
+
+              <!-- Joining Date -->
+              <td *ngIf="isColumnVisible('employees', 'Joining Date')">
+                <span class="date-val font-mono" *ngIf="emp.joiningDate">
+                  <i class="bi bi-calendar-event me-1 text-secondary"></i>{{ emp.joiningDate | indianDate }}
+                </span>
+                <span class="date-val text-muted" *ngIf="!emp.joiningDate">—</span>
+              </td>
+
+              <!-- Compliance Credentials Badges -->
+              <td *ngIf="isColumnVisible('employees', 'Credentials')">
+                <div class="credentials-badge-group">
+                  <span class="credential-pill" [class.verified]="emp.aadhaarNo" [title]="emp.aadhaarNo ? 'Aadhaar: ' + emp.aadhaarNo : 'Aadhaar verification pending'">
+                    <i class="bi" [ngClass]="emp.aadhaarNo ? 'bi-shield-check text-success' : 'bi-shield-x text-muted'"></i> UID
+                  </span>
+                  <span class="credential-pill" [class.verified]="emp.bankAccount" [title]="emp.bankAccount ? 'Bank: ' + emp.bankAccount : 'Bank credentials pending'">
+                    <i class="bi" [ngClass]="emp.bankAccount ? 'bi-bank text-primary' : 'bi-dash-circle text-muted'"></i> Bank
+                  </span>
+                </div>
+              </td>
+
+              <!-- Row Action Buttons -->
+              <td *ngIf="isColumnVisible('employees', 'Actions')" class="text-end">
+                <div class="row-actions">
+                  <!-- View Details -->
+                  <button 
+                    type="button" 
+                    class="btn-row-action btn-view" 
+                    (click)="openDetails(emp)" 
+                    title="View staff profile credentials &amp; compensation">
+                    <i class="bi bi-eye"></i>
+                  </button>
+
+                  <!-- Payroll Shortcut -->
+                  <button 
+                    type="button" 
+                    class="btn-row-action btn-salary" 
+                    (click)="goToSalaries()" 
+                    title="Disburse monthly salary in Payroll ledger">
+                    <i class="bi bi-cash-coin"></i>
+                  </button>
+
+                  <!-- Edit Profile -->
+                  <button 
+                    *ngIf="!isViewer()"
+                    type="button" 
+                    class="btn-row-action btn-edit" 
+                    (click)="openEditDrawer(emp)" 
+                    title="Edit staff profile">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+
+                  <!-- Delete Record -->
+                  <button 
+                    *ngIf="canDelete()" 
+                    type="button" 
+                    class="btn-row-action btn-delete" 
+                    (click)="deleteEmployee(emp.id)" 
+                    title="Delete staff record">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
-      <!-- Live Profile Readiness Gauge -->
-      <div *ngIf="employeeForm.empName" class="live-efficiency-badge-wrap animate-fade-in" style="margin-bottom: 14px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-hover); border: 1px solid var(--border-color);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-          <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="bi bi-shield-check me-1 text-primary"></i>Profile Readiness:</span>
-          <strong style="font-size: 12px; font-weight: 700; color: var(--primary);">
-            {{ (employeeForm.aadhaarNo && employeeForm.bankAccount ? 'Verified Staff' : 'Basic Info') }}
-          </strong>
-        </div>
-        <div style="font-size: 10.5px; color: var(--text-muted); display: flex; gap: 8px;">
-          <span [style.color]="employeeForm.aadhaarNo?.length === 12 ? 'var(--color-success)' : 'var(--text-muted)'">
-            {{ employeeForm.aadhaarNo?.length === 12 ? '✓ Aadhaar Valid' : '○ Aadhaar Optional' }}
-          </span>
-          <span>•</span>
-          <span [style.color]="employeeForm.bankAccount?.length ? 'var(--color-success)' : 'var(--text-muted)'">
-            {{ employeeForm.bankAccount?.length ? '✓ Bank Registered' : '○ Bank Optional' }}
-          </span>
+      <!-- ── 10. ENTERPRISE PAGINATION FOOTER ───────────────────────── -->
+      <div class="table-pagination-bar no-print">
+        <span class="pagination-info">
+          Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to <strong>{{ Math.min(currentPage * pageSize, tableFilteredCounts['employees'] || 0) }}</strong> of <strong>{{ tableFilteredCounts['employees'] || 0 }}</strong> staff records
+        </span>
+
+        <div class="pagination-controls">
+          <button 
+            type="button" 
+            class="btn-page" 
+            [disabled]="currentPage === 1" 
+            (click)="currentPage = currentPage - 1"
+            title="Previous Page">
+            <i class="bi bi-chevron-left me-1"></i>Previous
+          </button>
+          <span class="page-indicator font-mono">Page {{ currentPage }} of {{ totalPages }}</span>
+          <button 
+            type="button" 
+            class="btn-page" 
+            [disabled]="currentPage * pageSize >= (tableFilteredCounts['employees'] || 0)" 
+            (click)="currentPage = currentPage + 1"
+            title="Next Page">
+            Next<i class="bi bi-chevron-right ms-1"></i>
+          </button>
         </div>
       </div>
+    </div>
 
-      <button type="submit" class="btn btn-primary" style="width: 100%;">
-        <i class="bi bi-person-check me-1"></i>{{ isEditing() ? 'Update Staff Record' : ('hr.register_btn' | translate:currentLang) }}
-      </button>
-    </form>
   </div>
 
-  <!-- Table Grid Card -->
-  <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
-    <div class="section-title-badge" style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-      <span class="badge-icon"><i class="bi bi-people" style="font-size:18px; color:var(--primary);"></i></span>
-      <div class="badge-text">
-        <h3 style="margin: 0; font-size: 15px; font-weight: 700;">{{ 'hr.records_title' | translate:currentLang }}</h3>
+  <!-- ── 11. SLIDE-OVER DRAWER: ENROLL / EDIT STAFF MEMBER ───────────── -->
+  <div class="drawer-backdrop" *ngIf="isFormOpen" (click)="closeDrawer()">
+    <div class="drawer-panel animate-slide-left" (click)="$event.stopPropagation()">
+      <!-- Drawer Header -->
+      <div class="drawer-header">
+        <div class="drawer-header-left">
+          <div class="drawer-header-icon" [class.editing-icon]="isEditing()">
+            <i class="bi" [ngClass]="isEditing() ? 'bi-pencil-square' : 'bi-person-plus-fill'"></i>
+          </div>
+          <div>
+            <h2 class="drawer-title">{{ isEditing() ? 'Edit Staff Profile' : 'Enroll New Staff Member' }}</h2>
+            <p class="drawer-subtitle">
+              {{ isEditing() ? 'Update existing personnel record and payroll credentials' : 'Register employee, operational designation and monthly compensation' }}
+            </p>
+          </div>
+        </div>
+        <button type="button" class="drawer-close-btn" (click)="closeDrawer()" title="Close drawer">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <!-- Drawer Body -->
+      <div class="drawer-content">
+        <form (ngSubmit)="saveEmployee()" class="drawer-form-body">
+
+          <!-- Section 1: Personal Identity -->
+          <div class="form-section-card">
+            <div class="form-section-title">
+              <i class="bi bi-person-vcard text-primary me-2"></i>Personal &amp; Identity Details
+            </div>
+
+            <!-- Worker Name -->
+            <div class="form-group mb-3">
+              <label class="form-label" for="drawerEmpName">
+                Full Worker Name <span class="req-star">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="bi bi-person select-icon"></i>
+                <input 
+                  id="drawerEmpName"
+                  appAutoSelect 
+                  type="text" 
+                  class="form-control form-input-with-icon" 
+                  [(ngModel)]="employeeForm.empName" 
+                  name="drawerEmpName" 
+                  required 
+                  placeholder="e.g. Ramesh Pawar">
+              </div>
+            </div>
+
+            <!-- Mobile Contact & Address -->
+            <div class="form-grid-2col">
+              <div class="form-group">
+                <label class="form-label" for="drawerEmpContact">
+                  Mobile Contact <span class="req-star">*</span>
+                </label>
+                <div class="phone-input-wrap">
+                  <span class="phone-prefix">+91</span>
+                  <input 
+                    id="drawerEmpContact"
+                    appAutoSelect 
+                    type="tel" 
+                    class="form-control font-mono phone-input" 
+                    [(ngModel)]="employeeForm.empContact" 
+                    name="drawerEmpContact" 
+                    required 
+                    maxlength="10"
+                    placeholder="9876543210">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="drawerEmpAddr">
+                  Residential Address
+                </label>
+                <input 
+                  id="drawerEmpAddr"
+                  appAutoSelect 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="employeeForm.address" 
+                  name="drawerEmpAddr" 
+                  placeholder="City, village or street">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Employment & Designation -->
+          <div class="form-section-card">
+            <div class="form-section-title">
+              <i class="bi bi-briefcase text-success me-2"></i>Employment &amp; Designation
+            </div>
+
+            <div class="form-grid-2col">
+              <!-- Designation / Role -->
+              <div class="form-group">
+                <label class="form-label" for="drawerEmpDesig">
+                  Designation / Role <span class="req-star">*</span>
+                </label>
+                <div class="input-with-icon">
+                  <i class="bi bi-briefcase select-icon"></i>
+                  <input 
+                    id="drawerEmpDesig"
+                    appAutoSelect 
+                    type="text" 
+                    class="form-control form-input-with-icon" 
+                    [(ngModel)]="employeeForm.designation" 
+                    name="drawerEmpDesig" 
+                    required 
+                    list="drawerRolesList"
+                    placeholder="e.g. Machine Operator">
+                  <datalist id="drawerRolesList">
+                    <option *ngFor="let role of standardRoles" [value]="role"></option>
+                  </datalist>
+                </div>
+              </div>
+
+              <!-- Joining Date -->
+              <div class="form-group">
+                <label class="form-label" for="drawerEmpJoinDate">
+                  Joining Date <span class="req-star">*</span>
+                </label>
+                <input 
+                  id="drawerEmpJoinDate"
+                  appAutoSelect 
+                  type="date" 
+                  class="form-control font-mono" 
+                  [(ngModel)]="employeeForm.joiningDate" 
+                  name="drawerEmpJoinDate" 
+                  required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Compensation & Payroll -->
+          <div class="form-section-card">
+            <div class="form-section-title">
+              <i class="bi bi-cash-coin text-warning me-2"></i>Compensation &amp; Monthly Wage
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="drawerEmpSalary">
+                Monthly Base Salary <span class="req-star">*</span>
+              </label>
+              <div class="currency-input-wrap">
+                <span class="currency-prefix">₹</span>
+                <input 
+                  id="drawerEmpSalary"
+                  appAutoSelect 
+                  type="number" 
+                  class="form-control font-mono currency-input font-bold" 
+                  [(ngModel)]="employeeForm.salary" 
+                  name="drawerEmpSalary" 
+                  required 
+                  min="0"
+                  placeholder="0">
+              </div>
+              <span class="field-hint">Direct monthly base compensation credited in payroll ledger</span>
+            </div>
+          </div>
+
+          <!-- Section 4: Compliance & Banking Credentials -->
+          <div class="form-section-card">
+            <div class="form-section-title">
+              <i class="bi bi-shield-check text-info me-2"></i>Compliance &amp; Banking Credentials
+            </div>
+
+            <div class="form-grid-2col">
+              <!-- Aadhaar Number -->
+              <div class="form-group">
+                <label class="form-label" for="drawerEmpAadhaar">
+                  12-Digit Aadhaar UID
+                </label>
+                <input 
+                  id="drawerEmpAadhaar"
+                  appAutoSelect 
+                  type="text" 
+                  class="form-control font-mono" 
+                  [(ngModel)]="employeeForm.aadhaarNo" 
+                  name="drawerEmpAadhaar" 
+                  maxlength="12"
+                  placeholder="12-digit Aadhaar">
+              </div>
+
+              <!-- Bank Account / IFSC -->
+              <div class="form-group">
+                <label class="form-label" for="drawerEmpBank">
+                  Bank Account / IFSC
+                </label>
+                <input 
+                  id="drawerEmpBank"
+                  appAutoSelect 
+                  type="text" 
+                  class="form-control font-mono" 
+                  [(ngModel)]="employeeForm.bankAccount" 
+                  name="drawerEmpBank" 
+                  placeholder="Account No / IFSC">
+              </div>
+            </div>
+
+            <!-- Profile Readiness Meter -->
+            <div *ngIf="employeeForm.empName" class="live-readiness-badge mt-3">
+              <div class="readiness-header">
+                <span class="readiness-tag"><i class="bi bi-shield-check me-1 text-primary"></i>Profile Readiness:</span>
+                <span class="readiness-badge font-bold" [ngClass]="(employeeForm.aadhaarNo && employeeForm.bankAccount) ? 'tag-verified' : 'tag-basic'">
+                  {{ (employeeForm.aadhaarNo && employeeForm.bankAccount) ? 'Verified Staff' : 'Basic Profile' }}
+                </span>
+              </div>
+              <div class="readiness-checklist">
+                <span [class.active-check]="employeeForm.aadhaarNo?.length === 12">
+                  <i class="bi" [ngClass]="employeeForm.aadhaarNo?.length === 12 ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted'"></i> Aadhaar Valid
+                </span>
+                <span>•</span>
+                <span [class.active-check]="employeeForm.bankAccount?.length >= 9">
+                  <i class="bi" [ngClass]="employeeForm.bankAccount?.length >= 9 ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted'"></i> Bank Linked
+                </span>
+                <span>•</span>
+                <span [class.active-check]="employeeForm.salary > 0">
+                  <i class="bi" [ngClass]="employeeForm.salary > 0 ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted'"></i> ₹{{ employeeForm.salary | number:'1.0-0' }}/mo
+                </span>
+              </div>
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- Drawer Footer -->
+      <div class="drawer-footer">
+        <button type="button" class="btn btn-secondary btn-action-compact" (click)="closeDrawer()">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-primary btn-action-primary" (click)="saveEmployee()" [disabled]="isSaving || isLoading">
+          <i class="bi me-1" [ngClass]="isSaving ? 'bi-hourglass-split spin-anim' : (isEditing() ? 'bi-check2-circle' : 'bi-person-check-fill')"></i>
+          <span>{{ isSaving ? 'Saving...' : (isEditing() ? 'Update Staff Profile' : 'Register Staff Member') }}</span>
+        </button>
       </div>
     </div>
-    
-    <div class="table-container">
-      <app-data-table 
-        [data]="employees" 
-        [columns]="employeeTableColumns" 
-        [actions]="employeeTableActions" 
-        [tableId]="'employees_table'"
-        (actionClicked)="handleEmployeeAction($event)"
-        (batchDelete)="batchDeleteEmployees($event)"
-        searchPlaceholder="🔍 Search Employees by Name, Role or Contact...">
-      </app-data-table>
+  </div>
+
+  <!-- ── 12. SLIDE-OVER DRAWER: VIEW STAFF DETAILS ─────────────────── -->
+  <div class="drawer-backdrop" *ngIf="isDetailsOpen" (click)="closeDetails()">
+    <div class="drawer-panel drawer-panel-wide animate-slide-left" (click)="$event.stopPropagation()">
+      <!-- Header -->
+      <div class="drawer-header" *ngIf="selectedEmployee">
+        <div class="drawer-header-left">
+          <div class="emp-avatar-circle-large">
+            {{ (selectedEmployee.empName || 'Staff').charAt(0).toUpperCase() }}
+          </div>
+          <div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="emp-id-badge">EMP-{{ selectedEmployee.id }}</span>
+              <h2 class="drawer-title mb-0">{{ selectedEmployee.empName }}</h2>
+            </div>
+            <p class="drawer-subtitle">{{ selectedEmployee.designation }} • Joined {{ selectedEmployee.joiningDate ? (selectedEmployee.joiningDate | indianDate) : 'N/A' }}</p>
+          </div>
+        </div>
+        <button type="button" class="drawer-close-btn" (click)="closeDetails()" title="Close details">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <!-- Details Navigation Tabs -->
+      <div class="details-tab-nav" *ngIf="selectedEmployee">
+        <button type="button" 
+                class="details-tab-btn" 
+                [class.active]="detailsActiveTab === 'overview'"
+                (click)="detailsActiveTab = 'overview'">
+          <i class="bi bi-person-lines-fill me-1"></i>Profile Overview
+        </button>
+        <button type="button" 
+                class="details-tab-btn" 
+                [class.active]="detailsActiveTab === 'employment'"
+                (click)="detailsActiveTab = 'employment'">
+          <i class="bi bi-cash-stack me-1"></i>Compensation &amp; Terms
+        </button>
+        <button type="button" 
+                class="details-tab-btn" 
+                [class.active]="detailsActiveTab === 'compliance'"
+                (click)="detailsActiveTab = 'compliance'">
+          <i class="bi bi-shield-check me-1"></i>Compliance &amp; KYC
+        </button>
+      </div>
+
+      <!-- Details Body -->
+      <div class="drawer-content" *ngIf="selectedEmployee">
+        <!-- TAB 1: OVERVIEW -->
+        <div *ngIf="detailsActiveTab === 'overview'" class="details-tab-content">
+          <div class="details-metrics-grid">
+            <div class="metric-box">
+              <span class="metric-box-label">Monthly Salary</span>
+              <span class="metric-box-val text-success font-mono">₹{{ selectedEmployee.salary | number:'1.2-2' }}</span>
+              <span class="metric-box-sub">Direct monthly wage</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-box-label">Compliance Status</span>
+              <span class="readiness-badge mt-1 font-bold" [ngClass]="(selectedEmployee.aadhaarNo && selectedEmployee.bankAccount) ? 'tag-verified' : 'tag-basic'">
+                {{ (selectedEmployee.aadhaarNo && selectedEmployee.bankAccount) ? 'Verified KYC' : 'Basic Profile' }}
+              </span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-box-label">Operational Role</span>
+              <span class="metric-box-val text-primary" style="font-size:15px;">{{ selectedEmployee.designation }}</span>
+              <span class="metric-box-sub">Factory role title</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-box-label">Joining Date</span>
+              <span class="metric-box-val text-muted font-mono" style="font-size:14px;">{{ selectedEmployee.joiningDate ? (selectedEmployee.joiningDate | indianDate) : 'N/A' }}</span>
+              <span class="metric-box-sub">Enrollment date</span>
+            </div>
+          </div>
+
+          <div class="details-card mt-3">
+            <h4 class="details-card-title"><i class="bi bi-person-badge me-2 text-primary"></i>Personnel Contact &amp; Residence</h4>
+            <div class="details-kv-list">
+              <div class="details-kv-row">
+                <span class="kv-key">Full Name:</span>
+                <span class="kv-val font-semibold">{{ selectedEmployee.empName }}</span>
+              </div>
+              <div class="details-kv-row">
+                <span class="kv-key">Mobile Telephone:</span>
+                <span class="kv-val font-mono">
+                  <a [href]="'tel:' + selectedEmployee.empContact" class="contact-link">
+                    +91 {{ selectedEmployee.empContact }}
+                  </a>
+                </span>
+              </div>
+              <div class="details-kv-row">
+                <span class="kv-key">Residential Address:</span>
+                <span class="kv-val">{{ selectedEmployee.address || 'Not registered' }}</span>
+              </div>
+              <div class="details-kv-row">
+                <span class="kv-key">System Identifier:</span>
+                <span class="kv-val font-mono">EMP-{{ selectedEmployee.id }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: COMPENSATION -->
+        <div *ngIf="detailsActiveTab === 'employment'" class="details-tab-content">
+          <div class="details-card">
+            <h4 class="details-card-title"><i class="bi bi-wallet2 me-2 text-success"></i>Compensation Benchmark</h4>
+            <div class="details-kv-list">
+              <div class="details-kv-row">
+                <span class="kv-key">Monthly Base Salary:</span>
+                <span class="kv-val font-bold text-success font-mono">₹{{ selectedEmployee.salary | number:'1.2-2' }}</span>
+              </div>
+              <div class="details-kv-row">
+                <span class="kv-key">Annualized Compensation (CTC):</span>
+                <span class="kv-val font-bold font-mono">₹{{ (selectedEmployee.salary * 12) | number:'1.2-2' }}</span>
+              </div>
+              <div class="details-kv-row">
+                <span class="kv-key">Designation:</span>
+                <span class="kv-val">{{ selectedEmployee.designation }}</span>
+              </div>
+              <div class="details-kv-row">
+                <span class="kv-key">Payroll Status:</span>
+                <span class="kv-val text-primary font-semibold">Active for Monthly Disbursal</span>
+              </div>
+            </div>
+
+            <div class="payroll-shortcut-card mt-3">
+              <div>
+                <strong>Ready to disburse salary for {{ selectedEmployee.empName }}?</strong>
+                <p class="text-muted text-sm mb-0">Navigate to the Salaries ledger to log salary disbursements or view payout history.</p>
+              </div>
+              <button type="button" class="btn btn-secondary btn-action-compact" (click)="goToSalaries(); closeDetails()">
+                <i class="bi bi-cash-coin me-1 text-primary"></i>Open Payroll
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: COMPLIANCE & KYC -->
+        <div *ngIf="detailsActiveTab === 'compliance'" class="details-tab-content">
+          <div class="details-card">
+            <h4 class="details-card-title"><i class="bi bi-shield-lock me-2 text-info"></i>Statutory Compliance &amp; Banking Details</h4>
+            <div class="details-kv-list">
+              <div class="details-kv-row">
+                <span class="kv-key">Aadhaar UID Status:</span>
+                <span class="kv-val">
+                  <span class="credential-pill" [class.verified]="selectedEmployee.aadhaarNo">
+                    <i class="bi" [ngClass]="selectedEmployee.aadhaarNo ? 'bi-shield-check text-success' : 'bi-shield-x text-muted'"></i>
+                    {{ selectedEmployee.aadhaarNo ? 'Aadhaar Verified' : 'Aadhaar Pending' }}
+                  </span>
+                </span>
+              </div>
+              <div class="details-kv-row" *ngIf="selectedEmployee.aadhaarNo">
+                <span class="kv-key">Aadhaar Number:</span>
+                <span class="kv-val font-mono">{{ selectedEmployee.aadhaarNo }}</span>
+              </div>
+              <div class="details-kv-row">
+                <span class="kv-key">Bank Account Status:</span>
+                <span class="kv-val">
+                  <span class="credential-pill" [class.verified]="selectedEmployee.bankAccount">
+                    <i class="bi" [ngClass]="selectedEmployee.bankAccount ? 'bi-bank text-primary' : 'bi-dash-circle text-muted'"></i>
+                    {{ selectedEmployee.bankAccount ? 'Bank Linked' : 'Bank Account Pending' }}
+                  </span>
+                </span>
+              </div>
+              <div class="details-kv-row" *ngIf="selectedEmployee.bankAccount">
+                <span class="kv-key">Bank Account / IFSC:</span>
+                <span class="kv-val font-mono">{{ selectedEmployee.bankAccount }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="drawer-footer" *ngIf="selectedEmployee">
+        <button type="button" class="btn btn-secondary btn-action-compact" (click)="closeDetails()">
+          Close
+        </button>
+        <button type="button" 
+                class="btn btn-secondary btn-action-compact" 
+                (click)="goToSalaries(); closeDetails()">
+          <i class="bi bi-wallet2 me-1 text-primary"></i>Payroll Ledger
+        </button>
+        <button type="button" 
+                class="btn btn-primary btn-action-primary" 
+                *ngIf="!isViewer()" 
+                (click)="openEditDrawer(selectedEmployee); closeDetails()">
+          <i class="bi bi-pencil me-1"></i>Edit Profile
+        </button>
+      </div>
     </div>
   </div>
+
 </div>

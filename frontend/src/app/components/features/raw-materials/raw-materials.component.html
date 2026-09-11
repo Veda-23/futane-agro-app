@@ -1,109 +1,889 @@
-<div class="grid-cols-3">
-  <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
-    <h3>{{ 'raw.add_title' | translate:currentLang }}</h3>
-    <form (submit)="saveRawMaterial()">
-      <div class="form-group">
-        <label>{{ 'raw.date' | translate:currentLang }}</label>
-        <input appAutoSelect type="date" [(ngModel)]="rawMaterialsForm.date" name="rawDate" required>
+<div class="raw-materials-enterprise-container">
+
+  <!-- ── 1. UNIFIED BREADCRUMB & STABLE HEADER ────────────────────── -->
+  <div class="header-section-wrapper no-print">
+    <div class="breadcrumb-nav">
+      <span class="breadcrumb-item"><i class="bi bi-house-door me-1"></i>Futane Agro ERP</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item">Inventory & Supply</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item active">Polymer Raw Materials & PP Granules</span>
+    </div>
+
+    <div class="stable-page-header">
+      <div class="header-left">
+        <div class="header-icon-badge">
+          <i class="bi bi-box-seam"></i>
+        </div>
+        <div class="header-text-group">
+          <h1 class="header-main-title">Polymer Raw Materials & PP Granules Inventory</h1>
+          <p class="header-desc-text">Raw plastic resin procurements, polymer inventory ledger, unit rates & batch quality verification</p>
+        </div>
       </div>
-      <div class="form-group">
-        <label>{{ 'raw.material_name' | translate:currentLang }}</label>
-        <input appAutoSelect type="text" [(ngModel)]="rawMaterialsForm.materialName" name="rawName" required placeholder="e.g. HDPE Granules">
+
+      <div class="header-right-actions">
+        <!-- Refresh Button -->
+        <button type="button" class="btn btn-secondary btn-action-compact" (click)="loadData(true)" title="Refresh data from server">
+          <i class="bi bi-arrow-clockwise me-1" [class.spin-anim]="isLoading"></i>
+          <span class="btn-label-desktop">Refresh</span>
+        </button>
+
+        <!-- Consolidated Export Dropdown -->
+        <div class="export-dropdown-wrapper" (click)="$event.stopPropagation()">
+          <button type="button" class="btn btn-secondary btn-action-compact" (click)="toggleExportDropdown()" title="Export raw material records">
+            <i class="bi bi-download me-1"></i>
+            <span>Export ▾</span>
+          </button>
+          <div class="export-menu shadow-lg animate-fade-in" *ngIf="showExportDropdown">
+            <button type="button" class="export-menu-item" (click)="exportTableToCSV()">
+              <i class="bi bi-file-earmark-spreadsheet text-success me-2"></i>Export CSV (.csv)
+            </button>
+            <button type="button" class="export-menu-item" (click)="exportTableToExcel()">
+              <i class="bi bi-file-earmark-excel text-primary me-2"></i>Export Excel (.xlsx)
+            </button>
+          </div>
+        </div>
+
+        <!-- Primary Action: Log Procurement Batch -->
+        <button type="button" 
+                class="btn btn-primary btn-action-primary" 
+                *ngIf="!isViewer()"
+                (click)="toggleAddForm()" 
+                [title]="isAddFormOpen ? 'Close procurement form' : 'Log a new polymer purchase batch'">
+          <i class="bi" [ngClass]="isAddFormOpen ? 'bi-x-lg' : 'bi-plus-circle-fill'"></i>
+          <span>{{ isAddFormOpen ? 'Close Form' : '+ Log Procurement Batch' }}</span>
+        </button>
       </div>
-      <div class="form-group">
-        <label>{{ 'label.select_vendor' | translate:currentLang }}</label>
-        <select [(ngModel)]="rawMaterialsForm.id" name="rawVendor" required>
-          <option *ngFor="let vendor of vendors" [value]="vendor.id">{{ vendor.vendorName }}</option>
-        </select>
+    </div>
+
+    <!-- ── 2. SUBTABS CLASSIFICATION RIBBON ──────────────────────────── -->
+    <div class="subtabs-classification-bar">
+      <div class="subtabs-scroll-container">
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="selectedSubtab === 'all'"
+                (click)="setSubtab('all')">
+          <i class="bi bi-grid-fill me-1"></i>
+          <span>All Materials</span>
+          <span class="tab-count-badge">{{ getSubtabCount('all') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="selectedSubtab === 'virgin'"
+                (click)="setSubtab('virgin')">
+          <i class="bi bi-shield-check text-primary me-1"></i>
+          <span>Virgin Polymer (HDPE / PP)</span>
+          <span class="tab-count-badge">{{ getSubtabCount('virgin') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="selectedSubtab === 'recycled'"
+                (click)="setSubtab('recycled')">
+          <i class="bi bi-recycle text-success me-1"></i>
+          <span>Recycled & Compounds</span>
+          <span class="tab-count-badge">{{ getSubtabCount('recycled') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="selectedSubtab === 'masterbatch'"
+                (click)="setSubtab('masterbatch')">
+          <i class="bi bi-palette-fill text-warning me-1"></i>
+          <span>Masterbatch & Additives</span>
+          <span class="tab-count-badge">{{ getSubtabCount('masterbatch') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="selectedSubtab === 'packaging'"
+                (click)="setSubtab('packaging')">
+          <i class="bi bi-box-seam text-info me-1"></i>
+          <span>Packaging & Cartons</span>
+          <span class="tab-count-badge">{{ getSubtabCount('packaging') }}</span>
+        </button>
+
+        <button type="button" 
+                class="subtab-pill-btn" 
+                [class.active]="selectedSubtab === 'high-volume'"
+                (click)="setSubtab('high-volume')">
+          <i class="bi bi-graph-up-arrow text-danger me-1"></i>
+          <span>High Volume (1,000+ kg)</span>
+          <span class="tab-count-badge">{{ getSubtabCount('high-volume') }}</span>
+        </button>
       </div>
-      <div class="form-group">
-        <label>{{ 'raw.weight' | translate:currentLang }}</label>
-        <input appAutoSelect type="number" step="0.1" [(ngModel)]="rawMaterialsForm.weight" name="rawWeight" required>
+    </div>
+  </div>
+
+  <!-- ── 3. 5-CARD STOCK & FINANCIAL TELEMETRY RIBBON ─────────────── -->
+  <div class="stock-telemetry-ribbon no-print">
+    <!-- Card 1: Total Procurements -->
+    <div class="telemetry-card card-procurements">
+      <div class="telemetry-icon-wrap icon-primary">
+        <i class="bi bi-boxes"></i>
       </div>
-      <div class="form-group">
-        <label>{{ 'raw.rate' | translate:currentLang }}</label>
-        <input appAutoSelect type="number" step="0.01" [(ngModel)]="rawMaterialsForm.rate" name="rawRate" required>
+      <div class="telemetry-info">
+        <div class="telemetry-label">Procurements</div>
+        <div class="telemetry-number">{{ totalBatchesCount }} <span class="unit-text">Batches</span></div>
+        <div class="telemetry-meta">Cumulative purchase orders</div>
       </div>
-      <div class="form-group">
-        <label>{{ 'label.amount' | translate:currentLang }} <span style="color:var(--accent-warning); font-size:11px;">(Auto)</span></label>
-        <input appAutoSelect type="number" [value]="computedAmount" name="rawAmount" readonly style="background: rgba(217,119,6,0.08); font-weight:700; cursor: not-allowed;">
+    </div>
+
+    <!-- Card 2: Net Polymer Volume -->
+    <div class="telemetry-card card-weight">
+      <div class="telemetry-icon-wrap icon-info">
+        <i class="bi bi-layer-forward"></i>
       </div>
-      <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'raw.save_btn' | translate:currentLang }}</button>
+      <div class="telemetry-info">
+        <div class="telemetry-label">Net Polymer Volume</div>
+        <div class="telemetry-number font-mono">{{ totalPolymerWeightKg | number:'1.0-0' }} <span class="unit-text">kg</span></div>
+        <div class="telemetry-meta">{{ (totalPolymerWeightKg / 1000) | number:'1.1-2' }} Metric Tonnes</div>
+      </div>
+    </div>
+
+    <!-- Card 3: Inventory Valuation -->
+    <div class="telemetry-card card-valuation">
+      <div class="telemetry-icon-wrap icon-success">
+        <i class="bi bi-currency-rupee"></i>
+      </div>
+      <div class="telemetry-info">
+        <div class="telemetry-label">Inventory Valuation</div>
+        <div class="telemetry-number font-mono">₹{{ totalInventoryValuation | number:'1.0-0' }}</div>
+        <div class="telemetry-meta">Total raw material cost</div>
+      </div>
+    </div>
+
+    <!-- Card 4: Weighted Average Cost -->
+    <div class="telemetry-card card-rate">
+      <div class="telemetry-icon-wrap icon-warning">
+        <i class="bi bi-graph-up-arrow"></i>
+      </div>
+      <div class="telemetry-info">
+        <div class="telemetry-label">Weighted Avg Cost</div>
+        <div class="telemetry-number font-mono">₹{{ weightedAverageRate | number:'1.2-2' }}<span class="unit-text">/kg</span></div>
+        <div class="telemetry-meta">Unit procurement rate</div>
+      </div>
+    </div>
+
+    <!-- Card 5: Approved Suppliers -->
+    <div class="telemetry-card card-suppliers">
+      <div class="telemetry-icon-wrap icon-purple">
+        <i class="bi bi-shop"></i>
+      </div>
+      <div class="telemetry-info">
+        <div class="telemetry-label">Approved Suppliers</div>
+        <div class="telemetry-number">{{ activeVendorsCount }} <span class="unit-text">Vendors</span></div>
+        <div class="telemetry-meta">Registered polymer sources</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 4. COLLAPSIBLE ADD / EDIT PROCUREMENT FORM ────────────────── -->
+  <div id="raw-material-form-container" class="procurement-form-panel glass-panel animate-slide-down no-print" *ngIf="isAddFormOpen && !isViewer()">
+    <div class="form-header-bar">
+      <div class="form-title-group">
+        <div class="form-badge-icon">
+          <i class="bi" [ngClass]="editingRawMaterialId ? 'bi-pencil-square text-warning' : 'bi-plus-circle-fill text-primary'"></i>
+        </div>
+        <div>
+          <h3>{{ editingRawMaterialId ? 'Edit Procurement Batch #' + editingRawMaterialId : 'Log New Raw Material Procurement' }}</h3>
+          <p class="subtitle">Record raw polymer resin, masterbatch additives, weighbridge scale readings & purchase invoices</p>
+        </div>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" (click)="cancelEdit()">
+        <i class="bi bi-x-lg me-1"></i> Cancel
+      </button>
+    </div>
+
+    <form (submit)="saveRawMaterial()" class="procurement-form-grid">
+      <!-- Row 1: Date & Material Specification -->
+      <div class="form-section-title">
+        <i class="bi bi-calendar3 me-1 text-primary"></i> Batch & Material Specification
+      </div>
+
+      <div class="form-row-2col">
+        <div class="form-group">
+          <label for="purchaseDate">Purchase Date <span class="req-star">*</span></label>
+          <input type="date" id="purchaseDate" [(ngModel)]="rawMaterialsForm.date" name="purchaseDate" required class="form-control-compact">
+        </div>
+
+        <div class="form-group">
+          <label for="materialName">Material Grade & Description <span class="req-star">*</span></label>
+          <input type="text" id="materialName" [(ngModel)]="rawMaterialsForm.materialName" name="materialName" required placeholder="e.g. Virgin HDPE Granules Grade 100" class="form-control-compact">
+          <!-- Quick Preset Chips -->
+          <div class="quick-preset-chips">
+            <span class="preset-label">Quick select:</span>
+            <button type="button" class="preset-chip" *ngFor="let m of commonMaterials.slice(0, 4)" (click)="selectPresetMaterial(m)">{{ m.split(' ')[0] }} {{ m.split(' ')[1] }}</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: Supplier Selection -->
+      <div class="form-section-title">
+        <i class="bi bi-shop me-1 text-primary"></i> Supplier & Commercial Vendor
+      </div>
+
+      <div class="form-row-2col">
+        <div class="form-group">
+          <label for="vendorSelect">Select Approved Vendor <span class="req-star">*</span></label>
+          <select id="vendorSelect" [(ngModel)]="rawMaterialsForm.id" name="vendorSelect" required class="form-control-compact">
+            <option value="" disabled>-- Select Vendor / Supplier --</option>
+            <option *ngFor="let v of vendors" [value]="v.id || v.vendorId">
+              {{ v.vendorName }} (GST: {{ v.gstNumber || 'Unregistered' }})
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="purchaseBillPath">Purchase Bill / Tax Invoice No.</label>
+          <input type="text" id="purchaseBillPath" [(ngModel)]="rawMaterialsForm.purchaseBillPath" name="purchaseBillPath" placeholder="e.g. INV-POLY-2026-904" class="form-control-compact">
+        </div>
+      </div>
+
+      <!-- Row 3: Weight, Rate & Real-Time Calculation -->
+      <div class="form-section-title">
+        <i class="bi bi-speedometer2 me-1 text-primary"></i> Weightbridge Verification & Pricing
+      </div>
+
+      <div class="form-row-3col">
+        <div class="form-group">
+          <label for="netWeight">Net Weight (kg) <span class="req-star">*</span></label>
+          <div class="input-unit-wrap">
+            <input type="number" step="0.1" min="0.1" id="netWeight" [(ngModel)]="rawMaterialsForm.weight" name="netWeight" required class="form-control-compact font-mono">
+            <span class="unit-addon">kg</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="purchaseRate">Purchase Rate (₹/kg) <span class="req-star">*</span></label>
+          <div class="input-unit-wrap">
+            <span class="currency-addon">₹</span>
+            <input type="number" step="0.01" min="0.01" id="purchaseRate" [(ngModel)]="rawMaterialsForm.rate" name="purchaseRate" required class="form-control-compact font-mono">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="weightSlipPath">Weighbridge Slip Ref</label>
+          <input type="text" id="weightSlipPath" [(ngModel)]="rawMaterialsForm.weightSlipPath" name="weightSlipPath" placeholder="e.g. WB-SLIP-4402" class="form-control-compact">
+        </div>
+      </div>
+
+      <!-- Live Calculation Preview Card -->
+      <div class="live-batch-preview-box animate-fade-in" *ngIf="rawMaterialsForm.weight && rawMaterialsForm.rate">
+        <div class="preview-header">
+          <span><i class="bi bi-calculator-fill text-primary me-1"></i> Live Batch Cost Calculation</span>
+          <strong class="total-preview-cost font-mono">₹{{ calculatedBatchAmount | number:'1.2-2' }}</strong>
+        </div>
+        <div class="preview-subtext">
+          Formula: {{ rawMaterialsForm.weight | number }} kg × ₹{{ rawMaterialsForm.rate | number:'1.2-2' }}/kg = ₹{{ calculatedBatchAmount | number:'1.2-2' }} Net Batch Payable
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions-footer">
+        <button type="button" class="btn btn-secondary btn-action-compact" (click)="cancelEdit()">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-action-primary">
+          <i class="bi bi-check2-circle me-1"></i>
+          {{ editingRawMaterialId ? 'Update Procurement Record' : 'Save Procurement Record' }}
+        </button>
+      </div>
     </form>
   </div>
-  <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
-    <h3>{{ 'raw.records_title' | translate:currentLang }}</h3>
-    
-    <!-- Skeleton Loader (A-01) -->
-    <div *ngIf="isLoading" class="skeleton-container" aria-busy="true" aria-label="Loading raw materials...">
-      <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5,6]"></div>
+
+  <!-- ── 5. SEARCH + MULTI-FILTER TOOLBAR ──────────────────────────── -->
+  <div class="table-toolbar-container no-print">
+    <div class="toolbar-left-search">
+      <div class="search-input-box">
+        <i class="bi bi-search search-icon"></i>
+        <input type="text" 
+               [(ngModel)]="searchQuery" 
+               placeholder="Search material, grade, vendor, batch ID..."
+               aria-label="Search raw materials"
+               class="search-field">
+        <button type="button" *ngIf="searchQuery" class="clear-search-btn" (click)="searchQuery = ''" title="Clear search">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+
+      <!-- Multi-Filter Popover Trigger -->
+      <div class="filter-popover-wrapper" (click)="$event.stopPropagation()">
+        <button type="button" 
+                class="btn btn-secondary filter-trigger-btn" 
+                [class.active-filters]="activeFilterCount > 0"
+                (click)="showFilterPopover = !showFilterPopover" 
+                title="Open advanced filters">
+          <i class="bi bi-funnel me-1"></i>
+          <span>Filters</span>
+          <span class="filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
+        </button>
+
+        <!-- Filter Popover Panel -->
+        <div class="filter-popover-panel shadow-lg animate-fade-in" *ngIf="showFilterPopover">
+          <div class="popover-title-row">
+            <strong><i class="bi bi-sliders me-1"></i> Refine Raw Materials</strong>
+            <button type="button" class="btn-text" (click)="resetFilters()">Reset All</button>
+          </div>
+
+          <div class="popover-content-body">
+            <!-- Filter: Vendor -->
+            <div class="filter-field-group">
+              <label>Supplier / Vendor</label>
+              <select [(ngModel)]="filterVendorId" class="filter-select">
+                <option value="">All Approved Vendors</option>
+                <option *ngFor="let v of vendors" [value]="v.id || v.vendorId">{{ v.vendorName }}</option>
+              </select>
+            </div>
+
+            <!-- Filter: Material Category -->
+            <div class="filter-field-group">
+              <label>Material Classification</label>
+              <select [(ngModel)]="filterCategory" class="filter-select">
+                <option value="">All Classifications</option>
+                <option value="virgin">Virgin Polymer (HDPE/PP)</option>
+                <option value="recycled">Recycled & Compounds</option>
+                <option value="masterbatch">Masterbatch & Pigments</option>
+                <option value="packaging">Packaging & Cartons</option>
+              </select>
+            </div>
+
+            <!-- Filter: Weight Range -->
+            <div class="filter-field-group">
+              <label>Batch Net Weight</label>
+              <select [(ngModel)]="filterWeightRange" class="filter-select">
+                <option value="">Any Volume</option>
+                <option value="low">Under 500 kg (Small Batch)</option>
+                <option value="mid">500 kg – 1,500 kg (Standard)</option>
+                <option value="high">Over 1,500 kg (Bulk Load)</option>
+              </select>
+            </div>
+
+            <!-- Filter: Date Range -->
+            <div class="filter-field-group">
+              <label>Procurement Date Range</label>
+              <div class="filter-date-inputs">
+                <input type="date" [(ngModel)]="filterDateFrom" class="filter-date-field" placeholder="From">
+                <span class="date-sep">to</span>
+                <input type="date" [(ngModel)]="filterDateTo" class="filter-date-field" placeholder="To">
+              </div>
+            </div>
+          </div>
+
+          <div class="popover-footer-row">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="showFilterPopover = false">Close</button>
+            <button type="button" class="btn btn-primary btn-sm" (click)="applyFilters()">Apply Filters</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Reset Button -->
+      <button type="button" 
+              class="btn btn-secondary btn-action-compact" 
+              *ngIf="searchQuery || activeFilterCount > 0"
+              (click)="resetFilters()" 
+              title="Reset all search queries and filters">
+        <i class="bi bi-x-circle me-1"></i> Reset
+      </button>
     </div>
 
-    <!-- Error State -->
-    <div *ngIf="!isLoading && hasError" class="empty-state" style="padding:40px; text-align:center;">
-      <div style="margin-bottom:12px;"><i class="bi bi-exclamation-triangle text-danger" style="font-size:48px;"></i></div>
-      <h3 style="color: var(--text-primary);">Failed to Load Raw Materials</h3>
-      <p style="color: var(--text-secondary); margin-bottom:16px;">Could not connect to the server. Please check your connection.</p>
-      <button class="btn btn-primary" (click)="loadData()"><i class="bi bi-arrow-repeat me-1"></i>Retry</button>
-    </div>
+    <!-- Right Controls: Density & Columns -->
+    <div class="toolbar-right-controls">
+      <!-- Table Density Switcher -->
+      <div class="density-switch-group">
+        <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact table view">
+          <i class="bi bi-distribute-vertical"></i> Compact
+        </button>
+        <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="setDensity('comfortable')" title="Standard table view">
+          <i class="bi bi-list-ul"></i> Normal
+        </button>
+        <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious table view">
+          <i class="bi bi-grid-3x2-gap"></i> Spacious
+        </button>
+      </div>
 
-    <div *ngIf="!isLoading && !hasError">
-      <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
-        <div class="column-visibility-dropdown" style="position:relative;">
-          <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('raw')" style="padding: 6px 12px; font-size: 13px;">
-            <i class="bi bi-layout-three-columns me-1"></i>Columns
-          </button>
-          <div class="dropdown-menu" *ngIf="showColDropdown['raw']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
-            <label *ngFor="let col of getTableColumns('raw')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-              <input appAutoSelect type="checkbox" [checked]="isColumnVisible('raw', col)" (change)="toggleColumn('raw', col)" style="width:auto; margin:0; cursor:pointer;">
-              {{col}}
+      <!-- Columns Manager Dropdown -->
+      <div class="col-manager-dropdown-wrapper" (click)="$event.stopPropagation()">
+        <button type="button" class="btn btn-secondary btn-action-compact" (click)="toggleColDropdown()" title="Manage visible columns">
+          <i class="bi bi-layout-three-columns me-1"></i>
+          <span>Columns ({{ visibleColumnsCount }})</span>
+        </button>
+        <div class="col-manager-popover shadow-lg animate-fade-in" *ngIf="showColDropdown">
+          <div class="popover-header">
+            <strong>Manage Columns</strong>
+            <button type="button" class="btn-text" (click)="resetColumns()"><i class="bi bi-arrow-counterclockwise me-1"></i>Reset</button>
+          </div>
+          <div class="popover-body">
+            <label class="col-check-label" *ngFor="let col of defaultColumns">
+              <input type="checkbox" [checked]="isColumnVisible(col)" (change)="toggleColumn(col)">
+              <span>{{ col }}</span>
             </label>
           </div>
         </div>
       </div>
-      <div class="table-container table-responsive">
-        <table class="table" appResizableTable tableId="raw_materials_table">
-          <thead>
-            <tr>
-              <th *ngIf="isColumnVisible('raw', 'Date')" (click)="setSort('date')" style="cursor:pointer; min-width:110px;">{{ 'label.date' | translate:currentLang }} <span *ngIf="sortField === 'date'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('raw', 'Material')" (click)="setSort('materialName')" style="cursor:pointer; min-width:180px;">{{ 'raw.material' | translate:currentLang }} <span *ngIf="sortField === 'materialName'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('raw', 'Vendor')" (click)="setSort('vendor.vendorName')" style="cursor:pointer; min-width:160px;">{{ 'vendor.name' | translate:currentLang }} <span *ngIf="sortField === 'vendor.vendorName'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('raw', 'Weight')" (click)="setSort('weight')" style="cursor:pointer; min-width:110px;">{{ 'raw.weight' | translate:currentLang }} <span *ngIf="sortField === 'weight'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('raw', 'Rate')" (click)="setSort('rate')" style="cursor:pointer; min-width:110px;">{{ 'raw.rate' | translate:currentLang }} <span *ngIf="sortField === 'rate'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('raw', 'Amount')" (click)="setSort('amount')" style="cursor:pointer; min-width:130px;">{{ 'label.amount' | translate:currentLang }} <span *ngIf="sortField === 'amount'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('raw', 'Actions')" style="min-width:120px;">{{ 'label.actions' | translate:currentLang }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let rm of getProcessedList(rawMaterialsList, 'raw'); trackBy: trackById">
-              <td *ngIf="isColumnVisible('raw', 'Date')"><span class="date-cell">{{ rm.date | indianDate }}</span></td>
-              <td *ngIf="isColumnVisible('raw', 'Material')" style="font-weight:700;">{{ rm.materialName }}</td>
-              <td *ngIf="isColumnVisible('raw', 'Vendor')">{{ rm.vendor?.vendorName }}</td>
-              <td *ngIf="isColumnVisible('raw', 'Weight')" style="font-weight:600;">{{ rm.weight | number }} kg</td>
-              <td *ngIf="isColumnVisible('raw', 'Rate')">₹{{ rm.rate | number:'1.2-2' }}</td>
-              <td *ngIf="isColumnVisible('raw', 'Amount')"><strong style="color:var(--text-primary);">₹{{ rm.amount | number:'1.2-2' }}</strong></td>
-              <td *ngIf="isColumnVisible('raw', 'Actions')" style="display:flex; gap:6px;">
-                <button class="btn btn-secondary btn-sm" (click)="editRawMaterial(rm)"><i class="bi bi-pencil me-1"></i>Edit</button>
-                <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deleteRawMaterial(rm.rawMaterialId)">{{ 'btn.delete' | translate:currentLang }}</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    </div>
+  </div>
+
+  <!-- ── 6. BULK SELECTION ACTION BAR ──────────────────────────────── -->
+  <div class="bulk-action-bar animate-fade-in no-print" *ngIf="selectedRows.size > 0">
+    <span class="bulk-count-pill">
+      <i class="bi bi-check-circle-fill me-1"></i> {{ selectedRows.size }} record(s) selected
+    </span>
+    <div class="bulk-buttons-group">
+      <button type="button" class="btn btn-sm btn-primary" (click)="bulkExportSelected()">
+        <i class="bi bi-download me-1"></i> Export Selected
+      </button>
+      <button type="button" class="btn btn-sm btn-secondary" (click)="clearSelection()">
+        <i class="bi bi-x-lg me-1"></i> Clear
+      </button>
+    </div>
+  </div>
+
+  <!-- ── 7. SKELETON LOADER & ERROR STATES ─────────────────────────── -->
+  <div *ngIf="isLoading" class="table-skeleton-container" aria-busy="true">
+    <div class="skeleton-header"></div>
+    <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5,6,7,8]"></div>
+  </div>
+
+  <div *ngIf="!isLoading && hasError" class="empty-state-card glass-panel text-center">
+    <div class="empty-icon-wrap"><i class="bi bi-exclamation-triangle-fill text-danger"></i></div>
+    <h3>Failed to Load Polymer Inventory</h3>
+    <p>Could not retrieve raw material records from the backend server.</p>
+    <button type="button" class="btn btn-primary btn-action-compact mt-2" (click)="loadData()">
+      <i class="bi bi-arrow-repeat me-1"></i> Retry Connection
+    </button>
+  </div>
+
+  <!-- ── 8. RAW MATERIAL INVENTORY DATA TABLE ──────────────────────── -->
+  <div class="table-container" 
+       *ngIf="!isLoading && !hasError"
+       [class.table-compact]="tableDensity === 'compact'" 
+       [class.table-spacious]="tableDensity === 'spacious'">
+
+    <table class="table enterprise-raw-table" appResizableTable [tableId]="'raw_materials_procurement_table'">
+      <thead>
+        <tr>
+          <!-- Column 0: Checkbox -->
+          <th style="width: 44px; text-align: center;" class="no-print">
+            <input type="checkbox" 
+                   class="enterprise-checkbox" 
+                   [checked]="isAllSelected()" 
+                   (change)="toggleSelectAll()" 
+                   title="Select all on current page">
+          </th>
+
+          <!-- Column 1: Date -->
+          <th *ngIf="isColumnVisible('Date')" (click)="setSort('date')" class="sortable-th" style="min-width: 110px;">
+            <div class="th-content">
+              <span>Date</span>
+              <i class="bi ms-1" [ngClass]="sortField === 'date' ? (sortAsc ? 'bi-chevron-up' : 'bi-chevron-down') : 'bi-arrow-down-up opacity-40'"></i>
+            </div>
+          </th>
+
+          <!-- Column 2: Batch ID -->
+          <th *ngIf="isColumnVisible('BatchID')" (click)="setSort('rawMaterialId')" class="sortable-th" style="min-width: 90px;">
+            <div class="th-content">
+              <span>Batch ID</span>
+              <i class="bi ms-1" [ngClass]="sortField === 'rawMaterialId' ? (sortAsc ? 'bi-chevron-up' : 'bi-chevron-down') : 'bi-arrow-down-up opacity-40'"></i>
+            </div>
+          </th>
+
+          <!-- Column 3: Material Name -->
+          <th *ngIf="isColumnVisible('Material')" (click)="setSort('materialName')" class="sortable-th" style="min-width: 200px;">
+            <div class="th-content">
+              <span>Material & Grade</span>
+              <i class="bi ms-1" [ngClass]="sortField === 'materialName' ? (sortAsc ? 'bi-chevron-up' : 'bi-chevron-down') : 'bi-arrow-down-up opacity-40'"></i>
+            </div>
+          </th>
+
+          <!-- Column 4: Category -->
+          <th *ngIf="isColumnVisible('Category')" style="min-width: 130px;">
+            <span>Category</span>
+          </th>
+
+          <!-- Column 5: Supplier / Vendor -->
+          <th *ngIf="isColumnVisible('Supplier')" (click)="setSort('vendor.vendorName')" class="sortable-th" style="min-width: 170px;">
+            <div class="th-content">
+              <span>Supplier / Vendor</span>
+              <i class="bi ms-1" [ngClass]="sortField === 'vendor.vendorName' ? (sortAsc ? 'bi-chevron-up' : 'bi-chevron-down') : 'bi-arrow-down-up opacity-40'"></i>
+            </div>
+          </th>
+
+          <!-- Column 6: Net Weight (kg) -->
+          <th *ngIf="isColumnVisible('Weight')" (click)="setSort('weight')" class="sortable-th text-end" style="min-width: 120px;">
+            <div class="th-content justify-content-end">
+              <span>Net Weight (kg)</span>
+              <i class="bi ms-1" [ngClass]="sortField === 'weight' ? (sortAsc ? 'bi-chevron-up' : 'bi-chevron-down') : 'bi-arrow-down-up opacity-40'"></i>
+            </div>
+          </th>
+
+          <!-- Column 7: Purchase Rate (₹/kg) -->
+          <th *ngIf="isColumnVisible('Rate')" (click)="setSort('rate')" class="sortable-th text-end" style="min-width: 110px;">
+            <div class="th-content justify-content-end">
+              <span>Rate (₹/kg)</span>
+              <i class="bi ms-1" [ngClass]="sortField === 'rate' ? (sortAsc ? 'bi-chevron-up' : 'bi-chevron-down') : 'bi-arrow-down-up opacity-40'"></i>
+            </div>
+          </th>
+
+          <!-- Column 8: Batch Amount (₹) -->
+          <th *ngIf="isColumnVisible('Amount')" (click)="setSort('amount')" class="sortable-th text-end" style="min-width: 130px;">
+            <div class="th-content justify-content-end">
+              <span>Batch Value (₹)</span>
+              <i class="bi ms-1" [ngClass]="sortField === 'amount' ? (sortAsc ? 'bi-chevron-up' : 'bi-chevron-down') : 'bi-arrow-down-up opacity-40'"></i>
+            </div>
+          </th>
+
+          <!-- Column 9: Reference Docs -->
+          <th *ngIf="isColumnVisible('References')" style="min-width: 120px;">
+            <span>Ref Docs</span>
+          </th>
+
+          <!-- Column 10: Actions -->
+          <th *ngIf="isColumnVisible('Actions')" class="table-actions-th text-end no-print" style="min-width: 140px; padding-right: 16px;">
+            <span>Actions</span>
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <!-- Empty Result Row -->
+        <tr *ngIf="filteredList.length === 0" class="no-records-tr">
+          <td [attr.colspan]="visibleColumnsCount + 1" class="text-center py-5">
+            <div class="empty-table-state">
+              <i class="bi bi-inbox text-muted" style="font-size: 32px;"></i>
+              <div class="mt-2 text-muted font-bold">No raw material procurement batches found</div>
+              <p class="small text-muted mb-3">Try adjusting your search keywords, filter conditions, or log a new procurement batch.</p>
+              <button type="button" class="btn btn-secondary btn-sm" (click)="resetFilters()">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Filters
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Data Rows -->
+        <tr *ngFor="let rm of paginatedList; trackBy: trackById" 
+            [class.row-selected]="isRowSelected(rm.id || '' + rm.rawMaterialId)">
+          
+          <!-- Checkbox -->
+          <td style="text-align: center;" class="no-print">
+            <input type="checkbox" 
+                   class="enterprise-checkbox" 
+                   [checked]="isRowSelected(rm.id || '' + rm.rawMaterialId)" 
+                   (change)="toggleSelectRow(rm.id || '' + rm.rawMaterialId)">
+          </td>
+
+          <!-- Date -->
+          <td *ngIf="isColumnVisible('Date')" class="cell-date font-mono">
+            {{ rm.date | indianDate }}
+          </td>
+
+          <!-- Batch ID -->
+          <td *ngIf="isColumnVisible('BatchID')" class="cell-id">
+            <span class="batch-id-pill">#{{ rm.rawMaterialId || (rm.id ? rm.id.slice(0, 6) : 'N/A') }}</span>
+          </td>
+
+          <!-- Material & Grade -->
+          <td *ngIf="isColumnVisible('Material')" class="cell-material" [title]="rm.materialName">
+            <div class="material-name-wrap">
+              <strong class="material-title">{{ rm.materialName }}</strong>
+            </div>
+          </td>
+
+          <!-- Category Badge -->
+          <td *ngIf="isColumnVisible('Category')" class="cell-category">
+            <span class="category-badge" [ngClass]="getMaterialCategory(rm.materialName).badgeClass">
+              <i class="bi me-1" [ngClass]="getMaterialCategory(rm.materialName).icon"></i>
+              {{ getMaterialCategory(rm.materialName).label }}
+            </span>
+          </td>
+
+          <!-- Supplier / Vendor -->
+          <td *ngIf="isColumnVisible('Supplier')" class="cell-supplier" [title]="rm.vendor?.vendorName || 'No Vendor'">
+            <div class="supplier-info-block">
+              <span class="supplier-name">{{ rm.vendor?.vendorName || 'Unknown Supplier' }}</span>
+              <span class="supplier-gst text-muted" *ngIf="rm.vendor?.gstNumber">
+                <i class="bi bi-patch-check-fill text-success me-1" style="font-size: 10px;"></i>{{ rm.vendor?.gstNumber }}
+              </span>
+            </div>
+          </td>
+
+          <!-- Net Weight (kg) -->
+          <td *ngIf="isColumnVisible('Weight')" class="text-end font-mono cell-weight">
+            <div class="weight-cell-block">
+              <strong>{{ rm.weight | number:'1.1-2' }}</strong>
+              <span class="unit-kg">kg</span>
+            </div>
+          </td>
+
+          <!-- Purchase Rate (₹/kg) -->
+          <td *ngIf="isColumnVisible('Rate')" class="text-end font-mono cell-rate">
+            ₹{{ rm.rate | number:'1.2-2' }}
+          </td>
+
+          <!-- Batch Amount (₹) -->
+          <td *ngIf="isColumnVisible('Amount')" class="text-end font-mono cell-amount">
+            <strong class="text-success">₹{{ rm.amount | number:'1.2-2' }}</strong>
+          </td>
+
+          <!-- References (Bill / Weighbridge) -->
+          <td *ngIf="isColumnVisible('References')" class="cell-refs">
+            <div class="ref-badges-wrap">
+              <span class="ref-pill" *ngIf="rm.purchaseBillPath" [title]="'Invoice: ' + rm.purchaseBillPath">
+                <i class="bi bi-receipt me-1"></i>{{ rm.purchaseBillPath }}
+              </span>
+              <span class="ref-pill" *ngIf="rm.weightSlipPath" [title]="'Weigh Slip: ' + rm.weightSlipPath">
+                <i class="bi bi-truck me-1"></i>{{ rm.weightSlipPath }}
+              </span>
+              <span class="text-muted small" *ngIf="!rm.purchaseBillPath && !rm.weightSlipPath">—</span>
+            </div>
+          </td>
+
+          <!-- Row Actions -->
+          <td *ngIf="isColumnVisible('Actions')" class="table-actions-cell text-end no-print" style="padding-right: 16px;">
+            <div class="action-buttons-wrap">
+              <!-- Goods Receipt Note / Inspect -->
+              <button type="button" 
+                      class="btn-row-action btn-inspect" 
+                      (click)="openInspectionModal(rm)" 
+                      title="Inspect Batch & Print GRN Voucher">
+                <i class="bi bi-file-earmark-text"></i>
+              </button>
+
+              <!-- Edit Batch -->
+              <button type="button" 
+                      class="btn-row-action btn-edit" 
+                      *ngIf="!isViewer()"
+                      (click)="editRawMaterial(rm)" 
+                      title="Edit Procurement Record">
+                <i class="bi bi-pencil-square"></i>
+              </button>
+
+              <!-- Delete Batch -->
+              <button type="button" 
+                      class="btn-row-action btn-delete" 
+                      *ngIf="canDelete()" 
+                      (click)="deleteRawMaterial(rm.rawMaterialId || rm.id)" 
+                      title="Delete Batch Record">
+                <i class="bi bi-trash3"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+
+      <!-- ── 9. ACCOUNTING & STOCK SUMMARY FOOTER ──────────────────── -->
+      <tfoot *ngIf="filteredList.length > 0">
+        <tr class="summary-footer-row">
+          <td style="text-align:center;" class="no-print">—</td>
+          <td *ngIf="isColumnVisible('Date')" class="summary-label-cell" colspan="4">
+            <i class="bi bi-calculator me-1 text-primary"></i> Subtotal / Filtered Volume & Valuation ({{ filteredList.length }} batches):
+          </td>
+          <!-- Handled by colspan if some columns hidden -->
+          <td *ngIf="isColumnVisible('Supplier') && !isColumnVisible('Date')" class="summary-label-cell">Totals:</td>
+
+          <!-- Total Net Weight -->
+          <td *ngIf="isColumnVisible('Weight')" class="text-end font-mono summary-metric-cell">
+            <strong>{{ filteredTotalWeight | number:'1.1-2' }} kg</strong>
+          </td>
+
+          <!-- Average Rate -->
+          <td *ngIf="isColumnVisible('Rate')" class="text-end font-mono summary-metric-cell">
+            <strong>₹{{ filteredAverageRate | number:'1.2-2' }}/kg</strong>
+          </td>
+
+          <!-- Total Valuation -->
+          <td *ngIf="isColumnVisible('Amount')" class="text-end font-mono summary-metric-cell text-success">
+            <strong>₹{{ filteredTotalValue | number:'1.2-2' }}</strong>
+          </td>
+
+          <td *ngIf="isColumnVisible('References')">—</td>
+          <td *ngIf="isColumnVisible('Actions')" class="no-print"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- ── 10. COMPACT PAGINATION ────────────────────────────────────── -->
+  <div class="table-pagination-footer no-print" *ngIf="!isLoading && !hasError && filteredList.length > 0">
+    <div class="pagination-info-text">
+      Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to 
+      <strong>{{ Math.min(currentPage * pageSize, filteredList.length) }}</strong> of 
+      <strong>{{ filteredList.length }}</strong> procurement records
+      <span *ngIf="filteredList.length < rawMaterialsList.length" class="filtered-from-total">
+        (filtered from {{ rawMaterialsList.length }} total)
+      </span>
+    </div>
+
+    <div class="pagination-controls-group">
+      <!-- Page Size Selector -->
+      <div class="page-size-selector">
+        <span>Rows:</span>
+        <select [(ngModel)]="pageSize" (change)="currentPage = 1" class="page-size-select">
+          <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+        </select>
       </div>
-      <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
-        <span style="font-size:13px; color:var(--text-secondary);">
-          Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['raw'] || 0) }} of {{ tableFilteredCounts['raw'] || 0 }} entries
+
+      <!-- Previous / Next -->
+      <div class="page-buttons-wrap">
+        <button type="button" 
+                class="btn btn-secondary btn-sm pagination-nav-btn" 
+                [disabled]="currentPage === 1" 
+                (click)="currentPage = currentPage - 1"
+                title="Go to previous page">
+          <i class="bi bi-chevron-left me-1"></i> Prev
+        </button>
+
+        <span class="page-counter-badge">
+          Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong>
         </span>
-        <div style="display:flex; gap:8px;">
-          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
-            Previous
-          </button>
-          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['raw'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
-            Next
-          </button>
-        </div>
+
+        <button type="button" 
+                class="btn btn-secondary btn-sm pagination-nav-btn" 
+                [disabled]="currentPage >= totalPages" 
+                (click)="currentPage = currentPage + 1"
+                title="Go to next page">
+          Next <i class="bi bi-chevron-right ms-1"></i>
+        </button>
       </div>
     </div>
   </div>
-</div>
 
+  <!-- ── 11. GOODS RECEIPT NOTE (GRN) / INSPECTION MODAL ────────────── -->
+  <div class="grn-voucher-backdrop animate-fade-in" *ngIf="showInspectionModal" (click)="closeInspectionModal()">
+    <div class="grn-voucher-dialog shadow-2xl animate-scale-up" (click)="$event.stopPropagation()">
+      <div class="grn-voucher-header">
+        <div class="grn-title-group">
+          <span class="grn-badge-icon"><i class="bi bi-shield-check text-success"></i></span>
+          <div>
+            <h3>Material Inward & Inspection Note (GRN)</h3>
+            <p>Futane Agro Industries Pvt. Ltd. — Quality & Weight Verification</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close-modal" (click)="closeInspectionModal()" aria-label="Close dialog">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="grn-voucher-body" *ngIf="selectedMaterialForInspection">
+        <!-- Voucher Meta Row -->
+        <div class="grn-meta-banner">
+          <div class="meta-item">
+            <span class="meta-label">GRN Voucher Ref</span>
+            <strong class="meta-value font-mono">GRN-RM-{{ selectedMaterialForInspection.rawMaterialId || selectedMaterialForInspection.id }}</strong>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Inward Date</span>
+            <strong class="meta-value">{{ selectedMaterialForInspection.date | indianDate }}</strong>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Classification</span>
+            <span class="category-badge" [ngClass]="getMaterialCategory(selectedMaterialForInspection.materialName).badgeClass">
+              {{ getMaterialCategory(selectedMaterialForInspection.materialName).label }}
+            </span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">QC Status</span>
+            <strong class="meta-value text-success"><i class="bi bi-check-all me-1"></i>Passed & Accepted</strong>
+          </div>
+        </div>
+
+        <!-- Two Column Detailed Breakdown -->
+        <div class="grn-details-grid">
+          <!-- Supplier Card -->
+          <div class="grn-card">
+            <div class="grn-card-title"><i class="bi bi-building me-1 text-primary"></i> Approved Supplier Profile</div>
+            <div class="grn-card-content">
+              <div class="detail-row">
+                <span class="detail-label">Supplier Name:</span>
+                <strong class="detail-val">{{ selectedMaterialForInspection.vendor?.vendorName || 'Direct Local Purchase' }}</strong>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">GSTIN / Tax ID:</span>
+                <strong class="detail-val font-mono">{{ selectedMaterialForInspection.vendor?.gstNumber || 'Unregistered / Exempt' }}</strong>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Plant Address:</span>
+                <span class="detail-val text-muted">{{ selectedMaterialForInspection.vendor?.address || 'Industrial Estate, Maharashtra' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Contact / Mobile:</span>
+                <span class="detail-val">{{ selectedMaterialForInspection.vendor?.mobile || '+91 98220 00000' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weighbridge & Logistics -->
+          <div class="grn-card">
+            <div class="grn-card-title"><i class="bi bi-truck me-1 text-primary"></i> Scale & Invoice Traceability</div>
+            <div class="grn-card-content">
+              <div class="detail-row">
+                <span class="detail-label">Tax Invoice Ref:</span>
+                <strong class="detail-val font-mono">{{ selectedMaterialForInspection.purchaseBillPath || 'INV-DIRECT-ENTRY' }}</strong>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Weighbridge Slip:</span>
+                <strong class="detail-val font-mono">{{ selectedMaterialForInspection.weightSlipPath || 'WB-VERIFIED-SCALE' }}</strong>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Tare & Gross Weight:</span>
+                <span class="detail-val">Electronic Bridge Calibrated</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Quality Grade:</span>
+                <span class="detail-val font-bold text-primary">Agro Standard Moulding Grade</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Material Financials Table -->
+        <div class="grn-financial-summary mt-3">
+          <table class="table grn-spec-table">
+            <thead>
+              <tr>
+                <th>Polymer Material Specification</th>
+                <th class="text-end">Verified Net Weight</th>
+                <th class="text-end">Contract Rate</th>
+                <th class="text-end">Total Batch Payable</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <strong>{{ selectedMaterialForInspection.materialName }}</strong>
+                  <div class="text-muted small">Melt flow index verified • High density polyethylene resin</div>
+                </td>
+                <td class="text-end font-mono font-bold">{{ selectedMaterialForInspection.weight | number:'1.1-2' }} kg</td>
+                <td class="text-end font-mono">₹{{ selectedMaterialForInspection.rate | number:'1.2-2' }}/kg</td>
+                <td class="text-end font-mono font-bold text-success" style="font-size: 15px;">₹{{ selectedMaterialForInspection.amount | number:'1.2-2' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Verification Signatures -->
+        <div class="grn-signatures-row mt-4">
+          <div class="sig-box">
+            <div class="sig-line"></div>
+            <span>Store Inward Incharge</span>
+          </div>
+          <div class="sig-box">
+            <div class="sig-line"></div>
+            <span>Quality Control Inspector</span>
+          </div>
+          <div class="sig-box">
+            <div class="sig-line"></div>
+            <span>Plant Commercial Manager</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grn-voucher-footer">
+        <button type="button" class="btn btn-secondary btn-action-compact" (click)="closeInspectionModal()">Close</button>
+        <button type="button" class="btn btn-primary btn-action-compact" (click)="printInspectionNote()">
+          <i class="bi bi-printer me-1"></i> Print Inward Note
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

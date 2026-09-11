@@ -1,61 +1,81 @@
-<!-- Enterprise Header -->
-<div class="module-header-strip no-print">
-  <div class="strip-left">
-    <div class="module-icon-badge" style="background: rgba(194, 65, 12, 0.12); color: #c2410c;">
+<!-- Breadcrumb Navigation -->
+<div class="billing-breadcrumb-bar no-print" aria-label="Breadcrumb">
+  <span class="crumb-root">ERP</span>
+  <i class="bi bi-chevron-right crumb-sep"></i>
+  <span class="crumb-section">Financial Management</span>
+  <i class="bi bi-chevron-right crumb-sep"></i>
+  <span class="crumb-current">Billing Hub &amp; Document Center</span>
+</div>
+
+<!-- Stable Enterprise Page Header -->
+<div class="enterprise-header no-print">
+  <div class="enterprise-header-title-group">
+    <div class="enterprise-header-icon">
       <i class="bi bi-file-earmark-spreadsheet-fill"></i>
     </div>
-    <div class="module-titles">
-      <h2>📑 Billing Hub & Document Center</h2>
-      <p class="subtitle">Generate, print, and export GST tax invoices, challans, payment receipts, and salary slips</p>
+    <div class="enterprise-header-text">
+      <h2>Billing Hub &amp; Document Center</h2>
+      <p>Generate, print, and export GST tax invoices, challans, payment receipts, and salary slips</p>
     </div>
+  </div>
+  <div class="header-actions">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="loadAllSources(true)" [disabled]="isLoading" title="Synchronize document records">
+      <i class="bi bi-arrow-clockwise me-1" [class.spin-animate]="isLoading"></i>
+      <span>{{ isLoading ? 'Syncing...' : 'Refresh' }}</span>
+    </button>
+    <button type="button" class="btn btn-secondary btn-sm" (click)="printDocument()" title="Print current document">
+      <i class="bi bi-printer me-1"></i>
+      <span>Print</span>
+    </button>
+    <button type="button" class="btn btn-primary btn-sm" (click)="downloadPDF()" [disabled]="isExportingPdf || !selectedRecord" title="Export document as PDF">
+      <i class="bi me-1" [ngClass]="isExportingPdf ? 'bi-hourglass-split spin-animate' : 'bi-download'"></i>
+      <span>{{ isExportingPdf ? 'Generating...' : 'Export PDF' }}</span>
+    </button>
   </div>
 </div>
 
 <!-- Top Controls Bar (Hidden during Print) -->
-<div class="billing-header-bar no-print glass-panel" style="padding:16px 20px; margin-bottom:16px; border-radius:14px;">
-  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-    <!-- Document Type Switcher Tabs -->
-    <div class="doc-type-tabs" style="display:flex; gap:6px; flex-wrap:wrap;">
-      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'tax_invoice'" (click)="activeBillType = 'tax_invoice'; onBillTypeChange()" style="--tab-color:#C2410C;">
-        <i class="bi bi-receipt" style="margin-right:4px;"></i> Tax Invoice (GST)
+<div class="billing-header-bar no-print glass-panel">
+  <!-- Document Type Switcher Tabs -->
+  <div class="doc-type-tabs-container">
+    <div class="doc-type-tabs">
+      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'tax_invoice'" (click)="activeBillType = 'tax_invoice'; onBillTypeChange()">
+        <i class="bi bi-receipt"></i>
+        <span>Tax Invoice (GST)</span>
       </button>
-      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'proforma'" (click)="activeBillType = 'proforma'; onBillTypeChange()" style="--tab-color:#1E40AF;">
-        <i class="bi bi-file-earmark-text" style="margin-right:4px;"></i> Proforma Invoice
+      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'proforma'" (click)="activeBillType = 'proforma'; onBillTypeChange()">
+        <i class="bi bi-file-earmark-text"></i>
+        <span>Proforma Invoice</span>
       </button>
-      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'delivery_challan'" (click)="activeBillType = 'delivery_challan'; onBillTypeChange()" style="--tab-color:#15803D;">
-        <i class="bi bi-truck" style="margin-right:4px;"></i> Delivery Challan
+      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'delivery_challan'" (click)="activeBillType = 'delivery_challan'; onBillTypeChange()">
+        <i class="bi bi-truck"></i>
+        <span>Delivery Challan</span>
       </button>
-      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'payment_receipt'" (click)="activeBillType = 'payment_receipt'; onBillTypeChange()" style="--tab-color:#0F766E;">
-        <i class="bi bi-check2-circle" style="margin-right:4px;"></i> Payment Receipt
+      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'payment_receipt'" (click)="activeBillType = 'payment_receipt'; onBillTypeChange()">
+        <i class="bi bi-check2-circle"></i>
+        <span>Payment Receipt</span>
       </button>
-      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'purchase_invoice'" (click)="activeBillType = 'purchase_invoice'; onBillTypeChange()" style="--tab-color:#4338CA;">
-        <i class="bi bi-bag-check" style="margin-right:4px;"></i> Purchase Invoice
+      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'purchase_invoice'" (click)="activeBillType = 'purchase_invoice'; onBillTypeChange()">
+        <i class="bi bi-bag-check"></i>
+        <span>Purchase Invoice</span>
       </button>
-      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'transport_receipt'" (click)="activeBillType = 'transport_receipt'; onBillTypeChange()" style="--tab-color:#9A3412;">
-        <i class="bi bi-truck-flatbed" style="margin-right:4px;"></i> Transport Receipt
+      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'transport_receipt'" (click)="activeBillType = 'transport_receipt'; onBillTypeChange()">
+        <i class="bi bi-truck-flatbed"></i>
+        <span>Transport Receipt</span>
       </button>
-      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'salary_slip'" (click)="activeBillType = 'salary_slip'; onBillTypeChange()" style="--tab-color:#0369A1;">
-        <i class="bi bi-person-badge" style="margin-right:4px;"></i> Salary Slip
-      </button>
-    </div>
-
-    <!-- Actions: Print & Download PDF -->
-    <div style="display:flex; gap:8px;">
-      <button type="button" class="btn btn-secondary btn-sm" (click)="printDocument()" style="height:28px; padding:0 12px; font-weight:600; display:inline-flex; align-items:center;">
-        <i class="bi bi-printer me-1"></i> Print Document
-      </button>
-      <button type="button" class="btn btn-primary btn-sm" (click)="downloadPDF()" style="height:28px; padding:0 14px; font-weight:600; display:inline-flex; align-items:center;">
-        <i class="bi bi-download me-1"></i> Export PDF
+      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'salary_slip'" (click)="activeBillType = 'salary_slip'; onBillTypeChange()">
+        <i class="bi bi-person-badge"></i>
+        <span>Salary Slip</span>
       </button>
     </div>
   </div>
 
   <!-- Smart Filter Toolbar for Year/Month/Search -->
-  <div class="doc-filter-toolbar" style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border-glass, rgba(226, 232, 240, 0.15)); display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+  <div class="doc-filter-toolbar" *ngIf="!hasError">
     <!-- Year Filter -->
     <div class="filter-field">
       <label><i class="bi bi-calendar-event me-1"></i>Year:</label>
-      <select [(ngModel)]="filterYear" (change)="onFilterCriteriaChange()">
+      <select [(ngModel)]="filterYear" (change)="onFilterCriteriaChange()" class="filter-select">
         <option value="">All Years</option>
         <option *ngFor="let y of years" [value]="y">{{ y }}</option>
       </select>
@@ -64,62 +84,82 @@
     <!-- Month Filter -->
     <div class="filter-field">
       <label><i class="bi bi-calendar-month me-1"></i>Month:</label>
-      <select [(ngModel)]="filterMonth" (change)="onFilterCriteriaChange()">
+      <select [(ngModel)]="filterMonth" (change)="onFilterCriteriaChange()" class="filter-select">
         <option value="">All Months</option>
         <option *ngFor="let m of months" [value]="m.value">{{ m.name }}</option>
       </select>
     </div>
 
     <!-- Search Query -->
-    <div class="filter-field filter-search-field" style="flex:1; min-width:200px;">
-      <label><i class="bi bi-search me-1"></i>Search Party/Doc #:</label>
-      <input type="text" [(ngModel)]="filterSearch" (input)="onFilterCriteriaChange()" placeholder="e.g. Ramesh, Crate 600, MH-27, INV-...">
+    <div class="filter-field filter-search-field">
+      <label><i class="bi bi-search me-1"></i>Search:</label>
+      <input type="text" [(ngModel)]="filterSearch" (input)="onFilterCriteriaChange()" placeholder="Search party, crate, doc number..." class="filter-input">
     </div>
 
     <!-- Date From -->
-    <div class="filter-field">
+    <div class="filter-field date-field">
       <label>From:</label>
-      <input type="date" [(ngModel)]="filterDateFrom" (change)="onFilterCriteriaChange()">
+      <input type="date" [(ngModel)]="filterDateFrom" (change)="onFilterCriteriaChange()" class="filter-input">
     </div>
 
     <!-- Date To -->
-    <div class="filter-field">
+    <div class="filter-field date-field">
       <label>To:</label>
-      <input type="date" [(ngModel)]="filterDateTo" (change)="onFilterCriteriaChange()">
+      <input type="date" [(ngModel)]="filterDateTo" (change)="onFilterCriteriaChange()" class="filter-input">
     </div>
 
-    <!-- Clear Filters Button -->
-    <button *ngIf="filterYear || filterMonth || filterSearch || filterDateFrom || filterDateTo" type="button" class="btn-clear-filters" (click)="resetFilters()">
-      <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+    <!-- Reset Filters Button -->
+    <button *ngIf="filterYear || filterMonth || filterSearch || filterDateFrom || filterDateTo"
+            type="button" class="btn btn-outline btn-sm btn-clear-filters" (click)="resetFilters()" title="Reset all filters">
+      <i class="bi bi-arrow-counterclockwise me-1"></i>
+      <span>Reset</span>
     </button>
   </div>
 
-  <!-- Live Match Counter & Record Selection Dropdown -->
-  <div style="margin-top:12px; display:flex; flex-direction:column; gap:6px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:700; color:var(--text-secondary);">
-      <span>Select Linked Record:</span>
-      <span style="color:var(--doc-theme, #2563eb); font-weight:600; font-size:11.5px;">{{ getMatchCountText() }}</span>
+  <!-- Record Selection Selector -->
+  <div class="doc-selector-section" *ngIf="getFilteredRecords().length > 0">
+    <div class="doc-selector-meta">
+      <span class="selector-label">Select Linked Record:</span>
+      <span class="selector-count-pill">{{ getMatchCountText() }}</span>
     </div>
 
-    <div style="display:flex; gap:10px; align-items:center;">
-      <select *ngIf="getFilteredRecords().length > 0" [(ngModel)]="selectedRecordId" (change)="onRecordSelectChange()" style="flex:1; padding:8px 12px; font-size:13px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary); font-weight:600;">
+    <div class="doc-selector-dropdown-wrap">
+      <select [(ngModel)]="selectedRecordId" (change)="onRecordSelectChange()" class="doc-record-select">
         <option *ngFor="let item of getFilteredRecords()" [value]="getRecordId(item)">
           {{ getRecordLabel(item) }}
         </option>
       </select>
-
-      <div *ngIf="getFilteredRecords().length === 0" style="flex:1; padding:8px 14px; background:rgba(239, 68, 68, 0.1); border:1px dashed #ef4444; border-radius:8px; color:#ef4444; font-size:12.5px; font-weight:600; display:flex; justify-content:space-between; align-items:center;">
-        <span><i class="bi bi-exclamation-triangle me-1"></i>No {{ currentTheme.title.toLowerCase() }} records found matching the current year, month, or search filter.</span>
-        <button type="button" class="btn btn-sm btn-secondary" (click)="resetFilters()" style="padding:3px 10px; font-size:11px;">Reset Filters</button>
-      </div>
     </div>
   </div>
+
+  <!-- Empty Filter State using Shared Component -->
+  <app-empty-state *ngIf="!hasError && getFilteredRecords().length === 0"
+                   variant="search"
+                   icon="bi-search"
+                   title="No Linked Documents Found"
+                   [description]="'No ' + currentTheme.title.toLowerCase() + ' records match your selected year, month, or search query.'"
+                   actionLabel="Reset Filters"
+                   actionIcon="bi-arrow-counterclockwise"
+                   [compact]="true"
+                   (action)="resetFilters()">
+  </app-empty-state>
 </div>
 
 <!-- ========================================================================================= -->
 <!-- PRINTABLE DOCUMENT CONTAINER (A4 FORMAT) -->
 <!-- ========================================================================================= -->
-<div class="document-sheet-wrapper">
+<!-- Error State -->
+<app-empty-state *ngIf="hasError"
+                 variant="error"
+                 icon="bi-exclamation-triangle-fill"
+                 title="Unable to Load Billing Data"
+                 description="A network error or database timeout occurred while retrieving document records."
+                 actionLabel="Retry"
+                 actionIcon="bi-arrow-clockwise"
+                 (action)="loadAllSources(true)">
+</app-empty-state>
+
+<div class="document-sheet-wrapper" *ngIf="!hasError && selectedRecord">
   <div id="printable-document-sheet" class="document-sheet" [style.--doc-theme]="currentTheme.primary">
 
     <!-- Universal Corporate Letterhead Header -->
@@ -169,7 +209,7 @@
       <div class="doc-address-bar">
         <div>Gat No. 242, At. Post. Karanja (Lad), Tal. Achalpur, Dist. Amravati - 444 805, Maharashtra, India</div>
         <div style="margin-top:2px;">
-          Tel: 07224-XXXXXX &nbsp;|&nbsp; ✉️ info&#64;futaneagro.com &nbsp;|&nbsp; www.futaneagro.com &nbsp;|&nbsp; <strong>GSTIN : 27AABCF1234F1ZS</strong>
+          Tel: 07224-XXXXXX &nbsp;|&nbsp; Email: info&#64;futaneagro.com &nbsp;|&nbsp; www.futaneagro.com &nbsp;|&nbsp; <strong>GSTIN : 27AABCF1234F1ZS</strong>
         </div>
       </div>
     </div>

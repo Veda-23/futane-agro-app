@@ -1,7 +1,8 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 import { ApiService } from '../../../api.service';
@@ -68,15 +69,29 @@ export class SalesComponent implements OnInit {
   // Data collections
   salesList: SaleItem[] = [];
   parties: any[] = [];
+  dispatchesList: any[] = [];
 
   // Subtab filtering
-  subTab: 'all' | 'pending' | 'paid' | 'high_volume' = 'all';
+  subTab: 'all' | 'pending' | 'paid' | 'dispatched' | 'awaiting_outward' | 'high_volume' = 'all';
 
   // Toolbar & Search Filters
   searchQuery: string = '';
   filterPartyId: string = '';
   filterPaymentStatus: string = 'ALL'; // 'ALL', 'PAID', 'PENDING'
+  filterOutwardStatus: string = 'ALL'; // 'ALL', 'DISPATCHED', 'AWAITING'
   filterCrateType: string = '';
+  isFilterPopoverOpen: boolean = false;
+
+  // Material Outward Modal State
+  isOutwardModalOpen: boolean = false;
+  selectedSaleForOutward: SaleItem | null = null;
+  outwardForm = {
+    dispatchDate: new Date().toISOString().split('T')[0],
+    vehicleNumber: '',
+    driverName: '',
+    deliveryAddress: '',
+    status: 'In Transit'
+  };
 
   // Density & Pagination
   tableDensity: 'compact' | 'comfortable' | 'spacious' = 'comfortable';
@@ -114,7 +129,7 @@ export class SalesComponent implements OnInit {
   showColDropdown: boolean = false;
   columnsConfig = [
     { key: 'date', label: 'Order Date', visible: true, locked: true },
-    { key: 'orderRef', label: 'Invoice / Order Ref', visible: true },
+    { key: 'orderRef', label: 'Order Ref', visible: true },
     { key: 'party', label: 'Customer / Party', visible: true, locked: true },
     { key: 'crateSpecs', label: 'Crate Specs', visible: true },
     { key: 'quantity', label: 'Quantity', visible: true },
@@ -122,7 +137,8 @@ export class SalesComponent implements OnInit {
     { key: 'totalAmount', label: 'Total Value (₹)', visible: true },
     { key: 'paid', label: 'Settled (₹)', visible: true },
     { key: 'remaining', label: 'Balance Due (₹)', visible: true },
-    { key: 'status', label: 'Settlement Status', visible: true },
+    { key: 'outwardStatus', label: 'Material Outward', visible: true },
+    { key: 'status', label: 'Payment Status', visible: true },
     { key: 'actions', label: 'Actions', visible: true, locked: true }
   ];
 
@@ -161,16 +177,18 @@ export class SalesComponent implements OnInit {
     this.hasError = false;
 
     forkJoin({
-      parties: this.apiService.getParties(),
-      sales: this.apiService.getSales()
+      parties: this.apiService.getParties().pipe(catchError(() => of([]))),
+      sales: this.apiService.getSales().pipe(catchError(() => of([]))),
+      dispatches: this.apiService.getDispatches().pipe(catchError(() => of([])))
     }).subscribe({
-      next: ({ parties, sales }) => {
+      next: ({ parties, sales, dispatches }) => {
         this.parties = parties || [];
         this.salesList = sales || [];
+        this.dispatchesList = dispatches || [];
         this.isLoading = false;
         this.isRefreshing = false;
         if (notify) {
-          this.notificationService.success('Refreshed', 'Sales records updated successfully.');
+          this.notificationService.success('Refreshed', 'Sales orders and outward dispatches updated.');
         }
       },
       error: (err) => {
@@ -192,10 +210,97 @@ export class SalesComponent implements OnInit {
   }
 
   // Subtab switching
-  setSubTab(tab: 'all' | 'pending' | 'paid' | 'high_volume') {
+  setSubTab(tab: 'all' | 'pending' | 'paid' | 'dispatched' | 'awaiting_outward' | 'high_volume') {
     this.subTab = tab;
     this.currentPage = 1;
     this.clearSelection();
+  }
+
+  // Material Outward & Dispatch Helpers
+  getDispatchForSale(sale: SaleItem): any {
+    if (!sale) return null;
+    const saleId = String(sale.saleId || sale.id);
+    return this.dispatchesList.find(d => String(d.sale?.id || d.sale?.saleId || d.saleId) === saleId);
+  }
+
+  isDispatched(sale: SaleItem): boolean {
+    return !!this.getDispatchForSale(sale);
+  }
+
+  getDispatchedCount(): number {
+    return this.salesList.filter(s => this.isDispatched(s)).length;
+  }
+
+  getAwaitingOutwardCount(): number {
+    return this.salesList.filter(s => !this.isDispatched(s)).length;
+  }
+
+  // Outward Modal Handlers
+  openOutwardModal(sale: SaleItem) {
+    this.selectedSaleForOutward = sale;
+    const existingDispatch = this.getDispatchForSale(sale);
+    this.outwardForm = {
+      dispatchDate: existingDispatch ? (existingDispatch.date || existingDispatch.dispatchDate) : new Date().toISOString().split('T')[0],
+      vehicleNumber: existingDispatch ? existingDispatch.vehicleNumber : '',
+      driverName: existingDispatch ? existingDispatch.driverName : '',
+      deliveryAddress: existingDispatch ? existingDispatch.deliveryAddress : (sale.party?.city ? `${sale.party?.partyName}, ${sale.party?.city}` : ''),
+      status: existingDispatch ? existingDispatch.status : 'In Transit'
+    };
+    this.isOutwardModalOpen = true;
+  }
+
+  closeOutwardModal() {
+    this.isOutwardModalOpen = false;
+    this.selectedSaleForOutward = null;
+  }
+
+  saveMaterialOutward() {
+    if (!this.selectedSaleForOutward) return;
+    if (!this.outwardForm.vehicleNumber || !this.outwardForm.driverName) {
+      this.notificationService.warning('Required Fields', 'Please enter both Vehicle Number and Driver Name.');
+      return;
+    }
+
+    const sale = this.selectedSaleForOutward;
+    const dispatchPayload: any = {
+      dispatchNumber: 'DSP-' + Date.now().toString().slice(-6),
+      sale: { id: sale.id || sale.saleId },
+      vehicleNumber: this.outwardForm.vehicleNumber.trim().toUpperCase(),
+      driverName: this.outwardForm.driverName.trim(),
+      deliveryAddress: this.outwardForm.deliveryAddress,
+      date: this.outwardForm.dispatchDate,
+      status: this.outwardForm.status || 'In Transit'
+    };
+
+    this.apiService.createDispatch(dispatchPayload).subscribe({
+      next: (res) => {
+        this.dispatchesList.unshift(res);
+        this.notificationService.success('Material Outward Created', `Dispatched Order #${sale.saleId || sale.id} with vehicle ${dispatchPayload.vehicleNumber}.`);
+        this.logAudit(`Created material outward for sale #${sale.saleId || sale.id}`);
+        this.closeOutwardModal();
+      },
+      error: (err) => {
+        this.notificationService.error('Outward Failed', 'Failed to create dispatch: ' + (err.error?.message || err.message));
+      }
+    });
+  }
+
+  // Filter Popover Handlers
+  toggleFilterPopover() {
+    this.isFilterPopoverOpen = !this.isFilterPopoverOpen;
+  }
+
+  closeFilterPopover() {
+    this.isFilterPopoverOpen = false;
+  }
+
+  getActiveFilterCount(): number {
+    let count = 0;
+    if (this.filterPartyId) count++;
+    if (this.filterPaymentStatus !== 'ALL') count++;
+    if (this.filterOutwardStatus !== 'ALL') count++;
+    if (this.filterCrateType) count++;
+    return count;
   }
 
   // Subtab Count Helpers
@@ -718,6 +823,10 @@ export class SalesComponent implements OnInit {
       result = result.filter(s => (Number(s.remaining) || 0) > 0);
     } else if (this.subTab === 'paid') {
       result = result.filter(s => (Number(s.remaining) || 0) <= 0);
+    } else if (this.subTab === 'dispatched') {
+      result = result.filter(s => this.isDispatched(s));
+    } else if (this.subTab === 'awaiting_outward') {
+      result = result.filter(s => !this.isDispatched(s));
     } else if (this.subTab === 'high_volume') {
       result = result.filter(s => (Number(s.quantity) || 0) >= 10000);
     }
@@ -732,7 +841,10 @@ export class SalesComponent implements OnInit {
         const cMat = (s.crateMaterial || '').toLowerCase();
         const ref = String(s.saleId || s.id || '').toLowerCase();
         const date = (s.date || '').toLowerCase();
-        return pName.includes(q) || pCity.includes(q) || cType.includes(q) || cMat.includes(q) || ref.includes(q) || date.includes(q);
+        const disp = this.getDispatchForSale(s);
+        const veh = (disp?.vehicleNumber || '').toLowerCase();
+        const drv = (disp?.driverName || '').toLowerCase();
+        return pName.includes(q) || pCity.includes(q) || cType.includes(q) || cMat.includes(q) || ref.includes(q) || date.includes(q) || veh.includes(q) || drv.includes(q);
       });
     }
 
@@ -759,12 +871,19 @@ export class SalesComponent implements OnInit {
       result = result.filter(s => (Number(s.remaining) || 0) > 0);
     }
 
-    // 6. Crate Type filter
+    // 6. Outward status filter
+    if (this.filterOutwardStatus === 'DISPATCHED') {
+      result = result.filter(s => this.isDispatched(s));
+    } else if (this.filterOutwardStatus === 'AWAITING') {
+      result = result.filter(s => !this.isDispatched(s));
+    }
+
+    // 7. Crate Type filter
     if (this.filterCrateType) {
       result = result.filter(s => s.crateType === this.filterCrateType);
     }
 
-    // 7. Date & Month filters
+    // 8. Date & Month filters
     if (this.filterDate) {
       result = result.filter(s => s.date === this.filterDate);
     }
@@ -776,7 +895,7 @@ export class SalesComponent implements OnInit {
       });
     }
 
-    // 8. Sorting
+    // 9. Sorting
     result.sort((a, b) => {
       let valA: any = this.resolveSortValue(a, this.sortField);
       let valB: any = this.resolveSortValue(b, this.sortField);
@@ -821,8 +940,11 @@ export class SalesComponent implements OnInit {
     this.searchQuery = '';
     this.filterPartyId = '';
     this.filterPaymentStatus = 'ALL';
+    this.filterOutwardStatus = 'ALL';
     this.filterCrateType = '';
+    this.subTab = 'all';
     this.currentPage = 1;
+    this.isFilterPopoverOpen = false;
   }
 
   // Dynamic Accounting Totals for <tfoot>

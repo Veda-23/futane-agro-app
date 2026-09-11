@@ -1,131 +1,1045 @@
-<!-- 6. Payment Collection Tab -->
-<div *ngIf="activeTab === 'payments'">
-  <div class="enterprise-header">
-    <div class="enterprise-header-title-group">
-      <div class="enterprise-header-icon"><i class="bi bi-credit-card"></i></div>
-      <div class="enterprise-header-text">
-        <h2>Payment Registry & Collections</h2>
-        <p>Record customer collections, link invoice receipts, and track remaining balances</p>
-      </div>
-    </div>
+<div class="payments-enterprise-container" [attr.data-density]="tableDensity">
+  <!-- 1. BREADCRUMB NAVIGATION -->
+  <div class="payments-breadcrumb-bar" aria-label="Breadcrumb">
+    <span class="crumb-root">ERP</span>
+    <i class="bi bi-chevron-right crumb-sep"></i>
+    <span class="crumb-section">Financial Management</span>
+    <i class="bi bi-chevron-right crumb-sep"></i>
+    <span class="crumb-current">Customer Receipts & Payment Collections</span>
   </div>
 
-  <div class="grid-cols-3">
-    <div class="glass-panel form-card" style="grid-column: span 1; padding: 20px;" *ngIf="!isViewer()">
-      <h3 style="margin-bottom:14px;font-weight:700;"><i class="bi bi-plus-lg me-1"></i>{{ 'payments.add_title' | translate:currentLang }}</h3>
-      <form (submit)="savePayment()">
-        <div class="form-group">
-          <label>{{ 'payments.date' | translate:currentLang }}</label>
-          <input appAutoSelect type="date" [(ngModel)]="paymentsForm.paymentDate" name="payDate" required>
+  <!-- 2. STABLE PAGE HEADER -->
+  <header class="payments-page-header">
+    <div class="header-left-col">
+      <div class="header-icon-box">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+      <div class="header-title-meta">
+        <h1 class="header-main-title">Customer Receipts & Payment Collections</h1>
+        <div class="header-sub-row">
+          <span class="header-desc-text">Official payment vouchers, invoice settlements, digital collections & customer receivables ledger</span>
+          <span class="header-badge-live">
+            <span class="pulse-dot"></span>
+            <span>Real-time Financial Ledger</span>
+          </span>
         </div>
-        <div class="form-group">
-          <label>{{ 'label.select_party' | translate:currentLang }}</label>
-          <select [(ngModel)]="paymentsForm.id" name="payParty" required>
-            <option value="">-- Select Party --</option>
-            <option *ngFor="let party of parties" [value]="party.id">{{ party.partyName }}</option>
-          </select>
+      </div>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="header-right-col">
+      <button 
+        type="button" 
+        class="btn-header-action btn-secondary" 
+        (click)="loadData(true)" 
+        [disabled]="isRefreshing"
+        title="Reload fresh payment records from database"
+        aria-label="Refresh data">
+        <i class="bi bi-arrow-clockwise" [class.spin-anim]="isRefreshing"></i>
+        <span>Refresh</span>
+      </button>
+
+      <button 
+        type="button" 
+        class="btn-header-action btn-secondary" 
+        (click)="exportToCsv()"
+        title="Export receipt ledger to CSV"
+        aria-label="Export to CSV">
+        <i class="bi bi-download"></i>
+        <span>CSV</span>
+      </button>
+
+      <button 
+        type="button" 
+        class="btn-header-action btn-secondary" 
+        (click)="exportToExcel()"
+        title="Export receipt ledger for Microsoft Excel"
+        aria-label="Export to Excel">
+        <i class="bi bi-file-earmark-excel"></i>
+        <span>Excel</span>
+      </button>
+
+      <!-- Primary Action: + Record Payment -->
+      <button 
+        *ngIf="!isViewer()" 
+        type="button" 
+        class="btn-header-action btn-primary" 
+        (click)="toggleFormVisibility()"
+        [title]="isFormVisible ? 'Close Entry Form' : 'Record new customer receipt voucher'"
+        aria-label="Record Payment">
+        <i class="bi" [ngClass]="isFormVisible ? 'bi-dash-lg' : 'bi-plus-lg'"></i>
+        <span>{{ isFormVisible ? 'Close Form' : '+ Record Payment' }}</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 3. COLLAPSIBLE ADD / EDIT RECEIPT FORM -->
+  <section 
+    *ngIf="isFormVisible && !isViewer()" 
+    class="payments-form-card animated-fade-in" 
+    aria-label="Payment receipt registration form">
+    <div class="form-header-banner">
+      <div class="form-header-title-group">
+        <i class="bi" [ngClass]="editingPaymentId ? 'bi-pencil-square' : 'bi-receipt-cutoff'"></i>
+        <div>
+          <h3>{{ editingPaymentId ? 'Edit Payment Record #' + editingPaymentId : 'Record Customer Payment Collection' }}</h3>
+          <p>Register official customer money inflows, link invoices, or post on-account credit</p>
         </div>
-        <div class="form-group" *ngIf="paymentsForm.id">
-          <label style="font-size:11px; color:var(--text-secondary);">Outstanding Balance</label>
-          <div style="background:rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); border-radius:6px; padding:6px 12px; font-weight:700; color:var(--accent-green); font-size:13px;">
-            ₹{{ getOutstandingBalance(paymentsForm.id) | number:'1.2-2' }}
+      </div>
+      <button type="button" class="btn-close-form" (click)="cancelEditPayment()" title="Close Form" aria-label="Close Form">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <form (ngSubmit)="savePayment()" class="payments-form-content">
+      <div class="form-sections-wrapper">
+        <!-- Section 1: Customer & Invoice Reference -->
+        <div class="form-section-block">
+          <h4 class="form-section-legend"><i class="bi bi-person-badge me-2"></i>1. Customer & Account Reference</h4>
+          <div class="form-grid-layout">
+            <!-- Field 1: Customer / Party Selection -->
+            <div class="form-group party-select-group">
+              <label class="form-label" for="payParty">
+                Customer / Party <span class="required-star">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="bi bi-building input-prefix-icon"></i>
+                <select 
+                  id="payParty" 
+                  class="form-control" 
+                  name="payParty" 
+                  [(ngModel)]="paymentsForm.partyId" 
+                  required>
+                  <option value="" disabled>-- Select Customer Account --</option>
+                  <option *ngFor="let p of parties" [value]="p.id">
+                    {{ p.partyName }} {{ p.city ? '(' + p.city + ')' : '' }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Live Outstanding Balance Badge -->
+              <div *ngIf="paymentsForm.partyId" class="party-outstanding-badge">
+                <span class="lbl"><i class="bi bi-clock-history me-1"></i>Current Receivables Due:</span>
+                <strong class="val" [class.text-danger]="getOutstandingBalance(paymentsForm.partyId) > 0">
+                  {{ getOutstandingBalance(paymentsForm.partyId) | inr }}
+                </strong>
+              </div>
+            </div>
+
+            <!-- Field 2: Invoice Reference -->
+            <div class="form-group">
+              <label class="form-label" for="payInvoice">
+                Linked Invoice (Optional)
+              </label>
+              <div class="input-with-icon">
+                <i class="bi bi-file-earmark-text input-prefix-icon"></i>
+                <select 
+                  id="payInvoice" 
+                  class="form-control" 
+                  name="payInvoice" 
+                  [(ngModel)]="paymentsForm.invoiceNo">
+                  <option value="">General On-Account Receipt (No Invoice)</option>
+                  <option *ngFor="let inv of invoicesList" [value]="inv.invoiceNo">
+                    {{ inv.invoiceNo }} — Due: {{ (inv.sale?.remaining !== undefined ? inv.sale.remaining : 0) | inr }}
+                  </option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="form-group">
-          <label>{{ 'payments.invoice_ref' | translate:currentLang }}</label>
-          <select [(ngModel)]="paymentsForm.invoiceNo" name="payInvoice" required>
-            <option value="">General payment (No Invoice)</option>
-            <option *ngFor="let invoice of invoicesList" [value]="invoice.invoiceNo">{{ invoice.invoiceNo }} (₹{{ invoice.sale?.remaining || 0 }} due)</option>
-          </select>
+
+        <!-- Section 2: Payment Details -->
+        <div class="form-section-block">
+          <h4 class="form-section-legend"><i class="bi bi-credit-card me-2"></i>2. Transaction & Payment Details</h4>
+          <div class="form-grid-layout">
+            <!-- Field 3: Receipt Date -->
+            <div class="form-group">
+              <label class="form-label" for="payDate">
+                Receipt Date <span class="required-star">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="bi bi-calendar3 input-prefix-icon"></i>
+                <input 
+                  type="date" 
+                  id="payDate" 
+                  class="form-control" 
+                  name="payDate" 
+                  [(ngModel)]="paymentsForm.paymentDate" 
+                  required />
+              </div>
+            </div>
+
+            <!-- Field 4: Payment Channel / Mode -->
+            <div class="form-group">
+              <label class="form-label" for="payMode">
+                Payment Channel <span class="required-star">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="bi bi-wallet2 input-prefix-icon"></i>
+                <select 
+                  id="payMode" 
+                  class="form-control" 
+                  name="payMode" 
+                  [(ngModel)]="paymentsForm.paymentMode" 
+                  required>
+                  <option *ngFor="let m of paymentModes" [value]="m.id">{{ m.label }}</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Field 5: Amount Received -->
+            <div class="form-group">
+              <label class="form-label" for="payAmount">
+                Amount Received (₹) <span class="required-star">*</span>
+              </label>
+              <div class="input-with-icon">
+                <span class="currency-prefix-box">₹</span>
+                <input 
+                  type="number" 
+                  id="payAmount" 
+                  class="form-control font-mono bold-text" 
+                  name="payAmount" 
+                  [(ngModel)]="paymentsForm.amountReceived" 
+                  appAutoSelect
+                  min="1" 
+                  step="0.01" 
+                  placeholder="0.00" 
+                  required />
+              </div>
+            </div>
+
+            <!-- Field 6: Transaction Reference / UTR -->
+            <div class="form-group">
+              <label class="form-label" for="payRef">
+                Reference / UTR / Cheque #
+              </label>
+              <div class="input-with-icon">
+                <i class="bi bi-hash input-prefix-icon"></i>
+                <input 
+                  type="text" 
+                  id="payRef" 
+                  class="form-control" 
+                  name="payRef" 
+                  [(ngModel)]="paymentsForm.referenceNo" 
+                  placeholder="e.g. UTR12345678 or CHQ-9901" />
+              </div>
+            </div>
+
+            <!-- Live Financial Preview Strip -->
+            <div class="form-receipt-preview-strip full-span">
+              <div class="prev-item amt">
+                <span class="prev-label">Received Amount</span>
+                <span class="prev-val text-success">{{ paymentsForm.amountReceived | inr }}</span>
+              </div>
+              <div class="prev-item words">
+                <span class="prev-label">Amount in Words</span>
+                <span class="prev-val words-val">{{ getAmountInWords(paymentsForm.amountReceived) }}</span>
+              </div>
+              <div class="prev-item mode">
+                <span class="prev-label">Channel</span>
+                <span class="prev-val">{{ paymentsForm.paymentMode || 'UPI / QR' }}</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="form-group">
-          <label>{{ 'payments.amount' | translate:currentLang }}</label>
-          <input appAutoSelect type="number" step="0.01" [(ngModel)]="paymentsForm.amountReceived" name="payAmt" required min="1">
+      </div>
+
+      <div class="form-actions-row">
+        <button 
+          type="button" 
+          class="btn-form btn-secondary" 
+          (click)="cancelEditPayment()">
+          <i class="bi bi-x-circle"></i>
+          <span>Cancel</span>
+        </button>
+
+        <button 
+          type="submit" 
+          class="btn-form btn-primary">
+          <i class="bi" [ngClass]="editingPaymentId ? 'bi-check-circle-fill' : 'bi-save-fill'"></i>
+          <span>{{ editingPaymentId ? 'Update Payment Record' : 'Save Payment Collection' }}</span>
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <!-- 4. SUBNAV TABS BAR -->
+  <nav class="payments-subnav-bar" aria-label="Payment receipts subtabs">
+    <button 
+      type="button" 
+      class="subnav-tab-btn" 
+      [class.active]="subTab === 'all'" 
+      (click)="setSubTab('all')"
+      [attr.aria-selected]="subTab === 'all'">
+      <i class="bi bi-list-columns"></i>
+      <span>All Receipts</span>
+      <span class="tab-badge default">{{ getAllCount() }}</span>
+    </button>
+
+    <button 
+      type="button" 
+      class="subnav-tab-btn" 
+      [class.active]="subTab === 'upi'" 
+      (click)="setSubTab('upi')"
+      [attr.aria-selected]="subTab === 'upi'">
+      <i class="bi bi-qr-code text-success"></i>
+      <span>UPI / Digital</span>
+      <span class="tab-badge success">{{ getUpiCount() }}</span>
+    </button>
+
+    <button 
+      type="button" 
+      class="subnav-tab-btn" 
+      [class.active]="subTab === 'bank'" 
+      (click)="setSubTab('bank')"
+      [attr.aria-selected]="subTab === 'bank'">
+      <i class="bi bi-bank text-primary"></i>
+      <span>Bank Transfer</span>
+      <span class="tab-badge primary-badge">{{ getBankCount() }}</span>
+    </button>
+
+    <button 
+      type="button" 
+      class="subnav-tab-btn" 
+      [class.active]="subTab === 'cash'" 
+      (click)="setSubTab('cash')"
+      [attr.aria-selected]="subTab === 'cash'">
+      <i class="bi bi-cash-stack text-warning"></i>
+      <span>Cash Receipts</span>
+      <span class="tab-badge warning">{{ getCashCount() }}</span>
+    </button>
+
+    <button 
+      type="button" 
+      class="subnav-tab-btn" 
+      [class.active]="subTab === 'cheque'" 
+      (click)="setSubTab('cheque')"
+      [attr.aria-selected]="subTab === 'cheque'">
+      <i class="bi bi-card-heading text-info"></i>
+      <span>Cheque Clearances</span>
+      <span class="tab-badge info">{{ getChequeCount() }}</span>
+    </button>
+
+    <button 
+      type="button" 
+      class="subnav-tab-btn" 
+      [class.active]="subTab === 'high_value'" 
+      (click)="setSubTab('high_value')"
+      [attr.aria-selected]="subTab === 'high_value'">
+      <i class="bi bi-trophy text-amber"></i>
+      <span>High Value (₹50k+)</span>
+      <span class="tab-badge info">{{ getHighValueCount() }}</span>
+    </button>
+  </nav>
+
+  <!-- 5. COMPACT FINANCIAL TELEMETRY SUMMARY -->
+  <section class="payments-kpi-ribbon" aria-label="Customer collection metrics">
+    <!-- Card 1: Total Collections -->
+    <div class="kpi-card">
+      <div class="kpi-icon-wrapper success">
+        <i class="bi bi-cash-coin"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Total Collections</span>
+        <div class="kpi-value-row">
+          <span class="kpi-number text-success">{{ getTotalCollections() | inr }}</span>
+          <span class="kpi-trend up"><i class="bi bi-check-circle me-1"></i>Cleared</span>
         </div>
-        <div class="form-group">
-          <label>{{ 'payments.mode' | translate:currentLang }}</label>
-          <select [(ngModel)]="paymentsForm.paymentMode" name="payMode" required>
-            <option value="Cash">Cash</option>
-            <option value="UPI">UPI (Google Pay / PhonePe)</option>
-            <option value="Cheque">Cheque</option>
-            <option value="Bank Transfer">Bank Transfer / NEFT</option>
-          </select>
-        </div>
-        <button type="submit" class="btn btn-success" style="width: 100%;">{{ 'payments.save_btn' | translate:currentLang }}</button>
-      </form>
+        <span class="kpi-meta">Realized cash & bank inflows</span>
+      </div>
     </div>
-    <div class="glass-panel table-card" [style.grid-column]="isViewer() ? 'span 3' : 'span 2'" style="padding: 20px;">
-      <h3>{{ 'payments.records_title' | translate:currentLang }}</h3>
-      
-      <!-- Skeleton Loader (A-01) -->
-      <div *ngIf="isLoading" class="skeleton-container" aria-busy="true" aria-label="Loading payments...">
-        <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5,6]"></div>
+
+    <!-- Card 2: This Month Run -->
+    <div class="kpi-card">
+      <div class="kpi-icon-wrapper info">
+        <i class="bi bi-calendar-check"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">This Month Run</span>
+        <div class="kpi-value-row">
+          <span class="kpi-number text-info">{{ getMonthlyCollections() | inr }}</span>
+        </div>
+        <span class="kpi-meta">Current calendar month recovery</span>
+      </div>
+    </div>
+
+    <!-- Card 3: Digital / Bank Collections -->
+    <div class="kpi-card">
+      <div class="kpi-icon-wrapper primary">
+        <i class="bi bi-qr-code-scan"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Digital Collections</span>
+        <div class="kpi-value-row">
+          <span class="kpi-number text-primary">{{ getDigitalCollections() | inr }}</span>
+        </div>
+        <span class="kpi-meta">UPI & Bank Transfer settlements</span>
+      </div>
+    </div>
+
+    <!-- Card 4: Cash Collections -->
+    <div class="kpi-card">
+      <div class="kpi-icon-wrapper warning">
+        <i class="bi bi-wallet2"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Cash Collections</span>
+        <div class="kpi-value-row">
+          <span class="kpi-number text-warning">{{ getCashCollections() | inr }}</span>
+        </div>
+        <span class="kpi-meta">Over-the-counter cash receipts</span>
+      </div>
+    </div>
+
+    <!-- Card 5: Outstanding Balance -->
+    <div class="kpi-card">
+      <div class="kpi-icon-wrapper danger">
+        <i class="bi bi-hourglass-bottom"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Outstanding Receivables</span>
+        <div class="kpi-value-row">
+          <span class="kpi-number text-danger">{{ getTotalOutstandingAcrossAllParties() | inr }}</span>
+        </div>
+        <span class="kpi-meta">Unrecovered balances on ledger</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. CONTEXTUAL TOOLBAR & SEARCH FILTERS (PLACED CLOSE TO TABLE) -->
+  <section class="payments-toolbar-card">
+    <div class="toolbar-left-group">
+      <!-- Search Input -->
+      <div class="search-input-wrapper">
+        <i class="bi bi-search search-icon"></i>
+        <input 
+          type="text" 
+          class="search-input" 
+          placeholder="Search receipt #, customer, invoice, mode..." 
+          [(ngModel)]="searchQuery" 
+          (ngModelChange)="currentPage = 1"
+          aria-label="Search payment records" />
+        <button 
+          *ngIf="searchQuery" 
+          type="button" 
+          class="btn-clear-search" 
+          (click)="searchQuery = ''; currentPage = 1" 
+          title="Clear search query"
+          aria-label="Clear search">
+          <i class="bi bi-x-circle-fill"></i>
+        </button>
       </div>
 
-      <!-- Error State -->
-      <div *ngIf="!isLoading && hasError" class="empty-state" style="padding:40px; text-align:center;">
-        <div style="margin-bottom:12px;"><i class="bi bi-exclamation-triangle text-danger" style="font-size:48px;"></i></div>
-        <h3 style="color: var(--text-primary);">Failed to Load Payments Data</h3>
-        <p style="color: var(--text-secondary); margin-bottom:16px;">Could not connect to the server. Please check your connection.</p>
-        <button class="btn btn-primary" (click)="loadData()"><i class="bi bi-arrow-repeat me-1"></i>Retry</button>
+      <!-- Filters Popover Trigger -->
+      <div class="filter-popover-wrapper">
+        <button 
+          type="button" 
+          class="btn-filter-toggle" 
+          [class.filter-active]="getActiveFilterCount() > 0"
+          (click)="toggleFilterPopover(); $event.stopPropagation()"
+          title="Filter receipts"
+          aria-label="Filter receipts">
+          <i class="bi bi-funnel"></i>
+          <span>Filters</span>
+          <span *ngIf="getActiveFilterCount() > 0" class="filter-count-badge">{{ getActiveFilterCount() }}</span>
+        </button>
+
+        <!-- Filters Dropdown Panel -->
+        <div class="filter-popover-panel" *ngIf="isFilterPopoverOpen" (click)="$event.stopPropagation()">
+          <div class="filter-popover-header">
+            <strong><i class="bi bi-sliders me-1"></i> Receipt Filters</strong>
+            <button type="button" class="btn-text-reset" (click)="resetFilters()">Reset All</button>
+          </div>
+          <div class="filter-popover-body">
+            <!-- Filter: Party -->
+            <div class="filter-field-group">
+              <label class="filter-field-label">Customer / Party</label>
+              <select class="form-select-filter" [(ngModel)]="filterPartyId" (change)="currentPage = 1">
+                <option value="">All Customers</option>
+                <option *ngFor="let p of parties" [value]="p.id">{{ p.partyName }}</option>
+              </select>
+            </div>
+
+            <!-- Filter: Payment Mode -->
+            <div class="filter-field-group">
+              <label class="filter-field-label">Payment Channel</label>
+              <select class="form-select-filter" [(ngModel)]="filterPaymentMode" (change)="currentPage = 1">
+                <option value="ALL">All Payment Channels</option>
+                <option value="UPI">UPI / QR</option>
+                <option value="Bank Transfer">Bank Transfer / NEFT</option>
+                <option value="Cash">Cash Receipt</option>
+                <option value="Cheque">Cheque</option>
+              </select>
+            </div>
+
+            <!-- Filter: Invoice Linkage -->
+            <div class="filter-field-group">
+              <label class="filter-field-label">Invoice Linkage</label>
+              <select class="form-select-filter" [(ngModel)]="filterInvoiceType" (change)="currentPage = 1">
+                <option value="ALL">All Linkages</option>
+                <option value="INVOICE_LINKED">Linked to Specific Invoice</option>
+                <option value="GENERAL">General On-Account Credit</option>
+              </select>
+            </div>
+
+            <!-- Filter: Date Range -->
+            <div class="filter-field-group">
+              <label class="filter-field-label">Date From</label>
+              <input type="date" class="form-control-filter" [(ngModel)]="filterDateFrom" (change)="currentPage = 1">
+            </div>
+
+            <div class="filter-field-group">
+              <label class="filter-field-label">Date To</label>
+              <input type="date" class="form-control-filter" [(ngModel)]="filterDateTo" (change)="currentPage = 1">
+            </div>
+          </div>
+          <div class="filter-popover-footer">
+            <button type="button" class="btn btn-primary btn-sm w-100" (click)="closeFilterPopover()">
+              Apply Filters
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div *ngIf="!isLoading && !hasError">
-        <div class="table-toolbar no-print" style="display:flex; justify-content:flex-end; margin-bottom:10px; gap:10px; align-items:center;">
-        <div class="column-visibility-dropdown" style="position:relative;">
-          <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown('payments')" style="padding: 6px 12px; font-size: 13px;">
-            <i class="bi bi-layout-three-columns me-1"></i>Columns
-          </button>
-          <div class="dropdown-menu" *ngIf="showColDropdown['payments']" style="position:absolute; right:0; top:35px; background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:8px; padding:10px; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.15); display:flex; flex-direction:column; gap:6px; min-width:160px; max-height:250px; overflow-y:auto;">
-            <label *ngFor="let col of getTableColumns('payments')" style="display:flex; align-items:center; gap:8px; margin:0; text-transform:none; font-size:13px; font-weight:normal; color:var(--text-primary); cursor:pointer;">
-              <input appAutoSelect type="checkbox" [checked]="isColumnVisible('payments', col)" (change)="toggleColumn('payments', col)" style="width:auto; margin:0; cursor:pointer;">
-              {{col}}
+      <!-- Reset Filters Button -->
+      <button 
+        *ngIf="searchQuery || filterPartyId || filterPaymentMode !== 'ALL' || filterInvoiceType !== 'ALL' || filterDateFrom || filterDateTo || subTab !== 'all'" 
+        type="button" 
+        class="btn-reset-filters" 
+        (click)="resetFilters()" 
+        title="Reset all search filters">
+        <i class="bi bi-arrow-counterclockwise"></i>
+        <span>Reset</span>
+      </button>
+    </div>
+
+    <div class="toolbar-right-group">
+      <!-- Table Density Switcher -->
+      <div class="density-switch-group" role="group" aria-label="Table density">
+        <button 
+          type="button" 
+          class="btn-density" 
+          [class.active]="tableDensity === 'compact'" 
+          (click)="tableDensity = 'compact'" 
+          title="Compact row height">
+          <i class="bi bi-distribute-vertical"></i> Compact
+        </button>
+        <button 
+          type="button" 
+          class="btn-density" 
+          [class.active]="tableDensity === 'comfortable'" 
+          (click)="tableDensity = 'comfortable'" 
+          title="Normal row height">
+          <i class="bi bi-list-ul"></i> Normal
+        </button>
+        <button 
+          type="button" 
+          class="btn-density" 
+          [class.active]="tableDensity === 'spacious'" 
+          (click)="tableDensity = 'spacious'" 
+          title="Spacious row height">
+          <i class="bi bi-grid-3x2-gap"></i> Spacious
+        </button>
+      </div>
+
+      <!-- Column Manager Dropdown -->
+      <div class="column-manager-wrapper">
+        <button 
+          type="button" 
+          class="btn-toolbar-tool" 
+          (click)="showColDropdown = !showColDropdown; $event.stopPropagation()"
+          title="Manage visible columns">
+          <i class="bi bi-layout-three-columns"></i>
+          <span>Columns ({{ getVisibleColCount() }})</span>
+        </button>
+
+        <div class="column-dropdown-menu" *ngIf="showColDropdown" (click)="$event.stopPropagation()">
+          <div class="col-menu-header">
+            <strong>Table Columns</strong>
+            <button type="button" class="btn-text" (click)="resetColumns()">Reset</button>
+          </div>
+          <div class="col-menu-list">
+            <label class="col-checkbox-label" *ngFor="let col of columnsConfig" [class.locked]="col.locked">
+              <input 
+                type="checkbox" 
+                [checked]="col.visible" 
+                [disabled]="col.locked"
+                (change)="toggleColumnVisibility(col)" />
+              <span>{{ col.label }}</span>
             </label>
           </div>
         </div>
       </div>
-      <div class="table-container table-responsive">
-        <table class="table" appResizableTable tableId="payments_table">
-          <thead>
-            <tr>
-              <th *ngIf="isColumnVisible('payments', 'Date')" (click)="setSort('paymentDate')" style="cursor:pointer; min-width:110px;">{{ 'payments.date' | translate:currentLang }} <span *ngIf="sortField === 'paymentDate'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('payments', 'Party')" (click)="setSort('party.partyName')" style="cursor:pointer; min-width:160px;">{{ 'party.name' | translate:currentLang }} <span *ngIf="sortField === 'party.partyName'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('payments', 'Invoice Ref')" (click)="setSort('invoiceNo')" style="cursor:pointer; min-width:140px;">{{ 'payments.invoice_ref' | translate:currentLang }} <span *ngIf="sortField === 'invoiceNo'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('payments', 'Amount')" (click)="setSort('amountReceived')" style="cursor:pointer; min-width:130px;">{{ 'payments.amount' | translate:currentLang }} <span *ngIf="sortField === 'amountReceived'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('payments', 'Mode')" (click)="setSort('paymentMode')" style="cursor:pointer; min-width:100px;">{{ 'payments.mode' | translate:currentLang }} <span *ngIf="sortField === 'paymentMode'"><i class="bi ms-1" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i></span></th>
-              <th *ngIf="isColumnVisible('payments', 'Actions')" style="min-width:120px;">{{ 'label.actions' | translate:currentLang }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let payment of getProcessedList(paymentsList, 'payments'); trackBy: trackByPaymentId">
-              <td *ngIf="isColumnVisible('payments', 'Date')"><span class="date-cell">{{ payment.paymentDate | indianDate }}</span></td>
-              <td *ngIf="isColumnVisible('payments', 'Party')" style="font-weight:700;">{{ payment.party?.partyName }}</td>
-              <td *ngIf="isColumnVisible('payments', 'Invoice Ref')"><code>{{ payment.invoiceNo || 'N/A' }}</code></td>
-              <td *ngIf="isColumnVisible('payments', 'Amount')"><strong style="color:var(--accent-success, #10b981); font-size:13.5px;">₹{{ payment.amountReceived | number:'1.2-2' }}</strong></td>
-              <td *ngIf="isColumnVisible('payments', 'Mode')"><span class="badge badge-info" style="font-weight:700;">{{ payment.paymentMode }}</span></td>
-              <td *ngIf="isColumnVisible('payments', 'Actions')" style="display:flex; gap:6px;">
-                <button class="btn btn-secondary btn-sm" (click)="editPayment(payment)"><i class="bi bi-pencil me-1"></i>Edit</button>
-                <button class="btn btn-danger btn-sm" *ngIf="canDelete()" (click)="deletePayment(payment.paymentId)">{{ 'btn.delete' | translate:currentLang }}</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    </div>
+  </section>
+
+  <!-- 7. BULK ACTION BAR -->
+  <div *ngIf="getSelectedCount() > 0" class="payments-bulk-bar animated-slide-down">
+    <div class="bulk-info-pill">
+      <i class="bi bi-check2-circle me-1"></i>
+      <strong>{{ getSelectedCount() }}</strong> receipt records selected
+    </div>
+    <div class="bulk-actions-group">
+      <button type="button" class="btn-bulk btn-bulk-export" (click)="bulkExportSelected()">
+        <i class="bi bi-file-earmark-arrow-down me-1"></i> Export Selected
+      </button>
+      <button type="button" class="btn-bulk btn-bulk-clear" (click)="clearSelection()">
+        <i class="bi bi-x-circle me-1"></i> Clear
+      </button>
+    </div>
+  </div>
+
+  <!-- 8. CUSTOMER RECEIPTS TABLE -->
+  <section class="payments-table-card" aria-label="Customer receipts data table">
+    <div class="table-responsive-viewport" [class.density-compact]="tableDensity === 'compact'" [class.density-spacious]="tableDensity === 'spacious'">
+      <!-- Loading Skeleton -->
+      <div *ngIf="isLoading" class="table-loading-container" aria-busy="true">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Loading verified customer payment vouchers...</p>
       </div>
-      <div class="table-pagination no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--border-glass);">
-        <span style="font-size:13px; color:var(--text-secondary);">
-          Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['payments'] || 0) }} of {{ tableFilteredCounts['payments'] || 0 }} entries
-        </span>
-        <div style="display:flex; gap:8px;">
-          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" style="padding: 6px 12px; font-size: 13px;">
-            Previous
+
+      <!-- Error State -->
+      <div *ngIf="!isLoading && hasError" class="table-error-container">
+        <i class="bi bi-exclamation-triangle-fill text-danger error-icon"></i>
+        <h3>Failed to Connect to Payment Ledger</h3>
+        <p>Could not retrieve payment collections. Please check your backend connection.</p>
+        <button type="button" class="btn-retry" (click)="loadData(true)">
+          <i class="bi bi-arrow-clockwise me-1"></i> Retry
+        </button>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isLoading && !hasError && getFilteredPayments().length === 0" class="table-empty-container">
+        <div class="empty-icon-circle">
+          <i class="bi bi-receipt"></i>
+        </div>
+        <h3>No Customer Receipts Found</h3>
+        <p *ngIf="searchQuery || filterPartyId || filterPaymentMode !== 'ALL' || subTab !== 'all'">
+          No receipts match your search and filter criteria.
+        </p>
+        <p *ngIf="!searchQuery && !filterPartyId && filterPaymentMode === 'ALL' && subTab === 'all'">
+          No customer receipts recorded yet. Click <strong>+ Record Payment</strong> to log the first collection.
+        </p>
+        <div class="empty-actions">
+          <button *ngIf="searchQuery || filterPartyId || filterPaymentMode !== 'ALL' || subTab !== 'all'" type="button" class="btn btn-secondary btn-sm" (click)="resetFilters()">
+            Clear Filters
           </button>
-          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['payments'] || 0)" (click)="currentPage = currentPage + 1" style="padding: 6px 12px; font-size: 13px;">
-            Next
+          <button *ngIf="!isViewer()" type="button" class="btn btn-primary btn-sm" (click)="toggleFormVisibility()">
+            + Record Payment
           </button>
         </div>
       </div>
+
+      <!-- Real Data Table -->
+      <table 
+        *ngIf="!isLoading && !hasError && getFilteredPayments().length > 0" 
+        class="enterprise-payments-table">
+        <thead>
+          <tr>
+            <th class="th-checkbox">
+              <input 
+                type="checkbox" 
+                class="row-checkbox" 
+                [checked]="selectAllChecked" 
+                (change)="toggleSelectAll()" 
+                title="Select all receipts on this page"
+                aria-label="Select all" />
+            </th>
+
+            <th *ngIf="isColVisible('paymentDate')" (click)="setSort('paymentDate')" class="sortable-th">
+              <div class="th-content">
+                <span>Receipt Date</span>
+                <i class="bi" [ngClass]="sortField === 'paymentDate' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up text-muted'"></i>
+              </div>
+            </th>
+
+            <th *ngIf="isColVisible('voucherRef')" (click)="setSort('voucherRef')" class="sortable-th">
+              <div class="th-content">
+                <span>Voucher #</span>
+                <i class="bi" [ngClass]="sortField === 'voucherRef' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up text-muted'"></i>
+              </div>
+            </th>
+
+            <th *ngIf="isColVisible('party')" (click)="setSort('party')" class="sortable-th">
+              <div class="th-content">
+                <span>Customer / Party</span>
+                <i class="bi" [ngClass]="sortField === 'party' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up text-muted'"></i>
+              </div>
+            </th>
+
+            <th *ngIf="isColVisible('invoiceRef')" class="th-normal">
+              <div class="th-content">
+                <span>Invoice Linkage</span>
+              </div>
+            </th>
+
+            <th *ngIf="isColVisible('paymentMode')" class="th-normal">
+              <div class="th-content">
+                <span>Channel / Mode</span>
+              </div>
+            </th>
+
+            <th *ngIf="isColVisible('amountReceived')" (click)="setSort('amountReceived')" class="sortable-th th-right">
+              <div class="th-content th-right-content">
+                <span>Amount Received (₹)</span>
+                <i class="bi" [ngClass]="sortField === 'amountReceived' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up text-muted'"></i>
+              </div>
+            </th>
+
+            <th *ngIf="isColVisible('outstanding')" class="th-right">
+              <div class="th-content th-right-content">
+                <span>Party Balance (₹)</span>
+              </div>
+            </th>
+
+            <th *ngIf="isColVisible('status')" class="th-center">
+              <div class="th-content th-center-content">
+                <span>Status</span>
+              </div>
+            </th>
+
+            <th *ngIf="isColVisible('actions')" class="th-actions">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr 
+            *ngFor="let payment of getPaginatedPayments(); trackBy: trackByPaymentId" 
+            [class.row-selected]="isPaymentSelected(payment.id || payment.paymentId)">
+            <!-- Checkbox -->
+            <td class="td-checkbox">
+              <input 
+                type="checkbox" 
+                class="row-checkbox" 
+                [checked]="isPaymentSelected(payment.id || payment.paymentId)" 
+                (change)="toggleSelectPayment(payment.id || payment.paymentId)"
+                aria-label="Select row" />
+            </td>
+
+            <!-- Date -->
+            <td *ngIf="isColVisible('paymentDate')">
+              <span class="date-badge">{{ payment.paymentDate | indianDate }}</span>
+            </td>
+
+            <!-- Voucher Ref -->
+            <td *ngIf="isColVisible('voucherRef')">
+              <button 
+                type="button" 
+                class="voucher-ref-link" 
+                (click)="openVoucherModal(payment)" 
+                title="View & Print Official Receipt Voucher Slip">
+                <i class="bi bi-file-earmark-text me-1"></i>{{ getVoucherNumber(payment) }}
+              </button>
+            </td>
+
+            <!-- Party / Customer -->
+            <td *ngIf="isColVisible('party')">
+              <div class="party-info-cell">
+                <div class="party-avatar">
+                  {{ (payment.party?.partyName || 'C').substring(0, 2).toUpperCase() }}
+                </div>
+                <div class="party-text-group">
+                  <span class="party-name" [title]="payment.party?.partyName">
+                    {{ payment.party?.partyName || 'Customer ID: ' + (payment.partyId || '—') }}
+                  </span>
+                  <span class="party-city" *ngIf="payment.party?.city">
+                    <i class="bi bi-geo-alt me-1"></i>{{ payment.party?.city }}
+                  </span>
+                </div>
+              </div>
+            </td>
+
+            <!-- Invoice Reference -->
+            <td *ngIf="isColVisible('invoiceRef')">
+              <span *ngIf="payment.invoiceNo" class="invoice-badge" title="Linked to Invoice">
+                <i class="bi bi-file-text me-1"></i>{{ payment.invoiceNo }}
+              </span>
+              <span *ngIf="!payment.invoiceNo" class="general-credit-badge" title="General Ledger Credit">
+                On-Account
+              </span>
+            </td>
+
+            <!-- Payment Mode -->
+            <td *ngIf="isColVisible('paymentMode')">
+              <span class="mode-badge" [ngClass]="getModeMeta(payment.paymentMode).badgeClass">
+                <i class="bi me-1" [ngClass]="getModeMeta(payment.paymentMode).icon"></i>
+                <span>{{ payment.paymentMode || 'UPI' }}</span>
+              </span>
+            </td>
+
+            <!-- Amount Received -->
+            <td *ngIf="isColVisible('amountReceived')" class="cell-numeric text-success-num cell-bold">
+              {{ payment.amountReceived | inr }}
+            </td>
+
+            <!-- Party Outstanding Balance -->
+            <td *ngIf="isColVisible('outstanding')" class="cell-numeric" [class.text-danger-num]="getOutstandingBalance(payment.party?.id || payment.partyId) > 0">
+              {{ getOutstandingBalance(payment.party?.id || payment.partyId) | inr }}
+            </td>
+
+            <!-- Reconciliation Status -->
+            <td *ngIf="isColVisible('status')" class="cell-center">
+              <span class="status-reconciled-badge">
+                <i class="bi bi-shield-check me-1"></i> Reconciled
+              </span>
+            </td>
+
+            <!-- Action Buttons -->
+            <td *ngIf="isColVisible('actions')" class="td-actions">
+              <div class="actions-flex-row">
+                <!-- Voucher Print / View Action -->
+                <button 
+                  type="button" 
+                  class="btn-row-action btn-action-voucher" 
+                  (click)="openVoucherModal(payment)" 
+                  title="Official Receipt Voucher Slip"
+                  aria-label="View Receipt">
+                  <i class="bi bi-printer"></i>
+                </button>
+
+                <!-- Edit Action -->
+                <button 
+                  *ngIf="!isViewer()" 
+                  type="button" 
+                  class="btn-row-action btn-action-edit" 
+                  (click)="editPayment(payment)" 
+                  title="Edit Payment Metadata"
+                  aria-label="Edit Record">
+                  <i class="bi bi-pencil"></i>
+                </button>
+
+                <!-- Delete Action -->
+                <button 
+                  *ngIf="canDelete()" 
+                  type="button" 
+                  class="btn-row-action btn-action-delete" 
+                  (click)="deletePayment(payment)" 
+                  title="Delete Payment Record"
+                  aria-label="Delete Record">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+
+        <!-- Accounting Table Summary Footer -->
+        <tfoot class="table-summary-tfoot">
+          <tr>
+            <td colspan="4" class="tfoot-summary-title">
+              <strong>SUBTOTAL ({{ getFilteredPayments().length }} Filtered Collections)</strong>
+            </td>
+            <td colspan="2"></td>
+            <td class="cell-numeric cell-bold text-success-num">
+              {{ getTotalCollections() | inr }}
+            </td>
+            <td class="cell-numeric cell-bold text-danger-num">
+              {{ getTotalOutstandingAcrossAllParties() | inr }}
+            </td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
+
+    <!-- 9. COMPACT PAGINATION CONTROLS -->
+    <div class="table-pagination-bar" *ngIf="!isLoading && !hasError && getFilteredPayments().length > 0">
+      <div class="pagination-left-info">
+        <span>
+          Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to 
+          <strong>{{ Math.min(currentPage * pageSize, getFilteredPayments().length) }}</strong> of 
+          <strong>{{ getFilteredPayments().length }}</strong> receipts
+        </span>
+
+        <div class="pagesize-selector-wrap">
+          <label for="pageSizeSelect">Rows per page:</label>
+          <select 
+            id="pageSizeSelect" 
+            class="form-select-pagesize" 
+            [(ngModel)]="pageSize" 
+            (ngModelChange)="currentPage = 1">
+            <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="pagination-controls">
+        <button 
+          type="button" 
+          class="btn-page" 
+          [disabled]="currentPage === 1" 
+          (click)="currentPage = 1" 
+          title="First page"
+          aria-label="First page">
+          <i class="bi bi-chevron-double-left"></i>
+        </button>
+
+        <button 
+          type="button" 
+          class="btn-page btn-page-nav" 
+          [disabled]="currentPage === 1" 
+          (click)="currentPage = currentPage - 1" 
+          title="Previous page"
+          aria-label="Previous page">
+          <i class="bi bi-chevron-left me-1"></i> Previous
+        </button>
+
+        <span class="page-indicator">
+          Page <strong>{{ currentPage }}</strong> of <strong>{{ getTotalPages() }}</strong>
+        </span>
+
+        <button 
+          type="button" 
+          class="btn-page btn-page-nav" 
+          [disabled]="currentPage >= getTotalPages()" 
+          (click)="currentPage = currentPage + 1" 
+          title="Next page"
+          aria-label="Next page">
+          Next <i class="bi bi-chevron-right ms-1"></i>
+        </button>
+
+        <button 
+          type="button" 
+          class="btn-page" 
+          [disabled]="currentPage >= getTotalPages()" 
+          (click)="currentPage = getTotalPages()" 
+          title="Last page"
+          aria-label="Last page">
+          <i class="bi bi-chevron-double-right"></i>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. OFFICIAL CUSTOMER PAYMENT RECEIPT VOUCHER MODAL -->
+  <div 
+    *ngIf="isVoucherModalOpen" 
+    class="receipt-voucher-backdrop" 
+    (click)="closeVoucherModal()" 
+    aria-hidden="true">
+  </div>
+
+  <div 
+    *ngIf="isVoucherModalOpen" 
+    class="receipt-voucher-dialog" 
+    role="dialog" 
+    aria-label="Customer Receipt Voucher Slip">
+    <div class="voucher-modal-header no-print">
+      <div class="voucher-modal-title">
+        <i class="bi bi-receipt text-primary me-2"></i>
+        <div>
+          <h3>Official Payment Receipt Voucher</h3>
+          <p>{{ getVoucherNumber(selectedPaymentForVoucher!) }} — {{ selectedPaymentForVoucher?.party?.partyName }}</p>
+        </div>
+      </div>
+      <div class="header-modal-actions">
+        <button type="button" class="btn btn-primary btn-sm me-2" (click)="printVoucher()">
+          <i class="bi bi-printer me-1"></i> Print Receipt
+        </button>
+        <button type="button" class="btn-close-modal" (click)="closeVoucherModal()" title="Close Voucher" aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Printable Official Voucher Sheet -->
+    <div class="voucher-sheet-body" id="printableVoucherSheet">
+      <!-- Company Letterhead Strip -->
+      <div class="voucher-letterhead">
+        <div class="company-brand-row">
+          <div class="brand-logo-text">
+            <h2>FUTANE AGRO INDUSTRIES</h2>
+            <p>High-Density Polyethylene & Polymer Crate Manufacturing</p>
+            <span class="gst-label">GSTIN: 27AABCF1234F1Z8 • CIN: U25200MH2021PTC123456</span>
+          </div>
+          <div class="voucher-badge-box">
+            <span class="v-title">RECEIPT VOUCHER</span>
+            <strong class="v-num">{{ getVoucherNumber(selectedPaymentForVoucher!) }}</strong>
+            <span class="v-date">Date: {{ selectedPaymentForVoucher?.paymentDate | indianDate }}</span>
+          </div>
+        </div>
+        <div class="letterhead-divider"></div>
+      </div>
+
+      <!-- Customer & Payment Metadata -->
+      <div class="voucher-grid-info">
+        <div class="v-info-col">
+          <span class="v-label">Received With Thanks From:</span>
+          <strong class="v-party-name">{{ selectedPaymentForVoucher?.party?.partyName || 'Customer' }}</strong>
+          <span class="v-address" *ngIf="selectedPaymentForVoucher?.party?.city">
+            {{ selectedPaymentForVoucher?.party?.city }}, Maharashtra, India
+          </span>
+          <span class="v-gstin" *ngIf="selectedPaymentForVoucher?.party?.gstNumber">
+            Customer GSTIN: {{ selectedPaymentForVoucher?.party?.gstNumber }}
+          </span>
+        </div>
+
+        <div class="v-info-col right-aligned">
+          <div class="v-meta-row">
+            <span class="v-label">Payment Channel:</span>
+            <strong>{{ selectedPaymentForVoucher?.paymentMode }}</strong>
+          </div>
+          <div class="v-meta-row" *ngIf="selectedPaymentForVoucher?.referenceNo">
+            <span class="v-label">Ref / UTR #:</span>
+            <code>{{ selectedPaymentForVoucher?.referenceNo }}</code>
+          </div>
+          <div class="v-meta-row">
+            <span class="v-label">Invoice Linkage:</span>
+            <strong>{{ selectedPaymentForVoucher?.invoiceNo || 'General Ledger Credit (On-Account)' }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Amount Highlight Box -->
+      <div class="voucher-amount-box">
+        <div class="amount-figures">
+          <span class="curr-label">Amount Received:</span>
+          <span class="amount-num">{{ selectedPaymentForVoucher?.amountReceived | inr }}</span>
+        </div>
+        <div class="amount-words">
+          <span class="words-lbl">The sum of:</span>
+          <span class="words-val">**{{ getAmountInWords(selectedPaymentForVoucher?.amountReceived || 0) }}**</span>
+        </div>
+      </div>
+
+      <!-- Party Ledger Balance Status in Voucher -->
+      <div class="voucher-ledger-summary">
+        <div class="v-leg-item">
+          <span class="lbl">Settlement Status:</span>
+          <strong class="text-success"><i class="bi bi-shield-check me-1"></i>Reconciled in Commercial Ledger</strong>
+        </div>
+        <div class="v-leg-item">
+          <span class="lbl">Unrecovered Balance Due:</span>
+          <strong [class.text-danger]="getOutstandingBalance(selectedPaymentForVoucher?.party?.id || selectedPaymentForVoucher?.partyId) > 0">
+            {{ getOutstandingBalance(selectedPaymentForVoucher?.party?.id || selectedPaymentForVoucher?.partyId) | inr }}
+          </strong>
+        </div>
+      </div>
+
+      <!-- Signatures Footer -->
+      <div class="voucher-signatures-row">
+        <div class="sig-box">
+          <div class="sig-line"></div>
+          <span class="sig-title">Customer / Payee Signature</span>
+        </div>
+        <div class="sig-box right">
+          <div class="official-stamp-seal">
+            <i class="bi bi-patch-check-fill text-success me-1"></i>
+            <span>FUTANE AGRO SEALED</span>
+          </div>
+          <div class="sig-line"></div>
+          <span class="sig-title">For Futane Agro Industries (Authorized Signatory)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="voucher-modal-footer no-print">
+      <button type="button" class="btn btn-secondary" (click)="closeVoucherModal()">
+        Close
+      </button>
+      <button type="button" class="btn btn-primary" (click)="printVoucher()">
+        <i class="bi bi-printer me-1"></i> Print Receipt Voucher
+      </button>
     </div>
   </div>
 </div>
-
