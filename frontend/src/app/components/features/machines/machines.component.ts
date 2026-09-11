@@ -165,6 +165,14 @@ export class MachinesComponent implements OnInit {
     }).length;
   }
 
+  get idleMachinesCount(): number {
+    return this.machinesList.filter(m => (m.status || '').toLowerCase() === 'idle').length;
+  }
+
+  get breakdownMachinesCount(): number {
+    return this.machinesList.filter(m => (m.status || '').toLowerCase() === 'breakdown').length;
+  }
+
   get fleetCapacityPerHour(): number {
     return this.machinesList
       .filter(m => (m.status || '').toLowerCase() === 'running')
