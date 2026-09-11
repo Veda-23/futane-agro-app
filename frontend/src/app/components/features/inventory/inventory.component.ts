@@ -169,13 +169,25 @@ export class InventoryComponent implements OnInit {
     });
 
     this.apiService.getRawMaterials().subscribe({
-      next: (res: any[]) => { this.rawMaterialsList = res || []; },
-      error: () => { this.rawMaterialsList = []; }
+      next: (res: any[]) => { 
+        this.rawMaterialsList = res || []; 
+        this.computeShortfallPrediction();
+      },
+      error: () => { 
+        this.rawMaterialsList = []; 
+        this.computeShortfallPrediction();
+      }
     });
 
     this.apiService.getPpd().subscribe({
-      next: (res: any[]) => { this.ppdList = res || []; },
-      error: () => { this.ppdList = []; }
+      next: (res: any[]) => { 
+        this.ppdList = res || []; 
+        this.computeShortfallPrediction();
+      },
+      error: () => { 
+        this.ppdList = []; 
+        this.computeShortfallPrediction();
+      }
     });
   }
 
@@ -250,12 +262,14 @@ export class InventoryComponent implements OnInit {
   // AI SHORTFALL PREDICTION
   // ======================================================
 
-  get materialShortfallPrediction(): any[] {
+  materialShortfallPredictionList: any[] = [];
+
+  computeShortfallPrediction() {
     const avgKgPerCrate = 1.85;
     const avgDailyProduction = this.calculateAvgDailyProduction();
     const dailyBurnKg = avgDailyProduction * avgKgPerCrate;
 
-    return (this.rawMaterialsList || []).map(rm => {
+    this.materialShortfallPredictionList = (this.rawMaterialsList || []).map(rm => {
       const currentStock = rm.weight || rm.quantity || 0;
       const daysRemaining = dailyBurnKg > 0
         ? Math.floor(currentStock / dailyBurnKg)
@@ -268,6 +282,10 @@ export class InventoryComponent implements OnInit {
         riskLevel: daysRemaining <= 3 ? 'CRITICAL' : daysRemaining <= 7 ? 'WARNING' : 'HEALTHY'
       };
     });
+  }
+
+  get materialShortfallPrediction(): any[] {
+    return this.materialShortfallPredictionList;
   }
 
   calculateAvgDailyProduction(): number {
@@ -340,9 +358,7 @@ export class InventoryComponent implements OnInit {
       );
     }
 
-    const sorted = this.sortList(list);
-    this.tableFilteredCounts['inventory'] = sorted.length;
-    return sorted;
+    return this.sortList(list);
   }
 
   get paginatedList(): InventoryItem[] {
