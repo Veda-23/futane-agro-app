@@ -208,6 +208,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.globalSearchQuery = '';
   }
 
+  clearGlobalSearch() {
+    this.globalSearchQuery = '';
+    this.globalSearchResults = [];
+    this.searchInputElement?.nativeElement.focus();
+  }
+
   toggleNotifDropdown() {
     this.showNotifDropdown = !this.showNotifDropdown;
     if (this.showNotifDropdown) {

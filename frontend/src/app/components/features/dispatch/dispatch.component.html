@@ -1,29 +1,29 @@
-<div class="dispatch-module-container animated-fade">
+<div class="dispatch-module-container animated-fade erp-module-container">
   <!-- 1. Breadcrumbs & Telemetry Header -->
-  <header class="module-header-telemetry no-print">
-    <div class="header-title-group">
-      <nav class="breadcrumb-nav" aria-label="Breadcrumb">
-        <ol class="breadcrumb-list">
-          <li class="breadcrumb-item">SUPPLY CHAIN</li>
-          <li class="breadcrumb-separator"><i class="bi bi-chevron-right"></i></li>
-          <li class="breadcrumb-item active">LOGISTICS &amp; DISPATCH</li>
+  <header class="erp-page-header no-print">
+    <div class="erp-header-title-group">
+      <nav class="erp-breadcrumb" aria-label="Breadcrumb">
+        <ol class="erp-breadcrumb-list">
+          <li class="erp-breadcrumb-item">SUPPLY CHAIN</li>
+          <li class="erp-breadcrumb-separator"><i class="bi bi-chevron-right"></i></li>
+          <li class="erp-breadcrumb-item active">LOGISTICS &amp; DISPATCH</li>
         </ol>
       </nav>
-      <div class="title-with-badge">
-        <div class="header-squircle-icon">
+      <div class="erp-title-with-badge">
+        <div class="erp-header-icon">
           <i class="bi bi-truck"></i>
         </div>
         <div>
-          <h1 class="page-title">Logistics &amp; Dispatch Registry</h1>
-          <p class="page-subtitle">Outbound finished goods consignments, delivery tracking, vehicle manifests, and QR verification.</p>
+          <h1 class="erp-page-title">Logistics &amp; Dispatch Registry</h1>
+          <p class="erp-page-subtitle">Outbound finished goods consignments, delivery tracking, vehicle manifests, and QR verification.</p>
         </div>
       </div>
     </div>
 
-    <div class="header-actions">
-      <div class="telemetry-pill">
-        <span class="telemetry-dot pulse"></span>
-        <span class="telemetry-text">TOTAL MANIFESTS: {{ totalDispatchesCount }} &bull; IN TRANSIT: {{ inTransitDispatchesCount }} &bull; DELIVERED: {{ deliveredDispatchesCount }}</span>
+    <div class="erp-header-actions">
+      <div class="erp-telemetry-pill">
+        <span class="erp-telemetry-dot pulse"></span>
+        <span class="erp-telemetry-text">TOTAL MANIFESTS: {{ totalDispatchesCount }} &bull; IN TRANSIT: {{ inTransitDispatchesCount }} &bull; DELIVERED: {{ deliveredDispatchesCount }}</span>
       </div>
       <button type="button" class="btn btn-secondary btn-sm" (click)="openScanner()" title="Scan QR Code / Barcode">
         <i class="bi bi-qr-code-scan me-1 text-primary"></i>
@@ -37,147 +37,147 @@
   </header>
 
   <!-- 2. 4-Column Responsive KPI Telemetry Cards -->
-  <section class="telemetry-kpi-grid">
+  <section class="erp-kpi-grid">
     <!-- KPI 1: Total Consignments -->
-    <div class="kpi-card glass-panel" (click)="statusFilter = 'ALL'">
-      <div class="kpi-header">
-        <span class="kpi-title">Total Dispatches</span>
-        <div class="kpi-icon-squircle icon-blue">
+    <div class="erp-kpi-card glass-panel" (click)="statusFilter = 'ALL'">
+      <div class="erp-kpi-header">
+        <span class="erp-kpi-title">Total Dispatches</span>
+        <div class="erp-kpi-icon icon-blue">
           <i class="bi bi-box-seam-fill"></i>
         </div>
       </div>
-      <div class="kpi-body">
-        <h3 class="kpi-value">{{ totalDispatchesCount }}</h3>
-        <span class="kpi-trend trend-neutral">
+      <div class="erp-kpi-body">
+        <h3 class="erp-kpi-value">{{ totalDispatchesCount }}</h3>
+        <span class="erp-kpi-trend trend-neutral">
           <i class="bi bi-receipt me-1"></i> Recorded Manifests
         </span>
       </div>
-      <div class="kpi-footer">
-        <span class="kpi-subtext">All logged shipments</span>
+      <div class="erp-kpi-footer">
+        <span class="erp-kpi-subtext">All logged shipments</span>
       </div>
     </div>
 
     <!-- KPI 2: In Transit -->
-    <div class="kpi-card glass-panel" (click)="statusFilter = 'In Transit'">
-      <div class="kpi-header">
-        <span class="kpi-title">In Transit</span>
-        <div class="kpi-icon-squircle icon-cyan">
+    <div class="erp-kpi-card glass-panel" (click)="statusFilter = 'In Transit'">
+      <div class="erp-kpi-header">
+        <span class="erp-kpi-title">In Transit</span>
+        <div class="erp-kpi-icon icon-cyan">
           <i class="bi bi-truck"></i>
         </div>
       </div>
-      <div class="kpi-body">
-        <h3 class="kpi-value text-info">{{ inTransitDispatchesCount }}</h3>
-        <span class="kpi-trend trend-positive">
+      <div class="erp-kpi-body">
+        <h3 class="erp-kpi-value text-info">{{ inTransitDispatchesCount }}</h3>
+        <span class="erp-kpi-trend trend-positive">
           <i class="bi bi-geo-alt-fill me-1"></i> Active On Route
         </span>
       </div>
-      <div class="kpi-footer">
-        <span class="kpi-subtext">En route to consignees</span>
+      <div class="erp-kpi-footer">
+        <span class="erp-kpi-subtext">En route to consignees</span>
       </div>
     </div>
 
     <!-- KPI 3: Delivered -->
-    <div class="kpi-card glass-panel" (click)="statusFilter = 'Delivered'">
-      <div class="kpi-header">
-        <span class="kpi-title">Delivered Consignments</span>
-        <div class="kpi-icon-squircle icon-emerald">
+    <div class="erp-kpi-card glass-panel" (click)="statusFilter = 'Delivered'">
+      <div class="erp-kpi-header">
+        <span class="erp-kpi-title">Delivered Consignments</span>
+        <div class="erp-kpi-icon icon-emerald">
           <i class="bi bi-check-circle-fill"></i>
         </div>
       </div>
-      <div class="kpi-body">
-        <h3 class="kpi-value text-success">{{ deliveredDispatchesCount }}</h3>
-        <span class="kpi-trend trend-positive">
+      <div class="erp-kpi-body">
+        <h3 class="erp-kpi-value text-success">{{ deliveredDispatchesCount }}</h3>
+        <span class="erp-kpi-trend trend-positive">
           <i class="bi bi-patch-check-fill me-1"></i> Fulfilled Orders
         </span>
       </div>
-      <div class="kpi-footer">
-        <span class="kpi-subtext">Gate entry verified</span>
+      <div class="erp-kpi-footer">
+        <span class="erp-kpi-subtext">Gate entry verified</span>
       </div>
     </div>
 
     <!-- KPI 4: Pending Clearance -->
-    <div class="kpi-card glass-panel" (click)="statusFilter = 'Pending'">
-      <div class="kpi-header">
-        <span class="kpi-title">Pending Staging</span>
-        <div class="kpi-icon-squircle icon-amber">
+    <div class="erp-kpi-card glass-panel" (click)="statusFilter = 'Pending'">
+      <div class="erp-kpi-header">
+        <span class="erp-kpi-title">Pending Staging</span>
+        <div class="erp-kpi-icon icon-amber">
           <i class="bi bi-clock-history"></i>
         </div>
       </div>
-      <div class="kpi-body">
-        <h3 class="kpi-value" [class.text-warning]="pendingDispatchesCount > 0">{{ pendingDispatchesCount }}</h3>
-        <span class="kpi-trend" [class.trend-negative]="pendingDispatchesCount > 0" [class.trend-neutral]="pendingDispatchesCount === 0">
+      <div class="erp-kpi-body">
+        <h3 class="erp-kpi-value" [class.text-warning]="pendingDispatchesCount > 0">{{ pendingDispatchesCount }}</h3>
+        <span class="erp-kpi-trend" [class.trend-negative]="pendingDispatchesCount > 0" [class.trend-neutral]="pendingDispatchesCount === 0">
           <i class="bi bi-hourglass-split me-1"></i> Awaiting Vehicle
         </span>
       </div>
-      <div class="kpi-footer">
-        <span class="kpi-subtext">Dock staging area</span>
+      <div class="erp-kpi-footer">
+        <span class="erp-kpi-subtext">Dock staging area</span>
       </div>
     </div>
   </section>
 
   <!-- 3. Unified Control & Filter Bar -->
-  <section class="unified-control-bar glass-panel no-print">
-    <div class="control-left-group">
+  <section class="erp-control-bar no-print">
+    <div class="erp-control-left">
       <!-- Live Search -->
-      <div class="search-input-wrapper">
-        <i class="bi bi-search search-icon"></i>
+      <div class="erp-search-group">
+        <i class="bi bi-search erp-search-icon"></i>
         <input
           type="text"
-          class="table-search-input"
+          class="erp-input erp-search-input"
           [(ngModel)]="searchQuery"
           (input)="currentPage = 1"
           placeholder="Search by vehicle, driver, customer, manifest ID..."
         />
-        <button *ngIf="searchQuery" class="clear-search-btn" (click)="searchQuery = ''; currentPage = 1" title="Clear search">
+        <button *ngIf="searchQuery" class="erp-clear-search" (click)="searchQuery = ''; currentPage = 1" title="Clear search">
           <i class="bi bi-x-circle-fill"></i>
         </button>
       </div>
 
       <!-- Status Filter Pills -->
-      <div class="status-filter-pills">
-        <button type="button" class="status-pill-btn" [class.active]="statusFilter === 'ALL'" (click)="setStatusFilter('ALL')">
+      <div class="erp-filter-pills">
+        <button type="button" class="erp-filter-pill" [class.active]="statusFilter === 'ALL'" (click)="setStatusFilter('ALL')">
           All ({{ totalDispatchesCount }})
         </button>
-        <button type="button" class="status-pill-btn" [class.active]="statusFilter === 'In Transit'" (click)="setStatusFilter('In Transit')">
+        <button type="button" class="erp-filter-pill" [class.active]="statusFilter === 'In Transit'" (click)="setStatusFilter('In Transit')">
           In Transit ({{ inTransitDispatchesCount }})
         </button>
-        <button type="button" class="status-pill-btn" [class.active]="statusFilter === 'Delivered'" (click)="setStatusFilter('Delivered')">
+        <button type="button" class="erp-filter-pill" [class.active]="statusFilter === 'Delivered'" (click)="setStatusFilter('Delivered')">
           Delivered ({{ deliveredDispatchesCount }})
         </button>
-        <button type="button" class="status-pill-btn" [class.active]="statusFilter === 'Pending'" (click)="setStatusFilter('Pending')">
+        <button type="button" class="erp-filter-pill" [class.active]="statusFilter === 'Pending'" (click)="setStatusFilter('Pending')">
           Pending ({{ pendingDispatchesCount }})
         </button>
       </div>
     </div>
 
-    <div class="control-right-group">
+    <div class="erp-control-right">
       <!-- Density Toggle -->
-      <div class="density-switch-group">
-        <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact density">
+      <div class="erp-button-group">
+        <button type="button" class="erp-btn-icon" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact density">
           <i class="bi bi-distribute-vertical"></i> Compact
         </button>
-        <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="setDensity('comfortable')" title="Comfortable density">
+        <button type="button" class="erp-btn-icon" [class.active]="tableDensity === 'comfortable'" (click)="setDensity('comfortable')" title="Comfortable density">
           <i class="bi bi-list-ul"></i> Normal
         </button>
-        <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious density">
+        <button type="button" class="erp-btn-icon" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious density">
           <i class="bi bi-grid-3x2-gap"></i> Spacious
         </button>
       </div>
 
       <!-- Column Visibility Dropdown -->
-      <div class="col-manager-dropdown-wrapper">
+      <div class="erp-dropdown">
         <button type="button" class="btn btn-secondary btn-sm" (click)="toggleColDropdown(); $event.stopPropagation()">
           <i class="bi bi-layout-three-columns me-1"></i> Columns
         </button>
-        <div class="col-manager-popover" *ngIf="showColDropdown" (click)="$event.stopPropagation()">
-          <div class="popover-header">
+        <div class="erp-dropdown-menu" *ngIf="showColDropdown" (click)="$event.stopPropagation()">
+          <div class="erp-dropdown-header">
             <strong>Visible Columns</strong>
-            <button type="button" class="btn-text" (click)="resetColumns()">Reset</button>
+            <button type="button" class="btn btn-link btn-sm p-0" (click)="resetColumns()">Reset</button>
           </div>
-          <div class="popover-body">
-            <div class="col-item-row" *ngFor="let col of defaultCols">
-              <label class="col-check-label">
-                <input type="checkbox" [checked]="isColumnVisible(col)" (change)="toggleColumn(col)" />
+          <div class="erp-dropdown-body">
+            <div class="erp-checkbox-group" *ngFor="let col of defaultCols">
+              <label class="erp-checkbox-label">
+                <input type="checkbox" class="erp-checkbox" [checked]="isColumnVisible(col)" (change)="toggleColumn(col)" />
                 <span>{{ col }}</span>
               </label>
             </div>
@@ -186,15 +186,15 @@
       </div>
 
       <!-- Consolidated Export Dropdown -->
-      <div class="export-dropdown-wrapper">
+      <div class="erp-dropdown">
         <button type="button" class="btn btn-secondary btn-sm" (click)="toggleExportMenu(); $event.stopPropagation()" title="Export registry">
           <i class="bi bi-download me-1"></i> Export &#x25BE;
         </button>
-        <div class="export-menu" *ngIf="showExportMenu" (click)="$event.stopPropagation()">
-          <button type="button" class="export-menu-item" (click)="exportData('csv')">
+        <div class="erp-dropdown-menu" *ngIf="showExportMenu" (click)="$event.stopPropagation()">
+          <button type="button" class="erp-dropdown-item" (click)="exportData('csv')">
             <i class="bi bi-filetype-csv me-2 text-primary"></i> Export CSV (.csv)
           </button>
-          <button type="button" class="export-menu-item" (click)="exportData('excel')">
+          <button type="button" class="erp-dropdown-item" (click)="exportData('excel')">
             <i class="bi bi-file-earmark-excel me-2 text-success"></i> Export Excel (.csv)
           </button>
         </div>
@@ -203,28 +203,28 @@
   </section>
 
   <!-- 4. Main Two-Column Layout -->
-  <div class="feature-main-grid">
+  <div class="erp-module-grid">
     <!-- LEFT PANEL: Sticky Manifest Registration Form -->
-    <aside class="feature-form-panel glass-panel" [class.editing-mode]="editingDispatchId" *ngIf="!isViewer()">
-      <div class="panel-header">
-        <div class="panel-title-badge">
-          <span class="badge-icon-sm icon-blue"><i class="bi bi-box-arrow-up-right"></i></span>
+    <aside class="erp-form-panel" [class.editing-mode]="editingDispatchId" *ngIf="!isViewer()">
+      <div class="erp-panel-header">
+        <div class="erp-panel-title-group">
+          <span class="erp-panel-icon"><i class="bi bi-box-arrow-up-right"></i></span>
           <div>
-            <h3 class="panel-title">{{ editingDispatchId ? 'Edit Dispatch Manifest' : 'Create Dispatch Manifest' }}</h3>
-            <p class="panel-subtitle">Vehicle registration, driver assignment &amp; consignment notes</p>
+            <h3 class="erp-panel-title">{{ editingDispatchId ? 'Edit Dispatch Manifest' : 'Create Dispatch Manifest' }}</h3>
+            <p class="erp-panel-subtitle">Vehicle registration, driver assignment &amp; consignment notes</p>
           </div>
         </div>
-        <span *ngIf="editingDispatchId" class="editing-indicator-pill">EDITING</span>
+        <span *ngIf="editingDispatchId" class="erp-badge erp-badge-warning">EDITING</span>
       </div>
 
-      <form (ngSubmit)="saveDispatch()" class="modern-feature-form">
+      <form (ngSubmit)="saveDispatch()" class="erp-form-grid">
         <!-- Select Sale Order -->
-        <div class="form-group">
-          <div class="label-with-action">
-            <label class="form-label">
-              Customer Sales Order <span class="required-star">*</span>
+        <div class="erp-form-group">
+          <div class="d-flex justify-content-between align-items-center">
+            <label class="erp-label">
+              Customer Sales Order <span class="text-danger">*</span>
             </label>
-            <button type="button" class="quick-qr-link" (click)="openScanner()" title="Scan QR Code to identify sale">
+            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" (click)="openScanner()" title="Scan QR Code to identify sale">
               <i class="bi bi-qr-code me-1"></i>Scan QR
             </button>
           </div>
@@ -240,20 +240,20 @@
             searchPlaceholder="Type customer name or crate type..."
             [allowClear]="true">
           </app-searchable-select>
-          <small *ngIf="availableSales.length === 0 && !editingDispatchId" class="form-hint text-warning">
+          <small *ngIf="availableSales.length === 0 && !editingDispatchId" class="text-warning small mt-1">
             <i class="bi bi-info-circle me-1"></i>All current sales orders have already been dispatched.
           </small>
         </div>
 
-        <div class="form-row-2col">
+        <div class="erp-form-row">
           <!-- Dispatch Date -->
-          <div class="form-group">
-            <label class="form-label">Dispatch Date <span class="required-star">*</span></label>
-            <div class="input-with-icon">
-              <i class="bi bi-calendar3 input-icon"></i>
+          <div class="erp-form-group">
+            <label class="erp-label">Dispatch Date <span class="text-danger">*</span></label>
+            <div class="erp-input-group">
+              <i class="bi bi-calendar3 erp-input-icon"></i>
               <input
                 type="date"
-                class="form-control"
+                class="erp-input"
                 [(ngModel)]="dispatchForm.dispatchDate"
                 name="dDate"
                 required
@@ -262,14 +262,14 @@
           </div>
 
           <!-- Vehicle Number -->
-          <div class="form-group">
-            <label class="form-label">Vehicle Registration <span class="required-star">*</span></label>
-            <div class="input-with-icon">
-              <i class="bi bi-truck input-icon"></i>
+          <div class="erp-form-group">
+            <label class="erp-label">Vehicle Registration <span class="text-danger">*</span></label>
+            <div class="erp-input-group">
+              <i class="bi bi-truck erp-input-icon"></i>
               <input
                 appAutoSelect
                 type="text"
-                class="form-control text-uppercase"
+                class="erp-input text-uppercase"
                 [(ngModel)]="dispatchForm.vehicleNumber"
                 name="dVehicle"
                 required
@@ -280,14 +280,14 @@
         </div>
 
         <!-- Driver Name -->
-        <div class="form-group">
-          <label class="form-label">Assigned Driver <span class="required-star">*</span></label>
-          <div class="input-with-icon">
-            <i class="bi bi-person-badge input-icon"></i>
+        <div class="erp-form-group">
+          <label class="erp-label">Assigned Driver <span class="text-danger">*</span></label>
+          <div class="erp-input-group">
+            <i class="bi bi-person-badge erp-input-icon"></i>
             <input
               appAutoSelect
               type="text"
-              class="form-control"
+              class="erp-input"
               [(ngModel)]="dispatchForm.driverName"
               name="dDriver"
               required
@@ -297,11 +297,11 @@
         </div>
 
         <!-- Destination Address -->
-        <div class="form-group">
-          <label class="form-label">Delivery Destination <span class="required-star">*</span></label>
+        <div class="erp-form-group">
+          <label class="erp-label">Delivery Destination <span class="text-danger">*</span></label>
           <textarea
             appAutoSelect
-            class="form-control"
+            class="erp-textarea"
             [(ngModel)]="dispatchForm.deliveryAddress"
             name="dAddress"
             rows="2"
@@ -311,9 +311,9 @@
         </div>
 
         <!-- Status -->
-        <div class="form-group">
-          <label class="form-label">Consignment Status</label>
-          <select class="form-select" [(ngModel)]="dispatchForm.dispatchStatus" name="dStatus">
+        <div class="erp-form-group">
+          <label class="erp-label">Consignment Status</label>
+          <select class="erp-select" [(ngModel)]="dispatchForm.dispatchStatus" name="dStatus">
             <option value="Pending">Pending (Staged for Loading)</option>
             <option value="In Transit">In Transit (Dispatched / On Route)</option>
             <option value="Delivered">Delivered (Gate Entry Verified)</option>
@@ -321,24 +321,24 @@
         </div>
 
         <!-- Live Consignment Preview Card -->
-        <div *ngIf="selectedSaleDetails" class="live-calculation-card animate-fade-in">
-          <div class="calc-row">
-            <span class="calc-label"><i class="bi bi-box-seam me-1 text-primary"></i>Consignment Payload:</span>
-            <strong class="calc-value text-primary font-mono">
+        <div *ngIf="selectedSaleDetails" class="erp-alert erp-alert-info mt-2">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="fw-bold"><i class="bi bi-box-seam me-1 text-primary"></i>Consignment Payload:</span>
+            <strong class="text-primary font-mono fs-5">
               {{ selectedSaleDetails.quantity || selectedSaleDetails.cratesCount || 100 }} crates
             </strong>
           </div>
-          <div class="calc-sub">
+          <div class="small text-muted">
             Party: <strong>{{ selectedSaleDetails.party?.partyName || 'Customer' }}</strong> &bull; {{ selectedSaleDetails.crateType }}
           </div>
         </div>
 
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary btn-block">
+        <div class="erp-form-actions mt-3">
+          <button type="submit" class="btn btn-primary w-100">
             <i class="bi bi-check2-circle me-1"></i>
             {{ editingDispatchId ? 'Update Manifest Record' : 'Create Dispatch Manifest' }}
           </button>
-          <button *ngIf="editingDispatchId" type="button" class="btn btn-secondary btn-block" (click)="cancelEditDispatch()">
+          <button *ngIf="editingDispatchId" type="button" class="btn btn-secondary w-100 mt-2" (click)="cancelEditDispatch()">
             <i class="bi bi-x-lg me-1"></i> Cancel Edit
           </button>
         </div>
@@ -346,9 +346,9 @@
     </aside>
 
     <!-- RIGHT PANEL: Data Ledger Table Card -->
-    <main class="feature-table-panel glass-panel" [class.full-width]="isViewer()">
+    <main class="erp-table-panel" [class.full-width]="isViewer()">
       <!-- Bulk Action Bar -->
-      <div *ngIf="selectedRowIds.size > 0" class="bulk-action-bar no-print">
+      <div *ngIf="selectedRowIds.size > 0" class="erp-bulk-actions no-print">
         <span class="bulk-count-pill">
           <i class="bi bi-check-circle-fill me-1"></i>
           {{ selectedRowIds.size }} manifest(s) selected
@@ -364,8 +364,8 @@
       </div>
 
       <div class="table-content-wrap">
-        <div class="table-container" [class.table-compact]="tableDensity === 'compact'" [class.table-spacious]="tableDensity === 'spacious'">
-          <table class="table enterprise-table" appResizableTable tableId="dispatch_registry_table">
+        <div class="erp-table-responsive" [class.table-compact]="tableDensity === 'compact'" [class.table-spacious]="tableDensity === 'spacious'">
+          <table class="erp-table" appResizableTable tableId="dispatch_registry_table">
             <thead>
               <tr>
                 <th style="width: 40px; text-align: center;">
@@ -413,7 +413,7 @@
                   />
                 </td>
                 <td *ngIf="isColumnVisible('Manifest ID')">
-                  <span class="badge badge-secondary font-mono">DSP-{{ (d.id+'').padStart(3, '0') }}</span>
+                  <span class="erp-badge font-mono">DSP-{{ (d.id+'').padStart(3, '0') }}</span>
                 </td>
                 <td *ngIf="isColumnVisible('Consignee & Order')">
                   <div class="entity-name-cell">
@@ -425,7 +425,7 @@
                   {{ (d.dispatchDate || d.date) ? ((d.dispatchDate || d.date) | indianDate) : '—' }}
                 </td>
                 <td *ngIf="isColumnVisible('Vehicle')">
-                  <span class="badge badge-secondary font-mono">{{ d.vehicleNumber }}</span>
+                  <span class="erp-badge font-mono">{{ d.vehicleNumber }}</span>
                 </td>
                 <td *ngIf="isColumnVisible('Driver')">
                   <div class="driver-cell">
@@ -437,10 +437,10 @@
                   <span class="desc-text">{{ d.deliveryAddress || '—' }}</span>
                 </td>
                 <td *ngIf="isColumnVisible('Status')">
-                  <span class="status-badge"
-                    [class.status-running]="(d.dispatchStatus || d.status || '').toLowerCase() === 'delivered'"
-                    [class.status-transit]="(d.dispatchStatus || d.status || '').toLowerCase() === 'in transit'"
-                    [class.status-idle]="!(d.dispatchStatus || d.status) || (d.dispatchStatus || d.status || '').toLowerCase() === 'pending'">
+                  <span class="erp-badge"
+                    [class.erp-badge-success]="(d.dispatchStatus || d.status || '').toLowerCase() === 'delivered'"
+                    [class.erp-badge-info]="(d.dispatchStatus || d.status || '').toLowerCase() === 'in transit'"
+                    [class.erp-badge-warning]="!(d.dispatchStatus || d.status) || (d.dispatchStatus || d.status || '').toLowerCase() === 'pending'">
                     <i class="bi bi-truck me-1" *ngIf="(d.dispatchStatus || d.status || '').toLowerCase() === 'in transit'"></i>
                     <i class="bi bi-check2-circle me-1" *ngIf="(d.dispatchStatus || d.status || '').toLowerCase() === 'delivered'"></i>
                     <i class="bi bi-clock me-1" *ngIf="!(d.dispatchStatus || d.status) || (d.dispatchStatus || d.status || '').toLowerCase() === 'pending'"></i>
@@ -473,8 +473,8 @@
         </app-empty-state>
 
         <!-- Pagination Footer -->
-        <footer class="table-pagination-footer no-print">
-          <div class="pagination-info">
+        <footer class="erp-pagination no-print">
+          <div class="erp-pagination-info">
             <span>
               Showing
               <strong class="font-mono">
@@ -490,11 +490,11 @@
             </span>
           </div>
 
-          <div class="pagination-controls">
+          <div class="erp-pagination-controls">
             <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="setPage(currentPage - 1)">
               <i class="bi bi-chevron-left me-1"></i> Previous
             </button>
-            <span class="page-indicator font-mono">
+            <span class="erp-page-indicator font-mono">
               Page {{ currentPage }} of {{ totalPages }}
             </span>
             <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage >= totalPages || filteredDispatches.length === 0" (click)="setPage(currentPage + 1)">

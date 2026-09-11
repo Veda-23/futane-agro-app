@@ -32,33 +32,64 @@
 
   <!-- Center Section: Omnichannel Command Search (⌘K / Ctrl+K) -->
   <div class="header-center">
-    <div class="omnisearch-box">
-      <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
+    <div class="omnisearch-box" [class.has-query]="globalSearchQuery && globalSearchQuery.length > 0">
+      <div class="search-badge-icon">
+        <i class="bi bi-search"></i>
+      </div>
       <input 
         #searchInput
         type="text" 
         class="omnisearch-input" 
-        placeholder="Search ERP..."
+        placeholder="Search ERP records, parties, sales, materials..."
         [(ngModel)]="globalSearchQuery"
         (input)="doGlobalSearch()"
         (focus)="doGlobalSearch()">
-      <kbd class="omnisearch-kbd">⌘K</kbd>
+      
+      <!-- Clear Search Button -->
+      <button 
+        type="button" 
+        class="omnisearch-clear-btn" 
+        *ngIf="globalSearchQuery && globalSearchQuery.length > 0" 
+        (click)="clearGlobalSearch()" 
+        title="Clear query (Esc)">
+        <i class="bi bi-x-circle-fill"></i>
+      </button>
+
+      <!-- Keyboard Shortcut Pill -->
+      <div class="omnisearch-kbd-capsule" title="Press Ctrl+K or ⌘K to search">
+        <span class="kbd-key">Ctrl</span>
+        <span class="kbd-join">+</span>
+        <span class="kbd-key">K</span>
+      </div>
 
       <!-- Global Search Results Flyout -->
-      <div class="search-flyout" *ngIf="globalSearchResults.length > 0">
-        <div class="flyout-header">Search Results</div>
+      <div class="search-flyout shadow-lg animate-fade-in" *ngIf="globalSearchResults.length > 0">
+        <div class="flyout-header-bar">
+          <span><i class="bi bi-lightning-charge-fill text-warning me-1"></i> Quick Results</span>
+          <span class="flyout-count-pill">{{ globalSearchResults.length }} matches</span>
+        </div>
         <div class="flyout-items">
           <div 
             *ngFor="let res of globalSearchResults" 
             class="flyout-item" 
             (click)="goToSearchResult(res)">
-            <div class="flyout-item-label">{{ res.label }}</div>
-            <div class="flyout-item-meta">
-              <span class="flyout-type-badge">{{ res.type }}</span>
-              <span class="flyout-detail">{{ res.detail }}</span>
+            <div class="flyout-icon-col">
+              <i class="bi" [ngClass]="{
+                'bi-compass text-primary': res.type === 'Navigation',
+                'bi-building text-info': res.type === 'Party',
+                'bi-person-badge text-success': res.type === 'Employee',
+                'bi-cart-check text-warning': res.type === 'Sale',
+                'bi-truck text-danger': res.type === 'Dispatch'
+              }"></i>
             </div>
+            <div class="flyout-text-col">
+              <div class="flyout-item-label">{{ res.label }}</div>
+              <div class="flyout-item-meta">
+                <span class="flyout-type-badge" [attr.data-type]="res.type">{{ res.type }}</span>
+                <span class="flyout-detail">{{ res.detail }}</span>
+              </div>
+            </div>
+            <i class="bi bi-arrow-return-left flyout-enter-icon"></i>
           </div>
         </div>
       </div>
