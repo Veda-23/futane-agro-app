@@ -307,15 +307,15 @@
   gap: 8px;
   overflow-x: auto;
   padding-bottom: 2px;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
 }
 
 .subtabs-scroll-container::-webkit-scrollbar {
-  height: 4px;
-}
-.subtabs-scroll-container::-webkit-scrollbar-thumb {
-  background: var(--border-color, #cbd5e1);
-  border-radius: 2px;
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .subtab-pill-btn {
@@ -333,14 +333,15 @@
   border: 1px solid rgba(203, 213, 225, 0.7);
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s var(--ease-spring);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .subtab-pill-btn:hover {
   background: #ffffff;
   color: var(--text-primary, #0f172a);
   border-color: rgba(11, 71, 212, 0.3);
-  transform: translateY(-1px);
+  transform: translateY(-1.5px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
 }
 
 .subtab-pill-btn:active {
@@ -348,12 +349,17 @@
 }
 
 .subtab-pill-btn.active {
-  background: #ffffff;
-  color: #0B47D4;
-  border-color: rgba(11, 71, 212, 0.4);
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%);
+  color: #ffffff;
+  border-color: transparent;
   font-weight: 700;
-  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.16);
-  transform: scale(1.02);
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.32);
+  animation: subtabPillActivePop 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.subtab-pill-btn.active i {
+  color: #ffffff !important;
+  animation: iconMicroBounce 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .tab-count-badge {
@@ -651,15 +657,14 @@
   width: 100%;
   overflow-x: auto;
   position: relative;
-  scrollbar-width: thin;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
 
 .table-container::-webkit-scrollbar {
-  height: 6px;
-}
-.table-container::-webkit-scrollbar-thumb {
-  background: var(--border-color, #cbd5e1);
-  border-radius: 3px;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .modern-table {
@@ -1063,18 +1068,17 @@
   padding: 20px;
   overflow-y: auto;
   flex: 1;
-  scrollbar-width: thin;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
 .drawer-content::-webkit-scrollbar {
-  width: 5px;
-}
-.drawer-content::-webkit-scrollbar-thumb {
-  background: var(--border-color, #cbd5e1);
-  border-radius: 3px;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .drawer-footer {

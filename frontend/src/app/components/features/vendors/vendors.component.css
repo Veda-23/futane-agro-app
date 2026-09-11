@@ -226,36 +226,56 @@
   align-items: center;
   gap: 8px;
   overflow-x: auto;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
   padding-bottom: 2px;
+}
+
+.subtabs-scroll-container::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .subtab-pill-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 13px;
+  padding: 6px 14px;
   border-radius: 20px;
   background: var(--bg-hover, #f1f5f9);
   color: var(--text-secondary, #475569);
-  border: 1px solid transparent;
+  border: 1px solid var(--border-color, #e2e8f0);
   font-size: 12.5px;
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .subtab-pill-btn:hover {
   background: #e2e8f0;
   color: var(--text-primary, #0f172a);
+  transform: translateY(-1.5px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+}
+
+.subtab-pill-btn:active {
+  transform: scale(0.96);
 }
 
 .subtab-pill-btn.active {
-  background: var(--primary, #0284c7);
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%);
   color: #ffffff;
-  border-color: var(--primary, #0284c7);
-  box-shadow: 0 2px 5px rgba(2, 132, 199, 0.3);
+  border-color: transparent;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.32);
+  animation: subtabPillActivePop 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.subtab-pill-btn.active i {
+  animation: iconMicroBounce 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .subtab-pill-btn.active .tab-count-badge {
@@ -976,7 +996,14 @@ textarea.form-control {
 .table-responsive-wrapper {
   width: 100%;
   overflow-x: auto;
-  scrollbar-width: thin;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.table-responsive-wrapper::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .vendor-data-table {
