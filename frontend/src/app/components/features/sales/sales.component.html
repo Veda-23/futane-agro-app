@@ -484,10 +484,16 @@
             <!-- Filter: Party -->
             <div class="filter-field-group">
               <label class="filter-field-label">Customer / Party</label>
-              <select class="form-select-filter" [(ngModel)]="filterPartyId" (change)="currentPage = 1">
-                <option value="">All Customers</option>
-                <option *ngFor="let p of parties" [value]="p.id">{{ p.partyName }}</option>
-              </select>
+              <app-searchable-select
+                [items]="parties"
+                bindLabel="partyName"
+                bindValue="id"
+                subLabelKey="gstNumber"
+                placeholder="All Customers"
+                searchPlaceholder="Filter customers..."
+                [(ngModel)]="filterPartyId"
+                (change)="currentPage = 1">
+              </app-searchable-select>
             </div>
 
             <!-- Filter: Payment Status -->
@@ -1138,9 +1144,16 @@
 
         <div class="drawer-field">
           <label for="drwParty">Customer / Party</label>
-          <select id="drwParty" class="drawer-input" [(ngModel)]="drawerSaleForm.partyId">
-            <option *ngFor="let p of parties" [value]="p.id">{{ p.partyName }}</option>
-          </select>
+          <app-searchable-select
+            id="drwParty"
+            [items]="parties"
+            bindLabel="partyName"
+            bindValue="id"
+            subLabelKey="gstNumber"
+            placeholder="Select Customer / Party..."
+            searchPlaceholder="Search party by name, GSTIN..."
+            [(ngModel)]="drawerSaleForm.partyId">
+          </app-searchable-select>
         </div>
 
         <div class="drawer-field-row">

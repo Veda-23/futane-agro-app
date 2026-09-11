@@ -124,11 +124,17 @@
     </div>
 
     <div class="doc-selector-dropdown-wrap">
-      <select [(ngModel)]="selectedRecordId" (change)="onRecordSelectChange()" class="doc-record-select">
-        <option *ngFor="let item of getFilteredRecords()" [value]="getRecordId(item)">
-          {{ getRecordLabel(item) }}
-        </option>
-      </select>
+      <app-searchable-select
+        [items]="selectableRecords"
+        bindLabel="label"
+        bindValue="id"
+        subLabelKey="subLabel"
+        [(ngModel)]="selectedRecordId"
+        (ngModelChange)="onRecordSelectChange()"
+        placeholder="-- Select Linked Document Record --"
+        searchPlaceholder="Filter records by customer, vehicle, ID..."
+        [allowClear]="false">
+      </app-searchable-select>
     </div>
   </div>
 

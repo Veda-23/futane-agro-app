@@ -13,12 +13,23 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { forkJoin } from 'rxjs';
 
+import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
+
 Chart.register(...registerables);
 
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective, InrPipe, IndianDatePipe],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TranslatePipe,
+    AutoSelectDirective,
+    FormStateDirective,
+    InrPipe,
+    IndianDatePipe,
+    SearchableSelectComponent
+  ],
   templateUrl: './reports.component.html',
   styleUrls: ['./reports.component.css']
 })

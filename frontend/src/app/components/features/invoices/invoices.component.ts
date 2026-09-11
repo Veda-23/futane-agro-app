@@ -12,6 +12,7 @@ import { ResizableTableDirective } from '../../../directives/resizable-table.dir
 import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { NotificationService } from '../../../services/notification.service';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
+import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-invoices',
@@ -23,7 +24,8 @@ import { EmptyStateComponent } from '../../shared/empty-state/empty-state.compon
     AutoSelectDirective,
     ResizableTableDirective,
     IndianDatePipe,
-    EmptyStateComponent
+    EmptyStateComponent,
+    SearchableSelectComponent
   ],
   templateUrl: './invoices.component.html',
   styleUrls: ['./invoices.component.css']

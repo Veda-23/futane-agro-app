@@ -11,6 +11,7 @@ import { FormStateDirective } from '../../../directives/form-state.directive';
 import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
+import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-transports',
@@ -23,7 +24,8 @@ import { EmptyStateComponent } from '../../shared/empty-state/empty-state.compon
     FormStateDirective,
     ResizableTableDirective,
     IndianDatePipe,
-    EmptyStateComponent
+    EmptyStateComponent,
+    SearchableSelectComponent
   ],
   templateUrl: './transports.component.html',
   styleUrls: ['./transports.component.css']

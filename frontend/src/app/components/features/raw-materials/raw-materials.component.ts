@@ -31,6 +31,8 @@ export interface RawMaterialItem {
   createdAt?: string;
 }
 
+import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
+
 @Component({
   selector: 'app-raw-materials',
   standalone: true,
@@ -39,7 +41,8 @@ export interface RawMaterialItem {
     FormsModule,
     TranslatePipe,
     ResizableTableDirective,
-    IndianDatePipe
+    IndianDatePipe,
+    SearchableSelectComponent
   ],
   templateUrl: './raw-materials.component.html',
   styleUrls: ['./raw-materials.component.css']
@@ -55,6 +58,14 @@ export class RawMaterialsComponent implements OnInit {
   hasError: boolean = false;
   rawMaterialsList: RawMaterialItem[] = [];
   vendors: any[] = [];
+
+  get selectableVendors(): any[] {
+    return (this.vendors || []).map(v => ({
+      ...v,
+      id: String(v.id || v.vendorId || ''),
+      gstBadge: v.gstNumber ? `GST: ${v.gstNumber}` : 'Unregistered'
+    }));
+  }
 
   // Subtabs
   selectedSubtab: string = 'all';

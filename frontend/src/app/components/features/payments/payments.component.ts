@@ -34,6 +34,8 @@ export interface PaymentItem {
   createdDate?: string;
 }
 
+import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
+
 @Component({
   selector: 'app-payments',
   standalone: true,
@@ -44,7 +46,8 @@ export interface PaymentItem {
     IndianDatePipe,
     InrPipe,
     AutoSelectDirective,
-    FormStateDirective
+    FormStateDirective,
+    SearchableSelectComponent
   ],
   templateUrl: './payments.component.html',
   styleUrls: ['./payments.component.css']
@@ -128,6 +131,18 @@ export class PaymentsComponent implements OnInit {
     { id: 'Cash', label: 'Cash Receipt', icon: 'bi-cash-stack', badgeClass: 'mode-cash' },
     { id: 'Cheque', label: 'Cheque Clearance', icon: 'bi-card-heading', badgeClass: 'mode-cheque' }
   ];
+
+  get selectableInvoices(): any[] {
+    return (this.invoicesList || []).map(inv => {
+      const remainingVal = inv.sale?.remaining !== undefined ? Number(inv.sale.remaining) : 0;
+      return {
+        invoiceNo: inv.invoiceNo,
+        partyName: inv.party?.partyName || inv.partyName || 'Customer',
+        displayLabel: `${inv.invoiceNo} — ${inv.party?.partyName || 'Customer'}`,
+        dueText: `Due: ₹${remainingVal.toLocaleString('en-IN')}`
+      };
+    });
+  }
 
   constructor(
     private apiService: ApiService,

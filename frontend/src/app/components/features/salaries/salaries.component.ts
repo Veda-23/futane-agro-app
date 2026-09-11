@@ -11,6 +11,7 @@ import { FormStateDirective } from '../../../directives/form-state.directive';
 import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
+import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-salaries',
@@ -23,7 +24,8 @@ import { EmptyStateComponent } from '../../shared/empty-state/empty-state.compon
     FormStateDirective,
     IndianDatePipe,
     ResizableTableDirective,
-    EmptyStateComponent
+    EmptyStateComponent,
+    SearchableSelectComponent
   ],
   templateUrl: './salaries.component.html',
   styleUrls: ['./salaries.component.css']

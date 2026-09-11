@@ -126,11 +126,17 @@
         </div>
 
         <!-- Driver Filter -->
-        <div class="filter-select-wrap filter-select-driver">
-          <select class="toolbar-select" [(ngModel)]="filterDriver" (change)="currentPage = 1" aria-label="Filter by driver">
-            <option value="ALL">All Drivers</option>
-            <option *ngFor="let d of drivers" [value]="d.id">{{ d.driverName }}</option>
-          </select>
+        <div class="filter-select-wrap filter-select-driver" style="min-width: 170px;">
+          <app-searchable-select
+            [items]="drivers"
+            bindLabel="driverName"
+            bindValue="id"
+            subLabelKey="mobile"
+            placeholder="All Drivers"
+            searchPlaceholder="Filter drivers..."
+            [(ngModel)]="filterDriver"
+            (change)="currentPage = 1">
+          </app-searchable-select>
         </div>
 
         <!-- Reset Filters Trigger -->
@@ -558,19 +564,17 @@
               <label class="form-label" for="trDriver">
                 Assigned Driver <span class="req-star">*</span>
               </label>
-              <div class="input-with-icon">
-                <i class="bi bi-person-badge select-icon"></i>
-                <select id="trDriver" 
-                        class="form-control form-select-custom form-input-with-icon" 
-                        [(ngModel)]="transportsForm.driverId" 
-                        name="trDriver" 
-                        required>
-                  <option value="" disabled selected>-- Select Driver --</option>
-                  <option *ngFor="let d of drivers" [value]="d.id">
-                    {{ d.driverName }} ({{ d.mobile || 'No Mobile' }})
-                  </option>
-                </select>
-              </div>
+              <app-searchable-select
+                id="trDriver"
+                [items]="drivers"
+                bindLabel="driverName"
+                bindValue="id"
+                subLabelKey="mobile"
+                placeholder="-- Select Commercial Driver --"
+                searchPlaceholder="Search driver by name, phone..."
+                [(ngModel)]="transportsForm.driverId"
+                name="trDriver">
+              </app-searchable-select>
               <small class="form-helper-text" *ngIf="drivers.length === 0">
                 No drivers registered yet. <a (click)="goToDrivers()" class="text-link cursor-pointer">Add drivers in Driver Directory</a>
               </small>

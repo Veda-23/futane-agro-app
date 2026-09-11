@@ -135,11 +135,18 @@
     </div>
 
     <!-- Party Dropdown -->
-    <div class="inv-filter-field party-field">
-      <select [(ngModel)]="filterPartyId" name="invParty" (change)="currentPage=1" class="inv-control inv-select">
-        <option value="">All Parties</option>
-        <option *ngFor="let p of parties" [value]="p.id">{{ p.partyName }}</option>
-      </select>
+    <div class="inv-filter-field party-field" style="min-width: 180px;">
+      <app-searchable-select
+        [items]="parties"
+        bindLabel="partyName"
+        bindValue="id"
+        subLabelKey="gstNumber"
+        placeholder="All Parties"
+        searchPlaceholder="Filter parties..."
+        [(ngModel)]="filterPartyId"
+        name="invParty"
+        (change)="currentPage=1">
+      </app-searchable-select>
     </div>
 
     <!-- Payment Status Dropdown -->
@@ -614,13 +621,19 @@
 
         <div class="drawer-form-grid">
           <div class="drawer-form-group col-span-2">
-            <label for="invPartySelect" class="form-label">Customer / Party Name <span class="text-danger">*</span></label>
-            <select id="invPartySelect" [(ngModel)]="newInvoice.partyId" name="partyId" (change)="onPartySelectChange()" class="form-select drawer-control" required>
-              <option value="" disabled>Select billing party...</option>
-              <option *ngFor="let p of parties" [value]="p.id">
-                {{ p.partyName }} ({{ p.gstNumber || 'No GSTIN' }})
-              </option>
-            </select>
+            <label class="form-label">Customer / Party Name <span class="text-danger">*</span></label>
+            <app-searchable-select
+              id="invPartySelect"
+              [items]="parties"
+              bindLabel="partyName"
+              bindValue="id"
+              subLabelKey="gstNumber"
+              placeholder="Select billing party..."
+              searchPlaceholder="Search party name, GSTIN..."
+              [(ngModel)]="newInvoice.partyId"
+              name="partyId"
+              (change)="onPartySelectChange()">
+            </app-searchable-select>
           </div>
 
           <div class="drawer-form-group">

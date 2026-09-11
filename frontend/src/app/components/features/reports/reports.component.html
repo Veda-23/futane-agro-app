@@ -41,12 +41,20 @@
 
       <!-- CENTER: Secondary Filters -->
       <div class="filter-group-center">
-        <div class="form-group mb-0" style="width: 220px;" *ngIf="['sales','party_ledger'].includes(reportFilter.type)">
+        <div class="form-group mb-0" style="width: 260px;" *ngIf="['sales','party_ledger'].includes(reportFilter.type)">
           <label class="filter-label"><i class="bi bi-building me-1"></i> Customer</label>
-          <select [(ngModel)]="reportFilter.partyId" name="repParty" (change)="runReport()" class="form-control form-control-sm">
-            <option value="">{{ reportFilter.type === 'party_ledger' ? '— Select Customer —' : 'All Customers' }}</option>
-            <option *ngFor="let p of parties" [value]="p.id">{{ p.partyName }}</option>
-          </select>
+          <app-searchable-select
+            [items]="parties"
+            bindLabel="partyName"
+            bindValue="id"
+            subLabelKey="city"
+            [(ngModel)]="reportFilter.partyId"
+            name="repParty"
+            (ngModelChange)="runReport()"
+            [placeholder]="reportFilter.type === 'party_ledger' ? '— Select Customer —' : 'All Customers'"
+            searchPlaceholder="Search customer account..."
+            [allowClear]="reportFilter.type !== 'party_ledger'">
+          </app-searchable-select>
         </div>
 
         <div class="btn-group-sm d-flex align-items-end gap-1 pb-1" *ngIf="reportFilter.type !== 'inventory'">

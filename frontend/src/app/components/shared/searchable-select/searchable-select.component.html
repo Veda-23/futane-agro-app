@@ -1,0 +1,101 @@
+<div class="searchable-select-wrapper" [class.is-open]="isOpen" [class.is-disabled]="disabled" (keydown)="onKeyDown($event)">
+  <!-- Trigger Control (Looks like a form-select) -->
+  <div 
+    class="select-trigger" 
+    [class.has-value]="getSelectedItem()"
+    [attr.tabindex]="disabled ? -1 : 0"
+    [attr.id]="id"
+    (click)="toggleDropdown($event)"
+    role="combobox"
+    [attr.aria-expanded]="isOpen">
+    
+    <div class="trigger-content">
+      <ng-container *ngIf="getSelectedItem() as item; else placeholderTpl">
+        <span class="selected-label">{{ getItemLabel(item) }}</span>
+        <span class="selected-sublabel" *ngIf="getItemSubLabel(item)">
+          {{ getItemSubLabel(item) }}
+        </span>
+      </ng-container>
+      <ng-template #placeholderTpl>
+        <span class="trigger-placeholder">{{ placeholder }}</span>
+      </ng-template>
+    </div>
+
+    <div class="trigger-actions">
+      <!-- Clear Button -->
+      <button 
+        type="button" 
+        *ngIf="allowClear && getSelectedItem() && !disabled" 
+        class="btn-clear-selection" 
+        (click)="clearSelection($event)"
+        title="Clear selection"
+        aria-label="Clear selection">
+        <i class="bi bi-x-circle-fill"></i>
+      </button>
+
+      <!-- Chevron Arrow -->
+      <i class="bi bi-chevron-down trigger-chevron"></i>
+    </div>
+  </div>
+
+  <!-- Floating Dropdown Overlay -->
+  <div class="select-dropdown-panel animate-pop-in" *ngIf="isOpen" (click)="$event.stopPropagation()">
+    <!-- Sticky Search Box -->
+    <div class="dropdown-search-box">
+      <i class="bi bi-search search-icon"></i>
+      <input 
+        #searchInput
+        type="text" 
+        class="search-field" 
+        [placeholder]="searchPlaceholder"
+        [(ngModel)]="searchQuery"
+        (input)="onSearchInput()"
+        (keydown)="$event.stopPropagation()"
+        aria-label="Search options">
+      
+      <!-- Clear Search Query -->
+      <button 
+        type="button" 
+        *ngIf="searchQuery" 
+        class="btn-clear-query" 
+        (click)="clearSearch($event)"
+        title="Clear search">
+        <i class="bi bi-x"></i>
+      </button>
+
+      <!-- Match Count Pill -->
+      <span class="match-count-badge">
+        {{ filteredItems.length }} / {{ items.length }}
+      </span>
+    </div>
+
+    <!-- Options List -->
+    <div class="select-dropdown-list" role="listbox">
+      <div 
+        *ngFor="let item of filteredItems; let i = index" 
+        class="select-option"
+        [class.selected]="getItemValue(item) === value"
+        [class.focused]="i === focusedIndex"
+        (click)="selectItem(item, $event)"
+        role="option"
+        [attr.aria-selected]="getItemValue(item) === value">
+        
+        <div class="option-text-group">
+          <span class="option-main-label">{{ getItemLabel(item) }}</span>
+          <span class="option-sub-label" *ngIf="getItemSubLabel(item)">
+            {{ getItemSubLabel(item) }}
+          </span>
+        </div>
+
+        <i class="bi bi-check2 option-check-icon" *ngIf="getItemValue(item) === value"></i>
+      </div>
+
+      <!-- Empty State -->
+      <div class="select-empty-state" *ngIf="filteredItems.length === 0">
+        <i class="bi bi-search text-muted mb-1" style="font-size: 18px;"></i>
+        <p class="empty-title">No matching records found</p>
+        <span class="empty-subtitle">Try searching with a different keyword</span>
+      </div>
+    </div>
+  </div>
+</div>

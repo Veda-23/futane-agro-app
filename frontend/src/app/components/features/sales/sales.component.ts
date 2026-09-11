@@ -12,6 +12,7 @@ import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { InrPipe } from '../../../pipes/inr-currency.pipe';
 import { AutoSelectDirective } from '../../../directives/auto-select.directive';
 import { FormStateDirective } from '../../../directives/form-state.directive';
+import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
 
 declare var Razorpay: any;
 
@@ -47,7 +48,8 @@ export interface SaleItem {
     IndianDatePipe,
     InrPipe,
     AutoSelectDirective,
-    FormStateDirective
+    FormStateDirective,
+    SearchableSelectComponent
   ],
   templateUrl: './sales.component.html',
   styleUrls: ['./sales.component.css']

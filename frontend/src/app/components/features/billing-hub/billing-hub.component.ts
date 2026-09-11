@@ -15,13 +15,16 @@ import { NotificationService } from '../../../services/notification.service';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
+import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
+
 @Component({
   selector: 'app-billing-hub',
   standalone: true,
   imports: [
     CommonModule, FormsModule, TranslatePipe, DecimalPipe,
     AutoSelectDirective, FormStateDirective, InrPipe, IndianDatePipe,
-    QrCodeComponent, FilterBarComponent, EmptyStateComponent
+    QrCodeComponent, FilterBarComponent, EmptyStateComponent,
+    SearchableSelectComponent
   ],
   templateUrl: './billing-hub.component.html',
   styleUrls: ['./billing-hub.component.css']
@@ -406,6 +409,15 @@ export class BillingHubComponent implements OnInit, OnChanges {
       default:
         return item.id || 'Record';
     }
+  }
+
+  get selectableRecords(): any[] {
+    const records = this.getFilteredRecords();
+    return records.map(item => ({
+      id: String(this.getRecordId(item)),
+      label: this.getRecordLabel(item),
+      subLabel: this.getRecordDateString(item)
+    }));
   }
 
   getMatchCountText(): string {

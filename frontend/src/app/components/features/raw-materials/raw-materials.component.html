@@ -227,12 +227,18 @@
       <div class="form-row-2col">
         <div class="form-group">
           <label for="vendorSelect">Select Approved Vendor <span class="req-star">*</span></label>
-          <select id="vendorSelect" [(ngModel)]="rawMaterialsForm.id" name="vendorSelect" required class="form-control-compact">
-            <option value="" disabled>-- Select Vendor / Supplier --</option>
-            <option *ngFor="let v of vendors" [value]="v.id || v.vendorId">
-              {{ v.vendorName }} (GST: {{ v.gstNumber || 'Unregistered' }})
-            </option>
-          </select>
+          <app-searchable-select
+            id="vendorSelect"
+            [items]="selectableVendors"
+            bindLabel="vendorName"
+            bindValue="id"
+            subLabelKey="gstBadge"
+            [(ngModel)]="rawMaterialsForm.id"
+            name="vendorSelect"
+            placeholder="-- Select Vendor / Supplier --"
+            searchPlaceholder="Type vendor name or GSTIN..."
+            [allowClear]="true">
+          </app-searchable-select>
         </div>
 
         <div class="form-group">
@@ -329,10 +335,16 @@
             <!-- Filter: Vendor -->
             <div class="filter-field-group">
               <label>Supplier / Vendor</label>
-              <select [(ngModel)]="filterVendorId" class="filter-select">
-                <option value="">All Approved Vendors</option>
-                <option *ngFor="let v of vendors" [value]="v.id || v.vendorId">{{ v.vendorName }}</option>
-              </select>
+              <app-searchable-select
+                [items]="selectableVendors"
+                bindLabel="vendorName"
+                bindValue="id"
+                [(ngModel)]="filterVendorId"
+                (ngModelChange)="currentPage = 1"
+                placeholder="All Approved Vendors"
+                searchPlaceholder="Search vendor..."
+                [allowClear]="true">
+              </app-searchable-select>
             </div>
 
             <!-- Filter: Material Category -->

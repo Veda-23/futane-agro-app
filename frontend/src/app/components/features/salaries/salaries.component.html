@@ -513,20 +513,18 @@
               <label class="form-label" for="salEmployee">
                 Staff Member <span class="req-star">*</span>
               </label>
-              <div class="input-with-icon">
-                <i class="bi bi-person select-icon"></i>
-                <select id="salEmployee" 
-                        class="form-control form-select-custom" 
-                        [(ngModel)]="salariesForm.id" 
-                        name="salEmp" 
-                        required 
-                        (change)="onEmployeeSelectChange()">
-                  <option value="" disabled selected>-- Select Staff Member --</option>
-                  <option *ngFor="let emp of employees" [value]="emp.id">
-                    {{ emp.empName }} (₹{{ emp.salary | number:'1.0-0' }}/mo) — {{ emp.designation || 'Staff' }}
-                  </option>
-                </select>
-              </div>
+              <app-searchable-select
+                id="salEmployee"
+                [items]="employees"
+                bindLabel="empName"
+                bindValue="id"
+                subLabelKey="designation"
+                placeholder="-- Select Staff Member --"
+                searchPlaceholder="Search staff by name or role..."
+                [(ngModel)]="salariesForm.id"
+                name="salEmp"
+                (change)="onEmployeeSelectChange()">
+              </app-searchable-select>
             </div>
 
             <!-- Month & Year in 2 Columns -->

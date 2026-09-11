@@ -11,6 +11,8 @@ import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 import { QrScannerModalComponent } from '../../shared/qr-scanner-modal/qr-scanner-modal.component';
 
+import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
+
 @Component({
   selector: 'app-dispatch',
   standalone: true,
@@ -22,7 +24,8 @@ import { QrScannerModalComponent } from '../../shared/qr-scanner-modal/qr-scanne
     ResizableTableDirective,
     IndianDatePipe,
     EmptyStateComponent,
-    QrScannerModalComponent
+    QrScannerModalComponent,
+    SearchableSelectComponent
   ],
   templateUrl: './dispatch.component.html',
   styleUrls: ['./dispatch.component.css']
@@ -164,6 +167,14 @@ export class DispatchComponent implements OnInit {
         .map(d => String(d.sale?.id || d.saleId || ''))
     );
     return this.sales.filter(s => !dispatchedSaleIds.has(String(s.id)));
+  }
+
+  get selectableSales(): any[] {
+    return this.availableSales.map(s => ({
+      id: s.id,
+      label: `${s.party?.partyName || s.partyName || 'Customer #' + s.id} — ${s.crateType || 'Crates'}`,
+      subLabel: `${s.date || s.saleDate || ''} • Qty: ${s.quantity || s.cratesCount || 0}`
+    }));
   }
 
   get selectedSaleDetails(): any {

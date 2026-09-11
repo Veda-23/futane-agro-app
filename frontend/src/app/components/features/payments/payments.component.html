@@ -102,20 +102,18 @@
               <label class="form-label" for="payParty">
                 Customer / Party <span class="required-star">*</span>
               </label>
-              <div class="input-with-icon">
-                <i class="bi bi-building input-prefix-icon"></i>
-                <select 
-                  id="payParty" 
-                  class="form-control" 
-                  name="payParty" 
-                  [(ngModel)]="paymentsForm.partyId" 
-                  required>
-                  <option value="" disabled>-- Select Customer Account --</option>
-                  <option *ngFor="let p of parties" [value]="p.id">
-                    {{ p.partyName }} {{ p.city ? '(' + p.city + ')' : '' }}
-                  </option>
-                </select>
-              </div>
+              <app-searchable-select
+                id="payParty"
+                [items]="parties"
+                bindLabel="partyName"
+                bindValue="id"
+                subLabelKey="city"
+                [(ngModel)]="paymentsForm.partyId"
+                name="payParty"
+                placeholder="-- Select Customer Account --"
+                searchPlaceholder="Type customer name or city..."
+                [allowClear]="true">
+              </app-searchable-select>
 
               <!-- Live Outstanding Balance Badge -->
               <div *ngIf="paymentsForm.partyId" class="party-outstanding-badge">
@@ -131,19 +129,18 @@
               <label class="form-label" for="payInvoice">
                 Linked Invoice (Optional)
               </label>
-              <div class="input-with-icon">
-                <i class="bi bi-file-earmark-text input-prefix-icon"></i>
-                <select 
-                  id="payInvoice" 
-                  class="form-control" 
-                  name="payInvoice" 
-                  [(ngModel)]="paymentsForm.invoiceNo">
-                  <option value="">General On-Account Receipt (No Invoice)</option>
-                  <option *ngFor="let inv of invoicesList" [value]="inv.invoiceNo">
-                    {{ inv.invoiceNo }} — Due: {{ (inv.sale?.remaining !== undefined ? inv.sale.remaining : 0) | inr }}
-                  </option>
-                </select>
-              </div>
+              <app-searchable-select
+                id="payInvoice"
+                [items]="selectableInvoices"
+                bindLabel="displayLabel"
+                bindValue="invoiceNo"
+                subLabelKey="dueText"
+                [(ngModel)]="paymentsForm.invoiceNo"
+                name="payInvoice"
+                placeholder="General On-Account Receipt (No Invoice)"
+                searchPlaceholder="Search invoice # or customer..."
+                [allowClear]="true">
+              </app-searchable-select>
             </div>
           </div>
         </div>
@@ -454,10 +451,16 @@
             <!-- Filter: Party -->
             <div class="filter-field-group">
               <label class="filter-field-label">Customer / Party</label>
-              <select class="form-select-filter" [(ngModel)]="filterPartyId" (change)="currentPage = 1">
-                <option value="">All Customers</option>
-                <option *ngFor="let p of parties" [value]="p.id">{{ p.partyName }}</option>
-              </select>
+              <app-searchable-select
+                [items]="parties"
+                bindLabel="partyName"
+                bindValue="id"
+                [(ngModel)]="filterPartyId"
+                (ngModelChange)="currentPage = 1"
+                placeholder="All Customers"
+                searchPlaceholder="Search customer..."
+                [allowClear]="true">
+              </app-searchable-select>
             </div>
 
             <!-- Filter: Payment Mode -->
