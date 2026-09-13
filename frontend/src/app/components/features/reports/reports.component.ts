@@ -11,9 +11,10 @@ import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { Chart, registerables } from 'chart.js';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
 
 import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
+import { ThemeService } from '../../../services/theme.service';
 
 Chart.register(...registerables);
 
@@ -62,11 +63,13 @@ export class ReportsComponent implements OnInit, OnDestroy {
   filteredReportData: any[] = [];
   reportTotals = { amount: 0, qty: 0, count: 0 };
   private reportChart: Chart | null = null;
+  private themeSub?: Subscription;
   tableDensity: 'compact' | 'comfortable' | 'spacious' = 'comfortable';
 
   constructor(
     private apiService: ApiService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    public themeService: ThemeService
   ) {}
 
   ngOnInit() {
@@ -74,6 +77,11 @@ export class ReportsComponent implements OnInit, OnDestroy {
     if (saved === 'compact' || saved === 'comfortable' || saved === 'spacious') {
       this.tableDensity = saved;
     }
+    this.themeSub = this.themeService.isDark$.subscribe(() => {
+      if (this.reportChart) {
+        setTimeout(() => this.renderReportChart(), 50);
+      }
+    });
     this.loadData();
   }
 
@@ -85,6 +93,9 @@ export class ReportsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    if (this.themeSub) {
+      this.themeSub.unsubscribe();
+    }
     if (this.reportChart) {
       this.reportChart.destroy();
     }
@@ -173,6 +184,25 @@ export class ReportsComponent implements OnInit, OnDestroy {
       year: new Date().getFullYear().toString()
     };
     this.runReport();
+  }
+
+  setReportType(type: string) {
+    this.reportFilter.type = type;
+    this.runReport();
+  }
+
+  getReportCount(type: string): number {
+    switch (type) {
+      case 'production': return (this.ppdList || []).length;
+      case 'production_monthly': return 12;
+      case 'sales': return (this.salesList || []).length;
+      case 'party_ledger': return (this.parties || []).length;
+      case 'inventory': return (this.inventoryList || []).length;
+      case 'salary': return (this.salariesList || []).length;
+      case 'expense': return (this.expensesList || []).length;
+      case 'transport': return (this.transportsList || []).length;
+      default: return 0;
+    }
   }
 
   runReport(isManual: boolean = false) {
@@ -443,37 +473,86 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
     if (labels.length === 0) return;
 
+    const isDark = this.themeService.isDark ||
+      document.body.classList.contains('dark-theme') ||
+      document.body.classList.contains('theme-dark');
+
+    const tickColor = isDark ? '#94A3B8' : '#64748B';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)';
+    const tooltipBg = isDark ? '#1E293B' : '#0F172A';
+    const tooltipText = isDark ? '#F8FAFC' : '#FFFFFF';
+
+    const isBar = labels.length <= 12;
+
     this.reportChart = new Chart(canvas, {
-      type: labels.length <= 12 ? 'bar' : 'line',
+      type: isBar ? 'bar' : 'line',
       data: {
         labels,
         datasets: [{
           label: this.reportFilter.type === 'sales' ? 'Revenue (₹)' : 'Production (units)',
           data: values,
-          backgroundColor: 'rgba(217,119,6,0.25)',
-          borderColor: '#d97706',
+          backgroundColor: isBar ? 'rgba(5, 150, 105, 0.75)' : 'rgba(5, 150, 105, 0.12)',
+          borderColor: '#059669',
           borderWidth: 2,
-          borderRadius: 6,
+          borderRadius: isBar ? 4 : 0,
           fill: true,
-          tension: 0.35
+          tension: 0.25,
+          pointBackgroundColor: '#059669',
+          pointBorderColor: isDark ? '#131C2E' : '#FFFFFF',
+          pointBorderWidth: 1.5,
+          pointRadius: isBar ? 0 : 3.5,
+          pointHoverRadius: 5
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
         plugins: {
           legend: { display: false },
           tooltip: {
+            backgroundColor: tooltipBg,
+            titleColor: tooltipText,
+            bodyColor: tooltipText,
+            borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+            borderWidth: 1,
+            padding: 10,
+            cornerRadius: 8,
+            displayColors: false,
             callbacks: {
               label: ctx => this.reportFilter.type === 'sales'
-                ? `₹${Number(ctx.raw).toLocaleString('en-IN')}`
-                : `${ctx.raw} units`
+                ? `Revenue: ₹${Number(ctx.raw).toLocaleString('en-IN')}`
+                : `Production: ${Number(ctx.raw).toLocaleString('en-IN')} units`
             }
           }
         },
         scales: {
-          x: { ticks: { maxRotation: 45, font: { size: 11 } } },
-          y: { beginAtZero: true, ticks: { font: { size: 11 } } }
+          x: {
+            grid: { color: gridColor },
+            ticks: {
+              color: tickColor,
+              maxRotation: 45,
+              font: { size: 11, family: "'Inter', sans-serif" }
+            }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: gridColor },
+            ticks: {
+              color: tickColor,
+              font: { size: 11, family: "'Inter', sans-serif" },
+              callback: (val) => {
+                const num = Number(val);
+                if (this.reportFilter.type === 'sales') {
+                  return num >= 100000 ? `₹${(num / 100000).toFixed(1)}L` : (num >= 1000 ? `₹${(num / 1000).toFixed(0)}k` : `₹${num}`);
+                }
+                return num >= 1000 ? `${(num / 1000).toFixed(0)}k` : `${num}`;
+              }
+            }
+          }
         }
       }
     });

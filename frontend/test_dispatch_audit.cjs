@@ -120,7 +120,7 @@ const path = require('path');
   await page.waitForSelector('.dispatch-module-container', { timeout: 10000 });
   await page.waitForTimeout(1200);
 
-  const outDir = 'C:/Users/Vedant/.gemini/antigravity-ide/brain/31dd588e-fd68-4426-9deb-3030e10b9d4e';
+  const outDir = 'C:/Users/Vedant/.gemini/antigravity-ide/brain/63ae1ca7-044a-4a77-a0c6-a06dc2558ecf/scratch';
 
   // 1. Capture Main View
   console.log('Capturing dispatch_redesign_main.png...');
@@ -131,7 +131,7 @@ const path = require('path');
 
   // 2. Status Filter: In Transit
   console.log('Filtering by In Transit...');
-  const transitPill = page.locator('.status-pill-btn', { hasText: 'In Transit' });
+  const transitPill = page.locator('.erp-filter-pill', { hasText: 'In Transit' });
   if (await transitPill.isVisible()) {
     await transitPill.click();
     await page.waitForTimeout(800);
@@ -144,7 +144,7 @@ const path = require('path');
 
   // 3. Search Empty State
   console.log('Testing search empty state...');
-  const searchInput = page.locator('.table-search-input');
+  const searchInput = page.locator('.erp-search-input');
   if (await searchInput.isVisible()) {
     await searchInput.fill('NonExistentTruckXYZ');
     await page.waitForTimeout(800);
@@ -160,7 +160,7 @@ const path = require('path');
     await searchInput.fill('');
     await page.waitForTimeout(400);
   }
-  const allPill = page.locator('.status-pill-btn', { hasText: 'All' });
+  const allPill = page.locator('.erp-filter-pill', { hasText: 'All' });
   if (await allPill.isVisible()) {
     await allPill.click();
     await page.waitForTimeout(600);

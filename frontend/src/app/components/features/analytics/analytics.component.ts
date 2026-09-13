@@ -46,10 +46,15 @@ export class AnalyticsComponent implements OnInit {
   activeViewMode: 'cockpit' | 'reports' | 'embed' = 'cockpit';
   activeAnalyticsReport: 'sales' | 'production' | 'expenses' | 'pl' = 'sales';
 
+  // Table Density Mode
+  tableDensity: 'compact' | 'normal' | 'spacious' = 'normal';
+
   // Embed State
   powerBiEmbedUrl: SafeResourceUrl | null = null;
   powerBiUrlInput: string = '';
   powerBiSimulatorActive: boolean = true;
+  isEmbedFullscreen: boolean = false;
+  isEmbedRefreshing: boolean = false;
 
   isLoading: boolean = false;
   hasError: boolean = false;
@@ -248,6 +253,32 @@ export class AnalyticsComponent implements OnInit {
         this.notificationService.success('URL Saved', 'Power BI / Grafana embed URL saved.');
       }
     });
+  }
+
+  setDensity(mode: 'compact' | 'normal' | 'spacious'): void {
+    this.tableDensity = mode;
+  }
+
+  toggleEmbedFullscreen(): void {
+    this.isEmbedFullscreen = !this.isEmbedFullscreen;
+  }
+
+  openEmbedInNewTab(): void {
+    if (this.powerBiUrlInput && this.isSafeUrl(this.powerBiUrlInput)) {
+      window.open(this.powerBiUrlInput, '_blank', 'noopener,noreferrer');
+    }
+  }
+
+  refreshEmbed(): void {
+    if (!this.powerBiUrlInput) return;
+    this.isEmbedRefreshing = true;
+    const current = this.powerBiUrlInput;
+    this.powerBiEmbedUrl = null;
+    setTimeout(() => {
+      this.powerBiEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(current);
+      this.isEmbedRefreshing = false;
+      this.notificationService.info('Embed Refreshed', 'Telemetry dashboard reloaded.');
+    }, 400);
   }
 
   clearPowerBiUrl(): void {

@@ -61,6 +61,7 @@ export class ExpensesComponent implements OnInit {
   };
 
   editingId: any = null;
+  isDrawerOpen: boolean = false;
   isLoading: boolean = false;
   hasError: boolean = false;
   errorMessage: string = '';
@@ -191,12 +192,37 @@ export class ExpensesComponent implements OnInit {
     return counts;
   }
 
+  activeSubtab: string = 'ALL';
+
+  setSubtab(tab: string) {
+    this.activeSubtab = tab;
+    if (tab === 'ALL' || tab === 'high_value') {
+      this.selectedCategory = 'ALL';
+    } else {
+      this.selectedCategory = tab;
+    }
+    this.currentPage = 1;
+  }
+
+  getSubtabCount(tab: string): number {
+    if (!this.expensesList) return 0;
+    if (tab === 'ALL') return this.expensesList.length;
+    if (tab === 'high_value') return this.expensesList.filter(e => Number(e.amount) >= 10000).length;
+    return this.expensesList.filter(e => (e.category || '').toLowerCase() === tab.toLowerCase()).length;
+  }
+
+  printLedger() {
+    window.print();
+  }
+
   // --- Filtered & Sorted Records ---
   get filteredList(): ExpenseItem[] {
     let list = [...(this.expensesList || [])];
 
-    // Filter by Category
-    if (this.selectedCategory !== 'ALL') {
+    // Subtab High Value Filter
+    if (this.activeSubtab === 'high_value') {
+      list = list.filter(e => Number(e.amount) >= 10000);
+    } else if (this.selectedCategory !== 'ALL') {
       list = list.filter(e => (e.category || '').toLowerCase() === this.selectedCategory.toLowerCase());
     }
 
@@ -251,6 +277,7 @@ export class ExpensesComponent implements OnInit {
 
   setCategoryFilter(cat: string) {
     this.selectedCategory = cat;
+    this.activeSubtab = cat;
     this.currentPage = 1;
   }
 
@@ -381,16 +408,14 @@ export class ExpensesComponent implements OnInit {
       paidBy: e.paidBy || '',
       paymentMode: e.paymentMode || 'Cash'
     };
+    this.isDrawerOpen = true;
 
-    const formEl = document.querySelector('.expense-form-card');
-    if (formEl) {
-      formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
     this.notificationService.info('Editing Expense', `Editing voucher #${e.id} (${e.category})`);
   }
 
   cancelEdit() {
     this.editingId = null;
+    this.isDrawerOpen = false;
     this.expenseForm = {
       expenseDate: this.getTodayDate(),
       category: 'Maintenance',
@@ -399,6 +424,11 @@ export class ExpensesComponent implements OnInit {
       paidBy: '',
       paymentMode: 'Cash'
     };
+  }
+
+  openDrawer() {
+    this.cancelEdit();
+    this.isDrawerOpen = true;
   }
 
   deleteExpense(id: any) {

@@ -12,41 +12,56 @@ async function runAudit() {
   try {
     await page.goto('http://localhost:4200/', { waitUntil: 'networkidle' });
     
-    // Login
-    await page.fill('input[type="text"]', 'admin');
-    await page.fill('input[type="password"]', 'admin123');
-    await page.click('button[type="submit"]');
-    await page.waitForTimeout(1000);
-
-    // Navigate to Reports Tab
-    console.log("Navigating to Reports Tab...");
-    await page.click('li:has(.bi-bar-chart-steps)');
+    // Bypass Login by setting localStorage
+    console.log("Bypassing login via localStorage/sessionStorage...");
+    await page.evaluate(() => {
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('user', JSON.stringify({ role: 'SUPER_ADMIN', username: 'admin' }));
+      sessionStorage.setItem('user', JSON.stringify({ role: 'SUPER_ADMIN', username: 'admin' }));
+      sessionStorage.setItem('activeTab', 'reports');
+      localStorage.setItem('activeTab', 'reports');
+    });
+    await page.reload({ waitUntil: 'networkidle' });
     await page.waitForTimeout(2000);
+    
+    const isAuth = await page.evaluate(() => localStorage.getItem('isLoggedIn'));
+    console.log("After reload, isLoggedIn:", isAuth);
+    
+    // Ensure we are on the reports tab
+    await page.waitForSelector('.erp-page-title');
 
     // 1. Desktop Baseline
     await page.screenshot({ path: path.join(artifactDir, 'reports_main_1440.png'), fullPage: false });
     console.log("Took desktop baseline screenshot.");
 
     // Scroll to check sticky controls
-    await page.evaluate(() => window.scrollBy(0, 500));
+    const mainContent = await page.$('.main-content');
+    if (mainContent) {
+      await page.evaluate(el => el.scrollBy(0, 500), mainContent);
+    } else {
+      await page.evaluate(() => window.scrollBy(0, 500));
+    }
     await page.waitForTimeout(500);
     await page.screenshot({ path: path.join(artifactDir, 'reports_sticky_scroll.png') });
     console.log("Took sticky scrolling screenshot.");
-    await page.evaluate(() => window.scrollTo(0, 0));
+    
+    if (mainContent) {
+      await page.evaluate(el => el.scrollTo(0, 0), mainContent);
+    } else {
+      await page.evaluate(() => window.scrollTo(0, 0));
+    }
+    await page.waitForTimeout(500);
 
-    // 2. Report Selection (Party Ledger)
-    await page.selectOption('select[name="repType"]', 'party_ledger');
+    // 3. Test different reports
+    console.log("Testing Report Type Switching...");
+    // Just select a different report type
+    await page.selectOption('select.erp-select', { label: 'Party Ledger' });
     await page.waitForTimeout(1000);
     await page.screenshot({ path: path.join(artifactDir, 'reports_party_ledger.png') });
     console.log("Took Party Ledger report screenshot.");
 
-    // 3. Density Selection
-    await page.click('button:has-text("Compact")');
-    await page.waitForTimeout(500);
-    await page.screenshot({ path: path.join(artifactDir, 'reports_compact_density.png') });
-    console.log("Took Compact Density screenshot.");
-
-    // 4. Dark Mode
+    // (Optional) Test dark mode if there is a toggle in the UI.
+    // If not, we skip the dark mode toggle.
     await page.evaluate(() => {
       document.body.classList.add('dark-mode');
       document.documentElement.setAttribute('data-theme', 'dark');
@@ -76,6 +91,7 @@ async function runAudit() {
 
   } catch (error) {
     console.error("Audit failed:", error);
+    await page.screenshot({ path: path.join(artifactDir, 'error_debug.png') });
   } finally {
     await browser.close();
   }

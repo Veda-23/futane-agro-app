@@ -50,8 +50,8 @@
                 *ngIf="!isViewer()"
                 (click)="toggleAddForm()" 
                 [title]="isAddFormOpen ? 'Close registration form' : 'Register new vendor / supplier'">
-          <i class="bi" [ngClass]="isAddFormOpen ? 'bi-x-lg' : 'bi-plus-circle-fill'"></i>
-          <span>{{ isAddFormOpen ? 'Close Form' : '+ Register Supplier' }}</span>
+          <i class="bi" [ngClass]="isAddFormOpen ? 'bi-x-lg' : 'bi-plus-lg'"></i>
+          <span>{{ isAddFormOpen ? 'Close Form' : 'Register Supplier' }}</span>
         </button>
       </div>
     </div>
@@ -195,54 +195,53 @@
     </div>
   </div>
 
-  <!-- ── 4. COLLAPSIBLE ADD / EDIT SUPPLIER DRAWER/PANEL ────────────── -->
-  <div id="vendor-form-container" class="vendor-form-panel card shadow-sm mb-4 animate-slide-down no-print" *ngIf="isAddFormOpen && !isViewer()">
-    <div class="form-panel-header">
-      <div class="form-title-group">
-        <i class="bi" [ngClass]="editingVendorId ? 'bi-pencil-square text-warning' : 'bi-plus-circle text-primary'"></i>
-        <h3 class="form-title-text">{{ editingVendorId ? 'Edit Supplier Profile' : 'Register New Vendor / Supplier' }}</h3>
-        <span class="form-mode-badge" [ngClass]="editingVendorId ? 'badge-editing' : 'badge-new'">
-          {{ editingVendorId ? 'Editing ID #' + editingVendorId : 'New Master Record' }}
-        </span>
+  <!-- ── 4. SLIDE-OUT DRAWER FOR SUPPLIER REGISTRATION ────────────── -->
+  <div class="erp-drawer-overlay" *ngIf="isAddFormOpen && !isViewer()" (click)="cancelEdit()"></div>
+  <div class="erp-drawer" *ngIf="isAddFormOpen && !isViewer()" [class.open]="isAddFormOpen && !isViewer()">
+    <div class="erp-drawer-header">
+      <div>
+        <h3 class="erp-drawer-title">{{ editingVendorId ? 'Edit Supplier Profile' : 'Register New Vendor / Supplier' }}</h3>
+        <p class="erp-drawer-subtitle">{{ editingVendorId ? 'Editing ID #' + editingVendorId : 'Create new master record' }}</p>
       </div>
-      <button type="button" class="btn-close-panel" (click)="cancelEdit()" title="Close Form">
+      <button type="button" class="btn-action-icon" (click)="cancelEdit()" title="Close Form">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
 
-    <form class="form-panel-body" (ngSubmit)="saveVendor()">
-      <div class="vendor-enterprise-grid">
-        <!-- Row 1: Company Name (cols 1-2) | Category (col 3) -->
-        <div class="form-field col-span-2">
-          <label class="form-label required">Company / Supplier Name</label>
-          <div class="input-with-icon">
-            <i class="bi bi-building input-prefix-icon"></i>
+    <div class="erp-drawer-body">
+      <form (ngSubmit)="saveVendor()" class="d-flex flex-column gap-3">
+        <!-- Company Name -->
+        <div class="erp-form-group">
+          <label class="erp-label required">Company / Supplier Name</label>
+          <div class="erp-input-icon-left">
+            <i class="bi bi-building"></i>
             <input type="text" 
-                   class="form-control with-prefix" 
-                   placeholder="e.g. Reliance Polymers Ltd / Nilkamal Crates" 
+                   class="erp-input" 
+                   placeholder="e.g. Reliance Polymers Ltd" 
                    name="vendorName" 
                    [(ngModel)]="vendorForm.vendorName" 
                    required>
           </div>
         </div>
 
-        <div class="form-field">
-          <label class="form-label required">Supply Category</label>
-          <div class="input-with-icon">
-            <i class="bi bi-tag-fill input-prefix-icon"></i>
-            <select class="form-select with-prefix" name="category" [(ngModel)]="vendorForm.category">
+        <!-- Supply Category -->
+        <div class="erp-form-group">
+          <label class="erp-label required">Supply Category</label>
+          <div class="erp-input-icon-left">
+            <i class="bi bi-tag-fill"></i>
+            <select class="erp-input" name="category" [(ngModel)]="vendorForm.category">
               <option *ngFor="let cat of supplierCategories" [value]="cat">{{ cat }}</option>
             </select>
           </div>
         </div>
 
-        <!-- Row 2: Mobile (col 1) | GSTIN (col 2) | Contact Person (col 3) -->
-        <div class="form-field">
-          <label class="form-label required">Primary Mobile / Telephone</label>
-          <div class="input-with-icon">
-            <i class="bi bi-telephone-fill input-prefix-icon"></i>
+        <!-- Primary Mobile -->
+        <div class="erp-form-group">
+          <label class="erp-label required">Primary Mobile / Telephone</label>
+          <div class="erp-input-icon-left">
+            <i class="bi bi-telephone-fill"></i>
             <input type="tel" 
-                   class="form-control with-prefix" 
+                   class="erp-input" 
                    placeholder="10-digit Mobile or Landline" 
                    name="mobile" 
                    [(ngModel)]="vendorForm.mobile" 
@@ -250,12 +249,13 @@
           </div>
         </div>
 
-        <div class="form-field">
-          <label class="form-label">GSTIN Identification Number</label>
-          <div class="input-with-icon">
-            <i class="bi bi-patch-check-fill input-prefix-icon" [ngClass]="vendorForm.gstNumber?.length === 15 ? 'text-success' : ''"></i>
+        <!-- GSTIN -->
+        <div class="erp-form-group">
+          <label class="erp-label">GSTIN Identification Number</label>
+          <div class="erp-input-icon-left">
+            <i class="bi bi-patch-check-fill" [ngClass]="vendorForm.gstNumber?.length === 15 ? 'text-success' : ''"></i>
             <input type="text" 
-                   class="form-control with-prefix text-uppercase font-monospace" 
+                   class="erp-input text-uppercase font-monospace" 
                    placeholder="e.g. 27AAAAA0000A1Z5" 
                    name="gstNumber" 
                    maxlength="15"
@@ -264,73 +264,37 @@
           </div>
         </div>
 
-        <div class="form-field">
-          <label class="form-label">Contact Person / Sales Manager</label>
-          <div class="input-with-icon">
-            <i class="bi bi-person-badge-fill input-prefix-icon"></i>
+        <!-- Contact Person -->
+        <div class="erp-form-group">
+          <label class="erp-label">Contact Person / Sales Manager</label>
+          <div class="erp-input-icon-left">
+            <i class="bi bi-person-badge-fill"></i>
             <input type="text" 
-                   class="form-control with-prefix" 
+                   class="erp-input" 
                    placeholder="e.g. Rajesh Sharma" 
                    name="contactPerson" 
                    [(ngModel)]="vendorForm.contactPerson">
           </div>
         </div>
 
-        <!-- Row 3: Registered Address (cols 1-2) | Verification & Readiness Card (col 3) -->
-        <div class="form-field col-span-2">
-          <label class="form-label">Registered Office / Warehouse Address</label>
-          <div class="input-with-icon textarea-wrapper">
-            <i class="bi bi-geo-alt-fill input-prefix-icon textarea-icon"></i>
-            <textarea class="form-control with-prefix" 
-                      rows="2" 
-                      placeholder="Plant location, MIDC Industrial Area, City, PIN Code..." 
-                      name="address" 
-                      [(ngModel)]="vendorForm.address"></textarea>
-          </div>
+        <!-- Registered Address -->
+        <div class="erp-form-group">
+          <label class="erp-label">Registered Office / Warehouse Address</label>
+          <textarea class="erp-input" 
+                    rows="3" 
+                    placeholder="Plant location, MIDC Industrial Area, City, PIN Code..." 
+                    name="address" 
+                    [(ngModel)]="vendorForm.address"></textarea>
         </div>
 
-        <div class="vendor-readiness-card">
-          <div class="readiness-header">
-            <span class="readiness-title"><i class="bi bi-shield-check text-primary me-1"></i> Supplier Profile Readiness</span>
-            <span class="readiness-status" [ngClass]="vendorForm.vendorName && vendorForm.mobile ? 'status-ready' : 'status-draft'">
-              {{ vendorForm.vendorName && vendorForm.mobile ? 'Ready to Save' : 'Incomplete' }}
-            </span>
-          </div>
-          <div class="readiness-checklist">
-            <span class="check-pill" [class.done]="vendorForm.vendorName">
-              <i class="bi" [ngClass]="vendorForm.vendorName ? 'bi-check2 text-success' : 'bi-dash'"></i> Name
-            </span>
-            <span class="check-pill" [class.done]="vendorForm.mobile">
-              <i class="bi" [ngClass]="vendorForm.mobile ? 'bi-check2 text-success' : 'bi-dash'"></i> Contact
-            </span>
-            <span class="check-pill" [class.done]="vendorForm.gstNumber?.length === 15">
-              <i class="bi" [ngClass]="vendorForm.gstNumber?.length === 15 ? 'bi-check2 text-success' : 'bi-dash'"></i> GSTIN
-            </span>
-            <span class="check-pill" [class.done]="vendorForm.address">
-              <i class="bi" [ngClass]="vendorForm.address ? 'bi-check2 text-success' : 'bi-dash'"></i> Address
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-panel-actions">
-        <div class="action-left-info">
-          <span class="text-muted small">Fields marked <strong class="text-danger">*</strong> are mandatory for supplier master registration.</span>
-        </div>
-        <div class="action-buttons-group">
-          <button type="button" class="btn btn-secondary" (click)="cancelEdit()">
-            Cancel
-          </button>
-          <button type="button" class="btn btn-outline-secondary" (click)="resetForm()">
-            Reset
-          </button>
-          <button type="submit" class="btn btn-primary btn-save">
-            <i class="bi bi-check2-circle me-1"></i>
-            {{ editingVendorId ? 'Update Supplier Profile' : 'Save Supplier Record' }}
+        <div class="d-flex gap-2 mt-2" style="justify-content: flex-end;">
+          <button type="submit" class="btn w-100" [ngClass]="editingVendorId ? 'btn-warning' : 'btn-primary'">
+            <i class="bi me-2" [ngClass]="editingVendorId ? 'bi-check2-circle' : 'bi-plus-lg'"></i>
+            {{ editingVendorId ? 'Update Profile' : ('btn.save' | translate:currentLang) }}
           </button>
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
 
   <!-- ── 5. SEARCH & FILTER TOOLBAR ─────────────────────────────────── -->
@@ -569,7 +533,7 @@
                   </button>
                 </div>
                 <div class="empty-actions mt-2" *ngIf="!searchQuery && activeFilterCount === 0 && !isViewer()">
-                  <button type="button" class="btn btn-primary btn-sm" (click)="toggleAddForm()">
+                  <button type="button" class="btn btn-primary btn-sm" (click)="openAddForm()">
                     <i class="bi bi-plus-circle me-1"></i>Register First Supplier
                   </button>
                 </div>
@@ -872,8 +836,7 @@
       </div>
 
       <!-- Dossier Footer -->
-      <div class="dossier-footer-bar no-print">
-        <button type="button" class="btn btn-secondary btn-sm" (click)="closeDossierModal()">Close</button>
+      <div class="dossier-footer-bar no-print" style="justify-content: flex-end;">
         <button type="button" class="btn btn-primary btn-sm" (click)="printDossier()">
           <i class="bi bi-printer-fill me-1"></i>Print Official Dossier
         </button>

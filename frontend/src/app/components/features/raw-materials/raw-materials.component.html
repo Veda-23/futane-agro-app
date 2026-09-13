@@ -179,124 +179,104 @@
     </div>
   </div>
 
-  <!-- ── 4. COLLAPSIBLE ADD / EDIT PROCUREMENT FORM ────────────────── -->
-  <div id="raw-material-form-container" class="procurement-form-panel glass-panel animate-slide-down no-print" *ngIf="isAddFormOpen && !isViewer()">
-    <div class="form-header-bar">
-      <div class="form-title-group">
-        <div class="form-badge-icon">
-          <i class="bi" [ngClass]="editingRawMaterialId ? 'bi-pencil-square text-warning' : 'bi-plus-circle-fill text-primary'"></i>
-        </div>
-        <div>
-          <h3>{{ editingRawMaterialId ? 'Edit Procurement Batch #' + editingRawMaterialId : 'Log New Raw Material Procurement' }}</h3>
-          <p class="subtitle">Record raw polymer resin, masterbatch additives, weighbridge scale readings & purchase invoices</p>
-        </div>
+  <!-- ── 4. SLIDE-OUT DRAWER FOR PROCUREMENT FORM ────────────────── -->
+  <div class="erp-drawer-overlay" *ngIf="isAddFormOpen && !isViewer()" (click)="cancelEdit()"></div>
+  <div class="erp-drawer" *ngIf="isAddFormOpen && !isViewer()" [class.open]="isAddFormOpen && !isViewer()">
+    <div class="erp-drawer-header">
+      <div class="pe-4" style="overflow: hidden;">
+        <h3 class="erp-drawer-title text-truncate" [title]="editingRawMaterialId ? 'Edit Procurement Batch #' + editingRawMaterialId : 'Log New Raw Material Procurement'">
+          {{ editingRawMaterialId ? 'Edit Batch #' + (editingRawMaterialId | slice:0:8) + '...' : 'Log New Procurement' }}
+        </h3>
+        <p class="erp-drawer-subtitle">Record raw polymer resin, additives, and invoices</p>
       </div>
-      <button type="button" class="btn btn-secondary btn-sm" (click)="cancelEdit()">
-        <i class="bi bi-x-lg me-1"></i> Cancel
+      <button type="button" class="btn-action-icon" (click)="cancelEdit()" title="Close Form">
+        <i class="bi bi-x-lg"></i>
       </button>
     </div>
 
-    <form (submit)="saveRawMaterial()" class="procurement-form-grid">
-      <!-- Row 1: Date, Vendor, Bill No (3 Balanced Columns) -->
-      <div class="form-row-3col">
-        <div class="form-group">
-          <label for="purchaseDate"><i class="bi bi-calendar3 me-1 text-primary"></i>Purchase Date <span class="req-star">*</span></label>
-          <input type="date" id="purchaseDate" [(ngModel)]="rawMaterialsForm.date" name="purchaseDate" required class="form-control-compact">
+    <div class="erp-drawer-body">
+      <form (submit)="saveRawMaterial()" class="d-flex flex-column gap-3">
+        
+        <div class="erp-form-group">
+          <label class="erp-label required">Purchase Date</label>
+          <input type="date" [(ngModel)]="rawMaterialsForm.date" name="purchaseDate" required class="erp-input font-mono">
         </div>
 
-        <div class="form-group">
-          <label for="vendorSelect"><i class="bi bi-shop me-1 text-primary"></i>Approved Vendor <span class="req-star">*</span></label>
+        <div class="erp-form-group">
+          <label class="erp-label required">Approved Vendor</label>
           <app-searchable-select
-            id="vendorSelect"
             [items]="selectableVendors"
             bindLabel="vendorName"
             bindValue="id"
             subLabelKey="gstBadge"
             [(ngModel)]="rawMaterialsForm.id"
             name="vendorSelect"
-            placeholder="-- Select Vendor / Supplier --"
+            placeholder="-- Select Vendor --"
             searchPlaceholder="Type vendor name or GSTIN..."
             [allowClear]="true">
           </app-searchable-select>
         </div>
 
-        <div class="form-group">
-          <label for="purchaseBillPath"><i class="bi bi-receipt me-1 text-primary"></i>Purchase Bill / Tax Invoice No.</label>
-          <input type="text" id="purchaseBillPath" [(ngModel)]="rawMaterialsForm.purchaseBillPath" name="purchaseBillPath" placeholder="e.g. INV-POLY-2026-904" class="form-control-compact">
+        <div class="erp-form-group">
+          <label class="erp-label">Purchase Bill / Tax Invoice No.</label>
+          <input type="text" [(ngModel)]="rawMaterialsForm.purchaseBillPath" name="purchaseBillPath" placeholder="e.g. INV-POLY-2026-904" class="erp-input font-mono text-uppercase">
         </div>
-      </div>
 
-      <!-- Row 2: Material Grade (Spans 2 cols with inline chips) & Weighbridge Slip Ref -->
-      <div class="form-row-custom-2_1">
-        <div class="form-group col-span-2">
-          <div class="label-with-chips-bar">
-            <label for="materialName"><i class="bi bi-box-seam me-1 text-primary"></i>Material Grade & Description <span class="req-star">*</span></label>
-            <div class="quick-preset-chips">
-              <span class="preset-label">Quick select:</span>
-              <button type="button" class="preset-chip" *ngFor="let m of commonMaterials.slice(0, 4)" (click)="selectPresetMaterial(m)">
-                {{ m.split(' ')[0] }} {{ m.split(' ')[1] }}
-              </button>
-            </div>
+        <div class="erp-form-group">
+          <label class="erp-label required">Material Grade & Description</label>
+          <div class="d-flex gap-1 mb-2 flex-wrap">
+             <button type="button" class="btn btn-sm btn-outline-secondary py-0" style="font-size: 11px;" *ngFor="let m of commonMaterials.slice(0, 4)" (click)="selectPresetMaterial(m)">
+               {{ m.split(' ')[0] }}
+             </button>
           </div>
-          <input type="text" id="materialName" [(ngModel)]="rawMaterialsForm.materialName" name="materialName" required placeholder="e.g. Virgin HDPE Granules Grade 100" class="form-control-compact">
+          <input type="text" [(ngModel)]="rawMaterialsForm.materialName" name="materialName" required placeholder="e.g. Virgin HDPE Granules" class="erp-input">
         </div>
 
-        <div class="form-group">
-          <label for="weightSlipPath"><i class="bi bi-file-earmark-ruled me-1 text-primary"></i>Weighbridge Slip Ref</label>
-          <input type="text" id="weightSlipPath" [(ngModel)]="rawMaterialsForm.weightSlipPath" name="weightSlipPath" placeholder="e.g. WB-SLIP-4402" class="form-control-compact">
+        <div class="erp-form-group">
+          <label class="erp-label">Weighbridge Slip Ref</label>
+          <input type="text" [(ngModel)]="rawMaterialsForm.weightSlipPath" name="weightSlipPath" placeholder="e.g. WB-SLIP-4402" class="erp-input font-mono text-uppercase">
         </div>
-      </div>
 
-      <!-- Row 3: Weight, Rate & Real-Time Calculation Card in Column 3 -->
-      <div class="form-row-3col align-items-end">
-        <div class="form-group">
-          <label for="netWeight"><i class="bi bi-speedometer2 me-1 text-primary"></i>Net Weight (kg) <span class="req-star">*</span></label>
-          <div class="input-unit-wrap">
-            <input type="number" step="0.1" min="0.1" id="netWeight" [(ngModel)]="rawMaterialsForm.weight" name="netWeight" required placeholder="0.0" class="form-control-compact font-mono">
-            <span class="unit-addon">kg</span>
+        <div class="erp-form-group">
+          <label class="erp-label required">Net Weight (kg)</label>
+          <div class="erp-input-icon-left">
+            <i class="bi bi-speedometer2"></i>
+            <input type="number" step="0.1" min="0.1" [(ngModel)]="rawMaterialsForm.weight" name="netWeight" required placeholder="0.0" class="erp-input font-mono ps-5">
+            <span style="position: absolute; right: 12px; top: 10px; color: #94a3b8; font-size: 13px; font-weight: 500;">kg</span>
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="purchaseRate"><i class="bi bi-currency-rupee me-1 text-primary"></i>Purchase Rate (₹/kg) <span class="req-star">*</span></label>
-          <div class="input-unit-wrap">
-            <span class="currency-addon">₹</span>
-            <input type="number" step="0.01" min="0.01" id="purchaseRate" [(ngModel)]="rawMaterialsForm.rate" name="purchaseRate" required placeholder="0.00" class="form-control-compact font-mono">
+        <div class="erp-form-group">
+          <label class="erp-label required">Purchase Rate (₹/kg)</label>
+          <div class="erp-input-icon-left">
+            <i class="bi bi-currency-rupee"></i>
+            <input type="number" step="0.01" min="0.01" [(ngModel)]="rawMaterialsForm.rate" name="purchaseRate" required placeholder="0.00" class="erp-input font-mono ps-5">
           </div>
         </div>
 
-        <!-- Real-Time Live Calculation Tile Aligned In Column 3 -->
-        <div class="form-group cost-preview-col">
-          <div class="live-batch-calc-card" [class.has-active-cost]="rawMaterialsForm.weight && rawMaterialsForm.rate">
-            <div class="calc-card-header">
-              <span class="calc-card-title"><i class="bi bi-calculator-fill text-primary me-1"></i> Net Batch Cost</span>
-              <strong class="calc-card-val font-mono">₹{{ calculatedBatchAmount | number:'1.2-2' }}</strong>
-            </div>
-            <div class="calc-card-sub" *ngIf="rawMaterialsForm.weight && rawMaterialsForm.rate">
-              {{ rawMaterialsForm.weight | number }} kg × ₹{{ rawMaterialsForm.rate | number:'1.2-2' }}/kg
-            </div>
-            <div class="calc-card-sub text-muted" *ngIf="!rawMaterialsForm.weight || !rawMaterialsForm.rate">
-              Auto-computes weight × unit rate
-            </div>
+        <!-- Real-Time Live Calculation Tile -->
+        <div class="live-batch-calc-card mt-2" [class.has-active-cost]="rawMaterialsForm.weight && rawMaterialsForm.rate" style="background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px;">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-secondary fw-semibold" style="font-size: 12px;"><i class="bi bi-calculator me-1"></i>Net Batch Cost</span>
+            <strong class="font-mono text-primary" style="font-size: 15px;">₹{{ calculatedBatchAmount | number:'1.2-2' }}</strong>
+          </div>
+          <div class="text-muted" style="font-size: 11px;" *ngIf="rawMaterialsForm.weight && rawMaterialsForm.rate">
+            {{ rawMaterialsForm.weight | number }} kg × ₹{{ rawMaterialsForm.rate | number:'1.2-2' }}/kg
+          </div>
+          <div class="text-muted" style="font-size: 11px;" *ngIf="!rawMaterialsForm.weight || !rawMaterialsForm.rate">
+            Auto-computes weight × unit rate
           </div>
         </div>
-      </div>
 
-      <!-- Form Actions Footer -->
-      <div class="form-actions-footer">
-        <div class="form-footer-hint">
-          <i class="bi bi-shield-check text-success me-1"></i>
-          <span>Procurement entries automatically update live resin ledger & stock telemetry.</span>
-        </div>
-        <div class="form-footer-buttons">
-          <button type="button" class="btn btn-secondary btn-action-compact" (click)="cancelEdit()">Cancel</button>
-          <button type="submit" class="btn btn-primary btn-action-primary">
-            <i class="bi bi-check2-circle me-1"></i>
-            {{ editingRawMaterialId ? 'Update Procurement Record' : 'Save Procurement Record' }}
+        <div class="d-flex gap-2 mt-4">
+          <button type="submit" class="btn w-100" [ngClass]="editingRawMaterialId ? 'btn-warning' : 'btn-primary'">
+            <i class="bi me-2" [ngClass]="editingRawMaterialId ? 'bi-check2-circle' : 'bi-plus-lg'"></i>
+            {{ editingRawMaterialId ? 'Update Record' : 'Save Record' }}
           </button>
+          <button type="button" class="btn btn-outline w-100" (click)="cancelEdit()">Cancel</button>
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
 
   <!-- ── 5. SEARCH + MULTI-FILTER TOOLBAR ──────────────────────────── -->

@@ -15,18 +15,13 @@
       <span class="breadcrumb-current" [title]="getFormattedTabTitle(activeTab)">{{ getFormattedTabTitle(activeTab) }}</span>
     </div>
 
-    <!-- Live Telemetry Badges -->
-    <div class="header-telemetry-pills">
-      <span class="telemetry-pill env-pill" [class.env-uat]="isUat" [class.env-prod]="isProd">
-        <span class="pill-dot"></span>
-        {{ isUat ? 'UAT 8081' : 'PROD 8080' }}
-      </span>
-      <span class="telemetry-pill time-pill" title="Indian Standard Time (IST)">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
-          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-        </svg>
-        {{ currentDate }} • {{ currentTime }}
-      </span>
+    <!-- Proper Enterprise Date & Time Badge (Visible for all tabs) -->
+    <div class="header-date-badge" [title]="'Operational Time (IST): ' + currentDate + ' • ' + currentTime">
+      <i class="bi bi-calendar3 header-date-icon"></i>
+      <span class="header-date-text">{{ currentDate }}</span>
+      <span class="header-date-sep">•</span>
+      <i class="bi bi-clock header-time-icon"></i>
+      <span class="header-time-text">{{ currentTime }}</span>
     </div>
   </div>
 
@@ -40,7 +35,7 @@
         #searchInput
         type="text" 
         class="omnisearch-input" 
-        placeholder="Search ERP records, parties, sales, materials..."
+        placeholder="Search ERP records, parties, sales..."
         [(ngModel)]="globalSearchQuery"
         (input)="doGlobalSearch()"
         (focus)="doGlobalSearch()">
@@ -99,11 +94,6 @@
   <!-- Right Section: Quick Utilities & User Profile -->
   <div class="header-right">
     
-    <!-- Data Sync / Refresh Button -->
-    <button class="header-icon-btn" (click)="triggerDataSync()" title="Refresh Module Data" aria-label="Refresh data">
-      <i class="bi bi-arrow-clockwise"></i>
-    </button>
-
     <!-- Theme Toggle (Light / Dark) -->
     <button class="header-icon-btn" (click)="themeService.toggle()" title="Toggle Theme (Light / Dark)" aria-label="Toggle theme">
       <i class="bi" [ngClass]="themeService.isDark ? 'bi-sun-fill text-warning' : 'bi-moon-stars-fill'"></i>

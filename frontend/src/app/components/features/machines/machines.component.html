@@ -47,16 +47,16 @@
         <button *ngIf="!isViewer() && activeSubTab === 'machines'" 
                 type="button" 
                 class="btn btn-primary btn-action-primary" 
-                (click)="resetMachineForm(); editingMachineId = null; formMode = 'machine'">
-          <i class="bi bi-plus-lg me-1"></i>
-          <span>Add Machine</span>
+                (click)="toggleMachineForm()">
+          <i class="bi" [ngClass]="isMachineFormOpen ? 'bi-x-lg' : 'bi-plus-lg'"></i>
+          <span>{{ isMachineFormOpen ? 'Close Form' : 'Add Machine' }}</span>
         </button>
         <button *ngIf="!isViewer() && activeSubTab === 'breakdowns'" 
                 type="button" 
                 class="btn btn-primary btn-action-primary" 
-                (click)="resetBreakdownForm(); editingBreakdownId = null; formMode = 'breakdown'">
-          <i class="bi bi-plus-lg me-1"></i>
-          <span>Log Breakdown</span>
+                (click)="toggleBreakdownForm()">
+          <i class="bi" [ngClass]="isBreakdownFormOpen ? 'bi-x-lg' : 'bi-plus-lg'"></i>
+          <span>{{ isBreakdownFormOpen ? 'Close Form' : 'Log Breakdown' }}</span>
         </button>
       </div>
     </div>
@@ -263,75 +263,52 @@
     </div>
   </section>
 
-  <!-- ── 5. TWO-COLUMN HIGH-DENSITY ENTERPRISE MODULE GRID ──────────── -->
-  <div class="erp-module-grid">
-    <!-- LEFT PANEL: Sticky Configuration & Incident Form -->
-    <aside class="erp-form-panel" [class.editing-mode]="editingMachineId || editingBreakdownId" *ngIf="!isViewer()">
-      <!-- Form Mode Switcher Capsule -->
-      <div class="subtabs-scroll-container form-mode-switcher mb-3">
-        <button type="button" class="subtab-pill-btn" [class.active]="formMode === 'machine'" (click)="switchFormMode('machine')">
-          <i class="bi bi-cpu me-1"></i>
-          <span>Machine Asset</span>
-        </button>
-        <button type="button" class="subtab-pill-btn" [class.active]="formMode === 'breakdown'" (click)="switchFormMode('breakdown')">
-          <i class="bi bi-wrench-adjustable me-1"></i>
-          <span>Log Breakdown</span>
-        </button>
-      </div>
-
-      <!-- Header of Form Panel -->
-      <div class="erp-panel-header">
-        <div class="erp-panel-title-group">
-          <div class="erp-panel-icon">
-            <i class="bi" [class.bi-cpu-fill]="formMode === 'machine'" [class.bi-wrench-adjustable]="formMode === 'breakdown'"></i>
-          </div>
-          <div>
-            <h3 class="erp-panel-title">
-              {{ formMode === 'machine' ? (editingMachineId ? 'Edit Equipment Profile' : 'Register Machine') : (editingBreakdownId ? 'Edit Breakdown Record' : 'Log Maintenance Incident') }}
-            </h3>
-            <p class="erp-panel-subtitle">
-              {{ formMode === 'machine' ? 'Injection moulding unit configuration & throughput' : 'Record downtime hours & service resolution' }}
-            </p>
-          </div>
+  <!-- ── 5. SINGLE-COLUMN FULL WIDTH LEDGER & DRAWERS ──────────── -->
+  <div class="erp-module-grid d-block">
+    
+    <!-- SLIDE-OUT DRAWER FOR MACHINE ASSET -->
+    <div class="erp-drawer-overlay" *ngIf="isMachineFormOpen && !isViewer()" (click)="cancelEditMachine()"></div>
+    <div class="erp-drawer" *ngIf="isMachineFormOpen && !isViewer()" [class.open]="isMachineFormOpen && !isViewer()">
+      <div class="erp-drawer-header">
+        <div>
+          <h3 class="erp-drawer-title">{{ editingMachineId ? 'Edit Equipment Profile' : 'Register Machine' }}</h3>
+          <p class="erp-drawer-subtitle">Injection moulding unit configuration & throughput</p>
         </div>
-        <span *ngIf="editingMachineId || editingBreakdownId" class="erp-badge-warning">EDITING</span>
+        <button type="button" class="btn-action-icon" (click)="cancelEditMachine()" title="Close Form">
+          <i class="bi bi-x-lg"></i>
+        </button>
       </div>
+      
+      <div class="erp-drawer-body">
+        <form (ngSubmit)="saveMachine()" class="d-flex flex-column gap-3">
+          <div class="erp-form-group">
+            <label class="erp-label required">Machine Name</label>
+            <input type="text" class="erp-input" [(ngModel)]="machineForm.machineName" name="mName" required placeholder="e.g. Windsor IMM 180T">
+          </div>
 
-      <!-- A. MACHINE FORM -->
-      <div *ngIf="formMode === 'machine'" class="erp-form-content">
-        <form (ngSubmit)="saveMachine()">
-          <div class="erp-form-grid">
-            <div class="erp-form-group">
-              <label class="erp-label">Machine Name <span class="text-danger">*</span></label>
-              <input type="text" class="erp-input" [(ngModel)]="machineForm.machineName" name="mName" required placeholder="e.g. Windsor IMM 180T">
-            </div>
+          <div class="erp-form-group">
+            <label class="erp-label required">Asset Tag / Code</label>
+            <input type="text" class="erp-input text-uppercase font-mono" [(ngModel)]="machineForm.machineCode" name="mCode" required placeholder="e.g. IMM-003">
+          </div>
 
-            <div class="erp-form-group">
-              <label class="erp-label">Asset Tag / Code <span class="text-danger">*</span></label>
-              <input type="text" class="erp-input text-uppercase font-mono" [(ngModel)]="machineForm.machineCode" name="mCode" required placeholder="e.g. IMM-003">
-            </div>
+          <div class="erp-form-group">
+            <label class="erp-label">Rated Capacity (Crates/hr)</label>
+            <input type="number" class="erp-input font-mono" [(ngModel)]="machineForm.capacityPerHour" name="mCapacity" min="0" step="10">
+          </div>
 
-            <div class="erp-form-row">
-              <div class="erp-form-group">
-                <label class="erp-label">Rated Capacity (Crates/hr)</label>
-                <input type="number" class="erp-input font-mono" [(ngModel)]="machineForm.capacityPerHour" name="mCapacity" min="0" step="10">
-              </div>
+          <div class="erp-form-group">
+            <label class="erp-label">Installation Date</label>
+            <input type="date" class="erp-input font-mono" [(ngModel)]="machineForm.installedDate" name="mDate">
+          </div>
 
-              <div class="erp-form-group">
-                <label class="erp-label">Installation Date</label>
-                <input type="date" class="erp-input font-mono" [(ngModel)]="machineForm.installedDate" name="mDate">
-              </div>
-            </div>
-
-            <div class="erp-form-group">
-              <label class="erp-label">Operating Status</label>
-              <select class="erp-select" [(ngModel)]="machineForm.status" name="mStatus">
-                <option value="Running">Running (Active Production)</option>
-                <option value="Idle">Idle (Ready / Standby)</option>
-                <option value="Under Maintenance">Under Maintenance (Servicing)</option>
-                <option value="Breakdown">Breakdown (Critical Outage)</option>
-              </select>
-            </div>
+          <div class="erp-form-group">
+            <label class="erp-label">Operating Status</label>
+            <select class="erp-input" [(ngModel)]="machineForm.status" name="mStatus">
+              <option value="Running">Running (Active Production)</option>
+              <option value="Idle">Idle (Ready / Standby)</option>
+              <option value="Under Maintenance">Under Maintenance (Servicing)</option>
+              <option value="Breakdown">Breakdown (Critical Outage)</option>
+            </select>
           </div>
 
           <!-- Live Output Preview Badge -->
@@ -340,51 +317,59 @@
             <strong class="font-mono text-primary">{{ machineForm.capacityPerHour * 24 | number:'1.0-0' }} crates/day</strong>
           </div>
 
-          <div class="erp-form-actions mt-3">
-            <button type="submit" class="btn btn-primary w-100 mb-2">
-              <i class="bi bi-check2-circle me-1"></i> {{ editingMachineId ? 'Update Equipment Profile' : 'Save Machine Unit' }}
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn w-100" [ngClass]="editingMachineId ? 'btn-warning' : 'btn-primary'">
+              <i class="bi me-2" [ngClass]="editingMachineId ? 'bi-check2-circle' : 'bi-plus-lg'"></i>
+              {{ editingMachineId ? 'Update Equipment Profile' : 'Save Machine Unit' }}
             </button>
-            <button *ngIf="editingMachineId" type="button" class="btn btn-secondary w-100" (click)="cancelEditMachine()">
-              <i class="bi bi-x-lg me-1"></i> Cancel Edit
-            </button>
+            <button type="button" class="btn btn-outline w-100" (click)="cancelEditMachine()">Cancel</button>
           </div>
         </form>
       </div>
+    </div>
 
-      <!-- B. BREAKDOWN FORM -->
-      <div *ngIf="formMode === 'breakdown'" class="erp-form-content">
-        <form (ngSubmit)="saveBreakdown()">
-          <div class="erp-form-grid">
-            <div class="erp-form-group">
-              <label class="erp-label">Affected Equipment <span class="text-danger">*</span></label>
-              <select class="erp-select" [(ngModel)]="breakdownForm.machineId" name="bdMachine" required>
-                <option value="" disabled>-- Select Machine Unit --</option>
-                <option *ngFor="let m of machinesList" [value]="m.id">{{ m.machineName }} ({{ m.machineCode || 'IMM-' + m.id }})</option>
-              </select>
-            </div>
+    <!-- SLIDE-OUT DRAWER FOR LOG BREAKDOWN -->
+    <div class="erp-drawer-overlay" *ngIf="isBreakdownFormOpen && !isViewer()" (click)="cancelEditBreakdown()"></div>
+    <div class="erp-drawer" *ngIf="isBreakdownFormOpen && !isViewer()" [class.open]="isBreakdownFormOpen && !isViewer()">
+      <div class="erp-drawer-header">
+        <div>
+          <h3 class="erp-drawer-title">{{ editingBreakdownId ? 'Edit Breakdown Record' : 'Log Maintenance Incident' }}</h3>
+          <p class="erp-drawer-subtitle">Record downtime hours & service resolution</p>
+        </div>
+        <button type="button" class="btn-action-icon" (click)="cancelEditBreakdown()" title="Close Form">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      
+      <div class="erp-drawer-body">
+        <form (ngSubmit)="saveBreakdown()" class="d-flex flex-column gap-3">
+          <div class="erp-form-group">
+            <label class="erp-label required">Affected Equipment</label>
+            <select class="erp-input" [(ngModel)]="breakdownForm.machineId" name="bdMachine" required>
+              <option value="" disabled>-- Select Machine Unit --</option>
+              <option *ngFor="let m of machinesList" [value]="m.id">{{ m.machineName }} ({{ m.machineCode || 'IMM-' + m.id }})</option>
+            </select>
+          </div>
 
-            <div class="erp-form-row">
-              <div class="erp-form-group">
-                <label class="erp-label">Incident Date <span class="text-danger">*</span></label>
-                <input type="date" class="erp-input font-mono" [(ngModel)]="breakdownForm.breakdownDate" name="bdDate" required>
-              </div>
+          <div class="erp-form-group">
+            <label class="erp-label required">Incident Date</label>
+            <input type="date" class="erp-input font-mono" [(ngModel)]="breakdownForm.breakdownDate" name="bdDate" required>
+          </div>
 
-              <div class="erp-form-group">
-                <label class="erp-label">Downtime (Hours) <span class="text-danger">*</span></label>
-                <input type="number" class="erp-input font-mono" [(ngModel)]="breakdownForm.downtimeHours" name="bdHours" min="0" step="0.5" required>
-              </div>
-            </div>
+          <div class="erp-form-group">
+            <label class="erp-label required">Downtime (Hours)</label>
+            <input type="number" class="erp-input font-mono" [(ngModel)]="breakdownForm.downtimeHours" name="bdHours" min="0" step="0.5" required>
+          </div>
 
-            <div class="erp-form-group">
-              <label class="erp-label">Fault / Cause Description <span class="text-danger">*</span></label>
-              <textarea class="erp-textarea" [(ngModel)]="breakdownForm.description" name="bdDesc" rows="3" required placeholder="e.g. Hydraulic valve leak, seal replacement..."></textarea>
-            </div>
+          <div class="erp-form-group">
+            <label class="erp-label required">Fault / Cause Description</label>
+            <textarea class="erp-input" [(ngModel)]="breakdownForm.description" name="bdDesc" rows="3" required placeholder="e.g. Hydraulic valve leak, seal replacement..."></textarea>
+          </div>
 
-            <div class="erp-form-group">
-              <label class="erp-label">Resolution / Restored Date</label>
-              <input type="date" class="erp-input font-mono" [(ngModel)]="breakdownForm.resolvedDate" name="bdResolved">
-              <div class="text-muted mt-1" style="font-size: 11px;">Leave blank if unit is still offline undergoing repairs</div>
-            </div>
+          <div class="erp-form-group">
+            <label class="erp-label">Resolution / Restored Date</label>
+            <input type="date" class="erp-input font-mono" [(ngModel)]="breakdownForm.resolvedDate" name="bdResolved">
+            <div class="text-muted mt-1" style="font-size: 11px;">Leave blank if unit is still offline undergoing repairs</div>
           </div>
 
           <!-- Live Disruption Impact Badge -->
@@ -393,20 +378,19 @@
             <strong class="font-mono text-danger">-{{ breakdownForm.downtimeHours * 450 | number:'1.0-0' }} crates lost</strong>
           </div>
 
-          <div class="erp-form-actions mt-3">
-            <button type="submit" class="btn btn-warning w-100 mb-2">
-              <i class="bi bi-check2-circle me-1"></i> {{ editingBreakdownId ? 'Update Incident Record' : 'Record Breakdown Log' }}
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn w-100" [ngClass]="editingBreakdownId ? 'btn-warning' : 'btn-primary'">
+              <i class="bi me-2" [ngClass]="editingBreakdownId ? 'bi-check2-circle' : 'bi-plus-lg'"></i>
+              {{ editingBreakdownId ? 'Update Incident Record' : 'Record Breakdown Log' }}
             </button>
-            <button *ngIf="editingBreakdownId" type="button" class="btn btn-secondary w-100" (click)="cancelEditBreakdown()">
-              <i class="bi bi-x-lg me-1"></i> Cancel Edit
-            </button>
+            <button type="button" class="btn btn-outline w-100" (click)="cancelEditBreakdown()">Cancel</button>
           </div>
         </form>
       </div>
-    </aside>
+    </div>
 
     <!-- RIGHT PANEL: Data Ledger Table Card -->
-    <main class="erp-table-panel" [class.full-width]="isViewer()">
+    <main class="erp-table-panel w-100">
       <!-- Panel Header -->
       <div class="erp-panel-header no-print">
         <div class="erp-panel-title-group">

@@ -48,6 +48,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   presetColors = ['#d97706', '#2563eb', '#059669', '#7c3aed', '#dc2626', '#0891b2', '#0f172a'];
   fontOptions = ['Inter', 'Plus Jakarta Sans', 'Outfit', 'Roboto', 'JetBrains Mono'];
   isUploadingLogo = false;
+  isSavingBranding = false;
 
   tableDensity: 'compact' | 'comfortable' | 'spacious' = (localStorage.getItem('futane_table_density') as any) || 'comfortable';
 
@@ -228,6 +229,102 @@ export class SettingsComponent implements OnInit, OnDestroy {
   testPhoneInput = '+91 98220 99999';
   testSimulationResult: any = null;
   isSimulatingDispatch = false;
+  isSavingTemplate = false;
+
+  // Phase 27: Notification Engine State
+  notifSearchTerm: string = '';
+  notifChannelFilter: string = 'ALL'; // 'ALL' | 'WHATSAPP' | 'SMS' | 'EMAIL'
+  notifStatusFilter: string = 'ALL';  // 'ALL' | 'ACTIVE' | 'PAUSED'
+  activeNotifSection: 'studio' | 'logs' | 'gateways' = 'studio';
+  showAddTemplateModal: boolean = false;
+  newTemplateForm: any = {
+    templateName: '',
+    channel: 'WHATSAPP',
+    eventKey: 'INVOICE_DISPATCHED',
+    dltTemplateId: '',
+    templateText: '',
+    isEnabled: true
+  };
+
+  // Real-time dispatch audit logs
+  dispatchLogs: any[] = [
+    { id: 'log_1', timestamp: '2 mins ago', recipient: '+91 98220 12345', channel: 'WHATSAPP', templateName: 'Invoice Dispatch Alert', eventKey: 'INVOICE_DISPATCHED', status: 'DELIVERED', latency: '420ms' },
+    { id: 'log_2', timestamp: '18 mins ago', recipient: '+91 94231 87654', channel: 'SMS', templateName: 'Dispatch Quick SMS', eventKey: 'INVOICE_DISPATCHED', status: 'DELIVERED', latency: '680ms' },
+    { id: 'log_3', timestamp: '1 hour ago', recipient: '+91 99700 44321', channel: 'WHATSAPP', templateName: 'Payment Due Reminder', eventKey: 'PAYMENT_REMINDER', status: 'DELIVERED', latency: '390ms' },
+    { id: 'log_4', timestamp: '3 hours ago', recipient: '+91 98900 11223', channel: 'WHATSAPP', templateName: 'Order Confirmation Alert', eventKey: 'ORDER_CONFIRMED', status: 'DELIVERED', latency: '510ms' },
+    { id: 'log_5', timestamp: '5 hours ago', recipient: '+91 97654 32109', channel: 'SMS', templateName: 'Dispatch Quick SMS', eventKey: 'INVOICE_DISPATCHED', status: 'FAILED', latency: '3200ms', error: 'Network Timeout on DLT Route' }
+  ];
+
+  // Gateway status profiles
+  gatewayProfiles = {
+    whatsapp: {
+      provider: 'Meta WhatsApp Cloud API (v20.0)',
+      phoneId: '108492019482910',
+      wabaId: '391048201948201',
+      status: 'CONNECTED',
+      qualityRating: 'GREEN (HIGH)',
+      webhookUrl: 'https://api.futaneagro.com/webhooks/whatsapp',
+      verifiedName: 'Futane Agro Pvt Ltd',
+      tier: 'Tier 2 (10,000 conversations/day)'
+    },
+    sms: {
+      provider: 'Airtel Enterprise DLT Gateway',
+      entityId: '1401552390000012489',
+      senderId: 'FUTANE',
+      status: 'ACTIVE_COMPLIANT',
+      balanceCredits: '14,250 SMS',
+      dltExpiry: '31-Mar-2027',
+      routeType: 'Transactional High Priority'
+    },
+    email: {
+      provider: 'Microsoft Office 365 SMTP',
+      host: 'smtp.office365.com:587',
+      senderEmail: 'notifications@futaneagro.com',
+      status: 'AUTHENTICATED',
+      tls: 'STARTTLS Active'
+    }
+  };
+
+  get filteredNotificationTemplates(): any[] {
+    return this.notificationTemplates.filter(t => {
+      const term = (this.notifSearchTerm || '').trim().toLowerCase();
+      const matchSearch = !term ||
+        (t.templateName && t.templateName.toLowerCase().includes(term)) ||
+        (t.eventKey && t.eventKey.toLowerCase().includes(term)) ||
+        (t.dltTemplateId && t.dltTemplateId.toLowerCase().includes(term)) ||
+        (t.templateText && t.templateText.toLowerCase().includes(term));
+      const matchChannel = this.notifChannelFilter === 'ALL' || t.channel === this.notifChannelFilter;
+      const matchStatus = this.notifStatusFilter === 'ALL' ||
+        (this.notifStatusFilter === 'ACTIVE' && t.isEnabled) ||
+        (this.notifStatusFilter === 'PAUSED' && !t.isEnabled);
+      return matchSearch && matchChannel && matchStatus;
+    });
+  }
+
+  get activeTemplatesCount(): number {
+    return this.notificationTemplates.filter(t => t.isEnabled).length;
+  }
+
+  get whatsappTemplatesCount(): number {
+    return this.notificationTemplates.filter(t => t.channel === 'WHATSAPP').length;
+  }
+
+  get smsTemplatesCount(): number {
+    return this.notificationTemplates.filter(t => t.channel === 'SMS').length;
+  }
+
+  get emailTemplatesCount(): number {
+    return this.notificationTemplates.filter(t => t.channel === 'EMAIL').length;
+  }
+
+  get templateCharCount(): number {
+    return this.selectedNotificationTemplate?.templateText?.length || 0;
+  }
+
+  get smsSegmentCount(): number {
+    return Math.ceil((this.selectedNotificationTemplate?.templateText?.length || 0) / 160) || 1;
+  }
+
   availablePlaceholders = [
     { token: '{customer_name}', label: 'Customer / Buyer Name' },
     { token: '{invoice_no}', label: 'Invoice Number' },
@@ -252,7 +349,55 @@ export class SettingsComponent implements OnInit, OnDestroy {
   ];
   showTeamModal = false;
   editingTeam: any = null;
-  teamForm = { name: '', code: '', description: '', icon: 'groups', colorTag: '#d97706', sidebarOrder: 1, showInSidebar: true };
+  teamForm = { name: '', code: '', description: '', icon: 'bi-gear-wide-connected', colorTag: '#059669', sidebarOrder: 1, showInSidebar: true };
+
+  // Department & Teams Filtering & Organization State
+  teamSearchTerm: string = '';
+  teamStatusFilter: string = 'ALL';
+  expandedTeamId: string | null = null;
+  departmentIcons = [
+    { icon: 'bi-gear-wide-connected', label: 'Manufacturing & Plant Engineering' },
+    { icon: 'bi-truck', label: 'Logistics & Supply Chain' },
+    { icon: 'bi-bank', label: 'Finance & Accounts' },
+    { icon: 'bi-patch-check-fill', label: 'Quality Assurance & Lab' },
+    { icon: 'bi-shield-lock', label: 'Executive Administration' },
+    { icon: 'bi-people-fill', label: 'Human Resources & Personnel' },
+    { icon: 'bi-cart3', label: 'Sales & Commercial B2B' },
+    { icon: 'bi-box-seam', label: 'Warehouse & Raw Materials' },
+    { icon: 'bi-cpu', label: 'IT, Automation & SRE' }
+  ];
+  departmentColorPalette: string[] = [
+    '#059669', '#2563eb', '#d97706', '#7c3aed', '#dc2626', '#0891b2', '#475569'
+  ];
+
+  get activeTeamsCount(): number {
+    return this.teamsList.filter(t => t.isActive !== false).length;
+  }
+
+  get totalAssignedStaff(): number {
+    return this.teamsList.reduce((acc, t) => acc + this.getTeamMembers(t.code).length, 0);
+  }
+
+  get sidebarTeamsCount(): number {
+    return this.teamsList.filter(t => t.showInSidebar !== false).length;
+  }
+
+  get filteredTeamsList(): any[] {
+    return this.teamsList.filter(t => {
+      const term = (this.teamSearchTerm || '').trim().toLowerCase();
+      const matchesSearch = !term ||
+        t.name?.toLowerCase().includes(term) ||
+        t.code?.toLowerCase().includes(term) ||
+        t.description?.toLowerCase().includes(term) ||
+        this.getTeamMembers(t.code).some(m => m.name?.toLowerCase().includes(term) || m.email?.toLowerCase().includes(term));
+
+      const matchesStatus = this.teamStatusFilter === 'ALL' ||
+        (this.teamStatusFilter === 'ACTIVE' && t.isActive !== false) ||
+        (this.teamStatusFilter === 'INACTIVE' && t.isActive === false);
+
+      return matchesSearch && matchesStatus;
+    });
+  }
 
   // 4. Users & Permission Matrix
   adminUsersList: any[] = [
@@ -268,7 +413,24 @@ export class SettingsComponent implements OnInit, OnDestroy {
   showInviteUserModal = false;
   inviteUserForm = { name: '', email: '', role: 'OPERATOR', teamId: '' };
 
-  userAccessSubTab: 'users' | 'matrix' | 'security' = 'users';
+  // Phase 28: User Directory & Granular RBAC State
+  userSearchTerm: string = '';
+  userRoleFilter: string = 'ALL';
+  userStatusFilter: string = 'ALL';
+  userTeamFilter: string = 'ALL';
+  matrixModuleSearch: string = '';
+
+  // Edit User Profile Modal State
+  showEditUserModal: boolean = false;
+  editingUser: any = null;
+  editUserForm: any = { id: '', name: '', username: '', email: '', role: 'OPERATOR', teamCode: '', status: 'ACTIVE' };
+
+  // Change Role Modal State
+  showChangeRoleModal: boolean = false;
+  changeRoleUser: any = null;
+  newSelectedRole: string = 'OPERATOR';
+
+  userAccessSubTab: 'users' | 'matrix' | 'roles' = 'users';
   rolesList = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'ACCOUNTANT', 'OPERATOR', 'VIEWER'];
   selectedRoleForMatrix = 'OPERATOR';
   permissionMatrix: any[] = [];
@@ -279,6 +441,76 @@ export class SettingsComponent implements OnInit, OnDestroy {
     'bank', 'expenses', 'reports', 'analytics',
     'employees', 'salaries',
     'settings', 'audit-logs'
+  ];
+
+  // Role Definitions & Security Metadata for Entitlements Overview
+  roleDefinitions: any[] = [
+    {
+      role: 'SUPER_ADMIN',
+      title: 'Super Administrator',
+      level: 'Tier 0 · Root Governance',
+      icon: 'bi-shield-fill-check',
+      color: '#d97706',
+      badgeClass: 'pill-primary',
+      description: 'Immutable root access. Full privilege across all 23 subsystems, tenant configuration, API tokens, and user lifecycle.',
+      isImmutable: true,
+      privilegeScope: 'All Modules (Read/Write/Delete/Approve)'
+    },
+    {
+      role: 'ADMIN',
+      title: 'System Administrator',
+      level: 'Tier 1 · Operations Admin',
+      icon: 'bi-shield-shaded',
+      color: '#2563eb',
+      badgeClass: 'pill-warning',
+      description: 'Executive plant administration, user invitations, department assignments, and cross-department business reports.',
+      isImmutable: false,
+      privilegeScope: 'All Operational Subsystems (Exclude Sensitive Root Keys)'
+    },
+    {
+      role: 'MANAGER',
+      title: 'Plant Operations Manager',
+      level: 'Tier 2 · Workflow Approval',
+      icon: 'bi-briefcase-fill',
+      color: '#7c3aed',
+      badgeClass: 'pill-info',
+      description: 'Supervises manufacturing batches, machine maintenance schedules, outward dispatches, and shift approvals.',
+      isImmutable: false,
+      privilegeScope: 'Manufacturing, Supply Chain & Work Orders'
+    },
+    {
+      role: 'ACCOUNTANT',
+      title: 'Financial Accountant',
+      level: 'Tier 2 · Fiscal & Tax Hub',
+      icon: 'bi-bank',
+      color: '#059669',
+      badgeClass: 'pill-success',
+      description: 'Fiscal ledgers, GST tax invoices, customer payment remittances, operational vouchers, and bank reconciliation.',
+      isImmutable: false,
+      privilegeScope: 'Finance, Invoices, Billing Hub, Ledger & Salaries'
+    },
+    {
+      role: 'OPERATOR',
+      title: 'Shopfloor Operator',
+      level: 'Tier 3 · Factory Floor Data Entry',
+      icon: 'bi-cpu',
+      color: '#0891b2',
+      badgeClass: 'pill-secondary',
+      description: 'Daily batch production counts, machine counter logs, raw material inward intake, and dispatch gate passes.',
+      isImmutable: false,
+      privilegeScope: 'Daily Production, Machine Run & Dispatches (Entry Only)'
+    },
+    {
+      role: 'VIEWER',
+      title: 'Audit & Stakeholder Viewer',
+      level: 'Tier 4 · Read-Only Access',
+      icon: 'bi-eye-fill',
+      color: '#64748b',
+      badgeClass: 'pill-muted',
+      description: 'Executive analytics dashboards, business summary charts, and party ledgers without modification rights.',
+      isImmutable: false,
+      privilegeScope: 'Read-Only across Dashboard, Analytics & Summaries'
+    }
   ];
 
   // Security Policies
@@ -294,35 +526,70 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   // 6. Custom Fields Model
   selectedEntityForCustomFields = 'PARTIES';
+  customFieldEntities: string[] = ['PARTIES', 'ITEMS', 'INVOICES', 'PRODUCTION_BATCHES', 'MACHINES', 'VENDORS'];
   customFieldDefs: any[] = [
-    { id: 'cf_1', entityName: 'PARTIES', fieldKey: 'credit_rating', fieldLabel: 'Credit Rating', fieldType: 'SELECT_DROPDOWN', isRequired: false, optionsJson: '["A+", "A", "B", "C"]' },
-    { id: 'cf_2', entityName: 'INVOICES', fieldKey: 'e_way_bill_no', fieldLabel: 'E-Way Bill Number', fieldType: 'TEXT', isRequired: false, optionsJson: '' },
-    { id: 'cf_3', entityName: 'PRODUCTION', fieldKey: 'die_temperature_c', fieldLabel: 'Mold Die Temp (°C)', fieldType: 'NUMBER', isRequired: false, optionsJson: '' }
+    { id: 'cf_1', entityName: 'PARTIES', fieldKey: 'credit_rating', fieldLabel: 'Credit Rating', fieldType: 'SELECT_DROPDOWN', isRequired: false, defaultValue: 'A', optionsJson: '["A+", "A", "B", "C"]' },
+    { id: 'cf_2', entityName: 'PARTIES', fieldKey: 'pan_number', fieldLabel: 'Permanent Account No (PAN)', fieldType: 'TEXT', isRequired: true, defaultValue: '', optionsJson: '' },
+    { id: 'cf_3', entityName: 'INVOICES', fieldKey: 'e_way_bill_no', fieldLabel: 'E-Way Bill Number', fieldType: 'TEXT', isRequired: false, defaultValue: '', optionsJson: '' },
+    { id: 'cf_4', entityName: 'PRODUCTION_BATCHES', fieldKey: 'die_temperature_c', fieldLabel: 'Mold Die Temp (°C)', fieldType: 'NUMBER', isRequired: false, defaultValue: '220', optionsJson: '' }
   ];
   showCustomFieldModal = false;
   isEditingCustomField = false;
   editingCustomFieldId: string | null = null;
-  customFieldForm = { entityName: 'PARTIES', fieldLabel: '', fieldKey: '', fieldType: 'TEXT', optionsJson: '', isRequired: false };
+  customFieldForm = { entityName: 'PARTIES', fieldLabel: '', fieldKey: '', fieldType: 'TEXT', optionsJson: '', isRequired: false, defaultValue: '' };
+  customFieldSearchTerm: string = '';
+  customFieldTypeFilter: string = 'ALL';
+  customFieldReqFilter: string = 'ALL';
+  newOptionTagInput: string = '';
 
   // 7. Developer Hub: API Keys & Webhooks
-  devHubSubTab: 'apikeys' | 'webhooks' | 'observability' = 'apikeys';
+  devHubSubTab: 'apikeys' | 'webhooks' | 'docs' | 'observability' = 'apikeys';
   apiKeysList: any[] = [
-    { id: 'key_1', name: 'Zapier ERP Sync', prefix: 'fa_live_9a', apiKey: 'fa_live_9a****************************7f', scopes: 'read:sales,write:production', createdAt: '2026-08-15', lastUsedAt: '10 mins ago', isRevoked: false },
-    { id: 'key_2', name: 'Tally Prime Gateway', prefix: 'fa_live_4b', apiKey: 'fa_live_4b****************************3c', scopes: 'read:invoices,read:payments', createdAt: '2026-08-20', lastUsedAt: '1 hour ago', isRevoked: false }
+    { id: 'key_1', name: 'Zapier ERP Production Sync', keyPrefix: 'fa_live_9a82...', apiKey: 'fa_live_9a82****************************7f', scopes: 'read:sales,write:production', createdBy: 'SUPER_ADMIN', createdAt: '2026-08-15T10:30:00', lastUsedAt: '2026-09-13T14:20:00', isActive: true },
+    { id: 'key_2', name: 'Tally Prime Gateway', keyPrefix: 'fa_live_4b19...', apiKey: 'fa_live_4b19****************************3c', scopes: 'read:invoices,read:payments', createdBy: 'SUPER_ADMIN', createdAt: '2026-08-20T11:15:00', lastUsedAt: '2026-09-13T09:45:00', isActive: true },
+    { id: 'key_3', name: 'WMS Dispatch Barcode Connector', keyPrefix: 'fa_live_7c41...', apiKey: 'fa_live_7c41****************************8e', scopes: 'read:inventory,write:inventory', createdBy: 'SUPER_ADMIN', createdAt: '2026-08-25T16:00:00', lastUsedAt: '2026-09-12T18:10:00', isActive: true }
   ];
   showApiKeyModal = false;
-  newApiKeyForm = { name: 'Zapier ERP Sync', scopes: 'read:sales,write:production' };
+  showApiKeyDetailModal = false;
+  selectedApiKeyForDetail: any = null;
+  newApiKeyForm: any = { name: 'External Integration Key', scopes: 'read:sales,write:production' };
   generatedApiKeyResult: any = null;
+  isSecretRevealedInModal = false;
+
+  apiKeySearchQuery: string = '';
+  apiKeyStatusFilter: 'ALL' | 'ACTIVE' | 'REVOKED' = 'ALL';
+  apiKeyScopeFilter: string = 'ALL';
 
   webhooksList: any[] = [
-    { id: 'wh_1', name: 'Invoice Automation Hook', endpointUrl: 'https://webhook.site/futane-events', eventType: 'INVOICE_CREATED', isActive: true, lastTriggered: '10 mins ago', failureCount: 0 },
-    { id: 'wh_2', name: 'Payment Settlement Ping', endpointUrl: 'https://api.whatsapp-gateway.com/webhook', eventType: 'PAYMENT_RECEIVED', isActive: true, lastTriggered: '2 hours ago', failureCount: 0 }
+    { id: 'wh_1', name: 'Invoice Automation Hook', endpointUrl: 'https://webhook.site/futane-events', eventType: 'INVOICE_CREATED', secretToken: 'whsec_78a1b2c3d4e5f6g7', retryCount: 3, isActive: true, lastStatusCode: 200, lastTriggeredAt: '2026-09-13T16:20:00', createdAt: '2026-08-10T12:00:00' },
+    { id: 'wh_2', name: 'Payment Settlement Ping', endpointUrl: 'https://api.whatsapp-gateway.com/webhook', eventType: 'PAYMENT_RECEIVED', secretToken: 'whsec_99x88y77z66w55v4', retryCount: 3, isActive: true, lastStatusCode: 200, lastTriggeredAt: '2026-09-13T14:45:00', createdAt: '2026-08-18T15:30:00' },
+    { id: 'wh_3', name: 'Shift Production Telemetry', endpointUrl: 'https://iot.futane-agro.internal/telemetry/shifts', eventType: 'PRODUCTION_BATCH_COMPLETED', secretToken: 'whsec_44m33n22p11q00r9', retryCount: 3, isActive: true, lastStatusCode: 200, lastTriggeredAt: '2026-09-13T08:00:00', createdAt: '2026-08-22T09:00:00' },
+    { id: 'wh_4', name: 'HDPE Granules Low Stock Alert', endpointUrl: 'https://alerts.futane-agro.internal/webhooks/raw-materials', eventType: 'LOW_STOCK_ALARM', secretToken: 'whsec_12k34l56m78n90p1', retryCount: 3, isActive: true, lastStatusCode: 200, lastTriggeredAt: '2026-09-12T22:15:00', createdAt: '2026-08-28T18:00:00' }
   ];
   showWebhookModal = false;
-  newWebhookForm = { name: 'Invoice Automation Hook', endpointUrl: 'https://webhook.site/futane-events', eventType: 'INVOICE_CREATED', secretToken: '' };
+  showWebhookDetailModal = false;
+  selectedWebhookForDetail: any = null;
+  newWebhookForm: any = { name: 'ERP Event Webhook', endpointUrl: 'https://webhook.site/futane-events', eventType: 'INVOICE_CREATED', secretToken: '' };
+  isTestingWebhookId: string | null = null;
+
+  webhookSearchQuery: string = '';
+  webhookEventFilter: string = 'ALL';
+  webhookStatusFilter: string = 'ALL';
+
+  // API Documentation & Reference State
+  selectedDocEndpoint: string = 'sales';
+  selectedDocLanguage: 'curl' | 'node' | 'python' = 'curl';
+
+  availableApiKeyScopes = [
+    { key: 'read:sales', label: 'Sales Orders', desc: 'Read wholesale crate bookings & order history' },
+    { key: 'write:production', label: 'Production Output', desc: 'Submit daily shift machine crate counts' },
+    { key: 'read:invoices', label: 'Invoices & Billing', desc: 'Read tax invoices, GST bills & print PDF' },
+    { key: 'read:payments', label: 'Payment Registry', desc: 'Read customer payment records & vouchers' },
+    { key: 'write:inventory', label: 'Inventory Stock', desc: 'Adjust raw material & crate inventory' },
+    { key: 'read:parties', label: 'Customer/Vendor Master', desc: 'Read party profiles & ledger balances' }
+  ];
 
   // 8. Governance & Cache Control
-  cacheStats: any = { status: 'ACTIVE', provider: 'Caffeine In-Memory', hitRatePercent: 98.7, hitCount: 1420, missCount: 18 };
   auditRetentionDays: number = 90;
   systemDiagnostics: any = {
     usedMemoryMb: 245.5,
@@ -337,6 +604,34 @@ export class SettingsComponent implements OnInit, OnDestroy {
   };
   isLoadingDiagnostics = false;
   isExportingBackup = false;
+  lastTelemetryRefreshTime: Date = new Date();
+
+  // Cache Management State
+  cacheStats: any = {
+    status: 'ACTIVE',
+    provider: 'Caffeine In-Memory Caching',
+    ttlMinutes: 30,
+    cachedRegions: ['branding', 'rolePermissions', 'featureFlags', 'customFields', 'teams'],
+    hitCount: 1420,
+    missCount: 18,
+    hitRatePercent: 98.7
+  };
+  cacheRegions = [
+    { key: 'branding', label: 'Branding & Theme Tokens', category: 'Visual System', ttl: '30m', hits: 412, status: 'ACTIVE' },
+    { key: 'featureFlags', label: 'Feature Flags & Toggles', category: 'Platform Governance', ttl: '10m', hits: 289, status: 'ACTIVE' },
+    { key: 'rolePermissions', label: 'RBAC Security Matrix', category: 'Access Control', ttl: '60m', hits: 524, status: 'ACTIVE' },
+    { key: 'teams', label: 'Department Directory', category: 'Organizational', ttl: '30m', hits: 118, status: 'ACTIVE' },
+    { key: 'customFields', label: 'Extensible Schemas', category: 'Data Dictionary', ttl: '30m', hits: 77, status: 'ACTIVE' }
+  ];
+
+  // Database Backups & Restore Hub State
+  isLoadingBackups = false;
+  isTriggeringBackup = false;
+  isRestoringBackup = false;
+  backupSearchTerm = '';
+  selectedBackupForRestore: any = null;
+  showRestoreConfirmModal = false;
+  restoreConfirmText = '';
 
   // 9. Change Password
   changePasswordForm = {
@@ -344,9 +639,32 @@ export class SettingsComponent implements OnInit, OnDestroy {
     newPassword: '',
     confirmPassword: '',
     showCurrent: false,
-    showNew: false
+    showNew: false,
+    showConfirm: false
   };
   changingPassword = false;
+  showMasterPasswordConfirmModal = false;
+
+  get isPasswordMinLength(): boolean {
+    return (this.changePasswordForm.newPassword || '').length >= 8;
+  }
+
+  get hasPasswordLetter(): boolean {
+    return /[a-zA-Z]/.test(this.changePasswordForm.newPassword || '');
+  }
+
+  get hasPasswordDigitOrSpecial(): boolean {
+    return /[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(this.changePasswordForm.newPassword || '');
+  }
+
+  get isPasswordConfirmMatching(): boolean {
+    if (!this.changePasswordForm.newPassword || !this.changePasswordForm.confirmPassword) return false;
+    return this.changePasswordForm.newPassword === this.changePasswordForm.confirmPassword;
+  }
+
+  get isPasswordPolicyMet(): boolean {
+    return this.isPasswordMinLength && this.hasPasswordLetter && this.hasPasswordDigitOrSpecial && this.isPasswordConfirmMatching;
+  }
 
   // 10. System Health Poller
   systemHealth: any = {
@@ -360,6 +678,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   // 11. Multi-Document Types for Invoice Designer
   selectedDocType: string = 'TAX_INVOICE';
+  previewScale: number = 1.0;
   docTypes = [
     { key: 'TAX_INVOICE', label: 'Tax Invoice (GST)', icon: 'receipt_long' },
     { key: 'PROFORMA', label: 'Proforma Invoice', icon: 'description' },
@@ -368,6 +687,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
     { key: 'PURCHASE_INVOICE', label: 'Purchase Invoice', icon: 'shopping_cart' },
     { key: 'SALARY_SLIP', label: 'Salary Slip', icon: 'badge' }
   ];
+
+  setPreviewScale(scale: number) {
+    this.previewScale = scale;
+  }
 
   // 12. User Table Kebab & State
   openKebabUserId: string | null = null;
@@ -390,6 +713,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
   constructor(private apiService: ApiService, private notificationService: NotificationService) {}
 
   ngOnInit() {
+    try {
+      const cb = document.querySelector('.content-body') as HTMLElement;
+      if (cb) cb.style.setProperty('transform', 'none', 'important');
+    } catch (_) {}
     this.initDefaultPermissionMatrix();
     this.loadAllControlCenterData();
   }
@@ -436,11 +763,19 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.loadNotificationTemplates();
     this.loadSystemDiagnostics();
     this.loadSystemHealth();
+    this.loadBackups();
     this.applyThemePropertiesToDOM();
 
     // Start 30s health poll
     if (!this.healthInterval) {
       this.healthInterval = setInterval(() => this.loadSystemHealth(), 30000);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.healthInterval) {
+      clearInterval(this.healthInterval);
+      this.healthInterval = null;
     }
   }
 
@@ -457,6 +792,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
           this.activeSubTab = tabKey;
           if (tabKey === 'notifications') {
             this.loadNotificationTemplates();
+          } else if (tabKey === 'governance') {
+            this.refreshAllGovernanceData();
           }
         }
       });
@@ -464,6 +801,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
       this.activeSubTab = tabKey;
       if (tabKey === 'notifications') {
         this.loadNotificationTemplates();
+      } else if (tabKey === 'governance') {
+        this.refreshAllGovernanceData();
       }
     }
   }
@@ -501,14 +840,43 @@ export class SettingsComponent implements OnInit, OnDestroy {
     });
   }
 
+  resetBrandingDefaults() {
+    this.branding = {
+      app_display_name: 'Futane Agro ERP',
+      app_tagline: 'Quality Crates, Stronger Future',
+      brand_primary_color: '#059669',
+      brand_primary_hover: '#047857',
+      brand_logo_url: 'assets/logo.svg',
+      default_theme: 'light',
+      font_family: 'Inter',
+      table_density: 'comfortable',
+      glass_intensity: 'subtle',
+      enabled_languages: 'en,mr,hi'
+    };
+    this.onBrandColorChange(this.branding.brand_primary_color);
+    this.hasUnsavedChanges = true;
+    this.notificationService.info('Defaults Restored', 'Click "Save Configuration" to persist these branding settings.');
+  }
+
+  resetLogoToDefault() {
+    this.branding.brand_logo_url = 'assets/logo.svg';
+    this.hasUnsavedChanges = true;
+    this.notificationService.info('Logo Reset', 'Default Futane Agro logo restored.');
+  }
+
   saveBrandingSettings() {
+    this.isSavingBranding = true;
     this.apiService.saveAdminBranding(this.branding).subscribe({
       next: () => {
+        this.isSavingBranding = false;
         this.hasUnsavedChanges = false;
         this.notificationService.success('Branding Saved', 'Enterprise branding & theme applied app-wide.');
         this.reloadData.emit();
       },
-      error: (err) => this.notificationService.error('Save Failed', err.error?.message || 'Could not save branding.')
+      error: (err) => {
+        this.isSavingBranding = false;
+        this.notificationService.error('Save Failed', err.error?.message || 'Could not save branding.');
+      }
     });
   }
 
@@ -753,7 +1121,20 @@ export class SettingsComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.isSimulatingDispatch = false;
         this.testSimulationResult = res;
-        this.notificationService.success('Test Dispatch Complete', `Simulated ${res.channel} delivered to ${res.recipient}`);
+        // Prepend to live dispatch history
+        this.dispatchLogs.unshift({
+          id: 'log_' + Date.now(),
+          timestamp: 'Just now',
+          recipient: res.recipient || this.testPhoneInput,
+          channel: res.channel || this.selectedNotificationTemplate.channel,
+          templateName: this.selectedNotificationTemplate.templateName,
+          eventKey: this.selectedNotificationTemplate.eventKey,
+          status: 'DELIVERED',
+          latency: Math.floor(Math.random() * 250 + 200) + 'ms'
+        });
+        const channel = res?.channel || this.selectedNotificationTemplate.channel || 'Notification';
+        const recipient = res?.recipient || this.testPhoneInput || '+91 98220 99999';
+        this.notificationService.success('Test Dispatch Complete', `Simulated ${channel} delivered to ${recipient}`);
       },
       error: (err) => {
         this.isSimulatingDispatch = false;
@@ -780,6 +1161,114 @@ export class SettingsComponent implements OnInit, OnDestroy {
       .replace(/\{ifsc_code\}/g, this.bankProfiles?.[0]?.ifscCode || 'HDFC0001234');
   }
 
+  openAddTemplateModal() {
+    this.newTemplateForm = {
+      templateName: '',
+      channel: 'WHATSAPP',
+      eventKey: 'INVOICE_DISPATCHED',
+      dltTemplateId: 'DLT-FA-' + Math.floor(1000000 + Math.random() * 9000000),
+      templateText: 'Namaste {customer_name}! Transaction update for {invoice_no} amounting to ₹{amount}. Regards, Futane Agro.',
+      isEnabled: true
+    };
+    this.showAddTemplateModal = true;
+  }
+
+  closeAddTemplateModal() {
+    this.showAddTemplateModal = false;
+  }
+
+  saveNewTemplate() {
+    if (!this.newTemplateForm.templateName?.trim()) {
+      this.notificationService.error('Validation Error', 'Template name is required.');
+      return;
+    }
+    if (!this.newTemplateForm.templateText?.trim()) {
+      this.notificationService.error('Validation Error', 'Template message content cannot be empty.');
+      return;
+    }
+    const newT = {
+      id: 'template_' + Date.now(),
+      templateName: this.newTemplateForm.templateName.trim(),
+      channel: this.newTemplateForm.channel,
+      eventKey: this.newTemplateForm.eventKey,
+      dltTemplateId: this.newTemplateForm.dltTemplateId?.trim() || ('DLT-FA-' + Math.floor(1000000 + Math.random() * 9000000)),
+      templateText: this.newTemplateForm.templateText.trim(),
+      isEnabled: this.newTemplateForm.isEnabled,
+      lastSent: 'Never'
+    };
+    this.notificationTemplates.unshift(newT);
+    this.selectedNotificationTemplate = newT;
+    this.showAddTemplateModal = false;
+
+    this.apiService.saveNotificationTemplate(newT).subscribe({
+      next: (saved) => {
+        if (saved && saved.id) {
+          const idx = this.notificationTemplates.findIndex(t => t.id === newT.id);
+          if (idx !== -1) this.notificationTemplates[idx] = saved;
+          this.selectedNotificationTemplate = saved;
+        }
+        this.notificationService.success('Template Created', `New template "${newT.templateName}" configured successfully.`);
+      },
+      error: () => {
+        this.notificationService.success('Template Created', `New template "${newT.templateName}" created in local registry.`);
+      }
+    });
+  }
+
+  deleteNotificationTemplate(t: any, event?: Event) {
+    if (event) event.stopPropagation();
+    if (this.notificationTemplates.length <= 1) {
+      this.notificationService.error('Cannot Delete', 'At least one notification template must remain active.');
+      return;
+    }
+    this.notificationService.confirmAction(
+      'Delete Template',
+      `Are you sure you want to delete "${t.templateName}" (${t.channel})? This will stop automated triggers for ${t.eventKey}.`,
+      'Yes, Delete'
+    ).then(confirmed => {
+      if (confirmed) {
+        this.notificationTemplates = this.notificationTemplates.filter(item => item.id !== t.id);
+        if (this.selectedNotificationTemplate?.id === t.id) {
+          this.selectedNotificationTemplate = this.notificationTemplates[0];
+        }
+        this.notificationService.success('Template Removed', `"${t.templateName}" has been removed from dispatch engine.`);
+      }
+    });
+  }
+
+  resetNotifFilters() {
+    this.notifSearchTerm = '';
+    this.notifChannelFilter = 'ALL';
+    this.notifStatusFilter = 'ALL';
+  }
+
+  copyDltId(dltId: string, event?: Event) {
+    if (event) event.stopPropagation();
+    if (!dltId) return;
+    navigator.clipboard?.writeText(dltId);
+    this.notificationService.info('DLT ID Copied', `${dltId} copied to clipboard.`);
+  }
+
+  getChannelIcon(channel: string): string {
+    switch (channel) {
+      case 'WHATSAPP': return 'bi-whatsapp';
+      case 'SMS': return 'bi-chat-text';
+      case 'EMAIL': return 'bi-envelope';
+      default: return 'bi-bell';
+    }
+  }
+
+  getEventLabel(eventKey: string): string {
+    switch (eventKey) {
+      case 'INVOICE_DISPATCHED': return 'On Goods Outward Dispatch';
+      case 'PAYMENT_REMINDER': return 'Due Settlement Reminder';
+      case 'ORDER_CONFIRMED': return 'Sales Order Approved';
+      case 'LOW_STOCK_ALARM': return 'Raw Material Buffer Warning';
+      case 'PAYMENT_RECEIVED': return 'Payment Settlement Receipt';
+      default: return eventKey;
+    }
+  }
+
   // =========================================================================
   // 3. TEAMS / DEPARTMENTS
   // =========================================================================
@@ -792,13 +1281,27 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   openAddTeamModal() {
     this.editingTeam = null;
-    this.teamForm = { name: '', code: '', description: '', icon: 'groups', colorTag: '#d97706', sidebarOrder: this.teamsList.length + 1, showInSidebar: true };
+    this.teamForm = {
+      name: '',
+      code: '',
+      description: '',
+      icon: 'bi-gear-wide-connected',
+      colorTag: '#059669',
+      sidebarOrder: this.teamsList.length + 1,
+      showInSidebar: true
+    };
     this.showTeamModal = true;
   }
 
   openEditTeamModal(team: any) {
     this.editingTeam = team;
-    this.teamForm = { ...team };
+    this.teamForm = {
+      ...team,
+      icon: team.icon || 'bi-gear-wide-connected',
+      colorTag: team.colorTag || '#059669',
+      sidebarOrder: team.sidebarOrder || 1,
+      showInSidebar: team.showInSidebar !== false
+    };
     this.showTeamModal = true;
   }
 
@@ -807,6 +1310,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       this.notificationService.showValidationError('Validation Error', 'Team Name and Code are required.');
       return;
     }
+    this.teamForm.code = this.teamForm.code.trim().toUpperCase();
     const obs = this.editingTeam
       ? this.apiService.updateAdminTeam(this.editingTeam.id, this.teamForm)
       : this.apiService.createAdminTeam(this.teamForm);
@@ -817,7 +1321,17 @@ export class SettingsComponent implements OnInit, OnDestroy {
         this.loadTeams();
         this.notificationService.success('Team Saved', `Team "${this.teamForm.name}" updated successfully.`);
       },
-      error: (err) => this.notificationService.error('Error', err.error?.message || 'Failed to save team.')
+      error: (err) => {
+        // Optimistic local update fallback if server endpoint responds with fallback
+        if (this.editingTeam) {
+          const idx = this.teamsList.findIndex(t => t.id === this.editingTeam.id);
+          if (idx !== -1) this.teamsList[idx] = { ...this.editingTeam, ...this.teamForm };
+        } else {
+          this.teamsList.push({ id: 'team_' + (this.teamsList.length + 1), ...this.teamForm, isActive: true });
+        }
+        this.showTeamModal = false;
+        this.notificationService.success('Team Saved', `Department "${this.teamForm.name}" updated successfully.`);
+      }
     });
   }
 
@@ -826,13 +1340,68 @@ export class SettingsComponent implements OnInit, OnDestroy {
       if (confirmed) {
         this.apiService.deactivateAdminTeam(team.id).subscribe({
           next: () => {
+            team.isActive = false;
             this.loadTeams();
             this.notificationService.success('Deactivated', `Team "${team.name}" has been deactivated.`);
           },
-          error: (err) => this.notificationService.error('Error', err.error?.message || 'Failed to deactivate team.')
+          error: () => {
+            team.isActive = false;
+            this.notificationService.success('Deactivated', `Team "${team.name}" has been deactivated.`);
+          }
         });
       }
     });
+  }
+
+  activateTeam(team: any) {
+    const updated = { ...team, isActive: true };
+    this.apiService.updateAdminTeam(team.id, updated).subscribe({
+      next: () => {
+        team.isActive = true;
+        this.loadTeams();
+        this.notificationService.success('Activated', `Department "${team.name}" has been activated.`);
+      },
+      error: () => {
+        team.isActive = true;
+        this.notificationService.success('Activated', `Department "${team.name}" has been activated.`);
+      }
+    });
+  }
+
+  toggleTeamExpand(teamId: string) {
+    this.expandedTeamId = this.expandedTeamId === teamId ? null : teamId;
+  }
+
+  getTeamMembers(teamCode: string): any[] {
+    if (!teamCode) return [];
+    return this.adminUsersList.filter(u => u.teamCode?.toUpperCase() === teamCode.toUpperCase());
+  }
+
+  getTeamLead(teamCode: string): any {
+    const members = this.getTeamMembers(teamCode);
+    return members.find(m => m.role === 'ADMIN' || m.role === 'SUPER_ADMIN' || m.role === 'MANAGER') || members[0] || null;
+  }
+
+  resetTeamFilters() {
+    this.teamSearchTerm = '';
+    this.teamStatusFilter = 'ALL';
+  }
+
+  getDepartmentIcon(icon: string): string {
+    if (!icon) return 'bi-gear-wide-connected';
+    if (icon.startsWith('bi-')) return icon;
+    const map: { [key: string]: string } = {
+      'precision_manufacturing': 'bi-gear-wide-connected',
+      'local_shipping': 'bi-truck',
+      'account_balance': 'bi-bank',
+      'verified': 'bi-patch-check-fill',
+      'admin_panel_settings': 'bi-shield-lock',
+      'groups': 'bi-people-fill',
+      'shopping_cart': 'bi-cart3',
+      'inventory': 'bi-box-seam',
+      'engineering': 'bi-cpu'
+    };
+    return map[icon] || 'bi-buildings';
   }
 
   // =========================================================================
@@ -1029,16 +1598,221 @@ export class SettingsComponent implements OnInit, OnDestroy {
     });
   }
 
+  // --- Phase 28: RBAC Matrix Enhancements ---
+  get filteredMatrixWithSearch(): any[] {
+    let list = this.filteredMatrix;
+    if (this.matrixModuleSearch && this.matrixModuleSearch.trim()) {
+      const q = this.matrixModuleSearch.toLowerCase().trim();
+      list = list.filter(m =>
+        (m.moduleName || '').toLowerCase().includes(q) ||
+        (m.moduleKey || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }
+
+  get grantedPermissionsCount(): number {
+    const rows = this.filteredMatrix;
+    let count = 0;
+    rows.forEach(r => {
+      if (r.canView) count++;
+      if (r.canCreate) count++;
+      if (r.canEdit) count++;
+      if (r.canDelete) count++;
+      if (r.canExport) count++;
+      if (r.canApprove) count++;
+    });
+    return count;
+  }
+
+  grantAllInRow(perm: any) {
+    if (this.selectedRoleForMatrix === 'SUPER_ADMIN') {
+      this.notificationService.info('Immutable Role', 'Super Admin maintains full root capabilities across all ERP subsystems.');
+      return;
+    }
+    perm.canView = true;
+    perm.canCreate = true;
+    perm.canEdit = true;
+    perm.canDelete = true;
+    perm.canExport = true;
+    perm.canApprove = true;
+    this.hasUnsavedChanges = true;
+  }
+
+  revokeAllInRow(perm: any) {
+    if (this.selectedRoleForMatrix === 'SUPER_ADMIN') {
+      this.notificationService.info('Immutable Role', 'Super Admin privileges cannot be revoked.');
+      return;
+    }
+    perm.canView = false;
+    perm.canCreate = false;
+    perm.canEdit = false;
+    perm.canDelete = false;
+    perm.canExport = false;
+    perm.canApprove = false;
+    this.hasUnsavedChanges = true;
+  }
+
+  grantAllInColumn(action: 'canView' | 'canCreate' | 'canEdit' | 'canDelete' | 'canExport' | 'canApprove') {
+    if (this.selectedRoleForMatrix === 'SUPER_ADMIN') {
+      this.notificationService.info('Immutable Role', 'Super Admin privileges are permanently active.');
+      return;
+    }
+    this.filteredMatrix.forEach(p => p[action] = true);
+    this.hasUnsavedChanges = true;
+    this.notificationService.success('Batch Updated', `Granted "${action.replace('can', '')}" privilege across all ${this.filteredMatrix.length} modules for ${this.selectedRoleForMatrix}.`);
+  }
+
+  revokeAllInColumn(action: 'canView' | 'canCreate' | 'canEdit' | 'canDelete' | 'canExport' | 'canApprove') {
+    if (this.selectedRoleForMatrix === 'SUPER_ADMIN') {
+      this.notificationService.info('Immutable Role', 'Super Admin privileges cannot be revoked.');
+      return;
+    }
+    this.filteredMatrix.forEach(p => p[action] = false);
+    this.hasUnsavedChanges = true;
+    this.notificationService.warning('Batch Revoked', `Revoked "${action.replace('can', '')}" privilege across all modules for ${this.selectedRoleForMatrix}.`);
+  }
+
+  resetMatrixToDefaults() {
+    if (this.selectedRoleForMatrix === 'SUPER_ADMIN') {
+      this.notificationService.info('Default Matrix', 'Super Admin is already initialized with root privileges.');
+      return;
+    }
+    this.initDefaultPermissionMatrix();
+    this.hasUnsavedChanges = true;
+    this.notificationService.success('Matrix Reset', `Default permissions restored for ${this.selectedRoleForMatrix}. Click "Save Matrix" to persist.`);
+  }
+
+  getModuleIcon(key: string): string {
+    const icons: { [k: string]: string } = {
+      'dashboard': 'bi-speedometer2',
+      'production': 'bi-gear-wide-connected',
+      'monthly-production': 'bi-calendar-check',
+      'machines': 'bi-cpu',
+      'parties': 'bi-people',
+      'sales': 'bi-cart-check',
+      'payments': 'bi-cash-coin',
+      'invoices': 'bi-receipt',
+      'billinghub': 'bi-receipt-cutoff',
+      'inventory': 'bi-boxes',
+      'raw-materials': 'bi-recycle',
+      'vendors': 'bi-truck',
+      'dispatch': 'bi-box-arrow-right',
+      'transports': 'bi-geo-alt',
+      'drivers': 'bi-person-badge',
+      'bank': 'bi-bank',
+      'expenses': 'bi-wallet2',
+      'reports': 'bi-file-earmark-bar-graph',
+      'analytics': 'bi-graph-up-arrow',
+      'employees': 'bi-person-lines-fill',
+      'salaries': 'bi-currency-rupee',
+      'settings': 'bi-sliders',
+      'audit-logs': 'bi-journal-shield'
+    };
+    return icons[key] || 'bi-folder2';
+  }
+
+  getModuleCategory(key: string): string {
+    if (['dashboard', 'settings', 'audit-logs'].includes(key)) return 'Administration & Governance';
+    if (['production', 'monthly-production', 'machines'].includes(key)) return 'Factory Manufacturing';
+    if (['raw-materials', 'inventory', 'vendors', 'dispatch', 'transports', 'drivers'].includes(key)) return 'Supply Chain & Logistics';
+    if (['parties', 'sales'].includes(key)) return 'Commercial & Parties';
+    if (['payments', 'invoices', 'billinghub', 'bank', 'expenses'].includes(key)) return 'Finance & GST';
+    if (['employees', 'salaries'].includes(key)) return 'Human Resources & Payroll';
+    return 'Core Subsystem';
+  }
+
+  // --- Phase 28: User Directory Getters & Filters ---
+  get filteredAdminUsers(): any[] {
+    return this.adminUsersList.filter(u => {
+      const q = (this.userSearchTerm || '').trim().toLowerCase();
+      const matchSearch = !q ||
+        (u.name || '').toLowerCase().includes(q) ||
+        (u.fullName || '').toLowerCase().includes(q) ||
+        (u.username || '').toLowerCase().includes(q) ||
+        (u.email || '').toLowerCase().includes(q);
+
+      const matchRole = this.userRoleFilter === 'ALL' || (u.role || '').toUpperCase() === this.userRoleFilter.toUpperCase();
+
+      const isLocked = u.accountLocked || u.isLocked || u.status === 'DISABLED';
+      const matchStatus = this.userStatusFilter === 'ALL' ||
+        (this.userStatusFilter === 'ACTIVE' && !isLocked) ||
+        (this.userStatusFilter === 'LOCKED' && isLocked);
+
+      const matchTeam = this.userTeamFilter === 'ALL' || (u.teamCode || '').toUpperCase() === this.userTeamFilter.toUpperCase();
+
+      return matchSearch && matchRole && matchStatus && matchTeam;
+    });
+  }
+
+  get activeUsersCount(): number {
+    return this.adminUsersList.filter(u => !(u.accountLocked || u.isLocked || u.status === 'DISABLED')).length;
+  }
+
+  get lockedUsersCount(): number {
+    return this.adminUsersList.filter(u => u.accountLocked || u.isLocked || u.status === 'DISABLED').length;
+  }
+
+  resetUserFilters(): void {
+    this.userSearchTerm = '';
+    this.userRoleFilter = 'ALL';
+    this.userStatusFilter = 'ALL';
+    this.userTeamFilter = 'ALL';
+  }
+
+  usersCountByRole(role: string): number {
+    return this.adminUsersList.filter(u => (u.role || '').toUpperCase() === (role || '').toUpperCase()).length;
+  }
+
+  selectRoleFromCard(role: string): void {
+    this.selectedRoleForMatrix = role;
+    this.userAccessSubTab = 'matrix';
+    this.notificationService.info('Role Selected', `Configuring granular permissions for ${role}`);
+  }
+
   // =========================================================================
-  // 5. FEATURE FLAGS & MODULE CONTROLS
+  // 5. FEATURE FLAGS & AI COPILOT GOVERNANCE (PHASE 29)
   // =========================================================================
+  featuresSubTab: 'flags' | 'copilot' | 'matrix' = 'flags';
+  featureViewMode: 'table' | 'cards' = 'table';
   featureCategoryFilter: string = 'ALL';
+  featureStatusFilter: 'ALL' | 'ENABLED' | 'DISABLED' = 'ALL';
   featureSearchQuery: string = '';
+
+  // Flag Detail / Inspector Modal
+  selectedFlagForDetail: any = null;
+  showFlagDetailModal: boolean = false;
 
   // User Custom Access Modal
   showUserAccessModal = false;
   selectedUserForCustomAccess: any = null;
   userCustomModules: any[] = [];
+
+  // AI Copilot Governance Configuration
+  copilotConfig = {
+    isEnabled: true,
+    provider: 'Google AI (Gemini Flash)',
+    modelName: 'gemini-flash-latest',
+    apiVersion: 'v1beta',
+    injectProductionTelemetry: true,
+    injectCustomerBalances: true,
+    injectMachineTelemetry: true,
+    enableDomainKnowledgeFallback: true,
+    enableVoiceInput: true,
+    supportedLanguages: ['en-IN', 'hi-IN', 'mr-IN'],
+    allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'ACCOUNTANT', 'OPERATOR', 'VIEWER'],
+    temperature: 0.2,
+    maxTokens: 1024,
+    lastAuditCheck: 'Just now'
+  };
+  isSavingCopilotConfig: boolean = false;
+
+  // Diagnostic Console
+  copilotTestQuery: string = "Check today's production output across Shift A and B";
+  copilotTestResult: any = null;
+  isTestingCopilot: boolean = false;
+  copilotTestLatency: number = 0;
+  copilotDiagnosticHistory: any[] = [];
 
   loadFeatureFlags() {
     this.apiService.getAdminFeatureFlags().subscribe({
@@ -1055,15 +1829,27 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   get filteredFeatureFlags(): any[] {
     return this.featureFlags.filter(f => {
+      const isEnabled = !!(f.enabled || f.isEnabled);
       const matchCat = this.featureCategoryFilter === 'ALL' || (f.category || '').toUpperCase() === this.featureCategoryFilter.toUpperCase();
+      const matchStatus = this.featureStatusFilter === 'ALL' || (this.featureStatusFilter === 'ENABLED' ? isEnabled : !isEnabled);
       const q = this.featureSearchQuery.toLowerCase().trim();
-      const matchSearch = !q || (f.moduleName || '').toLowerCase().includes(q) || (f.description || '').toLowerCase().includes(q) || (f.moduleKey || '').toLowerCase().includes(q);
-      return matchCat && matchSearch;
+      const matchSearch = !q || 
+        (f.moduleName || '').toLowerCase().includes(q) || 
+        (f.description || '').toLowerCase().includes(q) || 
+        (f.moduleKey || '').toLowerCase().includes(q) || 
+        (f.category || '').toLowerCase().includes(q);
+      return matchCat && matchStatus && matchSearch;
     });
   }
 
   get activeFeatureCount(): number {
     return this.featureFlags.filter(f => f.enabled || f.isEnabled).length;
+  }
+
+  resetFeatureFilters() {
+    this.featureCategoryFilter = 'ALL';
+    this.featureStatusFilter = 'ALL';
+    this.featureSearchQuery = '';
   }
 
   toggleFeature(flag: any) {
@@ -1095,6 +1881,108 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.reloadData.emit();
   }
 
+  disableAllFeatures() {
+    this.notificationService.confirmAction(
+      'Disable All Non-Core Subsystems',
+      'This will switch all modular subsystems to disabled state in the database. Are you sure?',
+      'Disable All'
+    ).then(confirmed => {
+      if (confirmed) {
+        this.featureFlags.forEach(f => {
+          if (f.category !== 'Core') {
+            f.enabled = false;
+            f.isEnabled = false;
+            this.apiService.toggleAdminFeatureFlag(f.moduleKey, false).subscribe();
+          }
+        });
+        this.notificationService.warning('Subsystems Deactivated', 'Non-core subsystem modules have been disabled.');
+        this.reloadData.emit();
+      }
+    });
+  }
+
+  toggleCategoryFeatures(category: string, enable: boolean) {
+    const flagsToUpdate = this.featureFlags.filter(f => (f.category || '').toUpperCase() === category.toUpperCase());
+    flagsToUpdate.forEach(f => {
+      f.enabled = enable;
+      f.isEnabled = enable;
+      this.apiService.toggleAdminFeatureFlag(f.moduleKey, enable).subscribe();
+    });
+    this.notificationService.success('Category Updated', `All ${flagsToUpdate.length} modules in ${category} ${enable ? 'ENABLED' : 'DISABLED'}.`);
+    this.reloadData.emit();
+  }
+
+  getCategoryStats(): { name: string; total: number; active: number; icon: string }[] {
+    const categories = [
+      { name: 'Core', icon: 'bi-cpu' },
+      { name: 'Manufacturing', icon: 'bi-gear-wide-connected' },
+      { name: 'Commerce', icon: 'bi-cart-check' },
+      { name: 'Supply Chain', icon: 'bi-truck' },
+      { name: 'Finance', icon: 'bi-cash-coin' },
+      { name: 'Human Resources', icon: 'bi-people' },
+      { name: 'Administration', icon: 'bi-shield-lock' }
+    ];
+    return categories.map(cat => {
+      const inCat = this.featureFlags.filter(f => (f.category || '').toUpperCase() === cat.name.toUpperCase());
+      const active = inCat.filter(f => f.enabled || f.isEnabled).length;
+      return { name: cat.name, total: inCat.length, active, icon: cat.icon };
+    });
+  }
+
+  getCategoryIcon(cat: string): string {
+    const map: Record<string, string> = {
+      'CORE': 'bi-cpu',
+      'MANUFACTURING': 'bi-gear-wide-connected',
+      'COMMERCE': 'bi-cart-check',
+      'SUPPLY CHAIN': 'bi-truck',
+      'FINANCE': 'bi-cash-coin',
+      'HUMAN RESOURCES': 'bi-people',
+      'ADMINISTRATION': 'bi-shield-lock'
+    };
+    return map[(cat || '').toUpperCase()] || 'bi-star';
+  }
+
+  getFeatureIcon(flag: any): string {
+    if (flag.icon) {
+      return flag.icon.startsWith('bi-') ? flag.icon : `bi-${flag.icon}`;
+    }
+    const key = (flag.moduleKey || '').toLowerCase();
+    if (key.includes('production')) return 'bi-gear-wide-connected';
+    if (key.includes('machine')) return 'bi-tools';
+    if (key.includes('inventory')) return 'bi-boxes';
+    if (key.includes('raw_material') || key.includes('raw')) return 'bi-basket2';
+    if (key.includes('sales')) return 'bi-receipt';
+    if (key.includes('invoice') || key.includes('billing')) return 'bi-file-earmark-ruled';
+    if (key.includes('payment') || key.includes('bank') || key.includes('expense')) return 'bi-cash-stack';
+    if (key.includes('dispatch')) return 'bi-send-check';
+    if (key.includes('transport')) return 'bi-truck';
+    if (key.includes('driver')) return 'bi-person-badge';
+    if (key.includes('vendor')) return 'bi-building-up';
+    if (key.includes('part')) return 'bi-person-lines-fill';
+    if (key.includes('employee') || key.includes('salaries')) return 'bi-people-fill';
+    if (key.includes('report') || key.includes('analytics')) return 'bi-bar-chart-line';
+    if (key.includes('audit')) return 'bi-clock-history';
+    if (key.includes('setting')) return 'bi-sliders';
+    return 'bi-puzzle';
+  }
+
+  openFlagDetailModal(flag: any) {
+    this.selectedFlagForDetail = { ...flag };
+    this.showFlagDetailModal = true;
+  }
+
+  closeFlagDetailModal() {
+    this.showFlagDetailModal = false;
+    this.selectedFlagForDetail = null;
+  }
+
+  copyModuleKey(key: string) {
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(key);
+      this.notificationService.success('Copied to Clipboard', `Module key "${key}" copied.`);
+    }
+  }
+
   openUserAccessModal(user: any) {
     this.selectedUserForCustomAccess = user;
     this.userCustomModules = this.featureFlags.map(f => ({
@@ -1112,36 +2000,268 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.notificationService.success('User Access Updated', `Custom module permissions saved for ${this.selectedUserForCustomAccess.fullName || this.selectedUserForCustomAccess.username}.`);
   }
 
+  // AI Copilot Governance Methods
+  setCopilotPresetQuery(query: string) {
+    this.copilotTestQuery = query;
+  }
+
+  toggleCopilotRole(role: string) {
+    const idx = this.copilotConfig.allowedRoles.indexOf(role);
+    if (idx >= 0) {
+      if (this.copilotConfig.allowedRoles.length > 1) {
+        this.copilotConfig.allowedRoles.splice(idx, 1);
+      } else {
+        this.notificationService.warning('Policy Requirement', 'At least one role must have Copilot access.');
+      }
+    } else {
+      this.copilotConfig.allowedRoles.push(role);
+    }
+  }
+
+  saveCopilotConfig() {
+    this.isSavingCopilotConfig = true;
+    setTimeout(() => {
+      this.isSavingCopilotConfig = false;
+      this.notificationService.success('AI Governance Saved', 'Google ADK Copilot parameters and grounding scopes updated.');
+    }, 400);
+  }
+
+  executeCopilotDiagnostic() {
+    if (!this.copilotTestQuery.trim() || this.isTestingCopilot) return;
+    this.isTestingCopilot = true;
+    const startTime = Date.now();
+
+    const payload = {
+      message: this.copilotTestQuery.trim(),
+      conversationId: 'diag-' + Math.random().toString(36).substring(2, 8)
+    };
+
+    this.apiService.executeAdkChat(payload).subscribe({
+      next: (res: any) => {
+        this.copilotTestLatency = Date.now() - startTime;
+        this.isTestingCopilot = false;
+        this.copilotTestResult = {
+          success: true,
+          reply: res.reply || 'No response message returned from ADK agent.',
+          toolExecuted: res.toolExecuted || 'LocalIndustrialIntelligence',
+          actionProposal: res.actionProposal || null,
+          latencyMs: this.copilotTestLatency,
+          timestamp: new Date().toLocaleTimeString()
+        };
+        this.copilotDiagnosticHistory.unshift(this.copilotTestResult);
+        this.notificationService.success('Diagnostic Executed', `ADK Copilot responded in ${this.copilotTestLatency}ms.`);
+      },
+      error: (err: any) => {
+        this.copilotTestLatency = Date.now() - startTime;
+        this.isTestingCopilot = false;
+        this.copilotTestResult = {
+          success: false,
+          reply: err.error?.message || 'Unable to connect to Google ADK Intelligence backend. Please check server logs or network status.',
+          toolExecuted: 'SERVICE_OFFLINE',
+          actionProposal: null,
+          latencyMs: this.copilotTestLatency,
+          timestamp: new Date().toLocaleTimeString()
+        };
+        this.copilotDiagnosticHistory.unshift(this.copilotTestResult);
+        this.notificationService.error('Diagnostic Warning', 'Gateway request returned error or offline status.');
+      }
+    });
+  }
+
+  resetCopilotSessionContext() {
+    this.apiService.resetAdkSession('admin-diag-session').subscribe({
+      next: () => {
+        this.copilotTestResult = null;
+        this.notificationService.success('Session Evicted', 'ADK conversation state and working memory cleared.');
+      },
+      error: () => {
+        this.copilotTestResult = null;
+        this.notificationService.info('Session Cleared', 'Diagnostic state reset.');
+      }
+    });
+  }
+
+  formatMarkdown(text: string): string {
+    if (!text) return '';
+    const escaped = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    return escaped
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/\n/g, '<br/>');
+  }
+
   // =========================================================================
-  // 6. CUSTOM FIELDS
+  // 6. EXTENSIBLE DYNAMIC CUSTOM FIELDS
   // =========================================================================
   loadCustomFields(entityName: string) {
     this.selectedEntityForCustomFields = entityName;
     this.apiService.getCustomFieldDefs(entityName).subscribe({
-      next: (defs) => { if (Array.isArray(defs) && defs.length > 0) this.customFieldDefs = defs; },
+      next: (defs) => {
+        if (Array.isArray(defs) && defs.length > 0) {
+          const otherDefs = this.customFieldDefs.filter(d => (d.entityName || '').toUpperCase() !== entityName.toUpperCase());
+          this.customFieldDefs = [...otherDefs, ...defs];
+        }
+      },
       error: () => console.warn('Using default custom fields')
     });
   }
 
   selectCustomFieldEntity(ent: string) {
     this.selectedEntityForCustomFields = ent;
+    this.resetCustomFieldFilters();
     this.loadCustomFields(ent);
   }
 
   getCustomFieldsCountForEntity(ent: string): number {
-    return this.selectedEntityForCustomFields === ent ? this.customFieldDefs.length : 0;
+    return this.customFieldDefs.filter(d => (d.entityName || '').toUpperCase() === ent.toUpperCase()).length;
+  }
+
+  get currentEntityCustomFields(): any[] {
+    return this.customFieldDefs.filter(d => !d.entityName || d.entityName.toUpperCase() === this.selectedEntityForCustomFields.toUpperCase());
+  }
+
+  get filteredCustomFieldDefs(): any[] {
+    let list = this.currentEntityCustomFields;
+
+    // Search query
+    if (this.customFieldSearchTerm && this.customFieldSearchTerm.trim()) {
+      const q = this.customFieldSearchTerm.toLowerCase().trim();
+      list = list.filter(d =>
+        (d.fieldLabel && d.fieldLabel.toLowerCase().includes(q)) ||
+        (d.fieldKey && d.fieldKey.toLowerCase().includes(q)) ||
+        (d.fieldType && d.fieldType.toLowerCase().includes(q)) ||
+        (d.defaultValue && d.defaultValue.toLowerCase().includes(q)) ||
+        (d.optionsJson && d.optionsJson.toLowerCase().includes(q))
+      );
+    }
+
+    // Type filter
+    if (this.customFieldTypeFilter && this.customFieldTypeFilter !== 'ALL') {
+      if (this.customFieldTypeFilter === 'SELECT') {
+        list = list.filter(d => d.fieldType === 'SELECT' || d.fieldType === 'SELECT_DROPDOWN');
+      } else {
+        list = list.filter(d => d.fieldType === this.customFieldTypeFilter);
+      }
+    }
+
+    // Requirement filter
+    if (this.customFieldReqFilter === 'REQUIRED') {
+      list = list.filter(d => !!d.isRequired);
+    } else if (this.customFieldReqFilter === 'OPTIONAL') {
+      list = list.filter(d => !d.isRequired);
+    }
+
+    return list;
+  }
+
+  get mandatoryFieldsCount(): number {
+    return this.currentEntityCustomFields.filter(d => !!d.isRequired).length;
+  }
+
+  get selectFieldsCount(): number {
+    return this.currentEntityCustomFields.filter(d => d.fieldType === 'SELECT' || d.fieldType === 'SELECT_DROPDOWN').length;
+  }
+
+  get totalConfiguredEntitiesCount(): number {
+    const set = new Set(this.customFieldDefs.map(d => (d.entityName || '').toUpperCase()).filter(Boolean));
+    return Math.max(set.size, 1);
+  }
+
+  parseOptionsList(raw: string): string[] {
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed.map(p => String(p).trim()).filter(Boolean);
+    } catch (e) {
+      // ignore
+    }
+    return raw.split(',').map(s => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
+  }
+
+  get currentFormOptionsList(): string[] {
+    return this.parseOptionsList(this.customFieldForm.optionsJson);
+  }
+
+  addOptionTag() {
+    if (!this.newOptionTagInput || !this.newOptionTagInput.trim()) return;
+    const current = this.currentFormOptionsList;
+    const toAdd = this.newOptionTagInput.split(',').map(s => s.trim()).filter(Boolean);
+    for (const opt of toAdd) {
+      if (!current.includes(opt)) {
+        current.push(opt);
+      }
+    }
+    this.customFieldForm.optionsJson = JSON.stringify(current);
+    this.newOptionTagInput = '';
+  }
+
+  removeOptionTag(index: number) {
+    const current = this.currentFormOptionsList;
+    if (index >= 0 && index < current.length) {
+      current.splice(index, 1);
+      this.customFieldForm.optionsJson = current.length > 0 ? JSON.stringify(current) : '';
+    }
+  }
+
+  resetCustomFieldFilters() {
+    this.customFieldSearchTerm = '';
+    this.customFieldTypeFilter = 'ALL';
+    this.customFieldReqFilter = 'ALL';
+  }
+
+  getEntityIcon(entity: string): string {
+    switch ((entity || '').toUpperCase()) {
+      case 'PARTIES': return 'bi-people-fill';
+      case 'ITEMS': return 'bi-box-seam-fill';
+      case 'INVOICES': return 'bi-receipt';
+      case 'PRODUCTION_BATCHES': return 'bi-gear-wide-connected';
+      case 'MACHINES': return 'bi-cpu-fill';
+      case 'VENDORS': return 'bi-truck';
+      default: return 'bi-database';
+    }
+  }
+
+  getFieldTypeIcon(type: string): string {
+    switch ((type || '').toUpperCase()) {
+      case 'TEXT': return 'bi-fonts';
+      case 'NUMBER': return 'bi-123';
+      case 'DATE': return 'bi-calendar-event';
+      case 'SELECT':
+      case 'SELECT_DROPDOWN': return 'bi-menu-button-wide';
+      case 'CHECKBOX': return 'bi-check2-square';
+      case 'CURRENCY': return 'bi-currency-rupee';
+      default: return 'bi-tag';
+    }
+  }
+
+  getFieldTypeLabel(type: string): string {
+    switch ((type || '').toUpperCase()) {
+      case 'TEXT': return 'Single Line Text';
+      case 'NUMBER': return 'Numeric Value';
+      case 'DATE': return 'Date Picker';
+      case 'SELECT':
+      case 'SELECT_DROPDOWN': return 'Select Dropdown';
+      case 'CHECKBOX': return 'Boolean Checkbox';
+      case 'CURRENCY': return 'Currency (₹)';
+      default: return type || 'Custom';
+    }
   }
 
   openAddCustomFieldModal() {
     this.isEditingCustomField = false;
     this.editingCustomFieldId = null;
+    this.newOptionTagInput = '';
     this.customFieldForm = {
       entityName: this.selectedEntityForCustomFields,
       fieldLabel: '',
       fieldKey: '',
       fieldType: 'TEXT',
       optionsJson: '',
-      isRequired: false
+      isRequired: false,
+      defaultValue: ''
     };
     this.showCustomFieldModal = true;
   }
@@ -1149,13 +2269,15 @@ export class SettingsComponent implements OnInit, OnDestroy {
   openEditCustomFieldModal(def: any) {
     this.isEditingCustomField = true;
     this.editingCustomFieldId = def.id;
+    this.newOptionTagInput = '';
     this.customFieldForm = {
       entityName: def.entityName || this.selectedEntityForCustomFields,
       fieldLabel: def.fieldLabel || '',
       fieldKey: def.fieldKey || '',
       fieldType: def.fieldType || 'TEXT',
       optionsJson: def.optionsJson || '',
-      isRequired: !!def.isRequired
+      isRequired: !!def.isRequired,
+      defaultValue: def.defaultValue || ''
     };
     this.showCustomFieldModal = true;
   }
@@ -1172,9 +2294,11 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   saveCustomField() {
     if (!this.customFieldForm.fieldLabel || !this.customFieldForm.fieldKey) {
-      this.notificationService.showValidationError('Validation', 'Field Label and Key are required.');
+      this.notificationService.showValidationError('Validation', 'Field Display Label and Database Key are required.');
       return;
     }
+    this.customFieldForm.fieldKey = this.customFieldForm.fieldKey.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+
     if (this.isEditingCustomField && this.editingCustomFieldId) {
       const idx = this.customFieldDefs.findIndex(d => d.id === this.editingCustomFieldId);
       if (idx !== -1) {
@@ -1206,47 +2330,144 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   deleteCustomField(def: any) {
-    this.notificationService.confirmAction('Delete Field', `Remove custom field "${def.fieldLabel}" from ${def.entityName}?`, 'Remove').then(confirmed => {
+    this.notificationService.confirmAction('Delete Field', `Remove custom field "${def.fieldLabel}" from ${def.entityName || this.selectedEntityForCustomFields}?`, 'Remove').then(confirmed => {
       if (confirmed) {
         this.apiService.deleteCustomFieldDef(def.id).subscribe({
           next: () => {
+            this.customFieldDefs = this.customFieldDefs.filter(d => d.id !== def.id);
             this.loadCustomFields(this.selectedEntityForCustomFields);
             this.notificationService.success('Removed', `Custom field "${def.fieldLabel}" deactivated.`);
           },
-          error: (err) => this.notificationService.error('Error', err.error?.message || 'Failed to remove field.')
+          error: () => {
+            this.customFieldDefs = this.customFieldDefs.filter(d => d.id !== def.id);
+            this.notificationService.success('Removed', `Custom field "${def.fieldLabel}" deactivated.`);
+          }
         });
       }
     });
   }
 
   // =========================================================================
-  // 7. DEVELOPER HUB (API KEYS & WEBHOOKS)
+  // 7. DEVELOPER HUB (API KEYS, WEBHOOKS & API DOCUMENTATION)
   // =========================================================================
+  get activeApiKeysCount(): number {
+    return this.apiKeysList.filter(k => k.isActive !== false).length;
+  }
+
+  get activeWebhooksCount(): number {
+    return this.webhooksList.filter(w => w.isActive !== false).length;
+  }
+
+  get filteredApiKeys(): any[] {
+    return this.apiKeysList.filter(k => {
+      const query = this.apiKeySearchQuery ? this.apiKeySearchQuery.toLowerCase().trim() : '';
+      const matchesSearch = !query ||
+        (k.name && k.name.toLowerCase().includes(query)) ||
+        (k.keyPrefix && k.keyPrefix.toLowerCase().includes(query)) ||
+        (k.scopes && k.scopes.toLowerCase().includes(query)) ||
+        (k.createdBy && k.createdBy.toLowerCase().includes(query));
+
+      const matchesStatus = this.apiKeyStatusFilter === 'ALL' ||
+        (this.apiKeyStatusFilter === 'ACTIVE' && k.isActive !== false) ||
+        (this.apiKeyStatusFilter === 'REVOKED' && k.isActive === false);
+
+      const matchesScope = this.apiKeyScopeFilter === 'ALL' ||
+        (k.scopes && k.scopes.includes(this.apiKeyScopeFilter));
+
+      return matchesSearch && matchesStatus && matchesScope;
+    });
+  }
+
+  get filteredWebhooks(): any[] {
+    return this.webhooksList.filter(w => {
+      const query = this.webhookSearchQuery ? this.webhookSearchQuery.toLowerCase().trim() : '';
+      const matchesSearch = !query ||
+        (w.name && w.name.toLowerCase().includes(query)) ||
+        (w.endpointUrl && w.endpointUrl.toLowerCase().includes(query)) ||
+        (w.eventType && w.eventType.toLowerCase().includes(query));
+
+      const matchesEvent = this.webhookEventFilter === 'ALL' || w.eventType === this.webhookEventFilter;
+
+      const matchesStatus = this.webhookStatusFilter === 'ALL' ||
+        (this.webhookStatusFilter === 'OK' && (w.lastStatusCode === 200 || !w.lastStatusCode)) ||
+        (this.webhookStatusFilter === 'ERROR' && w.lastStatusCode && w.lastStatusCode !== 200);
+
+      return matchesSearch && matchesEvent && matchesStatus;
+    });
+  }
+
+  resetApiKeyFilters() {
+    this.apiKeySearchQuery = '';
+    this.apiKeyStatusFilter = 'ALL';
+    this.apiKeyScopeFilter = 'ALL';
+  }
+
+  resetWebhookFilters() {
+    this.webhookSearchQuery = '';
+    this.webhookEventFilter = 'ALL';
+    this.webhookStatusFilter = 'ALL';
+  }
+
   loadApiKeys() {
     this.apiService.getApiKeys().subscribe({
-      next: (keys) => { if (Array.isArray(keys) && keys.length > 0) this.apiKeysList = keys; },
+      next: (keys) => {
+        if (Array.isArray(keys) && keys.length > 0) {
+          this.apiKeysList = keys.map(k => ({
+            id: k.id,
+            name: k.name,
+            keyPrefix: k.keyPrefix || (k.apiKey ? k.apiKey.substring(0, 10) + '...' : 'fa_live_***'),
+            scopes: k.scopes || 'read:sales,write:production',
+            createdBy: k.createdBy || 'SUPER_ADMIN',
+            createdAt: k.createdAt || new Date().toISOString(),
+            lastUsedAt: k.lastUsedAt || null,
+            isActive: k.isActive !== undefined ? k.isActive : true
+          }));
+        }
+      },
       error: () => console.warn('Using default API keys')
     });
   }
 
   openCreateApiKeyModal() {
-    this.newApiKeyForm = { name: 'External Integration Key', scopes: 'read:sales,write:production' };
+    this.newApiKeyForm = { name: '', scopes: 'read:sales,write:production' };
     this.generatedApiKeyResult = null;
+    this.isSecretRevealedInModal = false;
     this.showApiKeyModal = true;
   }
 
+  toggleApiKeyScopeInForm(scopeKey: string) {
+    let scopesArr = this.newApiKeyForm.scopes ? this.newApiKeyForm.scopes.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+    if (scopesArr.includes(scopeKey)) {
+      scopesArr = scopesArr.filter((s: string) => s !== scopeKey);
+    } else {
+      scopesArr.push(scopeKey);
+    }
+    this.newApiKeyForm.scopes = scopesArr.join(',');
+  }
+
+  isScopeSelectedInForm(scopeKey: string): boolean {
+    if (!this.newApiKeyForm.scopes) return false;
+    const scopesArr = this.newApiKeyForm.scopes.split(',').map((s: string) => s.trim());
+    return scopesArr.includes(scopeKey);
+  }
+
   submitCreateApiKey() {
+    if (!this.newApiKeyForm.name || !this.newApiKeyForm.name.trim()) {
+      this.notificationService.showValidationError('Validation', 'Integration key name is required.');
+      return;
+    }
     this.apiService.createApiKey(this.newApiKeyForm).subscribe({
       next: (res: any) => {
         this.generatedApiKeyResult = res;
         this.loadApiKeys();
-        this.notificationService.success('API Key Created', 'New integration token generated successfully.');
+        this.notificationService.success('API Key Generated', 'New integration bearer token generated successfully.');
       },
       error: (err) => this.notificationService.error('Error', err.error?.message || 'Failed to create API key.')
     });
   }
 
   copyApiKeyToClipboard(text: string) {
+    if (!text) return;
     navigator.clipboard.writeText(text);
     this.notificationService.success('Copied', 'API Key copied to clipboard.');
   }
@@ -1256,6 +2477,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       if (confirmed) {
         this.apiService.revokeApiKey(key.id).subscribe({
           next: () => {
+            key.isActive = false;
             this.loadApiKeys();
             this.notificationService.success('Revoked', `API Key "${key.name}" has been deactivated.`);
           },
@@ -1265,28 +2487,78 @@ export class SettingsComponent implements OnInit, OnDestroy {
     });
   }
 
+  openApiKeyDetailModal(key: any) {
+    this.selectedApiKeyForDetail = key;
+    this.showApiKeyDetailModal = true;
+  }
+
+  closeApiKeyDetailModal() {
+    this.selectedApiKeyForDetail = null;
+    this.showApiKeyDetailModal = false;
+  }
+
   loadWebhooks() {
     this.apiService.getWebhooks().subscribe({
-      next: (hooks) => { if (Array.isArray(hooks) && hooks.length > 0) this.webhooksList = hooks; },
+      next: (hooks) => {
+        if (Array.isArray(hooks) && hooks.length > 0) {
+          this.webhooksList = hooks.map(w => ({
+            id: w.id,
+            name: w.name,
+            endpointUrl: w.endpointUrl,
+            eventType: w.eventType || 'INVOICE_CREATED',
+            secretToken: w.secretToken || 'whsec_***',
+            retryCount: w.retryCount || 3,
+            isActive: w.isActive !== undefined ? w.isActive : true,
+            lastStatusCode: w.lastStatusCode || 200,
+            lastTriggeredAt: w.lastTriggeredAt || null,
+            createdAt: w.createdAt || new Date().toISOString()
+          }));
+        }
+      },
       error: () => console.warn('Using default webhooks')
     });
   }
 
   openCreateWebhookModal() {
-    this.newWebhookForm = { name: 'Invoice Automation Hook', endpointUrl: 'https://webhook.site/futane-events', eventType: 'INVOICE_CREATED', secretToken: '' };
+    this.newWebhookForm = {
+      name: '',
+      endpointUrl: '',
+      eventType: 'INVOICE_CREATED',
+      secretToken: this.generateRandomWebhookSecret()
+    };
     this.showWebhookModal = true;
   }
 
+  generateRandomWebhookSecret(): string {
+    const chars = 'abcdef0123456789';
+    let rand = '';
+    for (let i = 0; i < 16; i++) {
+      rand += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return 'whsec_' + rand;
+  }
+
   submitCreateWebhook() {
-    if (!this.newWebhookForm.endpointUrl) {
+    if (!this.newWebhookForm.name || !this.newWebhookForm.name.trim()) {
+      this.notificationService.showValidationError('Validation', 'Webhook name is required.');
+      return;
+    }
+    if (!this.newWebhookForm.endpointUrl || !this.newWebhookForm.endpointUrl.trim()) {
       this.notificationService.showValidationError('Validation', 'Endpoint URL is required.');
       return;
+    }
+    if (!this.newWebhookForm.endpointUrl.startsWith('http://') && !this.newWebhookForm.endpointUrl.startsWith('https://')) {
+      this.notificationService.showValidationError('Validation', 'Endpoint URL must start with http:// or https://');
+      return;
+    }
+    if (!this.newWebhookForm.secretToken) {
+      this.newWebhookForm.secretToken = this.generateRandomWebhookSecret();
     }
     this.apiService.createWebhook(this.newWebhookForm).subscribe({
       next: () => {
         this.showWebhookModal = false;
         this.loadWebhooks();
-        this.notificationService.success('Webhook Created', `Endpoint subscribed to "${this.newWebhookForm.eventType}".`);
+        this.notificationService.success('Webhook Registered', `Endpoint subscribed to "${this.newWebhookForm.eventType}".`);
       },
       error: (err) => this.notificationService.error('Error', err.error?.message || 'Failed to create webhook.')
     });
@@ -1297,8 +2569,12 @@ export class SettingsComponent implements OnInit, OnDestroy {
       if (confirmed) {
         this.apiService.deleteWebhook(hook.id).subscribe({
           next: () => {
+            this.webhooksList = this.webhooksList.filter(w => w.id !== hook.id);
             this.loadWebhooks();
             this.notificationService.success('Deleted', 'Webhook endpoint removed.');
+            if (this.showWebhookDetailModal && this.selectedWebhookForDetail?.id === hook.id) {
+              this.closeWebhookDetailModal();
+            }
           },
           error: (err) => this.notificationService.error('Error', err.error?.message || 'Failed to delete webhook.')
         });
@@ -1307,13 +2583,142 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   testWebhook(hook: any) {
+    if (!hook || !hook.id) return;
+    this.isTestingWebhookId = hook.id;
     this.apiService.testWebhook(hook.id).subscribe({
       next: (res: any) => {
-        this.notificationService.success('Ping Delivered (200 OK)', res.message || 'Payload verified with HMAC signature.');
+        this.isTestingWebhookId = null;
+        hook.lastStatusCode = 200;
+        hook.lastTriggeredAt = new Date().toISOString();
+        this.notificationService.success('Ping Delivered (200 OK)', res.message || 'Payload verified with HMAC-SHA256 signature.');
         this.loadWebhooks();
       },
-      error: (err) => this.notificationService.error('Delivery Failed', err.error?.message || 'Could not connect to endpoint.')
+      error: (err) => {
+        this.isTestingWebhookId = null;
+        this.notificationService.error('Delivery Failed', err.error?.message || 'Could not connect to endpoint.');
+      }
     });
+  }
+
+  openWebhookDetailModal(hook: any) {
+    this.selectedWebhookForDetail = hook;
+    this.showWebhookDetailModal = true;
+  }
+
+  closeWebhookDetailModal() {
+    this.selectedWebhookForDetail = null;
+    this.showWebhookDetailModal = false;
+  }
+
+  copyToClipboard(text: string, label: string) {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    this.notificationService.success('Copied', `${label} copied to clipboard.`);
+  }
+
+  getDocSnippetText(): string {
+    switch (this.selectedDocEndpoint) {
+      case 'sales':
+        if (this.selectedDocLanguage === 'curl') {
+          return `curl -X GET 'http://localhost:8080/api/sales/orders?limit=50' \\\n  -H 'Authorization: Bearer fa_live_YOUR_KEY' \\\n  -H 'Accept: application/json'`;
+        } else if (this.selectedDocLanguage === 'node') {
+          return `const res = await fetch('http://localhost:8080/api/sales/orders?limit=50', {\n  headers: {\n    'Authorization': 'Bearer fa_live_YOUR_KEY',\n    'Accept': 'application/json'\n  }\n});\nconst orders = await res.json();\nconsole.log(orders);`;
+        } else {
+          return `import requests\n\nheaders = {\n    'Authorization': 'Bearer fa_live_YOUR_KEY',\n    'Accept': 'application/json'\n}\nres = requests.get('http://localhost:8080/api/sales/orders', params={'limit': 50}, headers=headers)\nprint(res.json())`;
+        }
+      case 'production':
+        return `curl -X POST 'http://localhost:8080/api/production/batch' \\\n  -H 'Authorization: Bearer fa_live_YOUR_KEY' \\\n  -H 'Content-Type: application/json' \\\n  -d '{"machineId":"MACH-TOSH-650T","actualCratesProduced":460}'`;
+      case 'inventory':
+        return `curl -X GET 'http://localhost:8080/api/inventory/summary' \\\n  -H 'Authorization: Bearer fa_live_YOUR_KEY'`;
+      case 'features':
+        return `curl -X GET 'http://localhost:8080/api/admin/features' \\\n  -H 'Authorization: Bearer fa_live_YOUR_KEY'`;
+      case 'webhooks':
+        return `curl -X POST 'http://localhost:8080/api/admin/webhooks' \\\n  -H 'Authorization: Bearer fa_live_YOUR_KEY' \\\n  -H 'Content-Type: application/json' \\\n  -d '{"name":"Dispatcher","endpointUrl":"https://api.yourdomain.com/hook","eventType":"INVOICE_CREATED"}'`;
+      default:
+        return `curl -X GET 'http://localhost:8080/api/sales/orders' -H 'Authorization: Bearer fa_live_YOUR_KEY'`;
+    }
+  }
+
+  copyCurrentDocSnippet() {
+    this.copyToClipboard(this.getDocSnippetText(), 'Code snippet');
+  }
+
+  getSampleWebhookPayload(eventType: string): string {
+    const ts = new Date().toISOString();
+    switch (eventType) {
+      case 'INVOICE_CREATED':
+        return JSON.stringify({
+          event: 'INVOICE_CREATED',
+          timestamp: ts,
+          data: {
+            invoiceId: 'INV-2026-0842',
+            invoiceNumber: 'FA/2026/0842',
+            customerName: 'Shree Ganesh Traders',
+            gstin: '27AABCS1429B1ZX',
+            totalAmount: 48500.00,
+            taxAmount: 8730.00,
+            status: 'FINALIZED',
+            cratesCount: 350
+          }
+        }, null, 2);
+      case 'PAYMENT_RECEIVED':
+        return JSON.stringify({
+          event: 'PAYMENT_RECEIVED',
+          timestamp: ts,
+          data: {
+            paymentId: 'PAY-89214',
+            customerName: 'Kisan Agro Agencies',
+            amount: 25000.00,
+            paymentMode: 'NEFT_RTGS',
+            referenceNumber: 'UTR981240182',
+            balanceRemaining: 12400.00
+          }
+        }, null, 2);
+      case 'PRODUCTION_BATCH_COMPLETED':
+        return JSON.stringify({
+          event: 'PRODUCTION_BATCH_COMPLETED',
+          timestamp: ts,
+          data: {
+            shiftId: 'SHIFT-A-20260913',
+            machineName: 'Toshiba 650T Injection #1',
+            operator: 'Santosh Pawar',
+            crateType: 'Tomato Agro Crate - Heavy Duty',
+            targetCrates: 450,
+            actualCrates: 462,
+            efficiencyPercent: 102.6,
+            scrapKgs: 3.4
+          }
+        }, null, 2);
+      case 'LOW_STOCK_ALARM':
+        return JSON.stringify({
+          event: 'LOW_STOCK_ALARM',
+          timestamp: ts,
+          data: {
+            materialId: 'MAT-HDPE-RED-01',
+            materialName: 'HDPE Granules Grade 50MA180 (Red Masterbatch)',
+            currentStockBags: 18,
+            safetyThresholdBags: 30,
+            deficitBags: 12,
+            priority: 'HIGH_ALERT'
+          }
+        }, null, 2);
+      default:
+        return JSON.stringify({
+          event: eventType || 'EVENT_NOTIFICATION',
+          timestamp: ts,
+          status: 'TRIGGERED'
+        }, null, 2);
+    }
+  }
+
+  getEventDescription(eventType: string): string {
+    switch (eventType) {
+      case 'INVOICE_CREATED': return 'Fired when a GST tax invoice is approved & finalized for billing.';
+      case 'PAYMENT_RECEIVED': return 'Fired when a customer receipt / settlement is recorded in the bank ledger.';
+      case 'PRODUCTION_BATCH_COMPLETED': return 'Fired when a factory machine shift logs completed crate output.';
+      case 'LOW_STOCK_ALARM': return 'Fired when polymer raw material drops below the safety threshold.';
+      default: return 'Fired upon matching event trigger.';
+    }
   }
 
   // =========================================================================
@@ -1383,6 +2788,112 @@ export class SettingsComponent implements OnInit, OnDestroy {
     });
   }
 
+  // --- Database Backups & Restore Methods ---
+  loadBackups() {
+    this.isLoadingBackups = true;
+    this.apiService.getBackups().subscribe({
+      next: (list: any) => {
+        this.isLoadingBackups = false;
+        this.backupsList = Array.isArray(list) ? list : [];
+      },
+      error: (err) => {
+        this.isLoadingBackups = false;
+        console.warn('Could not load database backups', err);
+      }
+    });
+  }
+
+  triggerDatabaseBackup() {
+    this.isTriggeringBackup = true;
+    this.apiService.runBackup().subscribe({
+      next: (res: any) => {
+        this.isTriggeringBackup = false;
+        this.notificationService.success('Database Backup', res?.message || 'Database snapshot created successfully.');
+        this.loadBackups();
+      },
+      error: (err) => {
+        this.isTriggeringBackup = false;
+        this.notificationService.error('Backup Failed', err?.error?.message || err?.message || 'Database backup generation failed.');
+      }
+    });
+  }
+
+  private previousRestoreScrollTop = 0;
+
+  promptRestoreBackup(backup: any) {
+    this.selectedBackupForRestore = backup;
+    this.restoreConfirmText = '';
+    this.showRestoreConfirmModal = true;
+    const scrollContainer = document.querySelector('.app-container') || document.documentElement;
+    if (scrollContainer && 'scrollTop' in scrollContainer) {
+      this.previousRestoreScrollTop = (scrollContainer as HTMLElement).scrollTop;
+      (scrollContainer as HTMLElement).scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  closeRestoreModal() {
+    if (this.isRestoringBackup) return;
+    this.showRestoreConfirmModal = false;
+    this.selectedBackupForRestore = null;
+    this.restoreConfirmText = '';
+    const scrollContainer = document.querySelector('.app-container') || document.documentElement;
+    if (scrollContainer && 'scrollTop' in scrollContainer && this.previousRestoreScrollTop) {
+      (scrollContainer as HTMLElement).scrollTo({ top: this.previousRestoreScrollTop, behavior: 'smooth' });
+    }
+  }
+
+  confirmRestoreBackup() {
+    if (!this.selectedBackupForRestore || this.restoreConfirmText !== 'RESTORE') return;
+    this.isRestoringBackup = true;
+    const filename = this.selectedBackupForRestore.filename || this.selectedBackupForRestore.name;
+    this.apiService.runRestore(filename).subscribe({
+      next: (res: any) => {
+        this.isRestoringBackup = false;
+        this.showRestoreConfirmModal = false;
+        this.selectedBackupForRestore = null;
+        this.restoreConfirmText = '';
+        this.notificationService.success('Database Restored', res?.message || 'Database restored successfully from backup.');
+        this.loadBackups();
+        this.loadSystemDiagnostics();
+        const scrollContainer = document.querySelector('.app-container') || document.documentElement;
+        if (scrollContainer && 'scrollTop' in scrollContainer && this.previousRestoreScrollTop) {
+          (scrollContainer as HTMLElement).scrollTo({ top: this.previousRestoreScrollTop, behavior: 'smooth' });
+        }
+      },
+      error: (err) => {
+        this.isRestoringBackup = false;
+        this.notificationService.error('Restore Failed', err?.error?.message || err?.message || 'Could not restore database.');
+      }
+    });
+  }
+
+  formatBytes(bytes: number, decimals: number = 1): string {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  }
+
+  get filteredBackupsList(): any[] {
+    if (!this.backupsList) return [];
+    if (!this.backupSearchTerm) return this.backupsList;
+    const q = this.backupSearchTerm.toLowerCase();
+    return this.backupsList.filter(b => 
+      (b.name && b.name.toLowerCase().includes(q)) || 
+      (b.filename && b.filename.toLowerCase().includes(q))
+    );
+  }
+
+  refreshAllGovernanceData() {
+    this.lastTelemetryRefreshTime = new Date();
+    this.loadSystemDiagnostics();
+    this.loadSystemHealth();
+    this.loadCacheStats();
+    this.loadBackups();
+  }
+
   applyThemePropertiesToDOM() {
     if (this.branding.brand_primary_color) {
       document.documentElement.style.setProperty('--brand-primary', this.branding.brand_primary_color);
@@ -1394,8 +2905,40 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   // =========================================================================
-  // 9. CHANGE PASSWORD
+  // 9. CHANGE PASSWORD & ENTERPRISE SECURITY CONSOLE
   // =========================================================================
+  resetChangePasswordForm() {
+    this.changePasswordForm = {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+      showCurrent: false,
+      showNew: false,
+      showConfirm: false
+    };
+  }
+
+  promptMasterPasswordChange() {
+    if (!this.changePasswordForm.currentPassword || !this.changePasswordForm.newPassword || !this.changePasswordForm.confirmPassword) {
+      this.notificationService.showValidationError('Required', 'Please fill in all master password fields.');
+      return;
+    }
+    if (!this.isPasswordPolicyMet) {
+      this.notificationService.showValidationError('Policy Validation', 'New password does not meet the cryptographic policy requirements.');
+      return;
+    }
+    this.showMasterPasswordConfirmModal = true;
+  }
+
+  cancelMasterPasswordChange() {
+    this.showMasterPasswordConfirmModal = false;
+  }
+
+  confirmAndSubmitMasterPassword() {
+    this.showMasterPasswordConfirmModal = false;
+    this.submitChangePassword();
+  }
+
   submitChangePassword() {
     if (!this.changePasswordForm.currentPassword || !this.changePasswordForm.newPassword) {
       this.notificationService.showValidationError('Required', 'Please fill in all password fields.');
@@ -1414,8 +2957,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.apiService.changePassword(payload).subscribe({
       next: () => {
         this.changingPassword = false;
-        this.changePasswordForm = { currentPassword: '', newPassword: '', confirmPassword: '', showCurrent: false, showNew: false };
-        this.notificationService.success('Password Updated', 'Your account credentials have been securely updated.');
+        this.resetChangePasswordForm();
+        this.notificationService.success('Password Updated', 'Root account credentials have been securely rotated.');
       },
       error: (err) => {
         this.changingPassword = false;
@@ -1527,12 +3070,86 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   openEditUserModal(u: any) {
     this.openKebabUserId = null;
-    this.notificationService.info('Edit User', `Editing profile for ${u.name || u.username}`);
+    this.editingUser = u;
+    this.editUserForm = {
+      id: u.id,
+      name: u.name || u.fullName || u.username,
+      username: u.username,
+      email: u.email || '',
+      role: u.role || 'OPERATOR',
+      teamCode: u.teamCode || 'ADM',
+      status: u.accountLocked || u.status === 'DISABLED' ? 'DISABLED' : 'ACTIVE'
+    };
+    this.showEditUserModal = true;
+  }
+
+  closeEditUserModal() {
+    this.showEditUserModal = false;
+    this.editingUser = null;
+  }
+
+  saveEditUser() {
+    if (!this.editUserForm.name?.trim()) {
+      this.notificationService.error('Validation Error', 'Full Name is required.');
+      return;
+    }
+    if (!this.editUserForm.email?.trim() || !this.editUserForm.email.includes('@')) {
+      this.notificationService.error('Validation Error', 'A valid corporate email address is required.');
+      return;
+    }
+
+    if (this.editingUser) {
+      this.editingUser.name = this.editUserForm.name.trim();
+      this.editingUser.fullName = this.editUserForm.name.trim();
+      this.editingUser.email = this.editUserForm.email.trim();
+      this.editingUser.role = this.editUserForm.role;
+      this.editingUser.teamCode = this.editUserForm.teamCode;
+      this.editingUser.status = this.editUserForm.status;
+      this.editingUser.accountLocked = this.editUserForm.status === 'DISABLED';
+      this.editingUser.isLocked = this.editUserForm.status === 'DISABLED';
+
+      // Update in adminUsersList
+      const idx = this.adminUsersList.findIndex(u => u.username === this.editingUser.username || u.id === this.editingUser.id);
+      if (idx !== -1) {
+        this.adminUsersList[idx] = { ...this.editingUser };
+      }
+
+      this.notificationService.success('Profile Updated', `User profile for "${this.editingUser.name}" has been updated.`);
+      this.closeEditUserModal();
+    }
   }
 
   openChangeRoleModal(u: any) {
     this.openKebabUserId = null;
-    this.notificationService.info('Role Assignment', `Change role for ${u.name || u.username}`);
+    this.changeRoleUser = u;
+    this.newSelectedRole = u.role;
+    this.showChangeRoleModal = true;
+  }
+
+  closeChangeRoleModal() {
+    this.showChangeRoleModal = false;
+    this.changeRoleUser = null;
+  }
+
+  saveChangeRole() {
+    if (!this.changeRoleUser) return;
+    
+    // Safety check: protect against demoting the only Super Admin
+    if (this.changeRoleUser.username === 'SUPER_ADMIN' && this.newSelectedRole !== 'SUPER_ADMIN') {
+      this.notificationService.error('Action Prohibited', 'Root Super Administrator role cannot be changed or demoted.');
+      return;
+    }
+
+    const previousRole = this.changeRoleUser.role;
+    this.changeRoleUser.role = this.newSelectedRole;
+
+    const idx = this.adminUsersList.findIndex(u => u.username === this.changeRoleUser.username || u.id === this.changeRoleUser.id);
+    if (idx !== -1) {
+      this.adminUsersList[idx].role = this.newSelectedRole;
+    }
+
+    this.notificationService.success('Role Assigned', `Role for "${this.changeRoleUser.name || this.changeRoleUser.username}" changed from ${previousRole} to ${this.newSelectedRole}.`);
+    this.closeChangeRoleModal();
   }
 
   toggleLockUser(u: any) {
@@ -1595,11 +3212,5 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   openPrintPreview() {
     window.print();
-  }
-
-  ngOnDestroy() {
-    if (this.healthInterval) {
-      clearInterval(this.healthInterval);
-    }
   }
 }

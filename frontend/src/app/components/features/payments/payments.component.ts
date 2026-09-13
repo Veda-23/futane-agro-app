@@ -494,6 +494,10 @@ export class PaymentsComponent implements OnInit {
     }
   }
 
+  openForm() {
+    this.isFormVisible = true;
+  }
+
   resetForm() {
     this.editingPaymentId = null;
     this.paymentsForm = {

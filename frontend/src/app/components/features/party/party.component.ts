@@ -381,6 +381,11 @@ export class PartyComponent implements OnInit {
     }
   }
 
+  openForm() {
+    this.isFormVisible = true;
+    this.cancelEditParty();
+  }
+
   // --- Slide-in Edit Drawer ---
   openEditDrawer(party: PartyRecord) {
     this.selectedPartyForDrawer = party;

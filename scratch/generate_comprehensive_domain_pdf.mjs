@@ -13,8 +13,7 @@ const SNAP_DIR = path.join(__dirname, 'comprehensive_snapshots');
 const OUTPUT_PDF_SCRATCH = path.join(__dirname, 'Futane_Agro_ERP_Comprehensive_Scrollable_Visual_Audit_Report.pdf');
 const DOCS_DIR = path.join(__dirname, '..', 'docs', 'reports');
 const OUTPUT_PDF_DOCS = path.join(DOCS_DIR, 'Futane_Agro_ERP_Comprehensive_Scrollable_Visual_Audit_Report.pdf');
-const CURRENT_CONV_ID = '31dd588e-fd68-4426-9deb-3030e10b9d4e';
-const OUTPUT_PDF_ARTIFACT = path.join('C:\\Users\\Vedant\\.gemini\\antigravity-ide\\brain', CURRENT_CONV_ID, 'Futane_Agro_ERP_Comprehensive_Scrollable_Visual_Audit_Report.pdf');
+const OUTPUT_PDF_ARTIFACT = 'C:\\Users\\Vedant\\.gemini\\antigravity-ide\\brain\\fdd0d5e2-b9ea-49ba-889e-e88204822640\\Futane_Agro_ERP_Comprehensive_Scrollable_Visual_Audit_Report.pdf';
 
 if (!fs.existsSync(SNAP_DIR)) fs.mkdirSync(SNAP_DIR, { recursive: true });
 if (!fs.existsSync(DOCS_DIR)) fs.mkdirSync(DOCS_DIR, { recursive: true });
@@ -25,284 +24,57 @@ const DOMAINS = [
     domainId: 'D1',
     domainName: 'Domain 1: Executive Command & Plant Manufacturing',
     modules: [
-      {
-        id: '1.1',
-        tab: 'dashboard',
-        name: 'Executive KPI Dashboard & Plant Telemetry',
-        hasAddForm: false
-      },
-      {
-        id: '1.2',
-        tab: 'production',
-        name: 'Daily Production Logs & Crate Batch Output',
-        hasAddForm: true,
-        addBtnSelector: '.btn-header-action.btn-primary',
-        formName: 'Add Daily Production Log',
-        closeFn: (page) => page.evaluate(() => {
-          const comp = window.ng?.getComponent(document.querySelector('app-production'));
-          if (comp && comp.isFormVisible) comp.toggleFormVisibility();
-        })
-      },
-      {
-        id: '1.3',
-        tab: 'monthly-production',
-        name: 'Monthly Aggregate Production Summary',
-        hasAddForm: false
-      },
-      {
-        id: '1.4',
-        tab: 'machines',
-        name: 'Injection Molding Machines & OEE Metrics',
-        hasAddForm: true,
-        customAdd: async (page) => {
-          await page.evaluate(() => {
-            const comp = window.ng?.getComponent(document.querySelector('app-machines'));
-            if (comp) comp.switchFormMode('machine');
-          });
-        },
-        formName: 'Register Equipment Asset Profile',
-        secondaryAdd: async (page) => {
-          await page.evaluate(() => {
-            const comp = window.ng?.getComponent(document.querySelector('app-machines'));
-            if (comp) comp.switchFormMode('breakdown');
-          });
-        },
-        secondaryFormName: 'Log Equipment Breakdown Incident'
-      }
+      { id: '1.1', tab: 'dashboard', name: 'Executive KPI Dashboard & Plant Telemetry', hasAddForm: false },
+      { id: '1.2', tab: 'production', name: 'Daily Production Logs & Crate Batch Output', hasAddForm: true, formName: 'Add Daily Production Log' },
+      { id: '1.3', tab: 'monthly-production', name: 'Monthly Aggregate Production Summary', hasAddForm: false },
+      { id: '1.4', tab: 'machines', name: 'Injection Molding Machines & OEE Metrics', hasAddForm: true, formName: 'Register Equipment Asset Profile', secondaryAdd: true, secondaryFormName: 'Log Equipment Breakdown Incident' }
     ]
   },
   {
     domainId: 'D2',
     domainName: 'Domain 2: Commercial Distribution, Sales & Customer Accounts',
     modules: [
-      {
-        id: '2.1',
-        tab: 'parties',
-        name: 'Parties & Wholesalers Directory',
-        hasAddForm: true,
-        addBtnSelector: '.btn-header-action.btn-primary',
-        formName: 'Register Commercial Party Account',
-        closeFn: (page) => page.evaluate(() => {
-          const comp = window.ng?.getComponent(document.querySelector('app-party'));
-          if (comp && comp.isFormVisible) comp.toggleFormVisibility();
-        })
-      },
-      {
-        id: '2.2',
-        tab: 'sales',
-        name: 'Sales Orders & Material Outward',
-        hasAddForm: true,
-        addBtnSelector: '.btn-header-action.btn-primary',
-        formName: 'Create New Sales Order & Dispatch',
-        closeFn: (page) => page.evaluate(() => {
-          const comp = window.ng?.getComponent(document.querySelector('app-sales'));
-          if (comp && comp.isFormVisible) comp.toggleFormVisibility();
-        })
-      },
-      {
-        id: '2.3',
-        tab: 'payments',
-        name: 'Customer Receipts & Payment Collections',
-        hasAddForm: true,
-        addBtnSelector: '.btn-header-action.btn-primary',
-        formName: 'Record Customer Payment Collection Voucher',
-        closeFn: (page) => page.evaluate(() => {
-          const comp = window.ng?.getComponent(document.querySelector('app-payments'));
-          if (comp && comp.isFormVisible) comp.toggleFormVisibility();
-        })
-      },
-      {
-        id: '2.4',
-        tab: 'invoices',
-        name: 'GST Billing Hub & Tax Invoices',
-        hasAddForm: true,
-        addBtnSelector: '.btn-create-invoice',
-        formName: 'Generate New GST Tax Invoice',
-        closeFn: (page) => page.evaluate(() => {
-          const comp = window.ng?.getComponent(document.querySelector('app-invoices'));
-          if (comp && comp.closeDrawer) comp.closeDrawer();
-        })
-      }
+      { id: '2.1', tab: 'parties', name: 'Parties & Wholesalers Directory', hasAddForm: true, formName: 'Register Commercial Party Account' },
+      { id: '2.2', tab: 'sales', name: 'Sales Orders & Material Outward', hasAddForm: true, formName: 'Create New Sales Order & Dispatch' },
+      { id: '2.3', tab: 'payments', name: 'Customer Receipts & Payment Collections', hasAddForm: true, formName: 'Record Customer Payment Collection Voucher' },
+      { id: '2.4', tab: 'invoices', name: 'GST Billing Hub & Tax Invoices', hasAddForm: true, formName: 'Generate New GST Tax Invoice' }
     ]
   },
   {
     domainId: 'D3',
     domainName: 'Domain 3: Supply Chain, Raw Materials & Warehouse Inventory',
     modules: [
-      {
-        id: '3.1',
-        tab: 'raw-materials',
-        name: 'Polymer Raw Materials & PP Granules Silos',
-        hasAddForm: true,
-        addBtnSelector: '.btn-action-primary',
-        formName: 'Log Polymer Procurement Batch',
-        closeFn: (page) => page.evaluate(() => {
-          const comp = window.ng?.getComponent(document.querySelector('app-raw-materials'));
-          if (comp && comp.closeForm) comp.closeForm();
-        })
-      },
-      {
-        id: '3.2',
-        tab: 'vendors',
-        name: 'Polymer Suppliers & Vendor Directory',
-        hasAddForm: true,
-        addBtnSelector: '.btn-action-primary',
-        formName: 'Register Supplier / Vendor Master',
-        closeFn: (page) => page.evaluate(() => {
-          const comp = window.ng?.getComponent(document.querySelector('app-vendors'));
-          if (comp && comp.toggleAddForm) comp.toggleAddForm();
-        })
-      },
-      {
-        id: '3.3',
-        tab: 'inventory',
-        name: 'Finished Goods Crates Warehouse Stock',
-        hasAddForm: true,
-        addBtnSelector: '.btn-action-primary',
-        formName: 'Log Finished Goods Crate SKU Entry',
-        closeFn: (page) => page.evaluate(() => {
-          const comp = window.ng?.getComponent(document.querySelector('app-inventory'));
-          if (comp && comp.closeForm) comp.closeForm();
-        }),
-        secondaryAdd: async (page) => {
-          await page.evaluate(() => {
-            const comp = window.ng?.getComponent(document.querySelector('app-inventory'));
-            if (comp && comp.openAdjustmentModal) comp.openAdjustmentModal();
-          });
-        },
-        secondaryFormName: 'Quick Physical Stock Adjustment Modal',
-        secondaryCloseFn: (page) => page.evaluate(() => {
-          const comp = window.ng?.getComponent(document.querySelector('app-inventory'));
-          if (comp && comp.closeAdjustmentModal) comp.closeAdjustmentModal();
-        })
-      }
+      { id: '3.1', tab: 'raw-materials', name: 'Polymer Raw Materials & PP Granules Silos', hasAddForm: true, formName: 'Log Polymer Procurement Batch' },
+      { id: '3.2', tab: 'vendors', name: 'Polymer Suppliers & Vendor Directory', hasAddForm: true, formName: 'Register Supplier / Vendor Master' },
+      { id: '3.3', tab: 'inventory', name: 'Finished Goods Crates Warehouse Stock', hasAddForm: true, formName: 'Log Finished Goods Crate SKU Entry', secondaryAdd: true, secondaryFormName: 'Quick Physical Stock Adjustment Modal' }
     ]
   },
   {
     domainId: 'D4',
     domainName: 'Domain 4: Factory Logistics, Freight & Outward Gate Passes',
     modules: [
-      {
-        id: '4.1',
-        tab: 'transports',
-        name: 'Freight & Logistics Transport Agencies',
-        hasAddForm: true,
-        addBtnSelector: '.btn-action-primary',
-        formName: 'Register Freight Haulage Trip',
-        closeFn: (page) => page.evaluate(() => {
-          const comp = window.ng?.getComponent(document.querySelector('app-transports'));
-          if (comp && comp.closeDrawer) comp.closeDrawer();
-        })
-      },
-      {
-        id: '4.2',
-        tab: 'drivers',
-        name: 'Commercial Vehicle Drivers Directory',
-        hasAddForm: true,
-        addBtnSelector: '.btn-action-primary',
-        formName: 'Enroll Commercial Driver to Fleet',
-        closeFn: (page) => page.evaluate(() => {
-          const comp = window.ng?.getComponent(document.querySelector('app-drivers'));
-          if (comp && comp.closeEnrollDrawer) comp.closeEnrollDrawer();
-        })
-      },
-      {
-        id: '4.3',
-        tab: 'dispatch',
-        name: 'Outward Dispatches & Vehicle Gate Passes',
-        hasAddForm: true,
-        customAdd: async (page) => {
-          await page.evaluate(() => {
-            const comp = window.ng?.getComponent(document.querySelector('app-dispatch'));
-            if (comp && comp.openScanner) comp.openScanner();
-          });
-        },
-        formName: 'Dispatch Manifest Security QR Scanner',
-        closeFn: (page) => page.evaluate(() => {
-          const comp = window.ng?.getComponent(document.querySelector('app-dispatch'));
-          if (comp && comp.closeScanner) comp.closeScanner();
-        })
-      }
+      { id: '4.1', tab: 'transports', name: 'Freight & Logistics Transport Agencies', hasAddForm: true, formName: 'Register Freight Haulage Trip' },
+      { id: '4.2', tab: 'drivers', name: 'Commercial Vehicle Drivers Directory', hasAddForm: true, formName: 'Enroll Commercial Driver to Fleet' },
+      { id: '4.3', tab: 'dispatch', name: 'Outward Dispatches & Vehicle Gate Passes', hasAddForm: true, formName: 'Dispatch Manifest Security QR Scanner' }
     ]
   },
   {
     domainId: 'D5',
     domainName: 'Domain 5: Human Resources & Factory Payroll Administration',
     modules: [
-      {
-        id: '5.1',
-        tab: 'employees',
-        name: 'Factory Personnel & Staff Directory',
-        hasAddForm: true,
-        addBtnSelector: '.btn-action-primary',
-        formName: 'Enroll Factory Staff Member',
-        closeFn: (page) => page.evaluate(() => {
-          const comp = window.ng?.getComponent(document.querySelector('app-employees'));
-          if (comp && comp.closeDrawer) comp.closeDrawer();
-        })
-      },
-      {
-        id: '5.2',
-        tab: 'salaries',
-        name: 'Payroll & Staff Salary Vouchers',
-        hasAddForm: true,
-        addBtnSelector: '.btn-action-primary',
-        formName: 'Create Monthly Salary Voucher',
-        closeFn: (page) => page.evaluate(() => {
-          const comp = window.ng?.getComponent(document.querySelector('app-salaries'));
-          if (comp && comp.closeDrawer) comp.closeDrawer();
-        })
-      }
+      { id: '5.1', tab: 'employees', name: 'Factory Personnel & Staff Directory', hasAddForm: true, formName: 'Enroll Factory Staff Member' },
+      { id: '5.2', tab: 'salaries', name: 'Payroll & Staff Salary Vouchers', hasAddForm: true, formName: 'Create Monthly Salary Voucher' }
     ]
   },
   {
     domainId: 'D6',
     domainName: 'Domain 6: Financial Governance, Overhead & Executive Intelligence',
     modules: [
-      {
-        id: '6.1',
-        tab: 'expenses',
-        name: 'Factory Operational Overhead Expenses',
-        hasAddForm: true,
-        formName: 'Log Operational Expense Voucher',
-        customAdd: async (page) => {
-          await page.evaluate(() => {
-            const f = document.querySelector('.expense-form-card');
-            if (f) f.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          });
-        }
-      },
-      {
-        id: '6.2',
-        tab: 'bank',
-        name: 'Bank Accounts, RTGS & Ledger Settlement',
-        hasAddForm: true,
-        formName: 'Record Treasury Bank / Cash Transaction',
-        customAdd: async (page) => {
-          await page.evaluate(() => {
-            const f = document.querySelector('.bank-form-card');
-            if (f) f.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          });
-        }
-      },
-      {
-        id: '6.3',
-        tab: 'reports',
-        name: 'Comprehensive Executive Business Reports',
-        hasAddForm: false
-      },
-      {
-        id: '6.4',
-        tab: 'analytics',
-        name: 'PowerBI Executive Analytics Suite',
-        hasAddForm: false
-      },
-      {
-        id: '6.5',
-        tab: 'audit-logs',
-        name: 'Security Audit Trail & System Telemetry',
-        hasAddForm: false
-      }
+      { id: '6.1', tab: 'expenses', name: 'Factory Operational Overhead Expenses', hasAddForm: true, formName: 'Log Operational Expense Voucher' },
+      { id: '6.2', tab: 'bank', name: 'Bank Accounts, RTGS & Ledger Settlement', hasAddForm: true, formName: 'Record Treasury Bank / Cash Transaction' },
+      { id: '6.3', tab: 'reports', name: 'Comprehensive Executive Business Reports', hasAddForm: false },
+      { id: '6.4', tab: 'analytics', name: 'PowerBI Executive Analytics Suite', hasAddForm: false },
+      { id: '6.5', tab: 'audit-logs', name: 'Security Audit Trail & System Telemetry', hasAddForm: false }
     ]
   },
   {
@@ -316,8 +88,7 @@ const DOMAINS = [
         sub: 'business-rules',
         name: 'Settings: Multi-Company ERP, Banking & Invoice Designer',
         hasAddForm: true,
-        openMethod: 'openAddCompanyModal',
-        closeProp: 'showCompanyModal',
+        addBtnKeywords: ['company', 'entity', 'add corporate', 'add bank'],
         formName: 'Register Corporate Entity / Subsidiary Modal'
       },
       {
@@ -325,8 +96,7 @@ const DOMAINS = [
         sub: 'teams',
         name: 'Settings: Department Directory & Teams Structure',
         hasAddForm: true,
-        openMethod: 'openAddTeamModal',
-        closeProp: 'showTeamModal',
+        addBtnKeywords: ['team', 'department', 'add team', 'create team'],
         formName: 'Configure Department & Teams Modal'
       },
       {
@@ -334,8 +104,7 @@ const DOMAINS = [
         sub: 'custom_fields',
         name: 'Settings: Extensible Dynamic Schema Fields',
         hasAddForm: true,
-        openMethod: 'openAddCustomFieldModal',
-        closeProp: 'showCustomFieldModal',
+        addBtnKeywords: ['field', 'add field', 'custom field'],
         formName: 'Add Dynamic Schema Custom Field Modal'
       },
       { id: '7.5', sub: 'notifications', name: 'Settings: WhatsApp & SMS Dispatch Engine' },
@@ -344,8 +113,7 @@ const DOMAINS = [
         sub: 'users',
         name: 'Settings: User Directory & Granular RBAC Matrix',
         hasAddForm: true,
-        openMethod: 'openInviteUserModal',
-        closeProp: 'showInviteUserModal',
+        addBtnKeywords: ['user', 'invite user', 'add user'],
         formName: 'Create / Invite System User Account Modal'
       },
       { id: '7.7', sub: 'features', name: 'Settings: Enterprise Feature Flags & AI Copilot' },
@@ -354,8 +122,7 @@ const DOMAINS = [
         sub: 'developer',
         name: 'Settings: Developer Hub, API Keys & Webhooks',
         hasAddForm: true,
-        openMethod: 'openCreateApiKeyModal',
-        closeProp: 'showApiKeyModal',
+        addBtnKeywords: ['api key', 'generate key', 'webhook'],
         formName: 'Generate Developer API Key Modal'
       },
       { id: '7.9', sub: 'governance', name: 'Settings: JVM Telemetry, Cache & Database Backups' },
@@ -363,6 +130,59 @@ const DOMAINS = [
     ]
   }
 ];
+
+async function navigateToTab(page, targetKey) {
+  return await page.evaluate((key) => {
+    try {
+      const root = document.querySelector('app-root');
+      if (window.ng && root) {
+        window.ng.getComponent(root).switchTab(key);
+        return true;
+      }
+    } catch (e) {}
+
+    const lis = Array.from(document.querySelectorAll('.sidebar-nav li'));
+    const target = lis.find(li => {
+      const aria = (li.getAttribute('aria-label') || '').toLowerCase();
+      const title = (li.getAttribute('title') || '').toLowerCase();
+      const text = (li.textContent || '').toLowerCase().trim();
+      const k = key.toLowerCase().replace('-', '');
+      return aria.includes(k) || title.includes(k) || text.replace(/\s+/g, '').includes(k);
+    });
+    if (target) {
+      target.click();
+      return true;
+    }
+    return false;
+  }, targetKey);
+}
+
+async function navigateToSettingsSub(page, subKey) {
+  return await page.evaluate((key) => {
+    try {
+      const sComp = document.querySelector('app-settings');
+      if (window.ng && sComp) {
+        const comp = window.ng.getComponent(sComp);
+        if (comp && comp.switchSubNav) {
+          comp.switchSubNav(key);
+          return true;
+        }
+      }
+    } catch (e) {}
+
+    const pills = Array.from(document.querySelectorAll('.settings-nav-pill'));
+    const target = pills.find(p => {
+      const t = (p.textContent || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const k = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+      return t.includes(k) || k.includes(t);
+    });
+    if (target) {
+      target.click();
+      return true;
+    }
+    return false;
+  }, subKey);
+}
 
 async function run() {
   console.log('================================================================');
@@ -394,64 +214,14 @@ async function run() {
       inputs[1].value = 'superadmin123';
       inputs[1].dispatchEvent(new Event('input', { bubbles: true }));
     }
-    const btn = document.querySelector('button[type="submit"]') || Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Login') || b.textContent.includes('Sign In'));
+    const btn = document.querySelector('button[type="submit"]');
     if (btn) btn.click();
   });
 
-  await new Promise(r => setTimeout(r, 2000));
-
-  // Wait for either OTP card or app-container
-  try {
-    await page.waitForSelector('.uat-otp-helper-card, .app-container', { timeout: 8000 });
-  } catch (e) {}
-
-  const otpCard = await page.$('.uat-otp-helper-card');
-  if (otpCard) {
-    console.log('   Passing 2-Factor OTP verification...');
-    await otpCard.click();
-    await new Promise(r => setTimeout(r, 600));
-    await page.evaluate(() => {
-      const loginComp = window.ng?.getComponent(document.querySelector('app-login'));
-      if (loginComp && loginComp.verifyOtp) {
-        loginComp.verifyOtp();
-      } else {
-        const btn = document.querySelector('button[type="submit"].enterprise-primary-btn, .action-form-panel form button[type="submit"]');
-        if (btn) btn.click();
-      }
-    });
-    await new Promise(r => setTimeout(r, 3000));
-  }
-
-  // Ensure authenticated session
-  const isAppReady = await page.evaluate(() => {
-    return document.querySelector('.app-container') !== null;
-  });
-
-  if (!isAppReady) {
-    console.log('   Ensuring superadmin session directly...');
-    await page.evaluate(() => {
-      const u = {
-        id: 1,
-        username: 'SUPER_ADMIN',
-        fullName: 'Super Administrator',
-        role: 'SUPER_ADMIN',
-        token: 'mock_jwt_token_2026',
-        permissions: ['ALL']
-      };
-      sessionStorage.setItem('user', JSON.stringify(u));
-      localStorage.setItem('user', JSON.stringify(u));
-      sessionStorage.setItem('jwtToken', u.token);
-      localStorage.setItem('jwtToken', u.token);
-      const root = document.querySelector('app-root');
-      if (window.ng && root) {
-        const rootComp = window.ng.getComponent(root);
-        if (rootComp && rootComp.completeLogin) rootComp.completeLogin(u);
-      }
-    });
-    await new Promise(r => setTimeout(r, 1500));
-  }
-
-  await page.waitForSelector('.app-container', { timeout: 20000 });
+  await page.waitForSelector('.uat-otp-helper-card', { timeout: 10000 });
+  await page.click('.uat-otp-helper-card');
+  await page.click('button[type="submit"]');
+  await page.waitForSelector('.app-container', { timeout: 15000 });
   console.log('🎉 Authenticated & inside ERP application!');
 
   const capturedSnapshots = [];
@@ -464,10 +234,7 @@ async function run() {
 
     if (domain.isSettingsDomain) {
       // Navigate to Settings
-      await page.evaluate(() => {
-        const root = document.querySelector('app-root');
-        if (window.ng && root) window.ng.getComponent(root).switchTab('settings');
-      });
+      await navigateToTab(page, 'settings');
       await new Promise(r => setTimeout(r, 1500));
 
       for (const mod of domain.modules) {
@@ -476,21 +243,7 @@ async function run() {
         // 1. Full Page with Scroller
         const fullPath = path.join(SNAP_DIR, `snap_${String(fileIdx++).padStart(3, '0')}_${mod.sub}_full.png`);
         if (!fs.existsSync(fullPath)) {
-          await page.evaluate((subKey) => {
-            try {
-              const sComp = document.querySelector('app-settings');
-              if (window.ng && sComp) {
-                const comp = window.ng.getComponent(sComp);
-                if (comp && comp.switchSubNav) {
-                  comp.switchSubNav(subKey);
-                  return;
-                }
-              }
-            } catch (e) {}
-            const subBtns = Array.from(document.querySelectorAll('.settings-nav-pill'));
-            const target = subBtns.find(b => b.textContent.toLowerCase().includes(subKey.replace('_', ' ').replace('-', ' ')));
-            if (target) target.click();
-          }, mod.sub);
+          await navigateToSettingsSub(page, mod.sub);
           await new Promise(r => setTimeout(r, 1200));
 
           await page.screenshot({ path: fullPath, fullPage: true });
@@ -510,15 +263,7 @@ async function run() {
         if (mod.sub === 'teams' || mod.sub === 'users' || mod.sub === 'custom_fields' || mod.sub === 'developer') {
           const tblPath = path.join(SNAP_DIR, `snap_${String(fileIdx++).padStart(3, '0')}_${mod.sub}_table.png`);
           if (!fs.existsSync(tblPath)) {
-            await page.evaluate((subKey) => {
-              try {
-                const sComp = document.querySelector('app-settings');
-                if (window.ng && sComp) {
-                  const comp = window.ng.getComponent(sComp);
-                  if (comp && comp.switchSubNav) comp.switchSubNav(subKey);
-                }
-              } catch (e) {}
-            }, mod.sub);
+            await navigateToSettingsSub(page, mod.sub);
             await new Promise(r => setTimeout(r, 800));
 
             const hasTable = await page.evaluate(() => {
@@ -553,49 +298,34 @@ async function run() {
         if (mod.hasAddForm) {
           const addPath = path.join(SNAP_DIR, `snap_${String(fileIdx++).padStart(3, '0')}_${mod.sub}_add_form.png`);
           if (!fs.existsSync(addPath)) {
-            await page.evaluate((subKey) => {
-              try {
-                const sComp = document.querySelector('app-settings');
-                if (window.ng && sComp) {
-                  const comp = window.ng.getComponent(sComp);
-                  if (comp && comp.switchSubNav) comp.switchSubNav(subKey);
-                }
-              } catch (e) {}
-            }, mod.sub);
+            await navigateToSettingsSub(page, mod.sub);
             await new Promise(r => setTimeout(r, 800));
 
-            await page.evaluate((methodName) => {
-              const sComp = document.querySelector('app-settings');
-              if (window.ng && sComp) {
-                const comp = window.ng.getComponent(sComp);
-                if (comp && comp[methodName]) {
-                  comp[methodName]();
-                  return;
-                }
-              }
-              const btns = Array.from(document.querySelectorAll('button'));
+            const opened = await page.evaluate((keywords) => {
+              const btns = Array.from(document.querySelectorAll('.admin-content-panel button, .subtab-section button'));
               const addB = btns.find(b => {
                 const t = b.textContent.toLowerCase();
-                return (t.includes('add ') || t.includes('create ') || t.includes('invite ') || t.includes('generate '));
+                return keywords.some(k => t.includes(k)) || t.includes('add ') || t.includes('create ') || t.includes('invite ') || t.includes('generate ');
               });
-              if (addB) addB.click();
-            }, mod.openMethod);
-
-            await new Promise(r => setTimeout(r, 900));
-            await page.screenshot({ path: addPath, fullPage: false });
-            console.log(`   ✅ [Add New Form / Modal] saved: ${path.basename(addPath)}`);
-
-            // Close modal
-            await page.evaluate((closeProp) => {
-              const sComp = document.querySelector('app-settings');
-              if (window.ng && sComp) {
-                const comp = window.ng.getComponent(sComp);
-                if (comp && closeProp) comp[closeProp] = false;
+              if (addB) {
+                addB.click();
+                return true;
               }
-              const closeBtn = document.querySelector('.btn-close, .modal-close, .btn-secondary, .btn-cancel');
-              if (closeBtn) closeBtn.click();
-            }, mod.closeProp);
-            await new Promise(r => setTimeout(r, 400));
+              return false;
+            }, mod.addBtnKeywords || []);
+
+            if (opened) {
+              await new Promise(r => setTimeout(r, 900));
+              await page.screenshot({ path: addPath, fullPage: false });
+              console.log(`   ✅ [Add New Form / Modal] saved: ${path.basename(addPath)}`);
+
+              // Close modal
+              await page.evaluate(() => {
+                const closeBtn = document.querySelector('.btn-close, .modal-close, .btn-secondary, .btn-cancel, [aria-label="Close"]');
+                if (closeBtn) closeBtn.click();
+              });
+              await new Promise(r => setTimeout(r, 400));
+            }
           } else {
             console.log(`   ⏩ [Add New Form / Modal] cached: ${path.basename(addPath)}`);
           }
@@ -618,13 +348,9 @@ async function run() {
         // 1. Full Page with Scroller
         const fullPath = path.join(SNAP_DIR, `snap_${String(fileIdx++).padStart(3, '0')}_${mod.tab}_full.png`);
         if (!fs.existsSync(fullPath)) {
-          await page.evaluate((tabKey) => {
-            const root = document.querySelector('app-root');
-            if (window.ng && root) window.ng.getComponent(root).switchTab(tabKey);
-          }, mod.tab);
+          await navigateToTab(page, mod.tab);
           await new Promise(r => setTimeout(r, 1500));
 
-          // analytics has external iframe to port 3000 (Grafana/PowerBI), use viewport screenshot
           const isFull = mod.tab !== 'analytics';
           await page.screenshot({ path: fullPath, fullPage: isFull });
           console.log(`   ✅ [Full Page with Scroller] saved: ${path.basename(fullPath)}`);
@@ -643,10 +369,7 @@ async function run() {
         if (mod.tab !== 'dashboard' && mod.tab !== 'analytics') {
           const tblPath = path.join(SNAP_DIR, `snap_${String(fileIdx++).padStart(3, '0')}_${mod.tab}_table.png`);
           if (!fs.existsSync(tblPath)) {
-            await page.evaluate((tabKey) => {
-              const root = document.querySelector('app-root');
-              if (window.ng && root) window.ng.getComponent(root).switchTab(tabKey);
-            }, mod.tab);
+            await navigateToTab(page, mod.tab);
             await new Promise(r => setTimeout(r, 1200));
 
             const hasTable = await page.evaluate(() => {
@@ -681,45 +404,32 @@ async function run() {
         if (mod.hasAddForm) {
           const addPath = path.join(SNAP_DIR, `snap_${String(fileIdx++).padStart(3, '0')}_${mod.tab}_add_form.png`);
           if (!fs.existsSync(addPath)) {
-            await page.evaluate((tabKey) => {
-              const root = document.querySelector('app-root');
-              if (window.ng && root) window.ng.getComponent(root).switchTab(tabKey);
-            }, mod.tab);
+            await navigateToTab(page, mod.tab);
             await new Promise(r => setTimeout(r, 1200));
 
-            let opened = false;
-            if (mod.customAdd) {
-              await mod.customAdd(page);
-              opened = true;
-            } else if (mod.addBtnSelector) {
-              opened = await page.evaluate((sel) => {
-                const b = document.querySelector(sel);
-                if (b) {
-                  b.click();
-                  return true;
-                }
-                const allBtns = Array.from(document.querySelectorAll('button'));
-                const fallback = allBtns.find(el => {
-                  const t = el.textContent.toLowerCase();
-                  return (t.includes('add ') || t.includes('create ') || t.includes('register ') || t.includes('enroll ') || t.includes('record ') || t.includes('log ')) && !t.includes('export');
-                });
-                if (fallback) {
-                  fallback.click();
-                  return true;
-                }
-                return false;
-              }, mod.addBtnSelector);
-            }
+            const opened = await page.evaluate(() => {
+              const btns = Array.from(document.querySelectorAll('button, .btn'));
+              const addBtn = btns.find(b => {
+                const t = (b.textContent || '').toLowerCase();
+                return (t.includes('add ') || t.includes('create ') || t.includes('register ') || t.includes('enroll ') || t.includes('record ') || t.includes('log ') || t.includes('new ')) && !t.includes('export');
+              });
+              if (addBtn) {
+                addBtn.click();
+                return true;
+              }
+              return false;
+            });
 
             if (opened) {
               await new Promise(r => setTimeout(r, 900));
               await page.screenshot({ path: addPath, fullPage: false });
               console.log(`   ✅ [Add New Form / Modal] saved: ${path.basename(addPath)}`);
 
-              if (mod.closeFn) {
-                await mod.closeFn(page);
-                await new Promise(r => setTimeout(r, 400));
-              }
+              await page.evaluate(() => {
+                const closeBtn = document.querySelector('.btn-close, .modal-close, .btn-secondary, .btn-cancel, [aria-label="Close"]');
+                if (closeBtn) closeBtn.click();
+              });
+              await new Promise(r => setTimeout(r, 400));
             }
           } else {
             console.log(`   ⏩ [Add New Form / Modal] cached: ${path.basename(addPath)}`);
@@ -735,23 +445,35 @@ async function run() {
           }
         }
 
-        // 4. Secondary Add form (Machines breakdown, Inventory quick adjust)
+        // 4. Secondary Add form
         if (mod.secondaryAdd) {
           const secPath = path.join(SNAP_DIR, `snap_${String(fileIdx++).padStart(3, '0')}_${mod.tab}_secondary_add.png`);
           if (!fs.existsSync(secPath)) {
-            await page.evaluate((tabKey) => {
-              const root = document.querySelector('app-root');
-              if (window.ng && root) window.ng.getComponent(root).switchTab(tabKey);
-            }, mod.tab);
+            await navigateToTab(page, mod.tab);
             await new Promise(r => setTimeout(r, 1200));
 
-            await mod.secondaryAdd(page);
-            await new Promise(r => setTimeout(r, 900));
-            await page.screenshot({ path: secPath, fullPage: false });
-            console.log(`   ✅ [Secondary Add Action] saved: ${path.basename(secPath)}`);
+            const opened = await page.evaluate(() => {
+              const btns = Array.from(document.querySelectorAll('button, .btn'));
+              const secBtn = btns.find(b => {
+                const t = (b.textContent || '').toLowerCase();
+                return t.includes('breakdown') || t.includes('adjust') || t.includes('quick adjust');
+              });
+              if (secBtn) {
+                secBtn.click();
+                return true;
+              }
+              return false;
+            });
 
-            if (mod.secondaryCloseFn) {
-              await mod.secondaryCloseFn(page);
+            if (opened) {
+              await new Promise(r => setTimeout(r, 900));
+              await page.screenshot({ path: secPath, fullPage: false });
+              console.log(`   ✅ [Secondary Add Action] saved: ${path.basename(secPath)}`);
+
+              await page.evaluate(() => {
+                const closeBtn = document.querySelector('.btn-close, .modal-close, .btn-secondary, .btn-cancel, [aria-label="Close"]');
+                if (closeBtn) closeBtn.click();
+              });
               await new Promise(r => setTimeout(r, 400));
             }
           } else {
@@ -954,7 +676,6 @@ async function run() {
     const imgWidth = embeddedImg.width;
     const imgHeight = embeddedImg.height;
 
-    // Header banner height
     const headerHeight = 65;
     const pageMargin = 20;
     const pageWidth = imgWidth + (pageMargin * 2);
@@ -962,7 +683,6 @@ async function run() {
 
     const pdfPage = pdfDoc.addPage([pageWidth, pageHeight]);
 
-    // Page Background: Deep slate
     pdfPage.drawRectangle({
       x: 0,
       y: 0,
@@ -971,7 +691,6 @@ async function run() {
       color: rgb(0.07, 0.10, 0.16)
     });
 
-    // Header Banner Background
     pdfPage.drawRectangle({
       x: pageMargin,
       y: pageHeight - pageMargin - headerHeight,
@@ -980,10 +699,9 @@ async function run() {
       color: rgb(0.12, 0.16, 0.25)
     });
 
-    // Left Accent Stripe on Header
-    let stripeColor = rgb(0.2, 0.5, 0.9); // Blue for full page
-    if (item.type.includes('TABLE')) stripeColor = rgb(0.1, 0.8, 0.4); // Green for table
-    if (item.type.includes('ADDITION')) stripeColor = rgb(0.96, 0.62, 0.07); // Amber for Add form
+    let stripeColor = rgb(0.2, 0.5, 0.9);
+    if (item.type.includes('TABLE')) stripeColor = rgb(0.1, 0.8, 0.4);
+    if (item.type.includes('ADDITION')) stripeColor = rgb(0.96, 0.62, 0.07);
 
     pdfPage.drawRectangle({
       x: pageMargin,
@@ -993,7 +711,6 @@ async function run() {
       color: stripeColor
     });
 
-    // Domain Title
     pdfPage.drawText(item.domain.toUpperCase(), {
       x: pageMargin + 20,
       y: pageHeight - pageMargin - 22,
@@ -1002,7 +719,6 @@ async function run() {
       color: rgb(0.65, 0.75, 0.88)
     });
 
-    // Screen Title
     pdfPage.drawText(item.title, {
       x: pageMargin + 20,
       y: pageHeight - pageMargin - 42,
@@ -1011,7 +727,6 @@ async function run() {
       color: rgb(1, 1, 1)
     });
 
-    // Right-aligned Badges
     const badgeText = `[${item.type}]`;
     pdfPage.drawText(badgeText, {
       x: pageWidth - pageMargin - 280,
@@ -1029,7 +744,6 @@ async function run() {
       color: rgb(0.6, 0.65, 0.75)
     });
 
-    // Draw the image
     pdfPage.drawImage(embeddedImg, {
       x: pageMargin,
       y: pageMargin,
@@ -1047,7 +761,6 @@ async function run() {
   fs.writeFileSync(OUTPUT_PDF_DOCS, pdfBytes);
   console.log(`💾 Saved Report to Docs: ${OUTPUT_PDF_DOCS}`);
 
-  // Also write to current conversation artifact directory
   fs.writeFileSync(OUTPUT_PDF_ARTIFACT, pdfBytes);
   console.log(`💾 Saved Report to Artifacts: ${OUTPUT_PDF_ARTIFACT}`);
 

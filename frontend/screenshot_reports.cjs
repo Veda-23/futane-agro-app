@@ -1,75 +1,57 @@
-const { chromium } = require('@playwright/test');
+const { chromium } = require('playwright');
 const path = require('path');
 
-const BASE_URL = 'http://localhost:8081';
+const ARTIFACT_DIR = 'C:/Users/Vedant/.gemini/antigravity-ide/brain/31dd588e-fd68-4426-9deb-3030e10b9d4e';
 
-async function captureReportsTableScreenshot() {
+async function capture() {
   const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-  const page = await context.newPage();
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await page.goto('http://localhost:4200');
+  await page.waitForTimeout(2000);
 
-  console.log('Navigating and authenticating...');
-  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(1000);
+  const userInp = await page.$('input[placeholder*="Username" i], input[type="text"]');
+  if (userInp && await userInp.isVisible()) {
+    await page.fill('input[placeholder*="Username" i], input[type="text"]', 'admin');
+    await page.fill('input[type="password"]', 'admin123');
+    await page.click('button[type="submit"], button:has-text("Sign In")');
+    await page.waitForTimeout(1500);
 
-  console.log('🔑 Authenticating via Backend UAT API (SUPER_ADMIN)...');
-  const loginRes = await fetch('http://localhost:8081/api/users/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: 'SUPER_ADMIN', password: 'superadmin123' })
-  }).then(r => r.json());
-
-  let userObj;
-  if (loginRes.status === 'OTP_REQUIRED' || loginRes.status === 'OTP_SENT') {
-    const otp = loginRes.tempOtp || '654321';
-    const verifyRes = await fetch('http://localhost:8081/api/users/login/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'SUPER_ADMIN', otp: otp })
-    }).then(r => r.json());
-    userObj = verifyRes;
-  } else {
-    userObj = loginRes;
+    const fill2fa = await page.$('text=CLICK TO FILL');
+    if (fill2fa) {
+      await fill2fa.click();
+      await page.waitForTimeout(500);
+      await page.click('button:has-text("Verify")');
+      await page.waitForTimeout(2500);
+    }
   }
 
-  console.log('🌐 Loading Futane Agro ERP & Injecting Session...');
-  await page.goto('http://localhost:8081/', { waitUntil: 'domcontentloaded' });
-  await page.evaluate((user) => {
-    localStorage.setItem('user', JSON.stringify(user));
-    sessionStorage.setItem('user', JSON.stringify(user));
-    if (user.token) {
-      localStorage.setItem('jwtToken', user.token);
-      sessionStorage.setItem('jwtToken', user.token);
-      document.cookie = `erp_session_cookie=${user.token}; path=/; SameSite=Strict`;
-    }
-    sessionStorage.setItem('activeTab', 'reports');
-    window.location.reload();
-  }, userObj);
+  // Navigate to Reports
+  const reportsNav = await page.$('.nav-menu-list li:has-text("Reports"), a:has-text("Reports")');
+  if (reportsNav) {
+    await reportsNav.click();
+    await page.waitForTimeout(2000);
+  }
 
-  await page.waitForTimeout(2500);
+  // 1. Scroll down to see table
+  await page.evaluate(() => window.scrollBy(0, 500));
+  await page.waitForTimeout(600);
+  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'reports_table_before.png') });
 
-  console.log('Switching to Reports tab...');
-  await page.evaluate(() => {
-    const rootEl = document.querySelector('app-root');
-    const ngComp = window.ng ? window.ng.getComponent(rootEl) : null;
-    if (ngComp && typeof ngComp.switchTab === 'function') {
-      ngComp.switchTab('reports');
-    }
-  });
+  // 2. Select "Sales & Revenue" report
+  await page.selectOption('select[name="repType"]', 'sales');
+  await page.waitForTimeout(1000);
+  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'reports_sales_before.png') });
 
-  await page.waitForTimeout(1500);
-
-  // Scroll down slightly so chart bottom and table are both captured
-  await page.evaluate(() => {
-    window.scrollTo({ top: 320, behavior: 'instant' });
-  });
-  await page.waitForTimeout(500);
-
-  const screenshotPath = 'C:\\Users\\Vedant\\.gemini\\antigravity-ide\\brain\\cc345a3b-9e95-4cb7-89f5-1da9c4af8947\\reports_table_redesigned.png';
-  await page.screenshot({ path: screenshotPath, fullPage: false });
-  console.log('Screenshot saved to:', screenshotPath);
+  // 3. Dark mode
+  const themeBtn = await page.$('#themeToggleBtn, .theme-toggle-btn');
+  if (themeBtn) {
+    await themeBtn.click();
+    await page.waitForTimeout(1000);
+    await page.screenshot({ path: path.join(ARTIFACT_DIR, 'reports_dark_before.png') });
+  }
 
   await browser.close();
+  console.log('Captured table, sales, and dark mode screenshots!');
 }
 
-captureReportsTableScreenshot().catch(console.error);
+capture().catch(console.error);

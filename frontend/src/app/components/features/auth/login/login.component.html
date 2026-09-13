@@ -1,5 +1,10 @@
 <!-- Futane Agro ERP — Professional Enterprise Authentication -->
 <div class="login-page-root">
+  <!-- Dynamic floating background shapes -->
+  <div class="floating-shape shape-1"></div>
+  <div class="floating-shape shape-2"></div>
+  <div class="floating-shape shape-3"></div>
+
   <div class="login-card-container">
 
     <!-- ── Left Enterprise Brand & Overview Panel ──────────────── -->
@@ -55,8 +60,8 @@
           <span class="status-indicator-dot" [class.uat]="isUat" [class.prod]="!isUat"></span>
           <span class="status-text">{{ isUat ? 'UAT Test Environment (Port 8081)' : 'Production Cluster v2.4 (Port 8080)' }}</span>
         </div>
-        <div class="system-security-note">
-          <i class="bi bi-shield-lock-fill me-1"></i> 256-Bit TLS Secured Enterprise Portal
+        <div class="system-security-note mt-2">
+          <i class="bi bi-shield-lock-fill me-1 text-success"></i> 256-Bit TLS Secured Enterprise Portal
         </div>
       </div>
     </div>
@@ -68,9 +73,9 @@
       <div class="form-header-area">
         <div class="form-logo-badge">
           <img src="assets/logo.svg" alt="Futane Logo" *ngIf="!showOtpScreen">
-          <i class="bi bi-shield-check" *ngIf="showOtpScreen"></i>
+          <i class="bi bi-shield-lock" *ngIf="showOtpScreen"></i>
         </div>
-        <h2 class="form-main-heading">{{ showOtpScreen ? 'Two-Factor Authentication' : 'Welcome back' }}</h2>
+        <h2 class="form-main-heading">{{ showOtpScreen ? 'Two-Factor Auth' : 'Welcome back' }}</h2>
         <p class="form-sub-heading">
           {{ showOtpScreen ? 'Enter the 6-digit security code for ' + loginCredentials.username : 'Sign in to access the Futane Agro ERP portal' }}
         </p>
@@ -81,7 +86,7 @@
 
         <div class="form-group-field">
           <label for="username" class="field-label">
-            <i class="bi bi-person me-1"></i> Username or Employee ID
+            <i class="bi bi-person me-2 text-muted"></i> Username / ID
           </label>
           <div class="field-input-box">
             <input appAutoSelect
@@ -99,7 +104,7 @@
         <div class="form-group-field">
           <div class="field-label-row">
             <label for="password" class="field-label">
-              <i class="bi bi-key me-1"></i> Password
+              <i class="bi bi-key me-2 text-muted"></i> Password
             </label>
             <button type="button" (click)="forgotPassword()" class="link-btn-subtle">
               Forgot Password?
@@ -136,56 +141,59 @@
                 id="login-submit-btn"
                 class="enterprise-primary-btn"
                 [disabled]="isSubmitting">
-          <span *ngIf="!isSubmitting">Sign In to ERP</span>
+          <span *ngIf="!isSubmitting">Secure Sign In</span>
           <span *ngIf="isSubmitting" class="d-flex align-items-center justify-content-center">
             <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
             Authenticating...
           </span>
-          <i *ngIf="!isSubmitting" class="bi bi-arrow-right ms-2"></i>
+          <i *ngIf="!isSubmitting" class="bi bi-arrow-right ms-2 fs-5"></i>
         </button>
       </form>
 
       <!-- ── Step 2: Two-Factor Authentication (OTP) ─────────── -->
-      <form *ngIf="showOtpScreen" (ngSubmit)="verifyOtp()" class="login-form-content" novalidate>
+      <form *ngIf="showOtpScreen" (ngSubmit)="verifyOtp()" class="login-form-content otp-form-content" novalidate>
 
-        <!-- UAT Helper Banner (Only visible if tempOtp is provided) -->
+        <!-- Compact Professional UAT Helper Pill -->
         <div *ngIf="tempOtp"
-             class="uat-otp-helper-card"
+             class="uat-otp-helper-pill"
              (click)="fillOtpFromHelper(tempOtp)"
              role="button"
              tabindex="0"
-             title="Click to populate OTP code">
-          <div class="helper-top">
-            <span class="helper-tag"><i class="bi bi-info-circle me-1"></i> Test Environment Code</span>
-            <span class="helper-action">Click to Fill <i class="bi bi-box-arrow-in-down-right"></i></span>
+             title="Click to auto-populate test OTP code">
+          <div class="helper-pill-left">
+            <span class="helper-pill-badge"><i class="bi bi-shield-check"></i> DEMO OTP</span>
+            <span class="helper-pill-code">{{ tempOtp }}</span>
           </div>
-          <div class="helper-code">{{ tempOtp }}</div>
+          <span class="helper-pill-action">Auto-fill <i class="bi bi-arrow-right-short"></i></span>
         </div>
 
-        <div class="form-group-field">
+        <div class="form-group-field otp-input-group">
           <div class="field-label-row">
             <label class="field-label">
-              <i class="bi bi-lock me-1"></i> Security Verification Code (6 Digits)
+              <i class="bi bi-shield-lock me-1"></i> Security Code
             </label>
             <span class="timer-badge">
-              <i class="bi bi-clock me-1"></i> Expires in {{ formatCountdown() }}
+              <i class="bi bi-stopwatch me-1"></i> {{ formatCountdown() }}
             </span>
           </div>
 
-          <!-- 6 Discrete Input Boxes -->
+          <!-- Professional 6 Discrete Input Boxes with 3-3 grouping -->
           <div class="otp-inputs-row" (paste)="onDigitPaste($event)">
-            <input *ngFor="let digit of otpDigits; let i = index"
-                   #otpInputRef
-                   type="text"
-                   inputmode="numeric"
-                   maxlength="1"
-                   pattern="[0-9]*"
-                   [value]="otpDigits[i]"
-                   (input)="onDigitInput($event, i)"
-                   (keydown)="onDigitKeydown($event, i)"
-                   class="otp-box-cell"
-                   [class.cell-filled]="otpDigits[i] !== ''"
-                   autocomplete="off">
+            <ng-container *ngFor="let digit of otpDigits; let i = index">
+              <div *ngIf="i === 3" class="otp-divider" aria-hidden="true">&ndash;</div>
+              <input #otpInputRef
+                     type="text"
+                     inputmode="numeric"
+                     maxlength="1"
+                     pattern="[0-9]*"
+                     [value]="otpDigits[i]"
+                     (input)="onDigitInput($event, i)"
+                     (keydown)="onDigitKeydown($event, i)"
+                     class="otp-box-cell"
+                     [class.cell-filled]="otpDigits[i] !== ''"
+                     autocomplete="off"
+                     [attr.aria-label]="'Digit ' + (i + 1)">
+            </ng-container>
           </div>
         </div>
 
@@ -197,14 +205,15 @@
 
         <!-- Verify Button -->
         <button type="submit"
+                id="otp-verify-submit-btn"
                 class="enterprise-primary-btn"
                 [disabled]="isSubmitting || otpValue.length < 6">
           <span *ngIf="!isSubmitting">Verify &amp; Enter Portal</span>
           <span *ngIf="isSubmitting" class="d-flex align-items-center justify-content-center">
             <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-            Verifying Code...
+            Verifying...
           </span>
-          <i *ngIf="!isSubmitting" class="bi bi-check2-circle ms-2"></i>
+          <i *ngIf="!isSubmitting" class="bi bi-check2-circle ms-2 fs-5"></i>
         </button>
 
         <!-- Secondary Actions -->
@@ -213,13 +222,13 @@
                   class="enterprise-secondary-btn"
                   [disabled]="otpCountdown > 0 || isSubmitting"
                   (click)="resendOtp()">
-            <i class="bi bi-arrow-clockwise me-1"></i> Resend Code
+            <i class="bi bi-arrow-clockwise me-1"></i> Resend
           </button>
           <button type="button"
                   class="enterprise-secondary-btn"
                   (click)="backToLogin()"
                   [disabled]="isSubmitting">
-            <i class="bi bi-arrow-left me-1"></i> Back to Sign In
+            <i class="bi bi-arrow-left me-1"></i> Back
           </button>
         </div>
       </form>
@@ -241,7 +250,7 @@
                   (click)="setLanguage('hi')">हिंदी</button>
         </div>
         <div class="footer-copyright-text">
-          &copy; 2026 Futane Agro Industries Pvt. Ltd. All rights reserved.
+          &copy; 2026 Futane Agro Industries Pvt. Ltd.
         </div>
       </div>
 

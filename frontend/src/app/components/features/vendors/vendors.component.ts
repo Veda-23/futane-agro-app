@@ -477,6 +477,12 @@ export class VendorsComponent implements OnInit {
     }
   }
 
+  openAddForm(): void {
+    this.editingVendorId = null;
+    this.resetForm();
+    this.isAddFormOpen = true;
+  }
+
   editVendor(vendor: VendorItem): void {
     this.editingVendorId = vendor.id || String(vendor.vendorId);
     this.vendorForm = {

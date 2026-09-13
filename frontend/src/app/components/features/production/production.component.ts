@@ -218,6 +218,14 @@ export class ProductionComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isFormVisible = !this.isFormVisible;
   }
 
+  openForm(type: 'ppd' | 'ppm' = 'ppd') {
+    if (type === 'ppd') {
+      this.isFormVisible = true;
+    } else {
+      this.isPpmFormVisible = true;
+    }
+  }
+
   togglePpmFormVisibility() {
     this.isPpmFormVisible = !this.isPpmFormVisible;
   }

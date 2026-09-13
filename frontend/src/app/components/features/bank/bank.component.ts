@@ -58,6 +58,7 @@ export class BankComponent implements OnInit {
   };
 
   editingId: any = null;
+  isDrawerOpen: boolean = false;
   isLoading: boolean = false;
   hasError: boolean = false;
   errorMessage: string = '';
@@ -155,12 +156,52 @@ export class BankComponent implements OnInit {
     return (this.bankTransactionsList || []).filter(t => t.transactionType === 'Debit').length;
   }
 
+  activeSubtab: string = 'ALL';
+
+  setSubtab(tab: string) {
+    this.activeSubtab = tab;
+    if (tab === 'ALL' || tab === 'high_value' || tab === 'contra') {
+      this.filterType = 'ALL';
+    } else {
+      this.filterType = tab as ('Credit' | 'Debit');
+    }
+    this.currentPage = 1;
+  }
+
+  getSubtabCount(tab: string): number {
+    if (!this.bankTransactionsList) return 0;
+    if (tab === 'ALL') return this.bankTransactionsList.length;
+    if (tab === 'Credit') return this.creditCount;
+    if (tab === 'Debit') return this.debitCount;
+    if (tab === 'high_value') return this.bankTransactionsList.filter(t => Number(t.amount) >= 50000).length;
+    if (tab === 'contra') {
+      return this.bankTransactionsList.filter(t => {
+        const d = (t.description || '').toLowerCase();
+        return d.includes('cash') || d.includes('contra') || d.includes('transfer') || d.includes('self');
+      }).length;
+    }
+    return 0;
+  }
+
+  printLedger() {
+    window.print();
+  }
+
   // --- Filtered & Sorted Records ---
   get filteredList(): BankTransactionItem[] {
     let list = [...(this.bankTransactionsList || [])];
 
-    // Filter by type
-    if (this.filterType !== 'ALL') {
+    // Filter by Subtab
+    if (this.activeSubtab === 'Credit' || this.activeSubtab === 'Debit') {
+      list = list.filter(t => t.transactionType === this.activeSubtab);
+    } else if (this.activeSubtab === 'high_value') {
+      list = list.filter(t => Number(t.amount) >= 50000);
+    } else if (this.activeSubtab === 'contra') {
+      list = list.filter(t => {
+        const d = (t.description || '').toLowerCase();
+        return d.includes('cash') || d.includes('contra') || d.includes('transfer') || d.includes('self');
+      });
+    } else if (this.filterType !== 'ALL') {
       list = list.filter(t => t.transactionType === this.filterType);
     }
 
@@ -214,6 +255,7 @@ export class BankComponent implements OnInit {
 
   setFilterType(type: 'ALL' | 'Credit' | 'Debit') {
     this.filterType = type;
+    this.activeSubtab = type;
     this.currentPage = 1;
   }
 
@@ -341,16 +383,14 @@ export class BankComponent implements OnInit {
       description: bt.description || '',
       referenceNo: bt.referenceNo || ''
     };
+    this.isDrawerOpen = true;
 
-    const formEl = document.querySelector('.bank-form-card');
-    if (formEl) {
-      formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-    this.notificationService.info('Editing Transaction', `Editing record #${bt.id} (${bt.description})`);
+    this.notificationService.info('Editing Transaction', `Editing record #${bt.id}`);
   }
 
   cancelEdit() {
     this.editingId = null;
+    this.isDrawerOpen = false;
     this.bankTxnForm = {
       transactionDate: this.getTodayDate(),
       transactionType: 'Credit',
@@ -358,6 +398,11 @@ export class BankComponent implements OnInit {
       description: '',
       referenceNo: ''
     };
+  }
+
+  openDrawer() {
+    this.cancelEdit();
+    this.isDrawerOpen = true;
   }
 
   deleteBankTransaction(id: any) {

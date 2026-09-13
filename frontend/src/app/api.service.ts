@@ -529,6 +529,18 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/admin/features/${moduleKey}/toggle`, { enabled });
   }
 
+  // AI Copilot & ADK Gateway
+  executeAdkChat(payload: any): Observable<any> {
+    const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || '';
+    const headers = { 'Authorization': token ? `Bearer ${token}` : '' };
+    return this.http.post(`${this.baseUrl}/adk/chat`, payload, { headers });
+  }
+  resetAdkSession(conversationId: string): Observable<any> {
+    const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || '';
+    const headers = { 'Authorization': token ? `Bearer ${token}` : '' };
+    return this.http.post(`${this.baseUrl}/adk/session/reset`, { conversationId }, { headers });
+  }
+
   getCustomFieldDefs(entityName: string): Observable<any> {
     return this.http.get(`${this.baseUrl}/admin/custom-fields/${entityName}`);
   }

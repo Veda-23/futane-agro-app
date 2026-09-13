@@ -105,10 +105,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   private updateLiveClock() {
     const now = new Date();
-    this.currentDate = now.toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short'
-    });
+    const day = now.toLocaleDateString('en-IN', { day: '2-digit' });
+    const month = now.toLocaleDateString('en-IN', { month: 'short' });
+    const year = now.getFullYear();
+    this.currentDate = `${day} ${month} ${year}`;
     this.currentTime = now.toLocaleTimeString('en-IN', {
       hour: '2-digit',
       minute: '2-digit',

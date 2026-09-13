@@ -368,6 +368,13 @@ export class SalesComponent implements OnInit {
     }
   }
 
+  openForm() {
+    this.isFormVisible = true;
+    if (!this.editingSaleId) {
+      this.resetSalesForm();
+    }
+  }
+
   resetSalesForm() {
     this.editingSaleId = null;
     this.salesForm = {

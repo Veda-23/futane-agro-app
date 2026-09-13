@@ -281,11 +281,11 @@ export class AuditLogsComponent implements OnInit {
 
   getActionBadgeClass(action: string): string {
     const a = (action || '').toUpperCase();
-    if (a.includes('LOGIN') || a.includes('SUCCESS') || a.includes('AUTH')) return 'badge-action-login';
-    if (a.includes('CREATE') || a.includes('ADD') || a.includes('INSERT') || a.includes('INVITE')) return 'badge-action-create';
-    if (a.includes('UPDATE') || a.includes('SYNC') || a.includes('EDIT') || a.includes('BRANDING')) return 'badge-action-update';
-    if (a.includes('DELETE') || a.includes('FAIL') || a.includes('REVOKE') || a.includes('BLOCK')) return 'badge-action-delete';
-    return 'badge-action-default';
+    if (a.includes('LOGIN') || a.includes('SUCCESS') || a.includes('AUTH') || a.includes('SYNC')) return 'badge bg-success-subtle text-success';
+    if (a.includes('CREATE') || a.includes('ADD') || a.includes('INSERT') || a.includes('INVITE')) return 'badge bg-info-subtle text-info';
+    if (a.includes('UPDATE') || a.includes('EDIT') || a.includes('BRANDING')) return 'badge bg-warning-subtle text-warning';
+    if (a.includes('DELETE') || a.includes('FAIL') || a.includes('REVOKE') || a.includes('BLOCK')) return 'badge bg-danger-subtle text-danger';
+    return 'badge bg-secondary-subtle text-secondary';
   }
 
   openLogDetail(log: AuditLogItem) {

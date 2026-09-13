@@ -39,8 +39,9 @@ export class MachinesComponent implements OnInit {
   // Sub-view toggle: 'machines' or 'breakdowns'
   activeSubTab: 'machines' | 'breakdowns' = 'machines';
 
-  // Form mode: 'machine' or 'breakdown'
-  formMode: 'machine' | 'breakdown' = 'machine';
+  // Form toggles
+  isMachineFormOpen = false;
+  isBreakdownFormOpen = false;
 
   // Machine Form
   machineForm: {
@@ -314,9 +315,7 @@ export class MachinesComponent implements OnInit {
     this.sortAsc = false;
   }
 
-  switchFormMode(mode: 'machine' | 'breakdown'): void {
-    this.formMode = mode;
-  }
+
 
   // --- Permissions ---
   isViewer(): boolean {
@@ -381,28 +380,41 @@ export class MachinesComponent implements OnInit {
     }
   }
 
-  editMachine(machine: any): void {
-    this.editingMachineId = machine.id;
-    this.formMode = 'machine';
-    this.machineForm = {
-      id: machine.id,
-      machineName: machine.machineName || '',
-      machineCode: machine.machineCode || '',
-      capacityPerHour: machine.capacityPerHour || 450,
-      installedDate: machine.installedDate || '',
-      status: machine.status || 'Running'
-    };
-    this.notificationService.info('Editing Equipment', `Loaded "${machine.machineName}" into configuration panel.`);
-    const formCard = document.querySelector('.feature-form-panel');
-    if (formCard) formCard.scrollIntoView({ behavior: 'smooth' });
+  // --- Form & Drawer Controls ---
+  toggleMachineForm(): void {
+    if (this.isMachineFormOpen) {
+      this.cancelEditMachine();
+    } else {
+      this.resetMachineForm();
+      this.isMachineFormOpen = true;
+    }
+  }
+
+  toggleBreakdownForm(): void {
+    if (this.isBreakdownFormOpen) {
+      this.cancelEditBreakdown();
+    } else {
+      this.resetBreakdownForm();
+      this.isBreakdownFormOpen = true;
+    }
+  }
+
+  editMachine(m: any): void {
+    this.editingMachineId = m.id;
+    this.machineForm = { ...m };
+    if (this.machineForm.installedDate) {
+      this.machineForm.installedDate = new Date(this.machineForm.installedDate).toISOString().split('T')[0];
+    }
+    this.isMachineFormOpen = true;
   }
 
   cancelEditMachine(): void {
-    this.editingMachineId = null;
     this.resetMachineForm();
   }
 
   resetMachineForm(): void {
+    this.editingMachineId = null;
+    this.isMachineFormOpen = false;
     this.machineForm = {
       id: null,
       machineName: '',
@@ -410,6 +422,39 @@ export class MachinesComponent implements OnInit {
       capacityPerHour: 450,
       installedDate: '',
       status: 'Running'
+    };
+  }
+
+  editBreakdown(b: any): void {
+    this.editingBreakdownId = b.id || b.breakdownId;
+    this.breakdownForm = { ...b };
+    if (this.breakdownForm.breakdownDate) {
+      this.breakdownForm.breakdownDate = new Date(this.breakdownForm.breakdownDate).toISOString().split('T')[0];
+    }
+    if (this.breakdownForm.resolvedDate) {
+      this.breakdownForm.resolvedDate = new Date(this.breakdownForm.resolvedDate).toISOString().split('T')[0];
+    }
+    // Handle nested machine object
+    if (b.machine && b.machine.id) {
+      this.breakdownForm.machineId = b.machine.id;
+    }
+    this.isBreakdownFormOpen = true;
+  }
+
+  cancelEditBreakdown(): void {
+    this.resetBreakdownForm();
+  }
+
+  resetBreakdownForm(): void {
+    this.editingBreakdownId = null;
+    this.isBreakdownFormOpen = false;
+    this.breakdownForm = {
+      id: null,
+      machineId: '',
+      breakdownDate: '',
+      description: '',
+      downtimeHours: 0,
+      resolvedDate: ''
     };
   }
 
@@ -501,38 +546,7 @@ export class MachinesComponent implements OnInit {
     }
   }
 
-  editBreakdown(bd: any): void {
-    this.editingBreakdownId = bd.id || bd.breakdownId;
-    this.formMode = 'breakdown';
-    this.breakdownForm = {
-      id: bd.id,
-      machineId: bd.machine?.id || bd.machineId || '',
-      breakdownDate: bd.breakdownDate || '',
-      description: bd.description || '',
-      downtimeHours: bd.downtimeHours || 0,
-      resolvedDate: bd.resolvedDate || '',
-      _editId: bd.id
-    };
-    this.notificationService.info('Editing Breakdown', 'Loaded service record into configuration panel.');
-    const formCard = document.querySelector('.feature-form-panel');
-    if (formCard) formCard.scrollIntoView({ behavior: 'smooth' });
-  }
 
-  cancelEditBreakdown(): void {
-    this.editingBreakdownId = null;
-    this.resetBreakdownForm();
-  }
-
-  resetBreakdownForm(): void {
-    this.breakdownForm = {
-      id: null,
-      machineId: '',
-      breakdownDate: new Date().toISOString().split('T')[0],
-      description: '',
-      downtimeHours: 0,
-      resolvedDate: ''
-    };
-  }
 
   deleteBreakdown(id: any): void {
     if (!this.canDelete()) {

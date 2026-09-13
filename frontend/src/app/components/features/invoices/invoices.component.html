@@ -7,28 +7,63 @@
   <span class="crumb-current">GST Billing Hub &amp; Tax Invoices</span>
 </div>
 
-<!-- ── 1. Enterprise Header ─────────────────────────────────────────────── -->
-<div class="enterprise-header no-print">
-  <div class="enterprise-header-title-group">
-    <div class="enterprise-header-icon">
+<!-- ── 1. Stable Enterprise Header ───────────────────────────────────── -->
+<header class="invoices-page-header no-print">
+  <div class="header-left-col">
+    <div class="header-icon-box">
       <i class="bi bi-receipt-cutoff"></i>
     </div>
-    <div class="enterprise-header-text">
-      <h2>GST Billing Hub &amp; Tax Invoices</h2>
-      <p>GST-compliant tax invoices, party billing ledgers, receivables &amp; PDF documentation</p>
+    <div class="header-title-meta">
+      <h1 class="header-main-title">GST Billing Hub &amp; Tax Invoices</h1>
+      <div class="header-sub-row">
+        <span class="header-desc-text">GST-compliant tax invoices, party billing ledgers, receivables &amp; PDF documentation</span>
+        <span class="header-badge-live">
+          <span class="pulse-dot"></span>
+          <span>Verified GST Ledger</span>
+        </span>
+      </div>
     </div>
   </div>
-  <div class="header-actions">
-    <button type="button" class="btn btn-secondary btn-sm" (click)="loadData(true)" [disabled]="isLoading" title="Reload invoices">
-      <i class="bi bi-arrow-clockwise me-1" [class.spin-animate]="isLoading"></i>
+
+  <div class="header-right-col">
+    <button 
+      type="button" 
+      class="btn-header-action btn-secondary" 
+      (click)="loadData(true)" 
+      [disabled]="isLoading" 
+      title="Reload fresh invoices from database">
+      <i class="bi bi-arrow-clockwise" [class.spin-anim]="isLoading"></i>
       <span>{{ isLoading ? 'Syncing...' : 'Refresh' }}</span>
     </button>
-    <button type="button" class="btn btn-primary btn-sm btn-create-invoice" (click)="openCreateDrawer()" title="Create and generate new GST tax invoice">
-      <i class="bi bi-plus-lg me-1"></i>
+
+    <button 
+      type="button" 
+      class="btn-header-action btn-secondary" 
+      (click)="exportTableCSV('invoices')" 
+      title="Export filtered invoices to CSV">
+      <i class="bi bi-download"></i>
+      <span>CSV</span>
+    </button>
+
+    <button 
+      type="button" 
+      class="btn-header-action btn-secondary" 
+      (click)="printRegistry()" 
+      title="Print current invoice ledger">
+      <i class="bi bi-printer"></i>
+      <span>Print</span>
+    </button>
+
+    <button 
+      type="button" 
+      class="btn-header-action btn-primary" 
+      (click)="openCreateDrawer()" 
+      title="Create and generate new GST tax invoice">
+      <i class="bi bi-plus-lg"></i>
       <span>Create Invoice</span>
     </button>
   </div>
-</div>
+</header>
 
 <!-- ── 2. Subtabs Bar (Document Status Filter) ─────────────────────────── -->
 <div class="inv-subtabs-strip no-print">
@@ -573,10 +608,7 @@
     </div>
 
     <!-- Footer -->
-    <div class="invoice-modal-footer no-print">
-      <button type="button" class="btn btn-secondary" (click)="closeInvoiceModal()">
-        <i class="bi bi-x-circle me-1"></i> Close
-      </button>
+    <div class="invoice-modal-footer no-print" style="justify-content: flex-end;">
       <button type="button" class="btn btn-secondary" (click)="printCurrentInvoice()">
         <i class="bi bi-printer me-1"></i> Print Invoice
       </button>
@@ -738,10 +770,7 @@
       </div>
 
       <!-- Drawer Actions Footer -->
-      <div class="invoice-drawer-footer">
-        <button type="button" class="btn btn-secondary" (click)="closeCreateDrawer()" [disabled]="isSubmitting">
-          Cancel
-        </button>
+      <div class="invoice-drawer-footer" style="justify-content: flex-end;">
         <button type="submit" class="btn btn-primary btn-save-invoice" [disabled]="isSubmitting || !newInvoice.partyId">
           <i class="bi me-1" [ngClass]="isSubmitting ? 'bi-hourglass-split spin-animate' : 'bi-check2-circle'"></i>
           <span>{{ isSubmitting ? 'Generating Invoice...' : 'Generate & Save Tax Invoice' }}</span>

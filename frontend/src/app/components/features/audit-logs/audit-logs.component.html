@@ -1,255 +1,216 @@
-<div class="audit-container">
-  <!-- Unified Module Context & Action Toolbar (Single Tier) -->
-  <div class="table-toolbar-unified no-print">
-    <div class="toolbar-left">
-      <div class="section-title-badge">
-        <div class="badge-icon-wrap">
-          <i class="bi bi-shield-check" style="font-size: 18px;"></i>
-        </div>
-        <div class="badge-text">
-          <h3>Security Audit Logs</h3>
-          <span class="badge-subtitle">Immutable Activity & Compliance Trail</span>
-        </div>
+<div class="audit-enterprise-container">
+  
+  <!-- 1. SECURITY HEADER (Dark/Slate Palette) -->
+  <div class="security-header-wrapper no-print">
+    <div class="header-left-group">
+      <div class="security-badge">
+        <i class="bi bi-shield-check"></i>
       </div>
-      <div class="filter-count-badge">
-        <span class="live-pulse-dot"></span>
-        <span><strong>{{ filteredAuditLogs.length }}</strong> logs</span>
+      <div>
+        <h2 class="security-title">Security Audit & System Telemetry</h2>
+        <p class="security-subtitle">FUTANE AGRO / ENTERPRISE-GRADE IMMUTABLE EVENT LEDGER</p>
       </div>
     </div>
+    
+    <div class="header-telemetry">
+      <div class="telemetry-stat">
+        <span class="stat-label">Active Monitors</span>
+        <span class="stat-value">
+          <div class="pulse-dot"></div>
+          {{ filteredAuditLogs.length }} Events Captured
+        </span>
+      </div>
+      
+      <div class="header-actions">
+        <button type="button" class="btn-security" (click)="loadData(true)" title="Force telemetry sync">
+          <i class="bi bi-arrow-clockwise" [class.spin-anim]="isLoading"></i> Sync
+        </button>
+        <button type="button" class="btn-security" (click)="exportCSV()" title="Download raw CSV logs">
+          <i class="bi bi-download"></i> Export Data
+        </button>
+      </div>
+    </div>
+  </div>
 
-    <div class="toolbar-right">
-      <!-- Search -->
-      <div class="search-input-wrapper">
-        <i class="bi bi-search search-icon"></i>
+  <!-- 2. FILTER CONTROL BAR -->
+  <div class="security-control-bar no-print">
+    <div class="filter-group">
+      <div class="security-input-group">
+        <i class="bi bi-terminal"></i>
         <input 
           type="text" 
           [(ngModel)]="searchTerm" 
           (ngModelChange)="currentPage = 1"
-          placeholder="Search user, action, module, IP..." 
-          class="audit-search-input">
+          placeholder="Query by User, Action, Module, IP..." 
+          class="security-input">
       </div>
-
-      <!-- Filters -->
-      <div class="filter-select-group">
-        <select [(ngModel)]="auditFilter.tableName" (ngModelChange)="currentPage = 1" class="audit-select" title="Filter by Module">
-          <option value="">All Modules</option>
-          <option *ngFor="let t of uniqueTableNames" [value]="t">{{ t }}</option>
-        </select>
-
-        <select [(ngModel)]="auditFilter.action" (ngModelChange)="currentPage = 1" class="audit-select" title="Filter by Action Type">
-          <option value="">All Actions</option>
-          <option value="LOGIN">LOGIN</option>
-          <option value="LOGOUT">LOGOUT</option>
-          <option value="CREATE">CREATE</option>
-          <option value="UPDATE">UPDATE</option>
-          <option value="DELETE">DELETE</option>
-        </select>
-
-        <button *ngIf="searchTerm || auditFilter.tableName || auditFilter.action || auditFilter.username" 
-          type="button" 
-          class="btn-clear-filters" 
-          (click)="clearAuditFilters()"
-          title="Clear Filters">
-          <i class="bi bi-x-lg"></i>
-        </button>
-      </div>
-
-      <!-- Density Toggle -->
-      <div class="density-switch-group">
-        <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact density"><i class="bi bi-distribute-vertical"></i> Compact</button>
-        <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="setDensity('comfortable')" title="Standard density"><i class="bi bi-list-ul"></i> Normal</button>
-        <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious density"><i class="bi bi-grid-3x2-gap"></i> Spacious</button>
-      </div>
-
-      <!-- Export CSV -->
-      <button type="button" class="btn btn-secondary btn-sm" (click)="exportCSV()" title="Export audit records to CSV">
-        <i class="bi bi-download me-1"></i> Export CSV
+      
+      <select [(ngModel)]="auditFilter.tableName" (ngModelChange)="currentPage = 1" class="security-select">
+        <option value="">[ALL MODULES]</option>
+        <option *ngFor="let t of uniqueTableNames" [value]="t">{{ t }}</option>
+      </select>
+      
+      <select [(ngModel)]="auditFilter.action" (ngModelChange)="currentPage = 1" class="security-select">
+        <option value="">[ALL ACTIONS]</option>
+        <option value="LOGIN">LOGIN</option>
+        <option value="LOGOUT">LOGOUT</option>
+        <option value="CREATE">CREATE</option>
+        <option value="UPDATE">UPDATE</option>
+        <option value="DELETE">DELETE</option>
+      </select>
+      
+      <button *ngIf="searchTerm || auditFilter.tableName || auditFilter.action" 
+        type="button" 
+        class="btn-clear"
+        (click)="clearAuditFilters()">
+        [RESET QUERY]
       </button>
-
-      <!-- Reload Data -->
-      <button type="button" class="btn btn-secondary btn-sm" (click)="loadData(true)" title="Reload audit data">
-        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
-      </button>
+    </div>
+    
+    <div class="d-flex align-items-center bg-light border rounded">
+      <button type="button" class="btn btn-sm border-0" [ngClass]="tableDensity === 'compact' ? 'btn-white shadow-sm' : 'text-muted'" (click)="setDensity('compact')"><i class="bi bi-list"></i></button>
+      <button type="button" class="btn btn-sm border-0" [ngClass]="tableDensity === 'comfortable' ? 'btn-white shadow-sm' : 'text-muted'" (click)="setDensity('comfortable')"><i class="bi bi-list-ul"></i></button>
     </div>
   </div>
 
-  <!-- Main Audit Table Card -->
-  <div class="glass-panel audit-table-card">
-    <div class="table-container" 
-         [class.table-compact]="tableDensity === 'compact'" 
-         [class.table-spacious]="tableDensity === 'spacious'">
-      <table class="table enterprise-table" appResizableTable [tableId]="'audit_logs_master_table'">
+  <!-- 3. STRICT LOG DATA GRID -->
+  <div class="security-grid-wrapper" [class]="'density-' + tableDensity">
+    <div class="table-responsive">
+      <table class="security-log-table">
         <thead>
           <tr>
-            <th style="width: 90px;">LOG ID</th>
-            <th style="width: 170px;">TIMESTAMP</th>
-            <th style="min-width: 170px;">USER EXECUTED</th>
-            <th style="min-width: 150px;">OPERATION ACTION</th>
-            <th style="min-width: 130px;">MODULE / RESOURCE</th>
-            <th style="width: 120px;">CLIENT IP</th>
-            <th style="min-width: 220px;">DETAILS</th>
+            <th style="width: 120px;">Event ID</th>
+            <th style="width: 160px;">Timestamp (UTC+5:30)</th>
+            <th style="min-width: 180px;">System Actor</th>
+            <th style="width: 150px;">Action Type</th>
+            <th style="width: 160px;">Target Resource</th>
+            <th style="width: 140px;">Source IP</th>
+            <th style="min-width: 250px;">Event Truncated Payload</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let log of paginatedAuditLogs; trackBy: trackById" (click)="openLogDetail(log)" class="audit-row-clickable">
-            <!-- LOG ID -->
+          <tr *ngFor="let log of paginatedAuditLogs; trackBy: trackById" (click)="openLogDetail(log)">
             <td>
-              <span class="code-badge-id">#{{ log.auditId || log.id }}</span>
+              <span class="font-mono text-muted">#{{ log.auditId || log.id }}</span>
             </td>
-
-            <!-- TIMESTAMP -->
             <td>
-              <div class="time-cell">
-                <i class="bi bi-clock time-icon"></i>
-                <span>{{ log.timestamp | date:'dd MMM yyyy, HH:mm:ss' }}</span>
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-clock-history text-muted"></i>
+                <span class="font-mono">{{ log.timestamp | date:'dd MMM, HH:mm:ss' }}</span>
               </div>
             </td>
-
-            <!-- USER EXECUTED (Clean & Uncluttered) -->
             <td>
-              <div class="user-identity-cell">
-                <div class="user-avatar-initials">
-                  {{ (log.username || 'U').charAt(0).toUpperCase() }}
-                </div>
-                <div class="user-meta">
-                  <strong class="user-handle">&#64;{{ log.username }}</strong>
-                  <span class="role-pill" [ngClass]="'role-' + (log.userRole || 'user').toLowerCase()">{{ log.userRole || 'USER' }}</span>
-                </div>
+              <div class="d-flex flex-column">
+                <span class="font-mono fw-bold" style="color: #0F172A;">&#64;{{ log.username }}</span>
+                <span class="text-xs text-muted font-mono">{{ log.userRole || 'USER' }}</span>
               </div>
             </td>
-
-            <!-- OPERATION ACTION -->
             <td>
-              <span class="action-badge" [ngClass]="getActionBadgeClass(log.action)">
-                {{ log.action }}
-              </span>
+              <span class="badge-action" [ngClass]="getActionBadgeClass(log.action)">{{ log.action }}</span>
             </td>
-
-            <!-- MODULE / RESOURCE -->
             <td>
-              <span class="module-tag">
-                <i class="bi bi-folder2-open tag-icon"></i>
-                {{ log.tableName || log.resourceName || 'system' }}
-              </span>
+              <span class="font-mono text-secondary"><i class="bi bi-box-seam me-2"></i>{{ log.tableName || log.resourceName || 'system_core' }}</span>
             </td>
-
-            <!-- CLIENT IP -->
             <td>
-              <span class="ip-badge">
-                <i class="bi bi-globe ip-icon"></i>
-                {{ log.ipAddress || '127.0.0.1' }}
-              </span>
+              <span class="font-mono text-xs text-muted"><i class="bi bi-ethernet me-1"></i>{{ log.ipAddress || '127.0.0.1' }}</span>
             </td>
-
-            <!-- DETAILS -->
             <td>
-              <div class="payload-cell">
-                <span class="payload-text" [title]="log.details || log.newValue || ''">
-                  {{ log.details || log.newValue || 'System event logged.' }}
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="log-detail-text font-mono" [title]="log.details || log.newValue || ''">
+                  {{ log.details || log.newValue || 'System event recorded.' }}
                 </span>
-                <button type="button" class="btn-inspect" (click)="openLogDetail(log); $event.stopPropagation()" title="Inspect details">
-                  <i class="bi bi-box-arrow-up-right"></i>
-                </button>
+                <i class="bi bi-arrow-right-circle text-muted"></i>
               </div>
             </td>
           </tr>
-
+          
           <!-- Empty State -->
           <tr *ngIf="paginatedAuditLogs.length === 0">
-            <td colspan="7" class="empty-state-cell">
-              <div class="empty-audit-box">
-                <i class="bi bi-search empty-icon"></i>
-                <h4>No Audit Records Found</h4>
-                <p>No audit activity matching your filter criteria. Try clearing filters.</p>
-                <button type="button" class="btn btn-secondary btn-sm" (click)="clearAuditFilters()"><i class="bi bi-x-lg me-1"></i>Reset Filters</button>
+            <td colspan="7" class="text-center py-5">
+              <div class="d-flex flex-column align-items-center text-muted">
+                <i class="bi bi-shield-slash mb-2" style="font-size: 32px; opacity: 0.5;"></i>
+                <h6 class="font-mono fw-bold mb-1">NO EVENTS CAPTURED</h6>
+                <p class="text-xs font-mono">Current telemetry filter returned 0 matching nodes.</p>
               </div>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-
-    <!-- Pagination Footer -->
-    <div class="table-pagination no-print">
-      <span class="pagination-info">
-        Showing {{ filteredAuditLogs.length === 0 ? 0 : (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, filteredAuditLogs.length) }} of {{ filteredAuditLogs.length }} entries
-      </span>
-      <div class="pagination-actions">
-        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
-          <i class="bi bi-chevron-left me-1"></i> Previous
+    
+    <!-- 4. PAGINATION FOOTER -->
+    <div class="security-pagination no-print">
+      <div>
+        Rows {{ filteredAuditLogs.length === 0 ? 0 : (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, filteredAuditLogs.length) }} of {{ filteredAuditLogs.length }} telemetry events
+      </div>
+      <div class="pagination-controls">
+        <button type="button" class="btn-page" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
+          <i class="bi bi-chevron-left"></i>
         </button>
-        <span class="page-indicator">Page {{ currentPage }} of {{ totalPages }}</span>
-        <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage >= totalPages" (click)="currentPage = currentPage + 1">
-          Next <i class="bi bi-chevron-right ms-1"></i>
+        <span class="font-mono fw-bold text-dark px-2">PAGE {{ currentPage }} / {{ totalPages }}</span>
+        <button type="button" class="btn-page" [disabled]="currentPage >= totalPages" (click)="currentPage = currentPage + 1">
+          <i class="bi bi-chevron-right"></i>
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Audit Log Detail Modal -->
+<!-- 5. FORENSIC DETAILS MODAL (POP CARD) -->
 <div class="audit-modal-backdrop" *ngIf="selectedLogForDetail" (click)="closeLogDetail()">
   <div class="audit-modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <div class="modal-title-group">
-        <div class="modal-icon-shield">
-          <i class="bi bi-shield-check"></i>
-        </div>
+    <!-- Header -->
+    <div class="audit-modal-header">
+      <div class="audit-modal-title">
+        <i class="bi bi-shield-check"></i>
         <div>
-          <h4>Audit Record Details</h4>
-          <span class="modal-subtitle">Log ID #{{ selectedLogForDetail.auditId || selectedLogForDetail.id }} · {{ selectedLogForDetail.timestamp | date:'medium' }}</span>
+          <h3>Forensic Event Inspector</h3>
+          <span class="audit-modal-subtitle">EVENT REF: {{ selectedLogForDetail.auditId || selectedLogForDetail.id }} · {{ selectedLogForDetail.timestamp | date:'medium' }}</span>
         </div>
       </div>
-      <button type="button" class="modal-close-btn" (click)="closeLogDetail()" title="Close"><i class="bi bi-x-lg"></i></button>
+      <button type="button" class="audit-close-btn" (click)="closeLogDetail()">
+        <i class="bi bi-x-lg"></i>
+      </button>
     </div>
-
-    <div class="modal-body">
-      <div class="modal-grid-meta">
-        <div class="meta-field">
-          <label>User</label>
-          <div class="meta-val highlight">
-            <strong>&#64;{{ selectedLogForDetail.username }}</strong>
-            <span class="role-pill" [ngClass]="'role-' + (selectedLogForDetail.userRole || 'user').toLowerCase()">{{ selectedLogForDetail.userRole }}</span>
-          </div>
+    
+    <!-- Body -->
+    <div class="audit-modal-body">
+      <div class="forensic-grid">
+        <div class="forensic-item">
+          <span class="forensic-label">System Actor</span>
+          <span class="forensic-value font-mono fw-bold">&#64;{{ selectedLogForDetail.username }} <span class="badge-action badge-neutral ms-2 text-xs">{{ selectedLogForDetail.userRole }}</span></span>
         </div>
-        <div class="meta-field">
-          <label>Operation Action</label>
-          <div class="meta-val">
-            <span class="action-badge" [ngClass]="getActionBadgeClass(selectedLogForDetail.action)">
-              <i class="bi bi-activity me-1"></i>{{ selectedLogForDetail.action }}
+        <div class="forensic-item">
+          <span class="forensic-label">Action Classification</span>
+          <span class="forensic-value">
+            <span class="badge-action" [ngClass]="getActionBadgeClass(selectedLogForDetail.action)">
+              {{ selectedLogForDetail.action }}
             </span>
-          </div>
+          </span>
         </div>
-        <div class="meta-field">
-          <label>Module / Resource</label>
-          <div class="meta-val"><code class="code-pill">{{ selectedLogForDetail.tableName || selectedLogForDetail.resourceName }}</code></div>
+        <div class="forensic-item">
+          <span class="forensic-label">Target Resource Node</span>
+          <span class="forensic-value font-mono">{{ selectedLogForDetail.tableName || selectedLogForDetail.resourceName }}</span>
         </div>
-        <div class="meta-field">
-          <label>Client IP Address</label>
-          <div class="meta-val"><code class="code-pill">{{ selectedLogForDetail.ipAddress || '127.0.0.1' }}</code></div>
-        </div>
-        <div class="meta-field">
-          <label>Timestamp</label>
-          <div class="meta-val">
-            <span class="timestamp-val"><i class="bi bi-clock me-1 text-muted"></i>{{ selectedLogForDetail.timestamp | date:'medium' }}</span>
-          </div>
+        <div class="forensic-item">
+          <span class="forensic-label">Origin IP Trace</span>
+          <span class="forensic-value font-mono">{{ selectedLogForDetail.ipAddress || '127.0.0.1' }}</span>
         </div>
       </div>
-
-      <div class="modal-payload-section">
-        <div class="payload-header-row">
-          <label><i class="bi bi-code-slash me-1"></i>Event Details & Change Payload</label>
-          <button type="button" class="btn-copy-payload" (click)="copyPayload()" title="Copy to clipboard">
-            <i class="bi" [ngClass]="copiedPayload ? 'bi-check-lg text-success' : 'bi-clipboard'"></i>
-            <span>{{ copiedPayload ? 'Copied' : 'Copy' }}</span>
+      
+      <div class="payload-block">
+        <div class="payload-header">
+          <div class="payload-title">
+            <i class="bi bi-terminal"></i> EVENT_PAYLOAD.JSON
+          </div>
+          <button type="button" class="btn-copy" (click)="copyPayload()">
+            <i class="bi" [ngClass]="copiedPayload ? 'bi-check2 text-success' : 'bi-clipboard'"></i> 
+            {{ copiedPayload ? 'COPIED' : 'COPY RAW' }}
           </button>
         </div>
-        <pre class="payload-pre"><code>{{ selectedLogForDetail.details || selectedLogForDetail.newValue || 'System audit log entry recorded.' }}</code></pre>
+        <pre class="payload-content">{{ selectedLogForDetail.details || selectedLogForDetail.newValue || 'System audit log entry recorded without explicit payload data.' }}</pre>
       </div>
     </div>
-
-    <div class="modal-footer">
-      <button type="button" class="btn btn-secondary btn-sm" (click)="closeLogDetail()">Close</button>
-    </div>
+    <!-- Note: Redundant footer buttons intentionally omitted as per standard -->
   </div>
 </div>
