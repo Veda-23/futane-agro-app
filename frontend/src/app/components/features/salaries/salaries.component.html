@@ -83,159 +83,9 @@
         </button>
       </div>
     </div>
-
-    <!-- ── 3. SEARCH & FILTERS TOOLBAR ──────────────────────────────── -->
-    <div class="filters-toolbar-wrapper">
-      <div class="filters-left-group">
-        <!-- Search Input -->
-        <div class="toolbar-search-box">
-          <i class="bi bi-search search-icon"></i>
-          <input type="text" 
-                 class="search-input" 
-                 [(ngModel)]="filterSearchQuery" 
-                 (input)="currentPage = 1" 
-                 placeholder="Search staff name, ID, month, status..." 
-                 aria-label="Search payroll ledger">
-          <button *ngIf="filterSearchQuery" 
-                  type="button" 
-                  class="btn-clear-search" 
-                  (click)="filterSearchQuery = ''; currentPage = 1"
-                  title="Clear search query">
-            <i class="bi bi-x"></i>
-          </button>
-        </div>
-
-        <!-- Wage Month Filter -->
-        <div class="filter-select-wrapper">
-          <select class="toolbar-select" 
-                  [(ngModel)]="filterMonth" 
-                  (change)="currentPage = 1" 
-                  title="Filter by Wage Month">
-            <option value="ALL">All Months</option>
-            <option *ngFor="let m of allMonths" [value]="m">{{ m }}</option>
-          </select>
-        </div>
-
-        <!-- Wage Year Filter -->
-        <div class="filter-select-wrapper">
-          <select class="toolbar-select" 
-                  [(ngModel)]="filterYear" 
-                  (change)="currentPage = 1" 
-                  title="Filter by Wage Year">
-            <option value="ALL">All Years</option>
-            <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
-          </select>
-        </div>
-
-        <!-- Staff Member Dropdown Filter -->
-        <div class="filter-select-wrapper">
-          <select class="toolbar-select" 
-                  [(ngModel)]="filterEmployee" 
-                  (change)="currentPage = 1" 
-                  title="Filter by Staff Member">
-            <option value="ALL">All Staff Members</option>
-            <option *ngFor="let emp of employees" [value]="emp.id">
-              {{ emp.empName }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Reset Filters Trigger -->
-        <button *ngIf="hasActiveFilters()" 
-                type="button" 
-                class="btn-reset-filters" 
-                (click)="resetFilters()" 
-                title="Reset all search queries and filters">
-          <i class="bi bi-x-circle me-1"></i>Reset
-        </button>
-      </div>
-
-      <div class="filters-right-group">
-        <!-- Staff Directory Navigation Shortcut -->
-        <button type="button" 
-                class="btn btn-secondary btn-action-compact" 
-                (click)="goToEmployees()" 
-                title="View Employee Master Directory">
-          <i class="bi bi-people me-1 text-primary"></i>
-          <span class="btn-label-desktop">Staff Directory</span>
-        </button>
-
-        <!-- Refresh Button -->
-        <button type="button" 
-                class="btn btn-secondary btn-action-compact" 
-                (click)="loadData(true)" 
-                [disabled]="isLoading || isRefreshing" 
-                title="Refresh payroll ledger from database">
-          <i class="bi bi-arrow-clockwise me-1" [class.spin-anim]="isRefreshing"></i>
-          <span class="btn-label-desktop">Refresh</span>
-        </button>
-
-        <!-- Consolidated Export Dropdown -->
-        <div class="export-dropdown-wrapper" (click)="$event.stopPropagation()">
-          <button type="button" 
-                  class="btn btn-secondary btn-action-compact" 
-                  (click)="toggleExportDropdown($event)" 
-                  title="Export payroll records">
-            <i class="bi bi-download me-1"></i>
-            <span>Export ▾</span>
-          </button>
-          <div class="export-menu shadow-lg animate-fade-in" *ngIf="showExportDropdown">
-            <button type="button" class="export-menu-item" (click)="exportCsv()">
-              <i class="bi bi-file-earmark-spreadsheet text-success me-2"></i>Export CSV (.csv)
-            </button>
-            <button type="button" class="export-menu-item" (click)="exportExcel()">
-              <i class="bi bi-file-earmark-excel text-primary me-2"></i>Export Excel (.xlsx)
-            </button>
-          </div>
-        </div>
-
-        <!-- Table Density Selector -->
-        <div class="density-group" role="group" aria-label="Table Density">
-          <button type="button" 
-                  class="density-btn" 
-                  [class.active]="tableDensity === 'compact'" 
-                  (click)="setDensity('compact')" 
-                  title="Compact rows">
-            <i class="bi bi-view-list"></i>
-          </button>
-          <button type="button" 
-                  class="density-btn" 
-                  [class.active]="tableDensity === 'normal'" 
-                  (click)="setDensity('normal')" 
-                  title="Standard rows">
-            <i class="bi bi-distribute-vertical"></i>
-          </button>
-          <button type="button" 
-                  class="density-btn" 
-                  [class.active]="tableDensity === 'spacious'" 
-                  (click)="setDensity('spacious')" 
-                  title="Spacious rows">
-            <i class="bi bi-arrows-expand"></i>
-          </button>
-        </div>
-
-        <!-- Columns Visibility Dropdown -->
-        <div class="columns-dropdown-wrap" (click)="$event.stopPropagation()">
-          <button type="button" 
-                  class="btn btn-secondary btn-sm btn-columns-toggle" 
-                  (click)="toggleColDropdown('salaries', $event)" 
-                  title="Configure Visible Columns">
-            <i class="bi bi-layout-three-columns me-1"></i>Columns ▾
-          </button>
-          <div class="columns-dropdown-menu shadow-lg animate-fade-in" *ngIf="showColDropdown['salaries']">
-            <label *ngFor="let col of getTableColumns('salaries')" class="column-checkbox-label">
-              <input type="checkbox" 
-                     [checked]="isColumnVisible('salaries', col)" 
-                     (change)="toggleColumn('salaries', col)">
-              <span>{{ col }}</span>
-            </label>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
-  <!-- ── 4. 4-COLUMN SUMMARY FINANCIAL KPI METRICS ─────────────────── -->
+  <!-- ── 3. 4-COLUMN SUMMARY FINANCIAL KPI METRICS ─────────────────── -->
   <section class="salaries-kpi-grid no-print" aria-label="Payroll Financial Metrics">
     <!-- Total Disbursed -->
     <div class="kpi-card">
@@ -299,6 +149,156 @@
       </div>
     </div>
   </section>
+
+  <!-- ── 4. SEARCH & FILTERS TOOLBAR ──────────────────────────────── -->
+  <div class="table-unified-toolbar filters-toolbar-wrapper no-print">
+    <div class="filters-left-group">
+      <!-- Search Input -->
+      <div class="toolbar-search-box">
+        <i class="bi bi-search search-icon"></i>
+        <input type="text" 
+               class="search-input" 
+               [(ngModel)]="filterSearchQuery" 
+               (input)="currentPage = 1" 
+               placeholder="Search staff name, ID, month, status..." 
+               aria-label="Search payroll ledger">
+        <button *ngIf="filterSearchQuery" 
+                type="button" 
+                class="btn-clear-search" 
+                (click)="filterSearchQuery = ''; currentPage = 1"
+                title="Clear search query">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+
+      <!-- Wage Month Filter -->
+      <div class="filter-select-wrapper">
+        <select class="toolbar-select" 
+                [(ngModel)]="filterMonth" 
+                (change)="currentPage = 1" 
+                title="Filter by Wage Month">
+          <option value="ALL">All Months</option>
+          <option *ngFor="let m of allMonths" [value]="m">{{ m }}</option>
+        </select>
+      </div>
+
+      <!-- Wage Year Filter -->
+      <div class="filter-select-wrapper">
+        <select class="toolbar-select" 
+                [(ngModel)]="filterYear" 
+                (change)="currentPage = 1" 
+                title="Filter by Wage Year">
+          <option value="ALL">All Years</option>
+          <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+        </select>
+      </div>
+
+      <!-- Staff Member Dropdown Filter -->
+      <div class="filter-select-wrapper">
+        <select class="toolbar-select" 
+                [(ngModel)]="filterEmployee" 
+                (change)="currentPage = 1" 
+                title="Filter by Staff Member">
+          <option value="ALL">All Staff Members</option>
+          <option *ngFor="let emp of employees" [value]="emp.id">
+            {{ emp.empName }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Reset Filters Trigger -->
+      <button *ngIf="hasActiveFilters()" 
+              type="button" 
+              class="btn-reset-filters" 
+              (click)="resetFilters()" 
+              title="Reset all search queries and filters">
+        <i class="bi bi-x-circle me-1"></i>Reset
+      </button>
+    </div>
+
+    <div class="filters-right-group">
+      <!-- Staff Directory Navigation Shortcut -->
+      <button type="button" 
+              class="btn btn-secondary btn-action-compact" 
+              (click)="goToEmployees()" 
+              title="View Employee Master Directory">
+        <i class="bi bi-people me-1 text-primary"></i>
+        <span class="btn-label-desktop">Staff Directory</span>
+      </button>
+
+      <!-- Refresh Button -->
+      <button type="button" 
+              class="btn btn-secondary btn-action-compact" 
+              (click)="loadData(true)" 
+              [disabled]="isLoading || isRefreshing" 
+              title="Refresh payroll ledger from database">
+        <i class="bi bi-arrow-clockwise me-1" [class.spin-anim]="isRefreshing"></i>
+        <span class="btn-label-desktop">Refresh</span>
+      </button>
+
+      <!-- Consolidated Export Dropdown -->
+      <div class="export-dropdown-wrapper" (click)="$event.stopPropagation()">
+        <button type="button" 
+                class="btn btn-secondary btn-action-compact" 
+                (click)="toggleExportDropdown($event)" 
+                title="Export payroll records">
+          <i class="bi bi-download me-1"></i>
+          <span>Export ▾</span>
+        </button>
+        <div class="export-menu shadow-lg animate-fade-in" *ngIf="showExportDropdown">
+          <button type="button" class="export-menu-item" (click)="exportCsv()">
+            <i class="bi bi-file-earmark-spreadsheet text-success me-2"></i>Export CSV (.csv)
+          </button>
+          <button type="button" class="export-menu-item" (click)="exportExcel()">
+            <i class="bi bi-file-earmark-excel text-primary me-2"></i>Export Excel (.xlsx)
+          </button>
+        </div>
+      </div>
+
+      <!-- Table Density Selector -->
+      <div class="density-group" role="group" aria-label="Table Density">
+        <button type="button" 
+                class="density-btn" 
+                [class.active]="tableDensity === 'compact'" 
+                (click)="setDensity('compact')" 
+                title="Compact rows">
+          <i class="bi bi-view-list"></i>
+        </button>
+        <button type="button" 
+                class="density-btn" 
+                [class.active]="tableDensity === 'normal'" 
+                (click)="setDensity('normal')" 
+                title="Standard rows">
+          <i class="bi bi-distribute-vertical"></i>
+        </button>
+        <button type="button" 
+                class="density-btn" 
+                [class.active]="tableDensity === 'spacious'" 
+                (click)="setDensity('spacious')" 
+                title="Spacious rows">
+          <i class="bi bi-arrows-expand"></i>
+        </button>
+      </div>
+
+      <!-- Columns Visibility Dropdown -->
+      <div class="columns-dropdown-wrap" (click)="$event.stopPropagation()">
+        <button type="button" 
+                class="btn btn-secondary btn-sm btn-columns-toggle" 
+                (click)="toggleColDropdown('salaries', $event)" 
+                title="Configure Visible Columns">
+          <i class="bi bi-layout-three-columns me-1"></i>Columns ▾
+        </button>
+        <div class="columns-dropdown-menu shadow-lg animate-fade-in" *ngIf="showColDropdown['salaries']">
+          <label *ngFor="let col of getTableColumns('salaries')" class="column-checkbox-label">
+            <input type="checkbox" 
+                   [checked]="isColumnVisible('salaries', col)" 
+                   (change)="toggleColumn('salaries', col)">
+            <span>{{ col }}</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ── 5. FULL-WIDTH ENTERPRISE FINANCIAL TABLE ──────────────────── -->
   <section class="salaries-table-section no-print">

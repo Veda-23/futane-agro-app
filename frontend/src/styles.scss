@@ -350,29 +350,30 @@ body.dark-theme,
   padding: 0;
 }
 
-/* Enterprise Scrollbar Standards (Subtle, professional 6px scrollbars) */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* Clean Global Invisible Scrollbars — Zero Visible Scrollbars Across All Tabs, Subtabs, and Content */
+*, *::before, *::after, html, body {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--border-input);
-  border-radius: 3px;
+::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+  display: none !important;
+  background: transparent !important;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
-}
-
-/* Firefox scrollbar */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-input) transparent;
+::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb {
+  display: none !important;
+  background: transparent !important;
 }
 
 html {
@@ -1870,14 +1871,14 @@ body.dark-theme .density-btn.active {
    15. ENTERPRISE TOAST & NOTIFICATION SYSTEM (STANDARD TOP-RIGHT)
    ────────────────────────────────────────────────────────────────────────── */
 
-/* Container placement: Standard Top-Right, cleanly offset below fixed header (76px) */
+/* Container placement: Standard Bottom-Right, non-blocking for header action buttons */
 .swal2-container.swal2-top-end,
 .swal2-container.futane-toast-container-top {
   position: fixed !important;
-  top: 76px !important;
+  top: auto !important;
+  bottom: 24px !important;
   right: 24px !important;
   left: auto !important;
-  bottom: auto !important;
   width: auto !important;
   height: auto !important;
   padding: 0 !important;
@@ -4254,7 +4255,7 @@ pre, code, table {
    Standardizes all 23 tabs to clean, compact, professional ERP specifications.
    ========================================================================== */
 
-/* ── A. Compact Enterprise Page Headers ─────────────────────────────────── */
+/* ── A. Compact Enterprise Page Headers (All 23 Tabs) ───────────────────── */
 .production-page-header,
 .enterprise-header,
 .page-header,
@@ -4263,42 +4264,71 @@ pre, code, table {
 .config-header-bar,
 .crm-header,
 .crm-header-card,
-.report-page-header {
+.report-page-header,
+.party-page-header,
+.analytics-page-header,
+.admin-header-banner,
+.security-header-wrapper {
   padding: 10px 16px !important;
   margin-bottom: 10px !important;
   border-radius: var(--radius-md, 8px) !important;
   background: var(--bg-surface, #ffffff) !important;
   border: 1px solid var(--border-color, #e2e8f0) !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
 
   .header-icon-box,
   .enterprise-header-icon,
   .module-header-icon,
-  .erp-header-icon {
-    width: 34px !important;
-    height: 34px !important;
-    min-width: 34px !important;
+  .erp-header-icon,
+  .security-badge,
+  .banner-icon-box,
+  .header-icon-badge {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
     border-radius: var(--radius-sm, 6px) !important;
     font-size: 16px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: var(--primary-soft, #ecfdf5) !important;
+    color: var(--primary, #059669) !important;
+    border: 1px solid var(--primary-border, #a7f3d0) !important;
+    box-shadow: none !important;
+
+    &::after {
+      display: none !important;
+    }
   }
 
   .header-main-title,
   .enterprise-header-text h2,
   .module-header-title,
   h1.header-title,
+  h1.header-main-title,
   h2.page-title,
-  .header-title-text {
-    font-size: 17px !important;
+  .header-title-text,
+  .security-title,
+  .banner-titles h2 {
+    font-size: 19px !important;
     font-weight: 700 !important;
     letter-spacing: -0.01em !important;
     line-height: 1.25 !important;
     margin: 0 !important;
+    color: var(--text-primary, #0f172a) !important;
   }
 
   .header-subtitle,
   .enterprise-header-text p,
   .header-desc-text,
-  .module-header-desc {
+  .module-header-desc,
+  .security-subtitle,
+  .banner-titles p {
     font-size: 11.5px !important;
     color: var(--text-muted, #64748b) !important;
     margin: 2px 0 0 0 !important;
@@ -4336,6 +4366,140 @@ pre, code, table {
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   GLOBAL ENTERPRISE BUTTON STANDARDIZATION — STRICT 32PX SPECIFICATION
+   Standardized across ALL tabs and ALL buttons to match Dispatch Scan QR / Refresh:
+   - Height: 32px strict
+   - Padding: 0 12px
+   - Font size: 12px
+   - Font weight: 600
+   - Border radius: 6px
+   - Gap: 6px
+   - Icon size: 13px - 14px
+   ══════════════════════════════════════════════════════════════════════════ */
+button.btn,
+a.btn,
+.btn,
+button.btn-primary,
+button.btn-secondary,
+button.btn-outline,
+button.btn-default,
+button.btn-light,
+button.btn-dark,
+button.btn-success,
+button.btn-danger,
+button.btn-warning,
+button.btn-info,
+button.btn-action,
+button.btn-action-primary,
+button.btn-action-compact,
+button.btn-header-action,
+button.btn-security,
+button.btn-reset-filters,
+button.btn-columns-toggle,
+button.inv-btn-action,
+button.btn-drivers-nav,
+button.erp-btn,
+button.erp-btn-primary,
+button.erp-btn-secondary,
+button.erp-btn-outline,
+button.btn-toolbar-action,
+.header-right-actions button,
+.erp-header-actions button,
+.header-actions button,
+.header-right-col button,
+.stable-page-header button,
+.party-page-header button,
+.analytics-page-header button,
+.admin-header-banner button,
+.security-header-wrapper button,
+.crm-header button,
+.crm-header-card button,
+.table-unified-toolbar button:not(.density-btn):not(.btn-clear-search),
+.table-toolbar button:not(.density-btn):not(.btn-clear-search),
+.filters-right-group button,
+.toolbar-right-group button,
+.filters-left-group button.btn-reset-filters,
+.toolbar-left-group button.btn-reset-filters,
+.columns-dropdown-wrap > button,
+.col-manager-dropdown-wrapper > button,
+.export-dropdown-wrapper > button,
+.export-dropdown-wrap > button,
+.inv-filter-actions button,
+.security-control-bar button,
+.procurement-actions button,
+.form-actions button,
+.drawer-footer button,
+.modal-footer button,
+.modal-header-actions button:not(.btn-close),
+.dialog-actions button {
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+
+  i, .bi {
+    font-size: 13px !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+}
+
+/* Secondary Button Styling (Clean white surface, crisp slate border) */
+button.btn-secondary,
+button.btn-outline,
+button.btn-action-compact,
+button.btn-security,
+.table-unified-toolbar button.btn-secondary,
+.filters-right-group button.btn-secondary,
+.toolbar-right-group button.btn-secondary,
+.columns-dropdown-wrap > button,
+.col-manager-dropdown-wrapper > button,
+.export-dropdown-wrapper > button,
+.export-dropdown-wrap > button {
+  background: var(--bg-surface, #ffffff) !important;
+  border: 1px solid var(--border-color, #cbd5e1) !important;
+  color: var(--text-primary, #0f172a) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+
+  &:hover {
+    background: var(--bg-hover, #f8fafc) !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+  }
+}
+
+/* Primary Button Styling (Brand Emerald, matching reference) */
+button.btn-primary,
+button.btn-action-primary,
+.header-right-actions button.btn-primary,
+.erp-header-actions button.btn-primary,
+.header-right-col button.btn-primary {
+  background: var(--primary, #059669) !important;
+  border: 1px solid var(--primary, #059669) !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 2px rgba(5, 150, 105, 0.25) !important;
+
+  &:hover {
+    background: #047857 !important;
+    border-color: #047857 !important;
+    color: #ffffff !important;
+  }
+}
+
 /* ── B. Compact Sub-Navigation Tabs ─────────────────────────────────────── */
 .subtabs-classification-bar,
 .production-subnav-bar,
@@ -4366,21 +4530,34 @@ pre, code, table {
   }
 }
 
-/* ── C. High-Density KPI / Telemetry Ribbon Cards ───────────────────────── */
+/* ── C. High-Density KPI / Telemetry Ribbon Cards (Exact Reference Look) ───────────────────────── */
 .production-kpi-grid,
 .erp-kpi-grid,
 .kpi-grid,
 .stats-grid,
 .metrics-grid,
 .overview-grid,
-.inv-stats-grid {
+.inv-stats-grid,
+.inv-kpi-grid,
+.inv-telemetry-grid,
+.telemetry-ribbon-grid,
+.stock-telemetry-ribbon,
+.transports-kpi-grid,
+.drivers-kpi-grid,
+.salaries-kpi-grid,
+.employees-kpi-grid,
+.expenses-kpi-ribbon,
+.bank-kpi-ribbon {
   display: grid !important;
   grid-template-columns: repeat(4, 1fr) !important;
-  gap: 10px !important;
-  margin-bottom: 10px !important;
+  gap: 14px !important;
+  margin-bottom: 16px !important;
 
-  @media (max-width: 1024px) {
+  @media (max-width: 1200px) {
     grid-template-columns: repeat(2, 1fr) !important;
+  }
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr !important;
   }
 }
 
@@ -4391,72 +4568,186 @@ pre, code, table {
 .summary-card,
 .powerbi-kpi-card,
 .analytics-kpi-card,
-.inv-summary-card {
-  padding: 10px 14px !important;
-  min-height: 70px !important;
-  border-radius: var(--radius-md, 8px) !important;
+.inv-summary-card,
+.inv-kpi-card,
+.telemetry-card {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding: 14px 18px !important;
+  min-height: 80px !important;
+  border-radius: 16px !important;
   background: var(--bg-surface, #ffffff) !important;
-  border: 1px solid var(--border-color, #e2e8f0) !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
-  gap: 4px !important;
-  justify-content: center !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+  position: relative !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
 
   &:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.08) !important;
+    border-color: #cbd5e1 !important;
   }
 
   .kpi-icon-wrap,
   .erp-kpi-icon,
   .stat-icon,
-  .metric-icon {
-    width: 32px !important;
-    height: 32px !important;
-    min-width: 32px !important;
-    border-radius: 6px !important;
-    font-size: 14px !important;
+  .metric-icon,
+  .kpi-icon-badge,
+  .telemetry-icon-wrap,
+  .telemetry-icon-box,
+  .inv-kpi-icon,
+  .kpi-icon-wrapper {
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    min-height: 46px !important;
+    border-radius: 13px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 20px !important;
+    flex-shrink: 0 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
   }
 
-  .kpi-label,
-  .erp-kpi-title,
-  .stat-title,
-  .metric-title {
-    font-size: 10.5px !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.04em !important;
-    text-transform: uppercase !important;
-    color: var(--text-muted, #64748b) !important;
-    margin: 0 !important;
-    line-height: 1.2 !important;
+  &.total-card .kpi-icon-wrap,
+  &.card-procurements .telemetry-icon-wrap,
+  .kpi-blue,
+  .icon-blue,
+  .kpi-icon-purple {
+    background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%) !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28) !important;
   }
 
-  .kpi-value,
-  .erp-kpi-value,
-  .stat-value,
-  .metric-value {
-    font-size: 18px !important;
-    font-weight: 700 !important;
-    line-height: 1.2 !important;
-    letter-spacing: -0.01em !important;
-    margin: 0 !important;
+  &.success-card .kpi-icon-wrap,
+  &.card-valuation .telemetry-icon-wrap,
+  .kpi-emerald,
+  .kpi-green,
+  .icon-emerald,
+  .kpi-icon-wrapper.success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.28) !important;
   }
 
-  .kpi-unit {
-    font-size: 11px !important;
-    font-weight: 500 !important;
-    color: var(--text-muted, #94a3b8) !important;
+  &.danger-card .kpi-icon-wrap,
+  .kpi-red,
+  .kpi-rose,
+  .icon-red,
+  .kpi-icon-wrapper.danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.28) !important;
   }
 
-  .kpi-meta,
-  .erp-kpi-trend,
-  .erp-kpi-subtext,
-  .stat-meta {
-    font-size: 10.5px !important;
-    color: var(--text-muted, #64748b) !important;
-    margin: 0 !important;
-    line-height: 1.2 !important;
+  &.efficiency-card .kpi-icon-wrap,
+  &.warning-card .kpi-icon-wrap,
+  &.card-rate .telemetry-icon-wrap,
+  .kpi-amber,
+  .icon-amber,
+  .kpi-icon-wrapper.warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.28) !important;
   }
 
+  .kpi-content,
+  .kpi-details,
+  .erp-kpi-body,
+  .telemetry-body,
+  .telemetry-info,
+  .inv-kpi-body,
+  .kpi-body {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+
+    .kpi-label,
+    .erp-kpi-title,
+    .stat-title,
+    .metric-title,
+    .telemetry-label,
+    .inv-kpi-label {
+      font-size: 10px !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.05em !important;
+      text-transform: uppercase !important;
+      color: #64748b !important;
+      margin: 0 !important;
+      line-height: 1.2 !important;
+    }
+
+    .kpi-value,
+    .erp-kpi-value,
+    .stat-value,
+    .metric-value,
+    .telemetry-number,
+    .telemetry-value,
+    .inv-kpi-value,
+    .kpi-number {
+      font-size: 18px !important;
+      font-weight: 800 !important;
+      line-height: 1.25 !important;
+      letter-spacing: -0.02em !important;
+      color: #0f172a !important;
+      margin: 2px 0 !important;
+      font-variant-numeric: tabular-nums !important;
+      display: flex !important;
+      align-items: baseline !important;
+      gap: 3px !important;
+    }
+
+    .kpi-unit,
+    .unit-text,
+    .telemetry-unit {
+      font-size: 11px !important;
+      font-weight: 500 !important;
+      color: #94a3b8 !important;
+    }
+
+    .kpi-meta,
+    .erp-kpi-trend,
+    .erp-kpi-subtext,
+    .stat-meta,
+    .telemetry-meta,
+    .telemetry-subtext,
+    .inv-kpi-sub,
+    .kpi-subtext {
+      font-size: 11px !important;
+      color: #64748b !important;
+      margin: 0 !important;
+      line-height: 1.2 !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 4px !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+
+    .kpi-progress-bar,
+    .telemetry-progress-track {
+      width: 100% !important;
+      height: 4px !important;
+      background: #e2e8f0 !important;
+      border-radius: 999px !important;
+      overflow: hidden !important;
+      margin-top: 5px !important;
+
+      .kpi-progress-fill,
+      .telemetry-progress-fill {
+        height: 100% !important;
+        border-radius: 999px !important;
+        background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important;
+      }
+    }
+  }
+
+  .erp-kpi-header,
   .erp-kpi-footer {
     display: none !important;
   }
@@ -4675,3 +4966,737 @@ pre, code, table {
   flex-direction: column !important;
   gap: 10px !important;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   ENTERPRISE UI STANDARDIZATION & DATA GRID CONSOLE DESIGN SYSTEM
+   Standardizes:
+   1. High-Contrast Commanding Table Headers (Light & Dark)
+   2. Data Grid Toolbars: 36px/38px Aligned Density Switchers & Columns Dropdowns
+   3. Unified Primary & Secondary Button Hierarchy (Emerald Brand, No Raw Blue)
+   4. Stat & KPI Cards Standardization (No Text Truncation, Consistent Physics)
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Unified Button Hierarchy & Micro-Animations ────────────────────────── */
+.btn-primary,
+.qa-btn-primary,
+.btn-action-primary,
+button.btn-primary,
+.enterprise-primary-btn {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  background-color: #059669 !important;
+  border-color: #059669 !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  height: 36px !important;
+  padding: 0 16px !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  box-shadow: 0 2px 5px rgba(5, 150, 105, 0.25) !important;
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1), background 0.15s ease !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+
+  &:hover {
+    background: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
+    border-color: #047857 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35) !important;
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.98) !important;
+    box-shadow: 0 1px 3px rgba(5, 150, 105, 0.2) !important;
+  }
+}
+
+.btn-secondary,
+.qa-btn,
+button.btn-secondary,
+.btn-outline-secondary {
+  height: 36px !important;
+  padding: 0 14px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  background: var(--bg-surface, #ffffff) !important;
+  border: 1.5px solid var(--border-color, #cbd5e1) !important;
+  color: var(--text-primary, #334155) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer !important;
+
+  &:hover {
+    background: var(--bg-hover, #f1f5f9) !important;
+    border-color: var(--border-color-hover, #94a3b8) !important;
+    color: var(--text-primary, #0f172a) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.98) !important;
+  }
+}
+
+body.dark-theme .btn-secondary,
+body.dark-theme .qa-btn,
+body.dark-theme button.btn-secondary,
+body.dark-theme .btn-outline-secondary {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+
+  &:hover {
+    background: #334155 !important;
+    border-color: #475569 !important;
+    color: #ffffff !important;
+  }
+}
+
+/* ── 2. Commanding High-Contrast Table Headers ─────────────────────────────── */
+.enterprise-table,
+.erp-table,
+.data-table,
+table.enterprise-table,
+.transports-ledger-section table,
+.sales-table,
+.invoices-table,
+.production-table,
+.inventory-table,
+.bank-table,
+.table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+
+  thead {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+  }
+
+  thead th,
+  th.sortable-th {
+    background: #f1f5f9 !important;
+    background-color: #f1f5f9 !important;
+    color: #1e293b !important;
+    font-family: var(--font-sans, 'Plus Jakarta Sans', system-ui, sans-serif) !important;
+    font-size: 11.5px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    padding: 11px 14px !important;
+    border-top: none !important;
+    border-bottom: 2px solid #cbd5e1 !important;
+    border-left: none !important;
+    border-right: none !important;
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+    user-select: none !important;
+    transition: background 0.15s ease, color 0.15s ease !important;
+
+    i.bi {
+      font-size: 12px !important;
+      vertical-align: middle !important;
+      opacity: 0.75;
+      transition: opacity 0.15s ease, color 0.15s ease;
+    }
+
+    &:hover {
+      background: #e2e8f0 !important;
+      color: #0f172a !important;
+
+      i.bi {
+        opacity: 1 !important;
+        color: #059669 !important;
+      }
+    }
+  }
+
+  tbody tr {
+    transition: background-color 0.15s ease !important;
+
+    &:nth-child(even) {
+      background-color: #f8fafc !important;
+    }
+
+    &:hover {
+      background-color: #f1f5f9 !important;
+      box-shadow: inset 0 0 0 1px rgba(5, 150, 105, 0.1) !important;
+    }
+
+    td {
+      padding: 10px 14px !important;
+      font-size: 12.5px !important;
+      color: var(--text-primary, #0f172a) !important;
+      border-bottom: 1px solid var(--border-color, #e2e8f0) !important;
+      vertical-align: middle !important;
+    }
+  }
+}
+
+/* Dark Theme Table Headers */
+body.dark-theme .enterprise-table thead th,
+body.dark-theme .erp-table thead th,
+body.dark-theme .data-table thead th,
+body.dark-theme table.enterprise-table thead th,
+body.dark-theme .transports-ledger-section table thead th,
+body.dark-theme .sales-table thead th,
+body.dark-theme .invoices-table thead th,
+body.dark-theme .production-table thead th,
+body.dark-theme .inventory-table thead th,
+body.dark-theme .bank-table thead th,
+body.dark-theme .table thead th {
+  background: #1e293b !important;
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+  border-bottom: 2px solid #334155 !important;
+
+  &:hover {
+    background: #334155 !important;
+    color: #ffffff !important;
+  }
+}
+
+body.dark-theme .enterprise-table tbody tr:nth-child(even),
+body.dark-theme table tbody tr:nth-child(even) {
+  background-color: rgba(30, 41, 59, 0.45) !important;
+}
+
+body.dark-theme .enterprise-table tbody tr:hover,
+body.dark-theme table tbody tr:hover {
+  background-color: rgba(51, 65, 85, 0.6) !important;
+}
+
+/* ── 3. Unified Table Toolbar Controls (Strict 32px Baseline) ────────────────── */
+.table-unified-toolbar,
+.toolbar-unified-card,
+.feature-toolbar,
+.toolbar-section,
+.table-toolbar-container,
+.table-toolbar,
+.inv-filter-bar,
+.erp-control-bar,
+.users-toolbar,
+.transports-ledger-section .table-unified-toolbar {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 10px 14px !important;
+  background: var(--bg-surface, #ffffff) !important;
+  border: 1px solid var(--border-color, #e2e8f0) !important;
+  border-radius: var(--radius-md, 10px) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+
+  .toolbar-left-group,
+  .toolbar-right-group,
+  .toolbar-left-search,
+  .toolbar-right-controls,
+  .erp-control-left,
+  .erp-control-right,
+  .filters-left-group,
+  .filters-right-group {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+  }
+}
+
+/* Universal Toolbar Search Input (Strict 32px Standard Across All Tabs) */
+.toolbar-search-box,
+.search-input-wrapper,
+.search-input-box,
+.toolbar-search-wrapper,
+.search-box-wrap,
+.erp-search-group,
+.inv-filter-field.search-field,
+.inv-search-wrap,
+.toolbar-search,
+.search-input-wrap {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  width: 250px !important;
+  min-width: 180px !important;
+  box-sizing: border-box !important;
+
+  .search-icon,
+  .search-lead-icon,
+  .erp-search-icon,
+  i.bi-search,
+  span.search-icon i {
+    position: absolute !important;
+    left: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    font-size: 13px !important;
+    color: #059669 !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+  }
+
+  input,
+  .search-input,
+  .toolbar-search-input,
+  .search-field,
+  .form-control-search,
+  .erp-search-input,
+  .inv-search-input {
+    width: 100% !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    max-height: 32px !important;
+    padding: 0 28px 0 32px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+    transition: all 0.15s ease !important;
+
+    &::placeholder {
+      color: #94a3b8 !important;
+      font-size: 12px !important;
+      font-weight: 400 !important;
+    }
+
+    &:focus {
+      border-color: #059669 !important;
+      box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15) !important;
+    }
+  }
+
+  .btn-clear-search,
+  .search-clear-btn,
+  .clear-search-btn,
+  .erp-clear-search {
+    position: absolute !important;
+    right: 6px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 20px !important;
+    min-width: 20px !important;
+    max-width: 20px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    max-height: 20px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #94a3b8 !important;
+    cursor: pointer !important;
+    z-index: 2 !important;
+
+    i {
+      font-size: 14px !important;
+      line-height: 1 !important;
+    }
+
+    &:hover {
+      color: #0f172a !important;
+    }
+  }
+}
+
+/* Universal Toolbar Selects (Strict 32px Standard Across All Tabs) */
+.toolbar-select,
+.filter-select-wrap select,
+.filter-select-wrapper select,
+.security-select {
+  height: 32px !important;
+  min-width: 120px !important;
+  width: auto !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 0 26px 0 10px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  color: #334155 !important;
+  outline: none !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+
+  &:focus {
+    border-color: #059669 !important;
+    box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15) !important;
+  }
+}
+
+/* Universal Density Group Segmented Toggle (Matching Transport Reference Image Exactly) */
+.density-group,
+.density-switch-group,
+.density-toggle-group,
+.density-btn-group,
+.density-switcher,
+.erp-button-group:has(.erp-btn-icon) {
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+
+  .density-btn,
+  .btn-density,
+  .erp-btn-icon,
+  button {
+    height: 30px !important;
+    min-height: 30px !important;
+    max-height: 30px !important;
+    width: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: #64748b !important;
+    font-size: 0 !important; /* Hides any raw text nodes like "Compact", "Normal", "Spacious" */
+    cursor: pointer !important;
+    transition: all 0.12s ease !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+
+    /* Completely hide any text spans or labels */
+    span, div:not(:has(i)) {
+      display: none !important;
+      visibility: hidden !important;
+      width: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+    }
+
+    i, .bi {
+      font-size: 14px !important;
+      line-height: 1 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      color: inherit !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    &:hover {
+      background: #f1f5f9 !important;
+      color: #0f172a !important;
+    }
+
+    &.active,
+    &[class*="active"],
+    &[ngClass*="btn-white"] {
+      background: #059669 !important;
+      color: #ffffff !important;
+      font-weight: 600 !important;
+      box-shadow: none !important;
+
+      i, .bi {
+        color: #ffffff !important;
+      }
+    }
+  }
+}
+
+/* Universal Columns Visibility Dropdown Wrap */
+.columns-dropdown-wrap,
+.col-manager-dropdown-wrapper,
+.column-visibility-dropdown,
+.column-manager-wrapper,
+.erp-dropdown {
+  position: relative !important;
+
+  button,
+  .btn {
+    height: 32px !important;
+    padding: 0 12px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    color: #334155 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+
+    i {
+      font-size: 13px !important;
+      color: #059669 !important;
+    }
+
+    &:hover {
+      background: #f1f5f9 !important;
+      border-color: #94a3b8 !important;
+      color: #0f172a !important;
+    }
+  }
+
+  .columns-dropdown-menu,
+  .col-manager-popover,
+  .erp-dropdown-menu {
+    position: absolute !important;
+    top: calc(100% + 5px) !important;
+    right: 0 !important;
+    z-index: 1050 !important;
+    min-width: 210px !important;
+    max-height: 320px !important;
+    overflow-y: auto !important;
+    padding: 8px !important;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+
+    .column-checkbox-label {
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      padding: 6px 10px !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      color: #334155 !important;
+      border-radius: 6px !important;
+      cursor: pointer !important;
+      transition: background 0.12s ease !important;
+
+      &:hover {
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+      }
+
+      input[type="checkbox"] {
+        accent-color: #059669 !important;
+        width: 15px !important;
+        height: 15px !important;
+        cursor: pointer !important;
+      }
+    }
+  }
+}
+
+/* Dark Theme Table Toolbar */
+body.dark-theme .table-unified-toolbar,
+body.dark-theme .toolbar-unified-card,
+body.dark-theme .feature-toolbar {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+
+  .toolbar-search-box input,
+  .search-input-wrap input {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+
+    &:focus {
+      border-color: #059669 !important;
+    }
+  }
+
+  .toolbar-select,
+  .filter-select-wrap select,
+  .filter-select-wrapper select,
+  .security-select {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #cbd5e1 !important;
+  }
+
+  .density-group,
+  .density-switch-group,
+  .density-toggle-group {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+
+    .density-btn {
+      color: #94a3b8 !important;
+
+      &:hover {
+        background: #334155 !important;
+        color: #ffffff !important;
+      }
+
+      &.active {
+        background: #059669 !important;
+        color: #ffffff !important;
+      }
+    }
+  }
+
+  .columns-dropdown-wrap {
+    button,
+    .btn {
+      background: #0f172a !important;
+      border-color: #334155 !important;
+      color: #cbd5e1 !important;
+
+      &:hover {
+        background: #334155 !important;
+        color: #ffffff !important;
+      }
+    }
+
+    .columns-dropdown-menu {
+      background: #1e293b !important;
+      border-color: #334155 !important;
+
+      .column-checkbox-label {
+        color: #cbd5e1 !important;
+
+        &:hover {
+          background: #334155 !important;
+          color: #ffffff !important;
+        }
+      }
+    }
+  }
+}
+
+/* ── 4. Unified KPI & Stat Card Hierarchy ─────────────────────────────────── */
+.kpi-card,
+.stat-card,
+.transports-kpi-grid .kpi-card,
+.metrics-summary-card {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding: 14px 18px !important;
+  background: var(--bg-surface, #ffffff) !important;
+  border: 1px solid var(--border-color, #e2e8f0) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+
+  &:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  .kpi-value,
+  .stat-value {
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
+    color: var(--text-primary, #0f172a) !important;
+    line-height: 1.25 !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  .kpi-label,
+  .stat-label {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    color: var(--text-secondary, #64748b) !important;
+  }
+}
+
+body.dark-theme {
+  .kpi-card,
+  .stat-card,
+  .telemetry-card,
+  .inv-kpi-card,
+  .metrics-summary-card {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+
+    .kpi-value,
+    .stat-value,
+    .telemetry-number,
+    .inv-kpi-value {
+      color: #f8fafc !important;
+    }
+
+    .kpi-label,
+    .stat-label,
+    .telemetry-label,
+    .inv-kpi-label {
+      color: #94a3b8 !important;
+    }
+
+    .kpi-subtext-muted,
+    .telemetry-meta,
+    .inv-kpi-meta {
+      color: #64748b !important;
+    }
+  }
+
+  .enterprise-header,
+  .page-header,
+  .erp-page-header,
+  .module-header,
+  .config-header-bar,
+  .crm-header,
+  .crm-header-card,
+  .report-page-header,
+  .party-page-header,
+  .analytics-page-header,
+  .admin-header-banner,
+  .security-header-wrapper {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+
+    .header-main-title,
+    .enterprise-header-text h2,
+    .module-header-title,
+    h1.header-title,
+    h1.header-main-title,
+    h2.page-title,
+    .header-title-text,
+    .security-title,
+    .banner-titles h2 {
+      color: #f8fafc !important;
+    }
+
+    .header-subtitle,
+    .enterprise-header-text p,
+    .header-desc-text,
+    .module-header-desc,
+    .security-subtitle,
+    .banner-titles p {
+      color: #94a3b8 !important;
+    }
+  }
+}
+
+

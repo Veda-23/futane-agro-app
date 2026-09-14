@@ -1,3 +1,6 @@
+process.on('uncaughtException', err => console.error('[UncaughtException]', err.message));
+process.on('unhandledRejection', err => console.error('[UnhandledRejection]', err));
+
 const { chromium } = require('@playwright/test');
 const http = require('http');
 const fs = require('fs');
@@ -36,6 +39,11 @@ function startServer() {
     const server = http.createServer((req, res) => {
       const parsedUrl = new URL(req.url, `http://localhost:${PORT}`);
       let pathname = parsedUrl.pathname.replace(/^\/+/, '');
+
+      if (pathname.startsWith('ws-erp') || pathname.startsWith('sockjs')) {
+        res.writeHead(204);
+        return res.end();
+      }
 
       // Serve generated screenshots directly
       if (pathname.startsWith('screenshots/')) {
@@ -148,6 +156,9 @@ async function run() {
   });
 
   const page = await context.newPage();
+
+  await page.route('**/ws-erp/**', route => route.abort());
+  await page.route('**/sockjs/**', route => route.abort());
 
   // Mock API routes with realistic sample data for rich, populated tables
   await page.route('**/api/**', async (route) => {
@@ -414,10 +425,12 @@ async function run() {
       await page.evaluate((t) => {
         sessionStorage.setItem('activeTab', t);
         localStorage.setItem('activeTab', t);
-      }, tab);
+      }, tab).catch(() => {});
 
-      await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'domcontentloaded', timeout: 15000 });
-      await page.waitForSelector('.main-content, .content-body', { timeout: 10000 });
+      await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(async () => {
+        await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
+      });
+      await page.waitForSelector('.main-content, .content-body', { timeout: 10000 }).catch(() => {});
       await page.waitForTimeout(400);
 
       // Hide toast containers so pointer events are never blocked
@@ -436,7 +449,7 @@ async function run() {
       // Capture 2: Detect & Capture Subtabs
       const subtabs = await page.evaluate(() => {
         const ribbon = document.querySelector(
-          '.subtabs-classification-bar .subtabs-scroll-container, .subtabs-classification-bar, .inv-subtabs-nav, .doc-type-tabs, .settings-nav-scroll-container, .settings-nav-pills, .subtabs-scroll-container'
+          '.reports-subtabs-bar .subtabs-scroll-container, .reports-subtabs-bar, .subtabs-classification-bar .subtabs-scroll-container, .subtabs-classification-bar, .inv-subtabs-nav, .doc-type-tabs, .settings-nav-scroll-container, .settings-nav-pills, .subtabs-scroll-container'
         );
         if (!ribbon) return [];
         const btns = Array.from(ribbon.querySelectorAll('button, .subnav-tab-btn, .inv-subtab-btn, .doc-tab-btn, .settings-nav-pill'));
@@ -454,7 +467,7 @@ async function run() {
             // Use evaluate-based click with scrollIntoView for 100% horizontal scroll safety
             const clicked = await page.evaluate((idx) => {
               const ribbon = document.querySelector(
-                '.subtabs-classification-bar .subtabs-scroll-container, .subtabs-classification-bar, .inv-subtabs-nav, .doc-type-tabs, .settings-nav-scroll-container, .settings-nav-pills, .subtabs-scroll-container'
+                '.reports-subtabs-bar .subtabs-scroll-container, .reports-subtabs-bar, .subtabs-classification-bar .subtabs-scroll-container, .subtabs-classification-bar, .inv-subtabs-nav, .doc-type-tabs, .settings-nav-scroll-container, .settings-nav-pills, .subtabs-scroll-container'
               );
               if (!ribbon) return false;
               const btns = Array.from(ribbon.querySelectorAll('button, .subnav-tab-btn, .inv-subtab-btn, .doc-tab-btn, .settings-nav-pill'));
@@ -481,7 +494,7 @@ async function run() {
         // Restore first subtab
         await page.evaluate(() => {
           const ribbon = document.querySelector(
-            '.subtabs-classification-bar .subtabs-scroll-container, .subtabs-classification-bar, .inv-subtabs-nav, .doc-type-tabs, .settings-nav-scroll-container, .settings-nav-pills, .subtabs-scroll-container'
+            '.reports-subtabs-bar .subtabs-scroll-container, .reports-subtabs-bar, .subtabs-classification-bar .subtabs-scroll-container, .subtabs-classification-bar, .inv-subtabs-nav, .doc-type-tabs, .settings-nav-scroll-container, .settings-nav-pills, .subtabs-scroll-container'
           );
           if (ribbon) {
             const first = ribbon.querySelector('button, .subnav-tab-btn, .inv-subtab-btn, .doc-tab-btn, .settings-nav-pill');
@@ -909,6 +922,17 @@ async function run() {
   console.log(`[PDF Generator] Rendering PDF to: ${PDF_PATH}`);
   const pdfPage = await context.newPage();
   await pdfPage.goto(`http://localhost:${PORT}/report_preview.html`, { waitUntil: 'load', timeout: 60000 });
+  await pdfPage.evaluate(async () => {
+    const selectors = Array.from(document.images);
+    await Promise.all(selectors.map(img => {
+      if (img.complete) return Promise.resolve();
+      return new Promise(resolve => {
+        img.addEventListener('load', resolve);
+        img.addEventListener('error', resolve);
+        setTimeout(resolve, 2500);
+      });
+    }));
+  });
   await pdfPage.waitForTimeout(1000);
 
   await pdfPage.pdf({

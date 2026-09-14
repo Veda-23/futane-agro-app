@@ -73,7 +73,76 @@
     </div>
   </header>
 
-  <!-- 3. COLLAPSIBLE ADD / EDIT RECEIPT FORM -->
+  <!-- 2. PAYMENTS MODULE SUB-NAVIGATION (Tabs) -->
+  <div class="production-subnav-bar no-print">
+    <div class="subnav-tabs-group" role="tablist">
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'all'" (click)="setSubTab('all')">
+        <i class="bi bi-cash-stack"></i>
+        <span>All Receipts</span>
+        <span class="tab-badge-pill">{{ getAllCount() }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'upi'" (click)="setSubTab('upi')">
+        <i class="bi bi-qr-code-scan text-primary"></i>
+        <span>UPI / QR</span>
+        <span class="tab-badge-pill primary">{{ getUpiCount() }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'bank'" (click)="setSubTab('bank')">
+        <i class="bi bi-bank text-info"></i>
+        <span>Bank / NEFT</span>
+        <span class="tab-badge-pill">{{ getBankCount() }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'cash'" (click)="setSubTab('cash')">
+        <i class="bi bi-wallet2 text-success"></i>
+        <span>Cash Collections</span>
+        <span class="tab-badge-pill success">{{ getCashCount() }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'high_value'" (click)="setSubTab('high_value')">
+        <i class="bi bi-shield-check text-warning"></i>
+        <span>High Value (&ge; ₹50k)</span>
+        <span class="tab-badge-pill warning">{{ getHighValueCount() }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. PAYMENTS TELEMETRY SUMMARY RIBBON (Exact Reference KPI Cards) -->
+  <section class="production-kpi-grid no-print" aria-label="Receipts Telemetry KPIs">
+    <div class="kpi-card total-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-cash-stack"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">TOTAL COLLECTIONS</span>
+        <strong class="kpi-value">₹{{ getTotalCollections() | number }} <span class="kpi-unit">INR</span></strong>
+        <span class="kpi-meta"><i class="bi bi-receipt me-1"></i>Across {{ paymentsList.length }} payment vouchers</span>
+      </div>
+    </div>
+    <div class="kpi-card success-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-calendar2-check"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">CURRENT MONTH RECEIPTS</span>
+        <strong class="kpi-value text-success">₹{{ getMonthlyCollections() | number }} <span class="kpi-unit">INR</span></strong>
+        <span class="kpi-meta"><i class="bi bi-arrow-up-right me-1"></i>Realized in current cycle</span>
+      </div>
+    </div>
+    <div class="kpi-card danger-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-qr-code-scan"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">DIGITAL COLLECTIONS (UPI/BANK)</span>
+        <strong class="kpi-value text-primary">₹{{ getDigitalCollections() | number }} <span class="kpi-unit">INR</span></strong>
+        <span class="kpi-meta"><i class="bi bi-shield-check me-1"></i>Direct electronic settlement</span>
+      </div>
+    </div>
+    <div class="kpi-card efficiency-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-wallet2"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">CASH COLLECTIONS</span>
+        <strong class="kpi-value text-warning">₹{{ getCashCollections() | number }} <span class="kpi-unit">INR</span></strong>
+        <div class="kpi-progress-bar">
+          <div class="kpi-progress-fill" [style.width.%]="getTotalCollections() > 0 ? (getDigitalCollections() / getTotalCollections()) * 100 : 0"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. COLLAPSIBLE ADD / EDIT RECEIPT FORM -->
   <section 
     *ngIf="isFormVisible && !isViewer()" 
     class="payments-form-card animated-fade-in" 
@@ -502,30 +571,30 @@
 
     <div class="toolbar-right-group">
       <!-- Table Density Switcher -->
-      <div class="density-switch-group" role="group" aria-label="Table density">
+      <div class="density-group" role="group" aria-label="Table density">
         <button 
           type="button" 
-          class="btn-density" 
+          class="density-btn" 
           [class.active]="tableDensity === 'compact'" 
           (click)="tableDensity = 'compact'" 
-          title="Compact row height">
-          <i class="bi bi-distribute-vertical"></i> Compact
+          title="Compact Density">
+          <i class="bi bi-view-list"></i>
         </button>
         <button 
           type="button" 
-          class="btn-density" 
+          class="density-btn" 
           [class.active]="tableDensity === 'comfortable'" 
           (click)="tableDensity = 'comfortable'" 
-          title="Normal row height">
-          <i class="bi bi-list-ul"></i> Normal
+          title="Normal Density">
+          <i class="bi bi-distribute-vertical"></i>
         </button>
         <button 
           type="button" 
-          class="btn-density" 
+          class="density-btn" 
           [class.active]="tableDensity === 'spacious'" 
           (click)="tableDensity = 'spacious'" 
-          title="Spacious row height">
-          <i class="bi bi-grid-3x2-gap"></i> Spacious
+          title="Spacious Density">
+          <i class="bi bi-arrows-expand"></i>
         </button>
       </div>
 

@@ -42,7 +42,76 @@
     </div>
   </header>
 
-  <!-- 3. COLLAPSIBLE ADD / EDIT PARTY FORM (STRUCTURED ENTERPRISE FORM) -->
+  <!-- 2. PARTIES MODULE SUB-NAVIGATION (Tabs) -->
+  <div class="production-subnav-bar no-print">
+    <div class="subnav-tabs-group" role="tablist">
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'all'" (click)="setSubTab('all')">
+        <i class="bi bi-building"></i>
+        <span>All Parties</span>
+        <span class="tab-badge-pill">{{ parties.length }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'wholesalers'" (click)="setSubTab('wholesalers')">
+        <i class="bi bi-shop text-primary"></i>
+        <span>Wholesalers &amp; Mandis</span>
+        <span class="tab-badge-pill primary">{{ getWholesalerDistributorCount() }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'gst'" (click)="setSubTab('gst')">
+        <i class="bi bi-shield-check text-success"></i>
+        <span>GSTIN Verified</span>
+        <span class="tab-badge-pill success">{{ getGstRegisteredCount() }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'mh'" (click)="setSubTab('mh')">
+        <i class="bi bi-geo-alt text-info"></i>
+        <span>Maharashtra Accounts</span>
+        <span class="tab-badge-pill">{{ getMhPartiesCount() }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'interstate'" (click)="setSubTab('interstate')">
+        <i class="bi bi-globe2 text-warning"></i>
+        <span>Interstate Clients</span>
+        <span class="tab-badge-pill warning">{{ getInterstatePartiesCount() }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. PARTIES TELEMETRY SUMMARY RIBBON (Exact Reference KPI Cards) -->
+  <section class="production-kpi-grid no-print" aria-label="Parties Telemetry KPIs">
+    <div class="kpi-card total-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-building"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">TOTAL REGISTERED CLIENTS</span>
+        <strong class="kpi-value">{{ getTotalPartiesCount() }} <span class="kpi-unit">Parties</span></strong>
+        <span class="kpi-meta"><i class="bi bi-person-check me-1"></i>Active commercial buyer directory</span>
+      </div>
+    </div>
+    <div class="kpi-card success-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-shop"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">WHOLESALERS &amp; MANDIS</span>
+        <strong class="kpi-value text-success">{{ getWholesalerDistributorCount() }} <span class="kpi-unit">Accounts</span></strong>
+        <span class="kpi-meta"><i class="bi bi-boxes me-1"></i>Bulk crate purchasing partners</span>
+      </div>
+    </div>
+    <div class="kpi-card danger-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-shield-check"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">GSTIN VERIFIED CLIENTS</span>
+        <strong class="kpi-value text-primary">{{ getGstRegisteredCount() }} <span class="kpi-unit">Verified</span></strong>
+        <span class="kpi-meta"><i class="bi bi-check-all me-1"></i>{{ getGstRegisteredPercent() }}% verified GST tax compliant</span>
+      </div>
+    </div>
+    <div class="kpi-card efficiency-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-geo-alt"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">MAHARASHTRA NETWORK</span>
+        <strong class="kpi-value text-warning">{{ getMhPartiesCount() }} <span class="kpi-unit">MH / {{ getInterstatePartiesCount() }} Interstate</span></strong>
+        <div class="kpi-progress-bar">
+          <div class="kpi-progress-fill" [style.width.%]="parties.length > 0 ? (getMhPartiesCount() / parties.length) * 100 : 0"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. COLLAPSIBLE ADD / EDIT PARTY FORM (STRUCTURED ENTERPRISE FORM) -->
   <section *ngIf="isFormVisible && !isViewer()" class="party-form-card animated-fade-in" aria-label="Register Party Form">
     <div class="form-header-banner">
       <div class="form-header-title">
@@ -167,36 +236,6 @@
     </form>
   </section>
 
-  <!-- 4. SUBTAB NAVIGATION BAR (STANDARDIZED ENTERPRISE SUBTABS) -->
-  <div class="party-subnav-bar">
-    <div class="subnav-tabs-group" role="tablist" aria-label="Party Directory Subtabs">
-      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'all'" (click)="setSubTab('all')" [attr.aria-selected]="subTab === 'all'">
-        <i class="bi bi-people"></i>
-        <span>All Accounts</span>
-        <span class="tab-badge-pill">{{ parties.length }}</span>
-      </button>
-      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'wholesalers'" (click)="setSubTab('wholesalers')" [attr.aria-selected]="subTab === 'wholesalers'">
-        <i class="bi bi-truck-front-fill text-primary"></i>
-        <span>Wholesalers & Distributors</span>
-        <span class="tab-badge-pill">{{ getWholesalerDistributorCount() }}</span>
-      </button>
-      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'gst'" (click)="setSubTab('gst')" [attr.aria-selected]="subTab === 'gst'">
-        <i class="bi bi-patch-check-fill text-success"></i>
-        <span>GST Registered</span>
-        <span class="tab-badge-pill">{{ getGstRegisteredCount() }}</span>
-      </button>
-      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'mh'" (click)="setSubTab('mh')" [attr.aria-selected]="subTab === 'mh'">
-        <i class="bi bi-geo-alt-fill text-info"></i>
-        <span>Maharashtra</span>
-        <span class="tab-badge-pill">{{ getMhPartiesCount() }}</span>
-      </button>
-      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'interstate'" (click)="setSubTab('interstate')" [attr.aria-selected]="subTab === 'interstate'">
-        <i class="bi bi-signpost-2-fill text-warning"></i>
-        <span>Inter-State</span>
-        <span class="tab-badge-pill">{{ getInterstatePartiesCount() }}</span>
-      </button>
-    </div>
-  </div>
 
   <!-- 5. SEARCH + FILTERS + SECONDARY ACTIONS (POSITIONED CLOSE TO TABLE) -->
   <div class="party-table-card">
@@ -287,15 +326,15 @@
         </button>
 
         <!-- Density Switcher -->
-        <div class="density-switch-group" role="group" aria-label="Table row density">
-          <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact density">
-            <i class="bi bi-distribute-vertical"></i> Compact
+        <div class="density-group" role="group" aria-label="Table row density">
+          <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact Density">
+            <i class="bi bi-view-list"></i>
           </button>
-          <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="setDensity('comfortable')" title="Normal density">
-            <i class="bi bi-list-ul"></i> Normal
+          <button type="button" class="density-btn" [class.active]="tableDensity === 'comfortable'" (click)="setDensity('comfortable')" title="Normal Density">
+            <i class="bi bi-distribute-vertical"></i>
           </button>
-          <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious density">
-            <i class="bi bi-grid-3x2-gap"></i> Spacious
+          <button type="button" class="density-btn" [class.active]="tableDensity === 'spacious'" (click)="setDensity('spacious')" title="Spacious Density">
+            <i class="bi bi-arrows-expand"></i>
           </button>
         </div>
 

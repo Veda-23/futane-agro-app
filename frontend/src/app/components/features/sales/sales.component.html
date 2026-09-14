@@ -73,7 +73,76 @@
     </div>
   </header>
 
-  <!-- 3. COLLAPSIBLE ADD / EDIT SALES ORDER FORM -->
+  <!-- 2. SALES MODULE SUB-NAVIGATION (Tabs) -->
+  <div class="production-subnav-bar no-print">
+    <div class="subnav-tabs-group" role="tablist">
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'all'" (click)="setSubTab('all')">
+        <i class="bi bi-cart-check"></i>
+        <span>All Orders</span>
+        <span class="tab-badge-pill">{{ salesList.length }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'pending'" (click)="setSubTab('pending')">
+        <i class="bi bi-clock-history text-warning"></i>
+        <span>Pending Receivables</span>
+        <span class="tab-badge-pill warning">{{ getPendingCount() }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'paid'" (click)="setSubTab('paid')">
+        <i class="bi bi-check2-circle text-success"></i>
+        <span>Settled / Cleared</span>
+        <span class="tab-badge-pill success">{{ getPaidCount() }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'dispatched'" (click)="setSubTab('dispatched')">
+        <i class="bi bi-truck text-primary"></i>
+        <span>Dispatched Outward</span>
+        <span class="tab-badge-pill">{{ getDispatchedCount() }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'awaiting_outward'" (click)="setSubTab('awaiting_outward')">
+        <i class="bi bi-hourglass-split text-info"></i>
+        <span>Awaiting Dispatch</span>
+        <span class="tab-badge-pill">{{ getAwaitingOutwardCount() }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. SALES TELEMETRY SUMMARY RIBBON (Exact Reference KPI Cards) -->
+  <section class="production-kpi-grid no-print" aria-label="Commercial Sales KPIs">
+    <div class="kpi-card total-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-cart-check"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">TOTAL COMMERCIAL REVENUE</span>
+        <strong class="kpi-value">₹{{ getTotalSalesAmount() | number }} <span class="kpi-unit">INR</span></strong>
+        <span class="kpi-meta"><i class="bi bi-bag me-1"></i>Across {{ getTotalOrdersCount() }} sales orders</span>
+      </div>
+    </div>
+    <div class="kpi-card success-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-wallet2"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">COLLECTED REVENUE</span>
+        <strong class="kpi-value text-success">₹{{ getTotalSalesPaid() | number }} <span class="kpi-unit">INR</span></strong>
+        <span class="kpi-meta"><i class="bi bi-check2-circle me-1"></i>Realized in bank/cash</span>
+      </div>
+    </div>
+    <div class="kpi-card danger-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-cash-stack"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">OUTSTANDING RECEIVABLES</span>
+        <strong class="kpi-value text-danger">₹{{ getTotalSalesPending() | number }} <span class="kpi-unit">INR</span></strong>
+        <span class="kpi-meta"><i class="bi bi-exclamation-triangle me-1"></i>{{ getPendingCount() }} customer accounts</span>
+      </div>
+    </div>
+    <div class="kpi-card efficiency-card">
+      <div class="kpi-icon-wrap"><i class="bi bi-graph-up-arrow"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">COLLECTION EFFICIENCY</span>
+        <strong class="kpi-value text-primary">{{ getCollectionEfficiency() }}%</strong>
+        <div class="kpi-progress-bar">
+          <div class="kpi-progress-fill" [style.width.%]="getCollectionEfficiency()"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. COLLAPSIBLE ADD / EDIT SALES ORDER FORM -->
   <section 
     *ngIf="isFormVisible && !isViewer()" 
     class="sales-form-card animated-fade-in" 
@@ -269,149 +338,6 @@
     </form>
   </section>
 
-  <!-- 4. SUBNAV TABS BAR -->
-  <nav class="sales-subnav-bar" aria-label="Sales filtering subtabs">
-    <button 
-      type="button" 
-      class="subnav-tab-btn" 
-      [class.active]="subTab === 'all'" 
-      (click)="setSubTab('all')"
-      [attr.aria-selected]="subTab === 'all'">
-      <i class="bi bi-list-columns"></i>
-      <span>All Orders</span>
-      <span class="tab-badge default">{{ getTotalOrdersCount() }}</span>
-    </button>
-
-    <button 
-      type="button" 
-      class="subnav-tab-btn" 
-      [class.active]="subTab === 'pending'" 
-      (click)="setSubTab('pending')"
-      [attr.aria-selected]="subTab === 'pending'">
-      <i class="bi bi-hourglass-split text-warning"></i>
-      <span>Payment Pending</span>
-      <span class="tab-badge warning">{{ getPendingCount() }}</span>
-    </button>
-
-    <button 
-      type="button" 
-      class="subnav-tab-btn" 
-      [class.active]="subTab === 'paid'" 
-      (click)="setSubTab('paid')"
-      [attr.aria-selected]="subTab === 'paid'">
-      <i class="bi bi-check-circle-fill text-success"></i>
-      <span>Fully Settled</span>
-      <span class="tab-badge success">{{ getPaidCount() }}</span>
-    </button>
-
-    <button 
-      type="button" 
-      class="subnav-tab-btn" 
-      [class.active]="subTab === 'dispatched'" 
-      (click)="setSubTab('dispatched')"
-      [attr.aria-selected]="subTab === 'dispatched'">
-      <i class="bi bi-truck-front-fill text-primary"></i>
-      <span>Dispatched</span>
-      <span class="tab-badge primary-badge">{{ getDispatchedCount() }}</span>
-    </button>
-
-    <button 
-      type="button" 
-      class="subnav-tab-btn" 
-      [class.active]="subTab === 'awaiting_outward'" 
-      (click)="setSubTab('awaiting_outward')"
-      [attr.aria-selected]="subTab === 'awaiting_outward'">
-      <i class="bi bi-box-seam text-info"></i>
-      <span>Awaiting Outward</span>
-      <span class="tab-badge info">{{ getAwaitingOutwardCount() }}</span>
-    </button>
-
-    <button 
-      type="button" 
-      class="subnav-tab-btn" 
-      [class.active]="subTab === 'high_volume'" 
-      (click)="setSubTab('high_volume')"
-      [attr.aria-selected]="subTab === 'high_volume'">
-      <i class="bi bi-boxes"></i>
-      <span>High Volume (10k+)</span>
-      <span class="tab-badge info">{{ getHighVolumeCount() }}</span>
-    </button>
-  </nav>
-
-  <!-- 5. COMPACT SALES ORDER TELEMETRY SUMMARY -->
-  <section class="sales-kpi-ribbon" aria-label="Commercial sales metrics">
-    <!-- Card 1: Total Orders -->
-    <div class="kpi-card">
-      <div class="kpi-icon-wrapper primary">
-        <i class="bi bi-receipt"></i>
-      </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Commercial Orders</span>
-        <div class="kpi-value-row">
-          <span class="kpi-number">{{ getTotalOrdersCount() }}</span>
-          <span class="kpi-trend up"><i class="bi bi-check-circle me-1"></i>Active</span>
-        </div>
-        <span class="kpi-meta">All-time sales contracts</span>
-      </div>
-    </div>
-
-    <!-- Card 2: Gross Billed Value -->
-    <div class="kpi-card">
-      <div class="kpi-icon-wrapper warning">
-        <i class="bi bi-currency-rupee"></i>
-      </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Gross Invoiced Value</span>
-        <div class="kpi-value-row">
-          <span class="kpi-number text-warning">{{ getTotalSalesAmount() | inr }}</span>
-        </div>
-        <span class="kpi-meta">Cumulative sales revenue</span>
-      </div>
-    </div>
-
-    <!-- Card 3: Cleared Collections -->
-    <div class="kpi-card">
-      <div class="kpi-icon-wrapper success">
-        <i class="bi bi-shield-check"></i>
-      </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Realized Collections</span>
-        <div class="kpi-value-row">
-          <span class="kpi-number text-success">{{ getTotalSalesPaid() | inr }}</span>
-        </div>
-        <span class="kpi-meta">Received in cash & bank</span>
-      </div>
-    </div>
-
-    <!-- Card 4: Outstanding Receivables -->
-    <div class="kpi-card">
-      <div class="kpi-icon-wrapper danger">
-        <i class="bi bi-clock-history"></i>
-      </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Outstanding Balance</span>
-        <div class="kpi-value-row">
-          <span class="kpi-number text-danger">{{ getTotalSalesPending() | inr }}</span>
-        </div>
-        <span class="kpi-meta">Receivables pending recovery</span>
-      </div>
-    </div>
-
-    <!-- Card 5: Material Outward Status -->
-    <div class="kpi-card">
-      <div class="kpi-icon-wrapper info">
-        <i class="bi bi-truck-front-fill"></i>
-      </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Material Outward</span>
-        <div class="kpi-value-row">
-          <span class="kpi-number text-info">{{ getDispatchedCount() }}</span>
-          <span class="kpi-unit">/ {{ getTotalOrdersCount() }}</span>
-        </div>
-        <span class="kpi-meta">{{ getTotalOrdersCount() > 0 ? Math.round((getDispatchedCount() / getTotalOrdersCount()) * 100) : 0 }}% Orders Dispatched</span>
-      </div>
-    </div>
-  </section>
 
   <!-- 6. CONTEXTUAL TOOLBAR & SEARCH FILTERS (POSITIONED CLOSE TO TABLE) -->
   <section class="sales-toolbar-card">
@@ -524,30 +450,30 @@
 
     <div class="toolbar-right-group">
       <!-- Table Density Switcher -->
-      <div class="density-switch-group" role="group" aria-label="Table density">
+      <div class="density-group" role="group" aria-label="Table density">
         <button 
           type="button" 
-          class="btn-density" 
+          class="density-btn" 
           [class.active]="tableDensity === 'compact'" 
           (click)="tableDensity = 'compact'" 
-          title="Compact row height">
-          <i class="bi bi-distribute-vertical"></i> Compact
+          title="Compact Density">
+          <i class="bi bi-view-list"></i>
         </button>
         <button 
           type="button" 
-          class="btn-density" 
+          class="density-btn" 
           [class.active]="tableDensity === 'comfortable'" 
           (click)="tableDensity = 'comfortable'" 
-          title="Normal row height">
-          <i class="bi bi-list-ul"></i> Normal
+          title="Normal Density">
+          <i class="bi bi-distribute-vertical"></i>
         </button>
         <button 
           type="button" 
-          class="btn-density" 
+          class="density-btn" 
           [class.active]="tableDensity === 'spacious'" 
           (click)="tableDensity = 'spacious'" 
-          title="Spacious row height">
-          <i class="bi bi-grid-3x2-gap"></i> Spacious
+          title="Spacious Density">
+          <i class="bi bi-arrows-expand"></i>
         </button>
       </div>
 

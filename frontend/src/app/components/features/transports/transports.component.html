@@ -87,153 +87,9 @@
         </button>
       </div>
     </div>
-
-    <!-- ── 3. FILTER & SEARCH TOOLBAR ────────────────────────────────── -->
-    <div class="table-unified-toolbar">
-      <div class="toolbar-left-group">
-        <!-- Search Box -->
-        <div class="toolbar-search-box">
-          <i class="bi bi-search search-icon"></i>
-          <input type="text" 
-                 class="search-input" 
-                 [(ngModel)]="filterSearchQuery" 
-                 (input)="currentPage = 1" 
-                 placeholder="Search truck, driver, mobile, amount..." 
-                 aria-label="Search freight transport records">
-          <button *ngIf="filterSearchQuery" 
-                  type="button" 
-                  class="btn-clear-search" 
-                  (click)="filterSearchQuery = ''; currentPage = 1"
-                  aria-label="Clear search input">
-            <i class="bi bi-x"></i>
-          </button>
-        </div>
-
-        <!-- Month Filter -->
-        <div class="filter-select-wrap filter-select-month">
-          <select class="toolbar-select" [(ngModel)]="filterMonth" (change)="currentPage = 1" aria-label="Filter by month">
-            <option value="ALL">All Months</option>
-            <option *ngFor="let m of allMonths" [value]="m">{{ m }}</option>
-          </select>
-        </div>
-
-        <!-- Year Filter -->
-        <div class="filter-select-wrap filter-select-year">
-          <select class="toolbar-select" [(ngModel)]="filterYear" (change)="currentPage = 1" aria-label="Filter by year">
-            <option value="ALL">All Years</option>
-            <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
-          </select>
-        </div>
-
-        <!-- Driver Filter -->
-        <div class="filter-select-wrap filter-select-driver" style="min-width: 170px;">
-          <app-searchable-select
-            [items]="drivers"
-            bindLabel="driverName"
-            bindValue="id"
-            subLabelKey="mobile"
-            placeholder="All Drivers"
-            searchPlaceholder="Filter drivers..."
-            [(ngModel)]="filterDriver"
-            (change)="currentPage = 1">
-          </app-searchable-select>
-        </div>
-
-        <!-- Reset Filters Trigger -->
-        <button *ngIf="hasActiveFilters()" 
-                type="button" 
-                class="btn-reset-filters" 
-                (click)="resetFilters()" 
-                title="Reset active search and filters">
-          <i class="bi bi-x-circle me-1"></i>Reset
-        </button>
-      </div>
-
-      <div class="toolbar-right-group">
-        <!-- Quick navigation to Drivers Directory -->
-        <button type="button" 
-                class="btn btn-secondary btn-sm btn-drivers-nav" 
-                (click)="goToDrivers()" 
-                title="Navigate to Drivers Directory">
-          <i class="bi bi-person-badge me-1"></i>
-          <span>Drivers Directory</span>
-        </button>
-
-        <!-- Refresh Button -->
-        <button type="button" 
-                class="btn btn-secondary btn-sm" 
-                (click)="loadData(true)" 
-                [disabled]="isLoading || isRefreshing" 
-                title="Refresh transport ledger">
-          <i class="bi bi-arrow-clockwise me-1" [class.spin-animate]="isLoading || isRefreshing"></i>
-          <span>Refresh</span>
-        </button>
-
-        <!-- Export Dropdown -->
-        <div class="export-dropdown-wrap" (click)="$event.stopPropagation()">
-          <button type="button" 
-                  class="btn btn-secondary btn-sm" 
-                  (click)="toggleExportDropdown($event)" 
-                  title="Export options">
-            <i class="bi bi-download me-1"></i>Export<i class="bi bi-chevron-down ms-1"></i>
-          </button>
-          <div class="export-dropdown-menu animate-fade-in" *ngIf="showExportDropdown">
-            <button type="button" class="export-item-btn" (click)="exportCsv()">
-              <i class="bi bi-file-earmark-text me-2 text-primary"></i>Export to CSV
-            </button>
-            <button type="button" class="export-item-btn" (click)="exportExcel()">
-              <i class="bi bi-file-earmark-spreadsheet me-2 text-success"></i>Export to Excel (.xlsx)
-            </button>
-          </div>
-        </div>
-
-        <!-- Table Density Switcher -->
-        <div class="density-group" role="group" aria-label="Table Density">
-          <button type="button" 
-                  class="density-btn" 
-                  [class.active]="tableDensity === 'compact'" 
-                  (click)="setDensity('compact')" 
-                  title="Compact Density">
-            <i class="bi bi-view-list"></i>
-          </button>
-          <button type="button" 
-                  class="density-btn" 
-                  [class.active]="tableDensity === 'normal'" 
-                  (click)="setDensity('normal')" 
-                  title="Normal Density">
-            <i class="bi bi-distribute-vertical"></i>
-          </button>
-          <button type="button" 
-                  class="density-btn" 
-                  [class.active]="tableDensity === 'spacious'" 
-                  (click)="setDensity('spacious')" 
-                  title="Spacious Density">
-            <i class="bi bi-arrows-expand"></i>
-          </button>
-        </div>
-
-        <!-- Columns Visibility Dropdown -->
-        <div class="columns-dropdown-wrap" (click)="$event.stopPropagation()">
-          <button type="button" 
-                  class="btn btn-secondary btn-sm" 
-                  (click)="toggleColDropdown('transports', $event)" 
-                  title="Toggle Columns Visibility">
-            <i class="bi bi-layout-three-columns me-1"></i>Columns
-          </button>
-          <div class="columns-dropdown-menu animate-fade-in" *ngIf="showColDropdown['transports']">
-            <label *ngFor="let col of getTableColumns('transports')" class="column-checkbox-label">
-              <input type="checkbox" 
-                     [checked]="isColumnVisible('transports', col)" 
-                     (change)="toggleColumn('transports', col)">
-              <span>{{ col }}</span>
-            </label>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
-  <!-- ── 4. 4-COLUMN LOGISTICS KPI TELEMETRY GRID ─────────────────── -->
+  <!-- ── 3. 4-COLUMN LOGISTICS KPI TELEMETRY GRID ─────────────────── -->
   <section class="transports-kpi-grid no-print" aria-label="Logistics Metrics Summary">
     <!-- Total Haulage Trips -->
     <div class="kpi-card">
@@ -295,6 +151,150 @@
       </div>
     </div>
   </section>
+
+  <!-- ── 4. FILTER & SEARCH TOOLBAR ────────────────────────────────── -->
+  <div class="table-unified-toolbar no-print">
+    <div class="toolbar-left-group">
+      <!-- Search Box -->
+      <div class="toolbar-search-box">
+        <i class="bi bi-search search-icon"></i>
+        <input type="text" 
+               class="search-input" 
+               [(ngModel)]="filterSearchQuery" 
+               (input)="currentPage = 1" 
+               placeholder="Search truck, driver, mobile, amount..." 
+               aria-label="Search freight transport records">
+        <button *ngIf="filterSearchQuery" 
+                type="button" 
+                class="btn-clear-search" 
+                (click)="filterSearchQuery = ''; currentPage = 1"
+                aria-label="Clear search input">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+
+      <!-- Month Filter -->
+      <div class="filter-select-wrap filter-select-month">
+        <select class="toolbar-select" [(ngModel)]="filterMonth" (change)="currentPage = 1" aria-label="Filter by month">
+          <option value="ALL">All Months</option>
+          <option *ngFor="let m of allMonths" [value]="m">{{ m }}</option>
+        </select>
+      </div>
+
+      <!-- Year Filter -->
+      <div class="filter-select-wrap filter-select-year">
+        <select class="toolbar-select" [(ngModel)]="filterYear" (change)="currentPage = 1" aria-label="Filter by year">
+          <option value="ALL">All Years</option>
+          <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+        </select>
+      </div>
+
+      <!-- Driver Filter -->
+      <div class="filter-select-wrap filter-select-driver" style="min-width: 170px;">
+        <app-searchable-select
+          [items]="drivers"
+          bindLabel="driverName"
+          bindValue="id"
+          subLabelKey="mobile"
+          placeholder="All Drivers"
+          searchPlaceholder="Filter drivers..."
+          [(ngModel)]="filterDriver"
+          (change)="currentPage = 1">
+        </app-searchable-select>
+      </div>
+
+      <!-- Reset Filters Trigger -->
+      <button *ngIf="hasActiveFilters()" 
+              type="button" 
+              class="btn-reset-filters" 
+              (click)="resetFilters()" 
+              title="Reset active search and filters">
+        <i class="bi bi-x-circle me-1"></i>Reset
+      </button>
+    </div>
+
+    <div class="toolbar-right-group">
+      <!-- Quick navigation to Drivers Directory -->
+      <button type="button" 
+              class="btn btn-secondary btn-sm btn-drivers-nav" 
+              (click)="goToDrivers()" 
+              title="Navigate to Drivers Directory">
+        <i class="bi bi-person-badge me-1"></i>
+        <span>Drivers Directory</span>
+      </button>
+
+      <!-- Refresh Button -->
+      <button type="button" 
+              class="btn btn-secondary btn-sm" 
+              (click)="loadData(true)" 
+              [disabled]="isLoading || isRefreshing" 
+              title="Refresh transport ledger">
+        <i class="bi bi-arrow-clockwise me-1" [class.spin-animate]="isLoading || isRefreshing"></i>
+        <span>Refresh</span>
+      </button>
+
+      <!-- Export Dropdown -->
+      <div class="export-dropdown-wrap" (click)="$event.stopPropagation()">
+        <button type="button" 
+                class="btn btn-secondary btn-sm" 
+                (click)="toggleExportDropdown($event)" 
+                title="Export options">
+          <i class="bi bi-download me-1"></i>Export<i class="bi bi-chevron-down ms-1"></i>
+        </button>
+        <div class="export-dropdown-menu animate-fade-in" *ngIf="showExportDropdown">
+          <button type="button" class="export-item-btn" (click)="exportCsv()">
+            <i class="bi bi-file-earmark-text me-2 text-primary"></i>Export to CSV
+          </button>
+          <button type="button" class="export-item-btn" (click)="exportExcel()">
+            <i class="bi bi-file-earmark-spreadsheet me-2 text-success"></i>Export to Excel (.xlsx)
+          </button>
+        </div>
+      </div>
+
+      <!-- Table Density Switcher -->
+      <div class="density-group" role="group" aria-label="Table Density">
+        <button type="button" 
+                class="density-btn" 
+                [class.active]="tableDensity === 'compact'" 
+                (click)="setDensity('compact')" 
+                title="Compact Density">
+          <i class="bi bi-view-list"></i>
+        </button>
+        <button type="button" 
+                class="density-btn" 
+                [class.active]="tableDensity === 'normal'" 
+                (click)="setDensity('normal')" 
+                title="Normal Density">
+          <i class="bi bi-distribute-vertical"></i>
+        </button>
+        <button type="button" 
+                class="density-btn" 
+                [class.active]="tableDensity === 'spacious'" 
+                (click)="setDensity('spacious')" 
+                title="Spacious Density">
+          <i class="bi bi-arrows-expand"></i>
+        </button>
+      </div>
+
+      <!-- Columns Visibility Dropdown -->
+      <div class="columns-dropdown-wrap" (click)="$event.stopPropagation()">
+        <button type="button" 
+                class="btn btn-secondary btn-sm" 
+                (click)="toggleColDropdown('transports', $event)" 
+                title="Toggle Columns Visibility">
+          <i class="bi bi-layout-three-columns me-1"></i>Columns
+        </button>
+        <div class="columns-dropdown-menu animate-fade-in" *ngIf="showColDropdown['transports']">
+          <label *ngFor="let col of getTableColumns('transports')" class="column-checkbox-label">
+            <input type="checkbox" 
+                   [checked]="isColumnVisible('transports', col)" 
+                   (change)="toggleColumn('transports', col)">
+            <span>{{ col }}</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ── 5. FULL-WIDTH TRANSPORT LEDGER TABLE ─────────────────────── -->
   <main class="transports-ledger-section">

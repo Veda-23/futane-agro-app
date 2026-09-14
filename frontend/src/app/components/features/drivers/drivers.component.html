@@ -82,122 +82,9 @@
         </button>
       </div>
     </div>
-
-    <!-- ── 3. FILTER & SEARCH TOOLBAR ────────────────────────────────── -->
-    <div class="table-unified-toolbar">
-      <div class="toolbar-left-group">
-        <!-- Search Box -->
-        <div class="toolbar-search-box">
-          <i class="bi bi-search search-icon"></i>
-          <input type="text" 
-                 class="search-input" 
-                 [(ngModel)]="filterSearchQuery" 
-                 (input)="currentPage = 1" 
-                 placeholder="Search driver, phone, license, depot..." 
-                 aria-label="Search commercial vehicle drivers">
-          <button *ngIf="filterSearchQuery" 
-                  type="button" 
-                  class="btn-clear-search" 
-                  (click)="filterSearchQuery = ''; currentPage = 1"
-                  aria-label="Clear search input">
-            <i class="bi bi-x"></i>
-          </button>
-        </div>
-
-        <!-- Reset Filters Trigger -->
-        <button *ngIf="hasActiveFilters()" 
-                type="button" 
-                class="btn-reset-filters" 
-                (click)="resetFilters()" 
-                title="Reset active search and filters">
-          <i class="bi bi-x-circle me-1"></i>Reset
-        </button>
-      </div>
-
-      <div class="toolbar-right-group">
-        <!-- Quick navigation to Freight Transport -->
-        <button type="button" 
-                class="btn btn-secondary btn-sm" 
-                (click)="goToTransports()" 
-                title="Navigate to Freight Transport Trips">
-          <i class="bi bi-truck me-1"></i>
-          <span>Freight Trips</span>
-        </button>
-
-        <!-- Refresh Button -->
-        <button type="button" 
-                class="btn btn-secondary btn-sm" 
-                (click)="loadData(true)" 
-                [disabled]="isRefreshing"
-                title="Reload driver records and trip logs from server">
-          <i class="bi bi-arrow-clockwise me-1" [class.spin-anim]="isRefreshing"></i>
-          <span>Refresh</span>
-        </button>
-
-        <!-- Export CSV Button -->
-        <button type="button" 
-                class="btn btn-secondary btn-sm" 
-                (click)="exportCsv()" 
-                title="Export filtered roster to CSV">
-          <i class="bi bi-download me-1"></i>
-          <span>Export CSV</span>
-        </button>
-
-        <!-- Table Density Selector -->
-        <div class="density-switch-group" role="group" aria-label="Table row density">
-          <button type="button" 
-                  class="density-btn" 
-                  [class.active]="tableDensity === 'compact'" 
-                  (click)="setDensity('compact')" 
-                  title="Compact Density">
-            <i class="bi bi-distribute-vertical"></i>
-          </button>
-          <button type="button" 
-                  class="density-btn" 
-                  [class.active]="tableDensity === 'normal'" 
-                  (click)="setDensity('normal')" 
-                  title="Normal Density">
-            <i class="bi bi-list-ul"></i>
-          </button>
-          <button type="button" 
-                  class="density-btn" 
-                  [class.active]="tableDensity === 'spacious'" 
-                  (click)="setDensity('spacious')" 
-                  title="Spacious Density">
-            <i class="bi bi-grid-3x2-gap"></i>
-          </button>
-        </div>
-
-        <!-- Columns Visibility Dropdown -->
-        <div class="col-manager-dropdown-wrapper">
-          <button type="button" 
-                  class="btn btn-secondary btn-sm" 
-                  (click)="toggleColDropdown('drivers'); $event.stopPropagation()" 
-                  title="Configure Visible Columns">
-            <i class="bi bi-layout-three-columns me-1"></i>
-            <span>Columns</span>
-          </button>
-          <div class="col-manager-popover" *ngIf="showColDropdown['drivers']" (click)="$event.stopPropagation()">
-            <div class="popover-header">
-              <strong>Visible Columns</strong>
-            </div>
-            <div class="popover-body">
-              <div class="col-item-row" *ngFor="let col of defaultColumns">
-                <label class="col-check-label">
-                  <input type="checkbox" 
-                         [checked]="isColumnVisible('drivers', col)" 
-                         (change)="toggleColumn('drivers', col)">
-                  <span>{{ col }}</span>
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
-  <!-- ── 4. 4-COLUMN TELEMETRY KPI METRICS GRID ────────────────────── -->
+  <!-- ── 3. 4-COLUMN TELEMETRY KPI METRICS GRID ────────────────────── -->
   <section class="drivers-kpi-grid no-print" aria-label="Commercial Drivers Key Performance Indicators">
     <!-- Card 1: Active Fleet Roster -->
     <div class="kpi-card">
@@ -259,6 +146,119 @@
       </div>
     </div>
   </section>
+
+  <!-- ── 4. FILTER & SEARCH TOOLBAR ────────────────────────────────── -->
+  <div class="table-unified-toolbar no-print">
+    <div class="toolbar-left-group">
+      <!-- Search Box -->
+      <div class="toolbar-search-box">
+        <i class="bi bi-search search-icon"></i>
+        <input type="text" 
+               class="search-input" 
+               [(ngModel)]="filterSearchQuery" 
+               (input)="currentPage = 1" 
+               placeholder="Search driver, phone, license, depot..." 
+               aria-label="Search commercial vehicle drivers">
+        <button *ngIf="filterSearchQuery" 
+                type="button" 
+                class="btn-clear-search" 
+                (click)="filterSearchQuery = ''; currentPage = 1" 
+                aria-label="Clear search input">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+
+      <!-- Reset Filters Trigger -->
+      <button *ngIf="hasActiveFilters()" 
+              type="button" 
+              class="btn-reset-filters" 
+              (click)="resetFilters()" 
+              title="Reset active search and filters">
+        <i class="bi bi-x-circle me-1"></i>Reset
+      </button>
+    </div>
+
+    <div class="toolbar-right-group">
+      <!-- Quick navigation to Freight Transport -->
+      <button type="button" 
+              class="btn btn-secondary btn-sm" 
+              (click)="goToTransports()" 
+              title="Navigate to Freight Transport Trips">
+        <i class="bi bi-truck me-1"></i>
+        <span>Freight Trips</span>
+      </button>
+
+      <!-- Refresh Button -->
+      <button type="button" 
+              class="btn btn-secondary btn-sm" 
+              (click)="loadData(true)" 
+              [disabled]="isRefreshing"
+              title="Reload driver records and trip logs from server">
+        <i class="bi bi-arrow-clockwise me-1" [class.spin-anim]="isRefreshing"></i>
+        <span>Refresh</span>
+      </button>
+
+      <!-- Export CSV Button -->
+      <button type="button" 
+              class="btn btn-secondary btn-sm" 
+              (click)="exportCsv()" 
+              title="Export driver directory to CSV file">
+        <i class="bi bi-file-earmark-spreadsheet me-1 text-success"></i>
+        <span>Export CSV</span>
+      </button>
+
+      <!-- Table Density Switcher -->
+      <div class="density-group" role="group" aria-label="Table row density">
+        <button type="button" 
+                class="density-btn" 
+                [class.active]="tableDensity === 'compact'" 
+                (click)="setDensity('compact')" 
+                title="Compact Density">
+          <i class="bi bi-view-list"></i>
+        </button>
+        <button type="button" 
+                class="density-btn" 
+                [class.active]="tableDensity === 'normal'" 
+                (click)="setDensity('normal')" 
+                title="Normal Density">
+          <i class="bi bi-list-ul"></i>
+        </button>
+        <button type="button" 
+                class="density-btn" 
+                [class.active]="tableDensity === 'spacious'" 
+                (click)="setDensity('spacious')" 
+                title="Spacious Density">
+          <i class="bi bi-grid-3x2-gap"></i>
+        </button>
+      </div>
+
+      <!-- Columns Visibility Dropdown -->
+      <div class="col-manager-dropdown-wrapper">
+        <button type="button" 
+                class="btn btn-secondary btn-sm" 
+                (click)="toggleColDropdown('drivers'); $event.stopPropagation()" 
+                title="Configure Visible Columns">
+          <i class="bi bi-layout-three-columns me-1"></i>
+          <span>Columns</span>
+        </button>
+        <div class="col-manager-popover" *ngIf="showColDropdown['drivers']" (click)="$event.stopPropagation()">
+          <div class="popover-header">
+            <strong>Visible Columns</strong>
+          </div>
+          <div class="popover-body">
+            <div class="col-item-row" *ngFor="let col of defaultColumns">
+              <label class="col-check-label">
+                <input type="checkbox" 
+                       [checked]="isColumnVisible('drivers', col)" 
+                       (change)="toggleColumn('drivers', col)">
+                <span>{{ col }}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ── 5. FULL-WIDTH ENTERPRISE TABLE WORKSPACE ──────────────────── -->
   <div class="table-master-card glass-panel">

@@ -22,47 +22,27 @@ async function recapture() {
   const page = await browser.newPage();
   await page.setViewport({ width: 1600, height: 1050, deviceScaleFactor: 1.25 });
 
-  console.log('🔑 Authenticating...');
-  await page.goto(`${BASE_URL}/#/login`, { waitUntil: 'networkidle2' });
-  await new Promise(r => setTimeout(r, 1000));
-
+  console.log('🔑 Authenticating with mock admin session...');
+  await page.goto(`${BASE_URL}`, { waitUntil: 'domcontentloaded' });
   await page.evaluate(() => {
-    const inputs = document.querySelectorAll('input');
-    if (inputs[0]) {
-      inputs[0].value = 'SUPER_ADMIN';
-      inputs[0].dispatchEvent(new Event('input', { bubbles: true }));
-    }
-    if (inputs[1]) {
-      inputs[1].value = 'superadmin123';
-      inputs[1].dispatchEvent(new Event('input', { bubbles: true }));
-    }
-    const btn = document.querySelector('button[type="submit"]') || Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Login') || b.textContent.includes('Sign In'));
-    if (btn) btn.click();
+    const mockUser = {
+      id: 1,
+      username: 'SUPER_ADMIN',
+      name: 'Super Administrator',
+      role: 'SUPER_ADMIN',
+      email: 'admin@futaneagro.com'
+    };
+    localStorage.setItem('user', JSON.stringify(mockUser));
+    localStorage.setItem('currentUser', JSON.stringify(mockUser));
+    localStorage.setItem('jwtToken', 'mock-token');
+    localStorage.setItem('auth_token', 'mock-token');
+    sessionStorage.setItem('user', JSON.stringify(mockUser));
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('theme', 'light');
+    document.body.classList.remove('dark-theme');
   });
 
-  await new Promise(r => setTimeout(r, 2000));
-
-  try {
-    await page.waitForSelector('.uat-otp-helper-card, .app-container', { timeout: 8000 });
-  } catch (e) {}
-
-  const otpCard = await page.$('.uat-otp-helper-card');
-  if (otpCard) {
-    console.log('   Passing 2-Factor OTP verification...');
-    await otpCard.click();
-    await new Promise(r => setTimeout(r, 600));
-    await page.evaluate(() => {
-      const loginComp = window.ng?.getComponent(document.querySelector('app-login'));
-      if (loginComp && loginComp.verifyOtp) {
-        loginComp.verifyOtp();
-      } else {
-        const btn = document.querySelector('button[type="submit"].enterprise-primary-btn, .action-form-panel form button[type="submit"]');
-        if (btn) btn.click();
-      }
-    });
-    await new Promise(r => setTimeout(r, 3000));
-  }
-
+  await page.reload({ waitUntil: 'networkidle2' });
   await page.waitForSelector('.app-container', { timeout: 15000 });
   console.log('🎉 Logged in!');
 
