@@ -10,7 +10,7 @@ const PORT = 4205;
 const DIST_DIR = path.join(__dirname, 'dist', 'frontend', 'browser');
 const ARTIFACT_DIR = path.join(
   'C:', 'Users', 'Vedant', '.gemini', 'antigravity-ide', 'brain',
-  '63ae1ca7-044a-4a77-a0c6-a06dc2558ecf'
+  'ba9f908a-f4fc-45e1-9126-b90978811490'
 );
 const SHOTS_DIR = path.join(ARTIFACT_DIR, 'pdf_screenshots');
 const PDF_PATH = path.join(ARTIFACT_DIR, 'Futane_Agro_ERP_Complete_Tabs_And_Popups.pdf');
