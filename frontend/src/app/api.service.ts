@@ -14,6 +14,10 @@ export class ApiService {
   private cachedDrivers$?: Observable<any>;
   private cachedEmployees$?: Observable<any>;
   private cachedMachines$?: Observable<any>;
+  private cachedStats$?: Observable<any>;
+  private cachedCharts$?: Observable<any>;
+  private statsCacheTime = 0;
+  private chartsCacheTime = 0;
 
   constructor(private http: HttpClient) {
     const savedBackend = localStorage.getItem('backend_url');
@@ -34,12 +38,16 @@ export class ApiService {
   invalidateDriversCache(): void { this.cachedDrivers$ = undefined; }
   invalidateEmployeesCache(): void { this.cachedEmployees$ = undefined; }
   invalidateMachinesCache(): void { this.cachedMachines$ = undefined; }
+  invalidateStatsCache(): void { this.cachedStats$ = undefined; }
+  invalidateChartsCache(): void { this.cachedCharts$ = undefined; }
   clearAllReferenceCache(): void {
     this.cachedParties$ = undefined;
     this.cachedVendors$ = undefined;
     this.cachedDrivers$ = undefined;
     this.cachedEmployees$ = undefined;
     this.cachedMachines$ = undefined;
+    this.cachedStats$ = undefined;
+    this.cachedCharts$ = undefined;
   }
 
   // Auth
@@ -65,13 +73,29 @@ export class ApiService {
   }
 
 
-  // Dashboard
-  getStats(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/dashboard/stats`).pipe(retry(2));
+  // Dashboard (Cached with shareReplay & 8s/15s window to deduplicate concurrent calls)
+  getStats(forceRefresh: boolean = false): Observable<any> {
+    const now = Date.now();
+    if (forceRefresh || !this.cachedStats$ || (now - this.statsCacheTime > 8000)) {
+      this.statsCacheTime = now;
+      this.cachedStats$ = this.http.get(`${this.baseUrl}/dashboard/stats`).pipe(
+        retry(2),
+        shareReplay({ bufferSize: 1, refCount: false })
+      );
+    }
+    return this.cachedStats$;
   }
 
-  getCharts(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/dashboard/charts`).pipe(retry(2));
+  getCharts(forceRefresh: boolean = false): Observable<any> {
+    const now = Date.now();
+    if (forceRefresh || !this.cachedCharts$ || (now - this.chartsCacheTime > 15000)) {
+      this.chartsCacheTime = now;
+      this.cachedCharts$ = this.http.get(`${this.baseUrl}/dashboard/charts`).pipe(
+        retry(2),
+        shareReplay({ bufferSize: 1, refCount: false })
+      );
+    }
+    return this.cachedCharts$;
   }
 
   importExcel(file: File): Observable<any> {

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, HostListener, ElementRef, ViewChild, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, HostListener, ElementRef, ViewChild, inject, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -55,10 +55,19 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   public appNotifService = inject(AppNotificationService);
   private elementRef = inject(ElementRef);
+  private ngZone = inject(NgZone);
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit() {
     this.updateLiveClock();
-    this.timer = setInterval(() => this.updateLiveClock(), 1000);
+    this.ngZone.runOutsideAngular(() => {
+      this.timer = setInterval(() => {
+        if (!document.hidden) {
+          this.updateLiveClock();
+          this.cdr.detectChanges();
+        }
+      }, 5000);
+    });
   }
 
   ngOnDestroy() {

@@ -1,4 +1,6 @@
 import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ElementRef } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AutoSelectDirective } from '../../../directives/auto-select.directive';
 import { FormStateDirective } from '../../../directives/form-state.directive';
 import { FormValidationService } from '../../../services/form-validation.service';
@@ -23,6 +25,8 @@ Chart.register(...registerables);
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+  private sparklineCharts: any[] = [];
   @Input() currentLang: string = 'en';
   @Input() loggedInUser: any = null;
   @Output() onNavigateTab = new EventEmitter<string>();
@@ -91,7 +95,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   loadRecentActivity() {
-    this.apiService.getAuditLogs().subscribe({
+    this.apiService.getAuditLogs().pipe(takeUntil(this.destroy$)).subscribe({
       next: (logs: any[]) => {
         if (logs && Array.isArray(logs)) {
           this.recentActivities = logs.slice(0, 8);
@@ -108,7 +112,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   checkSystemHealth() {
     if (this.loggedInUser && this.loggedInUser.role === 'SUPER_ADMIN') {
-      this.apiService.getSystemHealth().subscribe({
+      this.apiService.getSystemHealth().pipe(takeUntil(this.destroy$)).subscribe({
         next: (res: any) => this.systemHealth = res,
         error: () => this.systemHealth = { status: 'UP', components: { db: { status: 'UP' } } }
       });
@@ -116,20 +120,35 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if (this.prodChart) this.prodChart.destroy();
-    if (this.salesChart) this.salesChart.destroy();
-    if (this.customersChart) this.customersChart.destroy();
+    this.destroy$.next();
+    this.destroy$.complete();
+    if (this.prodChart) {
+      try { this.prodChart.destroy(); } catch (e) {}
+      this.prodChart = null;
+    }
+    if (this.salesChart) {
+      try { this.salesChart.destroy(); } catch (e) {}
+      this.salesChart = null;
+    }
+    if (this.customersChart) {
+      try { this.customersChart.destroy(); } catch (e) {}
+      this.customersChart = null;
+    }
+    this.sparklineCharts.forEach(c => {
+      try { c.destroy(); } catch (e) {}
+    });
+    this.sparklineCharts = [];
   }
 
   loadDashboardData(isManual: boolean = false) {
     if (isManual) {
       this.isRefreshing = true;
     }
-    // 1. Fetch Stats & recalculate net profit
-    this.apiService.getStats().subscribe({
+    // 1. Fetch Stats & recalculate net profit (pass isManual to force fresh read)
+    this.apiService.getStats(isManual).pipe(takeUntil(this.destroy$)).subscribe({
       next: (stats: any) => {
         this.stats = stats;
-        this.apiService.getExpenses().subscribe({
+        this.apiService.getExpenses().pipe(takeUntil(this.destroy$)).subscribe({
           next: (expenses: any) => {
             this.recalculateNetProfit(stats, expenses);
           }
@@ -149,7 +168,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // 2. Fetch Charts Data
     setTimeout(() => {
-      this.loadCharts();
+      this.loadCharts(isManual);
     }, 100);
   }
 
@@ -167,8 +186,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.computedNetProfit = income - totalExp;
   }
 
-  loadCharts() {
-    this.apiService.getCharts().subscribe((chartData: any) => {
+  loadCharts(isManual: boolean = false) {
+    this.apiService.getCharts(isManual).pipe(takeUntil(this.destroy$)).subscribe((chartData: any) => {
       const themeColors = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
 
       if (this.prodChart) this.prodChart.destroy();
@@ -343,7 +362,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   renderSparkline(canvasId: string, data: number[], color: string) {
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     if (!canvas) return;
-    new Chart(canvas, {
+    try {
+      const existing = Chart.getChart(canvas);
+      if (existing) {
+        existing.destroy();
+      }
+    } catch (e) {}
+
+    const sparkChart = new Chart(canvas, {
       type: 'line',
       data: {
         labels: data.map((_, i) => i),
@@ -364,6 +390,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         scales: { x: { display: false }, y: { display: false } }
       }
     });
+    this.sparklineCharts.push(sparkChart);
   }
 
   // Excel Import

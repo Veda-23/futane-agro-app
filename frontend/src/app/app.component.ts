@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, NgZone, ChangeDetectorRef } from '@angular/core';
 import { Subscription, interval, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import Swal from 'sweetalert2';
@@ -565,7 +565,9 @@ export class AppComponent implements OnInit, OnDestroy {
     private titleService: Title,
     private appNotificationService: AppNotificationService,
     private wsService: WebSocketService,
-    private paymentService: PaymentService
+    private paymentService: PaymentService,
+    private ngZone: NgZone,
+    private cdr: ChangeDetectorRef
   ) {}
 
   isTokenExpired(token: string): boolean {
@@ -597,7 +599,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.updateGrafanaUrl();
     this.pollTelemetryHealth();
-    this.telemetrySub = interval(15000).subscribe(() => this.pollTelemetryHealth());
+    this.telemetrySub = interval(30000).subscribe(() => {
+      if (!document.hidden) {
+        this.pollTelemetryHealth();
+      }
+    });
 
     this.initSettingsList();
 
@@ -835,15 +841,19 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
-
   startClock() {
     this.updateClock();
     if (this.clockInterval) {
       clearInterval(this.clockInterval);
     }
-    this.clockInterval = setInterval(() => {
-      this.updateClock();
-    }, 1000);
+    this.ngZone.runOutsideAngular(() => {
+      this.clockInterval = setInterval(() => {
+        if (!document.hidden) {
+          this.updateClock();
+          this.cdr.detectChanges();
+        }
+      }, 1000);
+    });
   }
 
   updateClock() {
@@ -884,9 +894,9 @@ export class AppComponent implements OnInit, OnDestroy {
       const remainingSecs = Math.max(0, Math.floor((this.IDLE_TIMEOUT - elapsed) / 1000));
       const rMins = Math.floor(remainingSecs / 60);
       const rSecs = remainingSecs % 60;
-      this.logoutCountdown = `${rMins}m ${rSecs < 10 ? '0' : ''}${rSecs}s`;
+      this.logoutCountdown = `${String(rMins).padStart(2, '0')}:${String(rSecs).padStart(2, '0')}`;
 
-      if (elapsed >= this.IDLE_TIMEOUT) {
+      if (remainingSecs === 0) {
         this.logoutDueToInactivity();
       }
     } else {
@@ -895,8 +905,7 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
-
-    checkIdleTimeout() {
+  checkIdleTimeout() {
     if (!this.isAuthenticated) return;
     const now = Date.now();
     const idleDuration = (now - this.lastActivityTime) / 1000 / 60; // in minutes
@@ -3265,6 +3274,10 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    if (this.clockInterval) {
+      clearInterval(this.clockInterval);
+      this.clockInterval = null;
+    }
     if (this.telemetrySub) {
       this.telemetrySub.unsubscribe();
       this.telemetrySub = null;
