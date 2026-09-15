@@ -10,8 +10,7 @@ import { DomSanitizer, SafeResourceUrl, Title } from '@angular/platform-browser'
 import { ApiService } from './api.service';
 import { TranslateService, Language, TranslatePipe } from './translate.service';
 import { Chart, registerables } from 'chart.js';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+// jsPDF and html2canvas are dynamically imported inside downloadPDFInvoice() — not needed at startup
 import { environment } from '../environments/environment';
 import { DataTableComponent } from './components/data-table/data-table.component';
 import { DashboardComponent } from './components/features/dashboard/dashboard.component';
@@ -48,7 +47,7 @@ import { WebSocketService } from './services/websocket.service';
 import { PaymentService } from './services/payment.service';
 Chart.register(...registerables);
 
-import * as XLSX from 'xlsx';
+// XLSX is dynamically imported inside exportTableToExcel() to avoid adding ~1MB to the initial bundle
 
 @Component({
   selector: 'app-root',
@@ -86,11 +85,13 @@ export class AppComponent implements OnInit, OnDestroy {
     localStorage.setItem('futane_sidebar_collapsed', this.isSidebarCollapsed ? 'true' : 'false');
   }
 
-  exportTableToExcel(data: any[], filename: string, sheetName: string = 'Data') {
+  async exportTableToExcel(data: any[], filename: string, sheetName: string = 'Data') {
     if (!data || data.length === 0) {
       this.notificationService.info('Export', 'No data to export.');
       return;
     }
+    // Dynamically import XLSX only when needed — keeps it out of the initial bundle (~1MB saved)
+    const XLSX = await import('xlsx');
     const flat = data.map(row => {
       const result: any = {};
       const flatten = (obj: any, prefix = '') => {
@@ -2736,14 +2737,20 @@ export class AppComponent implements OnInit, OnDestroy {
     this.selectedInvoice = inv;
     this.logAudit('Downloaded PDF Invoice: ' + inv.invoiceNo);
     // Wait for Angular to render the modal DOM
-    setTimeout(() => {
+    setTimeout(async () => {
       const element = document.querySelector('.invoice-bill-content') as HTMLElement;
       if (!element) {
         this.generateInvoicePDFFallback(inv);
         return;
       }
       Swal.fire({ title: 'Generating PDF...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-      html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then((canvas) => {
+      // Dynamically import heavy PDF libraries — only loaded on first PDF download, not at app startup
+      const [html2canvasModule, { jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf')
+      ]);
+      const html2canvas = html2canvasModule.default;
+      html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then((canvas: any) => {
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
         const imgWidth = 210;
@@ -2765,7 +2772,9 @@ export class AppComponent implements OnInit, OnDestroy {
     }, 200);
   }
 
-  generateInvoicePDFFallback(inv: any) {
+  async generateInvoicePDFFallback(inv: any) {
+    // Dynamically import jsPDF only when needed
+    const { jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(18);
@@ -3632,7 +3641,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   // Download currently selected Billing Hub document as PDF (white background)
-  downloadBillingHubPDF() {
+  async downloadBillingHubPDF() {
     if (!this.selectedBillRecord) return;
     const element = document.getElementById('printable-billing-card');
     if (!element) return;
@@ -3649,8 +3658,15 @@ export class AppComponent implements OnInit, OnDestroy {
 
     Swal.fire({ title: 'Generating PDF...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
 
+    // Dynamically import heavy PDF libraries — not needed at startup
+    const [html2canvasModule, { jsPDF }] = await Promise.all([
+      import('html2canvas'),
+      import('jspdf')
+    ]);
+    const html2canvas = html2canvasModule.default;
+
     html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false })
-      .then((canvas) => {
+      .then((canvas: any) => {
         element.style.background = origBg;
         element.style.color = origColor;
         const imgData = canvas.toDataURL('image/png');
@@ -3677,6 +3693,7 @@ export class AppComponent implements OnInit, OnDestroy {
         Swal.fire({ icon: 'error', title: 'PDF Error', text: 'Could not generate PDF. Please try again.' });
       });
   }
+
 
   // Print Billing Hub document in clean print window
   printBillingDocument() {
