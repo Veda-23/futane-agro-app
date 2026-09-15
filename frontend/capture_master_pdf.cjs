@@ -10,7 +10,7 @@ const PORT = 4205;
 const DIST_DIR = path.join(__dirname, 'dist', 'frontend', 'browser');
 const ARTIFACT_DIR = path.join(
   'C:', 'Users', 'Vedant', '.gemini', 'antigravity-ide', 'brain',
-  'ba9f908a-f4fc-45e1-9126-b90978811490'
+  '63ae1ca7-044a-4a77-a0c6-a06dc2558ecf'
 );
 const SHOTS_DIR = path.join(ARTIFACT_DIR, 'pdf_screenshots');
 const PDF_PATH = path.join(ARTIFACT_DIR, 'Futane_Agro_ERP_Complete_Tabs_And_Popups.pdf');
@@ -156,6 +156,10 @@ async function run() {
   });
 
   const page = await context.newPage();
+  page.on('dialog', async dialog => {
+    console.log('[Browser Dialog Dismissed]:', dialog.message());
+    await dialog.dismiss().catch(() => {});
+  });
 
   await page.route('**/ws-erp/**', route => route.abort());
   await page.route('**/sockjs/**', route => route.abort());
@@ -440,11 +444,31 @@ async function run() {
         `
       }).catch(() => {});
 
+      // Fast-resume screenshot helper: reuse if exists with valid size
+      async function takeShotSafe(fileName) {
+        const fullPath = path.join(SHOTS_DIR, fileName);
+        if (fs.existsSync(fullPath) && fs.statSync(fullPath).size > 2000) {
+          return fileName;
+        }
+        try {
+          await Promise.race([
+            page.screenshot({ path: fullPath, timeout: 6000, animations: 'disabled' }),
+            new Promise((_, r) => setTimeout(() => r(new Error('Shot timeout')), 7000))
+          ]);
+          return fileName;
+        } catch (err) {
+          console.warn(`    ⚠️ Screenshot issue on ${fileName}:`, err.message);
+          return null;
+        }
+      }
+
       // Capture 1: Main Ledger View
       const mainShot = `${tab}_01_main_ledger.png`;
-      await page.screenshot({ path: path.join(SHOTS_DIR, mainShot) });
-      tabData.mainScreenshot = mainShot;
-      console.log(`  ✓ Main Ledger captured: ${mainShot}`);
+      const savedMain = await takeShotSafe(mainShot);
+      if (savedMain) {
+        tabData.mainScreenshot = savedMain;
+        console.log(`  ✓ Main Ledger captured: ${savedMain}`);
+      }
 
       // Capture 2: Detect & Capture Subtabs
       const subtabs = await page.evaluate(() => {
@@ -463,145 +487,187 @@ async function run() {
         console.log(`  -> Found ${subtabs.length} Subtabs`);
         for (let s = 0; s < subtabs.length; s++) {
           const sub = subtabs[s];
+          const subShot = `${tab}_sub_${s + 1}_${sub.text.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 25)}.png`;
+          
+          if (fs.existsSync(path.join(SHOTS_DIR, subShot)) && fs.statSync(path.join(SHOTS_DIR, subShot)).size > 2000) {
+            tabData.subtabs.push({ name: sub.text, screenshot: subShot });
+            console.log(`    ✓ Subtab [${s + 1}/${subtabs.length}] already captured: "${sub.text}"`);
+            continue;
+          }
+
           try {
-            // Use evaluate-based click with scrollIntoView for 100% horizontal scroll safety
-            const clicked = await page.evaluate((idx) => {
-              const ribbon = document.querySelector(
-                '.reports-subtabs-bar .subtabs-scroll-container, .reports-subtabs-bar, .subtabs-classification-bar .subtabs-scroll-container, .subtabs-classification-bar, .inv-subtabs-nav, .doc-type-tabs, .settings-nav-scroll-container, .settings-nav-pills, .subtabs-scroll-container'
-              );
-              if (!ribbon) return false;
-              const btns = Array.from(ribbon.querySelectorAll('button, .subnav-tab-btn, .inv-subtab-btn, .doc-tab-btn, .settings-nav-pill'));
-              if (btns && btns[idx]) {
-                btns[idx].scrollIntoView({ inline: 'center', block: 'nearest' });
-                btns[idx].click();
-                return true;
-              }
-              return false;
-            }, s);
+            const clicked = await Promise.race([
+              page.evaluate((idx) => {
+                const ribbon = document.querySelector(
+                  '.reports-subtabs-bar .subtabs-scroll-container, .reports-subtabs-bar, .subtabs-classification-bar .subtabs-scroll-container, .subtabs-classification-bar, .inv-subtabs-nav, .doc-type-tabs, .settings-nav-scroll-container, .settings-nav-pills, .subtabs-scroll-container'
+                );
+                if (!ribbon) return false;
+                const btns = Array.from(ribbon.querySelectorAll('button, .subnav-tab-btn, .inv-subtab-btn, .doc-tab-btn, .settings-nav-pill'));
+                if (btns && btns[idx]) {
+                  btns[idx].scrollIntoView({ inline: 'center', block: 'nearest' });
+                  btns[idx].click();
+                  return true;
+                }
+                return false;
+              }, s),
+              new Promise((_, r) => setTimeout(() => r(false), 2500))
+            ]).catch(() => false);
 
             if (clicked) {
-              await page.waitForTimeout(400);
-              const subShot = `${tab}_sub_${s + 1}_${sub.text.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 25)}.png`;
-              await page.screenshot({ path: path.join(SHOTS_DIR, subShot) });
-              tabData.subtabs.push({ name: sub.text, screenshot: subShot });
-              console.log(`    ✓ Subtab [${s + 1}/${subtabs.length}] captured: "${sub.text}"`);
+              await page.waitForTimeout(350);
+              const savedSub = await takeShotSafe(subShot);
+              if (savedSub) {
+                tabData.subtabs.push({ name: sub.text, screenshot: savedSub });
+                console.log(`    ✓ Subtab [${s + 1}/${subtabs.length}] captured: "${sub.text}"`);
+              }
             }
           } catch (err) {
             console.warn(`    ⚠️ Subtab click issue: ${sub.text}`);
           }
         }
 
-        // Restore first subtab
-        await page.evaluate(() => {
-          const ribbon = document.querySelector(
-            '.reports-subtabs-bar .subtabs-scroll-container, .reports-subtabs-bar, .subtabs-classification-bar .subtabs-scroll-container, .subtabs-classification-bar, .inv-subtabs-nav, .doc-type-tabs, .settings-nav-scroll-container, .settings-nav-pills, .subtabs-scroll-container'
-          );
-          if (ribbon) {
-            const first = ribbon.querySelector('button, .subnav-tab-btn, .inv-subtab-btn, .doc-tab-btn, .settings-nav-pill');
-            if (first) {
-              first.scrollIntoView({ inline: 'center', block: 'nearest' });
-              first.click();
+        // Restore first subtab safely
+        await Promise.race([
+          page.evaluate(() => {
+            const ribbon = document.querySelector(
+              '.reports-subtabs-bar .subtabs-scroll-container, .reports-subtabs-bar, .subtabs-classification-bar .subtabs-scroll-container, .subtabs-classification-bar, .inv-subtabs-nav, .doc-type-tabs, .settings-nav-scroll-container, .settings-nav-pills, .subtabs-scroll-container'
+            );
+            if (ribbon) {
+              const first = ribbon.querySelector('button, .subnav-tab-btn, .inv-subtab-btn, .doc-tab-btn, .settings-nav-pill');
+              if (first) {
+                first.scrollIntoView({ inline: 'center', block: 'nearest' });
+                first.click();
+              }
             }
-          }
-        }).catch(() => {});
-        await page.waitForTimeout(250);
+          }),
+          new Promise(r => setTimeout(r, 1500))
+        ]).catch(() => {});
+        await page.waitForTimeout(200);
       }
 
       // Capture 3: Addition Form / Drawer / Modal
       if (tabObj.hasAdd) {
-        try {
-          // Check for add buttons
-          const addClicked = await page.evaluate(() => {
-            const btns = Array.from(document.querySelectorAll('.main-content button, .main-content a.btn, .content-body button, header button, .enterprise-header button, .invoices-page-header button'));
-            const addBtn = btns.find(b => {
-              const txt = b.innerText.trim();
-              const isAction = /\b(Add|New|Register|Enroll|Create|Log\s+|Record\s+)/i.test(txt);
-              const isExcl = /\b(Clear|Reset|Filter|Columns|Refresh|Cancel|Close|Back|Search|Edit|Delete|Download|Print|Export|Theme|Preview)\b/i.test(txt);
-              return isAction && !isExcl && b.offsetWidth > 0 && b.offsetHeight > 0;
-            });
-            if (addBtn) {
-              addBtn.scrollIntoView({ block: 'center' });
-              addBtn.click();
-              return addBtn.innerText.trim();
+        const addShot = `${tab}_02_add_form.png`;
+        if (fs.existsSync(path.join(SHOTS_DIR, addShot)) && fs.statSync(path.join(SHOTS_DIR, addShot)).size > 2000) {
+          tabData.addFormScreenshot = addShot;
+          console.log(`  ✓ Add Form already captured: ${addShot}`);
+        } else {
+          try {
+            const addClicked = await Promise.race([
+              page.evaluate(() => {
+                const btns = Array.from(document.querySelectorAll('.main-content button, .main-content a.btn, .content-body button, header button, .enterprise-header button, .invoices-page-header button'));
+                const addBtn = btns.find(b => {
+                  const txt = b.innerText.trim();
+                  const isAction = /\b(Add|New|Register|Enroll|Create|Log\s+|Record\s+)/i.test(txt);
+                  const isExcl = /\b(Clear|Reset|Filter|Columns|Refresh|Cancel|Close|Back|Search|Edit|Delete|Download|Print|Export|Theme|Preview)\b/i.test(txt);
+                  return isAction && !isExcl && b.offsetWidth > 0 && b.offsetHeight > 0;
+                });
+                if (addBtn) {
+                  addBtn.scrollIntoView({ block: 'center' });
+                  addBtn.click();
+                  return addBtn.innerText.trim();
+                }
+                return null;
+              }),
+              new Promise((_, r) => setTimeout(() => r(null), 2500))
+            ]).catch(() => null);
+
+            if (addClicked) {
+              await page.waitForTimeout(400);
+              const savedAdd = await takeShotSafe(addShot);
+              if (savedAdd) {
+                tabData.addFormScreenshot = savedAdd;
+                console.log(`  ✓ Add Form captured: "${addClicked.replace(/\n/g, ' ')}"`);
+              }
+
+              // Dismiss form/drawer
+              await page.evaluate(() => {
+                const closeBtn = document.querySelector('.btn-panel-close, .btn-drawer-close, .modal .btn-close, .erp-drawer-overlay, button.btn-close, button[aria-label="Close"]');
+                if (closeBtn) closeBtn.click();
+              }).catch(() => {});
+              await page.keyboard.press('Escape').catch(() => {});
+              await page.waitForTimeout(200);
             }
-            return null;
-          });
-
-          if (addClicked) {
-            await page.waitForTimeout(500);
-            const addShot = `${tab}_02_add_form.png`;
-            await page.screenshot({ path: path.join(SHOTS_DIR, addShot) });
-            tabData.addFormScreenshot = addShot;
-            console.log(`  ✓ Add Form captured: "${addClicked.replace(/\n/g, ' ')}"`);
-
-            // Dismiss form/drawer
-            await page.evaluate(() => {
-              const closeBtn = document.querySelector('.btn-panel-close, .btn-drawer-close, .modal .btn-close, .erp-drawer-overlay, button.btn-close, button[aria-label="Close"]');
-              if (closeBtn) closeBtn.click();
-            }).catch(() => {});
-            await page.waitForTimeout(250);
-          }
-        } catch (addErr) {}
+          } catch (addErr) {}
+        }
       }
 
       // Capture 4: Edit or Detail Interactive Popup
       if (tabObj.hasEdit) {
+        const editShot = `${tab}_03_edit_popup.png`;
+        if (fs.existsSync(path.join(SHOTS_DIR, editShot)) && fs.statSync(path.join(SHOTS_DIR, editShot)).size > 2000) {
+          tabData.editPopupScreenshot = editShot;
+          console.log(`  ✓ Edit Popup already captured: ${editShot}`);
+        } else {
+          try {
+            const editClicked = await Promise.race([
+              page.evaluate(() => {
+                const editBtns = Array.from(document.querySelectorAll('.main-content table tbody tr button, .main-content .enterprise-data-row button, .main-content .data-table-row button, .main-content table tbody tr .btn-action-edit, .main-content table tbody tr a.btn, .settings-card button'));
+                const target = editBtns.find(b => {
+                  const txt = b.innerText.trim();
+                  return /\b(Edit|View|Inspect|Preview|Waybill|Manifest|Pass|Details|Configure)\b/i.test(txt) && b.offsetWidth > 0;
+                });
+                if (target) {
+                  target.scrollIntoView({ block: 'center' });
+                  target.click();
+                  return true;
+                }
+                return false;
+              }),
+              new Promise((_, r) => setTimeout(() => r(false), 2500))
+            ]).catch(() => false);
+
+            if (editClicked) {
+              await page.waitForTimeout(400);
+              const savedEdit = await takeShotSafe(editShot);
+              if (savedEdit) {
+                tabData.editPopupScreenshot = savedEdit;
+                console.log(`  ✓ Edit Popup captured: ${editShot}`);
+              }
+
+              // Dismiss modal
+              await page.evaluate(() => {
+                const closeBtn = document.querySelector('.modal.show .btn-close, .erp-drawer.open .btn-close, .erp-drawer-overlay, button:has-text("Cancel")');
+                if (closeBtn) closeBtn.click();
+              }).catch(() => {});
+              await page.keyboard.press('Escape').catch(() => {});
+              await page.waitForTimeout(200);
+            }
+          } catch (editErr) {}
+        }
+      }
+
+      // Capture 5: Scrollable Table Viewport
+      const scrollShot = `${tab}_04_scrollable_table.png`;
+      if (fs.existsSync(path.join(SHOTS_DIR, scrollShot)) && fs.statSync(path.join(SHOTS_DIR, scrollShot)).size > 2000) {
+        tabData.scrollScreenshot = scrollShot;
+        console.log(`  ✓ Scrollable Table already captured: ${scrollShot}`);
+      } else {
         try {
-          const editClicked = await page.evaluate(() => {
-            const editBtns = Array.from(document.querySelectorAll('.main-content table tbody tr button, .main-content .enterprise-data-row button, .main-content .data-table-row button, .main-content table tbody tr .btn-action-edit, .main-content table tbody tr a.btn, .settings-card button'));
-            const target = editBtns.find(b => {
-              const txt = b.innerText.trim();
-              return /\b(Edit|View|Inspect|Preview|Waybill|Manifest|Pass|Details|Configure)\b/i.test(txt) && b.offsetWidth > 0;
-            });
-            if (target) {
-              target.scrollIntoView({ block: 'center' });
-              target.click();
-              return true;
+          const didScroll = await page.evaluate(() => {
+            const scrollContainer = document.querySelector('.table-responsive, .table-responsive-viewport, .table-container, .modern-table-container');
+            if (scrollContainer) {
+              if (scrollContainer.scrollWidth > scrollContainer.clientWidth) {
+                scrollContainer.scrollLeft = Math.min(scrollContainer.scrollWidth - scrollContainer.clientWidth, 350);
+                return true;
+              } else if (scrollContainer.scrollHeight > scrollContainer.clientHeight) {
+                scrollContainer.scrollTop = 150;
+                return true;
+              }
             }
             return false;
           });
 
-          if (editClicked) {
-            await page.waitForTimeout(500);
-            const editShot = `${tab}_03_edit_popup.png`;
-            await page.screenshot({ path: path.join(SHOTS_DIR, editShot) });
-            tabData.editPopupScreenshot = editShot;
-            console.log(`  ✓ Edit Popup captured: ${editShot}`);
-
-            // Dismiss modal
-            await page.evaluate(() => {
-              const closeBtn = document.querySelector('.modal.show .btn-close, .erp-drawer.open .btn-close, .erp-drawer-overlay, button:has-text("Cancel")');
-              if (closeBtn) closeBtn.click();
-            }).catch(() => {});
-            await page.waitForTimeout(250);
-          }
-        } catch (editErr) {}
-      }
-
-      // Capture 5: Scrollable Table Viewport
-      try {
-        const didScroll = await page.evaluate(() => {
-          const scrollContainer = document.querySelector('.table-responsive, .table-responsive-viewport, .table-container, .modern-table-container');
-          if (scrollContainer) {
-            if (scrollContainer.scrollWidth > scrollContainer.clientWidth) {
-              scrollContainer.scrollLeft = Math.min(scrollContainer.scrollWidth - scrollContainer.clientWidth, 350);
-              return true;
-            } else if (scrollContainer.scrollHeight > scrollContainer.clientHeight) {
-              scrollContainer.scrollTop = 150;
-              return true;
+          if (didScroll) {
+            await page.waitForTimeout(200);
+            const savedScroll = await takeShotSafe(scrollShot);
+            if (savedScroll) {
+              tabData.scrollScreenshot = savedScroll;
+              console.log(`  ✓ Scrollable Table captured: ${savedScroll}`);
             }
           }
-          return false;
-        });
-
-        if (didScroll) {
-          await page.waitForTimeout(250);
-          const scrollShot = `${tab}_04_scrollable_table.png`;
-          await page.screenshot({ path: path.join(SHOTS_DIR, scrollShot) });
-          tabData.scrollScreenshot = scrollShot;
-          console.log(`  ✓ Scrollable Table captured: ${scrollShot}`);
-        }
-      } catch (scErr) {}
+        } catch (scErr) {}
+      }
 
     } catch (tabErr) {
       console.error(`  ❌ Error processing tab ${tab}:`, tabErr.message);

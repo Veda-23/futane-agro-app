@@ -3099,13 +3099,16 @@ textarea:focus,
 }
 
 .modal-backdrop,
-.invoice-modal-overlay {
+.invoice-modal-overlay,
+.drawer-backdrop,
+.invoice-drawer-backdrop,
+.erp-drawer-overlay {
   position: fixed !important;
   inset: 0 !important;
   background: rgba(15, 23, 42, 0.6) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
-  z-index: 1060 !important;
+  z-index: 2000 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -3113,70 +3116,108 @@ textarea:focus,
   animation: backdropSoftFadeIn 0.22s ease both !important;
 }
 
-.drawer-backdrop {
-  position: fixed !important;
-  inset: 0 !important;
-  background: rgba(15, 23, 42, 0.5) !important;
-  backdrop-filter: blur(4px) !important;
-  -webkit-backdrop-filter: blur(4px) !important;
-  z-index: 1060 !important;
-  display: flex !important;
-  align-items: stretch !important;
-  justify-content: flex-end !important;
-  padding: 0 !important;
-  animation: backdropSoftFadeIn 0.22s ease both !important;
-}
-
+/* Modals, pop-cards, and panels nested within backdrops */
 .modal-dialog,
 .modal-card,
+.modal-content,
 .invoice-modal-card,
 .importer-modal,
-.audit-modal-content {
-  background: var(--bg-surface) !important;
-  border: 1px solid var(--border-card) !important;
-  border-radius: var(--radius-xl) !important;
-  box-shadow: var(--shadow-modal) !important;
-  max-height: 90vh !important;
+.audit-modal-content,
+.drawer-panel,
+.slide-drawer,
+.slide-in-drawer,
+.side-drawer,
+.invoice-drawer-panel,
+.dossier-voucher-dialog,
+.receipt-voucher-dialog,
+.grn-voucher-dialog {
+  background: var(--bg-surface, #ffffff) !important;
+  border: 1px solid var(--border-card, #e2e8f0) !important;
+  border-radius: var(--radius-xl, 14px) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+  width: 700px !important;
+  max-width: 95vw !important;
+  height: auto !important;
+  max-height: 88vh !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  margin: auto !important;
+  transform: none !important;
   animation: modalSpringPop 0.28s cubic-bezier(0.16, 1, 0.3, 1) both !important;
 }
 
-.slide-drawer,
-.drawer-panel,
-.side-drawer {
-  animation: universalDrawerSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both !important;
-}
-
-/* ── Universal ERP Slide-Over Drawer System ──────────────── */
-.erp-drawer-overlay {
-  position: fixed !important;
-  inset: 0 !important;
-  background: rgba(15, 23, 42, 0.5) !important;
-  backdrop-filter: blur(4px) !important;
-  -webkit-backdrop-filter: blur(4px) !important;
-  z-index: 2000 !important;
-  animation: backdropSoftFadeIn 0.22s ease both !important;
-}
-
-.erp-drawer {
-  position: fixed !important;
-  top: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 480px !important;
-  max-width: 95vw !important;
-  height: 100vh !important;
-  max-height: 100vh !important;
+/* Sibling popups/drawers: centered via fixed coordinates */
+.erp-drawer,
+.enterprise-drawer,
+.sales-drawer,
+.party-drawer {
   background: var(--bg-surface, #ffffff) !important;
-  z-index: 2010 !important;
+  border: 1px solid var(--border-card, #e2e8f0) !important;
+  border-radius: var(--radius-xl, 14px) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+  width: 720px !important;
+  max-width: 95vw !important;
+  height: auto !important;
+  max-height: 88vh !important;
   display: flex !important;
   flex-direction: column !important;
-  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.2) !important;
-  border-left: 1px solid var(--border-color, #e2e8f0) !important;
-  animation: universalDrawerSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both !important;
   overflow: hidden !important;
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 2005 !important;
+  margin: 0 !important;
+  animation: modalSpringPop 0.28s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+}
+
+.drawer-panel.drawer-panel-wide,
+.drawer-panel-wide,
+.drawer-wide,
+.modal-large {
+  width: 880px !important;
+  max-width: 96vw !important;
+}
+
+.drawer-header,
+.modal-header {
+  padding: 16px 20px !important;
+  border-bottom: 1px solid var(--border-color, #e2e8f0) !important;
+  background: var(--bg-surface, #ffffff) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-shrink: 0 !important;
+}
+
+.drawer-content,
+.drawer-body,
+.drawer-form-body,
+.drawer-scroll-body,
+.modal-body {
+  overflow-y: auto !important;
+  flex: 1 1 auto !important;
+  max-height: calc(88vh - 128px) !important;
+}
+
+.drawer-footer,
+.drawer-actions,
+.drawer-action-footer,
+.modal-footer {
+  padding: 12px 20px !important;
+  border-top: 1px solid var(--border-color, #e2e8f0) !important;
+  background: var(--bg-surface, #ffffff) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
 }
 
 .erp-drawer:not(.open) {

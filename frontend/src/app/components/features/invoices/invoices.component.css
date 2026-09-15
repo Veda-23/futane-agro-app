@@ -1266,34 +1266,32 @@
 /* ── 9. Create Invoice Slide-Over Drawer ─────────────────────────── */
 .invoice-drawer-backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
   background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 1250;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
   animation: modalFadeIn 0.2s ease;
 }
 
 .invoice-drawer-panel {
-  width: 620px;
-  max-width: 96vw;
-  height: 100vh;
+  width: 760px;
+  max-width: 95vw;
+  height: auto;
+  max-height: 88vh;
   background: var(--bg-surface, #ffffff);
-  border-left: 1px solid var(--border-glass, rgba(226, 232, 240, 0.8));
-  box-shadow: -10px 0 35px rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--border-glass, rgba(226, 232, 240, 0.8));
+  border-radius: 14px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  animation: drawerSlideLeft 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes drawerSlideLeft {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  overflow: hidden;
+  margin: auto;
+  animation: modalSpringPop 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .invoice-drawer-header {
