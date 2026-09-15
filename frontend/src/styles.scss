@@ -2881,11 +2881,110 @@ textarea:focus,
   height: 0 !important;
 }
 
-/* Universal Subtab Pill Styling with Interactive Micro-Animations */
+/* ========================================================================= */
+/* UNIVERSAL PAGE HEADER ICON PODS (46x46 Glossy Pill with Micro-Bounce)      */
+/* ========================================================================= */
+.header-icon-badge,
+.header-icon-box,
+.erp-header-icon,
+.enterprise-header-icon,
+.security-badge,
+.page-icon-badge,
+.directory-icon-box,
+.title-icon-badge {
+  width: 46px !important;
+  height: 46px !important;
+  min-width: 46px !important;
+  min-height: 46px !important;
+  border-radius: var(--radius-pod, 14px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 22px !important;
+  flex-shrink: 0 !important;
+  color: #ffffff !important;
+  position: relative !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.28) !important;
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+  transition: transform 0.22s var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)), box-shadow 0.22s ease !important;
+
+  &::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    width: 60% !important;
+    height: 50% !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0) 100%) !important;
+    border-radius: 0 14px 0 80px !important;
+    pointer-events: none !important;
+  }
+
+  &:hover {
+    transform: scale(1.06) rotate(1deg) !important;
+    box-shadow: 0 8px 20px rgba(11, 71, 212, 0.38) !important;
+  }
+
+  i {
+    color: #ffffff !important;
+    font-size: 22px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
+
+/* Specific theme gradient variants for header icons */
+.header-icon-box.header-icon-green,
+.header-icon-badge.badge-green,
+.enterprise-header-icon.header-green {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.28) !important;
+}
+
+.header-icon-box.header-icon-amber,
+.header-icon-badge.badge-amber {
+  background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%) !important;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.28) !important;
+}
+
+/* ========================================================================= */
+/* UNIVERSAL SUBTAB PILL CLASSIFICATION RIBBON                               */
+/* ========================================================================= */
+.subtabs-classification-bar,
+.production-subnav-bar,
+.invoices-subnav-bar,
+.filter-tabs-bar {
+  margin-top: 10px !important;
+  border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.06)) !important;
+  padding-top: 10px !important;
+  margin-bottom: 14px !important;
+}
+
+.subtabs-scroll-container,
+.subnav-tabs-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  scroll-behavior: smooth !important;
+  padding-bottom: 2px !important;
+
+  &::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+}
+
 .settings-nav-pill,
 .subtab-pill,
 .subtab-pill-btn,
-.subnav-tab-btn {
+.subnav-tab-btn,
+.subtab-btn {
   height: 36px !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -2894,24 +2993,25 @@ textarea:focus,
   font-size: 12.5px !important;
   font-weight: 600 !important;
   border-radius: 20px !important;
-  border: 1px solid var(--border-color, #cbd5e1) !important;
-  background: var(--bg-card, #ffffff) !important;
+  border: 1px solid var(--border-color, #e2e8f0) !important;
+  background: var(--bg-hover, #f1f5f9) !important;
   color: var(--text-secondary, #475569) !important;
   cursor: pointer !important;
   white-space: nowrap !important;
   flex-shrink: 0 !important;
-  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  position: relative;
-  overflow: hidden;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
 }
 
 .settings-nav-pill:hover,
 .subtab-pill:hover,
 .subtab-pill-btn:hover,
-.subnav-tab-btn:hover {
-  background: var(--bg-hover, #f8fafc) !important;
+.subnav-tab-btn:hover,
+.subtab-btn:hover {
+  background: #e2e8f0 !important;
   color: var(--text-primary, #0f172a) !important;
-  border-color: #94a3b8 !important;
+  border-color: #cbd5e1 !important;
   transform: translateY(-1.5px) !important;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05) !important;
 }
@@ -2919,35 +3019,75 @@ textarea:focus,
 .settings-nav-pill:active,
 .subtab-pill:active,
 .subtab-pill-btn:active,
-.subnav-tab-btn:active {
+.subnav-tab-btn:active,
+.subtab-btn:active {
   transform: scale(0.96) translateY(0) !important;
   transition: transform 0.1s ease !important;
 }
 
-/* Active Subtab: Enterprise Emerald Indicator */
+@keyframes subtabPillActivePop {
+  0% { transform: scale(0.95); }
+  60% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+@keyframes iconMicroBounce {
+  0% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(-2px) scale(1.15); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+/* Active Subtab: Rich Vibrant Gradient Fill with Pop Animation */
 .settings-nav-pill.active,
 .subtab-pill.active,
 .subtab-pill-btn.active,
-.subnav-tab-btn.active {
-  background: var(--primary) !important;
+.subnav-tab-btn.active,
+.subtab-btn.active {
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
   border-color: transparent !important;
   color: #ffffff !important;
-  font-weight: 600 !important;
-  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.32) !important;
+  animation: subtabPillActivePop 0.24s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* Emerald theme override where active is emerald green */
+.subtabs-classification-bar .subtab-pill-btn.active,
+.vendors-enterprise-container .subtab-pill-btn.active {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.32) !important;
 }
 
 .settings-nav-pill.active i,
 .subtab-pill.active i,
 .subtab-pill-btn.active i,
-.subnav-tab-btn.active i {
+.subnav-tab-btn.active i,
+.subtab-btn.active i {
   color: #ffffff !important;
+  animation: iconMicroBounce 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.tab-badge,
+.tab-count-badge,
+.tab-badge-pill,
+.subtab-count-pill {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 1px 7px !important;
+  border-radius: 12px !important;
+  background: rgba(0, 0, 0, 0.08) !important;
+  color: var(--text-primary, #1e293b) !important;
+  transition: all 0.2s ease !important;
 }
 
 .settings-nav-pill.active .tab-badge,
 .settings-nav-pill.active .tab-count-badge,
 .subtab-pill-btn.active .tab-count-badge,
-.subnav-tab-btn.active .tab-badge {
-  background: rgba(255, 255, 255, 0.22) !important;
+.subnav-tab-btn.active .tab-badge,
+.subnav-tab-btn.active .tab-badge-pill,
+.subtab-btn.active .tab-count-badge,
+.subtab-pill.active .tab-count-badge {
+  background: rgba(255, 255, 255, 0.25) !important;
   color: #ffffff !important;
   border: 1px solid rgba(255, 255, 255, 0.35) !important;
 }
@@ -4541,37 +4681,180 @@ button.btn-action-primary,
   }
 }
 
-/* ── B. Compact Sub-Navigation Tabs ─────────────────────────────────────── */
+/* ── A. Universal Page Header Icon Pod (Matching Vendors Reference Standard) ─────────── */
+.header-icon-badge,
+.header-icon-box,
+.erp-header-icon,
+.enterprise-header-icon,
+.security-badge,
+.panel-header-icon,
+.module-header-icon,
+.page-icon-pod,
+.infra-page-header .header-icon-box,
+.report-page-header .header-icon-box,
+.admin-header-banner .header-icon-box,
+.stable-page-header .header-icon-badge {
+  width: 46px !important;
+  height: 46px !important;
+  min-width: 46px !important;
+  min-height: 46px !important;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 22px !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.28) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.24s ease !important;
+  cursor: pointer !important;
+
+  &::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    width: 60% !important;
+    height: 50% !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 100%) !important;
+    border-radius: 0 14px 0 80px !important;
+    pointer-events: none !important;
+  }
+
+  &:hover {
+    transform: scale(1.06) rotate(1.5deg) !important;
+    box-shadow: 0 6px 18px rgba(11, 71, 212, 0.38) !important;
+  }
+
+  i, .bi {
+    font-size: 22px !important;
+    line-height: 1 !important;
+    color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
+
+/* ── B. Compact Sub-Navigation Tabs & Filter Pill Ribbon ─────────────────────── */
 .subtabs-classification-bar,
+.subtabs-scroll-container,
+.subnav-bar,
 .production-subnav-bar,
-.subnav-bar {
-  margin-bottom: 10px !important;
+.inv-tabs-nav,
+.subtabs-nav-bar,
+.parties-subnav-bar,
+.payments-subnav-bar,
+.invoices-subnav-bar,
+.drivers-subnav-bar,
+.employees-subnav-bar,
+.salaries-subnav-bar,
+.expenses-subnav-bar,
+.bank-subnav-bar,
+.config-nav-pills {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  padding: 4px 2px 8px !important;
+  margin-bottom: 12px !important;
+  scrollbar-width: thin !important;
 
   .subtab-pill-btn,
-  .subnav-tab-btn {
-    height: 30px !important;
-    padding: 0 12px !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
+  .subnav-tab-btn,
+  .subtab-btn,
+  .subtab-pill,
+  .tab-filter-btn,
+  .inv-tab-btn,
+  .config-nav-btn,
+  .settings-nav-pill,
+  .subtab-nav-btn {
+    height: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+    padding: 0 14px !important;
     border-radius: 20px !important;
-    gap: 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    white-space: nowrap !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    background: var(--bg-hover, #f1f5f9) !important;
+    color: var(--text-secondary, #475569) !important;
+    border: 1px solid var(--border-color, #e2e8f0) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+    cursor: pointer !important;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
 
-    i {
-      font-size: 13px !important;
+    &:hover {
+      background: #e2e8f0 !important;
+      color: var(--text-primary, #0f172a) !important;
+      transform: translateY(-1.5px) !important;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06) !important;
+    }
+
+    &:active {
+      transform: scale(0.97) !important;
+    }
+
+    &.active {
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+      color: #ffffff !important;
+      border-color: transparent !important;
+      font-weight: 700 !important;
+      box-shadow: 0 4px 14px rgba(5, 150, 105, 0.32) !important;
+      animation: subtabPillActivePop 0.24s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+
+      i, .bi {
+        color: #ffffff !important;
+        animation: iconMicroBounce 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+      }
+
+      .tab-count-badge,
+      .tab-badge-pill,
+      .tab-badge,
+      .subtab-count-pill {
+        background: rgba(255, 255, 255, 0.25) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+      }
+    }
+
+    i, .bi {
+      font-size: 14px !important;
+      line-height: 1 !important;
+      display: inline-flex !important;
+      align-items: center !important;
     }
 
     .tab-count-badge,
-    .tab-badge-pill {
-      font-size: 10.5px !important;
-      padding: 1px 6px !important;
-      height: 18px !important;
-      line-height: 16px !important;
-      border-radius: 10px !important;
+    .tab-badge-pill,
+    .tab-badge,
+    .subtab-count-pill {
+      font-size: 11px !important;
+      font-weight: 700 !important;
+      padding: 1px 7px !important;
+      height: 20px !important;
+      min-width: 18px !important;
+      line-height: 18px !important;
+      border-radius: 12px !important;
+      background: rgba(0, 0, 0, 0.08) !important;
+      color: var(--text-primary, #1e293b) !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-variant-numeric: tabular-nums !important;
+      transition: all 0.2s ease !important;
     }
   }
 }
 
-/* ── C. High-Density KPI / Telemetry Ribbon Cards (Exact Reference Look) ───────────────────────── */
+/* ── C. High-Density KPI / Telemetry Ribbon Cards (Exact Vendors Reference Standard) ───────────── */
 .production-kpi-grid,
 .erp-kpi-grid,
 .kpi-grid,
@@ -4588,15 +4871,13 @@ button.btn-action-primary,
 .salaries-kpi-grid,
 .employees-kpi-grid,
 .expenses-kpi-ribbon,
-.bank-kpi-ribbon {
+.bank-kpi-ribbon,
+.metrics-cards-grid {
   display: grid !important;
-  grid-template-columns: repeat(4, 1fr) !important;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
   gap: 14px !important;
   margin-bottom: 16px !important;
 
-  @media (max-width: 1200px) {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
   @media (max-width: 640px) {
     grid-template-columns: 1fr !important;
   }
@@ -4611,26 +4892,39 @@ button.btn-action-primary,
 .analytics-kpi-card,
 .inv-summary-card,
 .inv-kpi-card,
-.telemetry-card {
+.telemetry-card,
+.metrics-summary-card {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
   gap: 14px !important;
-  padding: 14px 18px !important;
-  min-height: 80px !important;
-  border-radius: 16px !important;
+  padding: 16px 18px !important;
+  min-height: 82px !important;
+  border-radius: 18px !important;
   background: var(--bg-surface, #ffffff) !important;
-  border: 1px solid #e2e8f0 !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02) !important;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+  border: 1px solid var(--border-card, rgba(99, 102, 241, 0.12)) !important;
+  box-shadow: var(--shadow-card, 0 4px 20px -2px rgba(11, 71, 212, 0.06), 0 2px 6px -1px rgba(30, 27, 75, 0.04)) !important;
+  transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.24s ease, border-color 0.2s ease !important;
   position: relative !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
 
   &:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.08) !important;
-    border-color: #cbd5e1 !important;
+    transform: translateY(-3px) !important;
+    box-shadow: var(--shadow-card-hover, 0 14px 30px -4px rgba(11, 71, 212, 0.14), 0 4px 12px -2px rgba(30, 27, 75, 0.06)) !important;
+    border-color: rgba(11, 71, 212, 0.25) !important;
+
+    .kpi-icon-wrap,
+    .erp-kpi-icon,
+    .stat-icon,
+    .metric-icon,
+    .kpi-icon-badge,
+    .telemetry-icon-wrap,
+    .telemetry-icon-box,
+    .inv-kpi-icon,
+    .kpi-icon-wrapper {
+      transform: scale(1.06) rotate(1deg) !important;
+    }
   }
 
   .kpi-icon-wrap,
@@ -4646,23 +4940,45 @@ button.btn-action-primary,
     height: 46px !important;
     min-width: 46px !important;
     min-height: 46px !important;
-    border-radius: 13px !important;
+    border-radius: 14px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     font-size: 20px !important;
     flex-shrink: 0 !important;
     color: #ffffff !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16) !important;
+
+    &::after {
+      content: '' !important;
+      position: absolute !important;
+      top: 0 !important;
+      right: 0 !important;
+      width: 60% !important;
+      height: 50% !important;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 100%) !important;
+      border-radius: 0 14px 0 80px !important;
+      pointer-events: none !important;
+    }
+
+    i, .bi {
+      font-size: 20px !important;
+      line-height: 1 !important;
+      color: #ffffff !important;
+    }
   }
 
   &.total-card .kpi-icon-wrap,
   &.card-procurements .telemetry-icon-wrap,
   .kpi-blue,
   .icon-blue,
-  .kpi-icon-purple {
-    background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%) !important;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28) !important;
+  .kpi-icon-purple,
+  .bg-blue-light {
+    background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+    box-shadow: 0 4px 14px rgba(11, 71, 212, 0.32) !important;
   }
 
   &.success-card .kpi-icon-wrap,
@@ -4670,9 +4986,11 @@ button.btn-action-primary,
   .kpi-emerald,
   .kpi-green,
   .icon-emerald,
+  .bg-green-light,
+  .bg-emerald-light,
   .kpi-icon-wrapper.success {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.28) !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.32) !important;
   }
 
   &.danger-card .kpi-icon-wrap,
@@ -4681,7 +4999,7 @@ button.btn-action-primary,
   .icon-red,
   .kpi-icon-wrapper.danger {
     background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
-    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.28) !important;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.32) !important;
   }
 
   &.efficiency-card .kpi-icon-wrap,
@@ -4689,9 +5007,15 @@ button.btn-action-primary,
   &.card-rate .telemetry-icon-wrap,
   .kpi-amber,
   .icon-amber,
+  .bg-amber-light,
   .kpi-icon-wrapper.warning {
     background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.28) !important;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35) !important;
+  }
+
+  .bg-indigo-light {
+    background: linear-gradient(135deg, #1E1B4B 0%, #31106A 100%) !important;
+    box-shadow: 0 4px 14px rgba(30, 27, 75, 0.35) !important;
   }
 
   .kpi-content,
@@ -4700,26 +5024,34 @@ button.btn-action-primary,
   .telemetry-body,
   .telemetry-info,
   .inv-kpi-body,
-  .kpi-body {
+  .kpi-body,
+  .stat-body {
     display: flex !important;
     flex-direction: column !important;
     flex: 1 !important;
     min-width: 0 !important;
     justify-content: center !important;
+    gap: 2px !important;
+    overflow: visible !important;
 
     .kpi-label,
     .erp-kpi-title,
     .stat-title,
+    .stat-label,
     .metric-title,
+    .metric-label,
     .telemetry-label,
     .inv-kpi-label {
-      font-size: 10px !important;
+      font-size: 11px !important;
       font-weight: 700 !important;
-      letter-spacing: 0.05em !important;
+      letter-spacing: 0.04em !important;
       text-transform: uppercase !important;
       color: #64748b !important;
       margin: 0 !important;
-      line-height: 1.2 !important;
+      line-height: 1.25 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
     }
 
     .kpi-value,
@@ -4730,24 +5062,29 @@ button.btn-action-primary,
     .telemetry-value,
     .inv-kpi-value,
     .kpi-number {
-      font-size: 18px !important;
+      font-size: 20px !important;
       font-weight: 800 !important;
-      line-height: 1.25 !important;
+      line-height: 1.2 !important;
       letter-spacing: -0.02em !important;
       color: #0f172a !important;
       margin: 2px 0 !important;
       font-variant-numeric: tabular-nums !important;
       display: flex !important;
       align-items: baseline !important;
-      gap: 3px !important;
+      gap: 4px !important;
+      white-space: nowrap !important;
+      overflow: visible !important;
     }
 
     .kpi-unit,
     .unit-text,
-    .telemetry-unit {
-      font-size: 11px !important;
+    .telemetry-unit,
+    .stat-unit {
+      font-size: 11.5px !important;
       font-weight: 500 !important;
-      color: #94a3b8 !important;
+      color: #64748b !important;
+      margin-left: 2px !important;
+      white-space: nowrap !important;
     }
 
     .kpi-meta,
@@ -4759,9 +5096,10 @@ button.btn-action-primary,
     .inv-kpi-sub,
     .kpi-subtext {
       font-size: 11px !important;
+      font-weight: 500 !important;
       color: #64748b !important;
       margin: 0 !important;
-      line-height: 1.2 !important;
+      line-height: 1.25 !important;
       display: flex !important;
       align-items: center !important;
       gap: 4px !important;
@@ -5630,7 +5968,7 @@ body.dark-theme .feature-toolbar {
   }
 }
 
-/* ── 4. Unified KPI & Stat Card Hierarchy ─────────────────────────────────── */
+/* ── 4. Unified KPI & Stat Card Hierarchy (Vendors Reference Standard Harmonized) ── */
 .kpi-card,
 .stat-card,
 .transports-kpi-grid .kpi-card,
@@ -5639,26 +5977,30 @@ body.dark-theme .feature-toolbar {
   flex-direction: row !important;
   align-items: center !important;
   gap: 14px !important;
-  padding: 14px 18px !important;
+  padding: 16px 18px !important;
+  min-height: 82px !important;
   background: var(--bg-surface, #ffffff) !important;
-  border: 1px solid var(--border-color, #e2e8f0) !important;
-  border-radius: 10px !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
-  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+  border: 1px solid var(--border-card, rgba(99, 102, 241, 0.12)) !important;
+  border-radius: 18px !important;
+  box-shadow: var(--shadow-card, 0 4px 20px -2px rgba(11, 71, 212, 0.06), 0 2px 6px -1px rgba(30, 27, 75, 0.04)) !important;
+  transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.24s ease !important;
 
   &:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06) !important;
+    transform: translateY(-3px) !important;
+    box-shadow: var(--shadow-card-hover, 0 14px 30px -4px rgba(11, 71, 212, 0.14), 0 4px 12px -2px rgba(30, 27, 75, 0.06)) !important;
+    border-color: rgba(11, 71, 212, 0.25) !important;
   }
 
   .kpi-value,
   .stat-value {
     font-size: 20px !important;
     font-weight: 800 !important;
-    font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
     color: var(--text-primary, #0f172a) !important;
-    line-height: 1.25 !important;
+    line-height: 1.2 !important;
     letter-spacing: -0.02em !important;
+    font-variant-numeric: tabular-nums !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
   }
 
   .kpi-label,
@@ -5668,6 +6010,9 @@ body.dark-theme .feature-toolbar {
     text-transform: uppercase !important;
     letter-spacing: 0.04em !important;
     color: var(--text-secondary, #64748b) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 }
 
@@ -5739,5 +6084,257 @@ body.dark-theme {
     }
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   GLOBAL ENTERPRISE UNIFICATION ENGINE — VENDORS REFERENCE STANDARD
+   Applies full-spectrum styling parity across ALL 23 tabs:
+   1. Page Header Card (18px radius, dual shadow, 16px 20px padding)
+   2. Typography (22px main title, 12.5px desc, 11.5px breadcrumb)
+   3. Action Buttons (36px height, 8px radius, emerald primary & crisp secondary)
+   4. Table Container & Toolbar (18px table radius, 12px toolbar radius, 36px search)
+   5. Data Grid (44px th header, 48px td cell, smooth hover, 12.5px typography)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Page Header Shell & Typography ──────────────────────────────────── */
+.header-section-wrapper,
+.enterprise-header,
+.page-header,
+.erp-page-header,
+.module-header,
+.config-header-bar,
+.crm-header,
+.crm-header-card,
+.report-page-header,
+.party-page-header,
+.analytics-page-header,
+.admin-header-banner,
+.security-header-wrapper,
+.stable-page-header,
+.invoices-page-header {
+  background: var(--bg-surface, #ffffff) !important;
+  border: 1px solid var(--border-card, rgba(99, 102, 241, 0.12)) !important;
+  border-radius: 18px !important;
+  padding: 16px 20px !important;
+  box-shadow: 0 4px 20px -2px rgba(11, 71, 212, 0.06), 0 2px 6px -1px rgba(30, 27, 75, 0.04) !important;
+  margin-bottom: 14px !important;
+  box-sizing: border-box !important;
+
+  .header-main-title,
+  .enterprise-header-text h2,
+  .module-header-title,
+  h1.header-title,
+  h1.header-main-title,
+  h2.page-title,
+  .header-title-text,
+  .security-title,
+  .banner-titles h2 {
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: var(--text-primary, #0f172a) !important;
+    letter-spacing: -0.01em !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
+  }
+
+  .header-subtitle,
+  .enterprise-header-text p,
+  .header-desc-text,
+  .module-header-desc,
+  .security-subtitle,
+  .banner-titles p {
+    font-size: 12.5px !important;
+    color: var(--text-secondary, #475569) !important;
+    line-height: 1.4 !important;
+    margin: 3px 0 0 0 !important;
+  }
+
+  .breadcrumb-nav,
+  .erp-breadcrumb {
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    color: var(--text-muted, #64748b) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-bottom: 6px !important;
+
+    .breadcrumb-item.active {
+      color: var(--primary, #0B47D4) !important;
+      font-weight: 700 !important;
+    }
+  }
+}
+
+/* ── 2. Header Action Buttons Standard (36px Height, 8px Radius) ───────── */
+.header-right-actions button,
+.erp-header-actions button,
+.header-actions button,
+.header-right-col button,
+.stable-page-header button,
+.party-page-header button,
+.analytics-page-header button,
+.admin-header-banner button,
+.security-header-wrapper button,
+button.btn-action-primary,
+button.btn-action-compact {
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  padding: 0 14px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+
+  i, .bi {
+    font-size: 14px !important;
+  }
+}
+
+button.btn-action-primary,
+.header-right-actions button.btn-primary,
+.erp-header-actions button.btn-primary {
+  background: var(--primary, #059669) !important;
+  border: 1px solid var(--primary, #059669) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.25) !important;
+
+  &:hover {
+    background: #047857 !important;
+    border-color: #047857 !important;
+    transform: translateY(-1px) !important;
+  }
+}
+
+/* ── 3. Table Container & Toolbar Standardization ──────────────────────── */
+.table-container,
+.table-panel-card,
+.erp-table-wrapper,
+.data-table-container,
+.ledger-container,
+.crm-table-container,
+.grid-container {
+  background: var(--bg-surface, #ffffff) !important;
+  border: 1px solid var(--border-card, rgba(99, 102, 241, 0.12)) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 4px 20px -2px rgba(11, 71, 212, 0.06), 0 2px 6px -1px rgba(30, 27, 75, 0.04) !important;
+  overflow: hidden !important;
+  margin-top: 14px !important;
+  box-sizing: border-box !important;
+}
+
+.toolbar-section,
+.table-unified-toolbar,
+.table-toolbar,
+.toolbar-card,
+.crm-toolbar,
+.filter-toolbar,
+.inv-filter-toolbar {
+  background: var(--bg-surface, #ffffff) !important;
+  border: 1px solid var(--border-card, rgba(99, 102, 241, 0.12)) !important;
+  border-radius: 12px !important;
+  padding: 10px 14px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02) !important;
+  margin-bottom: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+
+  .toolbar-search-input,
+  .search-input,
+  .search-box input,
+  .table-search input,
+  .toolbar-search-box input,
+  input[type="text"].toolbar-search {
+    height: 36px !important;
+    min-height: 36px !important;
+    border-radius: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #f8fafc !important;
+    font-size: 13px !important;
+    color: #0f172a !important;
+    padding: 0 12px 0 34px !important;
+    transition: all 0.15s ease !important;
+
+    &:focus {
+      background: #ffffff !important;
+      border-color: #0284c7 !important;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+      outline: none !important;
+    }
+  }
+
+  button,
+  .btn,
+  .btn-toolbar-compact,
+  .btn-toolbar-action {
+    height: 36px !important;
+    min-height: 36px !important;
+    border-radius: 8px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+
+    &:hover {
+      background: #f8fafc !important;
+      border-color: #94a3b8 !important;
+    }
+  }
+}
+
+/* ── 4. Global Data Table Rows & Cells ──────────────────────────────────── */
+table.table,
+table.vendor-data-table,
+table.enterprise-table,
+table.erp-table,
+table.data-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-size: 12.5px !important;
+
+  thead th,
+  th {
+    height: 44px !important;
+    min-height: 44px !important;
+    padding: 0 12px !important;
+    background: #f8fafc !important;
+    color: #475569 !important;
+    font-weight: 700 !important;
+    font-size: 11.5px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.03em !important;
+    border-bottom: 2px solid #e2e8f0 !important;
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+  }
+
+  tbody td,
+  td {
+    height: 48px !important;
+    padding: 0 12px !important;
+    vertical-align: middle !important;
+    color: #0f172a !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    font-size: 12.5px !important;
+  }
+
+  tbody tr:hover,
+  tr.table-data-row:hover {
+    background: #f8fafc !important;
+  }
+}
+
 
 

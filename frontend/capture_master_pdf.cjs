@@ -15,6 +15,7 @@ const ARTIFACT_DIR = path.join(
 const SHOTS_DIR = path.join(ARTIFACT_DIR, 'pdf_screenshots');
 const PDF_PATH = path.join(ARTIFACT_DIR, 'Futane_Agro_ERP_Complete_Tabs_And_Popups.pdf');
 const REPORT_HTML = path.join(ARTIFACT_DIR, 'report_preview.html');
+const FORCE_RECAPTURE = false;
 
 if (!fs.existsSync(SHOTS_DIR)) {
   fs.mkdirSync(SHOTS_DIR, { recursive: true });
@@ -447,13 +448,13 @@ async function run() {
       // Fast-resume screenshot helper: reuse if exists with valid size
       async function takeShotSafe(fileName) {
         const fullPath = path.join(SHOTS_DIR, fileName);
-        if (fs.existsSync(fullPath) && fs.statSync(fullPath).size > 2000) {
+        if (!FORCE_RECAPTURE && fs.existsSync(fullPath) && fs.statSync(fullPath).size > 2000) {
           return fileName;
         }
         try {
           await Promise.race([
-            page.screenshot({ path: fullPath, timeout: 6000, animations: 'disabled' }),
-            new Promise((_, r) => setTimeout(() => r(new Error('Shot timeout')), 7000))
+            page.screenshot({ path: fullPath, timeout: 5000, animations: 'disabled' }),
+            new Promise((_, r) => setTimeout(() => r(new Error('Shot timeout')), 6000))
           ]);
           return fileName;
         } catch (err) {
@@ -489,7 +490,7 @@ async function run() {
           const sub = subtabs[s];
           const subShot = `${tab}_sub_${s + 1}_${sub.text.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 25)}.png`;
           
-          if (fs.existsSync(path.join(SHOTS_DIR, subShot)) && fs.statSync(path.join(SHOTS_DIR, subShot)).size > 2000) {
+          if (!FORCE_RECAPTURE && fs.existsSync(path.join(SHOTS_DIR, subShot)) && fs.statSync(path.join(SHOTS_DIR, subShot)).size > 2000) {
             tabData.subtabs.push({ name: sub.text, screenshot: subShot });
             console.log(`    ✓ Subtab [${s + 1}/${subtabs.length}] already captured: "${sub.text}"`);
             continue;
@@ -548,7 +549,7 @@ async function run() {
       // Capture 3: Addition Form / Drawer / Modal
       if (tabObj.hasAdd) {
         const addShot = `${tab}_02_add_form.png`;
-        if (fs.existsSync(path.join(SHOTS_DIR, addShot)) && fs.statSync(path.join(SHOTS_DIR, addShot)).size > 2000) {
+        if (!FORCE_RECAPTURE && fs.existsSync(path.join(SHOTS_DIR, addShot)) && fs.statSync(path.join(SHOTS_DIR, addShot)).size > 2000) {
           tabData.addFormScreenshot = addShot;
           console.log(`  ✓ Add Form already captured: ${addShot}`);
         } else {
@@ -595,7 +596,7 @@ async function run() {
       // Capture 4: Edit or Detail Interactive Popup
       if (tabObj.hasEdit) {
         const editShot = `${tab}_03_edit_popup.png`;
-        if (fs.existsSync(path.join(SHOTS_DIR, editShot)) && fs.statSync(path.join(SHOTS_DIR, editShot)).size > 2000) {
+        if (!FORCE_RECAPTURE && fs.existsSync(path.join(SHOTS_DIR, editShot)) && fs.statSync(path.join(SHOTS_DIR, editShot)).size > 2000) {
           tabData.editPopupScreenshot = editShot;
           console.log(`  ✓ Edit Popup already captured: ${editShot}`);
         } else {
@@ -639,7 +640,7 @@ async function run() {
 
       // Capture 5: Scrollable Table Viewport
       const scrollShot = `${tab}_04_scrollable_table.png`;
-      if (fs.existsSync(path.join(SHOTS_DIR, scrollShot)) && fs.statSync(path.join(SHOTS_DIR, scrollShot)).size > 2000) {
+      if (!FORCE_RECAPTURE && fs.existsSync(path.join(SHOTS_DIR, scrollShot)) && fs.statSync(path.join(SHOTS_DIR, scrollShot)).size > 2000) {
         tabData.scrollScreenshot = scrollShot;
         console.log(`  ✓ Scrollable Table already captured: ${scrollShot}`);
       } else {
@@ -1016,6 +1017,16 @@ async function run() {
   const pdfStats = fs.statSync(PDF_PATH);
   console.log(`[PDF Generator] Master PDF successfully generated!`);
   console.log(`File Size: ${(pdfStats.size / (1024 * 1024)).toFixed(2)} MB`);
+
+  const CURRENT_ARTIFACT_DIR = path.join(
+    'C:', 'Users', 'Vedant', '.gemini', 'antigravity-ide', 'brain',
+    'b8360f7d-7d6d-4412-a236-7770e330ad5e'
+  );
+  if (fs.existsSync(CURRENT_ARTIFACT_DIR)) {
+    fs.copyFileSync(PDF_PATH, path.join(CURRENT_ARTIFACT_DIR, 'Futane_Agro_ERP_Complete_Tabs_And_Popups.pdf'));
+    fs.copyFileSync(REPORT_HTML, path.join(CURRENT_ARTIFACT_DIR, 'report_preview.html'));
+    console.log(`[PDF Generator] Copied to current session artifacts: ${CURRENT_ARTIFACT_DIR}`);
+  }
 
   await browser.close();
   if (server) server.close();
