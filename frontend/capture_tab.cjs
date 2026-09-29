@@ -51,6 +51,13 @@ const targetTab = process.argv[2] || 'sales';
   }, authData);
 
   const page = await context.newPage();
+  page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+  page.on('pageerror', err => console.log('PAGE ERROR:', err.message));
+  page.on('response', res => {
+    if (res.status() >= 400) {
+      console.log('HTTP ERROR:', res.status(), res.request().method(), res.url());
+    }
+  });
   await page.goto('http://localhost:4200', { waitUntil: 'domcontentloaded', timeout: 45000 });
   await page.waitForTimeout(2000);
 
@@ -85,7 +92,19 @@ const targetTab = process.argv[2] || 'sales';
       await page.waitForTimeout(600);
     }
   } catch (e) {}
-  await page.waitForTimeout(5000);
+  const btnStyle = await page.evaluate(() => {
+    const el = document.querySelector('.btn-density.active, .density-btn.active, .density-btn-group button.active');
+    if (!el) return 'No active density button found';
+    const cs = window.getComputedStyle(el);
+    return {
+      tag: el.tagName,
+      class: el.className,
+      bg: cs.backgroundColor,
+      color: cs.color,
+      inlineStyle: el.getAttribute('style')
+    };
+  });
+  console.log('ACTIVE DENSITY BTN STYLE:', JSON.stringify(btnStyle));
 
   const outPath = `C:/Users/Vedant/.gemini/antigravity-ide/brain/85ad973d-5ffe-43f1-ade7-7d1725289be5/${targetTab}_view.png`;
   await page.screenshot({ path: outPath });

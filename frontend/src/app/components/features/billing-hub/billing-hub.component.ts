@@ -149,7 +149,12 @@ export class BillingHubComponent implements OnInit, OnChanges {
             this.autoSelectFirst(); 
           } 
         },
-        error: () => { this.hasError = true; }
+        error: (err) => { 
+          console.warn('BillingHub: sales error', err);
+          if (this.activeBillType === 'tax_invoice' || this.activeBillType === 'proforma') {
+            this.hasError = true;
+          }
+        }
       });
     }
     if (!this.dispatchesList || this.dispatchesList.length === 0 || isManual) {
@@ -160,7 +165,12 @@ export class BillingHubComponent implements OnInit, OnChanges {
             this.extractAvailableYears();
           } 
         },
-        error: () => { this.hasError = true; }
+        error: (err) => { 
+          console.warn('BillingHub: dispatches error', err);
+          if (this.activeBillType === 'challan') {
+            this.hasError = true;
+          }
+        }
       });
     }
     if (!this.paymentsList || this.paymentsList.length === 0 || isManual) {
@@ -171,7 +181,12 @@ export class BillingHubComponent implements OnInit, OnChanges {
             this.extractAvailableYears();
           } 
         },
-        error: () => { this.hasError = true; }
+        error: (err) => { 
+          console.warn('BillingHub: payments error', err);
+          if (this.activeBillType === 'receipt') {
+            this.hasError = true;
+          }
+        }
       });
     }
     if (!this.rawMaterialsList || this.rawMaterialsList.length === 0 || isManual) {
@@ -182,7 +197,12 @@ export class BillingHubComponent implements OnInit, OnChanges {
             this.extractAvailableYears();
           } 
         },
-        error: () => { this.hasError = true; }
+        error: (err) => { 
+          console.warn('BillingHub: raw-materials error', err);
+          if (this.activeBillType === 'purchase_invoice') {
+            this.hasError = true;
+          }
+        }
       });
     }
     if (!this.transportsList || this.transportsList.length === 0 || isManual) {
@@ -193,7 +213,12 @@ export class BillingHubComponent implements OnInit, OnChanges {
             this.extractAvailableYears();
           } 
         },
-        error: () => { this.hasError = true; }
+        error: (err) => { 
+          console.warn('BillingHub: transports error', err);
+          if (this.activeBillType === 'transport') {
+            this.hasError = true;
+          }
+        }
       });
     }
     if (!this.salariesList || this.salariesList.length === 0 || isManual) {
@@ -204,7 +229,12 @@ export class BillingHubComponent implements OnInit, OnChanges {
             this.extractAvailableYears();
           } 
         },
-        error: () => { this.hasError = true; }
+        error: (err) => { 
+          console.warn('BillingHub: salaries error', err);
+          if (this.activeBillType === 'salary_slip') {
+            this.hasError = true;
+          }
+        }
       });
     }
 
