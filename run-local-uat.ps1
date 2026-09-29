@@ -5,7 +5,11 @@
 # ============================================================
 
 $ROOT = Split-Path -Parent $MyInvocation.MyCommand.Path
-$JAVA17 = "C:\Program Files\Microsoft\jdk-17.0.20.8-hotspot\bin\java.exe"
+$JAVA17 = "C:\Program Files\Microsoft\jdk-17.0.20.101-hotspot\bin\java.exe"
+if (-not (Test-Path $JAVA17)) {
+    $cmdJava = (Get-Command java -ErrorAction SilentlyContinue).Source
+    if ($cmdJava) { $JAVA17 = $cmdJava }
+}
 $BACKEND = "$ROOT\backend"
 $FRONTEND = "$ROOT\frontend"
 $JAR = "$BACKEND\target\futane-agro-app-0.0.1-SNAPSHOT.jar"

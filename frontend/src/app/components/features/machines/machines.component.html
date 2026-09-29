@@ -97,80 +97,64 @@
   </div>
 
   <!-- ── 3. 4-COLUMN RESPONSIVE KPI TELEMETRY CARDS ────────────────── -->
-  <section class="erp-kpi-grid">
+  <section class="erp-kpi-grid no-print" aria-label="Machinery Fleet Key Performance Indicators">
     <!-- KPI 1: Total Fleet Units -->
-    <div class="erp-kpi-card glass-panel" (click)="statusFilter = 'ALL'; switchSubTab('machines')">
-      <div class="erp-kpi-header">
-        <span class="erp-kpi-title">Total Equipment Fleet</span>
-        <div class="erp-kpi-icon icon-blue">
-          <i class="bi bi-cpu-fill"></i>
+    <div class="kpi-card" (click)="statusFilter = 'ALL'; switchSubTab('machines')">
+      <div class="kpi-icon-badge kpi-blue">
+        <i class="bi bi-cpu-fill"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Total Equipment Fleet</span>
+        <div class="kpi-value font-mono">{{ totalMachinesCount }} Units</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag tag-primary">Registered</span>
+          <span class="kpi-subtext-muted">Moulding fleet</span>
         </div>
-      </div>
-      <div class="erp-kpi-body">
-        <h3 class="erp-kpi-value">{{ totalMachinesCount }}</h3>
-        <span class="erp-kpi-trend trend-neutral">
-          <i class="bi bi-layers-fill me-1"></i> Registered Units
-        </span>
-      </div>
-      <div class="erp-kpi-footer">
-        <span class="erp-kpi-subtext">All factory moulding units</span>
       </div>
     </div>
 
     <!-- KPI 2: Active / Running -->
-    <div class="erp-kpi-card glass-panel" (click)="statusFilter = 'Running'; switchSubTab('machines')">
-      <div class="erp-kpi-header">
-        <span class="erp-kpi-title">Online &amp; Producing</span>
-        <div class="erp-kpi-icon icon-emerald">
-          <i class="bi bi-play-circle-fill"></i>
+    <div class="kpi-card" (click)="statusFilter = 'Running'; switchSubTab('machines')">
+      <div class="kpi-icon-badge kpi-emerald">
+        <i class="bi bi-play-circle-fill"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Online &amp; Producing</span>
+        <div class="kpi-value font-mono text-success">{{ runningMachinesCount }} Active</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag tag-success">{{ fleetUtilizationRate }}% In Service</span>
+          <span class="kpi-subtext-muted">Plant floor operational</span>
         </div>
-      </div>
-      <div class="erp-kpi-body">
-        <h3 class="erp-kpi-value text-success">{{ runningMachinesCount }}</h3>
-        <span class="erp-kpi-trend trend-positive">
-          <i class="bi bi-speedometer2 me-1"></i> {{ fleetUtilizationRate }}% In Service
-        </span>
-      </div>
-      <div class="erp-kpi-footer">
-        <span class="erp-kpi-subtext">Active on plant floor</span>
       </div>
     </div>
 
     <!-- KPI 3: Maintenance / Idle -->
-    <div class="erp-kpi-card glass-panel" (click)="statusFilter = 'Under Maintenance'; switchSubTab('machines')">
-      <div class="erp-kpi-header">
-        <span class="erp-kpi-title">Maintenance / Idle</span>
-        <div class="erp-kpi-icon icon-amber">
-          <i class="bi bi-tools"></i>
+    <div class="kpi-card" (click)="statusFilter = 'Under Maintenance'; switchSubTab('machines')">
+      <div class="kpi-icon-badge kpi-amber">
+        <i class="bi bi-tools"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Maintenance / Idle</span>
+        <div class="kpi-value font-mono" [class.text-warning]="maintenanceMachinesCount > 0">{{ maintenanceMachinesCount }} Units</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag tag-amber">{{ totalDowntimeHours }}h Downtime</span>
+          <span class="kpi-subtext-muted">Undergoing overhaul</span>
         </div>
-      </div>
-      <div class="erp-kpi-body">
-        <h3 class="erp-kpi-value" [class.text-warning]="maintenanceMachinesCount > 0">{{ maintenanceMachinesCount }}</h3>
-        <span class="erp-kpi-trend" [class.trend-negative]="maintenanceMachinesCount > 0" [class.trend-neutral]="maintenanceMachinesCount === 0">
-          <i class="bi bi-wrench-adjustable me-1"></i> {{ totalDowntimeHours }} hrs logged
-        </span>
-      </div>
-      <div class="erp-kpi-footer">
-        <span class="erp-kpi-subtext">Offline or undergoing overhaul</span>
       </div>
     </div>
 
     <!-- KPI 4: Plant Throughput -->
-    <div class="erp-kpi-card glass-panel" (click)="switchSubTab('machines')">
-      <div class="erp-kpi-header">
-        <span class="erp-kpi-title">Rated Plant Throughput</span>
-        <div class="erp-kpi-icon icon-cyan">
-          <i class="bi bi-lightning-charge-fill"></i>
+    <div class="kpi-card" (click)="switchSubTab('machines')">
+      <div class="kpi-icon-badge kpi-cyan">
+        <i class="bi bi-lightning-charge-fill"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Rated Plant Throughput</span>
+        <div class="kpi-value font-mono text-info">{{ fleetCapacityPerHour | number }}</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag tag-cyan">Crates / Hr</span>
+          <span class="kpi-subtext-muted">Hourly line capacity</span>
         </div>
-      </div>
-      <div class="erp-kpi-body">
-        <h3 class="erp-kpi-value text-info font-mono">{{ fleetCapacityPerHour | number }}</h3>
-        <span class="erp-kpi-trend trend-neutral">
-          <i class="bi bi-box-seam me-1"></i> Crates / Hour
-        </span>
-      </div>
-      <div class="erp-kpi-footer">
-        <span class="erp-kpi-subtext">Combined hourly line capacity</span>
       </div>
     </div>
   </section>

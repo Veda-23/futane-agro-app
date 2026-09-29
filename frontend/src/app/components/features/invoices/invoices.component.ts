@@ -30,6 +30,7 @@ import { SearchableSelectComponent } from '../../shared/searchable-select/search
   templateUrl: './invoices.component.html',
   styleUrls: ['./invoices.component.css']
 })
+// Standardized Invoices Component per reference master
 export class InvoicesComponent implements OnInit {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'invoices';

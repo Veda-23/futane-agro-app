@@ -15,7 +15,7 @@ const ARTIFACT_DIR = path.join(
 const SHOTS_DIR = path.join(ARTIFACT_DIR, 'pdf_screenshots');
 const PDF_PATH = path.join(ARTIFACT_DIR, 'Futane_Agro_ERP_Complete_Tabs_And_Popups.pdf');
 const REPORT_HTML = path.join(ARTIFACT_DIR, 'report_preview.html');
-const FORCE_RECAPTURE = false;
+const FORCE_RECAPTURE = true;
 
 if (!fs.existsSync(SHOTS_DIR)) {
   fs.mkdirSync(SHOTS_DIR, { recursive: true });
@@ -453,8 +453,8 @@ async function run() {
         }
         try {
           await Promise.race([
-            page.screenshot({ path: fullPath, timeout: 5000, animations: 'disabled' }),
-            new Promise((_, r) => setTimeout(() => r(new Error('Shot timeout')), 6000))
+            page.screenshot({ path: fullPath, timeout: 6000, animations: 'disabled' }),
+            new Promise((_, r) => setTimeout(() => r(new Error('Shot timeout')), 7000))
           ]);
           return fileName;
         } catch (err) {
@@ -1018,15 +1018,6 @@ async function run() {
   console.log(`[PDF Generator] Master PDF successfully generated!`);
   console.log(`File Size: ${(pdfStats.size / (1024 * 1024)).toFixed(2)} MB`);
 
-  const CURRENT_ARTIFACT_DIR = path.join(
-    'C:', 'Users', 'Vedant', '.gemini', 'antigravity-ide', 'brain',
-    'b8360f7d-7d6d-4412-a236-7770e330ad5e'
-  );
-  if (fs.existsSync(CURRENT_ARTIFACT_DIR)) {
-    fs.copyFileSync(PDF_PATH, path.join(CURRENT_ARTIFACT_DIR, 'Futane_Agro_ERP_Complete_Tabs_And_Popups.pdf'));
-    fs.copyFileSync(REPORT_HTML, path.join(CURRENT_ARTIFACT_DIR, 'report_preview.html'));
-    console.log(`[PDF Generator] Copied to current session artifacts: ${CURRENT_ARTIFACT_DIR}`);
-  }
 
   await browser.close();
   if (server) server.close();

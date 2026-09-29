@@ -68,16 +68,13 @@
 /* ── 2. STABLE ENTERPRISE PAGE HEADER ─────────────────────────────────── */
 .analytics-page-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 14px;
+  flex-direction: column;
   background: var(--bg-surface, #ffffff);
   border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: var(--radius-xl, 14px);
+  border-radius: 16px;
   padding: 16px 20px;
-  box-shadow: var(--shadow-sm, 0 1px 3px rgba(15, 23, 42, 0.05));
-  margin-bottom: 14px;
+  box-shadow: 0 4px 20px -2px rgba(11, 71, 212, 0.06), 0 2px 6px -1px rgba(30, 27, 75, 0.04);
+  margin-bottom: 16px;
 }
 
 .header-left-col {
@@ -90,13 +87,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  color: #ffffff;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+  color: #ffffff !important;
   font-size: 22px;
-  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.28);
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.28);
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
@@ -199,17 +196,17 @@
 }
 
 .btn-header-action.btn-primary {
-  background: var(--primary, #059669);
-  color: #ffffff;
-  border-color: var(--primary, #059669);
-  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.28) !important;
 }
 
 .btn-header-action.btn-primary:hover:not(:disabled) {
-  background: var(--primary-hover, #047857);
-  border-color: var(--primary-hover, #047857);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+  background: linear-gradient(135deg, #0050D8 0%, #0055E6 100%) !important;
+  border-color: transparent !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 18px rgba(11, 71, 212, 0.38) !important;
 }
 
 .btn-header-action.btn-secondary {
@@ -538,20 +535,50 @@
 }
 
 .kpi-icon-pod {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 17px;
+  flex-shrink: 0;
 }
 
-.prod-pod { background: rgba(5, 150, 105, 0.12); color: #059669; }
-.overdue-pod { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
-.stock-pod { background: rgba(14, 165, 233, 0.12); color: #0284c7; }
-.mat-pod { background: rgba(139, 92, 246, 0.12); color: #7c3aed; }
-.oee-pod { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+.prod-pod {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+.prod-pod i { color: #ffffff !important; }
+
+.overdue-pod {
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+}
+.overdue-pod i { color: #ffffff !important; }
+
+.stock-pod {
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(11, 71, 212, 0.3);
+}
+.stock-pod i { color: #ffffff !important; }
+
+.mat-pod {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+.mat-pod i { color: #ffffff !important; }
+
+.oee-pod {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+.oee-pod i { color: #ffffff !important; }
 
 .kpi-value-row {
   display: flex;
@@ -1811,4 +1838,333 @@
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* =========================================================================
+   DESIGN SYSTEM CONSISTENCY PATCH — Added to match Drivers/Dispatch modules
+   Fixes: missing density-btn, badge variants, pagination, btn-action-primary
+   ========================================================================= */
+
+/* ── Density Toggle ──────────────────────────────────────────────────────── */
+.density-group {
+  display: flex;
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: var(--radius-sm, 6px);
+  overflow: hidden;
+  height: 36px;
+}
+
+.density-btn {
+  background: var(--bg-surface, #ffffff);
+  border: none;
+  color: var(--text-secondary, #64748b);
+  padding: 0 10px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.density-btn:hover {
+  background: var(--bg-hover, #f1f5f9);
+  color: var(--text-primary, #0f172a);
+}
+
+.density-btn.active {
+  background: var(--primary, #059669);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(5, 150, 105, 0.3);
+}
+
+/* ── Status Badge Variants ───────────────────────────────────────────────── */
+.erp-badge-success {
+  background: var(--color-success-bg, #ECFDF5) !important;
+  color: var(--color-success-text, #065F46) !important;
+  border: 1px solid var(--color-success-border, #A7F3D0) !important;
+}
+
+.erp-badge-info {
+  background: var(--color-info-bg, #F0F9FF) !important;
+  color: var(--color-info-text, #0369A1) !important;
+  border: 1px solid var(--color-info-border, #BAE6FD) !important;
+}
+
+.erp-badge-warning {
+  background: var(--color-warning-bg, #FFFBEB) !important;
+  color: var(--color-warning-text, #92400E) !important;
+  border: 1px solid var(--color-warning-border, #FDE68A) !important;
+}
+
+.erp-badge-danger {
+  background: var(--color-danger-bg, #FEF2F2) !important;
+  color: var(--color-danger-text, #991B1B) !important;
+  border: 1px solid var(--color-danger-border, #FECACA) !important;
+}
+
+.badge-success {
+  background: var(--color-success-bg, #ECFDF5) !important;
+  color: var(--color-success-text, #065F46) !important;
+  border: 1px solid var(--color-success-border, #A7F3D0) !important;
+}
+
+.badge-info {
+  background: var(--color-info-bg, #F0F9FF) !important;
+  color: var(--color-info-text, #0369A1) !important;
+  border: 1px solid var(--color-info-border, #BAE6FD) !important;
+}
+
+.badge-warning {
+  background: var(--color-warning-bg, #FFFBEB) !important;
+  color: var(--color-warning-text, #92400E) !important;
+  border: 1px solid var(--color-warning-border, #FDE68A) !important;
+}
+
+.badge-danger {
+  background: var(--color-danger-bg, #FEF2F2) !important;
+  color: var(--color-danger-text, #991B1B) !important;
+  border: 1px solid var(--color-danger-border, #FECACA) !important;
+}
+
+/* ── Pagination Footer ───────────────────────────────────────────────────── */
+.erp-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-subtle, #f1f5f9);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.erp-pagination-info {
+  font-size: 12.5px;
+  color: var(--text-secondary, #64748b);
+}
+
+.erp-pagination-info strong {
+  color: var(--text-primary, #0f172a);
+}
+
+.erp-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.erp-page-indicator {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary, #475569);
+  white-space: nowrap;
+}
+
+/* ── Primary Action Button (Cobalt Blue) ─────────────────────────────────── */
+.btn-action-primary {
+  height: 38px;
+  padding: 0 16px;
+  font-size: 13.5px;
+  font-weight: 700;
+  border-radius: var(--radius-lg, 10px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%);
+  border: 1px solid transparent;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.28);
+  transition: all 0.2s var(--ease-smooth, cubic-bezier(0.16, 1, 0.3, 1));
+  white-space: nowrap;
+}
+
+.btn-action-primary:hover {
+  background: linear-gradient(135deg, #0050D8 0%, #0055E6 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(11, 71, 212, 0.38);
+  color: #ffffff;
+}
+
+.btn-action-primary:active {
+  transform: scale(0.96);
+}
+
+/* ── Secondary Button ────────────────────────────────────────────────────── */
+.btn-secondary.btn-sm:not([class*="btn-secondary btn-sm"]:defined) {
+  height: 36px;
+  padding: 0 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: var(--radius-sm, 6px);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--border-color, #cbd5e1);
+  background: var(--bg-surface, #ffffff);
+  color: var(--text-secondary, #334155);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+/* ── Filter Pill Active — Cobalt Blue override ───────────────────────────── */
+.status-filter-pill.active,
+.filter-pill.active,
+.erp-filter-pill.active,
+.subtab-pill-btn.active {
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(11, 71, 212, 0.28) !important;
+  font-weight: 700 !important;
+}
+
+/* ── Form Actions ────────────────────────────────────────────────────────── */
+.erp-form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.erp-form-actions .btn-primary {
+  height: 40px;
+  border-radius: var(--radius-lg, 10px);
+  font-size: 13.5px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%);
+  border: 1px solid transparent;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.24);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.erp-form-actions .btn-primary:hover {
+  background: linear-gradient(135deg, #0050D8 0%, #0055E6 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(11, 71, 212, 0.34);
+}
+
+.erp-form-actions .btn-secondary {
+  height: 38px;
+  border-radius: var(--radius-lg, 10px);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-color, #cbd5e1);
+  color: var(--text-secondary, #334155);
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.erp-form-actions .btn-secondary:hover {
+  background: var(--bg-hover, #f1f5f9);
+  color: var(--text-primary, #0f172a);
+}
+
+/* =========================================================================
+   KPI ICON GRADIENT PATCH — All icon wrappers get gradient backgrounds
+   ========================================================================= */
+.kpi-icon-wrap {
+  width: 44px !important; height: 44px !important; border-radius: 14px !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  flex-shrink: 0 !important; background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+  color: #ffffff !important; box-shadow: 0 4px 14px rgba(11,71,212,0.32) !important;
+  position: relative !important; overflow: hidden !important; font-size: 19px !important;
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1) !important;
+}
+.kpi-icon-wrap::after { content:'' !important; position:absolute !important; top:0 !important; right:0 !important; width:60% !important; height:50% !important; background:linear-gradient(135deg,rgba(255,255,255,0.35) 0%,rgba(255,255,255,0) 100%) !important; border-radius:0 14px 0 80px !important; pointer-events:none !important; }
+.kpi-icon-wrapper { width:44px !important; height:44px !important; border-radius:14px !important; display:flex !important; align-items:center !important; justify-content:center !important; flex-shrink:0 !important; position:relative !important; overflow:hidden !important; font-size:19px !important; transition:transform 0.2s cubic-bezier(0.34,1.56,0.64,1) !important; }
+.kpi-icon-wrapper::after { content:'' !important; position:absolute !important; top:0 !important; right:0 !important; width:60% !important; height:50% !important; background:linear-gradient(135deg,rgba(255,255,255,0.35) 0%,rgba(255,255,255,0) 100%) !important; border-radius:0 14px 0 80px !important; pointer-events:none !important; }
+.kpi-icon-wrapper.primary,.kpi-icon-wrap.primary { background:linear-gradient(135deg,#0B47D4 0%,#0066FF 100%) !important; color:#fff !important; box-shadow:0 4px 14px rgba(11,71,212,0.32) !important; }
+.kpi-icon-wrapper.success,.kpi-icon-wrap.success { background:linear-gradient(135deg,#10B981 0%,#059669 100%) !important; color:#fff !important; box-shadow:0 4px 14px rgba(16,185,129,0.32) !important; }
+.kpi-icon-wrapper.danger,.kpi-icon-wrap.danger { background:linear-gradient(135deg,#EF4444 0%,#DC2626 100%) !important; color:#fff !important; box-shadow:0 4px 14px rgba(239,68,68,0.32) !important; }
+.kpi-icon-wrapper.warning,.kpi-icon-wrap.warning { background:linear-gradient(135deg,#F59E0B 0%,#D97706 100%) !important; color:#fff !important; box-shadow:0 4px 14px rgba(245,158,11,0.35) !important; }
+.kpi-icon-wrapper.info,.kpi-icon-wrap.info { background:linear-gradient(135deg,#0284C7 0%,#0EA5E9 100%) !important; color:#fff !important; box-shadow:0 4px 14px rgba(2,132,199,0.32) !important; }
+.header-icon-box { width:46px !important; height:46px !important; border-radius:14px !important; background:linear-gradient(135deg,#0B47D4 0%,#0066FF 100%) !important; color:#fff !important; display:flex !important; align-items:center !important; justify-content:center !important; font-size:22px !important; box-shadow:0 4px 14px rgba(11,71,212,0.28) !important; flex-shrink:0 !important; position:relative !important; overflow:hidden !important; transition:transform 0.2s cubic-bezier(0.34,1.56,0.64,1) !important; }
+.header-icon-box::after { content:'' !important; position:absolute !important; top:0 !important; right:0 !important; width:60% !important; height:50% !important; background:linear-gradient(135deg,rgba(255,255,255,0.35) 0%,rgba(255,255,255,0) 100%) !important; border-radius:0 14px 0 80px !important; pointer-events:none !important; }
+.header-icon-box:hover { transform:scale(1.05) rotate(1deg) !important; }
+.kpi-card:hover { border-color:rgba(11,71,212,0.25) !important; box-shadow:0 14px 30px -4px rgba(11,71,212,0.14),0 4px 12px -2px rgba(30,27,75,0.06) !important; }
+.btn-success.btn-header-action,.btn-add-new,.btn-header-primary { background:linear-gradient(135deg,#0B47D4 0%,#0066FF 100%) !important; border-color:transparent !important; color:#fff !important; box-shadow:0 4px 14px rgba(11,71,212,0.28) !important; }
+.btn-success.btn-header-action:hover,.btn-add-new:hover,.btn-header-primary:hover { background:linear-gradient(135deg,#0050D8 0%,#0055E6 100%) !important; transform:translateY(-1px) !important; box-shadow:0 6px 18px rgba(11,71,212,0.38) !important; }
+
+/* =========================================================================
+   COBALT-BLUE OVERRIDE PATCH — Header icon & primary button consistency fix
+   Makes header-icon-box and btn-header-action.btn-primary use cobalt-blue
+   to match Drivers, Dispatch, and other premium modules
+   ========================================================================= */
+
+/* Header icon badge — cobalt-blue gradient */
+.header-icon-box,
+.header-icon-badge {
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.28) !important;
+  border-radius: 14px !important;
+  color: #ffffff !important;
+}
+
+/* Primary action button — cobalt blue gradient */
+.btn-header-action.btn-primary,
+.btn-action-primary,
+.btn-primary.btn-action-primary {
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.28) !important;
+  font-weight: 700;
+}
+
+.btn-header-action.btn-primary:hover:not(:disabled),
+.btn-action-primary:hover,
+.btn-primary.btn-action-primary:hover {
+  background: linear-gradient(135deg, #0050D8 0%, #0055E6 100%) !important;
+  border-color: transparent !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(11, 71, 212, 0.38) !important;
+  color: #ffffff !important;
+}
+
+/* Secondary button hover — cobalt-blue accent */
+.btn-header-action.btn-secondary:hover:not(:disabled) {
+  border-color: rgba(11, 71, 212, 0.4) !important;
+  color: #0B47D4 !important;
+}
+
+/* btn-success used as primary — cobalt-blue override */
+.btn-success.btn-header-action {
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.28) !important;
+}
+
+.btn-success.btn-header-action:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0050D8 0%, #0055E6 100%) !important;
+  box-shadow: 0 6px 18px rgba(11, 71, 212, 0.38) !important;
+  transform: translateY(-1px);
+}
+
+/* =========================================================================
+   HEADER ICON COBALT-BLUE OVERRIDE — Consistency with Drivers module
+   ========================================================================= */
+.header-icon-box,
+.page-header-icon,
+.module-header-icon,
+.erp-header-icon,
+.header-icon-badge {
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.28) !important;
 }

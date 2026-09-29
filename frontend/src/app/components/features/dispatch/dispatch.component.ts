@@ -66,6 +66,14 @@ export class DispatchComponent implements OnInit {
 
   // Form State
   editingDispatchId: any = null;
+  isFormOpen = false;
+
+  toggleForm(): void {
+    this.isFormOpen = !this.isFormOpen;
+    if (!this.isFormOpen) {
+      this.cancelEditDispatch();
+    }
+  }
   dispatchForm: {
     saleId: any;
     dispatchDate: string;
@@ -313,6 +321,7 @@ export class DispatchComponent implements OnInit {
           this.notificationService.success('Manifest Updated', `Dispatch manifest #${this.editingDispatchId} updated.`);
           this.logAudit(`Updated dispatch manifest ID: ${this.editingDispatchId}`);
           this.cancelEditDispatch();
+          this.isFormOpen = false;
           this.loadData();
         },
         error: (err) => {
@@ -326,6 +335,7 @@ export class DispatchComponent implements OnInit {
           this.notificationService.success('Dispatch Manifest Created', `Consignment for vehicle ${payload.vehicleNumber} registered.`);
           this.logAudit(`Created dispatch for vehicle: ${payload.vehicleNumber}`);
           this.resetForm();
+          this.isFormOpen = false;
           this.loadData();
         },
         error: (err) => {
@@ -337,6 +347,7 @@ export class DispatchComponent implements OnInit {
   }
 
   editDispatch(d: any): void {
+    this.isFormOpen = true;
     this.editingDispatchId = d.id;
     this.dispatchForm = {
       saleId: d.sale?.id ? String(d.sale.id) : (d.saleId ? String(d.saleId) : ''),
@@ -353,6 +364,7 @@ export class DispatchComponent implements OnInit {
 
   cancelEditDispatch(): void {
     this.editingDispatchId = null;
+    this.isFormOpen = false;
     this.resetForm();
   }
 

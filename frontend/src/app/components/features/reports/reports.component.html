@@ -1,77 +1,79 @@
-<!-- 1. Breadcrumb Navigation -->
-<nav class="reports-breadcrumb-bar no-print" aria-label="Breadcrumb">
-  <span class="crumb-root">ERP</span>
-  <i class="bi bi-chevron-right crumb-sep"></i>
-  <span class="crumb-section">Business Intelligence</span>
-  <i class="bi bi-chevron-right crumb-sep"></i>
-  <span class="crumb-current">Comprehensive Executive Reports</span>
-</nav>
-
-<!-- 2. Stable Enterprise Page Header -->
+<!-- 1. Stable Enterprise Page Header with Embedded Breadcrumbs -->
 <header class="reports-page-header no-print">
-  <div class="header-left-col">
-    <div class="header-icon-box">
-      <i class="bi bi-file-earmark-bar-graph-fill"></i>
-    </div>
-    <div class="header-title-meta">
-      <h1 class="header-main-title">Executive Reports &amp; Data Export</h1>
-      <div class="header-sub-row">
-        <span class="header-desc-text">Centralized analytics, P&amp;L statements, sales audits, customer ledgers &amp; Tally Prime export</span>
-        <span class="header-badge-live">
-          <span class="pulse-dot"></span>
-          <span>Verified Audit Ready</span>
-        </span>
-      </div>
-    </div>
+  <div class="breadcrumb-trail" style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; width: 100%;">
+    <i class="bi bi-house" style="font-size: 12px; color: #94a3b8;"></i>
+    <span>Futane Agro ERP</span>
+    <span style="color: #cbd5e1;">/</span>
+    <span>Business Intelligence</span>
+    <span style="color: #cbd5e1;">/</span>
+    <span style="color: #0B47D4; font-weight: 700;">Executive Reports &amp; Data Export</span>
   </div>
 
-  <div class="header-right-col">
-    <button 
-      type="button" 
-      class="btn-header-action btn-secondary" 
-      (click)="clearReportFilters()" 
-      title="Reset all filters">
-      <i class="bi bi-arrow-counterclockwise"></i>
-      <span>Reset</span>
-    </button>
+  <div class="header-main-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 14px;">
+    <div class="header-left-col">
+      <div class="header-icon-box">
+        <i class="bi bi-file-earmark-bar-graph-fill"></i>
+      </div>
+      <div class="header-title-meta">
+        <h1 class="header-main-title">Executive Reports &amp; Data Export</h1>
+        <div class="header-sub-row">
+          <span class="header-desc-text">Centralized analytics, P&amp;L statements, sales audits, customer ledgers &amp; Tally Prime export</span>
+          <span class="header-badge-live">
+            <span class="pulse-dot"></span>
+            <span>Verified Audit Ready</span>
+          </span>
+        </div>
+      </div>
+    </div>
 
-    <button 
-      type="button" 
-      class="btn-header-action btn-secondary" 
-      (click)="printReport()" 
-      [disabled]="filteredReportData.length === 0 && partyLedgerRows.length === 0" 
-      title="Print Document">
-      <i class="bi bi-printer"></i>
-      <span>Print</span>
-    </button>
+    <div class="header-right-col">
+      <button 
+        type="button" 
+        class="btn-header-action btn-secondary" 
+        (click)="clearReportFilters()" 
+        title="Reset all filters">
+        <i class="bi bi-arrow-counterclockwise"></i>
+        <span>Reset</span>
+      </button>
 
-    <button 
-      type="button" 
-      class="btn-header-action btn-secondary" 
-      (click)="exportReportToPdf()" 
-      [disabled]="filteredReportData.length === 0 && partyLedgerRows.length === 0" 
-      title="Download PDF Statement">
-      <i class="bi bi-file-earmark-pdf"></i>
-      <span>PDF</span>
-    </button>
+      <button 
+        type="button" 
+        class="btn-header-action btn-secondary" 
+        (click)="printReport()" 
+        [disabled]="filteredReportData.length === 0 && partyLedgerRows.length === 0" 
+        title="Print Document">
+        <i class="bi bi-printer"></i>
+        <span>Print</span>
+      </button>
 
-    <button 
-      type="button" 
-      class="btn-header-action btn-secondary" 
-      (click)="downloadTallyXml()" 
-      title="Export Sales to Tally Prime XML">
-      <i class="bi bi-file-earmark-code"></i>
-      <span>Tally XML</span>
-    </button>
+      <button 
+        type="button" 
+        class="btn-header-action btn-secondary" 
+        (click)="exportReportToPdf()" 
+        [disabled]="filteredReportData.length === 0 && partyLedgerRows.length === 0" 
+        title="Download PDF Statement">
+        <i class="bi bi-file-earmark-pdf"></i>
+        <span>PDF</span>
+      </button>
 
-    <button 
-      type="button" 
-      class="btn-header-action btn-primary" 
-      (click)="runReport(true)" 
-      title="Run / Refresh Report">
-      <i class="bi bi-play-fill"></i>
-      <span>Run Report</span>
-    </button>
+      <button 
+        type="button" 
+        class="btn-header-action btn-secondary" 
+        (click)="downloadTallyXml()" 
+        title="Export Sales to Tally Prime XML">
+        <i class="bi bi-file-earmark-code"></i>
+        <span>Tally XML</span>
+      </button>
+
+      <button 
+        type="button" 
+        class="btn-header-action btn-primary" 
+        (click)="runReport(true)" 
+        title="Run / Refresh Report">
+        <i class="bi bi-play-fill"></i>
+        <span>Run Report</span>
+      </button>
+    </div>
   </div>
 </header>
 

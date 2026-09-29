@@ -37,13 +37,13 @@
   width: 48px;
   height: 48px;
   border-radius: var(--radius-pod, 14px);
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 22px;
-  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.35);
   position: relative;
   overflow: hidden;
 }
@@ -110,16 +110,16 @@
 }
 
 .btn-header-action.btn-primary {
-  background: #059669;
-  border-color: #059669;
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%);
+  border-color: transparent;
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.35);
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.28);
 }
 
 .btn-header-action.btn-primary:hover:not(:disabled) {
-  background: #047857;
-  border-color: #047857;
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.45);
+  background: linear-gradient(135deg, #0050D8 0%, #0055E6 100%);
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(11, 71, 212, 0.38);
 }
 
 .btn-header-action:disabled {
@@ -152,16 +152,16 @@
 
 .doc-type-tabs {
   display: flex;
-  gap: 8px;
-  flex-wrap: nowrap;
+  gap: 8px 10px;
+  flex-wrap: wrap;
 }
 
 .doc-tab-btn {
   background: var(--bg-surface, #ffffff);
   border: 1px solid var(--border-color, #cbd5e1);
   border-radius: var(--radius-pill, 9999px);
-  padding: 8px 16px;
-  font-size: 12px;
+  padding: 7px 14px;
+  font-size: 11.5px;
   font-weight: 700;
   color: var(--text-secondary, #64748b);
   cursor: pointer;
@@ -175,22 +175,22 @@
 
 .doc-tab-btn:hover {
   background: var(--bg-hover, #f8fafc);
-  border-color: #059669;
-  color: #059669;
+  border-color: #0B47D4;
+  color: #0B47D4;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.12);
+  box-shadow: 0 4px 12px rgba(11, 71, 212, 0.12);
 }
 
 .doc-tab-btn.active {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
   color: #ffffff !important;
-  border-color: #059669;
-  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.32);
+  border-color: transparent !important;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.35) !important;
   transform: scale(1.02);
 }
 
 .doc-tab-btn.active i {
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 /* ── 3. Smart Filter Toolbar ────────────────────────────────────────── */
@@ -273,10 +273,10 @@
 }
 
 .selector-count-pill {
-  color: #059669;
+  color: #0B47D4;
   font-weight: 700;
   font-size: 11.5px;
-  background: rgba(5, 150, 105, 0.1);
+  background: rgba(11, 71, 212, 0.1);
   padding: 3px 10px;
   border-radius: 999px;
 }
@@ -296,8 +296,8 @@
 }
 
 .doc-record-select:focus {
-  border-color: #059669;
-  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.16);
+  border-color: #0B47D4;
+  box-shadow: 0 0 0 3px rgba(11, 71, 212, 0.16);
 }
 
 /* Printable A4 Paper Wrapper */
@@ -530,4 +530,294 @@
   .no-print, header, aside, .app-sidebar, .mobile-bottom-nav, .copilot-toggle-btn { display: none !important; }
   .document-sheet-wrapper { padding: 0 !important; }
   .document-sheet { box-shadow: none !important; width: 100% !important; min-height: 100vh !important; padding: 8mm !important; }
+}
+
+/* =========================================================================
+   DESIGN SYSTEM CONSISTENCY PATCH — Added to match Drivers/Dispatch modules
+   Fixes: missing density-btn, badge variants, pagination, btn-action-primary
+   ========================================================================= */
+
+/* ── Density Toggle ──────────────────────────────────────────────────────── */
+.density-group {
+  display: flex;
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: var(--radius-sm, 6px);
+  overflow: hidden;
+  height: 36px;
+}
+
+.density-btn {
+  background: var(--bg-surface, #ffffff);
+  border: none;
+  color: var(--text-secondary, #64748b);
+  padding: 0 10px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.density-btn:hover {
+  background: var(--bg-hover, #f1f5f9);
+  color: var(--text-primary, #0f172a);
+}
+
+.density-btn.active {
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(11, 71, 212, 0.3);
+}
+
+/* ── Status Badge Variants ───────────────────────────────────────────────── */
+.erp-badge-success {
+  background: var(--color-success-bg, #ECFDF5) !important;
+  color: var(--color-success-text, #065F46) !important;
+  border: 1px solid var(--color-success-border, #A7F3D0) !important;
+}
+
+.erp-badge-info {
+  background: var(--color-info-bg, #F0F9FF) !important;
+  color: var(--color-info-text, #0369A1) !important;
+  border: 1px solid var(--color-info-border, #BAE6FD) !important;
+}
+
+.erp-badge-warning {
+  background: var(--color-warning-bg, #FFFBEB) !important;
+  color: var(--color-warning-text, #92400E) !important;
+  border: 1px solid var(--color-warning-border, #FDE68A) !important;
+}
+
+.erp-badge-danger {
+  background: var(--color-danger-bg, #FEF2F2) !important;
+  color: var(--color-danger-text, #991B1B) !important;
+  border: 1px solid var(--color-danger-border, #FECACA) !important;
+}
+
+.badge-success {
+  background: var(--color-success-bg, #ECFDF5) !important;
+  color: var(--color-success-text, #065F46) !important;
+  border: 1px solid var(--color-success-border, #A7F3D0) !important;
+}
+
+.badge-info {
+  background: var(--color-info-bg, #F0F9FF) !important;
+  color: var(--color-info-text, #0369A1) !important;
+  border: 1px solid var(--color-info-border, #BAE6FD) !important;
+}
+
+.badge-warning {
+  background: var(--color-warning-bg, #FFFBEB) !important;
+  color: var(--color-warning-text, #92400E) !important;
+  border: 1px solid var(--color-warning-border, #FDE68A) !important;
+}
+
+.badge-danger {
+  background: var(--color-danger-bg, #FEF2F2) !important;
+  color: var(--color-danger-text, #991B1B) !important;
+  border: 1px solid var(--color-danger-border, #FECACA) !important;
+}
+
+/* ── Pagination Footer ───────────────────────────────────────────────────── */
+.erp-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-subtle, #f1f5f9);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.erp-pagination-info {
+  font-size: 12.5px;
+  color: var(--text-secondary, #64748b);
+}
+
+.erp-pagination-info strong {
+  color: var(--text-primary, #0f172a);
+}
+
+.erp-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.erp-page-indicator {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary, #475569);
+  white-space: nowrap;
+}
+
+/* ── Primary Action Button (Cobalt Blue) ─────────────────────────────────── */
+.btn-action-primary {
+  height: 38px;
+  padding: 0 16px;
+  font-size: 13.5px;
+  font-weight: 700;
+  border-radius: var(--radius-lg, 10px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%);
+  border: 1px solid transparent;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.28);
+  transition: all 0.2s var(--ease-smooth, cubic-bezier(0.16, 1, 0.3, 1));
+  white-space: nowrap;
+}
+
+.btn-action-primary:hover {
+  background: linear-gradient(135deg, #0050D8 0%, #0055E6 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(11, 71, 212, 0.38);
+  color: #ffffff;
+}
+
+.btn-action-primary:active {
+  transform: scale(0.96);
+}
+
+/* ── Secondary Button ────────────────────────────────────────────────────── */
+.btn-secondary.btn-sm:not([class*="btn-secondary btn-sm"]:defined) {
+  height: 36px;
+  padding: 0 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: var(--radius-sm, 6px);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--border-color, #cbd5e1);
+  background: var(--bg-surface, #ffffff);
+  color: var(--text-secondary, #334155);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+/* ── Filter Pill Active — Cobalt Blue override ───────────────────────────── */
+.status-filter-pill.active,
+.filter-pill.active,
+.erp-filter-pill.active,
+.subtab-pill-btn.active {
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(11, 71, 212, 0.28) !important;
+  font-weight: 700 !important;
+}
+
+/* ── Form Actions ────────────────────────────────────────────────────────── */
+.erp-form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.erp-form-actions .btn-primary {
+  height: 40px;
+  border-radius: var(--radius-lg, 10px);
+  font-size: 13.5px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%);
+  border: 1px solid transparent;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.24);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.erp-form-actions .btn-primary:hover {
+  background: linear-gradient(135deg, #0050D8 0%, #0055E6 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(11, 71, 212, 0.34);
+}
+
+.erp-form-actions .btn-secondary {
+  height: 38px;
+  border-radius: var(--radius-lg, 10px);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-color, #cbd5e1);
+  color: var(--text-secondary, #334155);
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.erp-form-actions .btn-secondary:hover {
+  background: var(--bg-hover, #f1f5f9);
+  color: var(--text-primary, #0f172a);
+}
+
+/* =========================================================================
+   COBALT-BLUE OVERRIDE PATCH — Header icon & primary button consistency fix
+   Makes header-icon-box and btn-header-action.btn-primary use cobalt-blue
+   to match Drivers, Dispatch, and other premium modules
+   ========================================================================= */
+
+/* Header icon badge — cobalt-blue gradient */
+.header-icon-box,
+.header-icon-badge {
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.28) !important;
+  border-radius: 14px !important;
+  color: #ffffff !important;
+}
+
+/* Primary action button — cobalt-blue gradient */
+.btn-header-action.btn-primary,
+.btn-action-primary,
+.btn-primary.btn-action-primary {
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.28) !important;
+  font-weight: 700;
+}
+
+.btn-header-action.btn-primary:hover:not(:disabled),
+.btn-action-primary:hover,
+.btn-primary.btn-action-primary:hover {
+  background: linear-gradient(135deg, #0050D8 0%, #0055E6 100%) !important;
+  border-color: transparent !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(11, 71, 212, 0.38) !important;
+  color: #ffffff !important;
+}
+
+/* Secondary button hover — cobalt-blue accent */
+.btn-header-action.btn-secondary:hover:not(:disabled) {
+  border-color: rgba(11, 71, 212, 0.4) !important;
+  color: #0B47D4 !important;
+}
+
+/* btn-success used as primary (party, etc.) — cobalt-blue override */
+.btn-success.btn-header-action {
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.28) !important;
+}
+
+.btn-success.btn-header-action:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0050D8 0%, #0055E6 100%) !important;
+  box-shadow: 0 6px 18px rgba(11, 71, 212, 0.38) !important;
+  transform: translateY(-1px);
 }

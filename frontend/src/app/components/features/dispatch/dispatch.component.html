@@ -4,9 +4,11 @@
     <div class="erp-header-title-group">
       <nav class="erp-breadcrumb" aria-label="Breadcrumb">
         <ol class="erp-breadcrumb-list">
-          <li class="erp-breadcrumb-item">SUPPLY CHAIN</li>
-          <li class="erp-breadcrumb-separator"><i class="bi bi-chevron-right"></i></li>
-          <li class="erp-breadcrumb-item active">LOGISTICS &amp; DISPATCH</li>
+          <li class="erp-breadcrumb-item"><i class="bi bi-house-door me-1"></i>Futane Agro ERP</li>
+          <li class="erp-breadcrumb-separator">/</li>
+          <li class="erp-breadcrumb-item">Supply Chain</li>
+          <li class="erp-breadcrumb-separator">/</li>
+          <li class="erp-breadcrumb-item active">Logistics &amp; Dispatch</li>
         </ol>
       </nav>
       <div class="erp-title-with-badge">
@@ -21,7 +23,7 @@
     </div>
 
     <div class="erp-header-actions">
-      <div class="erp-telemetry-pill">
+      <div class="erp-telemetry-pill d-none d-lg-inline-flex">
         <span class="erp-telemetry-dot pulse"></span>
         <span class="erp-telemetry-text">TOTAL MANIFESTS: {{ totalDispatchesCount }} &bull; IN TRANSIT: {{ inTransitDispatchesCount }} &bull; DELIVERED: {{ deliveredDispatchesCount }}</span>
       </div>
@@ -33,84 +35,76 @@
         <i class="bi bi-arrow-clockwise me-1" [class.spin-anim]="isLoading"></i>
         <span>Refresh</span>
       </button>
+      <button type="button" 
+              class="btn btn-primary btn-action-primary" 
+              *ngIf="!isViewer()"
+              (click)="toggleForm()" 
+              [title]="isFormOpen ? 'Close form' : 'Create new dispatch manifest'">
+        <i class="bi" [ngClass]="isFormOpen ? 'bi-x-lg' : 'bi-plus-lg'"></i>
+        <span>{{ isFormOpen ? 'Close Form' : 'Create Manifest' }}</span>
+      </button>
     </div>
   </header>
 
   <!-- 2. 4-Column Responsive KPI Telemetry Cards -->
-  <section class="erp-kpi-grid">
+  <section class="erp-kpi-grid no-print" aria-label="Dispatch Key Performance Indicators">
     <!-- KPI 1: Total Consignments -->
-    <div class="erp-kpi-card glass-panel" (click)="statusFilter = 'ALL'">
-      <div class="erp-kpi-header">
-        <span class="erp-kpi-title">Total Dispatches</span>
-        <div class="erp-kpi-icon icon-blue">
-          <i class="bi bi-box-seam-fill"></i>
+    <div class="kpi-card" (click)="statusFilter = 'ALL'">
+      <div class="kpi-icon-badge kpi-blue">
+        <i class="bi bi-box-seam-fill"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Total Dispatches</span>
+        <div class="kpi-value font-mono">{{ totalDispatchesCount }} Manifests</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag tag-primary">Recorded</span>
+          <span class="kpi-subtext-muted">All logged shipments</span>
         </div>
-      </div>
-      <div class="erp-kpi-body">
-        <h3 class="erp-kpi-value">{{ totalDispatchesCount }}</h3>
-        <span class="erp-kpi-trend trend-neutral">
-          <i class="bi bi-receipt me-1"></i> Recorded Manifests
-        </span>
-      </div>
-      <div class="erp-kpi-footer">
-        <span class="erp-kpi-subtext">All logged shipments</span>
       </div>
     </div>
 
     <!-- KPI 2: In Transit -->
-    <div class="erp-kpi-card glass-panel" (click)="statusFilter = 'In Transit'">
-      <div class="erp-kpi-header">
-        <span class="erp-kpi-title">In Transit</span>
-        <div class="erp-kpi-icon icon-cyan">
-          <i class="bi bi-truck"></i>
+    <div class="kpi-card" (click)="statusFilter = 'In Transit'">
+      <div class="kpi-icon-badge kpi-cyan">
+        <i class="bi bi-truck"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">In Transit</span>
+        <div class="kpi-value font-mono text-info">{{ inTransitDispatchesCount }} En Route</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag tag-cyan">Active</span>
+          <span class="kpi-subtext-muted">En route to consignees</span>
         </div>
-      </div>
-      <div class="erp-kpi-body">
-        <h3 class="erp-kpi-value text-info">{{ inTransitDispatchesCount }}</h3>
-        <span class="erp-kpi-trend trend-positive">
-          <i class="bi bi-geo-alt-fill me-1"></i> Active On Route
-        </span>
-      </div>
-      <div class="erp-kpi-footer">
-        <span class="erp-kpi-subtext">En route to consignees</span>
       </div>
     </div>
 
     <!-- KPI 3: Delivered -->
-    <div class="erp-kpi-card glass-panel" (click)="statusFilter = 'Delivered'">
-      <div class="erp-kpi-header">
-        <span class="erp-kpi-title">Delivered Consignments</span>
-        <div class="erp-kpi-icon icon-emerald">
-          <i class="bi bi-check-circle-fill"></i>
+    <div class="kpi-card" (click)="statusFilter = 'Delivered'">
+      <div class="kpi-icon-badge kpi-emerald">
+        <i class="bi bi-check-circle-fill"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Delivered Consignments</span>
+        <div class="kpi-value font-mono text-success">{{ deliveredDispatchesCount }} Fulfilled</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag tag-success">Gate Verified</span>
+          <span class="kpi-subtext-muted">Delivered to customers</span>
         </div>
-      </div>
-      <div class="erp-kpi-body">
-        <h3 class="erp-kpi-value text-success">{{ deliveredDispatchesCount }}</h3>
-        <span class="erp-kpi-trend trend-positive">
-          <i class="bi bi-patch-check-fill me-1"></i> Fulfilled Orders
-        </span>
-      </div>
-      <div class="erp-kpi-footer">
-        <span class="erp-kpi-subtext">Gate entry verified</span>
       </div>
     </div>
 
     <!-- KPI 4: Pending Clearance -->
-    <div class="erp-kpi-card glass-panel" (click)="statusFilter = 'Pending'">
-      <div class="erp-kpi-header">
-        <span class="erp-kpi-title">Pending Staging</span>
-        <div class="erp-kpi-icon icon-amber">
-          <i class="bi bi-clock-history"></i>
+    <div class="kpi-card" (click)="statusFilter = 'Pending'">
+      <div class="kpi-icon-badge kpi-amber">
+        <i class="bi bi-clock-history"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-label">Pending Staging</span>
+        <div class="kpi-value font-mono" [class.text-warning]="pendingDispatchesCount > 0">{{ pendingDispatchesCount }} Staging</div>
+        <div class="kpi-subtext">
+          <span class="badge-tag tag-amber">Awaiting</span>
+          <span class="kpi-subtext-muted">Dock staging area</span>
         </div>
-      </div>
-      <div class="erp-kpi-body">
-        <h3 class="erp-kpi-value" [class.text-warning]="pendingDispatchesCount > 0">{{ pendingDispatchesCount }}</h3>
-        <span class="erp-kpi-trend" [class.trend-negative]="pendingDispatchesCount > 0" [class.trend-neutral]="pendingDispatchesCount === 0">
-          <i class="bi bi-hourglass-split me-1"></i> Awaiting Vehicle
-        </span>
-      </div>
-      <div class="erp-kpi-footer">
-        <span class="erp-kpi-subtext">Dock staging area</span>
       </div>
     </div>
   </section>
@@ -202,10 +196,10 @@
     </div>
   </section>
 
-  <!-- 4. Main Two-Column Layout -->
-  <div class="erp-module-grid">
-    <!-- LEFT PANEL: Sticky Manifest Registration Form -->
-    <aside class="erp-form-panel" [class.editing-mode]="editingDispatchId" *ngIf="!isViewer()">
+  <!-- 4. Collapsible Form / Main Table Layout -->
+  <div class="erp-module-grid" [class.form-active]="isFormOpen && !isViewer()">
+    <!-- LEFT PANEL: Collapsible Manifest Registration Form -->
+    <aside class="erp-form-panel animate-fade-in" [class.editing-mode]="editingDispatchId" *ngIf="isFormOpen && !isViewer()">
       <div class="erp-panel-header">
         <div class="erp-panel-title-group">
           <span class="erp-panel-icon"><i class="bi bi-box-arrow-up-right"></i></span>
@@ -214,7 +208,12 @@
             <p class="erp-panel-subtitle">Vehicle registration, driver assignment &amp; consignment notes</p>
           </div>
         </div>
-        <span *ngIf="editingDispatchId" class="erp-badge erp-badge-warning">EDITING</span>
+        <div class="d-flex align-items-center gap-2">
+          <span *ngIf="editingDispatchId" class="erp-badge erp-badge-warning">EDITING</span>
+          <button type="button" class="btn btn-link btn-sm text-secondary p-0" (click)="toggleForm()" title="Close Form">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
       </div>
 
       <form (ngSubmit)="saveDispatch()" class="erp-form-grid">

@@ -26,6 +26,25 @@
       </div>
 
       <div class="header-right-actions">
+        <!-- Refresh Button -->
+        <button type="button" 
+                class="btn btn-secondary btn-header-action" 
+                (click)="loadData(true)" 
+                [disabled]="isRefreshing"
+                title="Reload driver records and trip logs from server">
+          <i class="bi bi-arrow-clockwise me-1" [class.spin-anim]="isRefreshing"></i>
+          <span>Refresh</span>
+        </button>
+
+        <!-- Export CSV Button -->
+        <button type="button" 
+                class="btn btn-secondary btn-header-action" 
+                (click)="exportCsv()" 
+                title="Export driver directory to CSV file">
+          <i class="bi bi-file-earmark-spreadsheet me-1 text-success"></i>
+          <span>Export CSV</span>
+        </button>
+
         <!-- Primary Action: Enroll Driver -->
         <button type="button" 
                 class="btn btn-primary btn-action-primary" 
@@ -131,13 +150,13 @@
       </div>
     </div>
 
-    <!-- Card 4: Cumulative Freight Volume -->
+    <!-- Card 4: Cumulative Freight -->
     <div class="kpi-card">
       <div class="kpi-icon-badge kpi-amber">
         <i class="bi bi-cash-stack"></i>
       </div>
       <div class="kpi-details">
-        <span class="kpi-label">Cumulative Freight Volume</span>
+        <span class="kpi-label">Cumulative Freight</span>
         <div class="kpi-value font-mono">₹{{ totalFreightVolume | number:'1.0-0' }}</div>
         <div class="kpi-subtext">
           <span class="badge-tag tag-warning">Gross Freight</span>

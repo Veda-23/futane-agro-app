@@ -354,6 +354,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       // Render mini sparklines for KPI cards (D-01)
       this.renderSparkline('sparkline-prod', [120, 145, 130, 165, 180, 150, 195], 'rgb(139, 92, 246)');
+      this.renderSparkline('sparkline-monthly', [2800, 3100, 3450, 3200, 3800, 4100, 4350], 'rgb(11, 71, 212)');
       this.renderSparkline('sparkline-sales', [45000, 52000, 48000, 61000, 59000, 72000, 85000], 'rgb(16, 185, 129)');
       this.renderSparkline('sparkline-pending', [25000, 22000, 29000, 21000, 18000, 19000, 15000], 'rgb(239, 68, 68)');
     });

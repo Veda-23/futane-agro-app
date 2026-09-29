@@ -3,13 +3,18 @@
   <!-- 1. Executive Command Center Header Strip with Live Telemetry HUD -->
   <header class="command-center-header glass-panel" role="banner">
     <div class="cch-left">
-      <div class="cch-badge">
-        <span class="pulse-indicator" aria-hidden="true"></span>
-        <span>PLANT ACTIVE &bull; SHIFT LIVE</span>
+      <div class="erp-header-icon" aria-hidden="true">
+        <i class="bi bi-speedometer2"></i>
       </div>
-      <div class="cch-titles">
-        <h2>Executive Overview</h2>
-        <p>Today's manufacturing, inventory, sales and financial performance</p>
+      <div class="cch-text-group">
+        <div class="cch-badge">
+          <span class="pulse-indicator" aria-hidden="true"></span>
+          <span>PLANT ACTIVE &bull; SHIFT LIVE</span>
+        </div>
+        <div class="cch-titles">
+          <h2>Executive Overview</h2>
+          <p>Today's manufacturing, inventory, sales and financial performance</p>
+        </div>
       </div>
     </div>
 
@@ -120,79 +125,82 @@
   <section class="kpi-grid" aria-label="Core Manufacturing and Financial KPIs">
 
     <!-- KPI 1: Today's Production -->
-    <div class="kpi-card kpi-production stagger-1">
-      <div class="kpi-card-inner">
+    <div class="kpi-card executive-kpi-card kpi-production stagger-1">
+      <div class="kpi-top-row">
         <div class="kpi-icon-wrap kpi-icon-purple" aria-hidden="true">
-          <i class="bi bi-boxes" style="font-size: 20px;"></i>
+          <i class="bi bi-boxes" style="font-size: 19px;"></i>
         </div>
-        <div class="kpi-body">
-          <div class="kpi-label">{{ 'dashboard.todayProduction' | translate:currentLang }}</div>
-          <div class="kpi-value text-purple">{{ stats.todayProduction | number }} <span class="kpi-unit">crates</span></div>
-          <div class="kpi-meta">{{ 'dashboard.todayProduction.desc' | translate:currentLang }}</div>
-        </div>
-      </div>
-      <div class="kpi-right-wrap">
         <span class="kpi-badge-trend positive"><i class="bi bi-arrow-up-short"></i> +12.4% vs lw</span>
-        <div class="kpi-sparkline-wrap">
-          <canvas id="sparkline-prod"></canvas>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-label">{{ 'dashboard.todayProduction' | translate:currentLang }}</div>
+        <div class="kpi-value-row">
+          <div class="kpi-value text-purple">{{ stats.todayProduction | number }} <span class="kpi-unit">crates</span></div>
+          <div class="kpi-sparkline-wrap">
+            <canvas id="sparkline-prod"></canvas>
+          </div>
         </div>
+        <div class="kpi-meta">{{ 'dashboard.todayProduction.desc' | translate:currentLang }}</div>
       </div>
     </div>
 
     <!-- KPI 2: MTD Production -->
-    <div class="kpi-card kpi-monthly stagger-2">
-      <div class="kpi-card-inner">
+    <div class="kpi-card executive-kpi-card kpi-monthly stagger-2">
+      <div class="kpi-top-row">
         <div class="kpi-icon-wrap kpi-icon-blue" aria-hidden="true">
-          <i class="bi bi-calendar2-check" style="font-size: 20px;"></i>
+          <i class="bi bi-calendar2-check" style="font-size: 19px;"></i>
         </div>
-        <div class="kpi-body">
-          <div class="kpi-label">{{ 'dashboard.monthlyProduction' | translate:currentLang }}</div>
-          <div class="kpi-value text-blue">{{ stats.monthlyProduction | number }} <span class="kpi-unit">crates</span></div>
-          <div class="kpi-meta">{{ 'dashboard.monthlyProduction.desc' | translate:currentLang }}</div>
-        </div>
-      </div>
-      <div class="kpi-right-wrap">
         <span class="kpi-badge-trend positive"><i class="bi bi-bullseye me-1"></i>98.1% Target</span>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-label">{{ 'dashboard.monthlyProduction' | translate:currentLang }}</div>
+        <div class="kpi-value-row">
+          <div class="kpi-value text-blue">{{ stats.monthlyProduction | number }} <span class="kpi-unit">crates</span></div>
+          <div class="kpi-sparkline-wrap">
+            <canvas id="sparkline-monthly"></canvas>
+          </div>
+        </div>
+        <div class="kpi-meta">{{ 'dashboard.monthlyProduction.desc' | translate:currentLang }}</div>
       </div>
     </div>
 
     <!-- KPI 3: Sales Revenue -->
-    <div class="kpi-card kpi-sales stagger-3">
-      <div class="kpi-card-inner">
+    <div class="kpi-card executive-kpi-card kpi-sales stagger-3">
+      <div class="kpi-top-row">
         <div class="kpi-icon-wrap kpi-icon-green" aria-hidden="true">
-          <i class="bi bi-graph-up-arrow" style="font-size: 20px;"></i>
+          <i class="bi bi-graph-up-arrow" style="font-size: 19px;"></i>
         </div>
-        <div class="kpi-body">
-          <div class="kpi-label">{{ 'dashboard.totalSales' | translate:currentLang }}</div>
-          <div class="kpi-value text-green">₹{{ stats.totalSales | number:'1.0-0' }}</div>
-          <div class="kpi-meta">{{ 'dashboard.totalSales.desc' | translate:currentLang }}</div>
-        </div>
-      </div>
-      <div class="kpi-right-wrap">
         <span class="kpi-badge-trend positive"><i class="bi bi-speedometer2 me-1"></i>+18.2% Velocity</span>
-        <div class="kpi-sparkline-wrap">
-          <canvas id="sparkline-sales"></canvas>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-label">{{ 'dashboard.totalSales' | translate:currentLang }}</div>
+        <div class="kpi-value-row">
+          <div class="kpi-value text-green">₹{{ stats.totalSales | number:'1.0-0' }}</div>
+          <div class="kpi-sparkline-wrap">
+            <canvas id="sparkline-sales"></canvas>
+          </div>
         </div>
+        <div class="kpi-meta">{{ 'dashboard.totalSales.desc' | translate:currentLang }}</div>
       </div>
     </div>
 
     <!-- KPI 4: Pending Overdues -->
-    <div class="kpi-card kpi-pending stagger-4">
-      <div class="kpi-card-inner">
+    <div class="kpi-card executive-kpi-card kpi-pending stagger-4">
+      <div class="kpi-top-row">
         <div class="kpi-icon-wrap kpi-icon-red" aria-hidden="true">
-          <i class="bi bi-clock-history" style="font-size: 20px;"></i>
+          <i class="bi bi-clock-history" style="font-size: 19px;"></i>
         </div>
-        <div class="kpi-body">
-          <div class="kpi-label">{{ 'dashboard.pendingAmount' | translate:currentLang }}</div>
-          <div class="kpi-value text-red">₹{{ stats.pendingAmount | number:'1.0-0' }}</div>
-          <div class="kpi-meta">{{ 'dashboard.pendingAmount.desc' | translate:currentLang }}</div>
-        </div>
-      </div>
-      <div class="kpi-right-wrap">
         <span class="kpi-badge-trend neutral"><i class="bi bi-hourglass-split me-1"></i>23.7% Unbilled</span>
-        <div class="kpi-sparkline-wrap">
-          <canvas id="sparkline-pending"></canvas>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-label">{{ 'dashboard.pendingAmount' | translate:currentLang }}</div>
+        <div class="kpi-value-row">
+          <div class="kpi-value text-red">₹{{ stats.pendingAmount | number:'1.0-0' }}</div>
+          <div class="kpi-sparkline-wrap">
+            <canvas id="sparkline-pending"></canvas>
+          </div>
         </div>
+        <div class="kpi-meta">{{ 'dashboard.pendingAmount.desc' | translate:currentLang }}</div>
       </div>
     </div>
 
@@ -247,7 +255,7 @@
   <section class="secondary-telemetry-grid" aria-label="Operational Stock and Logistics Telemetry">
     <!-- Finished Goods Inventory -->
     <div class="telemetry-pill-card" (click)="quickNavigate('inventory')" role="button" tabindex="0" title="Click to view finished goods inventory">
-      <div class="tpc-icon" style="background: var(--color-warning-bg); color: var(--color-warning);"><i class="bi bi-box-seam"></i></div>
+      <div class="tpc-icon" style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: #ffffff; box-shadow: 0 4px 14px rgba(245,158,11,0.35);"><i class="bi bi-box-seam"></i></div>
       <div class="tpc-content">
         <div class="tpc-header">
           <span class="tpc-title">{{ 'dashboard.inventoryStock' | translate:currentLang }}</span>
@@ -263,7 +271,7 @@
 
     <!-- Raw Material Polymer -->
     <div class="telemetry-pill-card" (click)="quickNavigate('raw-materials')" role="button" tabindex="0" title="Click to view raw polymer inventory">
-      <div class="tpc-icon" style="background: var(--accent-soft); color: var(--accent);"><i class="bi bi-droplet-half"></i></div>
+      <div class="tpc-icon" style="background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%); color: #ffffff; box-shadow: 0 4px 14px rgba(11,71,212,0.32);"><i class="bi bi-droplet-half"></i></div>
       <div class="tpc-content">
         <div class="tpc-header">
           <span class="tpc-title">{{ 'dashboard.rawMaterialStock' | translate:currentLang }}</span>
@@ -279,7 +287,7 @@
 
     <!-- Active Factory Staff -->
     <div class="telemetry-pill-card" (click)="quickNavigate('employees')" role="button" tabindex="0" title="Click to view factory workforce">
-      <div class="tpc-icon" style="background: var(--color-info-bg); color: var(--color-info);"><i class="bi bi-people-fill"></i></div>
+      <div class="tpc-icon" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #ffffff; box-shadow: 0 4px 14px rgba(16,185,129,0.32);"><i class="bi bi-people-fill"></i></div>
       <div class="tpc-content">
         <div class="tpc-header">
           <span class="tpc-title">{{ 'dashboard.employees' | translate:currentLang }}</span>
@@ -295,7 +303,7 @@
 
     <!-- Logistics & Freight Balance -->
     <div class="telemetry-pill-card" (click)="quickNavigate('transports')" role="button" tabindex="0" title="Click to view freight logistics">
-      <div class="tpc-icon" style="background: var(--color-danger-bg); color: var(--color-danger);"><i class="bi bi-truck"></i></div>
+      <div class="tpc-icon" style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); color: #ffffff; box-shadow: 0 4px 14px rgba(239,68,68,0.32);"><i class="bi bi-truck"></i></div>
       <div class="tpc-content">
         <div class="tpc-header">
           <span class="tpc-title">{{ 'dashboard.transportCost' | translate:currentLang }}</span>

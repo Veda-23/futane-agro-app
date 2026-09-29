@@ -2,57 +2,68 @@
 
   <!-- Top Banner: Futuristic Command Center HUD -->
   <div class="admin-header-banner">
-    <div class="banner-left">
-      <div class="banner-icon-box">
-        <i class="bi bi-sliders"></i>
-      </div>
-      <div class="banner-titles">
-        <h2>
-          Super Admin Control Center
-          <span class="super-admin-badge">
-            <i class="bi bi-shield-check" style="font-size: 14px;"></i>
-            SUPER ADMIN
-          </span>
-          <span class="hud-live-pill">
-            <span class="hud-live-dot"></span>
-            LIVE SYNC
-          </span>
-        </h2>
-        <p>Centralized enterprise operating suite for branding, business rules, API gateways, and governance.</p>
-        
-        <!-- Futuristic HUD Micro-Telemetry Strip -->
-        <div class="hud-telemetry-strip">
-          <span class="hud-metric" title="STOMP WebSocket broker live connection">
-            <i class="bi bi-broadcast hud-icon"></i>
-            WS Broker: <strong>Connected</strong>
-          </span>
-          <span class="hud-divider">|</span>
-          <span class="hud-metric" title="In-Memory Cache TTL">
-            <i class="bi bi-lightning-charge-fill hud-icon"></i>
-            Caffeine: <strong>30m TTL Active</strong>
-          </span>
-          <span class="hud-divider">|</span>
-          <span class="hud-metric" title="Database Health Status">
-            <i class="bi bi-database hud-icon" [style.color]="systemHealth?.db === 'HEALTHY' ? '#10b981' : '#ef4444'"></i>
-            DB: <strong [style.color]="systemHealth?.db === 'HEALTHY' ? '#10b981' : '#ef4444'">{{ systemHealth?.db === 'HEALTHY' ? 'Healthy' : 'Degraded' }}</strong>
-          </span>
-          <span class="hud-divider">|</span>
-          <span class="hud-metric" title="Mail Service Connectivity">
-            <i class="bi bi-envelope hud-icon" [style.color]="systemHealth?.mail === 'CONNECTED' ? '#10b981' : '#ef4444'"></i>
-            Mail: <strong [style.color]="systemHealth?.mail === 'CONNECTED' ? '#10b981' : '#ef4444'">{{ systemHealth?.mail === 'CONNECTED' ? 'Connected' : 'Disconnected' }}</strong>
-          </span>
-          <span class="hud-divider">|</span>
-          <span class="hud-metric" title="Audit Trail IP Logging">
-            <i class="bi bi-shield-lock hud-icon"></i>
-            Audit Guard: <strong>IP Logged</strong>
-          </span>
+    <div class="breadcrumb-trail" style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; width: 100%;">
+      <i class="bi bi-house" style="font-size: 12px; color: #94a3b8;"></i>
+      <span>Futane Agro ERP</span>
+      <span style="color: #cbd5e1;">/</span>
+      <span>Administration</span>
+      <span style="color: #cbd5e1;">/</span>
+      <span style="color: #0B47D4; font-weight: 700;">Super Admin Control Center</span>
+    </div>
+
+    <div class="banner-main-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 14px;">
+      <div class="banner-left">
+        <div class="banner-icon-box">
+          <i class="bi bi-sliders"></i>
+        </div>
+        <div class="banner-titles">
+          <h2>
+            Super Admin Control Center
+            <span class="super-admin-badge">
+              <i class="bi bi-shield-check" style="font-size: 14px;"></i>
+              SUPER ADMIN
+            </span>
+            <span class="hud-live-pill">
+              <span class="hud-live-dot"></span>
+              LIVE SYNC
+            </span>
+          </h2>
+          <p>Centralized enterprise operating suite for branding, business rules, API gateways, and governance.</p>
+          
+          <!-- Futuristic HUD Micro-Telemetry Strip -->
+          <div class="hud-telemetry-strip">
+            <span class="hud-metric" title="STOMP WebSocket broker live connection">
+              <i class="bi bi-broadcast hud-icon"></i>
+              WS Broker: <strong>Connected</strong>
+            </span>
+            <span class="hud-divider">|</span>
+            <span class="hud-metric" title="In-Memory Cache TTL">
+              <i class="bi bi-lightning-charge-fill hud-icon"></i>
+              Caffeine: <strong>30m TTL Active</strong>
+            </span>
+            <span class="hud-divider">|</span>
+            <span class="hud-metric" title="Database Health Status">
+              <i class="bi bi-database hud-icon" [style.color]="systemHealth?.db === 'HEALTHY' ? '#10b981' : '#ef4444'"></i>
+              DB: <strong [style.color]="systemHealth?.db === 'HEALTHY' ? '#10b981' : '#ef4444'">{{ systemHealth?.db === 'HEALTHY' ? 'Healthy' : 'Degraded' }}</strong>
+            </span>
+            <span class="hud-divider">|</span>
+            <span class="hud-metric" title="Mail Service Connectivity">
+              <i class="bi bi-envelope hud-icon" [style.color]="systemHealth?.mail === 'CONNECTED' ? '#10b981' : '#ef4444'"></i>
+              Mail: <strong [style.color]="systemHealth?.mail === 'CONNECTED' ? '#10b981' : '#ef4444'">{{ systemHealth?.mail === 'CONNECTED' ? 'Connected' : 'Disconnected' }}</strong>
+            </span>
+            <span class="hud-divider">|</span>
+            <span class="hud-metric" title="Audit Trail IP Logging">
+              <i class="bi bi-shield-lock hud-icon"></i>
+              Audit Guard: <strong>IP Logged</strong>
+            </span>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="banner-right">
-      <button class="btn btn-outline-secondary btn-sm hud-sync-btn" (click)="loadAllControlCenterData(true)" title="Reload settings and evict stale local state">
-        <i class="bi bi-arrow-clockwise" style="font-size: 15px; vertical-align: middle;"></i> Sync Data
-      </button>
+      <div class="banner-right">
+        <button class="btn btn-outline-secondary btn-sm hud-sync-btn" (click)="loadAllControlCenterData(true)" title="Reload settings and evict stale local state">
+          <i class="bi bi-arrow-clockwise" style="font-size: 15px; vertical-align: middle;"></i> Sync Data
+        </button>
+      </div>
     </div>
   </div>
 

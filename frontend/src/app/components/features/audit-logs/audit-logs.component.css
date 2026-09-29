@@ -27,15 +27,13 @@
 /* ── 1. SECURITY HEADER (Enterprise Consistent Light & Dark) ────────── */
 .security-header-wrapper {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   background: var(--bg-surface, #ffffff);
   border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: var(--radius-md, 8px);
-  padding: 12px 18px;
+  border-radius: 16px;
+  padding: 16px 20px;
   color: var(--text-primary, #0f172a);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
-  flex-wrap: wrap;
+  box-shadow: 0 4px 20px -2px rgba(11, 71, 212, 0.06), 0 2px 6px -1px rgba(30, 27, 75, 0.04);
   gap: 12px;
 }
 
@@ -48,21 +46,22 @@ body.dark-theme .security-header-wrapper {
 .header-left-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .security-badge {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  border-radius: 8px;
-  background: var(--primary-soft, #ecfdf5);
-  border: 1px solid var(--primary-border, #a7f3d0);
-  color: var(--primary, #059669);
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+  border: none !important;
+  color: #ffffff !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 22px;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.28);
 }
 
 .security-title {
@@ -566,3 +565,19 @@ body.dark-theme .security-select {
   max-height: 300px;
   overflow-y: auto;
 }
+
+/* =========================================================================
+   DESIGN SYSTEM PATCH — Density, Badge variants, Pagination
+   ========================================================================= */
+.density-group { display: flex; border: 1px solid var(--border-color, #cbd5e1); border-radius: 6px; overflow: hidden; height: 36px; }
+.density-btn { background: var(--bg-surface, #fff); border: none; color: var(--text-secondary, #64748b); padding: 0 10px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; }
+.density-btn:hover { background: var(--bg-hover, #f1f5f9); color: var(--text-primary, #0f172a); }
+.density-btn.active { background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important; color: #fff; font-weight: 700; box-shadow: 0 1px 2px rgba(11, 71, 212, 0.3); }
+.erp-badge-success, .badge-success { background: #ECFDF5 !important; color: #065F46 !important; border: 1px solid #A7F3D0 !important; }
+.erp-badge-info, .badge-info { background: #F0F9FF !important; color: #0369A1 !important; border: 1px solid #BAE6FD !important; }
+.erp-badge-warning, .badge-warning { background: #FFFBEB !important; color: #92400E !important; border: 1px solid #FDE68A !important; }
+.erp-badge-danger, .badge-danger { background: #FEF2F2 !important; color: #991B1B !important; border: 1px solid #FECACA !important; }
+.erp-pagination { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-top: 1px solid var(--border-subtle, #f1f5f9); gap: 12px; flex-wrap: wrap; }
+.erp-pagination-info { font-size: 12.5px; color: var(--text-secondary, #64748b); }
+.erp-pagination-controls { display: flex; align-items: center; gap: 8px; }
+.erp-page-indicator { font-size: 12.5px; font-weight: 600; color: var(--text-secondary, #475569); }
