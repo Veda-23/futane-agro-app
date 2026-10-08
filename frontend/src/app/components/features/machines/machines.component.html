@@ -29,12 +29,6 @@
 
       <!-- Right Header Actions -->
       <div class="header-right-actions">
-        <!-- Telemetry Live Pill -->
-        <div class="erp-telemetry-pill">
-          <span class="erp-telemetry-dot pulse"></span>
-          <span class="erp-telemetry-text">FLEET: {{ fleetCapacityPerHour | number }} CRATES/HR &bull; {{ fleetUtilizationRate }}% UTIL</span>
-        </div>
-
         <button type="button" class="btn-header-action btn-header-secondary" (click)="loadData()" [disabled]="isLoading" title="Refresh machinery records">
           <i class="bi bi-arrow-clockwise" [class.spin-anim]="isLoading"></i>
           <span>Refresh</span>
@@ -72,10 +66,16 @@
       <p class="header-subtitle">
         Heavy injection moulding units, hourly throughput capacity, and breakdown maintenance ledger
       </p>
-      <span class="header-formula-badge" title="Fleet Throughput Formula: Active Units × Unit Crates/Hr = Total Fleet Throughput">
-        <i class="bi bi-calculator me-1"></i>
-        <span>Active Units &times; Hourly Crates/Hr = Total Fleet Throughput</span>
-      </span>
+      <div class="header-secondary-badges">
+        <div class="erp-telemetry-pill">
+          <span class="erp-telemetry-dot pulse"></span>
+          <span class="erp-telemetry-text">FLEET: {{ fleetCapacityPerHour | number }} CRATES/HR &bull; {{ fleetUtilizationRate }}% UTIL</span>
+        </div>
+        <span class="header-formula-badge" title="Fleet Throughput Formula: Active Units × Unit Crates/Hr = Total Fleet Throughput">
+          <i class="bi bi-calculator me-1"></i>
+          <span>Active Units &times; Hourly Crates/Hr = Total Fleet Throughput</span>
+        </span>
+      </div>
     </div>
   </header>
 
@@ -206,53 +206,55 @@
         </button>
       </div>
       
-      <div class="erp-drawer-body">
-        <form (ngSubmit)="saveMachine()" class="d-flex flex-column gap-3">
-          <div class="erp-form-group">
-            <label class="erp-label required">Machine Name</label>
-            <input type="text" class="erp-input" [(ngModel)]="machineForm.machineName" name="mName" required placeholder="e.g. Windsor IMM 180T">
-          </div>
+      <form (ngSubmit)="saveMachine()" class="d-flex flex-column h-100" style="overflow: hidden; min-height: 0; flex: 1 1 auto; margin: 0;">
+        <div class="erp-drawer-body">
+          <div class="d-flex flex-column gap-3">
+            <div class="erp-form-group">
+              <label class="erp-label required">Machine Name</label>
+              <input type="text" class="erp-input" [(ngModel)]="machineForm.machineName" name="mName" required placeholder="e.g. Windsor IMM 180T">
+            </div>
 
-          <div class="erp-form-group">
-            <label class="erp-label required">Asset Tag / Code</label>
-            <input type="text" class="erp-input text-uppercase font-mono" [(ngModel)]="machineForm.machineCode" name="mCode" required placeholder="e.g. IMM-003">
-          </div>
+            <div class="erp-form-group">
+              <label class="erp-label required">Asset Tag / Code</label>
+              <input type="text" class="erp-input text-uppercase font-mono" [(ngModel)]="machineForm.machineCode" name="mCode" required placeholder="e.g. IMM-003">
+            </div>
 
-          <div class="erp-form-group">
-            <label class="erp-label">Rated Capacity (Crates/hr)</label>
-            <input type="number" class="erp-input font-mono" [(ngModel)]="machineForm.capacityPerHour" name="mCapacity" min="0" step="10">
-          </div>
+            <div class="erp-form-group">
+              <label class="erp-label">Rated Capacity (Crates/hr)</label>
+              <input type="number" class="erp-input font-mono" [(ngModel)]="machineForm.capacityPerHour" name="mCapacity" min="0" step="10">
+            </div>
 
-          <div class="erp-form-group">
-            <label class="erp-label">Installation Date</label>
-            <input type="date" class="erp-input font-mono" [(ngModel)]="machineForm.installedDate" name="mDate">
-          </div>
+            <div class="erp-form-group">
+              <label class="erp-label">Installation Date</label>
+              <input type="date" class="erp-input font-mono" [(ngModel)]="machineForm.installedDate" name="mDate">
+            </div>
 
-          <div class="erp-form-group">
-            <label class="erp-label">Operating Status</label>
-            <select class="erp-input" [(ngModel)]="machineForm.status" name="mStatus">
-              <option value="Running">Running (Active Production)</option>
-              <option value="Idle">Idle (Ready / Standby)</option>
-              <option value="Under Maintenance">Under Maintenance (Servicing)</option>
-              <option value="Breakdown">Breakdown (Critical Outage)</option>
-            </select>
-          </div>
+            <div class="erp-form-group">
+              <label class="erp-label">Operating Status</label>
+              <select class="erp-input" [(ngModel)]="machineForm.status" name="mStatus">
+                <option value="Running">Running (Active Production)</option>
+                <option value="Idle">Idle (Ready / Standby)</option>
+                <option value="Under Maintenance">Under Maintenance (Servicing)</option>
+                <option value="Breakdown">Breakdown (Critical Outage)</option>
+              </select>
+            </div>
 
-          <!-- Live Output Preview Badge -->
-          <div *ngIf="machineForm.capacityPerHour > 0" class="erp-alert-info mt-3 d-flex justify-content-between align-items-center">
-            <span class="small"><i class="bi bi-lightning-charge-fill me-1 text-primary"></i> Daily Rated Output:</span>
-            <strong class="font-mono text-primary">{{ machineForm.capacityPerHour * 24 | number:'1.0-0' }} crates/day</strong>
+            <!-- Live Output Preview Badge -->
+            <div *ngIf="machineForm.capacityPerHour > 0" class="erp-alert-info mt-2 d-flex justify-content-between align-items-center">
+              <span class="small"><i class="bi bi-lightning-charge-fill me-1 text-primary"></i> Daily Rated Output:</span>
+              <strong class="font-mono text-primary">{{ machineForm.capacityPerHour * 24 | number:'1.0-0' }} crates/day</strong>
+            </div>
           </div>
+        </div>
 
-          <div class="d-flex gap-2 mt-4">
-            <button type="submit" class="btn w-100" [ngClass]="editingMachineId ? 'btn-warning' : 'btn-primary'">
-              <i class="bi me-2" [ngClass]="editingMachineId ? 'bi-check2-circle' : 'bi-plus-lg'"></i>
-              {{ editingMachineId ? 'Update Equipment Profile' : 'Save Machine Unit' }}
-            </button>
-            <button type="button" class="btn btn-outline w-100" (click)="cancelEditMachine()">Cancel</button>
-          </div>
-        </form>
-      </div>
+        <div class="erp-drawer-footer">
+          <button type="button" class="btn btn-outline" (click)="cancelEditMachine()">Cancel</button>
+          <button type="submit" class="btn" [ngClass]="editingMachineId ? 'btn-warning' : 'btn-primary'">
+            <i class="bi me-2" [ngClass]="editingMachineId ? 'bi-check2-circle' : 'bi-plus-lg'"></i>
+            {{ editingMachineId ? 'Update Equipment Profile' : 'Save Machine Unit' }}
+          </button>
+        </div>
+      </form>
     </div>
 
     <!-- SLIDE-OUT DRAWER FOR LOG BREAKDOWN -->
@@ -268,52 +270,54 @@
         </button>
       </div>
       
-      <div class="erp-drawer-body">
-        <form (ngSubmit)="saveBreakdown()" class="d-flex flex-column gap-3">
-          <div class="erp-form-group">
-            <label class="erp-label required">Affected Equipment</label>
-            <select class="erp-input" [(ngModel)]="breakdownForm.machineId" name="bdMachine" required>
-              <option value="" disabled>-- Select Machine Unit --</option>
-              <option *ngFor="let m of machinesList" [value]="m.id">{{ m.machineName }} ({{ m.machineCode || 'IMM-' + m.id }})</option>
-            </select>
-          </div>
+      <form (ngSubmit)="saveBreakdown()" class="d-flex flex-column h-100" style="overflow: hidden; min-height: 0; flex: 1 1 auto; margin: 0;">
+        <div class="erp-drawer-body">
+          <div class="d-flex flex-column gap-3">
+            <div class="erp-form-group">
+              <label class="erp-label required">Affected Equipment</label>
+              <select class="erp-input" [(ngModel)]="breakdownForm.machineId" name="bdMachine" required>
+                <option value="" disabled>-- Select Machine Unit --</option>
+                <option *ngFor="let m of machinesList" [value]="m.id">{{ m.machineName }} ({{ m.machineCode || 'IMM-' + m.id }})</option>
+              </select>
+            </div>
 
-          <div class="erp-form-group">
-            <label class="erp-label required">Incident Date</label>
-            <input type="date" class="erp-input font-mono" [(ngModel)]="breakdownForm.breakdownDate" name="bdDate" required>
-          </div>
+            <div class="erp-form-group">
+              <label class="erp-label required">Incident Date</label>
+              <input type="date" class="erp-input font-mono" [(ngModel)]="breakdownForm.breakdownDate" name="bdDate" required>
+            </div>
 
-          <div class="erp-form-group">
-            <label class="erp-label required">Downtime (Hours)</label>
-            <input type="number" class="erp-input font-mono" [(ngModel)]="breakdownForm.downtimeHours" name="bdHours" min="0" step="0.5" required>
-          </div>
+            <div class="erp-form-group">
+              <label class="erp-label required">Downtime (Hours)</label>
+              <input type="number" class="erp-input font-mono" [(ngModel)]="breakdownForm.downtimeHours" name="bdHours" min="0" step="0.5" required>
+            </div>
 
-          <div class="erp-form-group">
-            <label class="erp-label required">Fault / Cause Description</label>
-            <textarea class="erp-input" [(ngModel)]="breakdownForm.description" name="bdDesc" rows="3" required placeholder="e.g. Hydraulic valve leak, seal replacement..."></textarea>
-          </div>
+            <div class="erp-form-group">
+              <label class="erp-label required">Fault / Cause Description</label>
+              <textarea class="erp-input" [(ngModel)]="breakdownForm.description" name="bdDesc" rows="3" required placeholder="e.g. Hydraulic valve leak, seal replacement..."></textarea>
+            </div>
 
-          <div class="erp-form-group">
-            <label class="erp-label">Resolution / Restored Date</label>
-            <input type="date" class="erp-input font-mono" [(ngModel)]="breakdownForm.resolvedDate" name="bdResolved">
-            <div class="text-muted mt-1" style="font-size: 11px;">Leave blank if unit is still offline undergoing repairs</div>
-          </div>
+            <div class="erp-form-group">
+              <label class="erp-label">Resolution / Restored Date</label>
+              <input type="date" class="erp-input font-mono" [(ngModel)]="breakdownForm.resolvedDate" name="bdResolved">
+              <div class="text-muted mt-1" style="font-size: 11px;">Leave blank if unit is still offline undergoing repairs</div>
+            </div>
 
-          <!-- Live Disruption Impact Badge -->
-          <div *ngIf="breakdownForm.downtimeHours > 0" class="erp-alert-info mt-3 d-flex justify-content-between align-items-center" style="border-color: rgba(239, 68, 68, 0.3);">
-            <span class="small text-danger"><i class="bi bi-exclamation-octagon-fill me-1"></i> Fleet Disruption:</span>
-            <strong class="font-mono text-danger">-{{ breakdownForm.downtimeHours * 450 | number:'1.0-0' }} crates lost</strong>
+            <!-- Live Disruption Impact Badge -->
+            <div *ngIf="breakdownForm.downtimeHours > 0" class="erp-alert-info mt-2 d-flex justify-content-between align-items-center" style="border-color: rgba(239, 68, 68, 0.3);">
+              <span class="small text-danger"><i class="bi bi-exclamation-octagon-fill me-1"></i> Fleet Disruption:</span>
+              <strong class="font-mono text-danger">-{{ breakdownForm.downtimeHours * 450 | number:'1.0-0' }} crates lost</strong>
+            </div>
           </div>
+        </div>
 
-          <div class="d-flex gap-2 mt-4">
-            <button type="submit" class="btn w-100" [ngClass]="editingBreakdownId ? 'btn-warning' : 'btn-primary'">
-              <i class="bi me-2" [ngClass]="editingBreakdownId ? 'bi-check2-circle' : 'bi-plus-lg'"></i>
-              {{ editingBreakdownId ? 'Update Incident Record' : 'Record Breakdown Log' }}
-            </button>
-            <button type="button" class="btn btn-outline w-100" (click)="cancelEditBreakdown()">Cancel</button>
-          </div>
-        </form>
-      </div>
+        <div class="erp-drawer-footer">
+          <button type="button" class="btn btn-outline" (click)="cancelEditBreakdown()">Cancel</button>
+          <button type="submit" class="btn btn-danger">
+            <i class="bi me-2" [ngClass]="editingBreakdownId ? 'bi-check2-circle' : 'bi-plus-lg'"></i>
+            {{ editingBreakdownId ? 'Update Incident Record' : 'Record Breakdown Log' }}
+          </button>
+        </div>
+      </form>
     </div>
 
     <!-- RIGHT PANEL: Data Ledger Table Card -->

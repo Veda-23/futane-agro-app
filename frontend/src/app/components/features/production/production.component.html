@@ -837,33 +837,56 @@
 <!-- ============================================================ -->
 <div *ngIf="activeTab === 'monthly-production'" class="production-screen-wrapper">
   
-  <!-- 1. COMPACT PROFESSIONAL PAGE HEADER -->
-  <header class="production-page-header">
-    <div class="header-left-col">
-      <div class="header-title-row">
+  <!-- 1. BREADCRUMB TRAIL (LAYER 1) -->
+  <div class="production-breadcrumb-trail no-print">
+    <i class="bi bi-house breadcrumb-home-ico"></i>
+    <span>Futane Agro ERP</span>
+    <span class="crumb-separator">/</span>
+    <span>Manufacturing</span>
+    <span class="crumb-separator">/</span>
+    <span class="crumb-active">Monthly Production &amp; Energy Summary</span>
+  </div>
+
+  <!-- 2. MASTER PAGE HEADER CARD (LAYER 2) -->
+  <header class="production-page-header no-print">
+    <div class="header-primary-row">
+      <div class="header-left-col">
         <div class="header-icon-box">
           <i class="bi bi-bar-chart-steps"></i>
         </div>
-        <div>
-          <h1 class="header-main-title">{{ 'nav.monthly-production' | translate:currentLang }}</h1>
-          <p class="header-subtitle">Monthly manufacturing volume, power unit consumption & electricity cost per crate</p>
+        <div class="header-titles">
+          <div class="title-with-badge">
+            <h1 class="header-main-title">{{ 'nav.monthly-production' | translate:currentLang }}</h1>
+            <span class="header-count-pill">{{ ppmList.length }} Months</span>
+          </div>
         </div>
+      </div>
+
+      <!-- Right-side actions: Refresh, + New Summary -->
+      <div class="header-right-actions">
+        <!-- Refresh Data Button -->
+        <button type="button" class="btn-header-action btn-header-secondary" (click)="loadData()" [disabled]="isRefreshing" title="Refresh monthly data" aria-label="Refresh monthly data">
+          <i class="bi bi-arrow-clockwise" [class.spin-anim]="isRefreshing"></i>
+          <span>Refresh</span>
+        </button>
+
+        <!-- Primary Action: + Add Monthly Summary -->
+        <button type="button" *ngIf="!isViewer()" class="btn-header-action btn-primary btn-header-primary" (click)="togglePpmFormVisibility()" [title]="isPpmFormVisible ? 'Collapse Summary Form' : 'Add Monthly Summary'" aria-label="Add Monthly Summary">
+          <i class="bi" [ngClass]="isPpmFormVisible ? 'bi-dash-lg' : 'bi-plus-lg'"></i>
+          <span>{{ isPpmFormVisible ? 'Hide Form' : '+ Add Summary' }}</span>
+        </button>
       </div>
     </div>
 
-    <!-- Right-side actions: Refresh, + New Summary -->
-    <div class="header-right-col">
-      <!-- Refresh Data Button -->
-      <button type="button" class="btn btn-secondary btn-header-action" (click)="loadData()" [disabled]="isRefreshing" title="Refresh monthly data" aria-label="Refresh monthly data">
-        <i class="bi bi-arrow-clockwise" [class.spin-anim]="isRefreshing"></i>
-        <span class="btn-label-text">Refresh</span>
-      </button>
-
-      <!-- Primary Action: + Add Monthly Summary -->
-      <button type="button" *ngIf="!isViewer()" class="btn btn-primary btn-header-action" (click)="togglePpmFormVisibility()" [title]="isPpmFormVisible ? 'Collapse Summary Form' : 'Add Monthly Summary'" aria-label="Add Monthly Summary">
-        <i class="bi" [ngClass]="isPpmFormVisible ? 'bi-dash-lg' : 'bi-plus-lg'"></i>
-        <span class="btn-label-text">{{ isPpmFormVisible ? 'Hide Form' : 'Add Summary' }}</span>
-      </button>
+    <!-- Secondary Row: Subtitle & Contextual Manufacturing Formula -->
+    <div class="header-secondary-row">
+      <p class="header-subtitle">
+        Monthly manufacturing volume, power unit consumption &amp; electricity cost per crate
+      </p>
+      <span class="header-formula-badge" title="Energy Overhead Formula: Electricity Bill ÷ Total Crates = Power Cost / Crate">
+        <i class="bi bi-calculator me-1"></i>
+        <span>Electricity Bill &divide; Total Crates = Power Cost / Crate</span>
+      </span>
     </div>
   </header>
 

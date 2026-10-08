@@ -707,14 +707,14 @@
             <!-- Outward Status -->
             <th *ngIf="isColVisible('outwardStatus')" class="no-sort th-outward">
               <div class="th-content">
-                <span>Material Outward</span>
+                <span>Outward</span>
               </div>
             </th>
 
             <!-- Payment Status -->
             <th *ngIf="isColVisible('status')" class="no-sort th-status">
               <div class="th-content">
-                <span>Payment Status</span>
+                <span>Payment</span>
               </div>
             </th>
 
@@ -821,7 +821,7 @@
                 <i class="bi bi-check-circle-fill"></i> Settled
               </span>
               <span *ngIf="(sale.remaining || 0) > 0 && (sale.paid || 0) > 0" class="status-pill partial">
-                <i class="bi bi-pie-chart"></i> Partial (Due {{ sale.remaining | inr }})
+                <i class="bi bi-pie-chart"></i> Partial
               </span>
               <span *ngIf="(sale.remaining || 0) > 0 && (sale.paid || 0) === 0" class="status-pill pending">
                 <i class="bi bi-exclamation-circle-fill"></i> Unpaid
@@ -850,7 +850,6 @@
                   title="Collect payment via UPI / Razorpay Gateway"
                   aria-label="Collect Payment">
                   <i class="bi bi-qr-code"></i>
-                  <span>Pay</span>
                 </button>
 
                 <!-- Material Outward / Dispatch Action -->
@@ -863,7 +862,6 @@
                   [title]="isDispatched(sale) ? 'View / Update Material Outward' : 'Create Material Outward Dispatch'"
                   aria-label="Material Outward Dispatch">
                   <i class="bi bi-truck-front"></i>
-                  <span>{{ isDispatched(sale) ? 'Outward' : 'Dispatch' }}</span>
                 </button>
 
                 <!-- Receipt Button -->
