@@ -68,6 +68,24 @@ export class DispatchComponent implements OnInit {
   editingDispatchId: any = null;
   isFormOpen = false;
 
+  // Dossier Modal State
+  showDispatchDossierModal = false;
+  selectedDispatchForDossier: any = null;
+
+  openDispatchDossier(d: any): void {
+    this.selectedDispatchForDossier = d;
+    this.showDispatchDossierModal = true;
+  }
+
+  closeDispatchDossier(): void {
+    this.showDispatchDossierModal = false;
+    this.selectedDispatchForDossier = null;
+  }
+
+  printDispatchDossier(): void {
+    window.print();
+  }
+
   toggleForm(): void {
     this.isFormOpen = !this.isFormOpen;
     if (!this.isFormOpen) {
@@ -96,6 +114,9 @@ export class DispatchComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    try {
+      localStorage.removeItem('cols_width_dispatch_registry_table');
+    } catch (_) {}
     this.initColumns();
     this.loadData();
   }
@@ -166,6 +187,30 @@ export class DispatchComponent implements OnInit {
       return sum + qty;
     }, 0);
   }
+
+  get filteredCratesTotal(): number {
+    return this.filteredDispatches.reduce((sum, d) => {
+      const qty = Number(d.sale?.quantity || d.sale?.cratesCount || d.quantity || 0);
+      return sum + qty;
+    }, 0);
+  }
+
+  formatManifestId(id: any): string {
+    if (!id && id !== 0) return 'DSP-000';
+    const str = String(id).trim();
+    if (/^\d+$/.test(str)) {
+      return `DSP-${str.padStart(4, '0')}`;
+    }
+    if (str.includes('-')) {
+      const parts = str.split('-');
+      return `DSP-${parts[0].toUpperCase()}`;
+    }
+    if (str.length > 8) {
+      return `DSP-${str.slice(0, 8).toUpperCase()}`;
+    }
+    return `DSP-${str.toUpperCase()}`;
+  }
+
 
   // Sales available to dispatch (not yet dispatched, or currently being edited)
   get availableSales(): any[] {

@@ -1,115 +1,170 @@
 <div class="dispatch-module-container animated-fade erp-module-container">
-  <!-- 1. Breadcrumbs & Telemetry Header -->
-  <header class="erp-page-header no-print">
-    <div class="erp-header-title-group">
-      <nav class="erp-breadcrumb" aria-label="Breadcrumb">
-        <ol class="erp-breadcrumb-list">
-          <li class="erp-breadcrumb-item"><i class="bi bi-house-door me-1"></i>Futane Agro ERP</li>
-          <li class="erp-breadcrumb-separator">/</li>
-          <li class="erp-breadcrumb-item">Supply Chain</li>
-          <li class="erp-breadcrumb-separator">/</li>
-          <li class="erp-breadcrumb-item active">Logistics &amp; Dispatch</li>
-        </ol>
-      </nav>
-      <div class="erp-title-with-badge">
-        <div class="erp-header-icon">
+
+  <!-- ── 1. BREADCRUMBS TRAIL ── -->
+  <div class="dispatch-breadcrumb-trail no-print">
+    <i class="bi bi-house breadcrumb-home-ico"></i>
+    <span>Futane Agro ERP</span>
+    <span class="crumb-separator">/</span>
+    <span>Supply Chain &amp; Logistics</span>
+    <span class="crumb-separator">/</span>
+    <span class="crumb-active">Logistics &amp; Dispatch Registry</span>
+  </div>
+
+  <!-- ── 2. MASTER PAGE HEADER CARD ── -->
+  <header class="dispatch-page-header no-print">
+    <!-- Top Row: Icon + Title + Count Pill on Left | Action Buttons on Right -->
+    <div class="header-primary-row">
+      <div class="header-left-col">
+        <div class="header-icon-box">
           <i class="bi bi-truck"></i>
         </div>
-        <div>
-          <h1 class="erp-page-title">Logistics &amp; Dispatch Registry</h1>
-          <p class="erp-page-subtitle">Outbound finished goods consignments, delivery tracking, vehicle manifests, and QR verification.</p>
+        <div class="header-titles">
+          <div class="title-with-badge">
+            <h1 class="header-main-title">Logistics &amp; Dispatch Registry</h1>
+            <span class="header-count-pill">{{ totalDispatchesCount }} Manifests</span>
+          </div>
         </div>
+      </div>
+
+      <!-- Right-side actions -->
+      <div class="header-right-actions">
+        <button type="button" class="btn-header-action btn-header-secondary" (click)="openScanner()" title="Scan QR Code / Barcode">
+          <i class="bi bi-qr-code-scan"></i>
+          <span>Scan QR</span>
+        </button>
+
+        <button type="button" class="btn-header-action btn-header-secondary" (click)="loadData()" [disabled]="isLoading" title="Refresh dispatch records">
+          <i class="bi bi-arrow-clockwise" [class.spin-anim]="isLoading"></i>
+          <span>Refresh</span>
+        </button>
+
+        <button type="button" class="btn-header-action btn-header-secondary" (click)="exportData('csv')" title="Export manifests to CSV">
+          <i class="bi bi-download"></i>
+          <span>CSV</span>
+        </button>
+
+        <button type="button" class="btn-header-action btn-header-secondary" (click)="exportData('excel')" title="Export manifests for Microsoft Excel">
+          <i class="bi bi-file-earmark-excel"></i>
+          <span>Excel</span>
+        </button>
+
+        <button type="button" 
+                class="btn-header-action btn-primary btn-header-primary" 
+                *ngIf="!isViewer()"
+                (click)="toggleForm()" 
+                [title]="isFormOpen ? 'Close form' : 'Create new dispatch manifest'">
+          <i class="bi" [ngClass]="isFormOpen ? 'bi-x-lg' : 'bi-plus-lg'"></i>
+          <span>{{ isFormOpen ? 'Close Form' : '+ Create Manifest' }}</span>
+        </button>
       </div>
     </div>
 
-    <div class="erp-header-actions">
-      <div class="erp-telemetry-pill d-none d-lg-inline-flex">
-        <span class="erp-telemetry-dot pulse"></span>
-        <span class="erp-telemetry-text">TOTAL MANIFESTS: {{ totalDispatchesCount }} &bull; IN TRANSIT: {{ inTransitDispatchesCount }} &bull; DELIVERED: {{ deliveredDispatchesCount }}</span>
-      </div>
-      <button type="button" class="btn btn-secondary btn-sm" (click)="openScanner()" title="Scan QR Code / Barcode">
-        <i class="bi bi-qr-code-scan me-1 text-primary"></i>
-        <span>Scan QR</span>
-      </button>
-      <button type="button" class="btn btn-secondary btn-sm" (click)="loadData()" [disabled]="isLoading" title="Refresh dispatch records">
-        <i class="bi bi-arrow-clockwise me-1" [class.spin-anim]="isLoading"></i>
-        <span>Refresh</span>
-      </button>
-      <button type="button" 
-              class="btn btn-primary btn-action-primary" 
-              *ngIf="!isViewer()"
-              (click)="toggleForm()" 
-              [title]="isFormOpen ? 'Close form' : 'Create new dispatch manifest'">
-        <i class="bi" [ngClass]="isFormOpen ? 'bi-x-lg' : 'bi-plus-lg'"></i>
-        <span>{{ isFormOpen ? 'Close Form' : 'Create Manifest' }}</span>
-      </button>
+    <!-- Bottom Row: Subtitle on Left | Live Formula Hint on Right -->
+    <div class="header-secondary-row">
+      <p class="header-subtitle">
+        Outbound finished goods consignments, delivery tracking, vehicle manifests, and gate verification
+      </p>
+      <span class="header-formula-badge" title="Stock Reconciliation: Total Dispatched - In Transit = Delivered Goods Reconciled">
+        <i class="bi bi-calculator me-1"></i>
+        <span>Dispatched &minus; In Transit = Delivered</span>
+      </span>
     </div>
   </header>
 
-  <!-- 2. 4-Column Responsive KPI Telemetry Cards -->
-  <section class="erp-kpi-grid no-print" aria-label="Dispatch Key Performance Indicators">
-    <!-- KPI 1: Total Consignments -->
-    <div class="kpi-card" (click)="statusFilter = 'ALL'">
-      <div class="kpi-icon-badge kpi-blue">
+  <!-- ── 3. PILL SUBTABS NAVIGATION BAR ── -->
+  <div class="dispatch-subnav-bar no-print">
+    <div class="subnav-tabs-group" role="tablist">
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="statusFilter === 'ALL'" (click)="setStatusFilter('ALL')">
+        <i class="bi bi-grid-fill"></i>
+        <span>All Manifests</span>
+        <span class="tab-badge-pill">{{ totalDispatchesCount }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="statusFilter === 'In Transit'" (click)="setStatusFilter('In Transit')">
+        <i class="bi bi-truck text-info"></i>
+        <span>In Transit</span>
+        <span class="tab-badge-pill info">{{ inTransitDispatchesCount }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="statusFilter === 'Delivered'" (click)="setStatusFilter('Delivered')">
+        <i class="bi bi-check2-circle text-success"></i>
+        <span>Delivered</span>
+        <span class="tab-badge-pill success">{{ deliveredDispatchesCount }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="statusFilter === 'Pending'" (click)="setStatusFilter('Pending')">
+        <i class="bi bi-clock-history text-warning"></i>
+        <span>Pending Clearance</span>
+        <span class="tab-badge-pill warning">{{ pendingDispatchesCount }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── 4. 5-COLUMN RESPONSIVE KPI TELEMETRY CARDS ── -->
+  <section class="dispatch-kpi-grid no-print" aria-label="Dispatch Key Performance Indicators">
+    <!-- Card 1: Total Manifests -->
+    <div class="dispatch-kpi-card" (click)="setStatusFilter('ALL')">
+      <div class="dispatch-kpi-icon kpi-blue">
         <i class="bi bi-box-seam-fill"></i>
       </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Total Dispatches</span>
-        <div class="kpi-value font-mono">{{ totalDispatchesCount }} Manifests</div>
-        <div class="kpi-subtext">
-          <span class="badge-tag tag-primary">Recorded</span>
-          <span class="kpi-subtext-muted">All logged shipments</span>
-        </div>
+      <div class="dispatch-kpi-body">
+        <div class="dispatch-kpi-label">TOTAL MANIFESTS</div>
+        <div class="dispatch-kpi-value">{{ totalDispatchesCount }}</div>
+        <div class="dispatch-kpi-sub">All Logged Consignments</div>
       </div>
     </div>
 
-    <!-- KPI 2: In Transit -->
-    <div class="kpi-card" (click)="statusFilter = 'In Transit'">
-      <div class="kpi-icon-badge kpi-cyan">
-        <i class="bi bi-truck"></i>
-      </div>
-      <div class="kpi-details">
-        <span class="kpi-label">In Transit</span>
-        <div class="kpi-value font-mono text-info">{{ inTransitDispatchesCount }} En Route</div>
-        <div class="kpi-subtext">
-          <span class="badge-tag tag-cyan">Active</span>
-          <span class="kpi-subtext-muted">En route to consignees</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- KPI 3: Delivered -->
-    <div class="kpi-card" (click)="statusFilter = 'Delivered'">
-      <div class="kpi-icon-badge kpi-emerald">
+    <!-- Card 2: Delivered Goods -->
+    <div class="dispatch-kpi-card" (click)="setStatusFilter('Delivered')">
+      <div class="dispatch-kpi-icon kpi-green">
         <i class="bi bi-check-circle-fill"></i>
       </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Delivered Consignments</span>
-        <div class="kpi-value font-mono text-success">{{ deliveredDispatchesCount }} Fulfilled</div>
-        <div class="kpi-subtext">
-          <span class="badge-tag tag-success">Gate Verified</span>
-          <span class="kpi-subtext-muted">Delivered to customers</span>
-        </div>
+      <div class="dispatch-kpi-body">
+        <div class="dispatch-kpi-label">DELIVERED GOODS</div>
+        <div class="dispatch-kpi-value text-success">{{ deliveredDispatchesCount }}</div>
+        <div class="dispatch-kpi-sub">Gate Verified Receipts</div>
       </div>
     </div>
 
-    <!-- KPI 4: Pending Clearance -->
-    <div class="kpi-card" (click)="statusFilter = 'Pending'">
-      <div class="kpi-icon-badge kpi-amber">
-        <i class="bi bi-clock-history"></i>
+    <!-- Card 3: In Transit -->
+    <div class="dispatch-kpi-card" (click)="setStatusFilter('In Transit')">
+      <div class="dispatch-kpi-icon kpi-amber">
+        <i class="bi bi-truck"></i>
       </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Pending Staging</span>
-        <div class="kpi-value font-mono" [class.text-warning]="pendingDispatchesCount > 0">{{ pendingDispatchesCount }} Staging</div>
-        <div class="kpi-subtext">
-          <span class="badge-tag tag-amber">Awaiting</span>
-          <span class="kpi-subtext-muted">Dock staging area</span>
+      <div class="dispatch-kpi-body">
+        <div class="dispatch-kpi-label">IN TRANSIT</div>
+        <div class="dispatch-kpi-value">{{ inTransitDispatchesCount }}</div>
+        <div class="dispatch-kpi-sub">Active Highway Convoys</div>
+      </div>
+    </div>
+
+    <!-- Card 4: Pending Clearance -->
+    <div class="dispatch-kpi-card" [class.kpi-card--alert]="pendingDispatchesCount > 0" (click)="setStatusFilter('Pending')">
+      <div class="dispatch-kpi-icon" [class.kpi-red]="pendingDispatchesCount > 0" [class.kpi-slate]="pendingDispatchesCount === 0">
+        <i class="bi" [ngClass]="pendingDispatchesCount > 0 ? 'bi-exclamation-triangle-fill' : 'bi-shield-check'"></i>
+      </div>
+      <div class="dispatch-kpi-body">
+        <div class="dispatch-kpi-label">PENDING CLEARANCE</div>
+        <div class="dispatch-kpi-value" [class.text-danger]="pendingDispatchesCount > 0">{{ pendingDispatchesCount }}</div>
+        <div class="dispatch-kpi-sub">{{ pendingDispatchesCount > 0 ? 'Dock loading required' : 'All manifests clear' }}</div>
+      </div>
+    </div>
+
+    <!-- Card 5: Fulfillment Rate & Crate Volume -->
+    <div class="dispatch-kpi-card">
+      <div class="dispatch-kpi-icon kpi-purple">
+        <i class="bi bi-speedometer2"></i>
+      </div>
+      <div class="dispatch-kpi-body">
+        <div class="dispatch-kpi-label">FULFILLMENT RATE</div>
+        <div class="dispatch-kpi-value">{{ totalDispatchesCount > 0 ? (deliveredDispatchesCount / totalDispatchesCount * 100 | number:'1.0-0') : 100 }}%</div>
+        <div class="dispatch-kpi-progress-bar">
+          <div class="dispatch-kpi-progress-fill" 
+               [style.width.%]="totalDispatchesCount > 0 ? (deliveredDispatchesCount / totalDispatchesCount * 100) : 100"></div>
         </div>
+        <div class="dispatch-kpi-sub">{{ totalCratesDispatched | number }} crates transported</div>
       </div>
     </div>
   </section>
 
-  <!-- 3. Unified Control & Filter Bar -->
+  <!-- 4. Unified Control & Filter Bar -->
   <section class="erp-control-bar no-print">
     <div class="erp-control-left">
       <!-- Live Search -->
@@ -124,22 +179,6 @@
         />
         <button *ngIf="searchQuery" class="erp-clear-search" (click)="searchQuery = ''; currentPage = 1" title="Clear search">
           <i class="bi bi-x-circle-fill"></i>
-        </button>
-      </div>
-
-      <!-- Status Filter Pills -->
-      <div class="erp-filter-pills">
-        <button type="button" class="erp-filter-pill" [class.active]="statusFilter === 'ALL'" (click)="setStatusFilter('ALL')">
-          All ({{ totalDispatchesCount }})
-        </button>
-        <button type="button" class="erp-filter-pill" [class.active]="statusFilter === 'In Transit'" (click)="setStatusFilter('In Transit')">
-          In Transit ({{ inTransitDispatchesCount }})
-        </button>
-        <button type="button" class="erp-filter-pill" [class.active]="statusFilter === 'Delivered'" (click)="setStatusFilter('Delivered')">
-          Delivered ({{ deliveredDispatchesCount }})
-        </button>
-        <button type="button" class="erp-filter-pill" [class.active]="statusFilter === 'Pending'" (click)="setStatusFilter('Pending')">
-          Pending ({{ pendingDispatchesCount }})
         </button>
       </div>
     </div>
@@ -157,6 +196,7 @@
           <i class="bi bi-arrows-expand"></i>
         </button>
       </div>
+
 
       <!-- Column Visibility Dropdown -->
       <div class="erp-dropdown">
@@ -196,10 +236,9 @@
     </div>
   </section>
 
-  <!-- 4. Collapsible Form / Main Table Layout -->
-  <div class="erp-module-grid" [class.form-active]="isFormOpen && !isViewer()">
-    <!-- LEFT PANEL: Collapsible Manifest Registration Form -->
-    <aside class="erp-form-panel animate-fade-in" [class.editing-mode]="editingDispatchId" *ngIf="isFormOpen && !isViewer()">
+  <!-- 4. Fixed Centered Modal Dialog for Manifest Registration / Edit -->
+  <div class="dispatch-modal-overlay no-print" *ngIf="isFormOpen && !isViewer()" (click)="toggleForm()">
+    <div class="dispatch-modal-dialog animate-scale-up" (click)="$event.stopPropagation()">
       <div class="erp-panel-header">
         <div class="erp-panel-title-group">
           <span class="erp-panel-icon"><i class="bi bi-box-arrow-up-right"></i></span>
@@ -210,7 +249,7 @@
         </div>
         <div class="d-flex align-items-center gap-2">
           <span *ngIf="editingDispatchId" class="erp-badge erp-badge-warning">EDITING</span>
-          <button type="button" class="btn btn-link btn-sm text-secondary p-0" (click)="toggleForm()" title="Close Form">
+          <button type="button" class="btn-action-icon" (click)="toggleForm()" title="Close Form">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -342,10 +381,11 @@
           </button>
         </div>
       </form>
-    </aside>
+    </div>
+  </div>
 
-    <!-- RIGHT PANEL: Data Ledger Table Card -->
-    <main class="erp-table-panel" [class.full-width]="isViewer()">
+  <!-- 5. MAIN DATA LEDGER TABLE CARD (Always Full Width, Zero-Squish) -->
+  <main class="erp-table-panel full-width">
       <!-- Bulk Action Bar -->
       <div *ngIf="selectedRowIds.size > 0" class="erp-bulk-actions no-print">
         <span class="bulk-count-pill">
@@ -364,46 +404,47 @@
 
       <div class="table-content-wrap">
         <div class="erp-table-responsive" [class.table-compact]="tableDensity === 'compact'" [class.table-spacious]="tableDensity === 'spacious'">
-          <table class="erp-table" appResizableTable tableId="dispatch_registry_table">
+          <table class="erp-table enterprise-dispatch-table" appResizableTable [tableId]="'dispatch_table'" aria-label="Logistics & Dispatch Registry">
             <thead>
               <tr>
-                <th style="width: 40px; text-align: center;">
+                <th class="th-checkbox">
                   <input
                     type="checkbox"
                     class="enterprise-row-checkbox"
                     [checked]="isAllSelected"
                     (change)="toggleSelectAll($any($event.target).checked)"
+                    title="Select all manifests"
                   />
                 </th>
-                <th *ngIf="isColumnVisible('Manifest ID')" (click)="setSort('id')" style="cursor: pointer; min-width: 100px;">
+                <th *ngIf="isColumnVisible('Manifest ID')" (click)="setSort('id')" class="th-manifest sortable-th">
                   Manifest # <span *ngIf="sortField === 'id'">{{ sortAsc ? '↑' : '↓' }}</span>
                 </th>
-                <th *ngIf="isColumnVisible('Consignee & Order')" (click)="setSort('sale.party.partyName')" style="cursor: pointer; min-width: 200px;">
+                <th *ngIf="isColumnVisible('Consignee & Order')" (click)="setSort('sale.party.partyName')" class="th-consignee sortable-th">
                   Consignee &amp; Order <span *ngIf="sortField === 'sale.party.partyName'">{{ sortAsc ? '↑' : '↓' }}</span>
                 </th>
-                <th *ngIf="isColumnVisible('Date')" (click)="setSort('dispatchDate')" style="cursor: pointer; min-width: 110px;">
+                <th *ngIf="isColumnVisible('Date')" (click)="setSort('dispatchDate')" class="th-date sortable-th text-center">
                   Date <span *ngIf="sortField === 'dispatchDate'">{{ sortAsc ? '↑' : '↓' }}</span>
                 </th>
-                <th *ngIf="isColumnVisible('Vehicle')" (click)="setSort('vehicleNumber')" style="cursor: pointer; min-width: 130px;">
+                <th *ngIf="isColumnVisible('Vehicle')" (click)="setSort('vehicleNumber')" class="th-vehicle sortable-th text-center">
                   Vehicle # <span *ngIf="sortField === 'vehicleNumber'">{{ sortAsc ? '↑' : '↓' }}</span>
                 </th>
-                <th *ngIf="isColumnVisible('Driver')" (click)="setSort('driverName')" style="cursor: pointer; min-width: 140px;">
+                <th *ngIf="isColumnVisible('Driver')" (click)="setSort('driverName')" class="th-driver sortable-th">
                   Assigned Driver <span *ngIf="sortField === 'driverName'">{{ sortAsc ? '↑' : '↓' }}</span>
                 </th>
-                <th *ngIf="isColumnVisible('Destination')" style="min-width: 180px;">
+                <th *ngIf="isColumnVisible('Destination')" class="th-destination">
                   Destination
                 </th>
-                <th *ngIf="isColumnVisible('Status')" (click)="setSort('dispatchStatus')" style="cursor: pointer; min-width: 120px;">
+                <th *ngIf="isColumnVisible('Status')" (click)="setSort('dispatchStatus')" class="th-status sortable-th text-center">
                   Status <span *ngIf="sortField === 'dispatchStatus'">{{ sortAsc ? '↑' : '↓' }}</span>
                 </th>
-                <th *ngIf="isColumnVisible('Actions')" class="table-action-col text-end" style="min-width: 110px;">
+                <th *ngIf="isColumnVisible('Actions')" class="th-actions table-action-col text-end">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let d of paginatedDispatches; trackBy: trackById" [class.row-selected]="isRowSelected(d.id)">
-                <td style="text-align: center;">
+                <td class="td-checkbox text-center">
                   <input
                     type="checkbox"
                     class="enterprise-row-checkbox"
@@ -411,53 +452,71 @@
                     (change)="toggleSelectRow(d.id, $any($event.target).checked)"
                   />
                 </td>
-                <td *ngIf="isColumnVisible('Manifest ID')">
-                  <span class="erp-badge font-mono">DSP-{{ (d.id+'').padStart(3, '0') }}</span>
+                <td *ngIf="isColumnVisible('Manifest ID')" class="td-manifest id-col-cell">
+                  <span class="manifest-badge font-mono" [title]="'Full ID: ' + d.id">
+                    {{ formatManifestId(d.id) }}
+                  </span>
                 </td>
-                <td *ngIf="isColumnVisible('Consignee & Order')">
+                <td *ngIf="isColumnVisible('Consignee & Order')" class="td-consignee">
                   <div class="entity-name-cell">
                     <span class="entity-primary">{{ d.sale?.party?.partyName || d.sale?.partyName || 'Customer #' + (d.sale?.id || d.saleId || '—') }}</span>
                     <span class="entity-secondary font-mono">{{ d.sale?.crateType || 'Standard Crate' }}</span>
                   </div>
                 </td>
-                <td *ngIf="isColumnVisible('Date')" class="date-cell font-mono">
+                <td *ngIf="isColumnVisible('Date')" class="td-date date-cell font-mono text-center">
                   {{ (d.dispatchDate || d.date) ? ((d.dispatchDate || d.date) | indianDate) : '—' }}
                 </td>
-                <td *ngIf="isColumnVisible('Vehicle')">
-                  <span class="erp-badge font-mono">{{ d.vehicleNumber }}</span>
+                <td *ngIf="isColumnVisible('Vehicle')" class="td-vehicle text-center">
+                  <span class="vehicle-plate-badge font-mono">{{ d.vehicleNumber || '—' }}</span>
                 </td>
-                <td *ngIf="isColumnVisible('Driver')">
+                <td *ngIf="isColumnVisible('Driver')" class="td-driver">
                   <div class="driver-cell">
                     <i class="bi bi-person-fill text-muted me-1"></i>
-                    <span>{{ d.driverName }}</span>
+                    <span>{{ d.driverName || '—' }}</span>
                   </div>
                 </td>
-                <td *ngIf="isColumnVisible('Destination')" class="cell-truncate" [title]="d.deliveryAddress">
+                <td *ngIf="isColumnVisible('Destination')" class="td-destination cell-truncate" [title]="d.deliveryAddress">
                   <span class="desc-text">{{ d.deliveryAddress || '—' }}</span>
                 </td>
-                <td *ngIf="isColumnVisible('Status')">
-                  <span class="erp-badge"
+                <td *ngIf="isColumnVisible('Status')" class="td-status text-center">
+                  <span class="erp-badge status-pill"
                     [class.erp-badge-success]="(d.dispatchStatus || d.status || '').toLowerCase() === 'delivered'"
                     [class.erp-badge-info]="(d.dispatchStatus || d.status || '').toLowerCase() === 'in transit'"
                     [class.erp-badge-warning]="!(d.dispatchStatus || d.status) || (d.dispatchStatus || d.status || '').toLowerCase() === 'pending'">
                     <i class="bi bi-truck me-1" *ngIf="(d.dispatchStatus || d.status || '').toLowerCase() === 'in transit'"></i>
                     <i class="bi bi-check2-circle me-1" *ngIf="(d.dispatchStatus || d.status || '').toLowerCase() === 'delivered'"></i>
-                    <i class="bi bi-clock me-1" *ngIf="!(d.dispatchStatus || d.status) || (d.dispatchStatus || d.status || '').toLowerCase() === 'pending'"></i>
+                    <i class="bi bi-clock-history me-1" *ngIf="!(d.dispatchStatus || d.status) || (d.dispatchStatus || d.status || '').toLowerCase() === 'pending'"></i>
                     {{ d.dispatchStatus || d.status || 'Pending' }}
                   </span>
                 </td>
-                <td *ngIf="isColumnVisible('Actions')" class="table-action-col text-end">
+                <td *ngIf="isColumnVisible('Actions')" class="td-actions table-action-col text-end">
                   <div class="row-actions-group">
-                    <button type="button" class="btn-row-action btn-edit" (click)="editDispatch(d)" title="Edit dispatch manifest">
-                      <i class="bi bi-pencil-square me-1"></i> Edit
+                    <button type="button" class="btn-row-action btn-view" (click)="openDispatchDossier(d)" title="View Delivery Challan & Dispatch Dossier" aria-label="View dossier">
+                      <i class="bi bi-eye"></i>
                     </button>
-                    <button *ngIf="canDelete()" type="button" class="btn-row-action btn-delete" (click)="deleteDispatch(d.id)" title="Delete manifest">
+                    <button type="button" class="btn-row-action btn-edit" (click)="editDispatch(d)" title="Edit dispatch manifest" aria-label="Edit manifest">
+                      <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button *ngIf="canDelete()" type="button" class="btn-row-action btn-delete" (click)="deleteDispatch(d.id)" title="Delete manifest" aria-label="Delete manifest">
                       <i class="bi bi-trash3"></i>
                     </button>
                   </div>
                 </td>
               </tr>
             </tbody>
+            <tfoot class="table-summary-tfoot" *ngIf="paginatedDispatches.length > 0">
+              <tr>
+                <td class="td-checkbox"></td>
+                <td *ngIf="isColumnVisible('Manifest ID')" class="tfoot-label"><strong>TOTALS</strong></td>
+                <td *ngIf="isColumnVisible('Consignee & Order')"><strong>{{ filteredDispatches.length }} manifests ({{ filteredCratesTotal | number }} crates)</strong></td>
+                <td *ngIf="isColumnVisible('Date')"></td>
+                <td *ngIf="isColumnVisible('Vehicle')"></td>
+                <td *ngIf="isColumnVisible('Driver')"></td>
+                <td *ngIf="isColumnVisible('Destination')"></td>
+                <td *ngIf="isColumnVisible('Status')"></td>
+                <td *ngIf="isColumnVisible('Actions')"></td>
+              </tr>
+            </tfoot>
           </table>
         </div>
 
@@ -471,40 +530,169 @@
           (actionClick)="searchQuery = ''; statusFilter = 'ALL'; currentPage = 1">
         </app-empty-state>
 
-        <!-- Pagination Footer -->
-        <footer class="erp-pagination no-print">
-          <div class="erp-pagination-info">
-            <span>
-              Showing
-              <strong class="font-mono">
-                {{ filteredDispatches.length === 0 ? 0 : (currentPage - 1) * pageSize + 1 }}
-              </strong>
-              to
-              <strong class="font-mono">
-                {{ Math.min(currentPage * pageSize, filteredDispatches.length) }}
-              </strong>
-              of
-              <strong class="font-mono">{{ filteredDispatches.length }}</strong>
-              entries
-            </span>
+        <!-- ── STANDARD PAGINATION FOOTER ── -->
+        <div class="erp-table-footer no-print" *ngIf="filteredDispatches.length > 0">
+          <div class="erp-footer-info">
+            Showing <strong>{{ filteredDispatches.length === 0 ? 0 : (currentPage - 1) * pageSize + 1 }}</strong> to
+            <strong>{{ Math.min(currentPage * pageSize, filteredDispatches.length) }}</strong> of
+            <strong>{{ filteredDispatches.length }}</strong> dispatch entries
           </div>
-
-          <div class="erp-pagination-controls">
-            <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="setPage(currentPage - 1)">
-              <i class="bi bi-chevron-left me-1"></i> Previous
-            </button>
-            <span class="erp-page-indicator font-mono">
-              Page {{ currentPage }} of {{ totalPages }}
-            </span>
-            <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage >= totalPages || filteredDispatches.length === 0" (click)="setPage(currentPage + 1)">
-              Next <i class="bi bi-chevron-right ms-1"></i>
-            </button>
+          <div class="erp-footer-controls">
+            <div class="erp-rows-selector">
+              <span>Rows:</span>
+              <select [(ngModel)]="pageSize" (change)="currentPage = 1" class="erp-rows-select">
+                <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="erp-page-buttons">
+              <button type="button" class="erp-page-nav-btn" [disabled]="currentPage === 1" (click)="setPage(currentPage - 1)">
+                <i class="bi bi-chevron-left"></i> Prev
+              </button>
+              <span class="erp-page-counter">Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong></span>
+              <button type="button" class="erp-page-nav-btn" [disabled]="currentPage >= totalPages || filteredDispatches.length === 0" (click)="setPage(currentPage + 1)">
+                Next <i class="bi bi-chevron-right"></i>
+              </button>
+            </div>
           </div>
-        </footer>
+        </div>
       </div>
     </main>
-  </div>
-</div>
 
-<!-- QR Scanner Modal -->
-<app-qr-scanner-modal *ngIf="showScannerModal" (scanned)="onQrScanned($event)" (close)="closeScanner()"></app-qr-scanner-modal>
+  <!-- 6. OFFICIAL PRINTABLE DELIVERY CHALLAN & DISPATCH DOSSIER MODAL -->
+  <div class="dispatch-dossier-overlay no-print-backdrop" *ngIf="showDispatchDossierModal && selectedDispatchForDossier" (click)="closeDispatchDossier()">
+    <div class="dispatch-dossier-dialog animate-scale-up" (click)="$event.stopPropagation()">
+      <!-- Dossier Header Bar -->
+      <div class="dossier-top-bar no-print">
+        <div class="dossier-top-title">
+          <i class="bi bi-truck text-primary fs-5"></i>
+          <div>
+            <h3 class="dossier-heading">Consignment Outward &amp; Delivery Challan</h3>
+            <span class="dossier-subheading">Manifest ID: {{ formatManifestId(selectedDispatchForDossier.id) }} &bull; Gate Pass Verified</span>
+          </div>
+        </div>
+        <div class="dossier-top-actions">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="printDispatchDossier()">
+            <i class="bi bi-printer me-1"></i> Print Challan
+          </button>
+          <button type="button" class="btn-action-icon ms-2" (click)="closeDispatchDossier()" title="Close">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Challan Sheet -->
+      <div class="dispatch-printable-sheet">
+        <!-- Letterhead -->
+        <div class="letterhead-header">
+          <div class="letterhead-brand">
+            <img src="assets/logo.svg" alt="Futane Agro" class="letterhead-logo" (error)="$any($event.target).style.display='none'">
+            <div>
+              <h2 class="company-name">FUTANE AGRO INDUSTRIES PVT. LTD.</h2>
+              <p class="company-sub">Industrial Packaging &amp; Agricultural Crates Manufacturing Division</p>
+              <p class="company-tax">Gate No 144, Hadapsar Industrial Area, Pune - 411028 | GSTIN: 27AAACF2920A1ZX | State: 27 (Maharashtra)</p>
+            </div>
+          </div>
+          <div class="letterhead-badge">
+            <span class="challan-badge-title">DELIVERY CHALLAN</span>
+            <span class="challan-badge-rule">Rule 55 - CGST Rules 2017</span>
+            <span class="challan-doc-no font-mono">{{ formatManifestId(selectedDispatchForDossier.id) }}</span>
+          </div>
+        </div>
+
+        <div class="dossier-divider"></div>
+
+        <!-- Telemetry Metadata Grid -->
+        <div class="dossier-meta-grid">
+          <div class="meta-card">
+            <span class="meta-label">DISPATCH DATE</span>
+            <span class="meta-value font-mono">{{ (selectedDispatchForDossier.dispatchDate || selectedDispatchForDossier.date) | indianDate }}</span>
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">VEHICLE NUMBER</span>
+            <span class="meta-value font-mono vehicle-tag">{{ selectedDispatchForDossier.vehicleNumber || '—' }}</span>
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">ASSIGNED DRIVER</span>
+            <span class="meta-value">{{ selectedDispatchForDossier.driverName || '—' }}</span>
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">CONSIGNMENT STATUS</span>
+            <span class="meta-value text-primary fw-bold">{{ selectedDispatchForDossier.dispatchStatus || 'Dispatched' }}</span>
+          </div>
+        </div>
+
+        <!-- Consignee Information -->
+        <div class="consignee-info-card">
+          <div class="info-block">
+            <span class="block-title"><i class="bi bi-person-fill me-1"></i>CONSIGNEE (DELIVER TO)</span>
+            <h4 class="consignee-name">{{ selectedDispatchForDossier.sale?.party?.partyName || selectedDispatchForDossier.sale?.partyName || 'Customer Consignee' }}</h4>
+            <p class="consignee-address">{{ selectedDispatchForDossier.deliveryAddress || 'Warehouse delivery destination' }}</p>
+          </div>
+          <div class="info-block text-end">
+            <span class="block-title"><i class="bi bi-receipt me-1"></i>SALES ORDER REFERENCE</span>
+            <h4 class="order-ref font-mono">Order #{{ selectedDispatchForDossier.sale?.id || selectedDispatchForDossier.saleId || '—' }}</h4>
+            <p class="order-date">Sales Date: {{ selectedDispatchForDossier.sale?.date ? (selectedDispatchForDossier.sale?.date | indianDate) : 'On Record' }}</p>
+          </div>
+        </div>
+
+        <!-- Itemized Consignment Table -->
+        <table class="dossier-items-table">
+          <thead>
+            <tr>
+              <th style="width: 8%;">#</th>
+              <th>Product / Crate Description</th>
+              <th style="width: 15%; text-align: center;">HSN Code</th>
+              <th style="width: 20%; text-align: center;">Unit of Measure</th>
+              <th style="width: 18%; text-align: right;">Dispatched Qty</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-center font-mono">01</td>
+              <td>
+                <strong>{{ selectedDispatchForDossier.sale?.crateType || 'Heavy Duty Agricultural Fruit Crate' }}</strong>
+                <div class="item-sub">Industrial Grade HDPE Polymer injection molded packaging container</div>
+              </td>
+              <td class="text-center font-mono">3923</td>
+              <td class="text-center">NOS (Pieces)</td>
+              <td class="text-end font-mono fs-5 fw-bold text-primary">
+                {{ (selectedDispatchForDossier.sale?.quantity || selectedDispatchForDossier.sale?.cratesCount || 100) | number }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Signatures & Official Corporate Seal -->
+        <div class="dossier-signoff-row">
+          <div class="signoff-box">
+            <div class="sign-line"></div>
+            <span class="sign-title">Dispatched By (Logistics In-Charge)</span>
+          </div>
+          <div class="signoff-box">
+            <div class="sign-line"></div>
+            <span class="sign-title">Driver's Acknowledgement</span>
+          </div>
+          <div class="signoff-box official-seal-box">
+            <div class="corporate-seal">
+              <div class="seal-inner">
+                <i class="bi bi-shield-check seal-icon"></i>
+                <span class="seal-brand">FUTANE AGRO</span>
+                <span class="seal-dept">GATE PASS AUTH</span>
+                <span class="seal-status">VERIFIED</span>
+              </div>
+            </div>
+            <span class="sign-title mt-1">Authorized Security Signatory</span>
+          </div>
+        </div>
+
+        <div class="challan-footer-note">
+          <span>This goods delivery challan is issued under Rule 55 of CGST Rules 2017 for supply of goods without tax invoice at the time of delivery.</span>
+          <span class="font-mono">FUTANE-AGRO-CHALLAN-{{ selectedDispatchForDossier.id }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR Scanner Modal -->
+  <app-qr-scanner-modal *ngIf="showScannerModal" (scanned)="onQrScanned($event)" (close)="closeScanner()"></app-qr-scanner-modal>
+</div>
