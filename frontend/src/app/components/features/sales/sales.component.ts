@@ -12,6 +12,7 @@ import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { InrPipe } from '../../../pipes/inr-currency.pipe';
 import { AutoSelectDirective } from '../../../directives/auto-select.directive';
 import { FormStateDirective } from '../../../directives/form-state.directive';
+import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
 
 declare var Razorpay: any;
@@ -49,6 +50,7 @@ export interface SaleItem {
     InrPipe,
     AutoSelectDirective,
     FormStateDirective,
+    ResizableTableDirective,
     SearchableSelectComponent
   ],
   templateUrl: './sales.component.html',
@@ -94,6 +96,24 @@ export class SalesComponent implements OnInit {
     deliveryAddress: '',
     status: 'In Transit'
   };
+
+  // Sales Order Dossier Modal State
+  showSalesDossierModal: boolean = false;
+  selectedSaleForDossier: SaleItem | null = null;
+
+  openSalesDossier(sale: SaleItem): void {
+    this.selectedSaleForDossier = sale;
+    this.showSalesDossierModal = true;
+  }
+
+  closeSalesDossier(): void {
+    this.showSalesDossierModal = false;
+    this.selectedSaleForDossier = null;
+  }
+
+  printSalesDossier(): void {
+    window.print();
+  }
 
   // Density & Pagination
   tableDensity: 'compact' | 'comfortable' | 'spacious' = 'comfortable';
@@ -340,6 +360,10 @@ export class SalesComponent implements OnInit {
     if (total <= 0) return 100;
     const paid = this.getTotalSalesPaid();
     return Math.min(100, Math.round((paid / total) * 100));
+  }
+
+  getTotalCratesSold(): number {
+    return this.salesList.reduce((sum, s) => sum + (Number(s.quantity) || 0), 0);
   }
 
   // Real-time calculation for Form
@@ -689,35 +713,73 @@ export class SalesComponent implements OnInit {
   generateReceipt(sale: SaleItem, paidAmount: number, paymentId: string) {
     const invoiceNum = sale.saleId || sale.id;
     const balanceRemaining = Math.max(0, (Number(sale.remaining) || 0) - paidAmount);
+    const dateFormatted = new Date().toLocaleString('en-IN', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true
+    });
     
     Swal.fire({
-      title: 'Commercial Payment Receipt',
+      title: '',
       html: `
-        <div style="text-align: left; font-family: 'Courier New', Courier, monospace; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px dashed #cbd5e1; font-size: 13px; color: #0f172a;">
-          <div style="text-align: center; font-weight: bold; font-size: 15px; margin-bottom: 4px;">FUTANE AGRO INDUSTRIES PVT. LTD.</div>
-          <div style="text-align: center; font-size: 11px; color: #64748b; margin-bottom: 12px;">Fruit Crate Moulding & Commercial Division</div>
-          --------------------------------------------------<br>
-          <b>Receipt No:</b> RZP-${paymentId}<br>
-          <b>Date & Time:</b> ${new Date().toLocaleString('en-IN')}<br>
-          <b>Order Ref:</b> #${invoiceNum}<br>
-          <b>Customer:</b> ${sale.party?.partyName || 'Customer'}<br>
-          <b>Location:</b> ${sale.party?.city || ''}${sale.party?.state ? ', ' + sale.party?.state : ''}<br>
-          <b>Product:</b> ${sale.quantity}x ${sale.crateType} (${sale.crateMaterial})<br>
-          --------------------------------------------------<br>
-          <b>Gross Order Value:</b> ₹${(Number(sale.totalAmount) || 0).toLocaleString('en-IN')}<br>
-          <b style="color: #10b981; font-size: 14px;">Amount Received:  ₹${paidAmount.toLocaleString('en-IN')}</b><br>
-          <b>Balance Outstanding:</b> ₹${balanceRemaining.toLocaleString('en-IN')}<br>
-          <b>Payment Mode:</b> Instant UPI / Razorpay Gateway<br>
-          --------------------------------------------------<br>
-          <div style="text-align: center; font-size: 11px; color: #64748b; margin-top: 8px;">
-            This is a computer generated commercial receipt.<br>
-            Thank you for your valued partnership!
+        <div style="text-align: left; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; background: #ffffff; border-radius: 12px; padding: 4px 6px; color: #0f172a;">
+          <!-- Voucher Header -->
+          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #0B47D4; padding-bottom: 12px; margin-bottom: 14px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px;">
+                <i class="bi bi-receipt-cutoff"></i>
+              </div>
+              <div>
+                <div style="font-weight: 800; font-size: 14px; color: #0f172a; letter-spacing: -0.01em;">FUTANE AGRO INDUSTRIES PVT. LTD.</div>
+                <div style="font-size: 11px; color: #64748b; font-weight: 500;">Fruit Crate Moulding & Commercial Division</div>
+              </div>
+            </div>
+            <span style="background: rgba(11, 71, 212, 0.08); color: #0B47D4; font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.04em; text-transform: uppercase;">Payment Voucher</span>
+          </div>
+
+          <!-- Metadata Grid -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; background: #f8fafc; padding: 12px 14px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 12px; margin-bottom: 14px;">
+            <div><span style="color: #64748b; font-size: 11px;">Receipt Number:</span><br><strong style="color: #0f172a; font-family: monospace; font-size: 12.5px;">RZP-${paymentId}</strong></div>
+            <div><span style="color: #64748b; font-size: 11px;">Date & Time:</span><br><strong style="color: #0f172a;">${dateFormatted}</strong></div>
+            <div><span style="color: #64748b; font-size: 11px;">Order Reference:</span><br><strong style="color: #0B47D4; font-family: monospace;">#${invoiceNum}</strong></div>
+            <div><span style="color: #64748b; font-size: 11px;">Customer / Party:</span><br><strong style="color: #0f172a;">${sale.party?.partyName || 'Valued Customer'}</strong></div>
+            <div style="grid-column: span 2;"><span style="color: #64748b; font-size: 11px;">Ordered Items:</span><br><strong style="color: #334155;">${sale.quantity} units • ${sale.crateType} (${sale.crateMaterial})</strong></div>
+          </div>
+
+          <!-- Financial Summary Strip -->
+          <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 12px; color: #475569;">Gross Order Value</span>
+              <span style="font-size: 13px; font-weight: 700; color: #1e293b;">₹${(Number(sale.totalAmount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 6px; border-top: 1px dashed #86efac; margin-bottom: 6px;">
+              <span style="font-size: 13px; font-weight: 700; color: #15803d; display: flex; align-items: center; gap: 4px;">
+                <i class="bi bi-check-circle-fill"></i> Amount Received
+              </span>
+              <span style="font-size: 16px; font-weight: 800; color: #15803d;">₹${paidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 6px; border-top: 1px dashed #86efac;">
+              <span style="font-size: 12px; color: #475569;">Remaining Due</span>
+              <span style="font-size: 13px; font-weight: 700; color: ${balanceRemaining > 0 ? '#dc2626' : '#15803d'};">₹${balanceRemaining.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            </div>
+          </div>
+
+          <!-- Footer Verification Note -->
+          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #64748b; padding-top: 6px;">
+            <span><i class="bi bi-shield-check text-success me-1"></i>Verified Gateway Transaction</span>
+            <span>Computer-Generated Receipt</span>
           </div>
         </div>
       `,
-      icon: 'success',
-      confirmButtonText: 'Print / Done',
-      confirmButtonColor: '#10b981'
+      showCancelButton: true,
+      cancelButtonText: 'Close',
+      cancelButtonColor: '#94a3b8',
+      confirmButtonText: '<i class="bi bi-printer-fill me-1"></i> Print Voucher',
+      confirmButtonColor: '#0B47D4',
+      width: '520px'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.print();
+      }
     });
   }
 

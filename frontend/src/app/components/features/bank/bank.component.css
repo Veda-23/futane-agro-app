@@ -22,6 +22,13 @@
 }
 
 /* ── 1. BREADCRUMB NAVIGATION ─────────────────────────────────────────── */
+.bank-breadcrumb-trail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
 .bank-breadcrumb-bar {
   display: flex;
   align-items: center;
@@ -50,15 +57,77 @@
 /* ── 2. STABLE ENTERPRISE PAGE HEADER ─────────────────────────────────── */
 .bank-page-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 14px;
+  flex-direction: column;
+  gap: 8px;
   background: var(--bg-surface, #ffffff);
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: var(--radius-xl, 14px);
-  padding: 16px 20px;
-  box-shadow: var(--shadow-sm, 0 1px 3px rgba(15, 23, 42, 0.05));
+  border: 1px solid var(--border-card, rgba(99, 102, 241, 0.12));
+  border-radius: var(--radius-card, 14px);
+  padding: 14px 20px;
+  box-shadow: var(--shadow-card, 0 4px 20px -2px rgba(11, 71, 212, 0.06), 0 2px 6px -1px rgba(30, 27, 75, 0.04));
+  margin-bottom: 0;
+}
+
+.header-primary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.header-title-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.header-secondary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+  border-top: 1px solid rgba(226, 232, 240, 0.6);
+  width: 100%;
+}
+
+.header-formula-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(241, 245, 249, 0.85);
+  border: 1px solid rgba(203, 213, 225, 0.7);
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.bank-subnav-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  padding: 4px 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
+  margin-bottom: 8px;
+}
+
+.bank-subnav-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .header-left-col {
@@ -324,7 +393,152 @@
   color: #b91c1c;
 }
 
-/* ── 4. TREASURY KPI RIBBON ──────────────────────────────────────────── */
+/* ── 4. TREASURY 5-COLUMN KPI GRID ──────────────────────────────────── */
+.bank-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 1200px) {
+  .bank-kpi-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .bank-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .bank-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bank-kpi-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-card, rgba(99, 102, 241, 0.12));
+  border-radius: var(--radius-card, 18px);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-card, 0 4px 20px -2px rgba(11, 71, 212, 0.06), 0 2px 6px -1px rgba(30, 27, 75, 0.04));
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.bank-kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px -4px rgba(11, 71, 212, 0.12), 0 4px 10px -2px rgba(30, 27, 75, 0.04);
+}
+
+.bank-kpi-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.bank-kpi-icon.kpi-green {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.2) 100%);
+  color: #059669;
+}
+
+.bank-kpi-icon.kpi-red {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(220, 38, 38, 0.2) 100%);
+  color: #dc2626;
+}
+
+.bank-kpi-icon.kpi-blue {
+  background: linear-gradient(135deg, rgba(11, 71, 212, 0.12) 0%, rgba(0, 102, 255, 0.2) 100%);
+  color: #0B47D4;
+}
+
+.bank-kpi-icon.kpi-purple {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.12) 0%, rgba(126, 34, 206, 0.2) 100%);
+  color: #7e22ce;
+}
+
+.bank-kpi-icon.kpi-slate {
+  background: linear-gradient(135deg, rgba(100, 116, 139, 0.12) 0%, rgba(71, 85, 105, 0.2) 100%);
+  color: #475569;
+}
+
+.bank-kpi-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.bank-kpi-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #64748b);
+}
+
+.bank-kpi-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.bank-kpi-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary, #0f172a);
+  line-height: 1.2;
+}
+
+.bank-kpi-unit {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary, #64748b);
+}
+
+.bank-kpi-meta {
+  font-size: 11px;
+  color: var(--text-muted, #94a3b8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #ffffff;
+  color: var(--text-muted, #64748b);
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.subnav-tab-btn.active .tab-badge-pill {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+}
+
 .bank-kpi-ribbon {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -711,30 +925,52 @@
 /* ── 6. ENTERPRISE TABLE ─────────────────────────────────────────────── */
 .table-container {
   width: 100%;
-  overflow-x: auto;
-  scrollbar-width: thin;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.table-container::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  display: none !important;
 }
 
 .enterprise-table {
-  width: 100%;
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
   border-collapse: collapse;
   font-size: 13px;
   text-align: left;
 }
 
+/* 100.0% Column Budget:
+   Date (12%) + Type (12%) + Amount (16%) + Description (30%) + Reference (18%) + Actions (12%) = 100.0% */
+.th-date, .td-date { width: 12% !important; max-width: 12% !important; }
+.th-type, .td-type { width: 12% !important; max-width: 12% !important; }
+.th-amount, .td-amount { width: 16% !important; max-width: 16% !important; }
+.th-desc, .td-desc { width: 30% !important; max-width: 30% !important; }
+.th-ref, .td-ref { width: 18% !important; max-width: 18% !important; }
+.th-actions, .td-actions { width: 12% !important; max-width: 12% !important; }
+
 .enterprise-table thead th {
   background: var(--bg-canvas, #f8fafc);
   color: var(--text-secondary, #475569);
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  padding: 10px 14px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--border-color, #e2e8f0);
-  position: sticky;
-  top: 0;
-  z-index: 5;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sortable-th {
@@ -751,28 +987,41 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .enterprise-table tbody tr {
   border-bottom: 1px solid var(--border-color, #f1f5f9);
-  transition: background 0.12s ease;
+  transition: background 0.08s ease;
 }
 
 .enterprise-table tbody tr:hover {
   background: rgba(5, 150, 105, 0.03);
 }
 
+.enterprise-table td {
+  padding: 8px 12px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color, #f1f5f9);
+  color: var(--text-primary, #0f172a);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Density Modifiers */
 .enterprise-table.density-compact td {
-  padding: 6px 14px;
+  padding: 6px 10px;
 }
 
 .enterprise-table.density-comfortable td {
-  padding: 10px 14px;
+  padding: 8px 12px;
 }
 
 .enterprise-table.density-spacious td {
-  padding: 14px 14px;
+  padding: 12px 14px;
 }
 
 .cell-date {
@@ -803,7 +1052,7 @@
 }
 
 .desc-truncate {
-  max-width: 320px;
+  width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -822,41 +1071,79 @@
 }
 
 .table-actions-cell {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 4px;
 }
 
 .btn-action-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
   border-radius: 6px;
   border: 1px solid var(--border-color, #e2e8f0);
   background: #ffffff;
   color: var(--text-secondary, #475569);
   cursor: pointer;
-  font-size: 13px;
-  transition: all 0.15s ease;
+  font-size: 12px;
+  transition: all 0.08s cubic-bezier(0.4, 0, 0.2, 1);
+  touch-action: manipulation;
+}
+
+.btn-action-icon:active {
+  transform: scale(0.92);
 }
 
 .btn-action-icon:hover {
-  transform: translateY(-1px);
+  background: var(--bg-hover, #f1f5f9);
+}
+
+.btn-action-icon.view-icon:hover {
+  border-color: #0b47d4;
+  color: #0b47d4;
+  background: rgba(11, 71, 212, 0.08);
 }
 
 .btn-action-icon.edit-icon:hover {
-  border-color: #059669;
-  color: #059669;
-  background: #ecfdf5;
+  border-color: #d97706;
+  color: #d97706;
+  background: rgba(245, 158, 11, 0.08);
 }
 
 .btn-action-icon.delete-icon:hover {
   border-color: #ef4444;
   color: #ef4444;
-  background: #fef2f2;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+/* ── Table Summary Tfoot ────────────────────────── */
+.table-summary-tfoot tr {
+  background: var(--bg-hover, #f8fafc);
+  border-top: 2px solid var(--border-color, #cbd5e1);
+}
+
+.table-summary-tfoot td {
+  padding: 10px 12px;
+  font-size: 12.5px;
+}
+
+.summary-label-cell {
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #475569);
+}
+
+.summary-amount-cell {
+  color: #059669;
+  font-size: 13.5px;
+}
+
+.summary-meta-cell {
+  font-size: 11.5px;
 }
 
 /* ── 7. PAGINATION FOOTER ────────────────────────────────────────────── */
@@ -1516,3 +1803,249 @@
   color: #ffffff !important;
   box-shadow: 0 4px 14px rgba(11, 71, 212, 0.28) !important;
 }
+
+/* View icon styling in table actions */
+.btn-action-icon.view-icon {
+  color: #0284c7 !important;
+}
+
+.btn-action-icon.view-icon:hover {
+  background: rgba(2, 132, 199, 0.12) !important;
+  color: #0369a1 !important;
+}
+
+/* ── READ-ONLY BANK TRANSACTION VOUCHER MODAL ── */
+.voucher-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeInModal 0.2s ease-out;
+}
+
+.voucher-modal-container {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 620px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.voucher-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.voucher-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.voucher-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.voucher-icon.icon-credit {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+}
+
+.voucher-icon.icon-debit {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+.voucher-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  display: block;
+}
+
+.voucher-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.btn-voucher-close {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-voucher-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.voucher-body {
+  padding: 20px;
+  overflow-y: auto;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.voucher-body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+}
+
+.voucher-amount-card {
+  padding: 18px;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.voucher-amount-card.amount-credit {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #047857;
+}
+
+.voucher-amount-card.amount-debit {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #b91c1c;
+}
+
+.amount-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.8;
+  margin-bottom: 4px;
+}
+
+.amount-value {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.amount-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.7);
+  margin-top: 6px;
+}
+
+.voucher-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.voucher-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.voucher-field.v-full {
+  grid-column: 1 / -1;
+}
+
+.v-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.v-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.v-val-narrative {
+  margin: 0;
+  font-size: 13px;
+  color: #334155;
+  background: #ffffff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  line-height: 1.45;
+}
+
+.voucher-signoff-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed #cbd5e1;
+}
+
+.signoff-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.signoff-box .line {
+  width: 100%;
+  height: 1px;
+  background: #94a3b8;
+}
+
+.signoff-box span {
+  font-size: 10.5px;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.voucher-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 12px 20px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+

@@ -1,16 +1,16 @@
+<div class="module-hub-breadcrumb no-print" *ngIf="activeTab === 'settings'">
+  <i class="bi bi-house"></i>
+  <span class="crumb-text">{{ 'appName' | term }}</span>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-text">ADMINISTRATION</span>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-active">{{ getActiveSubTabTitle() | uppercase }}</span>
+</div>
+
 <div class="admin-control-center" *ngIf="activeTab === 'settings'">
 
-  <!-- Top Banner: Futuristic Command Center HUD -->
-  <div class="admin-header-banner">
-    <div class="breadcrumb-trail" style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; width: 100%;">
-      <i class="bi bi-house" style="font-size: 12px; color: #94a3b8;"></i>
-      <span>Futane Agro ERP</span>
-      <span style="color: #cbd5e1;">/</span>
-      <span>Administration</span>
-      <span style="color: #cbd5e1;">/</span>
-      <span style="color: #0B47D4; font-weight: 700;">Super Admin Control Center</span>
-    </div>
-
+  <!-- Top Banner: Futuristic Command Center HUD (Governance & System Telemetry Only) -->
+  <div class="admin-header-banner" *ngIf="activeSubTab === 'governance'">
     <div class="banner-main-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 14px;">
       <div class="banner-left">
         <div class="banner-icon-box">
@@ -68,49 +68,57 @@
   </div>
 
   <!-- Top Segmented Domains Navigation Strip -->
-  <div class="settings-top-navbar">
-    <div class="settings-nav-scroll-container">
-      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'branding'" (click)="switchSubNav('branding')">
-        <i class="bi bi-palette nav-pill-icon"></i>
-        <span>Branding & Themes</span>
-      </button>
-      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'business-rules'" (click)="switchSubNav('business-rules')">
-        <i class="bi bi-building nav-pill-icon"></i>
-        <span>Business Rules</span>
-      </button>
-      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'teams'" (click)="switchSubNav('teams')">
-        <i class="bi bi-buildings nav-pill-icon"></i>
-        <span>Teams & Depts</span>
-      </button>
-      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'custom_fields'" (click)="switchSubNav('custom_fields')">
-        <i class="bi bi-puzzle nav-pill-icon"></i>
-        <span>Extensible Fields</span>
-      </button>
-      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'notifications'" (click)="switchSubNav('notifications')">
-        <i class="bi bi-chat-dots nav-pill-icon"></i>
-        <span>WhatsApp & Alerts</span>
-      </button>
-      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'users'" (click)="switchSubNav('users')">
-        <i class="bi bi-person-badge nav-pill-icon"></i>
-        <span>Users & RBAC</span>
-      </button>
-      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'features'" (click)="switchSubNav('features')">
-        <i class="bi bi-toggle-on nav-pill-icon"></i>
-        <span>Feature Flags</span>
-        <span class="badge-count-pill" [ngClass]="featureFlagBadgeClass" *ngIf="featureFlags.length > 0">{{ activeFeatureCount }}/{{ featureFlags.length }}</span>
-      </button>
-      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'developer'" (click)="switchSubNav('developer')">
-        <i class="bi bi-terminal nav-pill-icon"></i>
-        <span>Developer Hub</span>
-      </button>
-      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'governance'" (click)="switchSubNav('governance')">
-        <i class="bi bi-hdd-network nav-pill-icon"></i>
-        <span>JVM Telemetry, Cache &amp; Backups</span>
-      </button>
-      <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'password'" (click)="switchSubNav('password')">
-        <i class="bi bi-key nav-pill-icon"></i>
-        <span>Security</span>
-      </button>
+  <div class="settings-top-navbar-wrapper">
+    <div class="settings-top-navbar">
+      <div class="settings-nav-scroll-container">
+        <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'enterprise_customizations'" (click)="switchSubNav('enterprise_customizations')" id="subtab-enterprise-customizations">
+          <i class="bi bi-sliders2-vertical nav-pill-icon"></i>
+          <span>200+ Customizations Hub</span>
+          <span class="badge-count-pill badge-active-customizations">208 Active</span>
+        </button>
+        <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'branding'" (click)="switchSubNav('branding')" id="subtab-branding">
+          <i class="bi bi-palette nav-pill-icon"></i>
+          <span>Branding &amp; Themes</span>
+        </button>
+        <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'business-rules'" (click)="switchSubNav('business-rules')" id="subtab-business-rules">
+          <i class="bi bi-building nav-pill-icon"></i>
+          <span>Business Rules</span>
+        </button>
+        <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'teams'" (click)="switchSubNav('teams')" id="subtab-teams">
+          <i class="bi bi-diagram-3 nav-pill-icon"></i>
+          <span>Teams &amp; Depts</span>
+        </button>
+        <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'custom_fields'" (click)="switchSubNav('custom_fields')" id="subtab-custom-fields">
+          <i class="bi bi-puzzle nav-pill-icon"></i>
+          <span>Extensible Fields</span>
+          <span class="badge-count-pill" *ngIf="customFieldDefs.length > 0">{{ customFieldDefs.length }}</span>
+        </button>
+        <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'notifications'" (click)="switchSubNav('notifications')" id="subtab-notifications">
+          <i class="bi bi-chat-dots nav-pill-icon"></i>
+          <span>WhatsApp &amp; Alerts</span>
+        </button>
+        <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'users'" (click)="switchSubNav('users')" id="subtab-users">
+          <i class="bi bi-person-badge nav-pill-icon"></i>
+          <span>Users &amp; RBAC</span>
+        </button>
+        <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'features'" (click)="switchSubNav('features')" id="subtab-features">
+          <i class="bi bi-toggles2 nav-pill-icon"></i>
+          <span>Feature Flags</span>
+          <span class="badge-count-pill" [ngClass]="featureFlagBadgeClass" *ngIf="featureFlags.length > 0">{{ activeFeatureCount }}/{{ featureFlags.length }}</span>
+        </button>
+        <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'developer'" (click)="switchSubNav('developer')" id="subtab-developer">
+          <i class="bi bi-terminal nav-pill-icon"></i>
+          <span>Developer Hub</span>
+        </button>
+        <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'governance'" (click)="switchSubNav('governance')" id="subtab-governance">
+          <i class="bi bi-hdd-network nav-pill-icon"></i>
+          <span>System Telemetry</span>
+        </button>
+        <button type="button" class="settings-nav-pill" [class.active]="activeSubTab === 'password'" (click)="switchSubNav('password')" id="subtab-password">
+          <i class="bi bi-shield-lock nav-pill-icon"></i>
+          <span>Security</span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -118,34 +126,472 @@
   <div class="admin-content-panel">
 
       <!-- ========================================================================= -->
+      <!-- 0. 200+ ENTERPRISE CUSTOMIZATIONS & WHITE-LABEL HUB                        -->
+      <!-- ========================================================================= -->
+      <div *ngIf="activeSubTab === 'enterprise_customizations'" class="subtab-section">
+        
+        <!-- MODULE HUB: PRIMARY CONTENT CARD HEADER -->
+        <div class="module-hub-header">
+          <div class="header-left">
+            <div class="header-icon">
+              <i class="bi bi-sliders2-vertical"></i>
+            </div>
+            <div class="header-titles">
+              <div class="title-row">
+                <h2>200+ Enterprise Customizations &amp; White-Label Hub</h2>
+                <span class="header-count-pill">{{ customizationsCatalog.length }} Active Options</span>
+              </div>
+              <p class="header-desc">Configure multi-company tenant profiles, industry templates, terminology re-mapping, and granular operational parameters.</p>
+            </div>
+          </div>
+          <div class="header-actions">
+            <input type="file" #configFileInput (change)="importCustomizationsJson($event)" accept=".json" style="display: none;">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="exportCustomizationsJson()" title="Download JSON configuration package">
+              <i class="bi bi-download me-1"></i> Export JSON
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="configFileInput.click()" title="Import saved JSON configuration bundle">
+              <i class="bi bi-upload me-1"></i> Import JSON
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm text-danger" (click)="resetAllCustomizationsToDefaults()" title="Reset all 208 options to factory defaults">
+              <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" (click)="persistCustomizations(); notificationService.success('Customizations saved successfully!')">
+              <i class="bi bi-check2-circle me-1"></i> Save Customizations
+            </button>
+          </div>
+        </div>
+
+        <!-- MODULE HUB: 4-CARD KPI STAT ROW -->
+        <div class="module-hub-kpis">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-purple">
+              <i class="bi bi-sliders2-vertical"></i>
+            </div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Total Customizations">Total Customizations</div>
+              <div class="hub-kpi-value">{{ customizationsCatalog.length }}</div>
+              <div class="hub-kpi-sub" title="Across 8 System Domains">Across 8 System Domains</div>
+            </div>
+          </div>
+
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-green">
+              <i class="bi bi-buildings"></i>
+            </div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Active Template">Active Template</div>
+              <div class="hub-kpi-value">{{ selectedIndustryId.replace('_', ' ') | uppercase }}</div>
+              <div class="hub-kpi-sub" title="1-Click Tenant Provisioning">1-Click Tenant Provisioning</div>
+            </div>
+          </div>
+
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-blue">
+              <i class="bi bi-funnel"></i>
+            </div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Filtered Options">Filtered Options</div>
+              <div class="hub-kpi-value">{{ filteredCustomizations.length }}</div>
+              <div class="hub-kpi-sub" [title]="'Category: ' + activeCustomizationCategory">Category: {{ activeCustomizationCategory }}</div>
+            </div>
+          </div>
+
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-navy">
+              <i class="bi bi-shield-check"></i>
+            </div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Multi-Tenant Status">Multi-Tenant Status</div>
+              <div class="hub-kpi-value">Active</div>
+              <div class="hub-kpi-sub" title="Discriminator Isolated">Discriminator Isolated</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1. INDUSTRY SOLUTION TEMPLATES (1-CLICK COMPANY RECONFIGURATION) -->
+        <div class="config-card mb-3" style="background: var(--bg-card, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 12px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="template-section-pod" style="width: 38px; height: 38px; border-radius: 11px; background: linear-gradient(135deg, #059669 0%, #10B981 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.28); flex-shrink: 0;">
+                <i class="bi bi-magic"></i>
+              </div>
+              <div>
+                <h4 style="margin: 0; font-size: 14.5px; font-weight: 700; color: var(--text-primary, #1e293b);">1-Click Industry Templates &amp; White-Label Provisioning</h4>
+                <p style="margin: 0; font-size: 12px; color: var(--text-secondary, #64748b);">Instantly reconfigure terminology, units of measure, batch prefixes, scrap allowances, and color accents for other companies.</p>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 14px;">
+            <div *ngFor="let tpl of industryTemplates" 
+                 class="industry-template-card" 
+                 [class.active-template]="selectedIndustryId === tpl.id"
+                 style="border: 1px solid var(--border-color, #e2e8f0); border-radius: 10px; padding: 14px; background: var(--bg-surface, #f8fafc); transition: all 0.2s ease; position: relative;">
+              
+              <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div [style.background]="getTemplateGradient(tpl)" style="width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #ffffff; box-shadow: 0 3px 10px rgba(0,0,0,0.18); flex-shrink: 0;">
+                    <i class="bi" [ngClass]="tpl.icon"></i>
+                  </div>
+                  <div>
+                    <h5 style="margin: 0; font-size: 14px; font-weight: 700; color: var(--text-primary, #1e293b);">{{ tpl.name }}</h5>
+                    <span style="font-size: 11px; font-weight: 600; text-transform: uppercase;" [style.color]="tpl.badgeColor">Template Ready</span>
+                  </div>
+                </div>
+                <span *ngIf="selectedIndustryId === tpl.id" class="badge-soft-emerald" style="font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 12px;">ACTIVE</span>
+              </div>
+
+              <p style="font-size: 12px; color: var(--text-secondary, #64748b); margin-bottom: 10px; line-height: 1.4; min-height: 34px;">
+                {{ tpl.description }}
+              </p>
+
+              <!-- Terminology Preview Pill Strip -->
+              <div style="background: rgba(0,0,0,0.03); border-radius: 6px; padding: 6px 10px; font-size: 11px; margin-bottom: 12px; color: var(--text-primary, #334155); display: flex; flex-wrap: wrap; gap: 6px;">
+                <span>Unit: <strong>{{ tpl.terminology.primaryUnit }}</strong></span>
+                <span>• Client: <strong>{{ tpl.terminology.clientLabel }}</strong></span>
+                <span>• Lot: <strong>{{ tpl.terminology.batchLabel }}</strong></span>
+              </div>
+
+              <button type="button" 
+                      class="btn btn-sm w-100" 
+                      [style.background]="selectedIndustryId === tpl.id ? tpl.badgeColor : '#ffffff'" 
+                      [style.color]="selectedIndustryId === tpl.id ? '#ffffff' : tpl.badgeColor"
+                      [style.border]="'1px solid ' + tpl.badgeColor"
+                      style="font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px; transition: all 0.2s;"
+                      (click)="applyIndustryTemplate(tpl.id)">
+                <i class="bi bi-check2-circle me-1" *ngIf="selectedIndustryId === tpl.id"></i>
+                <i class="bi bi-box-arrow-in-down-right me-1" *ngIf="selectedIndustryId !== tpl.id"></i>
+                {{ selectedIndustryId === tpl.id ? 'Template Configured' : 'Apply ' + tpl.name + ' Template' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. REAL-TIME WHITE-LABEL & BRAND SYSTEM LIVE PREVIEW -->
+        <div class="config-card mb-3 live-whitelabel-preview-card" style="background: var(--bg-card, #ffffff); border: 1.5px solid var(--brand-primary, #0B47D4); border-radius: 14px; padding: 16px 20px; box-shadow: 0 4px 20px rgba(11, 71, 212, 0.08);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(11, 71, 212, 0.12); color: var(--brand-primary, #0B47D4); display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                <i class="bi bi-broadcast"></i>
+              </div>
+              <div>
+                <h4 style="margin: 0; font-size: 14.5px; font-weight: 700; color: var(--text-primary, #1e293b);">
+                  Real-Time White-Label &amp; Brand System Live Preview
+                </h4>
+                <p style="margin: 0; font-size: 11.5px; color: var(--text-secondary, #64748b);">
+                  Live rendering of Enterprise Title, Tagline, Primary Color, and Document Headers synced instantly across the application.
+                </p>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="badge-soft-emerald" style="font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
+                <span class="preview-pulse-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+                LIVE PREVIEW ACTIVE
+              </span>
+            </div>
+          </div>
+
+          <!-- Live Mockup Grid (4 Balanced Quadrants, Zero Blank Holes) -->
+          <div class="live-preview-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; background: var(--bg-surface, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 10px; padding: 14px; width: 100%; box-sizing: border-box;">
+            
+            <!-- Panel 1: Top Navigation & Brand Header -->
+            <div style="background: var(--bg-card, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 10.5px; font-weight: 700; text-transform: uppercase; color: var(--text-muted, #94a3b8); display: flex; align-items: center; gap: 6px;">
+                <i class="bi bi-window-sidebar"></i> Live Topbar &amp; Header Preview
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #0f172a; border-radius: 6px; color: #ffffff;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <img [src]="branding.brand_logo_url || 'assets/logo.svg'" alt="Logo" style="width: 24px; height: 24px; object-fit: contain;">
+                  <div>
+                    <div style="font-size: 13px; font-weight: 700; color: #ffffff; letter-spacing: 0.02em;">
+                      {{ branding.app_display_name || 'Futane Agro ERP' }}
+                    </div>
+                    <div style="font-size: 10.5px; color: #94a3b8;">
+                      {{ branding.app_tagline || 'Quality Crates, Stronger Future' }}
+                    </div>
+                  </div>
+                </div>
+                <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 12px; background: rgba(255,255,255,0.15); color: #93c5fd;">
+                  PROD v6.0
+                </span>
+              </div>
+            </div>
+
+            <!-- Panel 2: Live Button & Tab Accents -->
+            <div style="background: var(--bg-card, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 10.5px; font-weight: 700; text-transform: uppercase; color: var(--text-muted, #94a3b8); display: flex; align-items: center; gap: 6px;">
+                <i class="bi bi-palette"></i> Live UI Buttons &amp; Accent Tokens
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-sm" [style.background]="branding.brand_primary_color || '#0B47D4'" style="color: #ffffff; font-weight: 600; font-size: 12px; border-radius: 6px; border: none; padding: 6px 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                  <i class="bi bi-plus-lg me-1"></i> New Invoice
+                </button>
+                <span style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 600;"
+                      [style.background]="(branding.brand_primary_color || '#0B47D4') + '18'"
+                      [style.color]="branding.brand_primary_color || '#0B47D4'"
+                      [style.border]="'1px solid ' + (branding.brand_primary_color || '#0B47D4') + '40'">
+                  <span style="width: 6px; height: 6px; border-radius: 50%;" [style.background]="branding.brand_primary_color || '#0B47D4'"></span>
+                  Active Pill
+                </span>
+                <span style="font-size: 11px; font-family: monospace; font-weight: 700; color: var(--text-secondary, #64748b);">
+                  {{ branding.brand_primary_color || '#0B47D4' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Panel 3: Live Document Print Header (Invoices / Delivery Challans) -->
+            <div style="background: var(--bg-card, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 10.5px; font-weight: 700; text-transform: uppercase; color: var(--text-muted, #94a3b8); display: flex; align-items: center; gap: 6px;">
+                <i class="bi bi-receipt"></i> Document Header (Invoices &amp; Challans)
+              </div>
+              <div style="padding: 8px 12px; border: 1px dashed var(--border-color, #cbd5e1); border-radius: 6px; background: #ffffff;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <div style="font-size: 12.5px; font-weight: 800; color: #0f172a;">
+                      {{ branding.app_display_name || 'Futane Agro ERP' | uppercase }}
+                    </div>
+                    <div style="font-size: 10px; color: #64748b; font-style: italic;">
+                      "{{ branding.app_tagline || 'Quality Crates, Stronger Future' }}"
+                    </div>
+                  </div>
+                  <span style="font-size: 10px; font-family: monospace; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(5,150,105,0.1); color: #059669;">
+                    TAX INVOICE
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel 4: Live Data Grid Row & Density Preview -->
+            <div style="background: var(--bg-card, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 10.5px; font-weight: 700; text-transform: uppercase; color: var(--text-muted, #94a3b8); display: flex; align-items: center; justify-content: space-between;">
+                <span style="display: flex; align-items: center; gap: 6px;"><i class="bi bi-table"></i> Live Table Row &amp; Status Badges</span>
+                <span style="font-size: 9.5px; padding: 1px 6px; border-radius: 4px; background: rgba(0,0,0,0.05); font-weight: 700; color: var(--text-secondary, #64748b);">{{ tableDensity | uppercase }}</span>
+              </div>
+              <div style="border: 1px solid var(--border-color, #e2e8f0); border-radius: 6px; overflow: hidden; font-size: 11.5px;">
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1.2fr; background: var(--bg-surface, #f8fafc); padding: 5px 10px; font-weight: 700; color: var(--text-secondary, #64748b); border-bottom: 1px solid var(--border-color, #e2e8f0); font-size: 10.5px;">
+                  <span>PARTICULARS</span>
+                  <span>QTY</span>
+                  <span style="text-align: right;">STATUS</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1.2fr; padding: 7px 10px; align-items: center; background: #ffffff;">
+                  <span style="font-weight: 600; color: var(--text-primary, #1e293b);">Premium 20Kg Crate</span>
+                  <span style="font-family: monospace; color: var(--text-secondary, #64748b);">500 Nos</span>
+                  <span style="text-align: right;">
+                    <span style="font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 12px; color: #ffffff;"
+                          [style.background]="branding.brand_primary_color || '#0B47D4'">
+                      VERIFIED
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 3. SEARCH & DOMAIN CATEGORY FILTER BAR -->
+        <div class="config-card mb-3" style="background: var(--bg-card, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 12px; padding: 14px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px;">
+            <div style="position: relative; flex: 1; min-width: 280px; display: flex; align-items: center;">
+              <i class="bi bi-search" style="position: absolute; left: 12px; color: var(--text-muted, #94a3b8); font-size: 14px; pointer-events: none;"></i>
+              <input type="text" 
+                     [(ngModel)]="customizationSearchQuery" 
+                     (ngModelChange)="filterCustomizations()" 
+                     placeholder="Search across all 208 customization parameters, keys, or impacted modules..." 
+                     class="form-control form-control-sm" 
+                     style="padding-left: 36px; height: 38px; border-radius: 8px; font-size: 13px; width: 100%;">
+            </div>
+            <div style="font-size: 12.5px; font-weight: 600; color: var(--text-secondary, #64748b);">
+              Showing <span class="badge-soft-cobalt px-2 py-1" style="font-size: 12px;">{{ filteredCustomizations.length }} of {{ customizationsCatalog.length }}</span> Customizations
+            </div>
+          </div>
+
+          <!-- MODULE HUB: CATEGORY FILTER PILLS -->
+          <div class="module-hub-filter-pills" style="margin-top: 8px; margin-bottom: 0;">
+            <button *ngFor="let cat of customizationCategories" 
+                    type="button" 
+                    class="hub-filter-pill"
+                    [class.active]="activeCustomizationCategory === cat"
+                    (click)="setCustomizationCategory(cat)">
+              <i class="bi bi-tag-fill"></i>
+              <span>{{ cat }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. RESPONSIVE 208 CUSTOMIZATIONS GRID (2 OR 3 CARDS PER ROW) -->
+        <div class="customizations-grid-layout">
+          <div *ngFor="let item of filteredCustomizations" 
+               class="customization-setting-card">
+            
+            <div>
+              <!-- Header with Category and Alphanumeric Key -->
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                <span class="badge-soft-slate" style="font-size: 10.5px; font-weight: 700; text-transform: uppercase;">
+                  {{ item.category }}
+                </span>
+                <code style="font-size: 11px; color: var(--text-muted, #64748b); background: rgba(0,0,0,0.04); padding: 1px 6px; border-radius: 4px;">{{ item.key }}</code>
+              </div>
+
+              <!-- Title -->
+              <h5 style="margin: 0 0 6px 0; font-size: 13.5px; font-weight: 700; color: var(--text-primary, #1e293b);">
+                {{ item.title }}
+              </h5>
+
+              <!-- Description -->
+              <p style="margin: 0 0 12px 0; font-size: 12px; color: var(--text-secondary, #64748b); line-height: 1.4;">
+                {{ item.description }}
+              </p>
+            </div>
+
+            <div>
+              <!-- Impacted ERP Tabs Pills -->
+              <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px;">
+                <span *ngFor="let tab of item.impactedTabs" 
+                      style="font-size: 10px; font-weight: 600; background: rgba(37, 99, 235, 0.08); color: #1d4ed8; padding: 1px 6px; border-radius: 4px;">
+                  <i class="bi bi-tag-fill me-1" style="font-size: 8px;"></i>{{ tab }}
+                </span>
+              </div>
+
+              <!-- Contextual Input Control Based on Type -->
+              <div style="background: var(--bg-surface, #f8fafc); border-radius: 8px; padding: 10px; border: 1px solid var(--border-color, #e2e8f0);">
+                
+                <!-- Boolean Switch with Robust Toggle Switch Slider -->
+                <div *ngIf="item.type === 'boolean'" style="display: flex; align-items: center; justify-content: space-between;">
+                  <span style="font-size: 12px; font-weight: 600; color: var(--text-primary, #334155);">
+                    Status: <strong [style.color]="item.value ? '#059669' : '#dc2626'">{{ item.value ? 'Enabled' : 'Disabled' }}</strong>
+                  </span>
+                  <label class="toggle-switch" style="margin: 0; flex-shrink: 0; width: 44px; height: 24px;">
+                    <input type="checkbox" 
+                           [checked]="item.value" 
+                           (change)="item.value = $any($event.target).checked; updateCustomizationValue(item, item.value)"
+                           [attr.aria-label]="item.title">
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+
+                <!-- Number Input with Unit -->
+                <div *ngIf="item.type === 'number'" style="display: flex; align-items: center; gap: 8px;">
+                  <input type="number" 
+                         [(ngModel)]="item.value" 
+                         (ngModelChange)="updateCustomizationValue(item, item.value)"
+                         class="form-control form-control-sm" 
+                         style="font-weight: 600; font-family: monospace; font-size: 13px; height: 38px; line-height: 1.4; padding: 7px 12px;">
+                  <span *ngIf="item.unit" class="badge-soft-slate" style="font-size: 11px; white-space: nowrap; font-weight: 600;">
+                    {{ item.unit }}
+                  </span>
+                </div>
+
+                <!-- Color Picker -->
+                <div *ngIf="item.type === 'color'" style="display: flex; align-items: center; gap: 8px;">
+                  <input type="color" 
+                         [(ngModel)]="item.value" 
+                         (ngModelChange)="updateCustomizationValue(item, item.value)"
+                         style="width: 38px; height: 38px; padding: 2px; border-radius: 6px; cursor: pointer; border: 1px solid #cbd5e1; flex-shrink: 0;">
+                  <input type="text" 
+                         [(ngModel)]="item.value" 
+                         (ngModelChange)="updateCustomizationValue(item, item.value)"
+                         class="form-control form-control-sm" 
+                         style="font-family: monospace; font-weight: 600; font-size: 13px; height: 38px; line-height: 1.4; padding: 7px 12px; width: 100%;">
+                </div>
+
+                <!-- Select Dropdown -->
+                <div *ngIf="item.type === 'select'">
+                  <select [(ngModel)]="item.value" 
+                          (ngModelChange)="updateCustomizationValue(item, item.value)"
+                          class="form-select form-select-sm" 
+                          style="font-size: 12.5px; font-weight: 600; height: 38px; line-height: 1.4; padding: 7px 12px;">
+                    <option *ngFor="let opt of item.options" [value]="opt.includes(' ') ? opt.split(' ')[0] : opt">{{ opt }}</option>
+                  </select>
+                </div>
+
+                <!-- String Input with Full Height & No Text Clipping -->
+                <div *ngIf="item.type === 'string'">
+                  <input type="text" 
+                         [(ngModel)]="item.value" 
+                         (ngModelChange)="updateCustomizationValue(item, item.value)"
+                         class="form-control form-control-sm" 
+                         style="font-size: 13px; height: 38px; line-height: 1.4; padding: 7px 12px; box-sizing: border-box; width: 100%;">
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ========================================================================= -->
       <!-- 1. BRANDING & VISUAL THEMES                                                -->
       <!-- ========================================================================= -->
       <div *ngIf="activeSubTab === 'branding'" class="subtab-section">
         
-        <!-- COMPACT ENTERPRISE HEADER -->
-        <div class="config-header-bar">
-          <div class="config-header-info">
-            <div class="branding-breadcrumb">
-              <span class="crumb-root">ERP</span>
-              <i class="bi bi-chevron-right crumb-sep"></i>
-              <span class="crumb-sec">SYSTEM SETTINGS</span>
-              <i class="bi bi-chevron-right crumb-sep"></i>
-              <span class="crumb-curr">BRANDING &amp; VISUAL IDENTITY</span>
+        <!-- MODULE HUB: PRIMARY CONTENT CARD HEADER -->
+        <div class="module-hub-header">
+          <div class="header-left">
+            <div class="header-icon">
+              <i class="bi bi-palette"></i>
             </div>
-            <h3 class="branding-page-title">Branding &amp; Visual Identity System</h3>
-            <p class="branding-page-desc">Configure corporate visual tokens, primary theme palette, typography, and logo assets.</p>
+            <div class="header-titles">
+              <div class="title-row">
+                <h2>Branding &amp; Visual Identity System</h2>
+                <span class="header-count-pill">Theme Suite</span>
+              </div>
+              <p class="header-desc">Configure corporate branding assets, primary theme palette, typography, and density.</p>
+            </div>
           </div>
-          <div class="config-header-actions">
+          <div class="header-actions">
             <span class="unsaved-badge" *ngIf="hasUnsavedChanges">
               <span class="unsaved-dot"></span> Unsaved Changes
             </span>
-            <button type="button" class="btn btn-secondary config-btn-secondary" (click)="resetBrandingDefaults()" title="Revert to factory brand defaults">
-              <i class="bi bi-arrow-counterclockwise"></i> Reset Defaults
-            </button>
-            <button type="button" class="btn btn-primary config-btn-primary" (click)="saveBrandingSettings()" [disabled]="isSavingBranding">
-              <i class="bi" [ngClass]="isSavingBranding ? 'bi-arrow-repeat spin' : 'bi-check2-circle'"></i>
-              {{ isSavingBranding ? 'Saving...' : 'Save Configuration' }}
-            </button>
+          </div>
+        </div>
+
+        <!-- MODULE HUB: 4-CARD KPI STAT ROW -->
+        <div class="module-hub-kpis">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-blue">
+              <i class="bi bi-image"></i>
+            </div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Brand Assets Configured">Brand Assets</div>
+              <div class="hub-kpi-value">{{ branding.brand_logo_url ? 'Active Logo' : 'Default' }}</div>
+              <div class="hub-kpi-sub" title="Vector SVG & PNG High-DPI">Vector SVG &amp; PNG</div>
+            </div>
+          </div>
+
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-purple">
+              <i class="bi bi-moon-stars"></i>
+            </div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Active Theme">Active Theme</div>
+              <div class="hub-kpi-value">{{ isDarkMode ? 'Dark Mode' : 'Light Mode' }}</div>
+              <div class="hub-kpi-sub" [title]="'Density: ' + (tableDensity | titlecase)">Density: {{ tableDensity | titlecase }}</div>
+            </div>
+          </div>
+
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-green">
+              <i class="bi bi-translate"></i>
+            </div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Languages Enabled">Languages Enabled</div>
+              <div class="hub-kpi-value">3 Locales</div>
+              <div class="hub-kpi-sub" title="English, Marathi, Hindi">English, Marathi, Hindi</div>
+            </div>
+          </div>
+
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-amber">
+              <i class="bi bi-palette2"></i>
+            </div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Accent Palette">Accent Palette</div>
+              <div class="hub-kpi-value">{{ branding.brand_primary_color || '#0B47D4' }}</div>
+              <div class="hub-kpi-sub" [title]="'Font: ' + (branding.font_family || 'Inter')">Font: {{ branding.font_family || 'Inter' }}</div>
+            </div>
           </div>
         </div>
 
@@ -156,16 +602,21 @@
           <div class="config-section">
             <div class="config-section-header">
               <div class="section-title-wrap">
-                <div class="section-icon-badge"><i class="bi bi-building"></i></div>
+                <div class="section-icon-badge pod-blue"><i class="bi bi-building"></i></div>
                 <div>
                   <h4 class="config-section-title">Corporate Brand Information &amp; Assets</h4>
                   <p class="config-section-subtitle">Set official company display title, slogan, and high-resolution logo assets.</p>
                 </div>
               </div>
+              <div class="header-section-status">
+                <span class="badge-soft-emerald" style="font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
+                  <i class="bi bi-shield-check"></i> Enterprise Verified Brand
+                </span>
+              </div>
             </div>
             
-            <div class="config-grid-2col">
-              <!-- Left Col: Logo Upload -->
+            <div class="config-grid-3col">
+              <!-- Col 1: Corporate Logo & Live Thumbnail -->
               <div class="config-form-group">
                 <label class="config-label">Corporate Logo <span class="label-helper-inline">(Header &amp; Reports)</span></label>
                 <div class="compact-logo-upload">
@@ -182,25 +633,57 @@
                         <i class="bi bi-x-circle"></i> Reset
                       </button>
                     </div>
-                    <span class="upload-hint">SVG, PNG, or WebP with transparent background (Max 2MB).</span>
+                    <span class="upload-hint">SVG, PNG, or WebP (Max 2MB).</span>
                   </div>
                 </div>
                 <input type="file" #logoFileInput (change)="onLogoFileSelected($event)" accept="image/*" style="display: none;">
+                
+                <!-- Live Header Dark Preview Bar to fully utilize space -->
+                <div class="logo-live-preview-pill" style="margin-top: 10px; background: #0f172a; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #1e293b;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <img [src]="branding.brand_logo_url || 'assets/logo.svg'" alt="Logo" style="width: 22px; height: 22px; object-fit: contain;">
+                    <span style="font-size: 12px; font-weight: 700; color: #ffffff;">{{ branding.app_display_name || 'Futane Agro ERP' }}</span>
+                  </div>
+                  <span style="font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: 10px; background: rgba(255,255,255,0.15); color: #93c5fd;">HEADER CHIP</span>
+                </div>
               </div>
 
-              <!-- Right Col: App Name & Tagline -->
+              <!-- Col 2: App Name & Tagline -->
               <div class="config-stack">
                 <div class="config-form-group">
                   <label class="config-label">Application Display Title <span class="req-star">*</span></label>
-                  <input type="text" [(ngModel)]="branding.app_display_name" (ngModelChange)="hasUnsavedChanges = true" class="config-control" placeholder="Futane Agro ERP">
+                  <input type="text" [(ngModel)]="branding.app_display_name" (ngModelChange)="onBrandingTitleChange($event)" class="config-control" placeholder="Futane Agro ERP">
                   <span class="control-hint">Displayed in browser tabs, top navigation, and official reports.</span>
                 </div>
                 <div class="config-form-group">
                   <label class="config-label">Header Tagline / Slogan</label>
-                  <input type="text" [(ngModel)]="branding.app_tagline" (ngModelChange)="hasUnsavedChanges = true" class="config-control" placeholder="Quality Crates, Stronger Future">
+                  <input type="text" [(ngModel)]="branding.app_tagline" (ngModelChange)="onBrandingTaglineChange($event)" class="config-control" placeholder="Quality Crates, Stronger Future">
                   <span class="control-hint">Corporate slogan printed on official invoices and delivery challans.</span>
                 </div>
               </div>
+
+              <!-- Col 3: Legal Entity & Compliance Overview -->
+              <div class="config-stack">
+                <div class="config-form-group">
+                  <label class="config-label">Registered Legal Entity</label>
+                  <div style="background: var(--bg-surface, #f8fafc); border: 1px solid var(--border-color, #cbd5e1); border-radius: 8px; padding: 8px 12px; min-height: 38px; display: flex; align-items: center; font-size: 12.5px; font-weight: 600; color: var(--text-primary, #0f172a);">
+                    <i class="bi bi-building me-2 text-primary"></i>
+                    {{ companyProfiles[0]?.companyName || 'Futane Agro Industries Pvt. Ltd.' }}
+                  </div>
+                  <span class="control-hint">Official company name bound to statutory invoice templates.</span>
+                </div>
+                <div class="config-form-group">
+                  <label class="config-label">Statutory GSTIN / PAN</label>
+                  <div style="background: var(--bg-surface, #f8fafc); border: 1px solid var(--border-color, #cbd5e1); border-radius: 8px; padding: 8px 12px; min-height: 38px; display: flex; align-items: center; justify-content: space-between; font-family: monospace; font-size: 12.5px; font-weight: 700; color: var(--text-primary, #0f172a);">
+                    <span>{{ companyProfiles[0]?.gstin || '27AABCF1234F1Z8' }}</span>
+                    <button type="button" class="btn btn-sm btn-action-subtle" (click)="switchSubNav('business-rules')" style="font-size: 11px; padding: 2px 8px; height: 24px;">
+                      <i class="bi bi-pencil-square me-1"></i> Edit Entities
+                    </button>
+                  </div>
+                  <span class="control-hint">State tax identifier for GST calculation engines and invoices.</span>
+                </div>
+              </div>
+
             </div>
           </div>
 
@@ -210,7 +693,7 @@
           <div class="config-section">
             <div class="config-section-header">
               <div class="section-title-wrap">
-                <div class="section-icon-badge"><i class="bi bi-palette"></i></div>
+                <div class="section-icon-badge pod-purple"><i class="bi bi-palette"></i></div>
                 <div>
                   <h4 class="config-section-title">Color Palette &amp; Visual Theme Tokens</h4>
                   <p class="config-section-subtitle">Manage system-wide brand identity accent, interface theme, and typography.</p>
@@ -293,7 +776,7 @@
           <div class="config-section">
             <div class="config-section-header">
               <div class="section-title-wrap">
-                <div class="section-icon-badge"><i class="bi bi-eye"></i></div>
+                <div class="section-icon-badge pod-emerald"><i class="bi bi-eye"></i></div>
                 <div>
                   <h4 class="config-section-title">Live Brand &amp; Interface Preview</h4>
                   <p class="config-section-subtitle">Real-time rendering of corporate brand identity tokens without affecting live users until saved.</p>
@@ -393,28 +876,77 @@
       <!-- ========================================================================= -->
       <div *ngIf="activeSubTab === 'business-rules'" class="subtab-section">
         
-        <!-- COMPACT ENTERPRISE HEADER BAR -->
-        <div class="config-header-bar">
-          <div class="config-header-info">
-            <div class="config-header-badge">
-              <i class="bi bi-shield-check"></i> Enterprise Multi-Entity &amp; Compliance
-            </div>
-            <h3>Multi-Company Billing &amp; ERP Business Rules</h3>
-            <p>Configure corporate legal entities, GSTIN profiles, banking &amp; UPI settlement, plant operational parameters, and live print documents.</p>
-          </div>
-          <div class="config-header-actions">
-            <button type="button" class="btn btn-secondary config-btn-secondary" (click)="openAddBankModal()">
-              <i class="bi bi-bank"></i>
-              <span>Add Bank Account</span>
-            </button>
-            <button type="button" class="btn btn-secondary config-btn-secondary" (click)="openAddCompanyModal()">
+        <!-- MODULE HUB: PRIMARY CONTENT CARD HEADER -->
+        <div class="module-hub-header">
+          <div class="header-left">
+            <div class="header-icon">
               <i class="bi bi-building"></i>
-              <span>Add Legal Entity</span>
+            </div>
+            <div class="header-titles">
+              <div class="title-row">
+                <h2>Multi-Company Billing &amp; Business Rules</h2>
+                <span class="header-count-pill">{{ companyProfiles.length }} Legal Entities</span>
+              </div>
+              <p class="header-desc">Configure legal entities, GSTIN profiles, banking &amp; UPI accounts, plant shifts, and print documents.</p>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="openAddBankModal()">
+              <i class="bi bi-bank me-1"></i> Add Bank
             </button>
-            <button type="button" class="btn btn-primary config-btn-primary" (click)="saveBusinessRules()">
-              <i class="bi bi-check-lg"></i>
-              <span>Save Rules</span>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="openAddCompanyModal()">
+              <i class="bi bi-building me-1"></i> Add Entity
             </button>
+            <button type="button" class="btn btn-primary btn-sm" (click)="saveBusinessRules()">
+              <i class="bi bi-check2-circle me-1"></i> Save Rules
+            </button>
+          </div>
+        </div>
+
+        <!-- MODULE HUB: 4-CARD KPI STAT ROW -->
+        <div class="module-hub-kpis">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-blue">
+              <i class="bi bi-building-check"></i>
+            </div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Legal Entities">Legal Entities</div>
+              <div class="hub-kpi-value">{{ companyProfiles.length }} {{ companyProfiles.length === 1 ? 'Profile' : 'Profiles' }}</div>
+              <div class="hub-kpi-sub" title="GSTIN / PAN Configured">GSTIN / PAN Configured</div>
+            </div>
+          </div>
+
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-green">
+              <i class="bi bi-bank"></i>
+            </div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Bank Accounts">Bank Accounts</div>
+              <div class="hub-kpi-value">{{ bankProfiles.length }} Active</div>
+              <div class="hub-kpi-sub" title="UPI QR Enabled">UPI QR Enabled</div>
+            </div>
+          </div>
+
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-amber">
+              <i class="bi bi-file-earmark-spreadsheet"></i>
+            </div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Invoice Templates">Invoice Templates</div>
+              <div class="hub-kpi-value">{{ docTypes.length }} Types</div>
+              <div class="hub-kpi-sub" [title]="'Active: ' + selectedDocType">Active: {{ selectedDocType }}</div>
+            </div>
+          </div>
+
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-purple">
+              <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Credit & Due Terms">Credit &amp; Due Terms</div>
+              <div class="hub-kpi-value">{{ businessRules.payment_terms_days || 30 }} Days</div>
+              <div class="hub-kpi-sub" title="Max Credit Limit">Max Credit: ₹{{ (businessRules.credit_limit_default || 500000) | number:'1.0-0' }}</div>
+            </div>
           </div>
         </div>
 
@@ -425,7 +957,7 @@
           <div class="config-section">
             <div class="config-section-header">
               <div class="section-title-group">
-                <div class="section-icon-badge">
+                <div class="section-icon-badge pod-blue">
                   <i class="bi bi-building"></i>
                 </div>
                 <div>
@@ -515,7 +1047,7 @@
           <div class="config-section">
             <div class="config-section-header">
               <div class="section-title-group">
-                <div class="section-icon-badge icon-badge-bank">
+                <div class="section-icon-badge pod-emerald">
                   <i class="bi bi-bank"></i>
                 </div>
                 <div>
@@ -602,7 +1134,7 @@
             <div class="config-section">
               <div class="config-section-header">
                 <div class="section-title-group">
-                  <div class="section-icon-badge">
+                  <div class="section-icon-badge pod-blue">
                     <i class="bi bi-receipt"></i>
                   </div>
                   <div>
@@ -643,7 +1175,7 @@
             <div class="config-section">
               <div class="config-section-header">
                 <div class="section-title-group">
-                  <div class="section-icon-badge icon-badge-gear">
+                  <div class="section-icon-badge pod-amber">
                     <i class="bi bi-gear-wide-connected"></i>
                   </div>
                   <div>
@@ -696,7 +1228,7 @@
           <div class="config-section designer-master-section">
             <div class="config-section-header">
               <div class="section-title-group">
-                <div class="section-icon-badge icon-badge-designer">
+                <div class="section-icon-badge pod-purple">
                   <i class="bi bi-palette2"></i>
                 </div>
                 <div>
@@ -720,18 +1252,16 @@
               </div>
             </div>
 
-            <!-- Document Type Selector Tabs -->
-            <div class="doc-type-selector-wrapper">
-              <div class="doc-type-selector-tabs">
-                <button *ngFor="let dt of docTypes" 
-                        type="button" 
-                        class="doc-type-pill" 
-                        [class.active]="selectedDocType === dt.key" 
-                        (click)="selectDocType(dt.key)">
-                  <i class="bi bi-file-earmark-text"></i>
-                  <span>{{ dt.label }}</span>
-                </button>
-              </div>
+            <!-- MODULE HUB: DOCUMENT TYPE FILTER PILLS -->
+            <div class="module-hub-filter-pills" style="margin-bottom: 16px;">
+              <button *ngFor="let dt of docTypes" 
+                      type="button" 
+                      class="hub-filter-pill" 
+                      [class.active]="selectedDocType === dt.key" 
+                      (click)="selectDocType(dt.key)">
+                <i class="bi bi-file-earmark-text"></i>
+                <span>{{ dt.label }}</span>
+              </button>
             </div>
 
             <!-- Designer Grid: Controls Left, Live Sheet Right -->
@@ -833,6 +1363,7 @@
                     <span>Live Print View &bull; <strong>A4 Portrait</strong></span>
                   </div>
                   <div class="preview-zoom-actions">
+                    <button type="button" class="zoom-btn" [class.active]="previewScale === 0.78" (click)="setPreviewScale(0.78)">Fit</button>
                     <button type="button" class="zoom-btn" [class.active]="previewScale === 0.85" (click)="setPreviewScale(0.85)">85%</button>
                     <button type="button" class="zoom-btn" [class.active]="previewScale === 1.0" (click)="setPreviewScale(1.0)">100%</button>
                     <button type="button" class="zoom-btn" [class.active]="previewScale === 1.15" (click)="setPreviewScale(1.15)">115%</button>
@@ -844,7 +1375,7 @@
 
                 <!-- Preview Paper Sheet -->
                 <div class="preview-paper-container">
-                  <div class="preview-paper" [style.transform]="'scale(' + previewScale + ')'" [style.transform-origin]="'top center'">
+                  <div class="preview-paper" [style.zoom]="previewScale">
                     <!-- Invoice Header -->
                     <div class="inv-paper-header">
                       <div class="inv-brand-block">
@@ -897,14 +1428,14 @@
                     <table class="inv-items-table">
                       <thead>
                         <tr>
-                          <th style="width: 30px;">#</th>
-                          <th>Item Description</th>
-                          <th style="width: 55px; text-align: center;">HSN</th>
-                          <th style="width: 65px; text-align: right;">Qty</th>
-                          <th style="width: 70px; text-align: right;">Rate (₹)</th>
-                          <th style="width: 85px; text-align: right;">Taxable (₹)</th>
-                          <th style="width: 50px; text-align: center;">GST</th>
-                          <th style="width: 90px; text-align: right;">Total (₹)</th>
+                          <th style="width: 4%; text-align: center;">#</th>
+                          <th style="width: 28%;">Item Description</th>
+                          <th style="width: 8%; text-align: center;">HSN</th>
+                          <th style="width: 11%; text-align: right;">Qty</th>
+                          <th style="width: 11%; text-align: right;">Rate (₹)</th>
+                          <th style="width: 17%; text-align: right;">Taxable (₹)</th>
+                          <th style="width: 6%; text-align: center;">GST</th>
+                          <th style="width: 15%; text-align: right;">Total (₹)</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1043,130 +1574,100 @@
       <!-- ========================================================================= -->
       <div *ngIf="activeSubTab === 'developer'" class="devhub-subtab-section">
 
-        <!-- Stable Global Header Breadcrumb & Actions -->
-        <div class="devhub-header-deck">
-          <div>
-            <div class="devhub-breadcrumb-trail">
-              <span>ERP</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-              <span>SYSTEM SETTINGS</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-              <span class="breadcrumb-active">DEVELOPER HUB, API KEYS & WEBHOOKS</span>
+        <!-- MODULE HUB: PRIMARY CONTENT CARD HEADER -->
+        <div class="module-hub-header">
+          <div class="header-left">
+            <div class="header-icon" style="background: linear-gradient(135deg, #475569 0%, #334155 100%);">
+              <i class="bi bi-terminal"></i>
             </div>
-            <div class="devhub-domain-eyebrow">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-              ENTERPRISE DEVELOPER HUB & EXTERNAL INTEGRATIONS GATEWAY
+            <div class="header-titles">
+              <div class="title-row">
+                <h2>Developer Hub, API Keys &amp; Webhooks</h2>
+                <span class="header-count-pill">{{ apiKeysList.length }} Keys &bull; {{ webhooksList.length }} Webhooks</span>
+              </div>
+              <p class="header-desc">Generate scoped machine-to-machine API keys, configure HMAC-SHA256 signed event webhooks, and explore OpenAPI gateway docs.</p>
             </div>
-            <h3 class="devhub-deck-title">Developer Hub, API Keys & Webhooks</h3>
-            <p class="devhub-deck-desc">
-              Generate scoped machine-to-machine API keys, configure secure HMAC-SHA256 signed outbound event webhooks, explore live OpenAPI gateway documentation, and monitor SRE observability wallboards.
-            </p>
           </div>
-          <div class="devhub-header-actions">
+          <div class="header-actions">
             <button type="button" class="btn btn-secondary btn-sm" (click)="loadApiKeys(); loadWebhooks();" title="Reload API keys and webhooks from backend">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-              <span>Refresh Data</span>
+              <i class="bi bi-arrow-clockwise me-1"></i> Refresh Data
             </button>
             <button type="button" class="btn btn-primary btn-sm" (click)="openCreateApiKeyModal()" *ngIf="devHubSubTab === 'apikeys' || devHubSubTab === 'docs'">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3M18.5 4.5l3 3"/></svg>
-              <span>Generate API Key</span>
+              <i class="bi bi-key-fill me-1"></i> Generate API Key
             </button>
             <button type="button" class="btn btn-primary btn-sm" (click)="openCreateWebhookModal()" *ngIf="devHubSubTab === 'webhooks'">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-              <span>Add Webhook</span>
+              <i class="bi bi-link-45deg me-1"></i> Add Webhook
             </button>
           </div>
         </div>
 
-        <!-- 4 Telemetry Metrics Cards -->
-        <div class="devhub-telemetry-grid">
-          <!-- Active API Keys -->
-          <div class="devhub-telemetry-card">
-            <div class="devhub-card-top">
-              <div class="devhub-card-icon" style="background: rgba(16, 185, 129, 0.12); color: #059669;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3M18.5 4.5l3 3"/></svg>
-              </div>
-              <span class="devhub-badge devhub-badge-success">{{ activeApiKeysCount }} ACTIVE</span>
+        <!-- MODULE HUB: 4-CARD KPI STAT ROW -->
+        <div class="module-hub-kpis">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-green">
+              <i class="bi bi-key-fill"></i>
             </div>
-            <div class="devhub-metric-title">Active API Bearer Keys</div>
-            <div class="devhub-metric-val">
-              {{ activeApiKeysCount }}
-              <span class="devhub-metric-sub">/ {{ apiKeysList.length }} Registered</span>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Active API Bearer Keys">Active API Keys</div>
+              <div class="hub-kpi-value">{{ activeApiKeysCount }} / {{ apiKeysList.length }}</div>
+              <div class="hub-kpi-sub" title="M2M tokens with OAuth scopes">M2M OAuth Scopes</div>
             </div>
-            <div class="devhub-metric-foot">M2M tokens with granular OAuth scopes</div>
           </div>
 
-          <!-- Webhook Endpoints -->
-          <div class="devhub-telemetry-card">
-            <div class="devhub-card-top">
-              <div class="devhub-card-icon" style="background: rgba(37, 99, 235, 0.12); color: #2563eb;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-              </div>
-              <span class="devhub-badge devhub-badge-info">{{ activeWebhooksCount }} ONLINE</span>
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-blue">
+              <i class="bi bi-link-45deg"></i>
             </div>
-            <div class="devhub-metric-title">Event Webhook Endpoints</div>
-            <div class="devhub-metric-val">
-              {{ activeWebhooksCount }}
-              <span class="devhub-metric-sub">/ {{ webhooksList.length }} Subscribed</span>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Event Webhook Endpoints">Webhook Endpoints</div>
+              <div class="hub-kpi-value">{{ activeWebhooksCount }} / {{ webhooksList.length }}</div>
+              <div class="hub-kpi-sub" title="Real-time HTTP push dispatchers">Real-time HTTP Push</div>
             </div>
-            <div class="devhub-metric-foot">Real-time HTTP event push dispatchers</div>
           </div>
 
-          <!-- HMAC-SHA256 Security -->
-          <div class="devhub-telemetry-card">
-            <div class="devhub-card-top">
-              <div class="devhub-card-icon" style="background: rgba(124, 58, 237, 0.12); color: #7c3aed;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-              </div>
-              <span class="devhub-badge devhub-badge-purple">CRYPTOGRAPHIC</span>
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-purple">
+              <i class="bi bi-shield-lock-fill"></i>
             </div>
-            <div class="devhub-metric-title">HMAC-SHA256 Signing</div>
-            <div class="devhub-metric-val">
-              whsec_***
-              <span class="devhub-metric-sub">Enforced</span>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="HMAC-SHA256 Signing">HMAC Signing</div>
+              <div class="hub-kpi-value">Enforced</div>
+              <div class="hub-kpi-sub" title="Payload signature verification">Signature Verification</div>
             </div>
-            <div class="devhub-metric-foot">Tamper-proof payload signature verification</div>
           </div>
 
-          <!-- Observability Wallboards -->
-          <div class="devhub-telemetry-card">
-            <div class="devhub-card-top">
-              <div class="devhub-card-icon" style="background: rgba(217, 119, 6, 0.12); color: #d97706;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14h-2v-6h2zm0-8h-2V6h2z"/></svg>
-              </div>
-              <span class="devhub-badge devhub-badge-warning">10 TABS NOC</span>
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-amber">
+              <i class="bi bi-activity"></i>
             </div>
-            <div class="devhub-metric-title">SRE Observability Gateways</div>
-            <div class="devhub-metric-val">
-              Grafana
-              <span class="devhub-metric-sub">APM Suite</span>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="SRE Observability Gateways">SRE Observability</div>
+              <div class="hub-kpi-value">10 TABS NOC</div>
+              <div class="hub-kpi-sub" title="Prometheus &amp; Grafana APM Suite">Prometheus &amp; Grafana</div>
             </div>
-            <div class="devhub-metric-foot">Prometheus metrics & Loki stream logs</div>
           </div>
         </div>
 
-        <!-- Segmented Sub-Navigation Switcher -->
-        <div class="devhub-subnav-bar">
-          <div class="devhub-subnav-pills">
-            <button type="button" class="devhub-subnav-btn" [class.active]="devHubSubTab === 'apikeys'" (click)="devHubSubTab = 'apikeys'">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3M18.5 4.5l3 3"/></svg>
-              <span>API Bearer Keys</span>
-              <span class="devhub-subnav-counter">{{ apiKeysList.length }}</span>
-            </button>
-            <button type="button" class="devhub-subnav-btn" [class.active]="devHubSubTab === 'webhooks'" (click)="devHubSubTab = 'webhooks'">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-              <span>Event Webhooks</span>
-              <span class="devhub-subnav-counter">{{ webhooksList.length }}</span>
-            </button>
-            <button type="button" class="devhub-subnav-btn" [class.active]="devHubSubTab === 'docs'" (click)="devHubSubTab = 'docs'">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-              <span>API Gateway Documentation</span>
-            </button>
-            <button type="button" class="devhub-subnav-btn" [class.active]="devHubSubTab === 'observability'" (click)="devHubSubTab = 'observability'">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-              <span>SRE Observability Wallboards</span>
-            </button>
-          </div>
+        <!-- MODULE HUB: SECTION NAVIGATION FILTER PILLS -->
+        <div class="module-hub-filter-pills">
+          <button type="button" class="hub-filter-pill" [class.active]="devHubSubTab === 'apikeys'" (click)="devHubSubTab = 'apikeys'">
+            <i class="bi bi-key-fill"></i>
+            <span>API Bearer Keys</span>
+            <span class="pill-count">{{ apiKeysList.length }}</span>
+          </button>
+          <button type="button" class="hub-filter-pill" [class.active]="devHubSubTab === 'webhooks'" (click)="devHubSubTab = 'webhooks'">
+            <i class="bi bi-link-45deg"></i>
+            <span>Event Webhooks</span>
+            <span class="pill-count">{{ webhooksList.length }}</span>
+          </button>
+          <button type="button" class="hub-filter-pill" [class.active]="devHubSubTab === 'docs'" (click)="devHubSubTab = 'docs'">
+            <i class="bi bi-journal-code"></i>
+            <span>API Gateway Documentation</span>
+          </button>
+          <button type="button" class="hub-filter-pill" [class.active]="devHubSubTab === 'observability'" (click)="devHubSubTab = 'observability'">
+            <i class="bi bi-graph-up"></i>
+            <span>SRE Observability Wallboards</span>
+          </button>
         </div>
 
         <!-- ===================================================================== -->
@@ -1230,10 +1731,6 @@
               <span class="badge" style="background: var(--bg-surface-elevated, #f1f5f9); color: var(--text-secondary, #475569); border: 1px solid var(--border-color, #e2e8f0); font-weight: 600;">
                 Showing {{ filteredApiKeys.length }} of {{ apiKeysList.length }} Keys
               </span>
-              <button type="button" class="btn btn-primary btn-sm" (click)="openCreateApiKeyModal()">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                <span>Generate API Key</span>
-              </button>
             </div>
           </div>
 
@@ -2070,70 +2567,35 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
       <!-- ========================================================================= -->
       <div *ngIf="activeSubTab === 'governance'" class="subtab-section infra-console-section">
 
-        <!-- 1. Enterprise Breadcrumb Bar -->
-        <div class="infra-breadcrumb-bar no-print" aria-label="Breadcrumb">
-          <span class="crumb-root">ERP</span>
-          <i class="bi bi-chevron-right crumb-sep"></i>
-          <span class="crumb-sec">SYSTEM ADMINISTRATION</span>
-          <i class="bi bi-chevron-right crumb-sep"></i>
-          <span class="crumb-curr">JVM TELEMETRY, CACHE &amp; DATABASE BACKUPS</span>
-        </div>
-
-        <!-- 2. Infrastructure Operations Command Header Card -->
-        <header class="infra-page-header no-print">
-          <div class="header-left-col">
-            <div class="header-icon-box">
+        <!-- MODULE HUB: PRIMARY CONTENT CARD HEADER -->
+        <div class="module-hub-header">
+          <div class="header-left">
+            <div class="header-icon" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
               <i class="bi bi-hdd-network"></i>
             </div>
-            <div class="header-title-meta">
-              <div class="header-title-row">
-                <h2 class="header-main-title">JVM Telemetry, Cache &amp; Database Backups</h2>
-                <span class="header-badge-live">
-                  <span class="pulse-dot"></span>
-                  <span>Live System Telemetry</span>
-                </span>
-                <span class="auto-refresh-pill" title="Health poller polls every 30 seconds">
-                  <i class="bi bi-clock-history"></i> Auto-refresh: 30s
-                </span>
+            <div class="header-titles">
+              <div class="title-row">
+                <h2>JVM Telemetry, Cache &amp; Database Backups</h2>
+                <span class="header-count-pill">Live Diagnostics</span>
               </div>
-              <p class="header-desc-text">
-                Enterprise operational administration: real-time JVM telemetry, L1 Caffeine cache eviction, MySQL InnoDB health, and disaster recovery archives.
-              </p>
+              <p class="header-desc">Enterprise operational administration: real-time JVM telemetry, L1 Caffeine cache eviction, and disaster recovery archives.</p>
             </div>
           </div>
-
-          <div class="header-right-col">
-            <button 
-              type="button" 
-              class="btn-header-action btn-secondary" 
-              (click)="refreshAllGovernanceData()" 
-              [disabled]="isLoadingDiagnostics || isLoadingBackups"
-              title="Probe live JVM, memory, cache and database telemetry">
-              <i class="bi bi-arrow-clockwise" [class.spin-animate]="isLoadingDiagnostics || isLoadingBackups"></i>
-              <span>{{ (isLoadingDiagnostics || isLoadingBackups) ? 'Probing...' : 'Refresh Telemetry' }}</span>
+          <div class="header-actions">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="refreshAllGovernanceData()" [disabled]="isLoadingDiagnostics || isLoadingBackups" title="Probe live telemetry">
+              <i class="bi bi-arrow-clockwise me-1" [class.spin-animate]="isLoadingDiagnostics || isLoadingBackups"></i>
+              <span>Refresh Telemetry</span>
             </button>
-
-            <button 
-              type="button" 
-              class="btn-header-action btn-secondary" 
-              (click)="downloadEnterpriseBackupSnapshot()" 
-              [disabled]="isExportingBackup"
-              title="Download complete JSON configuration and master metadata snapshot">
-              <i class="bi bi-file-earmark-arrow-down" [class.spin-animate]="isExportingBackup"></i>
-              <span>{{ isExportingBackup ? 'Exporting...' : 'Export JSON Snapshot' }}</span>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="downloadEnterpriseBackupSnapshot()" [disabled]="isExportingBackup" title="Export JSON metadata snapshot">
+              <i class="bi bi-file-earmark-arrow-down me-1" [class.spin-animate]="isExportingBackup"></i>
+              <span>Export Snapshot</span>
             </button>
-
-            <button 
-              type="button" 
-              class="btn-header-action btn-primary" 
-              (click)="triggerDatabaseBackup()" 
-              [disabled]="isTriggeringBackup"
-              title="Execute instant mysqldump and generate .sql backup archive">
-              <i class="bi bi-database-add" [class.spin-animate]="isTriggeringBackup"></i>
-              <span>{{ isTriggeringBackup ? 'Backing Up...' : '+ Create Database Backup' }}</span>
+            <button type="button" class="btn btn-primary btn-sm" (click)="triggerDatabaseBackup()" [disabled]="isTriggeringBackup" title="Execute instant mysqldump">
+              <i class="bi bi-database-add me-1" [class.spin-animate]="isTriggeringBackup"></i>
+              <span>+ Create Database Backup</span>
             </button>
           </div>
-        </header>
+        </div>
 
         <!-- 3. Subsystem Health Status Strip (6 Critical Services) -->
         <div class="infra-health-strip">
@@ -2206,108 +2668,53 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
           </div>
         </div>
 
-        <!-- 4. JVM Telemetry & Resource Utilization Cards (4 Compact Cards) -->
-        <div class="section-sub-heading">
-          <div class="heading-title-group">
-            <i class="bi bi-speedometer2"></i>
-            <h4>JVM Telemetry &amp; Resource Utilization</h4>
-          </div>
-          <span class="heading-timestamp">Last probed: {{ lastTelemetryRefreshTime | date:'HH:mm:ss' }}</span>
-        </div>
-
-        <div class="infra-telemetry-grid">
+        <!-- MODULE HUB: 4-CARD KPI STAT ROW -->
+        <div class="module-hub-kpis">
           <!-- JVM Heap Memory Card -->
-          <div class="infra-stat-card">
-            <div class="stat-card-header">
-              <div class="stat-icon-pod pod-amber">
-                <i class="bi bi-cpu"></i>
-              </div>
-              <span class="stat-badge" [ngClass]="systemDiagnostics.memoryUsagePercent > 80 ? 'badge-danger' : 'badge-success'">
-                {{ systemDiagnostics.memoryUsagePercent || 24.0 }}% ALLOCATED
-              </span>
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-amber">
+              <i class="bi bi-cpu"></i>
             </div>
-            <div class="stat-card-label">JVM Heap Memory</div>
-            <div class="stat-card-value-row">
-              <span class="stat-primary-val">{{ systemDiagnostics.usedMemoryMb || 245.5 }} MB</span>
-              <span class="stat-secondary-val">/ {{ systemDiagnostics.maxMemoryMb || 1024 }} MB</span>
-            </div>
-            <div class="stat-progress-track">
-              <div class="stat-progress-bar" 
-                   [style.width.%]="systemDiagnostics.memoryUsagePercent || 24.0"
-                   [ngClass]="systemDiagnostics.memoryUsagePercent > 80 ? 'bar-danger' : 'bar-emerald'">
-              </div>
-            </div>
-            <div class="stat-supporting-text">
-              <span>G1GC Garbage Collector Active</span>
-              <span>Free: {{ ((systemDiagnostics.maxMemoryMb || 1024) - (systemDiagnostics.usedMemoryMb || 245.5)).toFixed(1) }} MB</span>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="JVM Heap Memory">JVM Heap Memory</div>
+              <div class="hub-kpi-value">{{ systemDiagnostics.usedMemoryMb || 245.5 }} MB</div>
+              <div class="hub-kpi-sub" [title]="(systemDiagnostics.memoryUsagePercent || 24.0) + '% of ' + (systemDiagnostics.maxMemoryMb || 1024) + ' MB Max'">{{ systemDiagnostics.memoryUsagePercent || 24.0 }}% of {{ systemDiagnostics.maxMemoryMb || 1024 }} MB</div>
             </div>
           </div>
 
           <!-- Active Threads & Concurrency Card -->
-          <div class="infra-stat-card">
-            <div class="stat-card-header">
-              <div class="stat-icon-pod pod-blue">
-                <i class="bi bi-stack"></i>
-              </div>
-              <span class="stat-badge badge-info">OPTIMAL CONCURRENCY</span>
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-blue">
+              <i class="bi bi-stack"></i>
             </div>
-            <div class="stat-card-label">Active JVM Threads</div>
-            <div class="stat-card-value-row">
-              <span class="stat-primary-val">{{ systemDiagnostics.activeThreads || 18 }}</span>
-              <span class="stat-secondary-val">Active Workers</span>
-            </div>
-            <div class="stat-progress-track">
-              <div class="stat-progress-bar bar-blue" [style.width.%]="Math.min(((systemDiagnostics.activeThreads || 18) / 100) * 100, 100)"></div>
-            </div>
-            <div class="stat-supporting-text">
-              <span>Async Dispatcher Pool: 8 Cores</span>
-              <span>Peak: {{ (systemDiagnostics.activeThreads || 18) + 6 }} Threads</span>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Active JVM Threads">Active JVM Threads</div>
+              <div class="hub-kpi-value">{{ systemDiagnostics.activeThreads || 18 }} Workers</div>
+              <div class="hub-kpi-sub" title="Dispatcher Pool: 8 Cores Active">Dispatcher Pool: 8 Cores</div>
             </div>
           </div>
 
           <!-- Database Ping & Connection Pool Card -->
-          <div class="infra-stat-card">
-            <div class="stat-card-header">
-              <div class="stat-icon-pod pod-emerald">
-                <i class="bi bi-database"></i>
-              </div>
-              <span class="stat-badge" [ngClass]="systemDiagnostics.dbLatencyMs > 50 ? 'badge-warning' : 'badge-success'">
-                {{ systemDiagnostics.dbConnectionStatus || 'HEALTHY' }}
-              </span>
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-green">
+              <i class="bi bi-database"></i>
             </div>
-            <div class="stat-card-label">Database Round-Trip Latency</div>
-            <div class="stat-card-value-row">
-              <span class="stat-primary-val">{{ systemDiagnostics.dbLatencyMs || 1.2 }} ms</span>
-              <span class="stat-secondary-val">MySQL Ping</span>
-            </div>
-            <div class="stat-progress-track">
-              <div class="stat-progress-bar bar-emerald" [style.width.%]="Math.min(((systemDiagnostics.dbLatencyMs || 1.2) / 20) * 100, 100)"></div>
-            </div>
-            <div class="stat-supporting-text">
-              <span>HikariCP Pool: Max 10 Connections</span>
-              <span>Entities: {{ systemDiagnostics.managedEntitiesCount || 42 }}+</span>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="DB Round-Trip Latency">DB Latency</div>
+              <div class="hub-kpi-value">{{ systemDiagnostics.dbLatencyMs || 1.2 }} ms</div>
+              <div class="hub-kpi-sub" [title]="'HikariCP: ' + (systemDiagnostics.dbConnectionStatus || 'HEALTHY')">HikariCP: {{ systemDiagnostics.dbConnectionStatus || 'HEALTHY' }}</div>
             </div>
           </div>
 
           <!-- Java Runtime & Platform Card -->
-          <div class="infra-stat-card">
-            <div class="stat-card-header">
-              <div class="stat-icon-pod pod-purple">
-                <i class="bi bi-terminal"></i>
-              </div>
-              <span class="stat-badge badge-purple">ENTERPRISE LTS</span>
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-purple">
+              <i class="bi bi-terminal"></i>
             </div>
-            <div class="stat-card-label">Java Runtime Environment</div>
-            <div class="stat-card-value-row">
-              <span class="stat-primary-val">JDK {{ systemDiagnostics.jvmVersion || '17.0.20' }}</span>
-              <span class="stat-secondary-val">64-Bit</span>
-            </div>
-            <div class="stat-progress-track">
-              <div class="stat-progress-bar bar-purple" style="width: 100%;"></div>
-            </div>
-            <div class="stat-supporting-text">
-              <span>OS: {{ systemDiagnostics.osName || 'Linux 64-bit' }}</span>
-              <span>Profile: Spring UAT/Prod</span>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Runtime Environment">Runtime Environment</div>
+              <div class="hub-kpi-value">JDK {{ systemDiagnostics.jvmVersion || '17' }}</div>
+              <div class="hub-kpi-sub" [title]="(systemDiagnostics.osName || 'Linux 64-bit') + ' • LTS'">{{ systemDiagnostics.osName || 'Linux 64-bit' }} &bull; LTS</div>
             </div>
           </div>
         </div>
@@ -2629,17 +3036,15 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
               <tbody *ngIf="!isLoadingBackups && filteredBackupsList.length === 0">
                 <tr>
                   <td colspan="5">
-                    <div class="infra-table-empty">
-                      <div class="empty-icon-box">
-                        <i class="bi bi-database-check"></i>
-                      </div>
+                    <div class="empty-state-box" style="margin: 24px auto; max-width: 480px;">
+                      <div class="empty-icon"><i class="bi bi-database text-muted"></i></div>
                       <h4>No Database Backups Found</h4>
                       <p>
                         {{ backupSearchTerm ? 'No backups match your search filter "' + backupSearchTerm + '".' : 'No .sql backup files currently exist in the server backups directory.' }}
                       </p>
                       <button 
                         type="button" 
-                        class="btn-header-action btn-primary" 
+                        class="btn btn-primary btn-sm" 
                         (click)="triggerDatabaseBackup()"
                         [disabled]="isTriggeringBackup">
                         <i class="bi bi-plus-lg"></i>
@@ -2755,81 +3160,73 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
       <!-- ========================================================================= -->
       <div *ngIf="activeSubTab === 'teams'" class="subtab-section">
         
-        <!-- COMPACT ENTERPRISE HEADER -->
-        <div class="config-header-bar">
-          <div class="config-header-info">
-            <div class="branding-breadcrumb">
-              <span class="crumb-root">ERP</span>
-              <i class="bi bi-chevron-right crumb-sep"></i>
-              <span class="crumb-sec">SYSTEM SETTINGS</span>
-              <i class="bi bi-chevron-right crumb-sep"></i>
-              <span class="crumb-current">ORGANIZATIONAL DIRECTORY</span>
+        <!-- MODULE HUB: PRIMARY CONTENT CARD HEADER -->
+        <div class="module-hub-header">
+          <div class="header-left">
+            <div class="header-icon">
+              <i class="bi bi-diagram-3"></i>
             </div>
-            <div class="config-header-title-row">
-              <span class="config-header-badge">
-                <i class="bi bi-diagram-3-fill"></i>
-                ORGANIZATIONAL GOVERNANCE &amp; STRUCTURE
-              </span>
+            <div class="header-titles">
+              <div class="title-row">
+                <h2>Department Directory &amp; Operational Teams</h2>
+                <span class="header-count-pill">{{ teamsList.length }} Departments</span>
+              </div>
+              <p class="header-desc">Configure corporate departments, functional operational units, role allocations, and navigation hubs.</p>
             </div>
-            <h2 class="config-page-title">Department Directory &amp; Operational Teams</h2>
-            <p class="config-page-desc">
-              Configure corporate departments, functional operational units, role allocations, and navigation hierarchy across plant facilities.
-            </p>
           </div>
-          <div class="config-header-actions">
-            <button type="button" class="btn btn-secondary config-btn-secondary" (click)="loadTeams()" title="Refresh department records from server">
-              <i class="bi bi-arrow-clockwise"></i>
-              <span>Refresh</span>
+          <div class="header-actions">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="loadTeams()" title="Refresh department records from server">
+              <i class="bi bi-arrow-clockwise me-1"></i> Refresh
             </button>
-            <button type="button" class="btn btn-primary config-btn-primary" (click)="openAddTeamModal()">
-              <i class="bi bi-plus-lg"></i>
-              <span>Add Department</span>
+            <button type="button" class="btn btn-primary btn-sm" (click)="openAddTeamModal()">
+              <i class="bi bi-plus-circle-fill me-1"></i> Add Department
             </button>
           </div>
         </div>
 
-        <!-- STAT METRIC PODS -->
-        <div class="dept-stat-grid">
-          <div class="dept-stat-card">
-            <div class="dept-stat-icon-box" style="background: rgba(5, 150, 105, 0.1); color: var(--brand-primary, #059669);">
+        <!-- MODULE HUB: 4-CARD KPI STAT ROW -->
+        <div class="module-hub-kpis">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-blue">
               <i class="bi bi-buildings"></i>
             </div>
-            <div class="dept-stat-info">
-              <div class="dept-stat-value">{{ teamsList.length }}</div>
-              <div class="dept-stat-label">TOTAL DEPARTMENTS</div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Total Departments">Total Departments</div>
+              <div class="hub-kpi-value">{{ teamsList.length }}</div>
+              <div class="hub-kpi-sub" title="Configured Entities">Configured Entities</div>
             </div>
           </div>
 
-          <div class="dept-stat-card">
-            <div class="dept-stat-icon-box" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-green">
               <i class="bi bi-check2-circle"></i>
             </div>
-            <div class="dept-stat-info">
-              <div class="dept-stat-val-row">
-                <span class="dept-stat-value">{{ activeTeamsCount }}</span>
-                <span class="pill-badge pill-success pill-xs">Active</span>
-              </div>
-              <div class="dept-stat-label">OPERATIONAL UNITS</div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Operational Units">Operational Units</div>
+              <div class="hub-kpi-value">{{ activeTeamsCount }} Active</div>
+              <div class="hub-kpi-sub" title="Ready for ERP Workflow">Ready for ERP Workflow</div>
             </div>
           </div>
 
-          <div class="dept-stat-card">
-            <div class="dept-stat-icon-box" style="background: rgba(37, 99, 235, 0.1); color: #2563eb;">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-amber">
               <i class="bi bi-people"></i>
             </div>
-            <div class="dept-stat-info">
-              <div class="dept-stat-value">{{ totalAssignedStaff }}</div>
-              <div class="dept-stat-label">ALLOCATED ERP STAFF</div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Allocated ERP Staff">Allocated ERP Staff</div>
+              <div class="hub-kpi-value">{{ totalAssignedStaff }} Members</div>
+              <div class="hub-kpi-sub" title="Assigned to Active Teams">Assigned to Active Teams</div>
             </div>
           </div>
 
-          <div class="dept-stat-card">
-            <div class="dept-stat-icon-box" style="background: rgba(124, 58, 237, 0.1); color: #7c3aed;">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-purple">
               <i class="bi bi-layout-sidebar"></i>
             </div>
-            <div class="dept-stat-info">
-              <div class="dept-stat-value">{{ sidebarTeamsCount }}</div>
-              <div class="dept-stat-label">NAVIGATION HUBS</div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Navigation Hubs">Navigation Hubs</div>
+              <div class="hub-kpi-value">{{ sidebarTeamsCount }} Hubs</div>
+              <div class="hub-kpi-sub" title="Pinned in Global Sidebar">Pinned in Global Sidebar</div>
             </div>
           </div>
         </div>
@@ -2910,7 +3307,7 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
                     </td>
                     <td>
                       <div class="dept-identity-cell">
-                        <div class="dept-avatar" [style.background-color]="t.colorTag + '18'" [style.border-color]="t.colorTag + '40'" [style.color]="t.colorTag">
+                        <div class="dept-avatar" [style.background]="t.colorTag || '#2563eb'" style="color: #ffffff; box-shadow: 0 3px 8px rgba(0,0,0,0.18); border-radius: 9px;">
                           <i class="bi" [ngClass]="getDepartmentIcon(t.icon)"></i>
                         </div>
                         <div class="dept-name-block">
@@ -2933,7 +3330,7 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
                         </div>
                         <div class="dept-lead-info">
                           <span class="dept-lead-name">{{ getTeamLead(t.code).name }}</span>
-                          <span class="dept-lead-role">{{ getTeamLead(t.code).role }}</span>
+                          <span class="pill-badge pill-xs" [ngClass]="getRoleBadgeClass(getTeamLead(t.code).role)">{{ getTeamLead(t.code).role }}</span>
                         </div>
                       </div>
                       <ng-template #unassignedLead>
@@ -3124,95 +3521,88 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
       <!-- 6. EXTENSIBLE DYNAMIC SCHEMA FIELDS                                        -->
       <!-- ========================================================================= -->
       <div *ngIf="activeSubTab === 'custom_fields'" class="subtab-section cf-screen-wrapper">
-        <!-- Header & Top Actions -->
-        <div class="cf-header-bar">
-          <div>
-            <div class="cf-breadcrumbs">
-              <span>ERP</span> <i class="bi bi-chevron-right"></i>
-              <span>SYSTEM SETTINGS</span> <i class="bi bi-chevron-right"></i>
-              <span class="active">DYNAMIC SCHEMA ENGINE</span>
+        <!-- MODULE HUB: PRIMARY CONTENT CARD HEADER -->
+        <div class="module-hub-header">
+          <div class="header-left">
+            <div class="header-icon">
+              <i class="bi bi-puzzle"></i>
             </div>
-            <div class="cf-domain-badge">
-              <i class="bi bi-puzzle-fill me-1"></i> DYNAMIC SCHEMA & METADATA EXTENSION
+            <div class="header-titles">
+              <div class="title-row">
+                <h2>Extensible Dynamic Schema Fields</h2>
+                <span class="header-count-pill">{{ currentEntityCustomFields.length }} on {{ selectedEntityForCustomFields }}</span>
+              </div>
+              <p class="header-desc">Extend ERP core database schemas with custom user-defined attributes, validations, and UI controls.</p>
             </div>
-            <h2 class="cf-page-title">Extensible Dynamic Schema Fields</h2>
-            <p class="cf-page-description">
-              Extend ERP core database schemas with custom user-defined attributes, validations, and UI controls without backend migrations.
-            </p>
           </div>
-          <div class="cf-header-actions">
-            <button type="button" class="btn btn-outline-secondary btn-sm cf-btn-compact" (click)="loadCustomFields(selectedEntityForCustomFields)" title="Refresh schema definitions">
-              <i class="bi bi-arrow-clockwise"></i> Refresh
+          <div class="header-actions">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="loadCustomFields(selectedEntityForCustomFields)" title="Refresh schema definitions">
+              <i class="bi bi-arrow-clockwise me-1"></i> Refresh
             </button>
-            <button type="button" class="btn btn-primary btn-sm cf-btn-primary" (click)="openAddCustomFieldModal()">
-              <i class="bi bi-plus-lg"></i> Add Dynamic Field
+            <button type="button" class="btn btn-primary btn-sm" (click)="openAddCustomFieldModal()">
+              <i class="bi bi-plus-circle-fill me-1"></i> Add Dynamic Field
             </button>
           </div>
         </div>
 
-        <!-- Entity / Target Selector Bar -->
-        <div class="cf-entity-nav-wrapper">
-          <div class="cf-entity-nav-label">
-            <i class="bi bi-diagram-3-fill me-1"></i> TARGET SCHEMA ENTITY:
-          </div>
-          <div class="cf-entity-nav-scroll">
-            <button type="button"
-                    *ngFor="let ent of customFieldEntities"
-                    class="cf-entity-pill"
-                    [class.active]="selectedEntityForCustomFields === ent"
-                    (click)="selectCustomFieldEntity(ent)">
-              <i [class]="'bi ' + getEntityIcon(ent)"></i>
-              <span class="cf-entity-name">{{ ent }}</span>
-              <span class="cf-entity-count" [class.has-count]="getCustomFieldsCountForEntity(ent) > 0">
-                {{ getCustomFieldsCountForEntity(ent) }}
-              </span>
-            </button>
-          </div>
+        <!-- MODULE HUB: FILTER-PILL SEGMENTED ROW (REPLACES BROKEN ENTITY STRIP) -->
+        <div class="module-hub-filter-pills">
+          <button type="button"
+                  *ngFor="let ent of customFieldEntities"
+                  class="hub-filter-pill"
+                  [class.active]="selectedEntityForCustomFields === ent"
+                  (click)="selectCustomFieldEntity(ent)">
+            <i [class]="'bi ' + getEntityIcon(ent)"></i>
+            <span>{{ ent }}</span>
+            <span class="pill-count" *ngIf="getCustomFieldsCountForEntity(ent) > 0">
+              {{ getCustomFieldsCountForEntity(ent) }}
+            </span>
+          </button>
         </div>
 
-        <!-- KPI Summary Cards -->
-        <div class="cf-stat-grid">
-          <div class="cf-stat-card">
-            <div class="cf-stat-icon-wrap icon-emerald">
+        <!-- MODULE HUB: 4-CARD KPI STAT ROW -->
+        <div class="module-hub-kpis">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-blue">
               <i class="bi bi-puzzle-fill"></i>
             </div>
-            <div class="cf-stat-info">
-              <div class="cf-stat-value">{{ currentEntityCustomFields.length }}</div>
-              <div class="cf-stat-label">ENTITY SCHEMA FIELDS</div>
-              <div class="cf-stat-sub">Active on {{ selectedEntityForCustomFields }}</div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Entity Schema Fields">Entity Schema Fields</div>
+              <div class="hub-kpi-value">{{ currentEntityCustomFields.length }}</div>
+              <div class="hub-kpi-sub" [title]="'Active on ' + selectedEntityForCustomFields">Active on {{ selectedEntityForCustomFields }}</div>
             </div>
           </div>
 
-          <div class="cf-stat-card">
-            <div class="cf-stat-icon-wrap icon-rose">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-red">
               <i class="bi bi-shield-check"></i>
             </div>
-            <div class="cf-stat-info">
-              <div class="cf-stat-value">{{ mandatoryFieldsCount }}</div>
-              <div class="cf-stat-label">MANDATORY CONSTRAINTS</div>
-              <div class="cf-stat-sub">Required at record creation</div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Mandatory Constraints">Mandatory Constraints</div>
+              <div class="hub-kpi-value">{{ mandatoryFieldsCount }}</div>
+              <div class="hub-kpi-sub" title="Required at record creation">Required at Record Creation</div>
             </div>
           </div>
 
-          <div class="cf-stat-card">
-            <div class="cf-stat-icon-wrap icon-amber">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-amber">
               <i class="bi bi-menu-button-wide-fill"></i>
             </div>
-            <div class="cf-stat-info">
-              <div class="cf-stat-value">{{ selectFieldsCount }}</div>
-              <div class="cf-stat-label">DROPDOWN / OPTION SETS</div>
-              <div class="cf-stat-sub">Predefined selectable options</div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Dropdown / Option Sets">Dropdown Options</div>
+              <div class="hub-kpi-value">{{ selectFieldsCount }}</div>
+              <div class="hub-kpi-sub" title="Predefined selectable options">Predefined Option Sets</div>
             </div>
           </div>
 
-          <div class="cf-stat-card">
-            <div class="cf-stat-icon-wrap icon-blue">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-green">
               <i class="bi bi-database-check"></i>
             </div>
-            <div class="cf-stat-info">
-              <div class="cf-stat-value">{{ totalConfiguredEntitiesCount }}</div>
-              <div class="cf-stat-label">EXTENDED MODULES</div>
-              <div class="cf-stat-sub">Across {{ customFieldEntities.length }} total ERP targets</div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Extended Modules">Extended Modules</div>
+              <div class="hub-kpi-value">{{ totalConfiguredEntitiesCount }}</div>
+              <div class="hub-kpi-sub" [title]="'Across ' + customFieldEntities.length + ' total targets'">Across {{ customFieldEntities.length }} targets</div>
             </div>
           </div>
         </div>
@@ -3271,7 +3661,7 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
         <!-- Dynamic Fields Data Table Card -->
         <div class="cf-card-table-wrap">
           <div class="cf-table-scroll">
-            <table class="cf-table">
+            <table class="cf-table" appResizableTable [tableId]="'custom_fields_table'">
               <thead>
                 <tr>
                   <th class="cf-th-num">#</th>
@@ -3386,111 +3776,96 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
       <!-- ========================================================================= -->
       <div *ngIf="activeSubTab === 'notifications'" class="subtab-section notif-screen-wrapper">
         
-        <!-- Standard Enterprise Header -->
-        <div class="notif-header-bar">
-          <div class="notif-header-left">
-            <div class="notif-breadcrumb-row">
-              <span class="notif-breadcrumb-item">ERP</span>
-              <i class="bi bi-chevron-right notif-breadcrumb-separator"></i>
-              <span class="notif-breadcrumb-item">SYSTEM SETTINGS</span>
-              <i class="bi bi-chevron-right notif-breadcrumb-separator"></i>
-              <span class="notif-breadcrumb-current">NOTIFICATION &amp; MESSAGING ENGINE</span>
-            </div>
-            <div class="notif-badge-row">
-              <span class="notif-domain-badge">
-                <i class="bi bi-chat-left-dots-fill"></i>
-                MULTI-CHANNEL DISPATCH &amp; DLT COMPLIANCE
-              </span>
-            </div>
-            <h2 class="notif-page-title">WhatsApp &amp; SMS Dispatch Engine</h2>
-            <p class="notif-page-subtitle">
-              Configure automated transactional notifications, WhatsApp Business API endpoints, DLT registered templates, and test delivery simulators.
-            </p>
-          </div>
-          <div class="notif-header-actions">
-            <button type="button" 
-                    class="btn btn-secondary btn-sm notif-btn-secondary" 
-                    (click)="loadNotificationTemplates()" 
-                    title="Reload all templates and gateway statuses">
-              <i class="bi bi-arrow-clockwise"></i>
-              <span>Refresh</span>
-            </button>
-            <button type="button" 
-                    class="btn btn-primary btn-sm notif-btn-primary" 
-                    (click)="openAddTemplateModal()" 
-                    title="Register a new notification template">
-              <i class="bi bi-plus-circle-fill"></i>
-              <span>Add Template</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 4 KPI Telemetry Summary Cards -->
-        <div class="notif-telemetry-grid">
-          <div class="notif-stat-card">
-            <div class="notif-stat-icon-wrap icon-whatsapp">
+        <!-- MODULE HUB: PRIMARY CONTENT CARD HEADER -->
+        <div class="module-hub-header">
+          <div class="header-left">
+            <div class="header-icon" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
               <i class="bi bi-whatsapp"></i>
             </div>
-            <div class="notif-stat-info">
-              <div class="notif-stat-value text-emerald">ACTIVE &amp; VERIFIED</div>
-              <div class="notif-stat-label">WHATSAPP BUSINESS API</div>
-              <div class="notif-stat-detail">Meta Cloud v20.0 &bull; Tier 2 (10k/day)</div>
+            <div class="header-titles">
+              <div class="title-row">
+                <h2>Automated Messaging &amp; WhatsApp Dispatch Engine</h2>
+                <span class="header-count-pill">{{ notificationTemplates.length }} Templates</span>
+              </div>
+              <p class="header-desc">Configure automated transactional notifications, WhatsApp Business API endpoints, and DLT registered templates.</p>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="loadNotificationTemplates()" title="Reload all templates and gateway statuses">
+              <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" (click)="openAddTemplateModal()" title="Register a new notification template">
+              <i class="bi bi-plus-circle-fill me-1"></i> Add Template
+            </button>
+          </div>
+        </div>
+
+        <!-- MODULE HUB: 4-CARD KPI STAT ROW -->
+        <div class="module-hub-kpis">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-green">
+              <i class="bi bi-whatsapp"></i>
+            </div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="WhatsApp Business API">WhatsApp API</div>
+              <div class="hub-kpi-value">Verified</div>
+              <div class="hub-kpi-sub" title="Meta Cloud v20.0 • Tier 2 (10k/day)">Meta Cloud v20.0 &bull; Tier 2</div>
             </div>
           </div>
 
-          <div class="notif-stat-card">
-            <div class="notif-stat-icon-wrap icon-sms">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-blue">
               <i class="bi bi-chat-text"></i>
             </div>
-            <div class="notif-stat-info">
-              <div class="notif-stat-value text-blue">COMPLIANT &amp; LIVE</div>
-              <div class="notif-stat-label">TRANSACTIONAL SMS (DLT)</div>
-              <div class="notif-stat-detail">14,250 Credits &bull; Entity ID Active</div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Transactional SMS (DLT)">Transactional SMS</div>
+              <div class="hub-kpi-value">Compliant</div>
+              <div class="hub-kpi-sub" title="14,250 Credits • Entity ID Active">14,250 Credits &bull; Entity Active</div>
             </div>
           </div>
 
-          <div class="notif-stat-card">
-            <div class="notif-stat-icon-wrap icon-templates">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-amber">
               <i class="bi bi-layers-fill"></i>
             </div>
-            <div class="notif-stat-info">
-              <div class="notif-stat-value text-amber">{{ activeTemplatesCount }} of {{ notificationTemplates.length }}</div>
-              <div class="notif-stat-label">ACTIVE TRIGGER RULES</div>
-              <div class="notif-stat-detail">{{ whatsappTemplatesCount }} WhatsApp &bull; {{ smsTemplatesCount }} SMS &bull; {{ emailTemplatesCount }} Email</div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Active Trigger Rules">Trigger Rules</div>
+              <div class="hub-kpi-value">{{ activeTemplatesCount }} / {{ notificationTemplates.length }}</div>
+              <div class="hub-kpi-sub" [title]="whatsappTemplatesCount + ' WhatsApp • ' + smsTemplatesCount + ' SMS • ' + emailTemplatesCount + ' Email'">{{ whatsappTemplatesCount }} WhatsApp &bull; {{ smsTemplatesCount }} SMS</div>
             </div>
           </div>
 
-          <div class="notif-stat-card">
-            <div class="notif-stat-icon-wrap icon-dispatch">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-purple">
               <i class="bi bi-send-check-fill"></i>
             </div>
-            <div class="notif-stat-info">
-              <div class="notif-stat-value text-purple">1,482 Sent Today</div>
-              <div class="notif-stat-label">SYSTEM DISPATCH TOTAL</div>
-              <div class="notif-stat-detail">99.8% SLA Delivery &bull; ~420ms Latency</div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="System Dispatch Total">Dispatch Total</div>
+              <div class="hub-kpi-value">1,482 Sent Today</div>
+              <div class="hub-kpi-sub" title="99.8% SLA Delivery • ~420ms Latency">99.8% SLA &bull; 420ms Latency</div>
             </div>
           </div>
         </div>
 
-        <!-- Section Navigation Switcher -->
-        <div class="notif-section-nav">
+        <!-- MODULE HUB: SECTION NAVIGATION FILTER PILLS -->
+        <div class="module-hub-filter-pills">
           <button type="button" 
-                  class="notif-section-btn" 
+                  class="hub-filter-pill" 
                   [class.active]="activeNotifSection === 'studio'" 
                   (click)="activeNotifSection = 'studio'">
             <i class="bi bi-code-square"></i>
             <span>Studio &amp; Template Editor</span>
           </button>
           <button type="button" 
-                  class="notif-section-btn" 
+                  class="hub-filter-pill" 
                   [class.active]="activeNotifSection === 'logs'" 
                   (click)="activeNotifSection = 'logs'">
             <i class="bi bi-journal-text"></i>
             <span>Recent Dispatch Logs</span>
-            <span class="notif-pill-count">{{ dispatchLogs.length }}</span>
+            <span class="pill-count">{{ dispatchLogs.length }}</span>
           </button>
           <button type="button" 
-                  class="notif-section-btn" 
+                  class="hub-filter-pill" 
                   [class.active]="activeNotifSection === 'gateways'" 
                   (click)="activeNotifSection = 'gateways'">
             <i class="bi bi-hdd-network"></i>
@@ -4108,126 +4483,108 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
       <!-- 6. USERS & RBAC MATRIX (PHASE 28 ENTERPRISE ARCHITECTURE)                    -->
       <!-- ========================================================================= -->
       <div *ngIf="activeSubTab === 'users'" class="subtab-section users-screen-wrapper">
-        <!-- Top Operational Header -->
-        <div class="notif-header-banner">
-          <div class="notif-header-left">
-            <div class="notif-breadcrumb-row">
-              <span class="notif-breadcrumb-root">ERP</span>
-              <i class="bi bi-chevron-right notif-breadcrumb-sep"></i>
-              <span class="notif-breadcrumb-root">SYSTEM SETTINGS</span>
-              <i class="bi bi-chevron-right notif-breadcrumb-sep"></i>
-              <span class="notif-breadcrumb-current">USER DIRECTORY &amp; GRANULAR RBAC</span>
+        <!-- MODULE HUB: PRIMARY CONTENT CARD HEADER -->
+        <div class="module-hub-header">
+          <div class="header-left">
+            <div class="header-icon" style="background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);">
+              <i class="bi bi-person-badge"></i>
             </div>
-            <div class="notif-title-row">
-              <span class="notif-badge-dlt">
-                <i class="bi bi-shield-lock-fill"></i> ROLE-BASED ACCESS CONTROL &amp; ENTITLEMENTS
-              </span>
-              <h2 class="notif-page-title">User Directory &amp; Granular RBAC Matrix</h2>
-              <p class="notif-page-subtitle">
-                Manage enterprise identities, team assignments, role definitions, and configure module-level permissions across all 23 ERP subsystems.
-              </p>
+            <div class="header-titles">
+              <div class="title-row">
+                <h2>User Directory &amp; Granular RBAC Matrix</h2>
+                <span class="header-count-pill">{{ adminUsersList.length }} Registered Staff</span>
+              </div>
+              <p class="header-desc">Manage enterprise staff identities, department assignments, role tiers, and module-level permissions.</p>
             </div>
           </div>
-          <div class="notif-header-actions">
-            <button type="button" class="btn btn-secondary btn-sm notif-btn-action" (click)="loadAdminUsers()" title="Reload user directory and matrix">
-              <i class="bi bi-arrow-clockwise"></i> Refresh
+          <div class="header-actions">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="loadAdminUsers()" title="Reload user directory and matrix">
+              <i class="bi bi-arrow-clockwise me-1"></i> Refresh
             </button>
-            <button type="button" class="btn btn-primary btn-sm notif-btn-action" (click)="openInviteUserModal()" *ngIf="userAccessSubTab === 'users' || userAccessSubTab === 'roles'">
-              <i class="bi bi-person-plus-fill"></i> Invite User
+            <button type="button" class="btn btn-secondary btn-sm" (click)="resetMatrixToDefaults()" *ngIf="userAccessSubTab === 'matrix'">
+              <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Defaults
             </button>
-            <button type="button" class="btn btn-secondary btn-sm notif-btn-action" (click)="resetMatrixToDefaults()" *ngIf="userAccessSubTab === 'matrix'">
-              <i class="bi bi-arrow-counterclockwise"></i> Reset Defaults
+            <button type="button" class="btn btn-primary btn-sm" (click)="openInviteUserModal()" *ngIf="userAccessSubTab === 'users' || userAccessSubTab === 'roles'">
+              <i class="bi bi-person-plus-fill me-1"></i> Invite User
             </button>
-            <button type="button" class="btn btn-primary btn-sm notif-btn-action" (click)="savePermissionsMatrix()" *ngIf="userAccessSubTab === 'matrix'">
-              <i class="bi bi-check-lg"></i> Save Matrix
+            <button type="button" class="btn btn-primary btn-sm" (click)="savePermissionsMatrix()" *ngIf="userAccessSubTab === 'matrix'">
+              <i class="bi bi-check2-circle me-1"></i> Save Matrix
             </button>
           </div>
         </div>
 
-        <!-- 4 Security & Telemetry Summary Cards -->
-        <div class="users-telemetry-grid">
-          <!-- Card 1: Active Users -->
-          <div class="telemetry-card">
-            <div class="telemetry-icon-box" style="background: rgba(16, 185, 129, 0.12); color: #059669; border-color: rgba(16, 185, 129, 0.25);">
+        <!-- MODULE HUB: 4-CARD KPI STAT ROW -->
+        <div class="module-hub-kpis">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-green">
               <i class="bi bi-people-fill"></i>
             </div>
-            <div class="telemetry-data">
-              <div class="telemetry-headline-row">
-                <span class="telemetry-headline" style="color: #059669;">{{ activeUsersCount }} ACTIVE USERS</span>
-              </div>
-              <h4 class="telemetry-title">{{ adminUsersList.length }} Registered Staff</h4>
-              <p class="telemetry-sub">{{ lockedUsersCount }} Suspended/Locked Accounts</p>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Active Users">Active Users</div>
+              <div class="hub-kpi-value">{{ activeUsersCount }} / {{ adminUsersList.length }}</div>
+              <div class="hub-kpi-sub" [title]="lockedUsersCount + ' Suspended/Locked'">{{ lockedUsersCount }} Suspended/Locked</div>
             </div>
           </div>
 
-          <!-- Card 2: Enterprise Roles -->
-          <div class="telemetry-card">
-            <div class="telemetry-icon-box" style="background: rgba(37, 99, 235, 0.12); color: #2563eb; border-color: rgba(37, 99, 235, 0.25);">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-blue">
               <i class="bi bi-shield-shaded"></i>
             </div>
-            <div class="telemetry-data">
-              <div class="telemetry-headline-row">
-                <span class="telemetry-headline" style="color: #2563eb;">6 SYSTEM ROLES</span>
-              </div>
-              <h4 class="telemetry-title">Role Authority Tiers</h4>
-              <p class="telemetry-sub">Tier 0 Root to Tier 4 Viewer</p>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="System Roles">System Roles</div>
+              <div class="hub-kpi-value">6 Roles</div>
+              <div class="hub-kpi-sub" title="Tier 0 Root to Tier 4 Viewer">Tier 0 Root to Tier 4 Viewer</div>
             </div>
           </div>
 
-          <!-- Card 3: Governed Subsystems -->
-          <div class="telemetry-card">
-            <div class="telemetry-icon-box" style="background: rgba(217, 119, 6, 0.12); color: #d97706; border-color: rgba(217, 119, 6, 0.25);">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-purple">
               <i class="bi bi-diagram-3-fill"></i>
             </div>
-            <div class="telemetry-data">
-              <div class="telemetry-headline-row">
-                <span class="telemetry-headline" style="color: #d97706;">23 ERP SUBSYSTEMS</span>
-              </div>
-              <h4 class="telemetry-title">138 Privilege Vectors</h4>
-              <p class="telemetry-sub">View · Create · Edit · Delete · Export · Approve</p>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Governed Subsystems">Subsystems</div>
+              <div class="hub-kpi-value">23 Subsystems</div>
+              <div class="hub-kpi-sub" title="138 Privilege Vectors Enforced">138 Privilege Vectors</div>
             </div>
           </div>
 
-          <!-- Card 4: Governance & Security Policy -->
-          <div class="telemetry-card">
-            <div class="telemetry-icon-box" style="background: rgba(124, 58, 237, 0.12); color: #7c3aed; border-color: rgba(124, 58, 237, 0.25);">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-navy">
               <i class="bi bi-lock-fill"></i>
             </div>
-            <div class="telemetry-data">
-              <div class="telemetry-headline-row">
-                <span class="telemetry-headline" style="color: #7c3aed;">ROOT GOVERNANCE</span>
-              </div>
-              <h4 class="telemetry-title">Super Admin Protection</h4>
-              <p class="telemetry-sub">Session TTL 30m · Audit Logging Active</p>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Root Governance">Root Governance</div>
+              <div class="hub-kpi-value">Active Guard</div>
+              <div class="hub-kpi-sub" title="Session TTL 30m • Audit Trail">Session TTL 30m &bull; Audit</div>
             </div>
           </div>
         </div>
 
-        <!-- Section Navigation Switcher -->
-        <div class="notif-section-nav">
+        <!-- MODULE HUB: SECTION NAVIGATION FILTER PILLS -->
+        <div class="module-hub-filter-pills">
           <button type="button" 
-                  class="notif-section-btn" 
+                  class="hub-filter-pill" 
                   [class.active]="userAccessSubTab === 'users'" 
                   (click)="userAccessSubTab = 'users'">
             <i class="bi bi-person-lines-fill"></i>
             <span>User Directory</span>
-            <span class="notif-tab-counter">{{ adminUsersList.length }}</span>
+            <span class="pill-count">{{ adminUsersList.length }}</span>
           </button>
           <button type="button" 
-                  class="notif-section-btn" 
+                  class="hub-filter-pill" 
                   [class.active]="userAccessSubTab === 'matrix'" 
                   (click)="userAccessSubTab = 'matrix'">
             <i class="bi bi-grid-3x3-gap-fill"></i>
             <span>Role Permission Matrix</span>
-            <span class="notif-tab-counter">{{ selectedRoleForMatrix }}</span>
+            <span class="pill-count">{{ selectedRoleForMatrix }}</span>
           </button>
           <button type="button" 
-                  class="notif-section-btn" 
+                  class="hub-filter-pill" 
                   [class.active]="userAccessSubTab === 'roles'" 
                   (click)="userAccessSubTab = 'roles'">
             <i class="bi bi-award-fill"></i>
             <span>Roles &amp; Entitlements Overview</span>
-            <span class="notif-tab-counter">6 Roles</span>
+            <span class="pill-count">6 Roles</span>
           </button>
         </div>
 
@@ -4296,7 +4653,7 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
           <!-- Users Table Card -->
           <div class="glass-card settings-card user-table-card" style="padding: 0; overflow: hidden; border-radius: 12px;">
             <div class="settings-table-scroll users-table-container">
-              <table class="table enterprise-table users-directory-table" [class.table-compact]="tableDensity === 'compact'" [class.table-spacious]="tableDensity === 'spacious'">
+              <table class="table enterprise-table users-directory-table" appResizableTable [tableId]="'users_table'" [class.table-compact]="tableDensity === 'compact'" [class.table-spacious]="tableDensity === 'spacious'">
                 <thead>
                   <tr>
                     <th class="col-num">#</th>
@@ -4353,16 +4710,16 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
                       </span>
                     </td>
                     <td class="col-status">
-                      <span class="pill-badge" [ngClass]="u.status === 'ACTIVE' && !u.accountLocked ? 'pill-success' : 'pill-danger'" style="font-size: 10px; padding: 3px 8px; font-weight: 700;">
-                        <span class="dot-indicator" [ngClass]="u.status === 'ACTIVE' && !u.accountLocked ? 'dot-success' : 'dot-danger'" style="width: 6px; height: 6px;"></span>
-                        {{ u.status || (u.accountLocked ? 'DISABLED' : 'ACTIVE') }}
+                      <span class="pill-badge" [ngClass]="isUserActive(u) ? 'pill-success' : 'pill-danger'" style="font-size: 10px; padding: 3px 8px; font-weight: 700;">
+                        <span class="dot-indicator" [ngClass]="isUserActive(u) ? 'dot-success' : 'dot-danger'" style="width: 6px; height: 6px;"></span>
+                        {{ isUserActive(u) ? 'ACTIVE' : 'LOCKED' }}
                       </span>
                     </td>
                     <td class="col-actions">
                       <div class="btn-action-group" style="display: inline-flex; align-items: center; gap: 4px; justify-content: flex-end;">
                         <!-- Custom Permissions -->
                         <button type="button" class="btn btn-action-subtle btn-xs" (click)="openUserAccessModal(u)" title="Custom Module Access" style="padding: 4px 7px; border-radius: 6px;">
-                          <i class="bi bi-sliders" style="font-size: 13px; color: var(--brand-primary, #d97706);"></i>
+                          <i class="bi bi-sliders" style="font-size: 13px; color: var(--brand-primary, #0B47D4);"></i>
                         </button>
                         <!-- Edit User Profile -->
                         <button type="button" class="btn btn-action-subtle btn-xs" (click)="openEditUserModal(u)" title="Edit user profile" style="padding: 4px 7px; border-radius: 6px;">
@@ -4397,6 +4754,13 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
                     </td>
                   </tr>
                 </tbody>
+                <tfoot class="table-summary-tfoot" *ngIf="filteredAdminUsers.length > 0">
+                  <tr>
+                    <td class="col-num"></td>
+                    <td class="col-user tfoot-label"><strong>TOTALS</strong></td>
+                    <td colspan="5"><strong>{{ filteredAdminUsers.length }} registered administrative users</strong></td>
+                  </tr>
+                </tfoot>
               </table>
 
               <!-- Empty State when filtering returns nothing -->
@@ -4704,125 +5068,111 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
       <!-- ========================================================================= -->
       <div *ngIf="activeSubTab === 'features'" class="subtab-section">
         
-        <!-- COMPACT ENTERPRISE HEADER -->
-        <div class="config-header-bar">
-          <div class="config-header-info">
-            <div class="branding-breadcrumb">
-              <span class="crumb-root">ERP</span>
-              <i class="bi bi-chevron-right crumb-sep"></i>
-              <span class="crumb-sec">SYSTEM SETTINGS</span>
-              <i class="bi bi-chevron-right crumb-sep"></i>
-              <span class="crumb-curr">FEATURE FLAGS &amp; AI COPILOT</span>
-            </div>
-            <div class="config-domain-badge">
-              <i class="bi bi-toggles2"></i> ENTERPRISE SUBSYSTEM &amp; AI INTELLIGENCE GOVERNANCE
-            </div>
-            <h3 class="branding-page-title">Enterprise Feature Flags &amp; AI Copilot Governance</h3>
-            <p class="branding-page-desc">Centrally control modular ERP subsystem availability, dynamic feature flag rollouts, and autonomous Google ADK AI Copilot intelligence gateway parameters.</p>
-          </div>
-          <div class="config-header-actions">
-            <button type="button" class="btn btn-secondary btn-sm notif-btn-secondary" (click)="loadFeatureFlags()" title="Reload feature flags and AI status">
-              <i class="bi bi-arrow-clockwise"></i> Refresh
-            </button>
-            <button type="button" class="btn btn-secondary btn-sm notif-btn-secondary" (click)="resetFeatureFilters()" *ngIf="featuresSubTab === 'flags'" title="Reset all search and category filters">
-              <i class="bi bi-arrow-counterclockwise"></i> Reset
-            </button>
-            <button type="button" class="btn btn-outline-danger btn-sm notif-btn-secondary" (click)="disableAllFeatures()" *ngIf="featuresSubTab === 'flags'" title="Disable modular subsystems">
-              <i class="bi bi-power"></i> Disable Non-Core
-            </button>
-            <button type="button" class="btn btn-primary btn-sm notif-btn-action" (click)="enableAllFeatures()" *ngIf="featuresSubTab === 'flags'" title="Enable all 23 enterprise ERP subsystems">
-              <i class="bi bi-lightning-charge-fill"></i> Enable All Modules
-            </button>
-            <button type="button" class="btn btn-primary btn-sm notif-btn-action" (click)="saveCopilotConfig()" *ngIf="featuresSubTab === 'copilot'" [disabled]="isSavingCopilotConfig" title="Persist AI Copilot configuration">
-              <i class="bi bi-check-lg"></i> {{ isSavingCopilotConfig ? 'Saving...' : 'Save AI Config' }}
-            </button>
-          </div>
-        </div>
-
-        <!-- 4 Telemetry & Operational Metrics Cards -->
-        <div class="users-telemetry-grid">
-          <!-- Card 1: Active Subsystems -->
-          <div class="telemetry-card">
-            <div class="telemetry-icon-box" style="background: rgba(16, 185, 129, 0.12); color: #059669; border-color: rgba(16, 185, 129, 0.25);">
+        <!-- MODULE HUB: PRIMARY CONTENT CARD HEADER -->
+        <div class="module-hub-header">
+          <div class="header-left">
+            <div class="header-icon" style="background: linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%);">
               <i class="bi bi-toggles2"></i>
             </div>
-            <div class="telemetry-data">
-              <div class="telemetry-headline-row">
-                <span class="telemetry-headline" style="color: #059669;">{{ activeFeatureCount }} ACTIVE SUBSYSTEMS</span>
+            <div class="header-titles">
+              <div class="title-row">
+                <h2>Feature Flags &amp; AI Copilot Governance</h2>
+                <span class="header-count-pill">{{ activeFeatureCount }} / {{ featureFlags.length }} Modules Enabled</span>
               </div>
-              <h4 class="telemetry-title">{{ featureFlags.length }} Registered Modules</h4>
-              <p class="telemetry-sub">{{ Math.round((activeFeatureCount / (featureFlags.length || 1)) * 100) }}% Subsystems Operational</p>
+              <p class="header-desc">Centrally govern modular ERP subsystems, dynamic feature rollouts, and autonomous Google Gemini AI Copilot intelligence.</p>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="loadFeatureFlags()" title="Reload feature flags and AI status">
+              <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="resetFeatureFilters()" *ngIf="featuresSubTab === 'flags'" title="Reset all search and category filters">
+              <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm text-danger" (click)="disableAllFeatures()" *ngIf="featuresSubTab === 'flags'" title="Disable modular subsystems">
+              <i class="bi bi-power me-1"></i> Disable Non-Core
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" (click)="enableAllFeatures()" *ngIf="featuresSubTab === 'flags'" title="Enable all 23 enterprise ERP subsystems">
+              <i class="bi bi-lightning-charge-fill me-1"></i> Enable All Modules
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" (click)="saveCopilotConfig()" *ngIf="featuresSubTab === 'copilot'" [disabled]="isSavingCopilotConfig" title="Persist AI Copilot configuration">
+              <i class="bi bi-check2-circle me-1"></i> {{ isSavingCopilotConfig ? 'Saving...' : 'Save AI Config' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- MODULE HUB: 4-CARD KPI STAT ROW -->
+        <div class="module-hub-kpis">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-green">
+              <i class="bi bi-toggles2"></i>
+            </div>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Active Subsystems">Subsystems</div>
+              <div class="hub-kpi-value">{{ activeFeatureCount }} / {{ featureFlags.length }}</div>
+              <div class="hub-kpi-sub" [title]="Math.round((activeFeatureCount / (featureFlags.length || 1)) * 100) + '% Subsystems Operational'">{{ Math.round((activeFeatureCount / (featureFlags.length || 1)) * 100) }}% Operational</div>
             </div>
           </div>
 
-          <!-- Card 2: Architectural Domains -->
-          <div class="telemetry-card">
-            <div class="telemetry-icon-box" style="background: rgba(37, 99, 235, 0.12); color: #2563eb; border-color: rgba(37, 99, 235, 0.25);">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-blue">
               <i class="bi bi-diagram-3-fill"></i>
             </div>
-            <div class="telemetry-data">
-              <div class="telemetry-headline-row">
-                <span class="telemetry-headline" style="color: #2563eb;">7 ARCHITECTURAL DOMAINS</span>
-              </div>
-              <h4 class="telemetry-title">Scoped Module Groups</h4>
-              <p class="telemetry-sub">Core · Manufacturing · Supply · Finance</p>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Architectural Domains">Domains</div>
+              <div class="hub-kpi-value">7 Domains</div>
+              <div class="hub-kpi-sub" title="Core • Manufacturing • Supply • Finance">Core, Prod, Supply, Fin</div>
             </div>
           </div>
 
-          <!-- Card 3: AI Copilot Gateway -->
-          <div class="telemetry-card">
-            <div class="telemetry-icon-box" style="background: rgba(217, 119, 6, 0.12); color: #d97706; border-color: rgba(217, 119, 6, 0.25);">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-amber">
               <i class="bi bi-robot"></i>
             </div>
-            <div class="telemetry-data">
-              <div class="telemetry-headline-row">
-                <span class="telemetry-headline" style="color: #d97706;">ADK INTELLIGENCE GATEWAY</span>
-              </div>
-              <h4 class="telemetry-title">Google Gemini Flash</h4>
-              <p class="telemetry-sub">Grounded in Live State &amp; Ledgers</p>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="AI Copilot Gateway">AI Copilot Gateway</div>
+              <div class="hub-kpi-value">Gemini 1.5 Pro</div>
+              <div class="hub-kpi-sub" title="Neural Context Cache Active">Neural Context Cache</div>
             </div>
           </div>
 
-          <!-- Card 4: L1 Cache Invalidation -->
-          <div class="telemetry-card">
-            <div class="telemetry-icon-box" style="background: rgba(124, 58, 237, 0.12); color: #7c3aed; border-color: rgba(124, 58, 237, 0.25);">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-purple">
               <i class="bi bi-lightning-charge-fill"></i>
             </div>
-            <div class="telemetry-data">
-              <div class="telemetry-headline-row">
-                <span class="telemetry-headline" style="color: #7c3aed;">CAFFEINE L1 CACHING</span>
-              </div>
-              <h4 class="telemetry-title">Zero-Downtime Rollouts</h4>
-              <p class="telemetry-sub">Sub-millisecond Invalidation</p>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Caffeine L1 Cache">L1 Cache</div>
+              <div class="hub-kpi-value">Zero-Downtime</div>
+              <div class="hub-kpi-sub" title="Sub-millisecond Rollout Invalidation">Sub-ms Invalidation</div>
             </div>
           </div>
         </div>
 
-        <!-- Section Navigation Switcher -->
-        <div class="notif-section-nav">
+        <!-- MODULE HUB: SECTION NAVIGATION FILTER PILLS -->
+        <div class="module-hub-filter-pills">
           <button type="button" 
-                  class="notif-section-btn" 
+                  class="hub-filter-pill" 
                   [class.active]="featuresSubTab === 'flags'" 
                   (click)="featuresSubTab = 'flags'">
             <i class="bi bi-toggles2"></i>
             <span>Feature Flags Directory</span>
-            <span class="notif-tab-counter">{{ activeFeatureCount }}/{{ featureFlags.length }}</span>
+            <span class="pill-count">{{ activeFeatureCount }}/{{ featureFlags.length }}</span>
           </button>
           <button type="button" 
-                  class="notif-section-btn" 
+                  class="hub-filter-pill" 
                   [class.active]="featuresSubTab === 'copilot'" 
                   (click)="featuresSubTab = 'copilot'">
             <i class="bi bi-robot"></i>
             <span>AI Copilot Governance</span>
-            <span class="notif-tab-counter">Online · Gemini</span>
+            <span class="pill-count">Gemini</span>
           </button>
           <button type="button" 
-                  class="notif-section-btn" 
+                  class="hub-filter-pill" 
                   [class.active]="featuresSubTab === 'matrix'" 
                   (click)="featuresSubTab = 'matrix'">
             <i class="bi bi-diagram-3"></i>
             <span>Subsystem Rollout Matrix</span>
-            <span class="notif-tab-counter">7 Categories</span>
+            <span class="pill-count">7 Domains</span>
           </button>
         </div>
 
@@ -4957,6 +5307,9 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
                     </td>
                     <td class="col-actions">
                       <div style="display: inline-flex; align-items: center; gap: 4px;">
+                        <button type="button" class="btn btn-outline-primary btn-xs btn-action-subtle" (click)="openEditFeatureFlagModal(f)" title="Edit Subsystem Details">
+                          <i class="bi bi-pencil"></i> Edit
+                        </button>
                         <button type="button" class="btn btn-outline-secondary btn-xs btn-action-subtle" (click)="openFlagDetailModal(f)" title="Inspect flag metadata &amp; scoping">
                           <i class="bi bi-info-circle"></i>
                         </button>
@@ -5340,105 +5693,73 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
       <!-- ========================================================================= -->
       <div *ngIf="activeSubTab === 'password'" class="sec-console-section">
 
-        <!-- Top Header Deck -->
-        <div class="sec-header-deck">
-          <div class="sec-header-left">
-            <nav class="sec-breadcrumb-trail" aria-label="Breadcrumb">
-              <span class="sec-crumb-muted">ERP</span>
-              <i class="bi bi-chevron-right sec-crumb-sep"></i>
-              <span class="sec-crumb-muted">SYSTEM SETTINGS</span>
-              <i class="bi bi-chevron-right sec-crumb-sep"></i>
-              <span class="sec-crumb-active">SECURITY &amp; ROOT AUTHENTICATION</span>
-            </nav>
-            <div class="sec-header-title-wrap">
-              <span class="sec-domain-eyebrow">
-                <i class="bi bi-shield-lock-fill me-1"></i> ENTERPRISE SECURITY CONSOLE &amp; ROOT ACCESS CONTROL
-              </span>
-              <h3 class="sec-title">Security &amp; Master Password Reset</h3>
-              <p class="sec-subtitle">
-                Manage high-privilege root account credentials, enforce cryptographic password policies, and execute fail-safe emergency operations.
-              </p>
+        <!-- MODULE HUB: PRIMARY CONTENT CARD HEADER -->
+        <div class="module-hub-header">
+          <div class="header-left">
+            <div class="header-icon" style="background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);">
+              <i class="bi bi-shield-lock"></i>
+            </div>
+            <div class="header-titles">
+              <div class="title-row">
+                <h2>Security &amp; Master Password Reset</h2>
+                <span class="header-count-pill">Root Governance</span>
+              </div>
+              <p class="header-desc">Manage high-privilege root account credentials, enforce cryptographic password policies, and execute emergency operations.</p>
             </div>
           </div>
-          <div class="sec-header-actions">
-            <button type="button" class="btn-sec-action btn-sec-secondary" (click)="loadSystemHealth()" title="Refresh telemetry and connection guard status">
-              <i class="bi bi-arrow-clockwise"></i>
-              <span>Refresh Security State</span>
+          <div class="header-actions">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="loadSystemHealth()" title="Refresh telemetry and connection guard status">
+              <i class="bi bi-arrow-clockwise me-1"></i> Refresh Security State
             </button>
-            <button type="button" class="btn-sec-action btn-sec-secondary" (click)="downloadEnterpriseBackupSnapshot()" title="Export offline encrypted system configuration snapshot">
-              <i class="bi bi-cloud-arrow-down"></i>
-              <span>Export Security Snapshot</span>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="downloadEnterpriseBackupSnapshot()" title="Export offline encrypted system configuration snapshot">
+              <i class="bi bi-cloud-arrow-down me-1"></i> Export Snapshot
             </button>
           </div>
         </div>
 
-        <!-- 4-Card Enterprise Security & Root Identity Status Strip -->
-        <div class="sec-telemetry-grid">
-          <!-- Card 1: Root Identity Context -->
-          <div class="sec-telemetry-card">
-            <div class="sec-telemetry-head">
-              <span class="sec-telemetry-eyebrow">ROOT IDENTITY CONTEXT</span>
-              <span class="sec-badge sec-badge-brand">
-                <i class="bi bi-person-badge-fill me-1"></i>{{ loggedInUser?.role || 'SUPER_ADMIN' }}
-              </span>
+        <!-- MODULE HUB: 4-CARD KPI STAT ROW -->
+        <div class="module-hub-kpis">
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-blue">
+              <i class="bi bi-person-badge-fill"></i>
             </div>
-            <div class="sec-telemetry-body">
-              <div class="sec-telemetry-metric">
-                <i class="bi bi-person-check-fill sec-metric-icon"></i>
-                <span class="sec-metric-value">{{ loggedInUser?.username || 'SUPER_ADMIN' }}</span>
-              </div>
-              <p class="sec-telemetry-subtext">JWT Bearer root administrative session</p>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Root Identity Context">Root Identity</div>
+              <div class="hub-kpi-value">{{ loggedInUser?.username || 'SUPER_ADMIN' }}</div>
+              <div class="hub-kpi-sub" [title]="'Role: ' + (loggedInUser?.role || 'SUPER_ADMIN') + ' • JWT Bearer'">Role: {{ loggedInUser?.role || 'SUPER_ADMIN' }} &bull; JWT</div>
             </div>
           </div>
 
-          <!-- Card 2: Cryptographic Hashing Standard -->
-          <div class="sec-telemetry-card">
-            <div class="sec-telemetry-head">
-              <span class="sec-telemetry-eyebrow">CREDENTIAL ENCRYPTION</span>
-              <span class="sec-badge sec-badge-success">
-                <i class="bi bi-shield-fill-check me-1"></i>HARDENED
-              </span>
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-green">
+              <i class="bi bi-shield-fill-check"></i>
             </div>
-            <div class="sec-telemetry-body">
-              <div class="sec-telemetry-metric">
-                <i class="bi bi-hash sec-metric-icon"></i>
-                <span class="sec-metric-value">BCrypt (Cost 10)</span>
-              </div>
-              <p class="sec-telemetry-subtext">Salted irreversible cryptographic one-way digest</p>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Credential Encryption">Encryption</div>
+              <div class="hub-kpi-value">BCrypt (Cost 10)</div>
+              <div class="hub-kpi-sub" title="Salted irreversible one-way digest">Salted One-Way Digest</div>
             </div>
           </div>
 
-          <!-- Card 3: Access & Rate Guard -->
-          <div class="sec-telemetry-card">
-            <div class="sec-telemetry-head">
-              <span class="sec-telemetry-eyebrow">AUDIT &amp; RATE GUARD</span>
-              <span class="sec-badge sec-badge-info">
-                <i class="bi bi-speedometer2 me-1"></i>5 REQ / MIN
-              </span>
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-amber">
+              <i class="bi bi-speedometer2"></i>
             </div>
-            <div class="sec-telemetry-body">
-              <div class="sec-telemetry-metric">
-                <i class="bi bi-shield-shaded sec-metric-icon"></i>
-                <span class="sec-metric-value">{{ systemHealth.auditGuard || 'IP_LOGGED' }}</span>
-              </div>
-              <p class="sec-telemetry-subtext">Rate-limited with immutable security audit trail</p>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Audit & Rate Guard">Audit &amp; Guard</div>
+              <div class="hub-kpi-value">{{ systemHealth.auditGuard || 'IP_LOGGED' }}</div>
+              <div class="hub-kpi-sub" title="5 Req / Min threshold with ledger">5 Req/Min Rate Ledger</div>
             </div>
           </div>
 
-          <!-- Card 4: Session Security & Revocation -->
-          <div class="sec-telemetry-card">
-            <div class="sec-telemetry-head">
-              <span class="sec-telemetry-eyebrow">SESSION GOVERNANCE</span>
-              <span class="sec-badge sec-badge-neutral">
-                <i class="bi bi-clock-history me-1"></i>24H TTL
-              </span>
+          <div class="hub-kpi-card">
+            <div class="hub-kpi-icon kpi-purple">
+              <i class="bi bi-key-fill"></i>
             </div>
-            <div class="sec-telemetry-body">
-              <div class="sec-telemetry-metric">
-                <i class="bi bi-key-fill sec-metric-icon"></i>
-                <span class="sec-metric-value">Token Blacklist</span>
-              </div>
-              <p class="sec-telemetry-subtext">Instant distributed revocation enabled</p>
+            <div class="hub-kpi-body">
+              <div class="hub-kpi-label" title="Session Governance">Session Guard</div>
+              <div class="hub-kpi-value">Token Blacklist</div>
+              <div class="hub-kpi-sub" title="24H TTL • Instant revocation">24H TTL &bull; Revocation</div>
             </div>
           </div>
         </div>
@@ -5652,7 +5973,7 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
                   </div>
                   <button
                     type="button"
-                    class="btn-sec-secondary"
+                    class="btn-sec-danger"
                     (click)="flushCacheRegion('all')"
                     title="Invalidate all L1 in-memory caches"
                   >
@@ -5764,7 +6085,7 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
   <div class="modal-content" (click)="$event.stopPropagation()" style="max-width: 680px;">
     <div class="modal-header">
       <div class="modal-title-group">
-        <div class="modal-icon-shield" style="background: rgba(217, 119, 6, 0.12); color: var(--brand-primary, #d97706);">
+        <div class="modal-icon-shield" style="background: rgba(11, 71, 212, 0.12); color: var(--brand-primary, #0B47D4);">
           <i class="bi bi-shield-lock"></i>
         </div>
         <div>
@@ -7075,6 +7396,70 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
     <div class="modal-footer">
       <button type="button" class="btn btn-secondary config-btn-secondary" (click)="closeFlagDetailModal()">
         Close Inspector
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- EDIT FEATURE FLAG / SUBSYSTEM MODAL                                       -->
+<!-- ========================================================================= -->
+<div class="modal-backdrop-custom" *ngIf="showEditFeatureFlagModal" (click)="showEditFeatureFlagModal = false">
+  <div class="modal-dialog-custom modal-md" (click)="$event.stopPropagation()" style="max-width: 540px; margin: 60px auto; background: var(--bg-card, #ffffff); border-radius: 12px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); overflow: hidden; border: 1px solid var(--border-color, #e2e8f0);">
+    <div class="modal-header-custom" style="padding: 16px 20px; border-bottom: 1px solid var(--border-color, #e2e8f0); display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface, #f8fafc);">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(37, 99, 235, 0.1); color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+          <i class="bi bi-toggles2"></i>
+        </div>
+        <div>
+          <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: var(--text-primary, #0f172a);">Edit Subsystem Configuration</h4>
+          <span style="font-size: 11.5px; color: var(--text-secondary, #64748b);">Module Key: <code class="font-mono text-primary">{{ featureFlagForm.moduleKey }}</code></span>
+        </div>
+      </div>
+      <button type="button" class="btn-close-custom" (click)="showEditFeatureFlagModal = false" style="background: none; border: none; font-size: 20px; line-height: 1; color: var(--text-secondary, #64748b); cursor: pointer;">&times;</button>
+    </div>
+    <div class="modal-body-custom" style="padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+      <div class="config-form-group">
+        <label class="config-label" style="font-size: 12px; font-weight: 600; color: var(--text-primary, #0f172a); margin-bottom: 6px; display: block;">
+          Subsystem Display Title <span class="text-danger">*</span>
+        </label>
+        <input type="text" [(ngModel)]="featureFlagForm.moduleName" class="form-control" style="font-size: 13px; height: 38px; border-radius: 8px; border: 1px solid var(--border-color, #cbd5e1); width: 100%; padding: 0 12px;" placeholder="e.g. Production Floor Control">
+      </div>
+      <div class="config-form-group">
+        <label class="config-label" style="font-size: 12px; font-weight: 600; color: var(--text-primary, #0f172a); margin-bottom: 6px; display: block;">
+          Architectural Domain Category
+        </label>
+        <select [(ngModel)]="featureFlagForm.category" class="form-select" style="font-size: 13px; height: 38px; border-radius: 8px; border: 1px solid var(--border-color, #cbd5e1); width: 100%; padding: 0 12px;">
+          <option value="Core">Core Subsystems</option>
+          <option value="Manufacturing">Manufacturing</option>
+          <option value="Commerce">Commerce &amp; Sales</option>
+          <option value="Supply Chain">Supply Chain</option>
+          <option value="Finance">Finance &amp; Accounts</option>
+          <option value="Human Resources">Human Resources</option>
+          <option value="Administration">Administration</option>
+        </select>
+      </div>
+      <div class="config-form-group">
+        <label class="config-label" style="font-size: 12px; font-weight: 600; color: var(--text-primary, #0f172a); margin-bottom: 6px; display: block;">
+          Capability &amp; Scope Description
+        </label>
+        <textarea [(ngModel)]="featureFlagForm.description" rows="3" class="form-control" style="font-size: 12.5px; border-radius: 8px; border: 1px solid var(--border-color, #cbd5e1); width: 100%; padding: 8px 12px;" placeholder="Describe functionality, dependencies, and business scope..."></textarea>
+      </div>
+      <div class="config-form-group" style="padding: 12px; background: var(--bg-surface, #f8fafc); border-radius: 8px; border: 1px solid var(--border-color, #e2e8f0); display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <strong style="font-size: 12.5px; color: var(--text-primary, #0f172a); display: block;">Operational Runtime State</strong>
+          <span style="font-size: 11px; color: var(--text-secondary, #64748b);">Enable or disable this subsystem in routing and navigation</span>
+        </div>
+        <label class="toggle-switch" style="margin: 0;">
+          <input type="checkbox" [(ngModel)]="featureFlagForm.enabled">
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer-custom" style="padding: 14px 20px; border-top: 1px solid var(--border-color, #e2e8f0); background: var(--bg-surface, #f8fafc); display: flex; justify-content: flex-end; gap: 8px;">
+      <button type="button" class="btn btn-secondary btn-sm" (click)="showEditFeatureFlagModal = false">Cancel</button>
+      <button type="button" class="btn btn-primary btn-sm" (click)="saveFeatureFlagEdit()">
+        <i class="bi bi-check-lg"></i> Save Changes
       </button>
     </div>
   </div>

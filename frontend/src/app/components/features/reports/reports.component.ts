@@ -8,6 +8,7 @@ import { FormStateDirective } from '../../../directives/form-state.directive';
 import { NotificationService } from '../../../services/notification.service';
 import { InrPipe } from '../../../pipes/inr-currency.pipe';
 import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
+import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 import { Chart, registerables } from 'chart.js';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -29,6 +30,7 @@ Chart.register(...registerables);
     FormStateDirective,
     InrPipe,
     IndianDatePipe,
+    ResizableTableDirective,
     SearchableSelectComponent
   ],
   templateUrl: './reports.component.html',

@@ -1,159 +1,224 @@
-<!-- Stable Enterprise Page Header -->
-<div class="enterprise-header no-print">
-  <div class="breadcrumb-trail" style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; width: 100%;">
-    <i class="bi bi-house" style="font-size: 12px; color: #94a3b8;"></i>
-    <span>Futane Agro ERP</span>
-    <span style="color: #cbd5e1;">/</span>
-    <span>Financial Management</span>
-    <span style="color: #cbd5e1;">/</span>
-    <span style="color: #0B47D4; font-weight: 700;">Billing Hub &amp; Document Center</span>
-  </div>
+<div class="billinghub-enterprise-container">
 
-  <div class="enterprise-header-title-group">
-    <div class="enterprise-header-icon">
-      <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+  <!-- ── 1. CANONICAL ENTERPRISE PAGE HEADER ──────────────────────────── -->
+  <header class="billinghub-page-header no-print">
+    <div class="breadcrumb-trail">
+      <i class="bi bi-house-door-fill"></i>
+      <span>Futane Agro ERP</span>
+      <span class="sep">/</span>
+      <span>FINANCE &amp; ACCOUNTS</span>
+      <span class="sep">/</span>
+      <span class="active">BILLING HUB &amp; DOCUMENT CENTER</span>
     </div>
-    <div class="enterprise-header-text">
-      <h2>Billing Hub &amp; Document Center</h2>
-      <p>Generate, print, and export GST tax invoices, challans, payment receipts, and salary slips</p>
-    </div>
-  </div>
-  <div class="header-actions">
-    <button type="button" class="btn-header-action btn-secondary" (click)="loadAllSources(true)" [disabled]="isLoading" title="Synchronize document records">
-      <i class="bi bi-arrow-clockwise me-1" [class.spin-animate]="isLoading"></i>
-      <span>{{ isLoading ? 'Syncing...' : 'Refresh' }}</span>
-    </button>
-    <button type="button" class="btn-header-action btn-secondary" (click)="printDocument()" title="Print current document">
-      <i class="bi bi-printer me-1"></i>
-      <span>Print</span>
-    </button>
-    <button type="button" class="btn-header-action btn-primary" (click)="downloadPDF()" [disabled]="isExportingPdf || !selectedRecord" title="Export document as PDF">
-      <i class="bi me-1" [ngClass]="isExportingPdf ? 'bi-hourglass-split spin-animate' : 'bi-download'"></i>
-      <span>{{ isExportingPdf ? 'Generating...' : 'Export PDF' }}</span>
-    </button>
-  </div>
-</div>
 
-<!-- Top Controls Bar (Hidden during Print) -->
-<div class="billing-header-bar no-print glass-panel">
-  <!-- Document Type Switcher Tabs -->
-  <div class="doc-type-tabs-container">
-    <div class="doc-type-tabs">
-      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'tax_invoice'" (click)="activeBillType = 'tax_invoice'; onBillTypeChange()">
+    <!-- Header Primary Row -->
+    <div class="header-primary-row">
+      <div class="header-title-box">
+        <div class="header-icon-box">
+          <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+        </div>
+        <div>
+          <div class="title-with-badge">
+            <h1 class="header-main-title">Billing Hub &amp; Document Center</h1>
+            <span class="header-count-pill">{{ totalQueueCount }} Records</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions Group -->
+      <div class="header-actions-group">
+        <button 
+          type="button" 
+          class="btn-header-action btn-secondary" 
+          (click)="loadAllSources(true)" 
+          [disabled]="isLoading" 
+          title="Synchronize document records"
+          aria-label="Synchronize document records">
+          <i class="bi bi-arrow-clockwise me-1" [class.spin-animate]="isLoading"></i>
+          <span>{{ isLoading ? 'Syncing...' : 'Refresh' }}</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="btn-header-action btn-secondary" 
+          (click)="printDocument()" 
+          title="Print current document"
+          aria-label="Print current document">
+          <i class="bi bi-printer me-1"></i>
+          <span>Print</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="btn-header-action btn-primary" 
+          (click)="downloadPDF()" 
+          [disabled]="isExportingPdf || !selectedRecord" 
+          title="Export document as PDF"
+          aria-label="Export document as PDF">
+          <i class="bi me-1" [ngClass]="isExportingPdf ? 'bi-hourglass-split spin-animate' : 'bi-download'"></i>
+          <span>{{ isExportingPdf ? 'Generating...' : 'Export PDF' }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Header Secondary Row -->
+    <div class="header-secondary-row">
+      <p class="header-subtitle">
+        Generate, print, and export GST tax invoices, challans, payment receipts, and salary slips
+      </p>
+      <div class="header-formula-badge" title="Statutory Billing Formula">
+        <i class="bi bi-calculator"></i>
+        <span>Formula: Taxable Value + CGST (9%) + SGST (9%) = Gross Invoice Total</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── 2. LAYER 3: PILL SUBTABS NAVIGATION BAR ────────────────────────── -->
+  <nav class="billinghub-subnav-bar no-print" role="tablist" aria-label="Billing Formats">
+    <div class="subnav-tabs-group">
+      <button 
+        type="button" 
+        role="tab" 
+        class="subnav-tab-btn" 
+        [class.active]="activeBillType === 'tax_invoice'" 
+        (click)="activeBillType = 'tax_invoice'; onBillTypeChange()"
+        [attr.aria-selected]="activeBillType === 'tax_invoice'">
         <i class="bi bi-receipt"></i>
-        <span>Tax Invoice (GST)</span>
+        <span>Tax Invoice</span>
       </button>
-      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'proforma'" (click)="activeBillType = 'proforma'; onBillTypeChange()">
+
+      <button 
+        type="button" 
+        role="tab" 
+        class="subnav-tab-btn" 
+        [class.active]="activeBillType === 'proforma'" 
+        (click)="activeBillType = 'proforma'; onBillTypeChange()"
+        [attr.aria-selected]="activeBillType === 'proforma'">
         <i class="bi bi-file-earmark-text"></i>
-        <span>Proforma Invoice</span>
+        <span>Proforma</span>
       </button>
-      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'delivery_challan'" (click)="activeBillType = 'delivery_challan'; onBillTypeChange()">
+
+      <button 
+        type="button" 
+        role="tab" 
+        class="subnav-tab-btn" 
+        [class.active]="activeBillType === 'delivery_challan'" 
+        (click)="activeBillType = 'delivery_challan'; onBillTypeChange()"
+        [attr.aria-selected]="activeBillType === 'delivery_challan'">
         <i class="bi bi-truck"></i>
         <span>Delivery Challan</span>
       </button>
-      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'payment_receipt'" (click)="activeBillType = 'payment_receipt'; onBillTypeChange()">
+
+      <button 
+        type="button" 
+        role="tab" 
+        class="subnav-tab-btn" 
+        [class.active]="activeBillType === 'payment_receipt'" 
+        (click)="activeBillType = 'payment_receipt'; onBillTypeChange()"
+        [attr.aria-selected]="activeBillType === 'payment_receipt'">
         <i class="bi bi-check2-circle"></i>
-        <span>Payment Receipt</span>
+        <span>Receipt</span>
       </button>
-      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'purchase_invoice'" (click)="activeBillType = 'purchase_invoice'; onBillTypeChange()">
+
+      <button 
+        type="button" 
+        role="tab" 
+        class="subnav-tab-btn" 
+        [class.active]="activeBillType === 'purchase_invoice'" 
+        (click)="activeBillType = 'purchase_invoice'; onBillTypeChange()"
+        [attr.aria-selected]="activeBillType === 'purchase_invoice'">
         <i class="bi bi-bag-check"></i>
-        <span>Purchase Invoice</span>
+        <span>Purchase</span>
       </button>
-      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'transport_receipt'" (click)="activeBillType = 'transport_receipt'; onBillTypeChange()">
+
+      <button 
+        type="button" 
+        role="tab" 
+        class="subnav-tab-btn" 
+        [class.active]="activeBillType === 'transport_receipt'" 
+        (click)="activeBillType = 'transport_receipt'; onBillTypeChange()"
+        [attr.aria-selected]="activeBillType === 'transport_receipt'">
         <i class="bi bi-truck-flatbed"></i>
-        <span>Transport Receipt</span>
+        <span>Transport</span>
       </button>
-      <button type="button" class="doc-tab-btn" [class.active]="activeBillType === 'salary_slip'" (click)="activeBillType = 'salary_slip'; onBillTypeChange()">
+
+      <button 
+        type="button" 
+        role="tab" 
+        class="subnav-tab-btn" 
+        [class.active]="activeBillType === 'salary_slip'" 
+        (click)="activeBillType = 'salary_slip'; onBillTypeChange()"
+        [attr.aria-selected]="activeBillType === 'salary_slip'">
         <i class="bi bi-person-badge"></i>
         <span>Salary Slip</span>
       </button>
     </div>
-  </div>
+  </nav>
 
-  <!-- Smart Filter Toolbar for Year/Month/Search -->
-  <div class="doc-filter-toolbar" *ngIf="!hasError">
-    <!-- Year Filter -->
-    <div class="filter-field">
-      <label><i class="bi bi-calendar-event me-1"></i>Year:</label>
-      <select [(ngModel)]="filterYear" (change)="onFilterCriteriaChange()" class="filter-select">
-        <option value="">All Years</option>
-        <option *ngFor="let y of years" [value]="y">{{ y }}</option>
-      </select>
+  <!-- ── 3. LAYER 4: 5-COLUMN KPI TELEMETRY GRID ───────────────────────── -->
+  <section class="billinghub-kpi-grid no-print" aria-label="Billing Telemetry KPIs">
+    <!-- Card 1: Total Commercial Value (Blue) -->
+    <div class="billinghub-kpi-card" title="Total Commercial Queue Value">
+      <div class="billinghub-kpi-icon kpi-blue"><i class="bi bi-currency-rupee"></i></div>
+      <div class="billinghub-kpi-content">
+        <span class="billinghub-kpi-label">TOTAL COMMERCIAL VALUE</span>
+        <div class="billinghub-kpi-value-row">
+          <strong class="billinghub-kpi-value">₹{{ totalQueueValue | number:'1.2-2' }}</strong>
+        </div>
+        <span class="billinghub-kpi-meta"><i class="bi bi-folder-check me-1"></i>Across {{ totalQueueCount }} active records</span>
+      </div>
     </div>
 
-    <!-- Month Filter -->
-    <div class="filter-field">
-      <label><i class="bi bi-calendar-month me-1"></i>Month:</label>
-      <select [(ngModel)]="filterMonth" (change)="onFilterCriteriaChange()" class="filter-select">
-        <option value="">All Months</option>
-        <option *ngFor="let m of months" [value]="m.value">{{ m.name }}</option>
-      </select>
+    <!-- Card 2: Queue Volume (Green) -->
+    <div class="billinghub-kpi-card" title="Document Queue Volume">
+      <div class="billinghub-kpi-icon kpi-green"><i class="bi bi-folder-check"></i></div>
+      <div class="billinghub-kpi-content">
+        <span class="billinghub-kpi-label">QUEUE VOLUME</span>
+        <div class="billinghub-kpi-value-row">
+          <strong class="billinghub-kpi-value">{{ totalQueueCount }}</strong>
+          <span class="billinghub-kpi-unit">Documents</span>
+        </div>
+        <span class="billinghub-kpi-meta"><i class="bi bi-funnel me-1"></i>Matching active filters</span>
+      </div>
     </div>
 
-    <!-- Search Query -->
-    <div class="filter-field filter-search-field">
-      <label><i class="bi bi-search me-1"></i>Search:</label>
-      <input type="text" [(ngModel)]="filterSearch" (input)="onFilterCriteriaChange()" placeholder="Search party, crate, doc number..." class="filter-input">
+    <!-- Card 3: Statutory GST (Amber) -->
+    <div class="billinghub-kpi-card" title="Statutory GST Accrual">
+      <div class="billinghub-kpi-icon kpi-amber"><i class="bi bi-calculator"></i></div>
+      <div class="billinghub-kpi-content">
+        <span class="billinghub-kpi-label">STATUTORY GST ACCRUAL</span>
+        <div class="billinghub-kpi-value-row">
+          <strong class="billinghub-kpi-value">₹{{ totalQueueTax | number:'1.2-2' }}</strong>
+        </div>
+        <span class="billinghub-kpi-meta"><i class="bi bi-patch-check me-1"></i>CGST (9%) + SGST (9%)</span>
+      </div>
     </div>
 
-    <!-- Date From -->
-    <div class="filter-field date-field">
-      <label>From:</label>
-      <input type="date" [(ngModel)]="filterDateFrom" (change)="onFilterCriteriaChange()" class="filter-input">
+    <!-- Card 4: Active Format (Purple) -->
+    <div class="billinghub-kpi-card" title="Active Document Format">
+      <div class="billinghub-kpi-icon kpi-purple"><i class="bi bi-file-earmark-check"></i></div>
+      <div class="billinghub-kpi-content">
+        <span class="billinghub-kpi-label">ACTIVE FORMAT</span>
+        <div class="billinghub-kpi-value-row">
+          <strong class="billinghub-kpi-value billinghub-title-sm">{{ activeDocTypeTitle }}</strong>
+        </div>
+        <span class="billinghub-kpi-meta"><i class="bi bi-tag me-1"></i>Series: {{ currentTheme.prefix }}</span>
+      </div>
     </div>
 
-    <!-- Date To -->
-    <div class="filter-field date-field">
-      <label>To:</label>
-      <input type="date" [(ngModel)]="filterDateTo" (change)="onFilterCriteriaChange()" class="filter-input">
+    <!-- Card 5: Document Prefix (Slate) -->
+    <div class="billinghub-kpi-card" title="Statutory Numbering Prefix">
+      <div class="billinghub-kpi-icon kpi-slate"><i class="bi bi-hash"></i></div>
+      <div class="billinghub-kpi-content">
+        <span class="billinghub-kpi-label">SERIES PREFIX</span>
+        <div class="billinghub-kpi-value-row">
+          <strong class="billinghub-kpi-value font-mono">{{ currentTheme.prefix }}</strong>
+        </div>
+        <span class="billinghub-kpi-meta"><i class="bi bi-calendar3 me-1"></i>FY 2025-26 Series</span>
+      </div>
     </div>
+  </section>
 
-    <!-- Reset Filters Button -->
-    <button *ngIf="filterYear || filterMonth || filterSearch || filterDateFrom || filterDateTo"
-            type="button" class="btn btn-outline btn-sm btn-clear-filters" (click)="resetFilters()" title="Reset all filters">
-      <i class="bi bi-arrow-counterclockwise me-1"></i>
-      <span>Reset</span>
-    </button>
-  </div>
-
-  <!-- Record Selection Selector -->
-  <div class="doc-selector-section" *ngIf="getFilteredRecords().length > 0">
-    <div class="doc-selector-meta">
-      <span class="selector-label">Select Linked Record:</span>
-      <span class="selector-count-pill">{{ getMatchCountText() }}</span>
-    </div>
-
-    <div class="doc-selector-dropdown-wrap">
-      <app-searchable-select
-        [items]="selectableRecords"
-        bindLabel="label"
-        bindValue="id"
-        subLabelKey="subLabel"
-        [(ngModel)]="selectedRecordId"
-        (ngModelChange)="onRecordSelectChange()"
-        placeholder="-- Select Linked Document Record --"
-        searchPlaceholder="Filter records by customer, vehicle, ID..."
-        [allowClear]="false">
-      </app-searchable-select>
-    </div>
-  </div>
-
-  <!-- Empty Filter State using Shared Component -->
-  <app-empty-state *ngIf="!hasError && getFilteredRecords().length === 0"
-                   variant="search"
-                   icon="bi-search"
-                   title="No Linked Documents Found"
-                   [description]="'No ' + currentTheme.title.toLowerCase() + ' records match your selected year, month, or search query.'"
-                   actionLabel="Reset Filters"
-                   actionIcon="bi-arrow-counterclockwise"
-                   [compact]="true"
-                   (action)="resetFilters()">
-  </app-empty-state>
-</div>
-
-<!-- ========================================================================================= -->
-<!-- PRINTABLE DOCUMENT CONTAINER (A4 FORMAT) -->
-<!-- ========================================================================================= -->
 <!-- Error State -->
 <app-empty-state *ngIf="hasError"
                  variant="error"
@@ -165,15 +230,154 @@
                  (action)="loadAllSources(true)">
 </app-empty-state>
 
-<div class="document-sheet-wrapper" *ngIf="!hasError && selectedRecord">
-  <div id="printable-document-sheet" class="document-sheet" [style.--doc-theme]="currentTheme.primary">
+<!-- Structure 3: 2-Column Executive Document Workbench -->
+<div class="billing-workbench-container no-print" *ngIf="!hasError">
+
+  <!-- LEFT COLUMN: Document Queue & Records Ledger (380px) -->
+  <div class="billing-workbench-left">
+    <!-- Category Pills -->
+    <div class="doc-category-picker">
+      <div class="category-picker-header">
+        <i class="bi bi-grid-fill me-1"></i>
+        <span>Document Format</span>
+      </div>
+      <div class="category-pills-wrap">
+        <button type="button" class="cat-pill" [class.active]="activeBillType === 'tax_invoice'" (click)="activeBillType = 'tax_invoice'; onBillTypeChange()">
+          <i class="bi bi-receipt"></i>
+          <span>Tax Invoice</span>
+        </button>
+        <button type="button" class="cat-pill" [class.active]="activeBillType === 'proforma'" (click)="activeBillType = 'proforma'; onBillTypeChange()">
+          <i class="bi bi-file-earmark-text"></i>
+          <span>Proforma</span>
+        </button>
+        <button type="button" class="cat-pill" [class.active]="activeBillType === 'delivery_challan'" (click)="activeBillType = 'delivery_challan'; onBillTypeChange()">
+          <i class="bi bi-truck"></i>
+          <span>Challan</span>
+        </button>
+        <button type="button" class="cat-pill" [class.active]="activeBillType === 'payment_receipt'" (click)="activeBillType = 'payment_receipt'; onBillTypeChange()">
+          <i class="bi bi-check2-circle"></i>
+          <span>Receipt</span>
+        </button>
+        <button type="button" class="cat-pill" [class.active]="activeBillType === 'purchase_invoice'" (click)="activeBillType = 'purchase_invoice'; onBillTypeChange()">
+          <i class="bi bi-bag-check"></i>
+          <span>Purchase</span>
+        </button>
+        <button type="button" class="cat-pill" [class.active]="activeBillType === 'transport_receipt'" (click)="activeBillType = 'transport_receipt'; onBillTypeChange()">
+          <i class="bi bi-truck-flatbed"></i>
+          <span>Transport</span>
+        </button>
+        <button type="button" class="cat-pill" [class.active]="activeBillType === 'salary_slip'" (click)="activeBillType = 'salary_slip'; onBillTypeChange()">
+          <i class="bi bi-person-badge"></i>
+          <span>Salary Slip</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Filters Card -->
+    <div class="queue-filters-card">
+      <div class="queue-search-wrap">
+        <i class="bi bi-search search-icon"></i>
+        <input type="text" [(ngModel)]="filterSearch" (input)="onFilterCriteriaChange()" placeholder="Search customer, vehicle, ID..." class="queue-search-input">
+        <button *ngIf="filterSearch" class="btn-clear-search" (click)="filterSearch=''; onFilterCriteriaChange()">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+      <div class="queue-date-filters">
+        <select [(ngModel)]="filterYear" (change)="onFilterCriteriaChange()" class="queue-filter-select">
+          <option value="">All Years</option>
+          <option *ngFor="let y of years" [value]="y">{{ y }}</option>
+        </select>
+        <select [(ngModel)]="filterMonth" (change)="onFilterCriteriaChange()" class="queue-filter-select">
+          <option value="">All Months</option>
+          <option *ngFor="let m of months" [value]="m.value">{{ m.name }}</option>
+        </select>
+        <button *ngIf="filterYear || filterMonth || filterSearch || filterDateFrom || filterDateTo"
+                type="button" class="btn-reset-pill" (click)="resetFilters()" title="Reset filters">
+          <i class="bi bi-arrow-counterclockwise"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Scrollable Queue Ledger -->
+    <div class="queue-ledger-card">
+      <div class="queue-ledger-header">
+        <span class="queue-header-title">Document Queue</span>
+        <span class="queue-count-badge">{{ totalQueueCount }}</span>
+      </div>
+
+      <div class="queue-scroll-container">
+        <div *ngIf="getFilteredRecords().length === 0" class="queue-empty-box">
+          <i class="bi bi-inbox empty-icon"></i>
+          <p>No records match filter</p>
+          <button class="btn btn-sm btn-outline" (click)="resetFilters()">Reset Filters</button>
+        </div>
+
+        <div *ngFor="let item of getFilteredRecords()"
+             class="queue-record-card"
+             [class.active-item]="isItemSelected(item)"
+             (click)="selectRecordItem(item)">
+          <div class="record-card-top">
+            <span class="record-party-name" [title]="getRecordPartyName(item)">{{ getRecordPartyName(item) }}</span>
+            <span class="record-amount-badge">₹{{ getRecordAmount(item) | number:'1.2-2' }}</span>
+          </div>
+          <div class="record-card-mid" *ngIf="item.crateType || item.materialName">
+            <span class="record-crate-tag">{{ item.crateType || item.materialName }}</span>
+          </div>
+          <div class="record-card-bottom">
+            <span class="record-ref-id">
+              <i class="bi bi-tag-fill me-1"></i>#{{ getRecordRefId(item) }}
+            </span>
+            <span class="record-date">
+              <i class="bi bi-calendar3 me-1"></i>{{ (getRecordDateString(item) || today) | date:'dd MMM yyyy' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN: Live Document Canvas (1fr) -->
+  <div class="billing-workbench-right">
+    <!-- Canvas Top Toolbar -->
+    <div class="canvas-action-toolbar">
+      <div class="canvas-doc-meta">
+        <span class="canvas-doc-title">{{ currentTheme.title }}</span>
+        <span class="canvas-doc-num-pill" [style.background]="currentTheme.secondary" [style.color]="currentTheme.primary" [style.borderColor]="currentTheme.primary">
+          {{ currentDocumentNumber }}
+        </span>
+        <span class="canvas-status-badge">
+          <span class="status-pulse-dot"></span> A4 PRINT READY
+        </span>
+      </div>
+
+      <div class="canvas-tools-group">
+        <div class="zoom-pill-group">
+          <button type="button" class="btn-zoom" [class.active]="zoomLevel === 0.78" (click)="setZoom(0.78)">Fit</button>
+          <button type="button" class="btn-zoom" [class.active]="zoomLevel === 0.88" (click)="setZoom(0.88)">88%</button>
+          <button type="button" class="btn-zoom" [class.active]="zoomLevel === 1.0" (click)="setZoom(1.0)">100%</button>
+          <button type="button" class="btn-zoom" [class.active]="zoomLevel === 1.15" (click)="setZoom(1.15)">115%</button>
+        </div>
+        <button type="button" class="btn-canvas-action" (click)="printDocument()" title="Print document">
+          <i class="bi bi-printer me-1"></i> Print
+        </button>
+        <button type="button" class="btn-canvas-action primary" (click)="downloadPDF()" [disabled]="isExportingPdf || !selectedRecord" title="Export PDF">
+          <i class="bi me-1" [ngClass]="isExportingPdf ? 'bi-hourglass-split spin-animate' : 'bi-download'"></i> PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- Canvas Viewport -->
+    <div class="document-canvas-viewport">
+      <div class="document-zoom-scaler" [style.zoom]="zoomLevel">
+        <div class="document-sheet-wrapper" *ngIf="selectedRecord">
+          <div id="printable-document-sheet" class="document-sheet" [style.--doc-theme]="currentTheme.primary">
 
     <!-- Universal Corporate Letterhead Header -->
     <div class="doc-header-block">
       <div style="display:flex; justify-content:space-between; align-items:flex-start;">
         <!-- Company Logo & Name -->
         <div style="display:flex; align-items:center; gap:12px;">
-          <div class="doc-logo-box">
+          <div class="doc-logo-box" *ngIf="invoiceTemplate?.showCompanyLogo !== false">
             <svg viewBox="0 0 100 100" style="width:48px; height:48px;">
               <polygon points="50,5 95,25 50,45 5,25" fill="var(--doc-theme)" opacity="0.95"/>
               <polygon points="5,25 50,45 50,95 5,75" fill="var(--doc-theme)" opacity="0.8"/>
@@ -185,10 +389,10 @@
           </div>
           <div>
             <div style="font-size:22px; font-weight:900; color:var(--doc-theme); letter-spacing:-0.5px; line-height:1.05;">
-              FUTANE AGRO
+              {{ companyProfiles[0]?.companyName || 'FUTANE AGRO' }}
             </div>
             <div style="font-size:13px; font-weight:800; color:#1e293b; letter-spacing:0.5px;">
-              INDUSTRIES PVT. LTD.
+              {{ companyProfiles[0]?.tradeName || 'INDUSTRIES PVT. LTD.' }}
             </div>
             <div style="font-size:9.5px; font-weight:600; color:var(--doc-theme); margin-top:2px;">
               — Quality Crates, Stronger Future —
@@ -199,7 +403,7 @@
         <!-- Document Pill Title & Number Box -->
         <div style="text-align:right;">
           <div class="doc-title-pill" [style.background]="currentTheme.primary">
-            {{ currentTheme.title }}
+            {{ activeBillType === 'tax_invoice' && invoiceTemplate.invoiceTitle ? invoiceTemplate.invoiceTitle : currentTheme.title }}
           </div>
           <div class="doc-meta-box">
             <div><strong>Document No. :</strong> {{ currentDocumentNumber }}</div>
@@ -213,10 +417,15 @@
 
       <!-- Factory Address & Legal Registration Bar -->
       <div class="doc-address-bar">
-        <div>Gat No. 242, At. Post. Karanja (Lad), Tal. Achalpur, Dist. Amravati - 444 805, Maharashtra, India</div>
+        <div>{{ companyProfiles[0]?.factoryAddress || companyProfiles[0]?.registeredAddress || 'Gat No. 242, At. Post. Karanja (Lad), Tal. Achalpur, Dist. Amravati - 444 805, Maharashtra, India' }}</div>
         <div style="margin-top:2px;">
-          Tel: 07224-XXXXXX &nbsp;|&nbsp; Email: info&#64;futaneagro.com &nbsp;|&nbsp; www.futaneagro.com &nbsp;|&nbsp; <strong>GSTIN : 27AABCF1234F1ZS</strong>
+          Tel: {{ companyProfiles[0]?.contactPhone || '07224-XXXXXX' }} &nbsp;|&nbsp; Email: {{ companyProfiles[0]?.contactEmail || 'info@futaneagro.com' }} &nbsp;|&nbsp; <strong>GSTIN : {{ companyProfiles[0]?.gstin || '27AABCF1234F1ZS' }}</strong>
         </div>
+      </div>
+
+      <!-- Header Remarks Banner (if configured) -->
+      <div class="inv-header-note-banner" *ngIf="invoiceTemplate?.headerNotes && activeBillType === 'tax_invoice'" style="background: rgba(194, 65, 12, 0.08); border: 1px dashed var(--doc-theme); border-radius: 4px; padding: 5px 10px; font-size: 10px; color: #1e293b; margin-top: 6px;">
+        <i class="bi bi-info-circle-fill me-1" [style.color]="currentTheme.primary"></i> {{ invoiceTemplate.headerNotes }}
       </div>
     </div>
 
@@ -227,9 +436,9 @@
       <!-- 3-Column Address Box -->
       <div class="grid-3-boxes">
         <div class="info-card-box">
-          <div class="info-card-header" [style.background]="currentTheme.primary">BILL TO:</div>
+          <div class="info-card-header" [style.background]="currentTheme.primary">BILL TO (BUYER):</div>
           <div class="info-card-body">
-            <strong>{{ selectedRecord?.party?.partyName || 'Shri Ganesh Traders' }}</strong><br>
+            <strong>{{ selectedRecord?.party?.partyName || selectedRecord?.partyName || 'Shri Ganesh Traders' }}</strong><br>
             {{ selectedRecord?.party?.partyAddress || selectedRecord?.party?.address || 'Shop No. 12, Main Market, Morshi Road, Amravati' }}<br>
             Maharashtra - 444601<br>
             <strong>GSTIN :</strong> {{ selectedRecord?.party?.gstNumber || selectedRecord?.party?.gstin || '27ABCDE1234F1Z5' }}<br>
@@ -237,124 +446,152 @@
           </div>
         </div>
         <div class="info-card-box">
-          <div class="info-card-header" [style.background]="currentTheme.primary">SHIP TO:</div>
+          <div class="info-card-header" [style.background]="currentTheme.primary">SHIP TO (CONSIGNEE):</div>
           <div class="info-card-body">
-            <strong>{{ selectedRecord?.party?.partyName || 'Shri Ganesh Traders' }}</strong><br>
-            {{ selectedRecord?.party?.partyAddress || selectedRecord?.party?.address || 'Shop No. 12, Main Market, Morshi Road, Amravati' }}<br>
+            <strong>{{ selectedRecord?.party?.partyName || selectedRecord?.partyName || 'Shri Ganesh Traders' }}</strong><br>
+            {{ selectedRecord?.deliveryAddress || selectedRecord?.party?.partyAddress || selectedRecord?.party?.address || 'Shop No. 12, Main Market, Morshi Road, Amravati' }}<br>
             Maharashtra - 444601<br>
             <strong>GSTIN :</strong> {{ selectedRecord?.party?.gstNumber || selectedRecord?.party?.gstin || '27ABCDE1234F1Z5' }}<br>
-            <strong>Mobile :</strong> {{ selectedRecord?.party?.partyContact || selectedRecord?.party?.contact || '9876543210' }}
+            <strong>Place of Supply :</strong> Maharashtra (27)
           </div>
         </div>
         <div class="info-card-box">
-          <div class="info-card-header" [style.background]="currentTheme.primary">VEHICLE & TRANSPORT</div>
+          <div class="info-card-header" [style.background]="currentTheme.primary">VEHICLE &amp; TRANSPORT</div>
           <div class="info-card-body">
-            <strong>Transport :</strong> Shri Sai Transport<br>
-            <strong>Vehicle No. :</strong> MH 27 AB 1234<br>
-            <strong>E-Way Bill No. :</strong> 291234567890<br>
-            <strong>Dispatch Date :</strong> {{ today | date:'dd/MM/yyyy' }}
+            <strong>Transport :</strong> {{ selectedRecord?.transportName || 'Shri Sai Transport' }}<br>
+            <strong>Vehicle No. :</strong> {{ selectedRecord?.vehicleNumber || 'MH 27 AB 1234' }}<br>
+            <strong>E-Way Bill No. :</strong> {{ selectedRecord?.ewayBill || '291234567890' }}<br>
+            <strong>Dispatch Date :</strong> {{ (selectedRecord?.date || today) | date:'dd/MM/yyyy' }}
           </div>
         </div>
       </div>
 
-      <!-- Itemized Table -->
-      <table class="doc-table">
+      <!-- Universal Itemized Invoice Table -->
+      <table class="doc-table inv-items-table">
         <thead>
           <tr [style.background]="currentTheme.primary">
-            <th style="width:4%;">Sr.</th>
-            <th>Description of Goods</th>
-            <th style="width:12%;">HSN Code</th>
-            <th style="width:8%;">Qty.</th>
-            <th style="width:10%;">Rate (₹)</th>
-            <th style="width:10%;">CGST 9%</th>
-            <th style="width:10%;">SGST 9%</th>
-            <th style="width:14%; text-align:right;">Amount (₹)</th>
+            <th style="width:4%; text-align:center;">#</th>
+            <th style="width:28%;">Item Description</th>
+            <th style="width:8%; text-align:center;">HSN</th>
+            <th style="width:11%; text-align:right;">Qty</th>
+            <th style="width:11%; text-align:right;">Rate (₹)</th>
+            <th style="width:17%; text-align:right;">Taxable (₹)</th>
+            <th style="width:6%; text-align:center;">GST</th>
+            <th style="width:15%; text-align:right;">Total (₹)</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td style="text-align:center;">1</td>
-            <td>Plastic Crate ({{ selectedRecord?.crateType || '600 x 400 x 300 mm' }})</td>
-            <td style="text-align:center;">39231090</td>
-            <td style="text-align:center;">{{ selectedRecord?.quantity || 100 }}</td>
-            <td style="text-align:right;">₹{{ (selectedRecord?.rate || 250) | number:'1.2-2' }}</td>
-            <td style="text-align:right;">₹{{ ((selectedRecord?.totalAmount || (selectedRecord?.quantity * selectedRecord?.rate) || 25000) * 0.09) | number:'1.2-2' }}</td>
-            <td style="text-align:right;">₹{{ ((selectedRecord?.totalAmount || (selectedRecord?.quantity * selectedRecord?.rate) || 25000) * 0.09) | number:'1.2-2' }}</td>
-            <td style="text-align:right; font-weight:700;">₹{{ (selectedRecord?.totalAmount || (selectedRecord?.quantity * selectedRecord?.rate) || 25000) | number:'1.2-2' }}</td>
+            <td>
+              <strong>{{ selectedRecord?.crateType || selectedRecord?.materialName || 'Industrial Heavy Duty Crates (54L)' }}</strong>
+              <div class="item-sub-desc" style="font-size:9px; color:#475569; margin-top:2px;">
+                {{ selectedRecord?.notes || 'Virgin HDPE • Royal Blue • Hot Embossed "FUTANE AGRO"' }}
+              </div>
+            </td>
+            <td style="text-align:center;" class="font-mono">{{ selectedRecord?.hsnCode || '3923' }}</td>
+            <td style="text-align:right;" class="font-mono">{{ selectedRecord?.quantity || 100 }} Nos</td>
+            <td style="text-align:right;" class="font-mono">₹{{ (selectedRecord?.rate || 250) | number:'1.2-2' }}</td>
+            <td style="text-align:right;" class="font-mono">₹{{ getItemTaxableAmount(selectedRecord) | number:'1.2-2' }}</td>
+            <td style="text-align:center;" class="font-mono">18%</td>
+            <td style="text-align:right; font-weight:700;" class="font-mono">₹{{ getItemTotal(selectedRecord) | number:'1.2-2' }}</td>
           </tr>
         </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5" style="text-align:right; font-weight:700;">Taxable Amount:</td>
+            <td colspan="3" style="text-align:right; font-weight:700;" class="font-mono">₹{{ getItemTaxableAmount(selectedRecord) | number:'1.2-2' }}</td>
+          </tr>
+          <tr>
+            <td colspan="5" style="text-align:right; font-size:10px; color:#475569;">Central GST (CGST &#64; 9%):</td>
+            <td colspan="3" style="text-align:right; font-size:10px;" class="font-mono">₹{{ getItemCgst(selectedRecord) | number:'1.2-2' }}</td>
+          </tr>
+          <tr>
+            <td colspan="5" style="text-align:right; font-size:10px; color:#475569;">State GST (SGST &#64; 9%):</td>
+            <td colspan="3" style="text-align:right; font-size:10px;" class="font-mono">₹{{ getItemSgst(selectedRecord) | number:'1.2-2' }}</td>
+          </tr>
+          <tr class="grand-total-row" [style.background]="currentTheme.primary">
+            <td colspan="5" style="text-align:right; font-weight:800; font-size:11.5px; color:#ffffff !important;">INVOICE TOTAL (INR):</td>
+            <td colspan="3" style="text-align:right; font-weight:900; font-size:13px; color:#ffffff !important;" class="font-mono">₹{{ getItemTotal(selectedRecord) | number:'1.2-2' }}</td>
+          </tr>
+        </tfoot>
       </table>
 
-      <!-- Calculations & Grand Total Block -->
-      <div style="display:flex; justify-content:space-between; margin-top:8px;">
-        <div style="font-size:10.5px; padding:6px; width:55%;">
-          <div><strong>Amount In Words :</strong></div>
-          <div style="font-style:italic; font-weight:600; color:#334155; margin-top:2px;">
-            {{ amountInWords(getTotalPayableAmount()) }}
-          </div>
-        </div>
-        <div style="width:42%;">
-          <table class="summary-table">
-            <tr>
-              <td>Sub Total (Taxable)</td>
-              <td style="text-align:right; font-weight:700;">₹{{ (selectedRecord?.totalAmount || (selectedRecord?.quantity * selectedRecord?.rate) || 25000) | number:'1.2-2' }}</td>
-            </tr>
-            <tr>
-              <td>CGST (9%)</td>
-              <td style="text-align:right;">₹{{ ((selectedRecord?.totalAmount || (selectedRecord?.quantity * selectedRecord?.rate) || 25000) * 0.09) | number:'1.2-2' }}</td>
-            </tr>
-            <tr>
-              <td>SGST (9%)</td>
-              <td style="text-align:right;">₹{{ ((selectedRecord?.totalAmount || (selectedRecord?.quantity * selectedRecord?.rate) || 25000) * 0.09) | number:'1.2-2' }}</td>
-            </tr>
-            <tr class="grand-total-row" [style.background]="currentTheme.primary">
-              <td>GRAND TOTAL</td>
-              <td style="text-align:right; font-weight:900; font-size:13.5px;">₹{{ getTotalPayableAmount() | number:'1.2-2' }}</td>
-            </tr>
-          </table>
-        </div>
+      <!-- Amount in Words -->
+      <div style="margin-top:6px; padding:4px 8px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:4px; font-size:10px;">
+        <strong>Amount In Words :</strong> <span style="font-style:italic; font-weight:600; color:#1e293b;">{{ amountInWords(getItemTotal(selectedRecord)) }}</span>
       </div>
 
-      <!-- Terms, Signatures & UPI QR -->
-      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:14px; font-size:9.5px;">
-        <!-- Terms -->
-        <div style="width:40%;">
-          <strong>Terms & Conditions :</strong><br>
-          1. Payment should be made within the due date.<br>
-          2. Interest &#64; 18% p.a. will be charged on overdue amount.<br>
-          3. Goods once sold will not be taken back.<br>
-          4. All disputes are subject to Amravati Jurisdiction.
-          <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
-            <app-qr-code [value]="upiQrString" [size]="50"></app-qr-code>
-            <div>
-              <strong>Scan & Pay</strong><br>
-              UPI ID: futaneagro&#64;upi
-            </div>
+      <!-- HSN/SAC Tax Breakup Summary (Governed by invoiceTemplate toggle) -->
+      <div class="inv-hsn-summary-block" *ngIf="invoiceTemplate?.showHsnSummary !== false" style="margin-top:8px;">
+        <div style="font-size:9.5px; font-weight:800; text-transform:uppercase; color:#1e293b; margin-bottom:3px;">
+          HSN/SAC Tax Breakup Summary
+        </div>
+        <table class="doc-table" style="margin-top:0;">
+          <thead>
+            <tr [style.background]="currentTheme.primary">
+              <th style="width:20%; font-size:9.5px; padding:4px 6px;">HSN/SAC</th>
+              <th style="width:25%; font-size:9.5px; padding:4px 6px; text-align:right;">Taxable Value (₹)</th>
+              <th style="width:18%; font-size:9.5px; padding:4px 6px; text-align:right;">CGST (9%)</th>
+              <th style="width:18%; font-size:9.5px; padding:4px 6px; text-align:right;">SGST (9%)</th>
+              <th style="width:19%; font-size:9.5px; padding:4px 6px; text-align:right;">Total Tax (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="font-mono" style="font-size:9.5px; padding:4px 6px;">{{ selectedRecord?.hsnCode || '3923' }}</td>
+              <td class="font-mono" style="font-size:9.5px; padding:4px 6px; text-align:right;">₹{{ getItemTaxableAmount(selectedRecord) | number:'1.2-2' }}</td>
+              <td class="font-mono" style="font-size:9.5px; padding:4px 6px; text-align:right;">₹{{ getItemCgst(selectedRecord) | number:'1.2-2' }}</td>
+              <td class="font-mono" style="font-size:9.5px; padding:4px 6px; text-align:right;">₹{{ getItemSgst(selectedRecord) | number:'1.2-2' }}</td>
+              <td class="font-mono" style="font-size:9.5px; padding:4px 6px; text-align:right; font-weight:700;">₹{{ (getItemCgst(selectedRecord) + getItemSgst(selectedRecord)) | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Bottom Layout: Banking, UPI QR & Signatory (Governed by invoiceTemplate toggles) -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:10px; gap:8px; font-size:9px;">
+        <!-- Electronic Remittance Coordinates -->
+        <div style="width:40%;" *ngIf="invoiceTemplate?.showBankDetails !== false">
+          <strong style="color:var(--doc-theme); font-size:9.5px;"><i class="bi bi-bank me-1"></i>Electronic Remittance Coordinates:</strong><br>
+          <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:4px; padding:4px 6px; margin-top:2px; line-height:1.4;">
+            <strong>Bank:</strong> {{ bankProfiles[0]?.bankName || 'HDFC Bank Ltd.' }}<br>
+            <strong>A/C No:</strong> <span class="font-mono">{{ bankProfiles[0]?.accountNumber || '50200067891234' }}</span><br>
+            <strong>IFSC:</strong> <span class="font-mono">{{ bankProfiles[0]?.ifscCode || 'HDFC0001234' }}</span> • <strong>Branch:</strong> {{ bankProfiles[0]?.branchName || 'Industrial Area Branch' }}<br>
+            <strong>Beneficiary:</strong> {{ bankProfiles[0]?.accountHolderName || companyProfiles[0]?.companyName || 'Futane Agro Tech Pvt. Ltd.' }}
           </div>
         </div>
 
-        <!-- Official Stamp -->
-        <div class="stamp-box">
-          <svg viewBox="0 0 100 100" style="width:62px; height:62px;">
-            <circle cx="50" cy="50" r="44" fill="none" stroke="#C2410C" stroke-width="2.5" stroke-dasharray="3,2"/>
-            <circle cx="50" cy="50" r="38" fill="none" stroke="#C2410C" stroke-width="1.5"/>
-            <text x="50" y="38" font-size="7" font-weight="900" fill="#C2410C" text-anchor="middle">FUTANE AGRO INDUSTRIES</text>
-            <text x="50" y="52" font-size="9" font-weight="900" fill="#C2410C" text-anchor="middle">ACHALPUR</text>
-            <text x="50" y="66" font-size="7" font-weight="900" fill="#C2410C" text-anchor="middle">★ PVT. LTD. ★</text>
-          </svg>
+        <!-- UPI QR Code Box -->
+        <div *ngIf="invoiceTemplate?.showUpiQrCode !== false" style="display:flex; align-items:center; gap:8px;">
+          <app-qr-code [value]="upiQrString" [size]="50"></app-qr-code>
+          <div style="font-size:8.5px; line-height:1.3;">
+            <strong style="color:#0f172a;">Scan to Pay via UPI</strong><br>
+            <span class="font-mono" style="color:#475569;">{{ bankProfiles[0]?.upiId || 'futaneagro@okhdfcbank' }}</span>
+          </div>
         </div>
 
-        <!-- Signature -->
-        <div style="text-align:center; width:30%;">
-          <div style="font-size:10.5px; font-weight:700; margin-bottom:24px;">For FUTANE AGRO INDUSTRIES PVT. LTD.</div>
-          <div style="font-family:'Brush Script MT', cursive; font-size:20px; color:#1e293b;">B. Futane</div>
-          <div style="border-top:1px solid #64748b; font-weight:700; padding-top:2px;">Authorized Signatory</div>
+        <!-- Authorized Signatory Box -->
+        <div style="text-align:center; min-width:150px;">
+          <div style="font-size:9.5px; font-weight:700; margin-bottom:18px;">
+            For {{ companyProfiles[0]?.companyName || 'Futane Agro Industries Pvt. Ltd.' }}
+          </div>
+          <div style="font-family:'Brush Script MT', cursive; font-size:18px; color:#1e293b;">B. Futane</div>
+          <div style="border-top:1px solid #64748b; font-weight:700; padding-top:2px; font-size:9px;">
+            {{ invoiceTemplate?.signatoryTitle || 'Authorized Signatory' }}
+          </div>
         </div>
       </div>
 
-      <!-- Orange Banner -->
-      <div class="bottom-banner" [style.background]="currentTheme.primary">
-        Thank You For Your Business!
+      <!-- Standard Terms & Conditions Footer (Dynamic from Settings) -->
+      <div style="border-top:1px solid #cbd5e1; margin-top:8px; padding-top:5px; font-size:8.5px;">
+        <strong style="font-size:9px;">Standard Terms &amp; Conditions:</strong>
+        <div style="white-space:pre-line; color:#334155; margin-top:2px; line-height:1.35;">
+          {{ invoiceTemplate?.termsAndConditions || '1. Goods once sold will not be accepted back or exchanged under any circumstances.\n2. Interest @ 18% p.a. will be charged on delayed payments exceeding credit terms.\n3. Any discrepancies must be reported in writing within 48 hours of delivery.' }}
+        </div>
+        <div style="color:#64748b; margin-top:3px; font-style:italic;">
+          {{ invoiceTemplate?.jurisdictionClause || 'Subject to Pune Jurisdiction only' }} &bull; {{ invoiceTemplate?.footerNotes || 'Thank you for partnering with Futane Agro. Quality Crates for a Stronger Future.' }}
+        </div>
       </div>
     </div>
 
@@ -778,5 +1015,9 @@
       </div>
     </div>
 
+  </div>
+</div>
+      </div>
+    </div>
   </div>
 </div>

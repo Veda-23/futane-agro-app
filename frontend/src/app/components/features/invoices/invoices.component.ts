@@ -11,6 +11,7 @@ import Swal from 'sweetalert2';
 import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { NotificationService } from '../../../services/notification.service';
+import { TerminologyService } from '../../../services/terminology.service';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
 
@@ -53,6 +54,12 @@ export class InvoicesComponent implements OnInit {
   tableFilteredCounts: { [key: string]: number } = {};
   showColDropdown: { [key: string]: boolean } = {};
   columnsVisibility: { [table: string]: { [col: string]: boolean } } = {};
+  pagedInvoices: any[] = [];
+  totalFilteredCount: number = 0;
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.totalFilteredCount / this.pageSize));
+  }
 
   // Filter state
   filterSearchQuery = '';
@@ -61,6 +68,8 @@ export class InvoicesComponent implements OnInit {
   filterMaxAmount: number | null = null;
   filterPartyId = '';
   filterPaymentStatus = 'all';
+  showFilterPopover = false;
+  showExportDropdown = false;
 
   tableDensity: 'compact' | 'comfortable' | 'spacious' = 'comfortable';
   defaultColumns = [
@@ -125,10 +134,14 @@ export class InvoicesComponent implements OnInit {
 
   constructor(
     private apiService: ApiService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    public terminologyService: TerminologyService
   ) {}
 
   ngOnInit() {
+    try {
+      localStorage.removeItem('cols_width_invoices_table');
+    } catch {}
     const saved = localStorage.getItem('futane_table_density');
     if (saved === 'compact' || saved === 'comfortable' || saved === 'spacious') {
       this.tableDensity = saved;
@@ -172,6 +185,7 @@ export class InvoicesComponent implements OnInit {
         this.hasError = false;
         this.invoicesList = res || [];
         this.tableFilteredCounts['invoices'] = (res || []).length;
+        this.updateFilteredInvoices();
         if (isManual) {
           this.notificationService.success('Invoices Synced', `Loaded ${this.invoicesList.length} invoice records from ledger.`);
         }
@@ -189,6 +203,7 @@ export class InvoicesComponent implements OnInit {
   setSubtab(tab: 'all' | 'paid' | 'partial' | 'unpaid' | 'high_value') {
     this.activeSubtab = tab;
     this.currentPage = 1;
+    this.updateFilteredInvoices();
   }
 
   getCountBySubtab(tab: 'all' | 'paid' | 'partial' | 'unpaid' | 'high_value'): number {
@@ -199,6 +214,16 @@ export class InvoicesComponent implements OnInit {
     if (tab === 'unpaid') return this.invoicesList.filter(i => (i.sale?.remaining ?? 0) >= (i.sale?.totalAmount ?? 0) && (i.sale?.remaining ?? 0) > 0).length;
     if (tab === 'high_value') return this.invoicesList.filter(i => (i.sale?.totalAmount ?? 0) >= 50000).length;
     return 0;
+  }
+
+  get activeFilterCount(): number {
+    let count = 0;
+    if (this.activeSubtab && this.activeSubtab !== 'all') count++;
+    if (this.filterPartyId) count++;
+    if (this.filterDate) count++;
+    if (this.filterMinAmount != null && this.filterMinAmount > 0) count++;
+    if (this.filterMaxAmount != null && this.filterMaxAmount > 0) count++;
+    return count;
   }
 
   filterByKpi(type: 'all' | 'paid' | 'pending') {
@@ -216,6 +241,8 @@ export class InvoicesComponent implements OnInit {
     this.filterPaymentStatus = 'all';
     this.activeSubtab = 'all';
     this.currentPage = 1;
+    this.showFilterPopover = false;
+    this.updateFilteredInvoices();
   }
 
   // ── KPI & Tax Helpers ────────────────────────────────────────────────────────
@@ -255,6 +282,35 @@ export class InvoicesComponent implements OnInit {
     return this.invoicesList.reduce((s, i) => s + ((i.sale?.cgst || 0) + (i.sale?.sgst || 0)), 0);
   }
 
+  getFilteredTaxableTotal(): number {
+    const list = this.getProcessedList(this.invoicesList, 'invoices', true);
+    return list.reduce((s: number, i: any) => s + ((i.sale?.quantity || 0) * (i.sale?.rate || 0)), 0);
+  }
+
+  getFilteredGstTotal(): number {
+    const list = this.getProcessedList(this.invoicesList, 'invoices', true);
+    return list.reduce((s: number, i: any) => s + ((i.sale?.cgst || 0) + (i.sale?.sgst || 0)), 0);
+  }
+
+  getFilteredTotalBill(): number {
+    const list = this.getProcessedList(this.invoicesList, 'invoices', true);
+    return list.reduce((s: number, i: any) => s + (i.sale?.totalAmount || 0), 0);
+  }
+
+  toggleFilterPopover(event: Event) {
+    event.stopPropagation();
+    this.showFilterPopover = !this.showFilterPopover;
+    this.showExportDropdown = false;
+    if (this.showColDropdown) this.showColDropdown['invoices'] = false;
+  }
+
+  toggleExportDropdown(event?: Event) {
+    if (event) event.stopPropagation();
+    this.showExportDropdown = !this.showExportDropdown;
+    this.showFilterPopover = false;
+    if (this.showColDropdown) this.showColDropdown['invoices'] = false;
+  }
+
   getTaxableAmount(inv: any): number {
     if (!inv?.sale) return 0;
     return (inv.sale.quantity || 0) * (inv.sale.rate || 0);
@@ -264,6 +320,9 @@ export class InvoicesComponent implements OnInit {
     if (!inv?.sale) return 0;
     return (inv.sale.cgst || 0) + (inv.sale.sgst || 0);
   }
+
+  printInvoiceData: any = null;
+  pdfTargetInvoice: any = null;
 
   // ── Modal & Printing ──────────────────────────────────────────────────────────
   viewInvoice(inv: any) {
@@ -281,14 +340,28 @@ export class InvoicesComponent implements OnInit {
   }
 
   printInvoice(inv: any) {
-    this.selectedInvoice = inv;
+    // Direct Print: NEVER open selectedInvoice modal preview popup
+    this.printInvoiceData = inv;
+    document.body.classList.add('printing-direct-invoice');
     setTimeout(() => {
       window.print();
-    }, 300);
+      setTimeout(() => {
+        document.body.classList.remove('printing-direct-invoice');
+        this.printInvoiceData = null;
+      }, 500);
+    }, 100);
   }
 
   printCurrentInvoice() {
-    window.print();
+    this.printInvoiceData = this.selectedInvoice;
+    document.body.classList.add('printing-direct-invoice');
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        document.body.classList.remove('printing-direct-invoice');
+        this.printInvoiceData = null;
+      }, 500);
+    }, 100);
   }
 
   printRegistry() {
@@ -303,34 +376,81 @@ export class InvoicesComponent implements OnInit {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
-    if (!(event.target as HTMLElement).closest('.column-visibility-dropdown')) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.column-visibility-dropdown') && !target.closest('.col-manager-dropdown-wrapper')) {
       Object.keys(this.showColDropdown).forEach(k => this.showColDropdown[k] = false);
+    }
+    if (!target.closest('.filter-popover-wrapper')) {
+      this.showFilterPopover = false;
+    }
+    if (!target.closest('.export-dropdown-wrapper')) {
+      this.showExportDropdown = false;
     }
   }
 
-  // ── PDF Download (opens modal first, then captures DOM) ─────────────────────
+  // ── PDF Download (Zero-Blank Single-Page A4 Headless Protocol) ─────────────
   downloadPDFInvoice(inv: any) {
-    this.selectedInvoice = inv;
+    if (!inv) return;
+    // Headless PDF: NEVER open on-screen preview modal popup
+    this.pdfTargetInvoice = inv;
     this.logAudit('Downloaded PDF Invoice: ' + inv.invoiceNo);
+
+    Swal.fire({
+      title: 'Generating Tax Invoice PDF',
+      html: `<div style="font-size: 13px; color: #64748b; margin-top: 6px;">Preparing official GST Invoice <strong>${inv.invoiceNo}</strong>...</div>`,
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      didOpen: () => Swal.showLoading()
+    });
+
     setTimeout(() => {
-      const element = document.querySelector('.invoice-bill-content') as HTMLElement;
-      if (!element) { this.generateInvoicePDFFallback(inv); return; }
-      Swal.fire({ title: 'Generating PDF...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-      html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const imgW = 210, pageH = 297;
-        const imgH = (canvas.height * imgW) / canvas.width;
-        let leftH = imgH, pos = 0;
-        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, pos, imgW, imgH);
-        leftH -= pageH;
-        while (leftH >= 0) { pos = leftH - imgH; pdf.addPage(); pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, pos, imgW, imgH); leftH -= pageH; }
-        pdf.save(`invoice_${inv.invoiceNo}.pdf`);
+      const element = document.getElementById('pdf-render-invoice-sheet');
+      if (!element) {
         Swal.close();
+        this.pdfTargetInvoice = null;
+        this.generateInvoicePDFFallback(inv);
+        return;
+      }
+
+      html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false
+      }).then(canvas => {
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const imgWidth = pageWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        // Exact single-page fit without trailing blank page
+        if (imgHeight <= pageHeight + 4) {
+          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, Math.min(imgHeight, pageHeight));
+        } else {
+          let leftHeight = imgHeight;
+          let position = 0;
+          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+          leftHeight -= pageHeight;
+          while (leftHeight > 10) {
+            position = leftHeight - imgHeight;
+            pdf.addPage();
+            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+            leftHeight -= pageHeight;
+          }
+        }
+
+        const safeFilename = `Tax_Invoice_${inv.invoiceNo || 'GST'}.pdf`;
+        pdf.save(safeFilename);
+        Swal.close();
+        this.pdfTargetInvoice = null;
+        this.notificationService.success('PDF Exported', `Tax invoice ${inv.invoiceNo} saved.`);
       }).catch(() => {
         Swal.close();
+        this.pdfTargetInvoice = null;
         this.generateInvoicePDFFallback(inv);
       });
-    }, 250);
+    }, 180);
   }
 
   private generateInvoicePDFFallback(inv: any) {
@@ -552,10 +672,25 @@ export class InvoicesComponent implements OnInit {
   setPageSize(size: number) {
     this.pageSize = size;
     this.currentPage = 1;
+    this.updateFilteredInvoices();
+  }
+
+  setPage(page: number) {
+    this.currentPage = page;
+    this.updateFilteredInvoices();
   }
 
   setSort(field: string) {
     this.sortField === field ? (this.sortAsc = !this.sortAsc) : (this.sortField = field, this.sortAsc = true);
+    this.updateFilteredInvoices();
+  }
+
+  updateFilteredInvoices() {
+    const list = this.getProcessedList(this.invoicesList, 'invoices', true);
+    this.totalFilteredCount = list.length;
+    this.tableFilteredCounts['invoices'] = list.length;
+    const start = (this.currentPage - 1) * this.pageSize;
+    this.pagedInvoices = list.slice(start, start + this.pageSize);
   }
 
   getProcessedList(list: any[], table: string, allRecords = false): any[] {
@@ -633,7 +768,6 @@ export class InvoicesComponent implements OnInit {
       return 0;
     });
 
-    this.tableFilteredCounts[table] = result.length;
     if (allRecords) return result;
     const start = (this.currentPage - 1) * this.pageSize;
     return result.slice(start, start + this.pageSize);
@@ -652,5 +786,74 @@ export class InvoicesComponent implements OnInit {
 
   trackByInvoiceId(index: number, item: any): any {
     return item?.id ?? item?.invoiceId ?? item?.invoiceNo ?? index;
+  }
+
+  getCollectionEfficiency(): number {
+    const total = this.getTotalInvoiceAmount();
+    if (!total || total === 0) return 0;
+    const paid = this.getTotalInvoicePaid();
+    return Math.min(100, Math.max(0, Math.round((paid / total) * 100)));
+  }
+
+  exportToCsv() {
+    const data: any[] = this.getProcessedList(this.invoicesList, 'invoices', true);
+    if (!data || data.length === 0) {
+      this.notificationService.warning('Export', 'No invoices found to export.');
+      return;
+    }
+    const headers = ['Invoice No', 'Date', 'Party Name', 'GSTIN', 'Crate Model', 'Taxable Val', 'GST 18%', 'Total Bill', 'Paid Amount', 'Remaining Due', 'Payment Status'];
+    const rows = data.map((inv: any) => [
+      `"${inv.invoiceNo || ''}"`,
+      `"${inv.createdDate || inv.date || ''}"`,
+      `"${(inv.sale?.party?.partyName || '').replace(/"/g, '""')}"`,
+      `"${inv.sale?.party?.gstNumber || ''}"`,
+      `"${(inv.sale?.crateType || '').replace(/"/g, '""')}"`,
+      this.getTaxableAmount(inv).toFixed(2),
+      this.getGstAmount(inv).toFixed(2),
+      (inv.sale?.totalAmount || 0).toFixed(2),
+      (inv.sale?.paid || 0).toFixed(2),
+      (inv.sale?.remaining || 0).toFixed(2),
+      `"${(inv.sale?.remaining ?? 0) === 0 ? 'Paid' : (inv.sale?.remaining ?? 0) >= (inv.sale?.totalAmount ?? 0) ? 'Unpaid' : 'Partial'}"`
+    ]);
+    const csvString = '\uFEFF' + [headers.join(','), ...rows.map((r: any[]) => r.join(','))].join('\r\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Futane_Agro_Tax_Invoices_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    this.notificationService.success('Export Successful', `Exported ${data.length} tax invoices to CSV.`);
+  }
+
+  exportToExcel() {
+    const data: any[] = this.getProcessedList(this.invoicesList, 'invoices', true);
+    if (!data || data.length === 0) {
+      this.notificationService.warning('Export', 'No invoices found to export.');
+      return;
+    }
+    const headers = ['Invoice No', 'Date', 'Party Name', 'GSTIN', 'Crate Model', 'Taxable Val', 'GST 18%', 'Total Bill', 'Paid Amount', 'Remaining Due', 'Payment Status'];
+    const rows = data.map((inv: any) => [
+      `"${inv.invoiceNo || ''}"`,
+      `"${inv.createdDate || inv.date || ''}"`,
+      `"${(inv.sale?.party?.partyName || '').replace(/"/g, '""')}"`,
+      `"${inv.sale?.party?.gstNumber || ''}"`,
+      `"${(inv.sale?.crateType || '').replace(/"/g, '""')}"`,
+      this.getTaxableAmount(inv).toFixed(2),
+      this.getGstAmount(inv).toFixed(2),
+      (inv.sale?.totalAmount || 0).toFixed(2),
+      (inv.sale?.paid || 0).toFixed(2),
+      (inv.sale?.remaining || 0).toFixed(2),
+      `"${(inv.sale?.remaining ?? 0) === 0 ? 'Paid' : (inv.sale?.remaining ?? 0) >= (inv.sale?.totalAmount ?? 0) ? 'Unpaid' : 'Partial'}"`
+    ]);
+    const csvString = '\uFEFF' + [headers.join(','), ...rows.map((r: any[]) => r.join(','))].join('\r\n');
+    const blob = new Blob([csvString], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Futane_Agro_Invoices_Ledger_${new Date().toISOString().split('T')[0]}.xls`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    this.notificationService.success('Export Successful', `Exported ${data.length} invoices to Excel format.`);
   }
 }

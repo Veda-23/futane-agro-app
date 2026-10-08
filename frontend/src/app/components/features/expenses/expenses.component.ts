@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -66,15 +66,49 @@ export class ExpensesComponent implements OnInit {
   hasError: boolean = false;
   errorMessage: string = '';
 
+  // Voucher Inspection Modal State
+  showVoucherModal: boolean = false;
+  selectedExpenseForVoucher: any = null;
+
+  openVoucherModal(e: any): void {
+    this.selectedExpenseForVoucher = e;
+    this.showVoucherModal = true;
+  }
+
+  closeVoucherModal(): void {
+    this.showVoucherModal = false;
+    this.selectedExpenseForVoucher = null;
+  }
+
+  printVoucher(): void {
+    window.print();
+  }
+
   // Filter & Search state
   selectedCategory: string = 'ALL';
   searchQuery: string = '';
   filterDateFrom: string = '';
   filterDateTo: string = '';
+  showFilterPopover = false;
+
+  get activeFilterCount(): number {
+    let count = 0;
+    if (this.selectedCategory && this.selectedCategory !== 'ALL') count++;
+    if (this.filterDateFrom) count++;
+    if (this.filterDateTo) count++;
+    return count;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick() {
+    this.showColDropdown['expenses'] = false;
+    this.showFilterPopover = false;
+  }
 
   // Pagination & Sorting state
   currentPage: number = 1;
   pageSize: number = 10;
+  pageSizeOptions: number[] = [10, 25, 50, 100];
   sortField: string = 'expenseDate';
   sortAsc: boolean = false;
   tableDensity: 'compact' | 'comfortable' | 'spacious' = 'comfortable';
@@ -113,6 +147,11 @@ export class ExpensesComponent implements OnInit {
       this.tableDensity = savedDensity;
     }
 
+    try {
+      localStorage.removeItem('cols_width_expenses_table');
+    } catch (e) {
+      // ignore
+    }
     this.loadData();
   }
 
@@ -147,9 +186,12 @@ export class ExpensesComponent implements OnInit {
     });
   }
 
-  // --- Executive Expense KPIs ---
   get totalExpenses(): number {
     return (this.expensesList || []).reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  }
+
+  get filteredTotalAmount(): number {
+    return (this.filteredList || []).reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
   }
 
   get currentMonthBurn(): number {
@@ -492,6 +534,35 @@ export class ExpensesComponent implements OnInit {
     document.body.removeChild(link);
 
     this.notificationService.success('Export Complete', 'Expenses CSV generated and downloaded.');
+  }
+
+  exportExcel() {
+    if (!this.expensesList || this.expensesList.length === 0) {
+      this.notificationService.warning('No Data', 'There are no expense records to export.');
+      return;
+    }
+
+    const headers = ['Date', 'Category', 'Description', 'Amount', 'Paid By', 'Payment Mode'];
+    const rows = this.filteredList.map(e => [
+      `"${e.expenseDate || ''}"`,
+      `"${e.category || ''}"`,
+      `"${(e.description || '').replace(/"/g, '""')}"`,
+      e.amount || 0,
+      `"${(e.paidBy || '').replace(/"/g, '""')}"`,
+      `"${e.paymentMode || ''}"`
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Futane_Expenses_Ledger_${this.getTodayDate()}.xls`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    this.notificationService.success('Export Complete', 'Expenses Excel statement downloaded.');
   }
 
   getCategoryBadgeClass(cat: string): string {

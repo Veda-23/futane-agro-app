@@ -3,47 +3,69 @@
 <!-- ============================================================ -->
 <div class="party-screen-wrapper" (click)="closeFilterPopover(); showColDropdown = false">
 
-  <!-- 2. STABLE PROFESSIONAL PAGE HEADER -->
-  <header class="party-page-header">
-    <div class="breadcrumb-trail" style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; width: 100%;">
-      <i class="bi bi-house" style="font-size: 12px; color: #94a3b8;"></i>
-      <span>Futane Agro ERP</span>
-      <span style="color: #cbd5e1;">/</span>
-      <span>Commercial Master Data</span>
-      <span style="color: #cbd5e1;">/</span>
-      <span style="color: #0B47D4; font-weight: 700;">Parties, Wholesalers & Distributors</span>
-    </div>
+  <!-- 1. BREADCRUMB TRAIL -->
+  <div class="party-breadcrumb-trail no-print">
+    <i class="bi bi-house breadcrumb-home-ico"></i>
+    <span>Futane Agro ERP</span>
+    <span class="crumb-separator">/</span>
+    <span>Commercial Master Data</span>
+    <span class="crumb-separator">/</span>
+    <span class="crumb-active">Parties, Wholesalers &amp; Distributors</span>
+  </div>
 
-    <div class="header-left-col">
-      <div class="header-title-wrapper">
+  <!-- 2. MASTER PAGE HEADER CARD -->
+  <header class="party-page-header no-print">
+    <div class="header-primary-row">
+      <div class="header-left-col">
         <div class="header-icon-box">
           <i class="bi bi-building"></i>
         </div>
-        <div>
-          <h1 class="header-main-title">{{ 'party.records_title' | translate:currentLang }}</h1>
-          <p class="header-subtitle">Enterprise directory of commercial accounts, wholesalers, distributors, GST registries & B2B profiles</p>
+        <div class="header-titles">
+          <div class="title-with-badge">
+            <h1 class="header-main-title">{{ 'party.records_title' | translate:currentLang }}</h1>
+            <span class="header-count-pill">{{ parties.length }} Parties</span>
+          </div>
         </div>
+      </div>
+
+      <!-- Right Header Actions -->
+      <div class="header-right-actions">
+        <button type="button" class="btn-header-action btn-header-secondary" (click)="loadData(true)" [disabled]="isRefreshing" title="Refresh party directory" aria-label="Refresh directory">
+          <i class="bi bi-arrow-clockwise" [class.spin-anim]="isRefreshing"></i>
+          <span>Refresh</span>
+        </button>
+
+        <button type="button" class="btn-header-action btn-header-secondary" (click)="exportToCsv()" title="Export party directory to CSV" aria-label="Export to CSV">
+          <i class="bi bi-download"></i>
+          <span>CSV</span>
+        </button>
+
+        <button type="button" class="btn-header-action btn-header-secondary" (click)="exportToExcel()" title="Export party directory for Microsoft Excel" aria-label="Export to Excel">
+          <i class="bi bi-file-earmark-excel"></i>
+          <span>Excel</span>
+        </button>
+
+        <button type="button" *ngIf="!isViewer()" class="btn-header-action btn-primary btn-header-primary" (click)="toggleFormVisibility()" [title]="isFormVisible ? 'Hide Registration Form' : 'Register New Party'" aria-label="Add Party">
+          <i class="bi" [ngClass]="isFormVisible ? 'bi-dash-lg' : 'bi-plus-lg'"></i>
+          <span>{{ isFormVisible ? 'Hide Form' : '+ Add Party' }}</span>
+        </button>
       </div>
     </div>
 
-    <!-- Header Actions -->
-    <div class="header-right-col">
-      <!-- Secondary: Refresh Directory -->
-      <button type="button" class="btn btn-secondary btn-header-action" (click)="loadData(true)" [disabled]="isRefreshing" title="Refresh party directory" aria-label="Refresh directory">
-        <i class="bi bi-arrow-clockwise" [class.spin-anim]="isRefreshing"></i>
-        <span class="btn-label-text">Refresh</span>
-      </button>
-
-      <!-- Primary Action: Add Party / Toggle Registration Form -->
-      <button type="button" *ngIf="!isViewer()" class="btn btn-primary btn-header-action" (click)="toggleFormVisibility()" [title]="isFormVisible ? 'Hide Registration Form' : 'Register New Party'" aria-label="Add Party" style="background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important; border-color: transparent !important; color: #ffffff !important; box-shadow: 0 4px 14px rgba(11, 71, 212, 0.28) !important; font-weight: 700;">
-        <i class="bi" [ngClass]="isFormVisible ? 'bi-dash-lg' : 'bi-plus-lg'"></i>
-        <span class="btn-label-text">{{ isFormVisible ? 'Hide Form' : '+ Add Party' }}</span>
-      </button>
+    <!-- Secondary Row: Subtitle + Live Formula Hint -->
+    <div class="header-secondary-row">
+      <p class="header-subtitle">
+        Enterprise directory of commercial accounts, wholesalers, distributors, GST registries &amp; B2B profiles
+      </p>
+      <span class="header-formula-badge" title="Directory Network Formula: Maharashtra Accounts + Interstate Accounts = Total Directory Network">
+        <i class="bi bi-calculator me-1"></i>
+        <span>MH Accounts + Interstate Accounts = Total Network</span>
+      </span>
     </div>
   </header>
 
-  <!-- 2. PARTIES MODULE SUB-NAVIGATION (Tabs) -->
-  <div class="production-subnav-bar no-print">
+  <!-- 3. PILL SUBTABS NAVIGATION BAR -->
+  <div class="party-subnav-bar no-print">
     <div class="subnav-tabs-group" role="tablist">
       <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'all'" (click)="setSubTab('all')">
         <i class="bi bi-building"></i>
@@ -51,174 +73,202 @@
         <span class="tab-badge-pill">{{ parties.length }}</span>
       </button>
       <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'wholesalers'" (click)="setSubTab('wholesalers')">
-        <i class="bi bi-shop text-primary"></i>
+        <i class="bi bi-shop"></i>
         <span>Wholesalers &amp; Mandis</span>
         <span class="tab-badge-pill primary">{{ getWholesalerDistributorCount() }}</span>
       </button>
       <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'gst'" (click)="setSubTab('gst')">
-        <i class="bi bi-shield-check text-success"></i>
+        <i class="bi bi-shield-check"></i>
         <span>GSTIN Verified</span>
         <span class="tab-badge-pill success">{{ getGstRegisteredCount() }}</span>
       </button>
       <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'mh'" (click)="setSubTab('mh')">
-        <i class="bi bi-geo-alt text-info"></i>
+        <i class="bi bi-geo-alt"></i>
         <span>Maharashtra Accounts</span>
         <span class="tab-badge-pill">{{ getMhPartiesCount() }}</span>
       </button>
       <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'interstate'" (click)="setSubTab('interstate')">
-        <i class="bi bi-globe2 text-warning"></i>
+        <i class="bi bi-globe2"></i>
         <span>Interstate Clients</span>
         <span class="tab-badge-pill warning">{{ getInterstatePartiesCount() }}</span>
       </button>
     </div>
   </div>
 
-  <!-- 3. PARTIES TELEMETRY SUMMARY RIBBON (Exact Reference KPI Cards) -->
-  <section class="production-kpi-grid no-print" aria-label="Parties Telemetry KPIs">
-    <div class="kpi-card total-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-building"></i></div>
-      <div class="kpi-content">
-        <span class="kpi-label">TOTAL REGISTERED CLIENTS</span>
-        <strong class="kpi-value">{{ getTotalPartiesCount() }} <span class="kpi-unit">Parties</span></strong>
-        <span class="kpi-meta"><i class="bi bi-person-check me-1"></i>Active commercial buyer directory</span>
+  <!-- 4. 5-COLUMN RESPONSIVE KPI TELEMETRY CARDS -->
+  <section class="party-kpi-grid no-print" aria-label="Parties Telemetry KPIs">
+    <!-- Card 1: Total Registered Clients -->
+    <div class="party-kpi-card">
+      <div class="party-kpi-icon kpi-blue">
+        <i class="bi bi-building"></i>
+      </div>
+      <div class="party-kpi-body">
+        <span class="party-kpi-label">TOTAL REGISTERED CLIENTS</span>
+        <div class="party-kpi-value">{{ getTotalPartiesCount() }}</div>
+        <div class="party-kpi-sub">Commercial buyer directory</div>
       </div>
     </div>
-    <div class="kpi-card success-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-shop"></i></div>
-      <div class="kpi-content">
-        <span class="kpi-label">WHOLESALERS &amp; MANDIS</span>
-        <strong class="kpi-value text-success">{{ getWholesalerDistributorCount() }} <span class="kpi-unit">Accounts</span></strong>
-        <span class="kpi-meta"><i class="bi bi-boxes me-1"></i>Bulk crate purchasing partners</span>
+
+    <!-- Card 2: Wholesalers & Mandis -->
+    <div class="party-kpi-card">
+      <div class="party-kpi-icon kpi-green">
+        <i class="bi bi-shop"></i>
+      </div>
+      <div class="party-kpi-body">
+        <span class="party-kpi-label">WHOLESALERS &amp; MANDIS</span>
+        <div class="party-kpi-value">{{ getWholesalerDistributorCount() }}</div>
+        <div class="party-kpi-sub">Bulk purchasing partners</div>
       </div>
     </div>
-    <div class="kpi-card danger-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-shield-check"></i></div>
-      <div class="kpi-content">
-        <span class="kpi-label">GSTIN VERIFIED CLIENTS</span>
-        <strong class="kpi-value text-primary">{{ getGstRegisteredCount() }} <span class="kpi-unit">Verified</span></strong>
-        <span class="kpi-meta"><i class="bi bi-check-all me-1"></i>{{ getGstRegisteredPercent() }}% verified GST tax compliant</span>
+
+    <!-- Card 3: GSTIN Verified -->
+    <div class="party-kpi-card">
+      <div class="party-kpi-icon kpi-amber">
+        <i class="bi bi-shield-check"></i>
+      </div>
+      <div class="party-kpi-body">
+        <span class="party-kpi-label">GSTIN VERIFIED CLIENTS</span>
+        <div class="party-kpi-value">{{ getGstRegisteredCount() }}</div>
+        <div class="party-kpi-sub">{{ getGstRegisteredPercent() }}% tax compliant</div>
       </div>
     </div>
-    <div class="kpi-card efficiency-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-geo-alt"></i></div>
-      <div class="kpi-content">
-        <span class="kpi-label">MAHARASHTRA NETWORK</span>
-        <strong class="kpi-value text-warning">{{ getMhPartiesCount() }} <span class="kpi-unit">MH / {{ getInterstatePartiesCount() }} Interstate</span></strong>
-        <div class="kpi-progress-bar">
-          <div class="kpi-progress-fill" [style.width.%]="parties.length > 0 ? (getMhPartiesCount() / parties.length) * 100 : 0"></div>
-        </div>
+
+    <!-- Card 4: Maharashtra Network -->
+    <div class="party-kpi-card">
+      <div class="party-kpi-icon kpi-purple">
+        <i class="bi bi-geo-alt"></i>
+      </div>
+      <div class="party-kpi-body">
+        <span class="party-kpi-label">MAHARASHTRA NETWORK</span>
+        <div class="party-kpi-value">{{ getMhPartiesCount() }}</div>
+        <div class="party-kpi-sub">Intra-state client hubs</div>
+      </div>
+    </div>
+
+    <!-- Card 5: Interstate Network -->
+    <div class="party-kpi-card">
+      <div class="party-kpi-icon kpi-slate">
+        <i class="bi bi-globe2"></i>
+      </div>
+      <div class="party-kpi-body">
+        <span class="party-kpi-label">INTERSTATE CLIENTS</span>
+        <div class="party-kpi-value">{{ getInterstatePartiesCount() }}</div>
+        <div class="party-kpi-sub">Across {{ getUniqueStates().length }} Indian states</div>
       </div>
     </div>
   </section>
 
-  <!-- 4. COLLAPSIBLE ADD / EDIT PARTY FORM (STRUCTURED ENTERPRISE FORM) -->
-  <section *ngIf="isFormVisible && !isViewer()" class="party-form-card animated-fade-in" aria-label="Register Party Form">
+  <!-- 4. MODAL OVERLAY: REGISTER / EDIT PARTY FORM -->
+  <div *ngIf="isFormVisible && !isViewer()" class="party-modal-overlay" (click)="cancelEditParty()" aria-hidden="true"></div>
+  <div *ngIf="isFormVisible && !isViewer()" class="party-modal-dialog" role="dialog" aria-modal="true" aria-label="Register Party Form">
     <div class="form-header-banner">
       <div class="form-header-title">
         <i class="bi bi-building-add text-primary"></i>
         <div>
           <h3>{{ editingPartyId ? 'Edit Party Account' : 'Register Commercial Party Account' }}</h3>
-          <p>Configure commercial master profile, GSTIN validation & billing credentials</p>
+          <p>Configure commercial master profile, GSTIN validation &amp; billing credentials</p>
         </div>
       </div>
-      <button type="button" class="btn-panel-close" (click)="toggleFormVisibility()" title="Close Form" aria-label="Close Form">
+      <button type="button" class="btn-panel-close" (click)="cancelEditParty()" title="Close Form" aria-label="Close Form">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
 
     <form #partyNgForm="ngForm" (submit)="saveParty()" class="party-form-container">
-      <div class="party-enterprise-grid">
-        <!-- Field 1: Party / Company Name (Cols 1-2) -->
-        <div class="form-group-item col-span-2">
-          <label class="form-item-label">Company / Party Name <span class="req-star">*</span></label>
-          <div class="input-icon-box">
-            <i class="bi bi-building input-lead-ico"></i>
-            <input type="text" [(ngModel)]="partyForm.partyName" name="partyName" #partyNameRef="ngModel" required minlength="2" class="form-control-standard" placeholder="e.g. Heritage Foods Retail Ltd.">
+      <div class="party-modal-scroll-body">
+        <div class="party-enterprise-grid">
+          <!-- Field 1: Party / Company Name (Cols 1-2) -->
+          <div class="form-group-item col-span-2">
+            <label class="form-item-label">Company / Party Name <span class="req-star">*</span></label>
+            <div class="input-icon-box">
+              <i class="bi bi-building input-lead-ico"></i>
+              <input type="text" [(ngModel)]="partyForm.partyName" name="partyName" #partyNameRef="ngModel" required minlength="2" class="form-control-standard" placeholder="e.g. Heritage Foods Retail Ltd.">
+            </div>
+            <div *ngIf="partyNameRef.invalid && (partyNameRef.dirty || partyNameRef.touched)" class="field-error-msg">
+              <small *ngIf="partyNameRef.errors?.['required']">Party name is required.</small>
+              <small *ngIf="partyNameRef.errors?.['minlength']">Name must be at least 2 characters.</small>
+            </div>
           </div>
-          <div *ngIf="partyNameRef.invalid && (partyNameRef.dirty || partyNameRef.touched)" class="field-error-msg">
-            <small *ngIf="partyNameRef.errors?.['required']">Party name is required.</small>
-            <small *ngIf="partyNameRef.errors?.['minlength']">Name must be at least 2 characters.</small>
-          </div>
-        </div>
 
-        <!-- Field 2: Mobile / Contact Phone (Col 3) -->
-        <div class="form-group-item">
-          <label class="form-item-label">Mobile / Contact Phone <span class="req-star">*</span></label>
-          <div class="input-icon-box">
-            <i class="bi bi-telephone input-lead-ico"></i>
-            <input type="text" [(ngModel)]="partyForm.partyContact" name="partyContact" #partyContactRef="ngModel" required pattern="^\d{10}$" class="form-control-standard font-mono" placeholder="10-digit mobile (e.g. 9876543210)">
+          <!-- Field 2: Mobile / Contact Phone (Col 3) -->
+          <div class="form-group-item">
+            <label class="form-item-label">Mobile / Contact Phone <span class="req-star">*</span></label>
+            <div class="input-icon-box">
+              <i class="bi bi-telephone input-lead-ico"></i>
+              <input type="text" [(ngModel)]="partyForm.partyContact" name="partyContact" #partyContactRef="ngModel" required pattern="^\d{10}$" class="form-control-standard font-mono" placeholder="10-digit mobile (e.g. 9876543210)">
+            </div>
+            <div *ngIf="partyContactRef.invalid && (partyContactRef.dirty || partyContactRef.touched)" class="field-error-msg">
+              <small *ngIf="partyContactRef.errors?.['required']">Contact number is required.</small>
+              <small *ngIf="partyContactRef.errors?.['pattern']">Must be exactly 10 digits.</small>
+            </div>
           </div>
-          <div *ngIf="partyContactRef.invalid && (partyContactRef.dirty || partyContactRef.touched)" class="field-error-msg">
-            <small *ngIf="partyContactRef.errors?.['required']">Contact number is required.</small>
-            <small *ngIf="partyContactRef.errors?.['pattern']">Must be exactly 10 digits.</small>
-          </div>
-        </div>
 
-        <!-- Field 3: GSTIN Tax Number (Col 1) -->
-        <div class="form-group-item">
-          <label class="form-item-label">GSTIN Tax Number</label>
-          <div class="input-icon-box">
-            <i class="bi bi-shield-check input-lead-ico"></i>
-            <input type="text" [(ngModel)]="partyForm.gstNumber" name="partyGst" #partyGstRef="ngModel" pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$" class="form-control-standard font-mono text-uppercase" placeholder="15-digit GSTIN (e.g. 27ABCDE1234F1Z5)">
+          <!-- Field 3: GSTIN Tax Number (Col 1) -->
+          <div class="form-group-item">
+            <label class="form-item-label">GSTIN Tax Number</label>
+            <div class="input-icon-box">
+              <i class="bi bi-shield-check input-lead-ico"></i>
+              <input type="text" [(ngModel)]="partyForm.gstNumber" name="partyGst" #partyGstRef="ngModel" pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$" class="form-control-standard font-mono text-uppercase" placeholder="15-digit GSTIN (e.g. 27ABCDE1234F1Z5)">
+            </div>
+            <div *ngIf="partyGstRef.invalid && (partyGstRef.dirty || partyGstRef.touched)" class="field-error-msg">
+              <small *ngIf="partyGstRef.errors?.['pattern']">Invalid GST Number (15 chars required).</small>
+            </div>
           </div>
-          <div *ngIf="partyGstRef.invalid && (partyGstRef.dirty || partyGstRef.touched)" class="field-error-msg">
-            <small *ngIf="partyGstRef.errors?.['pattern']">Invalid GST Number (15 chars required).</small>
-          </div>
-        </div>
 
-        <!-- Field 4: Business Email (Col 2) -->
-        <div class="form-group-item">
-          <label class="form-item-label">Business Email Address</label>
-          <div class="input-icon-box">
-            <i class="bi bi-envelope input-lead-ico"></i>
-            <input type="email" [(ngModel)]="partyForm.email" name="partyEmail" #partyEmailRef="ngModel" email class="form-control-standard" placeholder="procurement@company.com">
+          <!-- Field 4: Business Email (Col 2) -->
+          <div class="form-group-item">
+            <label class="form-item-label">Business Email Address</label>
+            <div class="input-icon-box">
+              <i class="bi bi-envelope input-lead-ico"></i>
+              <input type="email" [(ngModel)]="partyForm.email" name="partyEmail" #partyEmailRef="ngModel" email class="form-control-standard" placeholder="procurement@company.com">
+            </div>
+            <div *ngIf="partyEmailRef.invalid && (partyEmailRef.dirty || partyEmailRef.touched)" class="field-error-msg">
+              <small *ngIf="partyEmailRef.errors?.['email']">Invalid Email format.</small>
+            </div>
           </div>
-          <div *ngIf="partyEmailRef.invalid && (partyEmailRef.dirty || partyEmailRef.touched)" class="field-error-msg">
-            <small *ngIf="partyEmailRef.errors?.['email']">Invalid Email format.</small>
-          </div>
-        </div>
 
-        <!-- Field 5: State / Region (Col 3) -->
-        <div class="form-group-item">
-          <label class="form-item-label">State / Region <span class="req-star">*</span></label>
-          <div class="input-icon-box">
-            <i class="bi bi-geo-alt input-lead-ico"></i>
-            <input type="text" [(ngModel)]="partyForm.state" name="partyState" required class="form-control-standard" placeholder="e.g. Maharashtra">
+          <!-- Field 5: State / Region (Col 3) -->
+          <div class="form-group-item">
+            <label class="form-item-label">State / Region <span class="req-star">*</span></label>
+            <div class="input-icon-box">
+              <i class="bi bi-geo-alt input-lead-ico"></i>
+              <input type="text" [(ngModel)]="partyForm.state" name="partyState" required class="form-control-standard" placeholder="e.g. Maharashtra">
+            </div>
           </div>
-        </div>
 
-        <!-- Field 6: City / Town (Col 1) -->
-        <div class="form-group-item">
-          <label class="form-item-label">City / Town</label>
-          <div class="input-icon-box">
-            <i class="bi bi-pin-map input-lead-ico"></i>
-            <input type="text" [(ngModel)]="partyForm.city" name="partyCity" class="form-control-standard" placeholder="e.g. Pune, Baramati, Mumbai">
+          <!-- Field 6: City / Town (Col 1) -->
+          <div class="form-group-item">
+            <label class="form-item-label">City / Town</label>
+            <div class="input-icon-box">
+              <i class="bi bi-pin-map input-lead-ico"></i>
+              <input type="text" [(ngModel)]="partyForm.city" name="partyCity" class="form-control-standard" placeholder="e.g. Pune, Baramati, Mumbai">
+            </div>
           </div>
-        </div>
 
-        <!-- Field 7: Full Address (Col 2) -->
-        <div class="form-group-item">
-          <label class="form-item-label">Registered Office / Billing Address</label>
-          <div class="input-icon-box">
-            <i class="bi bi-signpost-2 input-lead-ico"></i>
-            <input type="text" [(ngModel)]="partyForm.partyAddress" name="partyAddress" class="form-control-standard" placeholder="Street address, MIDC Industrial Area, landmark...">
+          <!-- Field 7: Full Address (Col 2) -->
+          <div class="form-group-item">
+            <label class="form-item-label">Registered Office / Billing Address</label>
+            <div class="input-icon-box">
+              <i class="bi bi-signpost-2 input-lead-ico"></i>
+              <input type="text" [(ngModel)]="partyForm.partyAddress" name="partyAddress" class="form-control-standard" placeholder="Street address, MIDC Industrial Area, landmark...">
+            </div>
           </div>
-        </div>
 
-        <!-- Live Profile Quality & Readiness Card (Col 3) -->
-        <div class="party-readiness-card">
-          <div class="readiness-header">
-            <span class="readiness-lbl"><i class="bi bi-shield-check text-primary me-1"></i>Profile Quality:</span>
-            <span class="readiness-status-tag" [class.status-ready]="partyForm.partyContact" [class.status-pending]="!partyForm.partyContact">
-              <i class="bi" [ngClass]="partyForm.partyContact ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
-              {{ partyForm.partyContact ? 'Ready for Billing' : 'Incomplete' }}
-            </span>
-          </div>
-          <div class="readiness-badges">
-            <span class="badge-tag" [class.badge-tag-success]="isGstCompliant(partyForm.gstNumber)" [class.badge-tag-muted]="!isGstCompliant(partyForm.gstNumber)">
-              {{ isGstCompliant(partyForm.gstNumber) ? 'GSTIN Validated' : 'Non-GST / Regular' }}
-            </span>
-            <span class="badge-tag badge-tag-info">{{ partyForm.state || 'Maharashtra' }}</span>
+          <!-- Live Profile Quality & Readiness Card (Col 3) -->
+          <div class="party-readiness-card">
+            <div class="readiness-header">
+              <span class="readiness-lbl"><i class="bi bi-shield-check text-primary me-1"></i>Profile Quality:</span>
+              <span class="readiness-status-tag" [class.status-ready]="partyForm.partyContact" [class.status-pending]="!partyForm.partyContact">
+                <i class="bi" [ngClass]="partyForm.partyContact ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
+                {{ partyForm.partyContact ? 'Ready for Billing' : 'Incomplete' }}
+              </span>
+            </div>
+            <div class="readiness-badges">
+              <span class="badge-tag" [class.badge-tag-success]="isGstCompliant(partyForm.gstNumber)" [class.badge-tag-muted]="!isGstCompliant(partyForm.gstNumber)">
+                {{ isGstCompliant(partyForm.gstNumber) ? 'GSTIN Validated' : 'Non-GST / Regular' }}
+              </span>
+              <span class="badge-tag badge-tag-info">{{ partyForm.state || 'Maharashtra' }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -234,7 +284,7 @@
         </button>
       </div>
     </form>
-  </section>
+  </div>
 
 
   <!-- 5. SEARCH + FILTERS + SECONDARY ACTIONS (POSITIONED CLOSE TO TABLE) -->
@@ -371,42 +421,9 @@
       </div>
     </div>
 
-    <!-- 6. COMPACT ENTERPRISE PARTY SUMMARY TELEMETRY STRIP (DIRECTLY ABOVE TABLE) -->
-    <div class="party-directory-summary-strip" aria-label="Directory Master Data Summary">
-      <div class="summary-chip">
-        <span class="chip-label">TOTAL ACCOUNTS:</span>
-        <strong class="chip-val">{{ getTotalPartiesCount() }}</strong>
-      </div>
-      <div class="summary-sep">|</div>
-      <div class="summary-chip">
-        <span class="chip-label">WHOLESALERS & DISTRIBUTORS:</span>
-        <strong class="chip-val text-primary">{{ getWholesalerDistributorCount() }}</strong>
-      </div>
-      <div class="summary-sep">|</div>
-      <div class="summary-chip">
-        <span class="chip-label">GSTIN COMPLIANT:</span>
-        <strong class="chip-val text-success">{{ getGstRegisteredCount() }} ({{ getGstRegisteredPercent() }}%)</strong>
-      </div>
-      <div class="summary-sep">|</div>
-      <div class="summary-chip">
-        <span class="chip-label">REGION:</span>
-        <strong class="chip-val text-info">{{ getMhPartiesCount() }} MH</strong>
-        <span class="chip-muted">/ {{ getInterstatePartiesCount() }} Interstate</span>
-      </div>
-      <div class="summary-sep">|</div>
-      <div class="summary-chip">
-        <span class="chip-label">PROFILE COMPLETION:</span>
-        <strong class="chip-val text-accent">{{ getProfileReadinessPercent() }}%</strong>
-      </div>
-      <div class="summary-spacer"></div>
-      <div class="summary-filtered-count">
-        <span>Showing <strong>{{ getFilteredParties().length }}</strong> of {{ parties.length }} records</span>
-      </div>
-    </div>
-
-    <!-- 7. PARTY DIRECTORY TABLE CONTAINER -->
+    <!-- 6. PARTY DIRECTORY TABLE CONTAINER -->
     <div class="table-wrapper-custom" [class.table-compact]="tableDensity === 'compact'" [class.table-spacious]="tableDensity === 'spacious'">
-      <table class="enterprise-data-table" aria-label="Customer Directory Table">
+      <table class="enterprise-data-table" appResizableTable [tableId]="'party_table'" aria-label="Customer Directory Table">
         <thead>
           <tr>
             <th class="th-checkbox">
@@ -416,7 +433,7 @@
             <th *ngIf="isColumnVisible('partyType')" class="th-party-type">BUSINESS TYPE</th>
             <th *ngIf="isColumnVisible('partyContact')" class="th-contact">CONTACT DETAILS</th>
             <th *ngIf="isColumnVisible('gstNumber')" class="th-gst">GSTIN / TAX ID</th>
-            <th *ngIf="isColumnVisible('location')" class="th-location">LOCATION & REGION</th>
+            <th *ngIf="isColumnVisible('location')" class="th-location">LOCATION</th>
             <th *ngIf="isColumnVisible('email')" class="th-email">BUSINESS EMAIL</th>
             <th *ngIf="isColumnVisible('status')" class="th-status">B2B READINESS</th>
             <th *ngIf="isColumnVisible('createdDate')" class="th-date">REGISTERED ON</th>
@@ -524,8 +541,8 @@
             <!-- Actions Column -->
             <td class="td-actions text-center">
               <div class="action-buttons-group">
-                <!-- View Drawer -->
-                <button type="button" class="btn-action-icon btn-view" (click)="openEditDrawer(party)" title="View & Edit Party Profile" aria-label="View Party">
+                <!-- View Client Dossier (Read-Only) -->
+                <button type="button" class="btn-action-icon btn-view" (click)="openPartyDossier(party)" title="View Official Client Dossier" aria-label="View Client Dossier">
                   <i class="bi bi-eye"></i>
                 </button>
 
@@ -546,47 +563,49 @@
         <!-- Accounting / Summary Totals Footer Row -->
         <tfoot *ngIf="getFilteredParties().length > 0" class="table-summary-tfoot">
           <tr>
-            <td></td>
-            <td class="tfoot-summary-title">
-              SUMMARY ({{ getFilteredParties().length }} PARTIES)
+            <td class="td-checkbox"></td>
+            <td *ngIf="isColumnVisible('partyName')" class="tfoot-label">
+              <strong>TOTALS ({{ getFilteredParties().length }} PARTIES)</strong>
             </td>
-            <td>
+            <td *ngIf="isColumnVisible('partyType')">
               <strong>{{ getWholesalerDistributorCount() }}</strong> Wholesalers/Dist.
             </td>
-            <td></td>
-            <td class="tfoot-gst-stat">
+            <td *ngIf="isColumnVisible('partyContact')"></td>
+            <td *ngIf="isColumnVisible('gstNumber')" class="tfoot-gst-stat">
               <strong>{{ getGstRegisteredCount() }}</strong> Verified
             </td>
-            <td class="tfoot-region-stat">
+            <td *ngIf="isColumnVisible('location')" class="tfoot-region-stat">
               <strong>{{ getMhPartiesCount() }}</strong> MH / <strong>{{ getInterstatePartiesCount() }}</strong> Interstate
             </td>
-            <td colspan="4"></td>
+            <td *ngIf="isColumnVisible('email')"></td>
+            <td *ngIf="isColumnVisible('status')"></td>
+            <td *ngIf="isColumnVisible('createdDate')"></td>
+            <td class="text-center"></td>
           </tr>
         </tfoot>
       </table>
     </div>
 
-    <!-- 8. TABLE PAGINATION FOOTER -->
-    <div class="party-table-footer">
-      <div class="footer-left-info">
-        <span>Showing {{ getFilteredParties().length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1 }} to {{ currentPage * itemsPerPage > getFilteredParties().length ? getFilteredParties().length : currentPage * itemsPerPage }} of {{ getFilteredParties().length }} parties</span>
+    <!-- ── STANDARD PAGINATION FOOTER ── -->
+    <div class="erp-table-footer no-print" *ngIf="getFilteredParties().length > 0">
+      <div class="erp-footer-info">
+        Showing <strong>{{ getFilteredParties().length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1 }}</strong> to
+        <strong>{{ currentPage * itemsPerPage > getFilteredParties().length ? getFilteredParties().length : currentPage * itemsPerPage }}</strong> of
+        <strong>{{ getFilteredParties().length }}</strong> parties
       </div>
-      <div class="footer-right-pagination">
-        <!-- Rows per page selector -->
-        <div class="page-size-selector">
-          <label>Rows per page:</label>
-          <select [(ngModel)]="itemsPerPage" (change)="currentPage = 1" class="form-select-pagesize" aria-label="Rows per page">
+      <div class="erp-footer-controls">
+        <div class="erp-rows-selector">
+          <span>Rows:</span>
+          <select [(ngModel)]="itemsPerPage" (change)="currentPage = 1" class="erp-rows-select" aria-label="Rows per page">
             <option *ngFor="let opt of itemsPerPageOptions" [value]="opt">{{ opt }}</option>
           </select>
         </div>
-
-        <!-- Page navigation controls -->
-        <div class="pagination-buttons-group">
-          <button type="button" class="btn-page-nav" [disabled]="currentPage === 1" (click)="setPage(currentPage - 1)" title="Previous Page" aria-label="Previous Page">
-            <i class="bi bi-chevron-left"></i> Previous
+        <div class="erp-page-buttons">
+          <button type="button" class="erp-page-nav-btn" [disabled]="currentPage === 1" (click)="setPage(currentPage - 1)">
+            <i class="bi bi-chevron-left"></i> Prev
           </button>
-          <span class="page-current-indicator">Page {{ currentPage }} of {{ getTotalPages() }}</span>
-          <button type="button" class="btn-page-nav" [disabled]="currentPage >= getTotalPages()" (click)="setPage(currentPage + 1)" title="Next Page" aria-label="Next Page">
+          <span class="erp-page-counter">Page <strong>{{ currentPage }}</strong> of <strong>{{ getTotalPages() }}</strong></span>
+          <button type="button" class="erp-page-nav-btn" [disabled]="currentPage >= getTotalPages()" (click)="setPage(currentPage + 1)">
             Next <i class="bi bi-chevron-right"></i>
           </button>
         </div>
@@ -676,4 +695,172 @@
     </div>
   </aside>
 
+  <!-- 7. OFFICIAL CLIENT DOSSIER INSPECTION MODAL (READ-ONLY) -->
+  <div class="dossier-modal-backdrop" *ngIf="showDossierModal && selectedPartyForDossier" (click)="closePartyDossier()" aria-hidden="true"></div>
+  <div class="dossier-modal-container" *ngIf="showDossierModal && selectedPartyForDossier" role="dialog" aria-modal="true" aria-label="Official Client Dossier">
+    <!-- Modal Header -->
+    <div class="dossier-header-bar no-print">
+      <div class="dossier-header-left">
+        <div class="dossier-badge-icon">
+          <i class="bi bi-building-check"></i>
+        </div>
+        <div class="dossier-header-titles">
+          <span class="dossier-eyebrow">Enterprise Client Master Record</span>
+          <h3 class="dossier-title">{{ selectedPartyForDossier.partyName }}</h3>
+        </div>
+      </div>
+      <div class="dossier-header-actions no-print">
+        <button type="button" class="btn btn-primary btn-sm me-2" (click)="printPartyDossier()">
+          <i class="bi bi-printer me-1"></i> Print Dossier
+        </button>
+        <button type="button" class="btn-dossier-close" (click)="closePartyDossier()" title="Close Dossier" aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Dossier Body / Printable Official Sheet -->
+    <div class="dossier-body-content" id="printableDossierSheet">
+      <!-- Corporate Letterhead -->
+      <div class="dossier-letterhead">
+        <div class="company-brand-row">
+          <div class="brand-brand-group">
+            <div class="dossier-logo-box">
+              <img src="assets/logo.svg" alt="Futane Agro" class="dossier-company-logo" (error)="$any($event.target).style.display='none'; logoFallback.style.display='flex'">
+              <div #logoFallback class="company-logo-fallback" style="display: none;">
+                <i class="bi bi-building text-primary"></i>
+              </div>
+            </div>
+            <div class="brand-logo-text">
+              <h2>FUTANE AGRO INDUSTRIES PVT. LTD.</h2>
+              <p class="brand-tagline">Manufacturers of Premium Plastic Crates &amp; Material Handling Trays</p>
+              <p class="brand-address">Gate No 144, Hadapsar Industrial Area, Pune – 411028 | Tel: +91 98234 56789</p>
+              <div class="gst-label-wrap">
+                <span class="corp-tax-chip"><strong>GSTIN:</strong> 27AAACF2920A1ZX</span>
+                <span class="corp-tax-chip"><strong>PAN:</strong> AAACF2920A</span>
+                <span class="corp-tax-chip"><strong>State:</strong> Maharashtra (27)</span>
+              </div>
+            </div>
+          </div>
+          <div class="dossier-badge-box">
+            <span class="d-title">CLIENT MASTER DOSSIER</span>
+            <strong class="d-code font-mono">#CLI-{{ selectedPartyForDossier.id || selectedPartyForDossier.partyId }}</strong>
+            <div class="d-status-pill">
+              <i class="bi bi-patch-check-fill me-1"></i>Verified Commercial Account
+            </div>
+          </div>
+        </div>
+        <div class="letterhead-divider"></div>
+      </div>
+
+      <!-- Top Status Banner -->
+      <div class="dossier-status-banner">
+        <div class="banner-cell">
+          <span class="banner-label">Account Code</span>
+          <strong class="banner-value font-mono">#CLI-{{ selectedPartyForDossier.id || selectedPartyForDossier.partyId }}</strong>
+        </div>
+        <div class="banner-cell">
+          <span class="banner-label">Account Type</span>
+          <span class="badge-party-type" [ngClass]="'type-' + getPartyType(selectedPartyForDossier).toLowerCase()">
+            {{ getPartyType(selectedPartyForDossier) }}
+          </span>
+        </div>
+        <div class="banner-cell">
+          <span class="banner-label">GSTIN Verification</span>
+          <span class="badge-status-pill" [ngClass]="isGstCompliant(selectedPartyForDossier.gstNumber) ? 'status-active' : 'status-pending'">
+            <i class="bi" [ngClass]="isGstCompliant(selectedPartyForDossier.gstNumber) ? 'bi-patch-check-fill' : 'bi-exclamation-triangle-fill'"></i>
+            {{ isGstCompliant(selectedPartyForDossier.gstNumber) ? 'GST Verified' : 'Unregistered / Regular' }}
+          </span>
+        </div>
+        <div class="banner-cell">
+          <span class="banner-label">Registered On</span>
+          <strong class="banner-value font-mono">{{ selectedPartyForDossier.createdDate || 'Active Master' }}</strong>
+        </div>
+      </div>
+
+      <!-- Two Column Detailed Breakdown -->
+      <div class="dossier-details-grid mt-3">
+        <!-- Column 1: Client Commercial Identity -->
+        <div class="dossier-section-card">
+          <h5 class="section-title"><i class="bi bi-person-lines-fill me-2 text-primary"></i>Company &amp; Contact Details</h5>
+          <div class="detail-row">
+            <span class="detail-key">Company Name:</span>
+            <span class="detail-val fw-bold text-primary">{{ selectedPartyForDossier.partyName }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Primary Phone:</span>
+            <span class="detail-val font-mono">{{ selectedPartyForDossier.partyContact || 'Not Registered' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Business Email:</span>
+            <span class="detail-val">{{ selectedPartyForDossier.email || 'None on record' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Location:</span>
+            <span class="detail-val">{{ selectedPartyForDossier.city ? (selectedPartyForDossier.city + ', ' + selectedPartyForDossier.state) : (selectedPartyForDossier.state || 'Maharashtra') }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Billing Address:</span>
+            <span class="detail-val">{{ selectedPartyForDossier.partyAddress || 'Direct Office Delivery' }}</span>
+          </div>
+        </div>
+
+        <!-- Column 2: Tax & Accounting Credentials -->
+        <div class="dossier-section-card">
+          <h5 class="section-title"><i class="bi bi-shield-check me-2 text-success"></i>Tax &amp; Compliance Credentials</h5>
+          <div class="detail-row">
+            <span class="detail-key">GSTIN Number:</span>
+            <span class="detail-val font-mono text-uppercase fw-bold">{{ selectedPartyForDossier.gstNumber || 'UNREGISTERED / REGULAR' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Jurisdiction:</span>
+            <span class="detail-val">{{ selectedPartyForDossier.state === 'Maharashtra' ? 'Intrastate (CGST + SGST)' : 'Interstate (IGST)' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">B2B Compliance:</span>
+            <span class="detail-val text-success fw-bold">
+              <i class="bi bi-check-circle-fill me-1"></i>Verified Active Tax Entity
+            </span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Billing Currency:</span>
+            <span class="detail-val font-mono">INR (₹) — Indian Rupee</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Official Sign-off Block for Print with Seal -->
+      <div class="dossier-signoff-block mt-4">
+        <div class="signoff-column">
+          <div class="signoff-line"></div>
+          <span class="signoff-title">Accounts Officer / Clerk</span>
+        </div>
+        <div class="signoff-column center">
+          <div class="official-stamp-seal">
+            <i class="bi bi-patch-check-fill text-success me-1"></i>
+            <div class="stamp-details">
+              <span class="stamp-company">FUTANE AGRO ERP</span>
+              <span class="stamp-verified">OFFICIAL COMMERCIAL AUDIT SEAL</span>
+            </div>
+          </div>
+        </div>
+        <div class="signoff-column right">
+          <div class="signoff-line"></div>
+          <span class="signoff-title">For FUTANE AGRO INDUSTRIES PVT. LTD.</span>
+          <small class="signoff-subtitle">Authorized Corporate Signatory</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dossier Footer -->
+    <div class="dossier-footer-bar no-print">
+      <button type="button" class="btn btn-secondary btn-sm" (click)="closePartyDossier()">
+        Close
+      </button>
+      <button type="button" class="btn btn-primary btn-sm ms-2" (click)="printPartyDossier()">
+        <i class="bi bi-printer-fill me-1"></i> Print Official Dossier
+      </button>
+    </div>
+  </div>
 </div>
+

@@ -1,204 +1,234 @@
 <div class="bank-enterprise-container" [attr.data-density]="tableDensity">
 
-  <!-- 2. STABLE ENTERPRISE PAGE HEADER -->
+  <!-- ── 1. CANONICAL ENTERPRISE PAGE HEADER ──────────────────────────── -->
   <header class="bank-page-header no-print">
-    <div class="breadcrumb-trail" style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; width: 100%;">
-      <i class="bi bi-house" style="font-size: 12px; color: #94a3b8;"></i>
+    <div class="breadcrumb-trail">
+      <i class="bi bi-house-door-fill"></i>
       <span>Futane Agro ERP</span>
-      <span style="color: #cbd5e1;">/</span>
-      <span>Treasury &amp; Accounts</span>
-      <span style="color: #cbd5e1;">/</span>
-      <span style="color: #0B47D4; font-weight: 700;">Bank Book &amp; Treasury Ledger</span>
+      <span class="sep">/</span>
+      <span>FINANCE &amp; ACCOUNTS</span>
+      <span class="sep">/</span>
+      <span class="active">BANK BOOK &amp; TREASURY LEDGER</span>
     </div>
 
-    <div class="header-left-col">
-      <div class="header-icon-box">
-        <i class="bi bi-bank2"></i>
-      </div>
-      <div class="header-title-meta">
-        <h1 class="header-main-title">{{ 'bank.title' | translate:currentLang }}</h1>
-        <div class="header-sub-row">
-          <span class="header-desc-text">Treasury accounts, liquidity tracking, bank reconciliation &amp; cash flows</span>
-          <span class="header-badge-live">
-            <span class="pulse-dot"></span>
-            <span>Live Treasury Ledger</span>
-          </span>
+    <!-- Header Primary Row -->
+    <div class="header-primary-row">
+      <div class="header-title-box">
+        <div class="header-icon-box">
+          <i class="bi bi-bank2"></i>
+        </div>
+        <div>
+          <div class="title-with-badge">
+            <h1 class="header-main-title">{{ 'bank.title' | translate:currentLang }}</h1>
+            <span class="header-count-pill">{{ bankTransactionsList.length }} Entries</span>
+          </div>
         </div>
       </div>
+
+      <!-- Actions Group -->
+      <div class="header-actions-group">
+        <!-- Refresh Button -->
+        <button 
+          type="button" 
+          class="btn-header-action btn-secondary" 
+          (click)="loadData(true)" 
+          [disabled]="isLoading"
+          title="Reload fresh bank ledger from database"
+          aria-label="Refresh data">
+          <i class="bi bi-arrow-clockwise" [class.spin-anim]="isLoading"></i>
+          <span>Refresh</span>
+        </button>
+
+        <!-- CSV Export -->
+        <button 
+          type="button" 
+          class="btn-header-action btn-secondary" 
+          (click)="exportCSV()" 
+          [disabled]="bankTransactionsList.length === 0" 
+          title="Export bank ledger to CSV"
+          aria-label="Export to CSV">
+          <i class="bi bi-filetype-csv"></i>
+          <span>CSV</span>
+        </button>
+
+        <!-- Excel Export -->
+        <button 
+          type="button" 
+          class="btn-header-action btn-secondary" 
+          (click)="exportExcel()" 
+          [disabled]="bankTransactionsList.length === 0" 
+          title="Export bank ledger for Excel"
+          aria-label="Export to Excel">
+          <i class="bi bi-file-earmark-excel"></i>
+          <span>Excel</span>
+        </button>
+
+        <!-- Print Ledger -->
+        <button 
+          type="button" 
+          class="btn-header-action btn-secondary" 
+          (click)="printLedger()" 
+          [disabled]="bankTransactionsList.length === 0" 
+          title="Print bank ledger statement"
+          aria-label="Print ledger">
+          <i class="bi bi-printer"></i>
+          <span>Print</span>
+        </button>
+
+        <!-- Primary Action: + Add Transaction -->
+        <button 
+          *ngIf="!isViewer()" 
+          type="button" 
+          class="btn-header-action btn-primary" 
+          (click)="openDrawer()"
+          title="Record new treasury bank transaction"
+          aria-label="Add Transaction">
+          <i class="bi bi-plus-lg"></i>
+          <span>+ Add Transaction</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Header Actions -->
-    <div class="header-right-col">
-      <button 
-        type="button" 
-        class="btn-header-action btn-secondary" 
-        (click)="loadData(true)" 
-        [disabled]="isLoading"
-        title="Reload fresh bank ledger from database"
-        aria-label="Refresh data">
-        <i class="bi bi-arrow-clockwise" [class.spin-anim]="isLoading"></i>
-        <span>Refresh</span>
-      </button>
-
-      <button 
-        type="button" 
-        class="btn-header-action btn-secondary" 
-        (click)="exportCSV()" 
-        [disabled]="bankTransactionsList.length === 0" 
-        title="Export bank ledger to CSV"
-        aria-label="Export to CSV">
-        <i class="bi bi-download"></i>
-        <span>CSV</span>
-      </button>
-
-      <button 
-        type="button" 
-        class="btn-header-action btn-secondary" 
-        (click)="printLedger()" 
-        [disabled]="bankTransactionsList.length === 0" 
-        title="Print bank ledger statement"
-        aria-label="Print ledger">
-        <i class="bi bi-printer"></i>
-        <span>Print</span>
-      </button>
-
-      <!-- Primary Action: + Add Transaction -->
-      <button 
-        *ngIf="!isViewer()" 
-        type="button" 
-        class="btn-header-action btn-primary" 
-        (click)="openDrawer()"
-        title="Record new treasury bank transaction"
-        aria-label="Add Transaction">
-        <i class="bi bi-plus-lg"></i>
-        <span>Add Transaction</span>
-      </button>
+    <!-- Header Secondary Row -->
+    <div class="header-secondary-row">
+      <p class="header-subtitle">
+        Treasury accounts, liquidity tracking, bank reconciliation &amp; cash flows
+      </p>
+      <div class="header-formula-badge" title="Treasury Balance Formula">
+        <i class="bi bi-calculator"></i>
+        <span>Formula: Opening Balance + Total Credits (Inflows) - Total Debits (Outflows) = Net Balance</span>
+      </div>
     </div>
   </header>
 
-  <!-- 3. SUBTABS CLASSIFICATION BAR -->
-  <nav class="subtabs-classification-bar no-print" aria-label="Bank Transaction Filter Subtabs">
-    <div class="subtabs-scroll-container">
+  <!-- ── 2. LAYER 3: PILL SUBTABS NAVIGATION BAR ────────────────────────── -->
+  <nav class="bank-subnav-bar no-print" role="tablist" aria-label="Bank Transaction Filter Subtabs">
+    <div class="subnav-tabs-group">
       <button 
         type="button" 
+        role="tab" 
         class="subnav-tab-btn" 
         [class.active]="activeSubtab === 'ALL'" 
         (click)="setSubtab('ALL')"
         [attr.aria-selected]="activeSubtab === 'ALL'">
-        <i class="bi bi-collection me-1"></i>
+        <i class="bi bi-collection"></i>
         <span>All Transactions</span>
-        <span class="tab-badge default">{{ getSubtabCount('ALL') }}</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('ALL') }}</span>
       </button>
 
       <button 
         type="button" 
+        role="tab" 
         class="subnav-tab-btn" 
         [class.active]="activeSubtab === 'Credit'" 
         (click)="setSubtab('Credit')"
         [attr.aria-selected]="activeSubtab === 'Credit'">
-        <i class="bi bi-arrow-down-left-circle-fill text-success me-1"></i>
+        <i class="bi bi-arrow-down-left-circle-fill text-success"></i>
         <span>Inflows (Credits)</span>
-        <span class="tab-badge success">{{ getSubtabCount('Credit') }}</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('Credit') }}</span>
       </button>
 
       <button 
         type="button" 
+        role="tab" 
         class="subnav-tab-btn" 
         [class.active]="activeSubtab === 'Debit'" 
         (click)="setSubtab('Debit')"
         [attr.aria-selected]="activeSubtab === 'Debit'">
-        <i class="bi bi-arrow-up-right-circle-fill text-danger me-1"></i>
+        <i class="bi bi-arrow-up-right-circle-fill text-danger"></i>
         <span>Outflows (Debits)</span>
-        <span class="tab-badge danger">{{ getSubtabCount('Debit') }}</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('Debit') }}</span>
       </button>
 
       <button 
         type="button" 
+        role="tab" 
         class="subnav-tab-btn" 
         [class.active]="activeSubtab === 'contra'" 
         (click)="setSubtab('contra')"
         [attr.aria-selected]="activeSubtab === 'contra'">
-        <i class="bi bi-arrow-left-right text-info me-1"></i>
+        <i class="bi bi-arrow-left-right text-info"></i>
         <span>Contra &amp; Transfers</span>
-        <span class="tab-badge info">{{ getSubtabCount('contra') }}</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('contra') }}</span>
       </button>
 
       <button 
         type="button" 
+        role="tab" 
         class="subnav-tab-btn" 
         [class.active]="activeSubtab === 'high_value'" 
         (click)="setSubtab('high_value')"
         [attr.aria-selected]="activeSubtab === 'high_value'">
-        <i class="bi bi-shield-check text-primary me-1"></i>
-        <span>High Value (&ge; ₹50k)</span>
-        <span class="tab-badge primary-badge">{{ getSubtabCount('high_value') }}</span>
+        <i class="bi bi-shield-check text-primary"></i>
+        <span>High Value (≥ ₹50k)</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('high_value') }}</span>
       </button>
     </div>
   </nav>
 
-  <!-- 4. TREASURY KPI SUMMARY METRICS RIBBON -->
-  <section class="bank-kpi-ribbon no-print" aria-label="Treasury liquidity metrics">
-    <!-- Card 1: Total Inflow -->
-    <div class="kpi-card">
-      <div class="kpi-icon-wrapper success">
-        <i class="bi bi-arrow-down-left-circle-fill"></i>
-      </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Total Inflow (Credits)</span>
-        <div class="kpi-value-row">
-          <span class="kpi-number text-success">₹{{ totalInflow | number:'1.2-2' }}</span>
-          <span class="kpi-trend up"><i class="bi bi-arrow-up-right me-1"></i>Credit</span>
+  <!-- ── 3. LAYER 4: 5-COLUMN KPI TELEMETRY GRID ───────────────────────── -->
+  <section class="bank-kpi-grid no-print" aria-label="Treasury liquidity metrics">
+    <!-- Card 1: Total Inflow (Green) -->
+    <div class="bank-kpi-card" (click)="setSubtab('Credit')" title="Total realized treasury credit inflows">
+      <div class="bank-kpi-icon kpi-green"><i class="bi bi-arrow-down-left-circle-fill"></i></div>
+      <div class="bank-kpi-content">
+        <span class="bank-kpi-label">TOTAL INFLOWS (CREDITS)</span>
+        <div class="bank-kpi-value-row">
+          <strong class="bank-kpi-value text-success">₹{{ totalInflow | number:'1.2-2' }}</strong>
         </div>
-        <span class="kpi-meta">{{ creditCount }} credit entries</span>
+        <span class="bank-kpi-meta"><i class="bi bi-check2-circle me-1"></i>{{ creditCount }} credit entries</span>
       </div>
     </div>
 
-    <!-- Card 2: Total Outflow -->
-    <div class="kpi-card">
-      <div class="kpi-icon-wrapper danger">
-        <i class="bi bi-arrow-up-right-circle-fill"></i>
-      </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Total Outflow (Debits)</span>
-        <div class="kpi-value-row">
-          <span class="kpi-number text-danger">₹{{ totalOutflow | number:'1.2-2' }}</span>
-          <span class="kpi-trend down"><i class="bi bi-arrow-down-right me-1"></i>Debit</span>
+    <!-- Card 2: Total Outflow (Red) -->
+    <div class="bank-kpi-card" (click)="setSubtab('Debit')" title="Total realized treasury debit outflows">
+      <div class="bank-kpi-icon kpi-red"><i class="bi bi-arrow-up-right-circle-fill"></i></div>
+      <div class="bank-kpi-content">
+        <span class="bank-kpi-label">TOTAL OUTFLOWS (DEBITS)</span>
+        <div class="bank-kpi-value-row">
+          <strong class="bank-kpi-value text-danger">₹{{ totalOutflow | number:'1.2-2' }}</strong>
         </div>
-        <span class="kpi-meta">{{ debitCount }} debit entries</span>
+        <span class="bank-kpi-meta"><i class="bi bi-arrow-up-right me-1"></i>{{ debitCount }} debit entries</span>
       </div>
     </div>
 
-    <!-- Card 3: Net Treasury Balance -->
-    <div class="kpi-card">
-      <div class="kpi-icon-wrapper" [ngClass]="netBalance >= 0 ? 'primary' : 'danger'">
-        <i class="bi bi-wallet2"></i>
-      </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Net Treasury Balance</span>
-        <div class="kpi-value-row">
-          <span class="kpi-number" [ngClass]="netBalance >= 0 ? 'text-primary' : 'text-danger'">
+    <!-- Card 3: Net Treasury Balance (Blue) -->
+    <div class="bank-kpi-card" title="Current net cash & bank liquidity surplus/deficit">
+      <div class="bank-kpi-icon kpi-blue"><i class="bi bi-wallet2"></i></div>
+      <div class="bank-kpi-content">
+        <span class="bank-kpi-label">NET TREASURY BALANCE</span>
+        <div class="bank-kpi-value-row">
+          <strong class="bank-kpi-value" [ngClass]="netBalance >= 0 ? 'text-primary' : 'text-danger'">
             ₹{{ netBalance | number:'1.2-2' }}
-          </span>
-          <span class="kpi-trend" [ngClass]="netBalance >= 0 ? 'up' : 'down'">
-            {{ netBalance >= 0 ? 'Surplus' : 'Deficit' }}
-          </span>
+          </strong>
         </div>
-        <span class="kpi-meta">Current cash &amp; bank liquidity</span>
+        <span class="bank-kpi-meta"><i class="bi bi-shield-check me-1"></i>Live reconciled position</span>
       </div>
     </div>
 
-    <!-- Card 4: Total Reconciled Entries -->
-    <div class="kpi-card">
-      <div class="kpi-icon-wrapper info">
-        <i class="bi bi-receipt-cutoff"></i>
-      </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Total Entries</span>
-        <div class="kpi-value-row">
-          <span class="kpi-number text-info">{{ bankTransactionsList.length }}</span>
-          <span class="kpi-trend up"><i class="bi bi-check-circle me-1"></i>Reconciled</span>
+    <!-- Card 4: Total Reconciled Entries (Purple) -->
+    <div class="bank-kpi-card" (click)="setSubtab('ALL')" title="Total recorded treasury entries">
+      <div class="bank-kpi-icon kpi-purple"><i class="bi bi-receipt-cutoff"></i></div>
+      <div class="bank-kpi-content">
+        <span class="bank-kpi-label">TOTAL ENTRIES</span>
+        <div class="bank-kpi-value-row">
+          <strong class="bank-kpi-value">{{ bankTransactionsList.length }}</strong>
+          <span class="bank-kpi-unit">Entries</span>
         </div>
-        <span class="kpi-meta">Recorded treasury entries</span>
+        <span class="bank-kpi-meta"><i class="bi bi-check-circle me-1"></i>Reconciled bank records</span>
+      </div>
+    </div>
+
+    <!-- Card 5: High Value Entries (Slate) -->
+    <div class="bank-kpi-card" (click)="setSubtab('high_value')" title="High value transactions ≥ ₹50,000">
+      <div class="bank-kpi-icon kpi-slate"><i class="bi bi-shield-check"></i></div>
+      <div class="bank-kpi-content">
+        <span class="bank-kpi-label">HIGH VALUE ENTRIES</span>
+        <div class="bank-kpi-value-row">
+          <strong class="bank-kpi-value">{{ getSubtabCount('high_value') }}</strong>
+          <span class="bank-kpi-unit">≥ ₹50k</span>
+        </div>
+        <span class="bank-kpi-meta"><i class="bi bi-tag me-1"></i>Statutory compliance check</span>
       </div>
     </div>
   </section>
@@ -239,20 +269,54 @@
           </button>
         </div>
 
-        <!-- Transaction Type Dropdown -->
-        <div class="filter-select-box">
-          <select [(ngModel)]="filterType" (change)="activeSubtab = filterType; currentPage = 1" class="toolbar-select">
-            <option value="ALL">All Types ({{ bankTransactionsList.length }})</option>
-            <option value="Credit">Credits (+₹{{ totalInflow | number:'1.0-0' }})</option>
-            <option value="Debit">Debits (-₹{{ totalOutflow | number:'1.0-0' }})</option>
-          </select>
-        </div>
+        <!-- Consolidated Filter Popover -->
+        <div class="filter-popover-wrapper" (click)="$event.stopPropagation()">
+          <button 
+            type="button" 
+            class="filter-trigger-btn"
+            [class.active-filters]="activeFilterCount > 0"
+            (click)="showFilterPopover = !showFilterPopover"
+            title="Filter bank transactions">
+            <i class="bi bi-funnel"></i>
+            <span>Filters</span>
+            <span class="filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
+          </button>
 
-        <!-- Date Range Filter -->
-        <div class="date-range-box">
-          <input type="date" [(ngModel)]="filterDateFrom" (change)="currentPage = 1" class="date-picker-input" title="From Date">
-          <span class="date-sep">to</span>
-          <input type="date" [(ngModel)]="filterDateTo" (change)="currentPage = 1" class="date-picker-input" title="To Date">
+          <div class="filter-popover-panel shadow-lg" *ngIf="showFilterPopover">
+            <div class="popover-title-row">
+              <span><i class="bi bi-sliders me-1 text-primary"></i>Refine Treasury Ledger</span>
+              <button type="button" class="btn-text" (click)="resetFilters(); activeSubtab = 'ALL'; showFilterPopover = false">Reset All</button>
+            </div>
+
+            <div class="popover-content-body">
+              <!-- Transaction Type Filter -->
+              <div class="filter-field-group">
+                <label>Transaction Type</label>
+                <select [(ngModel)]="filterType" (change)="activeSubtab = filterType; currentPage = 1" class="filter-select">
+                  <option value="ALL">All Types ({{ bankTransactionsList.length }})</option>
+                  <option value="Credit">Credits (+₹{{ totalInflow | number:'1.0-0' }})</option>
+                  <option value="Debit">Debits (-₹{{ totalOutflow | number:'1.0-0' }})</option>
+                </select>
+              </div>
+
+              <!-- From Date Filter -->
+              <div class="filter-field-group">
+                <label>From Date</label>
+                <input type="date" [(ngModel)]="filterDateFrom" (change)="currentPage = 1" class="filter-select">
+              </div>
+
+              <!-- To Date Filter -->
+              <div class="filter-field-group">
+                <label>To Date</label>
+                <input type="date" [(ngModel)]="filterDateTo" (change)="currentPage = 1" class="filter-select">
+              </div>
+            </div>
+
+            <div class="popover-footer-row">
+              <button type="button" class="btn btn-sm btn-secondary" (click)="showFilterPopover = false">Close</button>
+              <button type="button" class="btn btn-sm btn-primary" (click)="showFilterPopover = false">Apply Filters</button>
+            </div>
+          </div>
         </div>
 
         <!-- Reset Button -->
@@ -326,73 +390,88 @@
       <table class="enterprise-table" [ngClass]="'density-' + tableDensity" appResizableTable [tableId]="'bank_table'">
         <thead>
           <tr>
-            <th *ngIf="isColumnVisible('bank', 'Date')" (click)="setSort('transactionDate')" class="sortable-th">
+            <th *ngIf="isColumnVisible('bank', 'Date')" (click)="setSort('transactionDate')" class="sortable-th th-date">
               <div class="th-content">
                 <span>{{ 'bank.date' | translate:currentLang }}</span>
                 <i class="bi" [ngClass]="sortField === 'transactionDate' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-arrow-down-up opacity-25'"></i>
               </div>
             </th>
-            <th *ngIf="isColumnVisible('bank', 'Type')" (click)="setSort('transactionType')" class="sortable-th">
+            <th *ngIf="isColumnVisible('bank', 'Type')" (click)="setSort('transactionType')" class="sortable-th th-type">
               <div class="th-content">
                 <span>{{ 'bank.type' | translate:currentLang }}</span>
                 <i class="bi" [ngClass]="sortField === 'transactionType' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-arrow-down-up opacity-25'"></i>
               </div>
             </th>
-            <th *ngIf="isColumnVisible('bank', 'Amount')" (click)="setSort('amount')" class="sortable-th text-end">
+            <th *ngIf="isColumnVisible('bank', 'Amount')" (click)="setSort('amount')" class="sortable-th th-amount text-end">
               <div class="th-content justify-content-end">
                 <span>{{ 'bank.amount' | translate:currentLang }}</span>
                 <i class="bi" [ngClass]="sortField === 'amount' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-arrow-down-up opacity-25'"></i>
               </div>
             </th>
-            <th *ngIf="isColumnVisible('bank', 'Description')">
+            <th *ngIf="isColumnVisible('bank', 'Description')" class="th-desc">
               <div class="th-content">
                 <span>{{ 'bank.desc' | translate:currentLang }}</span>
               </div>
             </th>
-            <th *ngIf="isColumnVisible('bank', 'Reference')" (click)="setSort('referenceNo')" class="sortable-th">
+            <th *ngIf="isColumnVisible('bank', 'Reference')" (click)="setSort('referenceNo')" class="sortable-th th-ref">
               <div class="th-content">
                 <span>{{ 'bank.reference' | translate:currentLang }}</span>
                 <i class="bi" [ngClass]="sortField === 'referenceNo' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-arrow-down-up opacity-25'"></i>
               </div>
             </th>
-            <th *ngIf="isColumnVisible('bank', 'Actions')" class="text-end" style="width: 90px;">
+            <th *ngIf="isColumnVisible('bank', 'Actions')" class="th-actions text-end">
               <div class="th-content justify-content-end">Actions</div>
             </th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let bt of paginatedList; trackBy: trackById" class="table-row-hover">
-            <td *ngIf="isColumnVisible('bank', 'Date')" class="cell-date font-tabular">
+            <td *ngIf="isColumnVisible('bank', 'Date')" class="td-date cell-date font-tabular">
               {{ bt.transactionDate | indianDate }}
             </td>
-            <td *ngIf="isColumnVisible('bank', 'Type')">
+            <td *ngIf="isColumnVisible('bank', 'Type')" class="td-type">
               <span class="category-pill-badge" [ngClass]="bt.transactionType === 'Credit' ? 'badge-credit' : 'badge-debit'">
                 <i class="bi me-1" [ngClass]="bt.transactionType === 'Credit' ? 'bi-arrow-down-left' : 'bi-arrow-up-right'"></i>
                 {{ bt.transactionType }}
               </span>
             </td>
-            <td *ngIf="isColumnVisible('bank', 'Amount')" class="text-end font-tabular fw-700 font-mono" [ngClass]="bt.transactionType === 'Credit' ? 'text-success' : 'text-danger'">
+            <td *ngIf="isColumnVisible('bank', 'Amount')" class="td-amount text-end font-tabular fw-700 font-mono" [ngClass]="bt.transactionType === 'Credit' ? 'text-success' : 'text-danger'">
               {{ bt.transactionType === 'Credit' ? '+' : '-' }}₹{{ bt.amount | number:'1.2-2' }}
             </td>
-            <td *ngIf="isColumnVisible('bank', 'Description')">
+            <td *ngIf="isColumnVisible('bank', 'Description')" class="td-desc">
               <div class="desc-truncate" [title]="bt.description">{{ bt.description }}</div>
             </td>
-            <td *ngIf="isColumnVisible('bank', 'Reference')">
-              <span class="reference-badge font-mono" *ngIf="bt.referenceNo">{{ bt.referenceNo }}</span>
+            <td *ngIf="isColumnVisible('bank', 'Reference')" class="td-ref">
+              <span class="reference-badge font-mono text-truncate" *ngIf="bt.referenceNo">{{ bt.referenceNo }}</span>
               <span class="text-muted" *ngIf="!bt.referenceNo">—</span>
             </td>
-            <td *ngIf="isColumnVisible('bank', 'Actions')" class="text-end">
-              <div class="table-actions-cell">
-                <button type="button" class="btn-action-icon edit-icon" (click)="editBankTransaction(bt)" title="Edit Transaction">
-                  <i class="bi bi-pencil"></i>
+            <td *ngIf="isColumnVisible('bank', 'Actions')" class="td-actions text-end">
+              <div class="table-actions-cell justify-content-end">
+                <button type="button" class="btn-action-icon btn-view view-icon" (click)="openViewModal(bt)" title="View Bank Voucher">
+                  <i class="bi bi-eye"></i>
                 </button>
-                <button *ngIf="canDelete()" type="button" class="btn-action-icon delete-icon" (click)="deleteBankTransaction(bt.id)" title="Delete Transaction">
+                <button type="button" class="btn-action-icon btn-edit edit-icon" (click)="editBankTransaction(bt)" title="Edit Transaction">
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+                <button *ngIf="canDelete()" type="button" class="btn-action-icon btn-delete delete-icon" (click)="deleteBankTransaction(bt.id)" title="Delete Transaction">
                   <i class="bi bi-trash3"></i>
                 </button>
               </div>
             </td>
           </tr>
         </tbody>
+        <tfoot class="table-summary-tfoot" *ngIf="filteredList.length > 0">
+          <tr>
+            <td *ngIf="isColumnVisible('bank', 'Date')" class="tfoot-label"><strong>TOTALS</strong></td>
+            <td *ngIf="isColumnVisible('bank', 'Type')"><strong>{{ filteredList.length }} transactions</strong></td>
+            <td *ngIf="isColumnVisible('bank', 'Amount')" class="text-end font-mono">
+              <strong class="text-primary">₹{{ filteredTotalAmount | number:'1.2-2' }}</strong>
+            </td>
+            <td *ngIf="isColumnVisible('bank', 'Description')"></td>
+            <td *ngIf="isColumnVisible('bank', 'Reference')"></td>
+            <td *ngIf="isColumnVisible('bank', 'Actions')" class="text-end"></td>
+          </tr>
+        </tfoot>
       </table>
     </div>
 
@@ -409,36 +488,31 @@
       (action)="resetFilters(); activeSubtab = 'ALL'">
     </app-empty-state>
 
-    <!-- Enterprise Pagination Footer -->
-    <footer class="table-pagination-footer no-print" *ngIf="filteredList.length > 0">
-      <div class="pagination-info">
-        Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to 
-        <strong>{{ Math.min(currentPage * pageSize, filteredList.length) }}</strong> of 
+    <!-- ── STANDARD PAGINATION FOOTER ── -->
+    <div class="erp-table-footer no-print" *ngIf="filteredList.length > 0">
+      <div class="erp-footer-info">
+        Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to
+        <strong>{{ Math.min(currentPage * pageSize, filteredList.length) }}</strong> of
         <strong>{{ filteredList.length }}</strong> treasury transactions
       </div>
-
-      <div class="pagination-controls">
-        <button 
-          type="button" 
-          class="btn-page-nav" 
-          [disabled]="currentPage === 1" 
-          (click)="currentPage = currentPage - 1">
-          <i class="bi bi-chevron-left me-1"></i>Prev
-        </button>
-
-        <span class="page-indicator">
-          Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong>
-        </span>
-
-        <button 
-          type="button" 
-          class="btn-page-nav" 
-          [disabled]="currentPage >= totalPages" 
-          (click)="currentPage = currentPage + 1">
-          Next<i class="bi bi-chevron-right ms-1"></i>
-        </button>
+      <div class="erp-footer-controls">
+        <div class="erp-rows-selector">
+          <span>Rows:</span>
+          <select [(ngModel)]="pageSize" (change)="currentPage = 1" class="erp-rows-select">
+            <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+        <div class="erp-page-buttons">
+          <button type="button" class="erp-page-nav-btn" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
+            <i class="bi bi-chevron-left"></i> Prev
+          </button>
+          <span class="erp-page-counter">Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong></span>
+          <button type="button" class="erp-page-nav-btn" [disabled]="currentPage >= totalPages" (click)="currentPage = currentPage + 1">
+            Next <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
       </div>
-    </footer>
+    </div>
   </section>
 </div>
 
@@ -540,5 +614,91 @@
         </button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ── READ-ONLY BANK TRANSACTION VOUCHER INSPECTION MODAL ── -->
+<div class="voucher-modal-backdrop" *ngIf="showViewModal && selectedTxnForView" (click)="closeViewModal()">
+  <div class="voucher-modal-container" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="voucher-header">
+      <div class="voucher-title-wrap">
+        <div class="voucher-icon" [ngClass]="selectedTxnForView.transactionType === 'Credit' ? 'icon-credit' : 'icon-debit'">
+          <i class="bi" [ngClass]="selectedTxnForView.transactionType === 'Credit' ? 'bi-arrow-down-left-circle-fill' : 'bi-arrow-up-right-circle-fill'"></i>
+        </div>
+        <div>
+          <span class="voucher-eyebrow">Futane Agro Treasury & Bank Voucher</span>
+          <h3 class="voucher-title">Transaction Receipt #{{ selectedTxnForView.id }}</h3>
+        </div>
+      </div>
+      <button type="button" class="btn-voucher-close no-print" (click)="closeViewModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Voucher Body -->
+    <div class="voucher-body">
+      <!-- Amount Card -->
+      <div class="voucher-amount-card" [ngClass]="selectedTxnForView.transactionType === 'Credit' ? 'amount-credit' : 'amount-debit'">
+        <div class="amount-label">Voucher Value (INR)</div>
+        <div class="amount-value font-mono">
+          {{ selectedTxnForView.transactionType === 'Credit' ? '+' : '-' }}₹{{ selectedTxnForView.amount | number:'1.2-2' }}
+        </div>
+        <div class="amount-badge">
+          <i class="bi me-1" [ngClass]="selectedTxnForView.transactionType === 'Credit' ? 'bi-shield-check' : 'bi-dash-circle'"></i>
+          {{ selectedTxnForView.transactionType === 'Credit' ? 'CREDIT / INFLOW' : 'DEBIT / OUTFLOW' }}
+        </div>
+      </div>
+
+      <!-- Key Value Grid -->
+      <div class="voucher-grid">
+        <div class="voucher-field">
+          <span class="v-label">Accounting Date</span>
+          <strong class="v-val font-mono">{{ selectedTxnForView.transactionDate | indianDate }}</strong>
+        </div>
+        <div class="voucher-field">
+          <span class="v-label">Banking Reference / UTR</span>
+          <strong class="v-val font-mono">{{ selectedTxnForView.referenceNo || 'Direct Bank Advice' }}</strong>
+        </div>
+        <div class="voucher-field v-full">
+          <span class="v-label">Narration / Description</span>
+          <p class="v-val-narrative">{{ selectedTxnForView.description }}</p>
+        </div>
+        <div class="voucher-field">
+          <span class="v-label">Ledger Classification</span>
+          <span class="v-val">Commercial Banking & Treasury</span>
+        </div>
+        <div class="voucher-field">
+          <span class="v-label">Audit Verification</span>
+          <span class="v-val text-success fw-bold"><i class="bi bi-check2-all me-1"></i>Settled & Reconciled</span>
+        </div>
+      </div>
+
+      <!-- Official Signoff for Print -->
+      <div class="voucher-signoff-grid mt-4">
+        <div class="signoff-box">
+          <div class="line"></div>
+          <span>Cashier / Operator</span>
+        </div>
+        <div class="signoff-box">
+          <div class="line"></div>
+          <span>Accounts Manager</span>
+        </div>
+        <div class="signoff-box">
+          <div class="line"></div>
+          <span>Authorized Signatory</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="voucher-footer no-print">
+      <button type="button" class="btn-header-action btn-secondary" (click)="closeViewModal()">
+        Close
+      </button>
+      <button type="button" class="btn-header-action btn-primary ms-2" (click)="printBankVoucher()">
+        <i class="bi bi-printer-fill me-1"></i>Print Official Voucher
+      </button>
+    </div>
   </div>
 </div>

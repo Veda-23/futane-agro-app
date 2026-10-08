@@ -1,153 +1,185 @@
 <div class="transports-enterprise-container">
 
-  <!-- ── 1. UNIFIED BREADCRUMB & STABLE HEADER ────────────────────── -->
-  <div class="header-section-wrapper no-print">
-    <!-- Row 1a: Breadcrumbs -->
-    <div class="breadcrumb-nav">
-      <span class="breadcrumb-item"><i class="bi bi-house-door me-1"></i>Futane Agro ERP</span>
-      <span class="breadcrumb-separator">/</span>
-      <span class="breadcrumb-item">Supply Chain</span>
-      <span class="breadcrumb-separator">/</span>
-      <span class="breadcrumb-item active">Freight &amp; Logistics Transport Agencies</span>
-    </div>
+  <!-- ── 1. UNIFIED BREADCRUMB TRAIL ─────────────────────────────── -->
+  <div class="transports-breadcrumb-trail no-print">
+    <i class="bi bi-house breadcrumb-home-ico"></i>
+    <span>Futane Agro ERP</span>
+    <span class="crumb-separator">/</span>
+    <span>Supply Chain</span>
+    <span class="crumb-separator">/</span>
+    <span class="crumb-active">Freight &amp; Logistics Transport Agencies</span>
+  </div>
 
-    <!-- Row 1b: Stable Header with Title & Primary Actions -->
-    <div class="stable-page-header">
-      <div class="header-left">
-        <div class="header-icon-badge">
+  <!-- ── 2. MASTER PAGE HEADER CARD ── -->
+  <header class="transports-page-header no-print">
+    <!-- Top Row: Icon + Title + Count Pill on Left | Action Buttons on Right -->
+    <div class="header-primary-row">
+      <div class="header-left-col">
+        <div class="header-icon-box">
           <i class="bi bi-truck"></i>
         </div>
-        <div class="header-text-group">
+        <div class="header-titles">
           <div class="title-with-badge">
             <h1 class="header-main-title">Freight &amp; Logistics Transport Agencies</h1>
-            <span class="header-count-pill" *ngIf="totalTripsCount > 0">
-              {{ totalTripsCount }} Dispatches
-            </span>
+            <span class="header-count-pill" *ngIf="totalTripsCount > 0">{{ totalTripsCount }} Trips</span>
           </div>
-          <p class="header-desc-text">
-            Manage freight transport haulage trips, vehicle dispatch rentals, driver settlements and advance payments
-          </p>
         </div>
       </div>
 
+      <!-- Right-side actions -->
       <div class="header-right-actions">
-        <!-- Primary Action: Register Freight Trip -->
         <button type="button" 
-                class="btn btn-primary btn-action-primary" 
+                class="btn-header-action btn-header-secondary" 
+                (click)="loadData(true)" 
+                [disabled]="isLoading"
+                title="Reload transport records from server">
+          <i class="bi bi-arrow-clockwise" [class.spin-anim]="isLoading"></i>
+          <span>Refresh</span>
+        </button>
+
+        <button type="button" 
+                class="btn-header-action btn-header-secondary" 
+                (click)="exportCsv()" 
+                title="Export transports to CSV">
+          <i class="bi bi-download"></i>
+          <span>CSV</span>
+        </button>
+
+        <button type="button" 
+                class="btn-header-action btn-header-secondary" 
+                (click)="exportExcel()" 
+                title="Export transports to Excel">
+          <i class="bi bi-file-earmark-excel"></i>
+          <span>Excel</span>
+        </button>
+
+        <button type="button" 
+                class="btn-header-action btn-primary btn-header-primary" 
                 *ngIf="!isViewer()"
                 (click)="openAddDrawer()" 
                 title="Log vehicle haulage, driver rental and advance cash">
-          <i class="bi bi-truck me-1"></i>
-          <span>Register Freight Trip</span>
+          <i class="bi bi-truck"></i>
+          <span>+ Register Freight Trip</span>
         </button>
       </div>
     </div>
 
-    <!-- ── 2. SUBTABS CLASSIFICATION RIBBON ──────────────────────────── -->
-    <div class="subtabs-classification-bar">
-      <div class="subtabs-scroll-container">
-        <!-- All Trips -->
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="filterStatus === 'ALL'"
-                (click)="setSubtabStatus('ALL')">
-          <i class="bi bi-collection me-1"></i>
-          <span>All Haulage Trips</span>
-          <span class="tab-count-badge">{{ getSubtabCount('ALL') }}</span>
-        </button>
+    <!-- Bottom Row: Subtitle on Left | Live Formula Hint on Right -->
+    <div class="header-secondary-row">
+      <p class="header-subtitle">
+        Manage freight transport haulage trips, vehicle dispatch rentals, driver settlements and advance payments
+      </p>
+      <span class="header-formula-badge" title="Settlement Reconciliation Formula: Gross Freight - Advance Disbursed = Pending Balance">
+        <i class="bi bi-calculator me-1"></i>
+        <span>Gross Rent &minus; Advance Disbursed = Pending Settlement</span>
+      </span>
+    </div>
+  </header>
 
-        <!-- Settled / Cleared -->
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="filterStatus === 'SETTLED'"
-                (click)="setSubtabStatus('SETTLED')">
-          <i class="bi bi-check-circle-fill text-success me-1"></i>
-          <span>Settled / Paid in Full</span>
-          <span class="tab-count-badge">{{ getSubtabCount('SETTLED') }}</span>
-        </button>
+  <!-- ── 3. PILL SUBTABS NAVIGATION BAR ── -->
+  <div class="transports-subnav-bar no-print">
+    <div class="subnav-tabs-group" role="tablist">
+      <button type="button" 
+              role="tab"
+              class="subnav-tab-btn" 
+              [class.active]="filterStatus === 'ALL'"
+              (click)="setSubtabStatus('ALL')">
+        <i class="bi bi-collection"></i>
+        <span>All Haulage Trips</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('ALL') }}</span>
+      </button>
 
-        <!-- Balance Due -->
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="filterStatus === 'PENDING'"
-                (click)="setSubtabStatus('PENDING')">
-          <i class="bi bi-hourglass-split text-warning me-1"></i>
-          <span>Balance Due / Pending</span>
-          <span class="tab-count-badge">{{ getSubtabCount('PENDING') }}</span>
-        </button>
+      <button type="button" 
+              role="tab"
+              class="subnav-tab-btn" 
+              [class.active]="filterStatus === 'SETTLED'"
+              (click)="setSubtabStatus('SETTLED')">
+        <i class="bi bi-check-circle-fill text-success"></i>
+        <span>Settled / Paid in Full</span>
+        <span class="tab-badge-pill success">{{ getSubtabCount('SETTLED') }}</span>
+      </button>
 
-        <!-- Current Month Cycle Quick Filter -->
-        <button type="button" 
-                class="subtab-pill-btn quick-cycle-pill" 
-                [class.active]="isCurrentMonthFiltered()"
-                (click)="setCurrentMonthFilter()"
-                title="Toggle filter for current month's dispatch haulages">
-          <i class="bi bi-calendar2-month me-1"></i>
-          <span>Current Month Cycle</span>
-        </button>
-      </div>
+      <button type="button" 
+              role="tab"
+              class="subnav-tab-btn" 
+              [class.active]="filterStatus === 'PENDING'"
+              (click)="setSubtabStatus('PENDING')">
+        <i class="bi bi-hourglass-split text-warning"></i>
+        <span>Balance Due / Pending</span>
+        <span class="tab-badge-pill warning">{{ getSubtabCount('PENDING') }}</span>
+      </button>
+
+      <button type="button" 
+              role="tab"
+              class="subnav-tab-btn" 
+              [class.active]="isCurrentMonthFiltered()"
+              (click)="setCurrentMonthFilter()"
+              title="Toggle filter for current month's dispatch haulages">
+        <i class="bi bi-calendar2-month"></i>
+        <span>Current Month Cycle</span>
+      </button>
     </div>
   </div>
 
-  <!-- ── 3. 4-COLUMN LOGISTICS KPI TELEMETRY GRID ─────────────────── -->
+  <!-- ── 4. 5-CARD LOGISTICS KPI TELEMETRY GRID ── -->
   <section class="transports-kpi-grid no-print" aria-label="Logistics Metrics Summary">
-    <!-- Total Haulage Trips -->
-    <div class="kpi-card">
-      <div class="kpi-icon-badge kpi-blue">
+    <!-- Card 1: Total Haulage Trips -->
+    <div class="transport-kpi-card" (click)="setSubtabStatus('ALL')">
+      <div class="transport-kpi-icon kpi-blue">
         <i class="bi bi-truck"></i>
       </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Total Haulage Trips</span>
-        <div class="kpi-value font-mono">{{ totalTripsCount }} Dispatches</div>
-        <div class="kpi-subtext">
-          <span class="badge-tag tag-primary">Logged Trips</span>
-          <span class="kpi-subtext-muted">Vehicle dispatches</span>
-        </div>
+      <div class="transport-kpi-body">
+        <div class="transport-kpi-label">TOTAL HAULAGE TRIPS</div>
+        <div class="transport-kpi-value">{{ totalTripsCount }} <span class="unit-text">Trips</span></div>
+        <div class="transport-kpi-sub">All logged haulages</div>
       </div>
     </div>
 
-    <!-- Total Freight Value -->
-    <div class="kpi-card">
-      <div class="kpi-icon-badge kpi-emerald">
+    <!-- Card 2: Total Freight Value -->
+    <div class="transport-kpi-card">
+      <div class="transport-kpi-icon kpi-green">
         <i class="bi bi-cash-stack"></i>
       </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Total Freight Value</span>
-        <div class="kpi-value font-mono">₹{{ totalFreightAmount | number:'1.2-2' }}</div>
-        <div class="kpi-subtext">
-          <span class="badge-tag tag-success">Gross Rental</span>
-          <span class="kpi-subtext-muted">Contracted value</span>
-        </div>
+      <div class="transport-kpi-body">
+        <div class="transport-kpi-label">TOTAL FREIGHT VALUE</div>
+        <div class="transport-kpi-value font-mono">₹{{ totalFreightAmount | number:'1.0-0' }}</div>
+        <div class="transport-kpi-sub">Gross contracted rental</div>
       </div>
     </div>
 
-    <!-- Advance Disbursed -->
-    <div class="kpi-card">
-      <div class="kpi-icon-badge kpi-indigo">
+    <!-- Card 3: Advance Disbursed -->
+    <div class="transport-kpi-card">
+      <div class="transport-kpi-icon kpi-purple">
         <i class="bi bi-wallet2"></i>
       </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Advance Disbursed</span>
-        <div class="kpi-value font-mono">₹{{ totalAdvanceDisbursed | number:'1.2-2' }}</div>
-        <div class="kpi-subtext">
-          <span class="badge-tag tag-indigo">Driver Cash</span>
-          <span class="kpi-subtext-muted">Disbursed on trip</span>
-        </div>
+      <div class="transport-kpi-body">
+        <div class="transport-kpi-label">ADVANCE DISBURSED</div>
+        <div class="transport-kpi-value font-mono">₹{{ totalAdvanceDisbursed | number:'1.0-0' }}</div>
+        <div class="transport-kpi-sub">Driver cash disbursed</div>
       </div>
     </div>
 
-    <!-- Pending Trip Balance -->
-    <div class="kpi-card">
-      <div class="kpi-icon-badge kpi-amber">
+    <!-- Card 4: Pending Trip Balance -->
+    <div class="transport-kpi-card" (click)="setSubtabStatus('PENDING')">
+      <div class="transport-kpi-icon kpi-amber">
         <i class="bi bi-hourglass-split"></i>
       </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Pending Trip Balance</span>
-        <div class="kpi-value font-mono">₹{{ totalPendingBalance | number:'1.2-2' }}</div>
-        <div class="kpi-subtext">
-          <span class="badge-tag tag-warning">{{ pendingCount }} Awaiting</span>
-          <span class="kpi-subtext-muted">Settlement due</span>
-        </div>
+      <div class="transport-kpi-body">
+        <div class="transport-kpi-label">PENDING BALANCE</div>
+        <div class="transport-kpi-value font-mono" [class.text-warning]="totalPendingBalance > 0">₹{{ totalPendingBalance | number:'1.0-0' }}</div>
+        <div class="transport-kpi-sub">{{ pendingCount }} trips awaiting payment</div>
+      </div>
+    </div>
+
+    <!-- Card 5: Settled Trips -->
+    <div class="transport-kpi-card" (click)="setSubtabStatus('SETTLED')">
+      <div class="transport-kpi-icon kpi-green">
+        <i class="bi bi-check2-circle"></i>
+      </div>
+      <div class="transport-kpi-body">
+        <div class="transport-kpi-label">SETTLED TRIPS</div>
+        <div class="transport-kpi-value text-success">{{ settledCount }}</div>
+        <div class="transport-kpi-sub">{{ totalTripsCount > 0 ? (settledCount / totalTripsCount * 100 | number:'1.0-0') : 100 }}% paid in full</div>
       </div>
     </div>
   </section>
@@ -173,34 +205,75 @@
         </button>
       </div>
 
-      <!-- Month Filter -->
-      <div class="filter-select-wrap filter-select-month">
-        <select class="toolbar-select" [(ngModel)]="filterMonth" (change)="currentPage = 1" aria-label="Filter by month">
-          <option value="ALL">All Months</option>
-          <option *ngFor="let m of allMonths" [value]="m">{{ m }}</option>
-        </select>
-      </div>
+      <!-- Multi-Filter Popover Trigger (Single Filter Button) -->
+      <div class="filter-popover-wrapper" (click)="$event.stopPropagation()">
+        <button type="button" 
+                class="btn btn-secondary filter-trigger-btn" 
+                [class.active-filters]="activeFilterCount > 0"
+                (click)="showFilterPopover = !showFilterPopover" 
+                title="Open advanced haulage filters">
+          <i class="bi bi-funnel me-1"></i>
+          <span>Filters</span>
+          <span class="filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
+        </button>
 
-      <!-- Year Filter -->
-      <div class="filter-select-wrap filter-select-year">
-        <select class="toolbar-select" [(ngModel)]="filterYear" (change)="currentPage = 1" aria-label="Filter by year">
-          <option value="ALL">All Years</option>
-          <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
-        </select>
-      </div>
+        <!-- Filter Popover Panel -->
+        <div class="filter-popover-panel shadow-lg animate-fade-in" *ngIf="showFilterPopover">
+          <div class="popover-title-row">
+            <strong><i class="bi bi-sliders me-1"></i> Refine Haulage Trips</strong>
+            <button type="button" class="btn-text" (click)="resetFilters()">Reset All</button>
+          </div>
 
-      <!-- Driver Filter -->
-      <div class="filter-select-wrap filter-select-driver" style="min-width: 170px;">
-        <app-searchable-select
-          [items]="drivers"
-          bindLabel="driverName"
-          bindValue="id"
-          subLabelKey="mobile"
-          placeholder="All Drivers"
-          searchPlaceholder="Filter drivers..."
-          [(ngModel)]="filterDriver"
-          (change)="currentPage = 1">
-        </app-searchable-select>
+          <div class="popover-content-body">
+            <!-- Filter: Assigned Driver -->
+            <div class="filter-field-group">
+              <label>Assigned Driver</label>
+              <app-searchable-select
+                [items]="drivers"
+                bindLabel="driverName"
+                bindValue="id"
+                subLabelKey="mobile"
+                placeholder="All Drivers"
+                searchPlaceholder="Filter drivers..."
+                [(ngModel)]="filterDriver"
+                (change)="currentPage = 1">
+              </app-searchable-select>
+            </div>
+
+            <!-- Filter: Month -->
+            <div class="filter-field-group">
+              <label>Haulage Month</label>
+              <select class="filter-select" [(ngModel)]="filterMonth" (change)="currentPage = 1">
+                <option value="ALL">All Months</option>
+                <option *ngFor="let m of allMonths" [value]="m">{{ m }}</option>
+              </select>
+            </div>
+
+            <!-- Filter: Year -->
+            <div class="filter-field-group">
+              <label>Fiscal Year</label>
+              <select class="filter-select" [(ngModel)]="filterYear" (change)="currentPage = 1">
+                <option value="ALL">All Years</option>
+                <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+              </select>
+            </div>
+
+            <!-- Filter: Settlement Status -->
+            <div class="filter-field-group">
+              <label>Settlement Status</label>
+              <select class="filter-select" [(ngModel)]="filterStatus" (change)="currentPage = 1">
+                <option value="ALL">All Statuses</option>
+                <option value="SETTLED">Settled (Zero Due)</option>
+                <option value="PENDING">Pending Balance Due</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="popover-footer-row">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="showFilterPopover = false">Close</button>
+            <button type="button" class="btn btn-primary btn-sm" (click)="showFilterPopover = false; currentPage = 1">Apply Filters</button>
+          </div>
+        </div>
       </div>
 
       <!-- Reset Filters Trigger -->
@@ -214,6 +287,56 @@
     </div>
 
     <div class="toolbar-right-group">
+      <!-- Table Density Switcher -->
+      <div class="density-group" role="group" aria-label="Table Density">
+        <button type="button" 
+                class="density-btn" 
+                [class.active]="tableDensity === 'compact'" 
+                (click)="setDensity('compact')" 
+                title="Compact Density">
+          <i class="bi bi-view-list"></i>
+        </button>
+        <button type="button" 
+                class="density-btn" 
+                [class.active]="tableDensity === 'normal'" 
+                (click)="setDensity('normal')" 
+                title="Normal Density">
+          <i class="bi bi-distribute-vertical"></i>
+        </button>
+        <button type="button" 
+                class="density-btn" 
+                [class.active]="tableDensity === 'spacious'" 
+                (click)="setDensity('spacious')" 
+                title="Spacious Density">
+          <i class="bi bi-arrows-expand"></i>
+        </button>
+      </div>
+
+      <!-- Columns Visibility Dropdown -->
+      <div class="col-manager-dropdown-wrapper" (click)="$event.stopPropagation()">
+        <button type="button" 
+                class="btn btn-secondary btn-sm" 
+                (click)="toggleColDropdown('transports', $event)" 
+                title="Toggle Columns Visibility">
+          <i class="bi bi-layout-three-columns me-1"></i>
+          <span>Columns ({{ getVisibleColCount('transports') }})</span>
+        </button>
+        <div class="col-manager-popover shadow-lg animate-fade-in" *ngIf="showColDropdown['transports']">
+          <div class="popover-header">
+            <strong>Manage Columns</strong>
+            <button type="button" class="btn-text" (click)="resetColumns('transports')"><i class="bi bi-arrow-counterclockwise me-1"></i>Reset</button>
+          </div>
+          <div class="popover-body">
+            <label *ngFor="let col of getTableColumns('transports')" class="col-check-label">
+              <input type="checkbox" 
+                     [checked]="isColumnVisible('transports', col)" 
+                     (change)="toggleColumn('transports', col)">
+              <span>{{ col }}</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
       <!-- Quick navigation to Drivers Directory -->
       <button type="button" 
               class="btn btn-secondary btn-sm btn-drivers-nav" 
@@ -248,49 +371,6 @@
           <button type="button" class="export-item-btn" (click)="exportExcel()">
             <i class="bi bi-file-earmark-spreadsheet me-2 text-success"></i>Export to Excel (.xlsx)
           </button>
-        </div>
-      </div>
-
-      <!-- Table Density Switcher -->
-      <div class="density-group" role="group" aria-label="Table Density">
-        <button type="button" 
-                class="density-btn" 
-                [class.active]="tableDensity === 'compact'" 
-                (click)="setDensity('compact')" 
-                title="Compact Density">
-          <i class="bi bi-view-list"></i>
-        </button>
-        <button type="button" 
-                class="density-btn" 
-                [class.active]="tableDensity === 'normal'" 
-                (click)="setDensity('normal')" 
-                title="Normal Density">
-          <i class="bi bi-distribute-vertical"></i>
-        </button>
-        <button type="button" 
-                class="density-btn" 
-                [class.active]="tableDensity === 'spacious'" 
-                (click)="setDensity('spacious')" 
-                title="Spacious Density">
-          <i class="bi bi-arrows-expand"></i>
-        </button>
-      </div>
-
-      <!-- Columns Visibility Dropdown -->
-      <div class="columns-dropdown-wrap" (click)="$event.stopPropagation()">
-        <button type="button" 
-                class="btn btn-secondary btn-sm" 
-                (click)="toggleColDropdown('transports', $event)" 
-                title="Toggle Columns Visibility">
-          <i class="bi bi-layout-three-columns me-1"></i>Columns
-        </button>
-        <div class="columns-dropdown-menu animate-fade-in" *ngIf="showColDropdown['transports']">
-          <label *ngFor="let col of getTableColumns('transports')" class="column-checkbox-label">
-            <input type="checkbox" 
-                   [checked]="isColumnVisible('transports', col)" 
-                   (change)="toggleColumn('transports', col)">
-            <span>{{ col }}</span>
-          </label>
         </div>
       </div>
     </div>
@@ -328,7 +408,7 @@
       <!-- Data Table -->
       <div *ngIf="!isLoading && !hasError && filteredTransports.length > 0">
         <div class="table-container table-responsive">
-          <table class="enterprise-table" [ngClass]="'density-' + tableDensity" appResizableTable [tableId]="'transports_table'">
+          <table class="enterprise-table enterprise-transports-table" [ngClass]="'density-' + tableDensity" appResizableTable [tableId]="'transports_table'" aria-label="Freight Transport Haulage Registry">
             <thead>
               <tr>
                 <th *ngIf="isColumnVisible('transports', 'Trip Date')" (click)="setSort('date')" class="sortable-th col-date">
@@ -458,38 +538,50 @@
                 </td>
               </tr>
             </tbody>
+            <tfoot class="table-summary-tfoot" *ngIf="filteredTransports.length > 0">
+              <tr class="ledger-row">
+                <td *ngIf="isColumnVisible('transports', 'Trip Date')" class="tfoot-label col-date"><strong>TOTALS</strong></td>
+                <td *ngIf="isColumnVisible('transports', 'Vehicle Number')" class="col-truck"></td>
+                <td *ngIf="isColumnVisible('transports', 'Assigned Driver')" class="col-driver"><strong>{{ filteredTransports.length }} trips</strong></td>
+                <td *ngIf="isColumnVisible('transports', 'Freight Rent')" class="col-rent text-end font-mono">
+                  <strong>₹{{ totalFilteredRent | number:'1.2-2' }}</strong>
+                </td>
+                <td *ngIf="isColumnVisible('transports', 'Advance Paid')" class="col-advance text-end font-mono">
+                  <strong>₹{{ totalFilteredAdvance | number:'1.2-2' }}</strong>
+                </td>
+                <td *ngIf="isColumnVisible('transports', 'Balance Due')" class="col-balance text-end font-mono" [ngClass]="totalFilteredBalance <= 0 ? 'text-success' : 'text-warning'">
+                  <strong>₹{{ totalFilteredBalance | number:'1.2-2' }}</strong>
+                </td>
+                <td *ngIf="isColumnVisible('transports', 'Status')" class="col-status text-center"></td>
+                <td *ngIf="isColumnVisible('transports', 'Actions')" class="col-actions text-center"></td>
+              </tr>
+            </tfoot>
           </table>
         </div>
 
-        <!-- Pagination Bar -->
-        <div class="table-pagination-bar no-print">
-          <div class="pagination-left-wrap">
-            <span class="pagination-info">
-              Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['transports'] || 0) }} of {{ tableFilteredCounts['transports'] || 0 }} transport entries
-            </span>
-            <!-- Rows per page selector -->
-            <div class="page-size-selector">
-              <label for="pageSizeSelect">Per page:</label>
-              <select id="pageSizeSelect" [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
+        <!-- ── STANDARD PAGINATION FOOTER ── -->
+        <div class="erp-table-footer no-print">
+          <div class="erp-footer-info">
+            Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to
+            <strong>{{ Math.min(currentPage * pageSize, tableFilteredCounts['transports'] || 0) }}</strong> of
+            <strong>{{ tableFilteredCounts['transports'] || 0 }}</strong> transport entries
+          </div>
+          <div class="erp-footer-controls">
+            <div class="erp-rows-selector">
+              <span>Rows:</span>
+              <select class="erp-rows-select" [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
                 <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
               </select>
             </div>
-          </div>
-
-          <div class="pagination-controls">
-            <button type="button" 
-                    class="btn-page" 
-                    [disabled]="currentPage === 1" 
-                    (click)="currentPage = currentPage - 1">
-              <i class="bi bi-chevron-left me-1"></i>Previous
-            </button>
-            <span class="page-indicator font-mono">Page {{ currentPage }}</span>
-            <button type="button" 
-                    class="btn-page" 
-                    [disabled]="currentPage * pageSize >= (tableFilteredCounts['transports'] || 0)" 
-                    (click)="currentPage = currentPage + 1">
-              Next<i class="bi bi-chevron-right ms-1"></i>
-            </button>
+            <div class="erp-page-buttons">
+              <button type="button" class="erp-page-nav-btn" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
+                <i class="bi bi-chevron-left"></i> Prev
+              </button>
+              <span class="erp-page-counter">Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong></span>
+              <button type="button" class="erp-page-nav-btn" [disabled]="currentPage * pageSize >= (tableFilteredCounts['transports'] || 0)" (click)="currentPage = currentPage + 1">
+                Next <i class="bi bi-chevron-right"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -675,7 +767,10 @@
       </div>
 
       <!-- Fixed Drawer Footer -->
-      <div class="drawer-footer" style="justify-content: flex-end;">
+      <div class="drawer-footer">
+        <button type="button" class="btn btn-secondary btn-cancel-drawer" (click)="closeFormDrawer()">
+          Cancel
+        </button>
         <button type="submit" 
                 form="transportDrawerForm" 
                 class="btn btn-primary btn-save-drawer" 
@@ -684,6 +779,7 @@
           <span class="ms-1">{{ isEditing() ? 'Update Transport Record' : 'Register Freight Trip' }}</span>
         </button>
       </div>
+
     </div>
   </div>
 

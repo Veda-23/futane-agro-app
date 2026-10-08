@@ -3,78 +3,92 @@
 <!-- ============================================================ -->
 <div class="sales-screen-wrapper" (click)="closeFilterPopover(); showColDropdown = false">
 
-  <!-- 2. STABLE PROFESSIONAL PAGE HEADER -->
-  <header class="sales-page-header">
-    <div class="breadcrumb-trail" style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; width: 100%;">
-      <i class="bi bi-house" style="font-size: 12px; color: #94a3b8;"></i>
-      <span>Futane Agro ERP</span>
-      <span style="color: #cbd5e1;">/</span>
-      <span>Commercial Operations</span>
-      <span style="color: #cbd5e1;">/</span>
-      <span style="color: #0B47D4; font-weight: 700;">Sales Orders & Material Outward</span>
-    </div>
+  <!-- 1. BREADCRUMB TRAIL -->
+  <div class="sales-breadcrumb-trail no-print">
+    <i class="bi bi-house breadcrumb-home-ico"></i>
+    <span>Futane Agro ERP</span>
+    <span class="crumb-separator">/</span>
+    <span>Commercial Operations</span>
+    <span class="crumb-separator">/</span>
+    <span class="crumb-active">Sales Orders &amp; Material Outward</span>
+  </div>
 
-    <div class="header-left-col">
-      <div class="header-title-row">
+  <!-- 2. MASTER PAGE HEADER CARD -->
+  <header class="sales-page-header no-print">
+    <div class="header-primary-row">
+      <div class="header-left-col">
         <div class="header-icon-box">
           <i class="bi bi-cart-check-fill"></i>
         </div>
-        <div>
-          <h1 class="header-main-title">Sales Orders & Material Outward</h1>
-          <p class="header-subtitle">Commercial sales contracts, fruit crate dispatches, material outward tracking & revenue ledger</p>
+        <div class="header-titles">
+          <div class="title-with-badge">
+            <h1 class="header-main-title">Sales Orders &amp; Material Outward</h1>
+            <span class="header-count-pill">{{ getTotalOrdersCount() }} Orders</span>
+          </div>
         </div>
+      </div>
+
+      <!-- Right Header Actions -->
+      <div class="header-right-actions">
+        <button 
+          type="button" 
+          class="btn-header-action btn-header-secondary" 
+          (click)="loadData(true)" 
+          [disabled]="isRefreshing"
+          title="Reload fresh data from database"
+          aria-label="Refresh data">
+          <i class="bi bi-arrow-clockwise" [class.spin-anim]="isRefreshing"></i>
+          <span>Refresh</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="btn-header-action btn-header-secondary" 
+          (click)="exportToCsv()"
+          title="Export current view to CSV"
+          aria-label="Export to CSV">
+          <i class="bi bi-download"></i>
+          <span>CSV</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="btn-header-action btn-header-secondary" 
+          (click)="exportToExcel()"
+          title="Export ledger for Microsoft Excel"
+          aria-label="Export to Excel">
+          <i class="bi bi-file-earmark-excel"></i>
+          <span>Excel</span>
+        </button>
+
+        <!-- Primary Action: + New Sales Order -->
+        <button 
+          *ngIf="!isViewer()" 
+          type="button" 
+          class="btn-header-action btn-primary btn-header-primary" 
+          (click)="toggleFormVisibility()"
+          [title]="isFormVisible ? 'Close Registration Form' : 'Create new commercial sales order'"
+          aria-label="New Sales Order">
+          <i class="bi" [ngClass]="isFormVisible ? 'bi-dash-lg' : 'bi-plus-lg'"></i>
+          <span>{{ isFormVisible ? 'Close Form' : '+ New Sales Order' }}</span>
+        </button>
       </div>
     </div>
 
-    <!-- Header Actions -->
-    <div class="header-right-col">
-      <button 
-        type="button" 
-        class="btn-header-action btn-secondary" 
-        (click)="loadData(true)" 
-        [disabled]="isRefreshing"
-        title="Reload fresh data from database"
-        aria-label="Refresh data">
-        <i class="bi bi-arrow-clockwise" [class.spin-anim]="isRefreshing"></i>
-        <span>Refresh</span>
-      </button>
-
-      <button 
-        type="button" 
-        class="btn-header-action btn-secondary" 
-        (click)="exportToCsv()"
-        title="Export current view to CSV"
-        aria-label="Export to CSV">
-        <i class="bi bi-download"></i>
-        <span>CSV</span>
-      </button>
-
-      <button 
-        type="button" 
-        class="btn-header-action btn-secondary" 
-        (click)="exportToExcel()"
-        title="Export ledger for Microsoft Excel"
-        aria-label="Export to Excel">
-        <i class="bi bi-file-earmark-excel"></i>
-        <span>Excel</span>
-      </button>
-
-      <!-- Primary Action: + New Sales Order -->
-      <button 
-        *ngIf="!isViewer()" 
-        type="button" 
-        class="btn-header-action btn-primary" 
-        (click)="toggleFormVisibility()"
-        [title]="isFormVisible ? 'Close Registration Form' : 'Create new commercial sales order'"
-        aria-label="New Sales Order">
-        <i class="bi" [ngClass]="isFormVisible ? 'bi-dash-lg' : 'bi-plus-lg'"></i>
-        <span>{{ isFormVisible ? 'Close Form' : 'New Sales Order' }}</span>
-      </button>
+    <!-- Secondary Row: Subtitle + Live Formula Hint -->
+    <div class="header-secondary-row">
+      <p class="header-subtitle">
+        Commercial sales contracts, fruit crate dispatches, material outward tracking &amp; revenue ledger
+      </p>
+      <span class="header-formula-badge" title="Financial Formula: Commercial Revenue - Realized Collections = Outstanding Receivables">
+        <i class="bi bi-calculator me-1"></i>
+        <span>Total Revenue &minus; Realized Collections = Outstanding Receivables</span>
+      </span>
     </div>
   </header>
 
-  <!-- 2. SALES MODULE SUB-NAVIGATION (Tabs) -->
-  <div class="production-subnav-bar no-print">
+  <!-- 3. PILL SUBTABS NAVIGATION BAR -->
+  <div class="sales-subnav-bar no-print">
     <div class="subnav-tabs-group" role="tablist">
       <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'all'" (click)="setSubTab('all')">
         <i class="bi bi-cart-check"></i>
@@ -82,62 +96,87 @@
         <span class="tab-badge-pill">{{ salesList.length }}</span>
       </button>
       <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'pending'" (click)="setSubTab('pending')">
-        <i class="bi bi-clock-history text-warning"></i>
+        <i class="bi bi-clock-history"></i>
         <span>Pending Receivables</span>
         <span class="tab-badge-pill warning">{{ getPendingCount() }}</span>
       </button>
       <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'paid'" (click)="setSubTab('paid')">
-        <i class="bi bi-check2-circle text-success"></i>
+        <i class="bi bi-check2-circle"></i>
         <span>Settled / Cleared</span>
         <span class="tab-badge-pill success">{{ getPaidCount() }}</span>
       </button>
       <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'dispatched'" (click)="setSubTab('dispatched')">
-        <i class="bi bi-truck text-primary"></i>
+        <i class="bi bi-truck"></i>
         <span>Dispatched Outward</span>
         <span class="tab-badge-pill">{{ getDispatchedCount() }}</span>
       </button>
       <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'awaiting_outward'" (click)="setSubTab('awaiting_outward')">
-        <i class="bi bi-hourglass-split text-info"></i>
+        <i class="bi bi-hourglass-split"></i>
         <span>Awaiting Dispatch</span>
         <span class="tab-badge-pill">{{ getAwaitingOutwardCount() }}</span>
       </button>
     </div>
   </div>
 
-  <!-- 3. SALES TELEMETRY SUMMARY RIBBON (Exact Reference KPI Cards) -->
-  <section class="production-kpi-grid no-print" aria-label="Commercial Sales KPIs">
-    <div class="kpi-card total-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-cart-check"></i></div>
-      <div class="kpi-content">
-        <span class="kpi-label">TOTAL COMMERCIAL REVENUE</span>
-        <strong class="kpi-value">₹{{ getTotalSalesAmount() | number }} <span class="kpi-unit">INR</span></strong>
-        <span class="kpi-meta"><i class="bi bi-bag me-1"></i>Across {{ getTotalOrdersCount() }} sales orders</span>
+  <!-- 4. 5-COLUMN RESPONSIVE KPI TELEMETRY CARDS -->
+  <section class="sales-kpi-grid no-print" aria-label="Commercial Sales KPIs">
+    <!-- Card 1: Total Revenue -->
+    <div class="sales-kpi-card">
+      <div class="sales-kpi-icon kpi-blue">
+        <i class="bi bi-currency-rupee"></i>
+      </div>
+      <div class="sales-kpi-body">
+        <span class="sales-kpi-label">TOTAL COMMERCIAL REVENUE</span>
+        <div class="sales-kpi-value">₹{{ getTotalSalesAmount() | number }}</div>
+        <div class="sales-kpi-sub">Across {{ getTotalOrdersCount() }} sales orders</div>
       </div>
     </div>
-    <div class="kpi-card success-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-wallet2"></i></div>
-      <div class="kpi-content">
-        <span class="kpi-label">COLLECTED REVENUE</span>
-        <strong class="kpi-value text-success">₹{{ getTotalSalesPaid() | number }} <span class="kpi-unit">INR</span></strong>
-        <span class="kpi-meta"><i class="bi bi-check2-circle me-1"></i>Realized in bank/cash</span>
+
+    <!-- Card 2: Realized Collections -->
+    <div class="sales-kpi-card">
+      <div class="sales-kpi-icon kpi-green">
+        <i class="bi bi-wallet2"></i>
+      </div>
+      <div class="sales-kpi-body">
+        <span class="sales-kpi-label">COLLECTED REVENUE</span>
+        <div class="sales-kpi-value">₹{{ getTotalSalesPaid() | number }}</div>
+        <div class="sales-kpi-sub">Realized in bank/cash</div>
       </div>
     </div>
-    <div class="kpi-card danger-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-cash-stack"></i></div>
-      <div class="kpi-content">
-        <span class="kpi-label">OUTSTANDING RECEIVABLES</span>
-        <strong class="kpi-value text-danger">₹{{ getTotalSalesPending() | number }} <span class="kpi-unit">INR</span></strong>
-        <span class="kpi-meta"><i class="bi bi-exclamation-triangle me-1"></i>{{ getPendingCount() }} customer accounts</span>
+
+    <!-- Card 3: Outstanding Receivables -->
+    <div class="sales-kpi-card">
+      <div class="sales-kpi-icon kpi-amber">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+      <div class="sales-kpi-body">
+        <span class="sales-kpi-label">OUTSTANDING RECEIVABLES</span>
+        <div class="sales-kpi-value">₹{{ getTotalSalesPending() | number }}</div>
+        <div class="sales-kpi-sub">{{ getPendingCount() }} customer accounts</div>
       </div>
     </div>
-    <div class="kpi-card efficiency-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-graph-up-arrow"></i></div>
-      <div class="kpi-content">
-        <span class="kpi-label">COLLECTION EFFICIENCY</span>
-        <strong class="kpi-value text-primary">{{ getCollectionEfficiency() }}%</strong>
-        <div class="kpi-progress-bar">
-          <div class="kpi-progress-fill" [style.width.%]="getCollectionEfficiency()"></div>
-        </div>
+
+    <!-- Card 4: Total Crates Volume -->
+    <div class="sales-kpi-card">
+      <div class="sales-kpi-icon kpi-purple">
+        <i class="bi bi-box-seam"></i>
+      </div>
+      <div class="sales-kpi-body">
+        <span class="sales-kpi-label">TOTAL CRATES SOLD</span>
+        <div class="sales-kpi-value">{{ getTotalCratesSold() | number }}</div>
+        <div class="sales-kpi-sub">{{ getDispatchedCount() }} dispatched units</div>
+      </div>
+    </div>
+
+    <!-- Card 5: Collection Efficiency -->
+    <div class="sales-kpi-card">
+      <div class="sales-kpi-icon kpi-slate">
+        <i class="bi bi-pie-chart-fill"></i>
+      </div>
+      <div class="sales-kpi-body">
+        <span class="sales-kpi-label">COLLECTION EFFICIENCY</span>
+        <div class="sales-kpi-value">{{ getCollectionEfficiency() }}%</div>
+        <div class="sales-kpi-sub">Financial realization rate</div>
       </div>
     </div>
   </section>
@@ -581,7 +620,7 @@
       *ngIf="!isLoading && !hasError && getFilteredList().length > 0" 
       class="table-responsive-viewport" 
       [ngClass]="'density-' + tableDensity">
-      <table class="enterprise-sales-table" aria-label="Commercial Sales Orders Ledger">
+      <table class="enterprise-sales-table" appResizableTable [tableId]="'sales_table'" aria-label="Commercial Sales Orders Ledger">
         <thead>
           <tr>
             <!-- Checkbox column -->
@@ -594,7 +633,7 @@
             </th>
 
             <!-- Date -->
-            <th *ngIf="isColVisible('date')" class="sortable-th" (click)="setSort('date')">
+            <th *ngIf="isColVisible('date')" class="sortable-th th-date" (click)="setSort('date')">
               <div class="th-content">
                 <span>Date</span>
                 <i class="bi" [ngClass]="sortField === 'date' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
@@ -602,7 +641,7 @@
             </th>
 
             <!-- Order Ref -->
-            <th *ngIf="isColVisible('orderRef')" class="sortable-th" (click)="setSort('orderRef')">
+            <th *ngIf="isColVisible('orderRef')" class="sortable-th th-order-ref" (click)="setSort('orderRef')">
               <div class="th-content">
                 <span>Order Ref</span>
                 <i class="bi" [ngClass]="sortField === 'orderRef' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
@@ -610,7 +649,7 @@
             </th>
 
             <!-- Party / Customer -->
-            <th *ngIf="isColVisible('party')" class="sortable-th" (click)="setSort('party')">
+            <th *ngIf="isColVisible('party')" class="sortable-th th-party" (click)="setSort('party')">
               <div class="th-content">
                 <span>Customer / Party</span>
                 <i class="bi" [ngClass]="sortField === 'party' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
@@ -618,7 +657,7 @@
             </th>
 
             <!-- Crate Specs -->
-            <th *ngIf="isColVisible('crateSpecs')" class="sortable-th" (click)="setSort('crateType')">
+            <th *ngIf="isColVisible('crateSpecs')" class="sortable-th th-specs" (click)="setSort('crateType')">
               <div class="th-content">
                 <span>Crate Model & Material</span>
                 <i class="bi" [ngClass]="sortField === 'crateType' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
@@ -626,7 +665,7 @@
             </th>
 
             <!-- Quantity -->
-            <th *ngIf="isColVisible('quantity')" class="sortable-th th-right" (click)="setSort('quantity')">
+            <th *ngIf="isColVisible('quantity')" class="sortable-th th-right th-qty" (click)="setSort('quantity')">
               <div class="th-content th-right-content">
                 <span>Quantity</span>
                 <i class="bi" [ngClass]="sortField === 'quantity' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
@@ -634,7 +673,7 @@
             </th>
 
             <!-- Unit Rate -->
-            <th *ngIf="isColVisible('rate')" class="sortable-th th-right" (click)="setSort('rate')">
+            <th *ngIf="isColVisible('rate')" class="sortable-th th-right th-rate" (click)="setSort('rate')">
               <div class="th-content th-right-content">
                 <span>Unit Rate</span>
                 <i class="bi" [ngClass]="sortField === 'rate' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
@@ -642,7 +681,7 @@
             </th>
 
             <!-- Total Amount -->
-            <th *ngIf="isColVisible('totalAmount')" class="sortable-th th-right" (click)="setSort('totalAmount')">
+            <th *ngIf="isColVisible('totalAmount')" class="sortable-th th-right th-total" (click)="setSort('totalAmount')">
               <div class="th-content th-right-content">
                 <span>Total Value</span>
                 <i class="bi" [ngClass]="sortField === 'totalAmount' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
@@ -650,7 +689,7 @@
             </th>
 
             <!-- Paid -->
-            <th *ngIf="isColVisible('paid')" class="sortable-th th-right" (click)="setSort('paid')">
+            <th *ngIf="isColVisible('paid')" class="sortable-th th-right th-paid" (click)="setSort('paid')">
               <div class="th-content th-right-content">
                 <span>Paid (₹)</span>
                 <i class="bi" [ngClass]="sortField === 'paid' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
@@ -658,7 +697,7 @@
             </th>
 
             <!-- Balance Remaining -->
-            <th *ngIf="isColVisible('remaining')" class="sortable-th th-right" (click)="setSort('remaining')">
+            <th *ngIf="isColVisible('remaining')" class="sortable-th th-right th-remaining" (click)="setSort('remaining')">
               <div class="th-content th-right-content">
                 <span>Balance Due</span>
                 <i class="bi" [ngClass]="sortField === 'remaining' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
@@ -666,14 +705,14 @@
             </th>
 
             <!-- Outward Status -->
-            <th *ngIf="isColVisible('outwardStatus')" class="no-sort">
+            <th *ngIf="isColVisible('outwardStatus')" class="no-sort th-outward">
               <div class="th-content">
                 <span>Material Outward</span>
               </div>
             </th>
 
             <!-- Payment Status -->
-            <th *ngIf="isColVisible('status')" class="no-sort">
+            <th *ngIf="isColVisible('status')" class="no-sort th-status">
               <div class="th-content">
                 <span>Payment Status</span>
               </div>
@@ -740,27 +779,27 @@
             </td>
 
             <!-- Quantity -->
-            <td *ngIf="isColVisible('quantity')" class="cell-numeric th-right">
+            <td *ngIf="isColVisible('quantity')" class="cell-numeric cell-qty th-right">
               <span class="qty-pill">{{ sale.quantity | number }}</span>
             </td>
 
             <!-- Unit Rate -->
-            <td *ngIf="isColVisible('rate')" class="cell-numeric th-right text-muted-num">
+            <td *ngIf="isColVisible('rate')" class="cell-numeric cell-rate th-right text-muted-num">
               {{ sale.rate | inr }}
             </td>
 
             <!-- Total Amount -->
-            <td *ngIf="isColVisible('totalAmount')" class="cell-numeric th-right cell-bold">
+            <td *ngIf="isColVisible('totalAmount')" class="cell-numeric cell-total th-right cell-bold">
               {{ sale.totalAmount | inr }}
             </td>
 
             <!-- Paid -->
-            <td *ngIf="isColVisible('paid')" class="cell-numeric th-right text-success-num">
+            <td *ngIf="isColVisible('paid')" class="cell-numeric cell-paid th-right text-success-num">
               {{ sale.paid | inr }}
             </td>
 
             <!-- Remaining Due -->
-            <td *ngIf="isColVisible('remaining')" class="cell-numeric th-right">
+            <td *ngIf="isColVisible('remaining')" class="cell-numeric cell-remaining th-right">
               <span [class.text-danger-num]="(sale.remaining || 0) > 0" [class.text-success-num]="(sale.remaining || 0) <= 0">
                 {{ sale.remaining | inr }}
               </span>
@@ -792,6 +831,16 @@
             <!-- Actions Row -->
             <td *ngIf="isColVisible('actions')" class="cell-actions">
               <div class="row-actions-group">
+                <!-- View Order Dossier Action -->
+                <button 
+                  type="button" 
+                  class="btn-row-action btn-action-view" 
+                  (click)="openSalesDossier(sale)" 
+                  title="View commercial sales contract & order dossier"
+                  aria-label="View Order Dossier">
+                  <i class="bi bi-eye"></i>
+                </button>
+
                 <!-- Collect Payment Button (If remaining > 0) -->
                 <button 
                   *ngIf="!isViewer() && (sale.remaining || 0) > 0" 
@@ -854,107 +903,66 @@
         </tbody>
 
         <!-- DYNAMIC SUMMARY ACCOUNTING TOTALS TFOOT -->
-        <tfoot class="table-summary-tfoot">
+        <tfoot class="table-summary-tfoot" *ngIf="getFilteredList().length > 0">
           <tr>
             <td class="col-checkbox"></td>
-            <td *ngIf="isColVisible('date')"></td>
-            <td *ngIf="isColVisible('orderRef')"></td>
-            <td *ngIf="isColVisible('party')" class="tfoot-label">
-              <strong>SUBTOTAL ({{ getFilteredList().length }} Orders)</strong>
+            <td *ngIf="isColVisible('date')" class="cell-date tfoot-label"><strong>TOTALS</strong></td>
+            <td *ngIf="isColVisible('orderRef')" class="cell-order-ref"></td>
+            <td *ngIf="isColVisible('party')" class="cell-party">
+              <strong>{{ getFilteredList().length }} Orders</strong>
             </td>
-            <td *ngIf="isColVisible('crateSpecs')"></td>
+            <td *ngIf="isColVisible('crateSpecs')" class="cell-specs"></td>
             <!-- Quantity total -->
-            <td *ngIf="isColVisible('quantity')" class="cell-numeric th-right tfoot-val">
+            <td *ngIf="isColVisible('quantity')" class="cell-qty cell-numeric th-right tfoot-val">
               <strong>{{ getFilteredTotalQuantity() | number }}</strong>
             </td>
-            <td *ngIf="isColVisible('rate')"></td>
+            <td *ngIf="isColVisible('rate')" class="cell-rate"></td>
             <!-- Total amount -->
-            <td *ngIf="isColVisible('totalAmount')" class="cell-numeric th-right tfoot-val text-warning">
+            <td *ngIf="isColVisible('totalAmount')" class="cell-total cell-numeric th-right tfoot-val text-warning">
               <strong>{{ getFilteredTotalAmount() | inr }}</strong>
             </td>
             <!-- Paid total -->
-            <td *ngIf="isColVisible('paid')" class="cell-numeric th-right tfoot-val text-success">
+            <td *ngIf="isColVisible('paid')" class="cell-paid cell-numeric th-right tfoot-val text-success">
               <strong>{{ getFilteredTotalPaid() | inr }}</strong>
             </td>
             <!-- Balance due total -->
-            <td *ngIf="isColVisible('remaining')" class="cell-numeric th-right tfoot-val text-danger">
+            <td *ngIf="isColVisible('remaining')" class="cell-remaining cell-numeric th-right tfoot-val text-danger">
               <strong>{{ getFilteredTotalRemaining() | inr }}</strong>
             </td>
-            <td *ngIf="isColVisible('outwardStatus')">
+            <td *ngIf="isColVisible('outwardStatus')" class="cell-outward">
               <strong class="text-info">{{ getDispatchedCount() }}</strong> Dispatched
             </td>
-            <td *ngIf="isColVisible('status')"></td>
-            <td *ngIf="isColVisible('actions')"></td>
+            <td *ngIf="isColVisible('status')" class="cell-status"></td>
+            <td *ngIf="isColVisible('actions')" class="cell-actions"></td>
           </tr>
         </tfoot>
       </table>
     </div>
 
-    <!-- 8. PAGINATION CONTROLS -->
-    <div 
-      *ngIf="!isLoading && !hasError && getFilteredList().length > 0" 
-      class="table-pagination-bar">
-      <div class="pagination-info">
-        <span>
-          Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to 
-          <strong>{{ Math.min(currentPage * pageSize, getFilteredList().length) }}</strong> of 
-          <strong>{{ getFilteredList().length }}</strong> orders
-        </span>
-        <div class="page-size-selector">
-          <label for="pageSizeSelect">Rows per page:</label>
-          <select 
-            id="pageSizeSelect" 
-            [(ngModel)]="pageSize" 
-            (change)="currentPage = 1"
-            class="form-select-pagesize"
-            aria-label="Rows per page">
+    <!-- ── STANDARD PAGINATION FOOTER ── -->
+    <div class="erp-table-footer no-print"
+         *ngIf="!isLoading && !hasError && getFilteredList().length > 0">
+      <div class="erp-footer-info">
+        Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to
+        <strong>{{ Math.min(currentPage * pageSize, getFilteredList().length) }}</strong> of
+        <strong>{{ getFilteredList().length }}</strong> orders
+      </div>
+      <div class="erp-footer-controls">
+        <div class="erp-rows-selector">
+          <span>Rows:</span>
+          <select class="erp-rows-select" [(ngModel)]="pageSize" (change)="currentPage = 1" aria-label="Rows per page">
             <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
           </select>
         </div>
-      </div>
-
-      <div class="pagination-controls">
-        <button 
-          type="button" 
-          class="btn-page" 
-          [disabled]="currentPage === 1" 
-          (click)="currentPage = 1" 
-          title="First page"
-          aria-label="First page">
-          <i class="bi bi-chevron-double-left"></i>
-        </button>
-        <button 
-          type="button" 
-          class="btn-page" 
-          [disabled]="currentPage === 1" 
-          (click)="currentPage = currentPage - 1" 
-          title="Previous page"
-          aria-label="Previous page">
-          <i class="bi bi-chevron-left"></i> Previous
-        </button>
-
-        <span class="page-number-indicator">
-          Page <strong>{{ currentPage }}</strong> of <strong>{{ getTotalPages() }}</strong>
-        </span>
-
-        <button 
-          type="button" 
-          class="btn-page" 
-          [disabled]="currentPage >= getTotalPages()" 
-          (click)="currentPage = currentPage + 1" 
-          title="Next page"
-          aria-label="Next page">
-          Next <i class="bi bi-chevron-right"></i>
-        </button>
-        <button 
-          type="button" 
-          class="btn-page" 
-          [disabled]="currentPage >= getTotalPages()" 
-          (click)="currentPage = getTotalPages()" 
-          title="Last page"
-          aria-label="Last page">
-          <i class="bi bi-chevron-double-right"></i>
-        </button>
+        <div class="erp-page-buttons">
+          <button type="button" class="erp-page-nav-btn" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
+            <i class="bi bi-chevron-left"></i> Prev
+          </button>
+          <span class="erp-page-counter">Page <strong>{{ currentPage }}</strong> of <strong>{{ getTotalPages() }}</strong></span>
+          <button type="button" class="erp-page-nav-btn" [disabled]="currentPage >= getTotalPages()" (click)="currentPage = currentPage + 1">
+            Next <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
       </div>
     </div>
   </section>
@@ -1233,6 +1241,164 @@
         [disabled]="!outwardForm.vehicleNumber || !outwardForm.driverName || isViewer()">
         <i class="bi bi-truck me-1"></i> Confirm Material Outward
       </button>
+    </div>
+  </div>
+
+  <!-- 9. OFFICIAL COMMERCIAL SALES CONTRACT & ORDER DOSSIER MODAL -->
+  <div class="sales-dossier-overlay no-print-backdrop" *ngIf="showSalesDossierModal && selectedSaleForDossier" (click)="closeSalesDossier()">
+    <div class="sales-dossier-dialog animate-scale-up" (click)="$event.stopPropagation()">
+      <!-- Dossier Header Bar -->
+      <div class="dossier-top-bar no-print">
+        <div class="dossier-top-title">
+          <i class="bi bi-cart-check-fill text-primary fs-5"></i>
+          <div>
+            <h3 class="dossier-heading">Commercial Sales Contract &amp; Order Dossier</h3>
+            <span class="dossier-subheading">Contract Order #{{ selectedSaleForDossier.saleId || selectedSaleForDossier.id }} &bull; Enterprise Certified</span>
+          </div>
+        </div>
+        <div class="dossier-top-actions">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="printSalesDossier()">
+            <i class="bi bi-printer me-1"></i> Print Order Dossier
+          </button>
+          <button type="button" class="btn-action-icon ms-2" (click)="closeSalesDossier()" title="Close">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Sales Sheet -->
+      <div class="sales-printable-sheet">
+        <!-- Letterhead -->
+        <div class="letterhead-header">
+          <div class="letterhead-brand">
+            <img src="assets/logo.svg" alt="Futane Agro" class="letterhead-logo" (error)="$any($event.target).style.display='none'">
+            <div>
+              <h2 class="company-name">FUTANE AGRO INDUSTRIES PVT. LTD.</h2>
+              <p class="company-sub">Industrial Packaging &amp; Agricultural Crates Manufacturing Division</p>
+              <p class="company-tax">Gate No 144, Hadapsar Industrial Area, Pune - 411028 | GSTIN: 27AAACF2920A1ZX | State: 27 (Maharashtra)</p>
+            </div>
+          </div>
+          <div class="letterhead-badge">
+            <span class="challan-badge-title">COMMERCIAL SALES CONTRACT</span>
+            <span class="challan-badge-rule">Section 31 - CGST Compliance</span>
+            <span class="challan-doc-no font-mono">ORDER #{{ selectedSaleForDossier.saleId || selectedSaleForDossier.id }}</span>
+          </div>
+        </div>
+
+        <div class="dossier-divider"></div>
+
+        <!-- Telemetry Metadata Grid -->
+        <div class="dossier-meta-grid">
+          <div class="meta-card">
+            <span class="meta-label">CONTRACT DATE</span>
+            <span class="meta-value font-mono">{{ selectedSaleForDossier.date | indianDate }}</span>
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">ORDER REFERENCE</span>
+            <span class="meta-value font-mono text-primary fw-bold">#{{ selectedSaleForDossier.saleId || selectedSaleForDossier.id }}</span>
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">SETTLEMENT STATUS</span>
+            <span class="meta-value" [ngClass]="(selectedSaleForDossier.remaining || 0) <= 0 ? 'text-success fw-bold' : 'text-warning fw-bold'">
+              {{ (selectedSaleForDossier.remaining || 0) <= 0 ? 'SETTLED IN FULL' : 'PAYMENT DUE' }}
+            </span>
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">DISPATCH STATUS</span>
+            <span class="meta-value" [ngClass]="isDispatched(selectedSaleForDossier) ? 'text-info fw-bold' : 'text-secondary'">
+              {{ isDispatched(selectedSaleForDossier) ? 'DISPATCHED' : 'READY FOR OUTWARD' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Customer & Commercial Partner Card -->
+        <div class="customer-info-card">
+          <div class="info-block">
+            <span class="block-title"><i class="bi bi-building me-1"></i>COMMERCIAL BUYER / CLIENT</span>
+            <h4 class="consignee-name">{{ selectedSaleForDossier.party?.partyName || 'Customer ID: ' + (selectedSaleForDossier.partyId || selectedSaleForDossier.id) }}</h4>
+            <p class="consignee-address">
+              <i class="bi bi-geo-alt me-1 text-muted"></i>
+              {{ selectedSaleForDossier.party?.city || 'Pune' }}{{ selectedSaleForDossier.party?.state ? ', ' + selectedSaleForDossier.party?.state : ', Maharashtra' }}
+            </p>
+          </div>
+          <div class="info-block text-end">
+            <span class="block-title"><i class="bi bi-patch-check me-1"></i>BUYER GSTIN</span>
+            <h4 class="order-ref font-mono">{{ selectedSaleForDossier.party?.gstNumber || 'UNREGISTERED' }}</h4>
+            <p class="order-date">Payment Terms: 30 Days Commercial Credit</p>
+          </div>
+        </div>
+
+        <!-- Itemized Commercial Specifications Table -->
+        <table class="dossier-items-table">
+          <thead>
+            <tr>
+              <th style="width: 6%;">#</th>
+              <th>Product Specification</th>
+              <th style="width: 15%; text-align: center;">Material</th>
+              <th style="width: 15%; text-align: right;">Quantity</th>
+              <th style="width: 16%; text-align: right;">Unit Rate (₹)</th>
+              <th style="width: 18%; text-align: right;">Total Value (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-center font-mono">01</td>
+              <td>
+                <strong>{{ selectedSaleForDossier.crateType || 'Heavy Duty Agricultural Crate' }}</strong>
+                <div class="item-sub">Industrial grade injection-molded reusable agricultural storage crate</div>
+              </td>
+              <td class="text-center font-mono">{{ selectedSaleForDossier.crateMaterial || 'HDPE Polymer' }}</td>
+              <td class="text-end font-mono fs-6 fw-bold">{{ selectedSaleForDossier.quantity | number }} NOS</td>
+              <td class="text-end font-mono">{{ selectedSaleForDossier.rate | inr }}</td>
+              <td class="text-end font-mono fs-6 fw-bold text-primary">{{ selectedSaleForDossier.totalAmount | inr }}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="summary-tfoot-row">
+              <td colspan="4" class="text-end fw-bold">TOTAL COMMERCIAL VALUE:</td>
+              <td colspan="2" class="text-end font-mono fs-5 fw-bold text-primary">{{ selectedSaleForDossier.totalAmount | inr }}</td>
+            </tr>
+            <tr class="summary-tfoot-row">
+              <td colspan="4" class="text-end fw-bold text-success">AMOUNT PAID / ADVANCE:</td>
+              <td colspan="2" class="text-end font-mono fs-6 fw-bold text-success">{{ selectedSaleForDossier.paid | inr }}</td>
+            </tr>
+            <tr class="summary-tfoot-row">
+              <td colspan="4" class="text-end fw-bold" [ngClass]="(selectedSaleForDossier.remaining || 0) > 0 ? 'text-danger' : 'text-success'">OUTSTANDING BALANCE DUE:</td>
+              <td colspan="2" class="text-end font-mono fs-5 fw-bold" [ngClass]="(selectedSaleForDossier.remaining || 0) > 0 ? 'text-danger' : 'text-success'">
+                {{ selectedSaleForDossier.remaining | inr }}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <!-- Signatures & Official Corporate Seal -->
+        <div class="dossier-signoff-row">
+          <div class="signoff-box">
+            <div class="sign-line"></div>
+            <span class="sign-title">Prepared By (Sales Officer)</span>
+          </div>
+          <div class="signoff-box">
+            <div class="sign-line"></div>
+            <span class="sign-title">Buyer's Authorized Acceptance</span>
+          </div>
+          <div class="signoff-box official-seal-box">
+            <div class="corporate-seal">
+              <div class="seal-inner">
+                <i class="bi bi-shield-check seal-icon"></i>
+                <span class="seal-brand">FUTANE AGRO</span>
+                <span class="seal-dept">COMMERCIAL</span>
+                <span class="seal-status">AUTHENTICATED</span>
+              </div>
+            </div>
+            <span class="sign-title mt-1">Futane Agro Industries Corporate Seal</span>
+          </div>
+        </div>
+
+        <div class="challan-footer-note">
+          <span>This commercial sales contract record is generated by Futane Agro ERP and forms a legally binding sales agreement.</span>
+          <span class="font-mono">CONTRACT-REF-{{ selectedSaleForDossier.saleId || selectedSaleForDossier.id }}</span>
+        </div>
+      </div>
     </div>
   </div>
 

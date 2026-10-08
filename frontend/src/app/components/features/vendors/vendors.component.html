@@ -1,199 +1,198 @@
 <div class="vendors-enterprise-container">
 
-  <!-- ── 1. UNIFIED BREADCRUMB & STABLE HEADER ────────────────────── -->
-  <div class="header-section-wrapper no-print">
-    <div class="breadcrumb-nav">
-      <span class="breadcrumb-item"><i class="bi bi-house-door me-1"></i>Futane Agro ERP</span>
-      <span class="breadcrumb-separator">/</span>
-      <span class="breadcrumb-item">Procurement & Supply Chain</span>
-      <span class="breadcrumb-separator">/</span>
-      <span class="breadcrumb-item active">Polymer Suppliers & Vendor Directory</span>
-    </div>
+  <!-- ── 1. UNIFIED BREADCRUMB (OUTSIDE CARD) ────────────────────── -->
+  <div class="breadcrumb-trail vendors-breadcrumb-trail no-print">
+    <i class="bi bi-house me-1"></i>
+    <span>Futane Agro ERP</span>
+    <span class="sep">/</span>
+    <span>Procurement &amp; Supply Chain</span>
+    <span class="sep">/</span>
+    <span class="active">Polymer Suppliers &amp; Vendor Directory</span>
+  </div>
 
-    <div class="stable-page-header">
-      <div class="header-left">
-        <div class="header-icon-badge">
+  <!-- ── 2. MASTER PAGE HEADER CARD ── -->
+  <header class="vendors-page-header no-print">
+    <!-- Top Row: Icon + Title + Count Pill on Left | Action Buttons on Right -->
+    <div class="header-primary-row">
+      <div class="header-left-col">
+        <div class="header-icon-box">
           <i class="bi bi-shop"></i>
         </div>
-        <div class="header-text-group">
-          <h1 class="header-main-title">Polymer Suppliers & Vendor Directory</h1>
-          <p class="header-desc-text">Approved raw polymer resin suppliers, packaging partners, GSTIN compliance & procurement commercial linkages</p>
+        <div class="header-titles">
+          <div class="title-with-badge">
+            <h1 class="header-main-title">Polymer Suppliers &amp; Vendor Directory</h1>
+            <span class="header-count-pill">{{ totalVendorsCount }} Vendors</span>
+          </div>
         </div>
       </div>
 
+      <!-- Right-side actions -->
       <div class="header-right-actions">
-        <!-- Refresh Button -->
-        <button type="button" class="btn btn-secondary btn-action-compact" (click)="loadData(true)" title="Refresh supplier records">
-          <i class="bi bi-arrow-clockwise me-1" [class.spin-anim]="isLoading"></i>
-          <span class="btn-label-desktop">Refresh</span>
+        <button type="button" class="btn-header-action btn-header-secondary" (click)="loadData(true)" [disabled]="isLoading" title="Refresh supplier records">
+          <i class="bi bi-arrow-clockwise" [class.spin-anim]="isLoading"></i>
+          <span>Refresh</span>
         </button>
 
-        <!-- Consolidated Export Dropdown -->
-        <div class="export-dropdown-wrapper" (click)="$event.stopPropagation()">
-          <button type="button" class="btn btn-secondary btn-action-compact" (click)="toggleExportDropdown()" title="Export vendor directory">
-            <i class="bi bi-download me-1"></i>
-            <span>Export ▾</span>
-          </button>
-          <div class="export-menu shadow-lg animate-fade-in" *ngIf="showExportDropdown">
-            <button type="button" class="export-menu-item" (click)="exportTableToCSV()">
-              <i class="bi bi-file-earmark-spreadsheet text-success me-2"></i>Export CSV (.csv)
-            </button>
-            <button type="button" class="export-menu-item" (click)="exportTableToExcel()">
-              <i class="bi bi-file-earmark-excel text-primary me-2"></i>Export Excel (.xlsx)
-            </button>
-          </div>
-        </div>
+        <button type="button" class="btn-header-action btn-header-secondary" (click)="exportTableToCSV()" title="Export vendor directory to CSV">
+          <i class="bi bi-download"></i>
+          <span>CSV</span>
+        </button>
 
-        <!-- Primary Action: Register Supplier -->
+        <button type="button" class="btn-header-action btn-header-secondary" (click)="exportTableToExcel()" title="Export vendor directory for Microsoft Excel">
+          <i class="bi bi-file-earmark-excel"></i>
+          <span>Excel</span>
+        </button>
+
         <button type="button" 
-                class="btn btn-primary btn-action-primary" 
+                class="btn-header-action btn-primary btn-header-primary" 
                 *ngIf="!isViewer()"
                 (click)="toggleAddForm()" 
                 [title]="isAddFormOpen ? 'Close registration form' : 'Register new vendor / supplier'">
           <i class="bi" [ngClass]="isAddFormOpen ? 'bi-x-lg' : 'bi-plus-lg'"></i>
-          <span>{{ isAddFormOpen ? 'Close Form' : 'Register Supplier' }}</span>
+          <span>{{ isAddFormOpen ? 'Close Form' : '+ Register Supplier' }}</span>
         </button>
       </div>
     </div>
 
-    <!-- ── 2. SUBTABS CLASSIFICATION RIBBON ──────────────────────────── -->
-    <div class="subtabs-classification-bar">
-      <div class="subtabs-scroll-container">
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="selectedSubtab === 'all'"
-                (click)="setSubtab('all')">
-          <i class="bi bi-grid-fill me-1"></i>
-          <span>All Suppliers</span>
-          <span class="tab-count-badge">{{ getSubtabCount('all') }}</span>
-        </button>
+    <!-- Bottom Row: Subtitle on Left | Live Formula Hint on Right -->
+    <div class="header-secondary-row">
+      <p class="header-subtitle">
+        Approved raw polymer resin suppliers, packaging partners, GSTIN compliance &amp; procurement commercial linkages
+      </p>
+      <span class="header-formula-badge" title="Compliance Ratio: Verified GSTIN Vendors / Total Vendors">
+        <i class="bi bi-calculator me-1"></i>
+        <span>GST Compliance: {{ gstCompliancePercentage }}% ({{ gstRegisteredCount }}/{{ totalVendorsCount }})</span>
+      </span>
+    </div>
+  </header>
 
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="selectedSubtab === 'gst'"
-                (click)="setSubtab('gst')">
-          <i class="bi bi-patch-check-fill text-success me-1"></i>
-          <span>Verified GSTIN</span>
-          <span class="tab-count-badge">{{ getSubtabCount('gst') }}</span>
-        </button>
+  <!-- ── 3. PILL SUBTABS NAVIGATION BAR ── -->
+  <div class="vendors-subnav-bar no-print">
+    <div class="subnav-tabs-group" role="tablist">
+      <button type="button" 
+              role="tab"
+              class="subnav-tab-btn" 
+              [class.active]="selectedSubtab === 'all'"
+              (click)="setSubtab('all')">
+        <i class="bi bi-grid-fill"></i>
+        <span>All Suppliers</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('all') }}</span>
+      </button>
 
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="selectedSubtab === 'polymer'"
-                (click)="setSubtab('polymer')">
-          <i class="bi bi-boxes text-primary me-1"></i>
-          <span>Polymer & Resin</span>
-          <span class="tab-count-badge">{{ getSubtabCount('polymer') }}</span>
-        </button>
+      <button type="button" 
+              role="tab"
+              class="subnav-tab-btn" 
+              [class.active]="selectedSubtab === 'gst'"
+              (click)="setSubtab('gst')">
+        <i class="bi bi-patch-check-fill text-success"></i>
+        <span>Verified GSTIN</span>
+        <span class="tab-badge-pill success">{{ getSubtabCount('gst') }}</span>
+      </button>
 
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="selectedSubtab === 'packaging'"
-                (click)="setSubtab('packaging')">
-          <i class="bi bi-box-seam text-info me-1"></i>
-          <span>Packaging & Crates</span>
-          <span class="tab-count-badge">{{ getSubtabCount('packaging') }}</span>
-        </button>
+      <button type="button" 
+              role="tab"
+              class="subnav-tab-btn" 
+              [class.active]="selectedSubtab === 'polymer'"
+              (click)="setSubtab('polymer')">
+        <i class="bi bi-boxes text-primary"></i>
+        <span>Polymer &amp; Resin</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('polymer') }}</span>
+      </button>
 
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="selectedSubtab === 'additives'"
-                (click)="setSubtab('additives')">
-          <i class="bi bi-palette-fill text-warning me-1"></i>
-          <span>Color & Additives</span>
-          <span class="tab-count-badge">{{ getSubtabCount('additives') }}</span>
-        </button>
+      <button type="button" 
+              role="tab"
+              class="subnav-tab-btn" 
+              [class.active]="selectedSubtab === 'packaging'"
+              (click)="setSubtab('packaging')">
+        <i class="bi bi-box-seam text-info"></i>
+        <span>Packaging &amp; Crates</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('packaging') }}</span>
+      </button>
 
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="selectedSubtab === 'unregistered'"
-                (click)="setSubtab('unregistered')">
-          <i class="bi bi-exclamation-triangle-fill text-secondary me-1"></i>
-          <span>Unregistered / Direct</span>
-          <span class="tab-count-badge">{{ getSubtabCount('unregistered') }}</span>
-        </button>
-      </div>
+      <button type="button" 
+              role="tab"
+              class="subnav-tab-btn" 
+              [class.active]="selectedSubtab === 'additives'"
+              (click)="setSubtab('additives')">
+        <i class="bi bi-palette-fill text-warning"></i>
+        <span>Color &amp; Additives</span>
+        <span class="tab-badge-pill warning">{{ getSubtabCount('additives') }}</span>
+      </button>
+
+      <button type="button" 
+              role="tab"
+              class="subnav-tab-btn" 
+              [class.active]="selectedSubtab === 'unregistered'"
+              (click)="setSubtab('unregistered')">
+        <i class="bi bi-exclamation-triangle-fill text-secondary"></i>
+        <span>Unregistered / Direct</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('unregistered') }}</span>
+      </button>
     </div>
   </div>
 
-  <!-- ── 3. 5-CARD TELEMETRY RIBBON ─────────────────────────────────── -->
-  <div class="telemetry-ribbon-grid no-print">
+  <!-- ── 4. 5-CARD RESPONSIVE KPI TELEMETRY GRID ── -->
+  <section class="vendors-kpi-grid no-print" aria-label="Vendors Key Performance Indicators">
     <!-- Card 1: Total Approved Suppliers -->
-    <div class="telemetry-card">
-      <div class="telemetry-icon-box bg-blue-light text-primary">
+    <div class="vendor-kpi-card" (click)="setSubtab('all')">
+      <div class="vendor-kpi-icon kpi-blue">
         <i class="bi bi-building-check"></i>
       </div>
-      <div class="telemetry-body">
-        <span class="telemetry-label">Approved Suppliers</span>
-        <div class="telemetry-val-group">
-          <span class="telemetry-value">{{ totalVendorsCount }}</span>
-          <span class="telemetry-unit">Vendors</span>
-        </div>
-        <span class="telemetry-subtext">Active Master Registry</span>
+      <div class="vendor-kpi-body">
+        <div class="vendor-kpi-label">APPROVED SUPPLIERS</div>
+        <div class="vendor-kpi-value">{{ totalVendorsCount }}</div>
+        <div class="vendor-kpi-sub">Active master registry</div>
       </div>
     </div>
 
     <!-- Card 2: GSTIN Compliance -->
-    <div class="telemetry-card">
-      <div class="telemetry-icon-box bg-green-light text-success">
+    <div class="vendor-kpi-card" (click)="setSubtab('gst')">
+      <div class="vendor-kpi-icon kpi-green">
         <i class="bi bi-shield-lock-fill"></i>
       </div>
-      <div class="telemetry-body">
-        <span class="telemetry-label">GST Compliance</span>
-        <div class="telemetry-val-group">
-          <span class="telemetry-value text-success">{{ gstCompliancePercentage }}%</span>
-          <span class="telemetry-unit">({{ gstRegisteredCount }}/{{ totalVendorsCount }})</span>
-        </div>
-        <div class="telemetry-progress-track">
-          <div class="telemetry-progress-fill bg-success" [style.width.%]="gstCompliancePercentage"></div>
-        </div>
+      <div class="vendor-kpi-body">
+        <div class="vendor-kpi-label">GST COMPLIANCE</div>
+        <div class="vendor-kpi-value text-success">{{ gstCompliancePercentage }}%</div>
+        <div class="vendor-kpi-sub">{{ gstRegisteredCount }} of {{ totalVendorsCount }} compliant</div>
       </div>
     </div>
 
     <!-- Card 3: Active Procuring Partners -->
-    <div class="telemetry-card">
-      <div class="telemetry-icon-box bg-indigo-light text-indigo">
+    <div class="vendor-kpi-card">
+      <div class="vendor-kpi-icon kpi-purple">
         <i class="bi bi-truck-front-fill"></i>
       </div>
-      <div class="telemetry-body">
-        <span class="telemetry-label">Active Partners</span>
-        <div class="telemetry-val-group">
-          <span class="telemetry-value text-indigo">{{ activeSuppliersCount }}</span>
-          <span class="telemetry-unit">Vendors</span>
-        </div>
-        <span class="telemetry-subtext">Supplied Material Batches</span>
+      <div class="vendor-kpi-body">
+        <div class="vendor-kpi-label">ACTIVE PARTNERS</div>
+        <div class="vendor-kpi-value">{{ activeSuppliersCount }}</div>
+        <div class="vendor-kpi-sub">Supplied material batches</div>
       </div>
     </div>
 
     <!-- Card 4: Total Procured Volume -->
-    <div class="telemetry-card">
-      <div class="telemetry-icon-box bg-amber-light text-warning">
+    <div class="vendor-kpi-card">
+      <div class="vendor-kpi-icon kpi-amber">
         <i class="bi bi-boxes"></i>
       </div>
-      <div class="telemetry-body">
-        <span class="telemetry-label">Procured Volume</span>
-        <div class="telemetry-val-group">
-          <span class="telemetry-value">{{ totalProcurementVolumeKg | number:'1.0-0' }}</span>
-          <span class="telemetry-unit">kg</span>
-        </div>
-        <span class="telemetry-subtext">Raw Polymers & Additives</span>
+      <div class="vendor-kpi-body">
+        <div class="vendor-kpi-label">PROCURED VOLUME</div>
+        <div class="vendor-kpi-value font-mono">{{ totalProcurementVolumeKg | number:'1.0-0' }} <span class="unit-text">kg</span></div>
+        <div class="vendor-kpi-sub">{{ (totalProcurementVolumeKg / 1000) | number:'1.1-2' }} MT polymer</div>
       </div>
     </div>
 
     <!-- Card 5: Cumulative Commercial Value -->
-    <div class="telemetry-card">
-      <div class="telemetry-icon-box bg-emerald-light text-emerald">
+    <div class="vendor-kpi-card">
+      <div class="vendor-kpi-icon kpi-green">
         <i class="bi bi-currency-rupee"></i>
       </div>
-      <div class="telemetry-body">
-        <span class="telemetry-label">Procurement Value</span>
-        <div class="telemetry-val-group">
-          <span class="telemetry-value text-emerald">₹{{ totalProcurementSpend | number:'1.0-0' }}</span>
-        </div>
-        <span class="telemetry-subtext">Total Linked Supplier Spend</span>
+      <div class="vendor-kpi-body">
+        <div class="vendor-kpi-label">PROCUREMENT VALUE</div>
+        <div class="vendor-kpi-value font-mono">₹{{ totalProcurementSpend | number:'1.0-0' }}</div>
+        <div class="vendor-kpi-sub">Total linked supplier spend</div>
       </div>
     </div>
-  </div>
+  </section>
 
   <!-- ── 4. SLIDE-OUT DRAWER FOR SUPPLIER REGISTRATION ────────────── -->
   <div class="erp-drawer-overlay" *ngIf="isAddFormOpen && !isViewer()" (click)="cancelEdit()"></div>
@@ -286,14 +285,18 @@
                     name="address" 
                     [(ngModel)]="vendorForm.address"></textarea>
         </div>
-
-        <div class="d-flex gap-2 mt-2" style="justify-content: flex-end;">
-          <button type="submit" class="btn w-100" [ngClass]="editingVendorId ? 'btn-warning' : 'btn-primary'">
-            <i class="bi me-2" [ngClass]="editingVendorId ? 'bi-check2-circle' : 'bi-plus-lg'"></i>
-            {{ editingVendorId ? 'Update Profile' : ('btn.save' | translate:currentLang) }}
-          </button>
-        </div>
       </form>
+    </div>
+
+    <!-- Pinned Docked Modal Action Footer -->
+    <div class="erp-drawer-footer">
+      <button type="button" class="btn btn-outline-secondary px-3" (click)="cancelEdit()">
+        <i class="bi bi-x-lg me-1"></i>Cancel
+      </button>
+      <button type="submit" (click)="saveVendor()" class="btn px-4" [ngClass]="editingVendorId ? 'btn-warning' : 'btn-primary'">
+        <i class="bi me-2" [ngClass]="editingVendorId ? 'bi-check2-circle' : 'bi-plus-lg'"></i>
+        {{ editingVendorId ? 'Update Profile' : ('btn.save' | translate:currentLang) }}
+      </button>
     </div>
   </div>
 
@@ -318,16 +321,16 @@
         <!-- Advanced Filter Button + Popover -->
         <div class="filter-popover-wrapper" (click)="$event.stopPropagation()">
           <button type="button" 
-                  class="btn btn-secondary btn-toolbar-compact" 
+                  class="btn btn-secondary btn-toolbar-compact filter-trigger-btn" 
                   [class.btn-active-filter]="activeFilterCount > 0"
                   (click)="showFilterPopover = !showFilterPopover">
             <i class="bi bi-funnel me-1"></i>
             <span>Filters</span>
-            <span class="active-filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
+            <span class="active-filter-badge filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
           </button>
 
           <!-- Popover Modal Content -->
-          <div class="filter-popover-card shadow-lg animate-fade-in" *ngIf="showFilterPopover">
+          <div class="filter-popover-card filter-popover-panel shadow-lg animate-fade-in" *ngIf="showFilterPopover">
             <div class="popover-header">
               <span class="popover-title"><i class="bi bi-sliders me-1"></i>Filter Suppliers</span>
               <button type="button" class="popover-close-btn" (click)="showFilterPopover = false"><i class="bi bi-x"></i></button>
@@ -441,16 +444,16 @@
 
     <!-- Scrollable Table Wrapper -->
     <div class="table-responsive-wrapper" [ngClass]="'density-' + tableDensity">
-      <table class="table vendor-data-table mb-0" appResizableTable>
+      <table class="table vendor-data-table enterprise-vendors-table mb-0" appResizableTable [tableId]="'vendors_table'">
         <thead>
           <tr class="table-header-row">
             <!-- Col: Checkbox Selection -->
-            <th *ngIf="isColumnVisible('Select')" class="th-checkbox text-center" style="width: 44px;">
+            <th *ngIf="isColumnVisible('Select')" class="th-checkbox text-center" style="width: 3%;">
               <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()" title="Select All On Page">
             </th>
 
             <!-- Col: Code / ID -->
-            <th *ngIf="isColumnVisible('Code')" class="th-code sortable" (click)="setSort('vendorId')" style="width: 110px;">
+            <th *ngIf="isColumnVisible('Code')" class="th-code sortable" (click)="setSort('vendorId')" style="width: 7%;">
               <div class="th-content">
                 <span>Code</span>
                 <i class="bi" [ngClass]="sortField === 'vendorId' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
@@ -458,50 +461,50 @@
             </th>
 
             <!-- Col: Supplier Name -->
-            <th *ngIf="isColumnVisible('Supplier')" class="th-supplier sortable" (click)="setSort('vendorName')" style="min-width: 220px;">
+            <th *ngIf="isColumnVisible('Supplier')" class="th-supplier sortable" (click)="setSort('vendorName')" style="width: 20%;">
               <div class="th-content">
-                <span>Supplier / Vendor Name</span>
+                <span>Supplier Name</span>
                 <i class="bi" [ngClass]="sortField === 'vendorName' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
               </div>
             </th>
 
             <!-- Col: Category -->
-            <th *ngIf="isColumnVisible('Category')" class="th-category" style="width: 170px;">
+            <th *ngIf="isColumnVisible('Category')" class="th-category" style="width: 11%;">
               <div class="th-content">
                 <span>Category</span>
               </div>
             </th>
 
             <!-- Col: Contact -->
-            <th *ngIf="isColumnVisible('Contact')" class="th-contact" style="width: 150px;">
+            <th *ngIf="isColumnVisible('Contact')" class="th-contact" style="width: 10%;">
               <div class="th-content">
-                <span>Contact Phone</span>
+                <span>Contact</span>
               </div>
             </th>
 
             <!-- Col: Location -->
-            <th *ngIf="isColumnVisible('Location')" class="th-location" style="min-width: 160px;">
+            <th *ngIf="isColumnVisible('Location')" class="th-location" style="width: 13%;">
               <div class="th-content">
-                <span>Plant / Address</span>
+                <span>Location</span>
               </div>
             </th>
 
             <!-- Col: GSTIN -->
-            <th *ngIf="isColumnVisible('GSTIN')" class="th-gst" style="width: 170px;">
+            <th *ngIf="isColumnVisible('GSTIN')" class="th-gst" style="width: 11%;">
               <div class="th-content">
                 <span>GSTIN Status</span>
               </div>
             </th>
 
             <!-- Col: Procurements -->
-            <th *ngIf="isColumnVisible('Procurements')" class="th-procurements text-center" style="width: 140px;">
+            <th *ngIf="isColumnVisible('Procurements')" class="th-procurements text-center" style="width: 6%;">
               <div class="th-content text-center">
-                <span>Procurements</span>
+                <span>Batches</span>
               </div>
             </th>
 
             <!-- Col: Commercial Spend -->
-            <th *ngIf="isColumnVisible('Spend')" class="th-spend text-end sortable" (click)="setSort('procurementAmount')" style="width: 150px;">
+            <th *ngIf="isColumnVisible('Spend')" class="th-spend text-end sortable" (click)="setSort('procurementAmount')" style="width: 14%;">
               <div class="th-content text-end">
                 <span>Total Spend (₹)</span>
                 <i class="bi" [ngClass]="sortField === 'procurementAmount' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up'"></i>
@@ -509,7 +512,7 @@
             </th>
 
             <!-- Col: Actions -->
-            <th *ngIf="isColumnVisible('Actions')" class="th-actions text-end no-print" style="width: 130px;">
+            <th *ngIf="isColumnVisible('Actions')" class="th-actions text-end no-print" style="width: 7%;">
               <div class="th-content text-end">
                 <span>Actions</span>
               </div>
@@ -656,7 +659,7 @@
         </tbody>
 
         <!-- ── Accounting Summary Table Footer ── -->
-        <tfoot class="table-summary-footer" *ngIf="!isLoading && paginatedList.length > 0">
+        <tfoot class="table-summary-tfoot" *ngIf="!isLoading && paginatedList.length > 0">
           <tr>
             <td *ngIf="isColumnVisible('Select')"></td>
             <td *ngIf="isColumnVisible('Code')" class="text-muted small"><strong>TOTALS</strong></td>
@@ -669,10 +672,10 @@
             <td *ngIf="isColumnVisible('GSTIN')" class="small text-success">
               <strong>{{ filteredGstCount }} GST Compliant</strong>
             </td>
-            <td *ngIf="isColumnVisible('Procurements')" class="text-center text-muted small">
-              <strong>Summary</strong>
+            <td *ngIf="isColumnVisible('Procurements')" class="text-center text-muted small" style="white-space: nowrap !important;">
+              <strong>{{ filteredTotalBatches }} Batches</strong>
             </td>
-            <td *ngIf="isColumnVisible('Spend')" class="text-end font-monospace text-emerald">
+            <td *ngIf="isColumnVisible('Spend')" class="text-end font-monospace text-emerald" style="white-space: nowrap !important;">
               <strong>₹{{ filteredTotalSpend | number:'1.2-2' }}</strong>
             </td>
             <td *ngIf="isColumnVisible('Actions')" class="no-print"></td>
@@ -681,39 +684,27 @@
       </table>
     </div>
 
-    <!-- ── 7. PAGINATION TOOLBAR ───────────────────────────────────── -->
-    <div class="table-pagination-footer no-print" *ngIf="!isLoading && filteredList.length > 0">
-      <div class="pagination-left-info">
-        <span class="text-muted small">
-          Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to 
-          <strong>{{ Math.min(currentPage * pageSize, filteredList.length) }}</strong> of 
-          <strong>{{ filteredList.length }}</strong> vendors
-        </span>
+    <!-- ── STANDARD PAGINATION FOOTER ── -->
+    <div class="erp-table-footer no-print" *ngIf="!isLoading && filteredList.length > 0">
+      <div class="erp-footer-info">
+        Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to
+        <strong>{{ Math.min(currentPage * pageSize, filteredList.length) }}</strong> of
+        <strong>{{ filteredList.length }}</strong> vendors
       </div>
-
-      <div class="pagination-right-controls">
-        <div class="page-size-selector">
-          <label class="page-size-label">Rows per page:</label>
-          <select class="form-select form-select-sm page-size-select" [(ngModel)]="pageSize" (change)="currentPage = 1">
+      <div class="erp-footer-controls">
+        <div class="erp-rows-selector">
+          <span>Rows:</span>
+          <select class="erp-rows-select" [(ngModel)]="pageSize" (change)="currentPage = 1">
             <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
           </select>
         </div>
-
-        <div class="pagination-pager-buttons">
-          <button type="button" 
-                  class="btn-pager" 
-                  [disabled]="currentPage === 1" 
-                  (click)="currentPage = currentPage - 1" 
-                  title="Previous Page">
-            <i class="bi bi-chevron-left"></i>
+        <div class="erp-page-buttons">
+          <button type="button" class="erp-page-nav-btn" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
+            <i class="bi bi-chevron-left"></i> Prev
           </button>
-          <span class="pager-status-text">Page {{ currentPage }} of {{ totalPages }}</span>
-          <button type="button" 
-                  class="btn-pager" 
-                  [disabled]="currentPage === totalPages" 
-                  (click)="currentPage = currentPage + 1" 
-                  title="Next Page">
-            <i class="bi bi-chevron-right"></i>
+          <span class="erp-page-counter">Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong></span>
+          <button type="button" class="erp-page-nav-btn" [disabled]="currentPage === totalPages" (click)="currentPage = currentPage + 1">
+            Next <i class="bi bi-chevron-right"></i>
           </button>
         </div>
       </div>

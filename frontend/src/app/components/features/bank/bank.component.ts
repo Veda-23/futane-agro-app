@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -59,6 +59,8 @@ export class BankComponent implements OnInit {
 
   editingId: any = null;
   isDrawerOpen: boolean = false;
+  showViewModal: boolean = false;
+  selectedTxnForView: BankTransactionItem | null = null;
   isLoading: boolean = false;
   hasError: boolean = false;
   errorMessage: string = '';
@@ -68,10 +70,26 @@ export class BankComponent implements OnInit {
   searchQuery: string = '';
   filterDateFrom: string = '';
   filterDateTo: string = '';
+  showFilterPopover = false;
+
+  get activeFilterCount(): number {
+    let count = 0;
+    if (this.filterType && this.filterType !== 'ALL') count++;
+    if (this.filterDateFrom) count++;
+    if (this.filterDateTo) count++;
+    return count;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick() {
+    this.showColDropdown['bank'] = false;
+    this.showFilterPopover = false;
+  }
 
   // Pagination & Sorting state
   currentPage: number = 1;
   pageSize: number = 10;
+  pageSizeOptions: number[] = [10, 25, 50, 100];
   sortField: string = 'transactionDate';
   sortAsc: boolean = false;
   tableDensity: 'compact' | 'comfortable' | 'spacious' = 'comfortable';
@@ -89,6 +107,9 @@ export class BankComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    try {
+      localStorage.removeItem('cols_width_bank_table');
+    } catch (e) {}
     this.columnsVisibility['bank'] = {};
     this.defaultCols.forEach(col => (this.columnsVisibility['bank'][col] = true));
 
@@ -98,6 +119,10 @@ export class BankComponent implements OnInit {
     }
 
     this.loadData();
+  }
+
+  get filteredTotalAmount(): number {
+    return (this.filteredList || []).reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
   }
 
   getTodayDate(): string {
@@ -373,6 +398,21 @@ export class BankComponent implements OnInit {
     }
   }
 
+  // Read-Only Transaction Voucher Inspection
+  openViewModal(bt: BankTransactionItem) {
+    this.selectedTxnForView = bt;
+    this.showViewModal = true;
+  }
+
+  closeViewModal() {
+    this.showViewModal = false;
+    this.selectedTxnForView = null;
+  }
+
+  printBankVoucher() {
+    window.print();
+  }
+
   editBankTransaction(bt: BankTransactionItem) {
     this.editingId = bt.id;
     this.bankTxnForm = {
@@ -458,6 +498,34 @@ export class BankComponent implements OnInit {
     document.body.removeChild(link);
 
     this.notificationService.success('Export Complete', 'Bank ledger CSV generated and downloaded.');
+  }
+
+  exportExcel() {
+    if (!this.bankTransactionsList || this.bankTransactionsList.length === 0) {
+      this.notificationService.warning('No Data', 'There are no bank records to export.');
+      return;
+    }
+
+    const headers = ['Date', 'Type', 'Amount', 'Description', 'Reference No'];
+    const rows = this.filteredList.map(t => [
+      `"${t.transactionDate || ''}"`,
+      `"${t.transactionType || ''}"`,
+      t.amount || 0,
+      `"${(t.description || '').replace(/"/g, '""')}"`,
+      `"${(t.referenceNo || '').replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Futane_Bank_Ledger_${this.getTodayDate()}.xls`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    this.notificationService.success('Export Complete', 'Bank ledger Excel statement downloaded.');
   }
 
   trackById(index: number, item: any): any {

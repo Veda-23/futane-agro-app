@@ -12,6 +12,7 @@ import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { InrPipe } from '../../../pipes/inr-currency.pipe';
 import { AutoSelectDirective } from '../../../directives/auto-select.directive';
 import { FormStateDirective } from '../../../directives/form-state.directive';
+import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 
 export interface PaymentItem {
   id?: string | number;
@@ -47,6 +48,7 @@ import { SearchableSelectComponent } from '../../shared/searchable-select/search
     InrPipe,
     AutoSelectDirective,
     FormStateDirective,
+    ResizableTableDirective,
     SearchableSelectComponent
   ],
   templateUrl: './payments.component.html',
@@ -88,6 +90,9 @@ export class PaymentsComponent implements OnInit {
   pageSizeOptions: number[] = [10, 25, 50, 100];
   sortField: string = 'paymentDate';
   sortAsc: boolean = false;
+  pagedPayments: PaymentItem[] = [];
+  filteredPaymentsCount: number = 0;
+  totalPages: number = 1;
 
   // Multi-Selection
   selectedPaymentIds: { [id: string]: boolean } = {};
@@ -171,6 +176,7 @@ export class PaymentsComponent implements OnInit {
         this.paymentsList = payments || [];
         this.isLoading = false;
         this.isRefreshing = false;
+        this.updateFilteredPayments();
         if (notify) {
           this.notificationService.success('Refreshed', 'Customer receipts and payment registry updated.');
         }
@@ -198,6 +204,7 @@ export class PaymentsComponent implements OnInit {
     this.subTab = tab;
     this.currentPage = 1;
     this.clearSelection();
+    this.updateFilteredPayments();
   }
 
   // Party Outstanding Balance calculations
@@ -301,6 +308,7 @@ export class PaymentsComponent implements OnInit {
     this.subTab = 'all';
     this.currentPage = 1;
     this.closeFilterPopover();
+    this.updateFilteredPayments();
     this.notificationService.info('Filters Reset', 'Showing all receipt records.');
   }
 
@@ -412,14 +420,32 @@ export class PaymentsComponent implements OnInit {
     }
   }
 
-  getPaginatedPayments(): PaymentItem[] {
+
+  setPageSize(size: number) {
+    this.pageSize = size;
+    this.currentPage = 1;
+    this.updateFilteredPayments();
+  }
+
+  setPage(page: number) {
+    this.currentPage = page;
+    this.updateFilteredPayments();
+  }
+
+  updateFilteredPayments() {
     const filtered = this.getFilteredPayments();
+    this.filteredPaymentsCount = filtered.length;
+    this.totalPages = Math.max(1, Math.ceil(filtered.length / this.pageSize));
     const start = (this.currentPage - 1) * this.pageSize;
-    return filtered.slice(start, start + this.pageSize);
+    this.pagedPayments = filtered.slice(start, start + this.pageSize);
+  }
+
+  getPaginatedPayments(): PaymentItem[] {
+    return this.pagedPayments;
   }
 
   getTotalPages(): number {
-    return Math.max(1, Math.ceil(this.getFilteredPayments().length / this.pageSize));
+    return this.totalPages;
   }
 
   setSort(field: string) {
@@ -429,6 +455,7 @@ export class PaymentsComponent implements OnInit {
       this.sortField = field;
       this.sortAsc = (field === 'party');
     }
+    this.updateFilteredPayments();
   }
 
   // Voucher Number Formatter

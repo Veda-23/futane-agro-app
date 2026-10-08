@@ -44,7 +44,7 @@
     <div class="cch-right">
       <div class="cch-stat-pill" title="Reporting Period">
         <i class="bi bi-calendar3 me-1 text-primary"></i>
-        <span>Aug 2026 MTD</span>
+        <span>{{ currentPeriodLabel }}</span>
       </div>
       <button type="button" class="btn btn-secondary btn-sm refresh-btn" (click)="loadDashboardData(true)" [disabled]="isRefreshing" title="Refresh dashboard telemetry" aria-label="Refresh dashboard telemetry">
         <i class="bi bi-arrow-clockwise me-1" [class.spin-refresh]="isRefreshing"></i>
@@ -82,13 +82,15 @@
     </div>
   </section>
 
-  <!-- 3. Operational Attention & Alerts Strip -->
+  <!-- 3. Operational Attention & Alerts Strip (Zero Truncation Guaranteed) -->
   <section class="alerts-exceptions-strip" aria-label="System Alerts and Health Status">
     <div class="alert-pill alert-warning-pill" (click)="quickNavigate('payments')" role="button" tabindex="0" title="Click to view pending receivables">
       <div class="alert-top-row">
-        <span class="alert-icon"><i class="bi bi-exclamation-triangle-fill text-warning"></i></span>
-        <span class="alert-text"><strong>Receivables Notice:</strong> ₹{{ stats.pendingAmount | number:'1.0-0' }} pending recovery</span>
-        <span class="alert-action">Collect →</span>
+        <div class="alert-headline-box">
+          <span class="alert-icon"><i class="bi bi-exclamation-triangle-fill text-warning"></i></span>
+          <span class="alert-text"><strong>Receivables Notice:</strong> ₹{{ stats.pendingAmount | number:'1.0-0' }} pending recovery</span>
+        </div>
+        <span class="alert-action">Collect &rarr;</span>
       </div>
       <div class="alert-gauge-wrap" role="progressbar" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100">
         <div class="alert-gauge-fill warning-fill" style="width: 68%;"></div>
@@ -98,9 +100,11 @@
 
     <div class="alert-pill alert-info-pill" (click)="quickNavigate('raw-materials')" role="button" tabindex="0" title="Click to view raw polymer inventory">
       <div class="alert-top-row">
-        <span class="alert-icon"><i class="bi bi-droplet-half text-info"></i></span>
-        <span class="alert-text"><strong>Polymer Buffer:</strong> {{ stats.rawMaterialStock | number }} kg HDPE granules on hand</span>
-        <span class="alert-action">Details →</span>
+        <div class="alert-headline-box">
+          <span class="alert-icon"><i class="bi bi-droplet-half text-info"></i></span>
+          <span class="alert-text"><strong>Polymer Buffer:</strong> {{ stats.rawMaterialStock | number }} kg HDPE granules on hand</span>
+        </div>
+        <span class="alert-action">Details &rarr;</span>
       </div>
       <div class="alert-gauge-wrap" role="progressbar" [attr.aria-valuenow]="polymerBufferPct" aria-valuemin="0" aria-valuemax="100">
         <div class="alert-gauge-fill info-fill" [style.width.%]="polymerBufferPct"></div>
@@ -110,14 +114,16 @@
 
     <div class="alert-pill alert-success-pill" (click)="quickNavigate('production')" role="button" tabindex="0" title="Click to view plant output">
       <div class="alert-top-row">
-        <span class="alert-icon"><i class="bi bi-check-circle-fill text-success"></i></span>
-        <span class="alert-text"><strong>Plant Pacing:</strong> Running on schedule with 26 injection lines active</span>
-        <span class="alert-action">View →</span>
+        <div class="alert-headline-box">
+          <span class="alert-icon"><i class="bi bi-check-circle-fill text-success"></i></span>
+          <span class="alert-text"><strong>Plant Pacing:</strong> Running on schedule with 26 injection lines active</span>
+        </div>
+        <span class="alert-action">View &rarr;</span>
       </div>
       <div class="alert-gauge-wrap" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
         <div class="alert-gauge-fill success-fill" style="width: 100%;"></div>
       </div>
-      <div class="alert-gauge-sub">100% Machine Fleet Operational • 0 Downtime</div>
+      <div class="alert-gauge-sub">100% Machine Fleet Operational &bull; 0 Downtime</div>
     </div>
   </section>
 
@@ -251,69 +257,69 @@
     </div>
   </section>
 
-  <!-- 6. Secondary Operational Telemetry Strip with Progress Gauges -->
+  <!-- 6. Secondary Operational Telemetry Strip with Progress Gauges (Vertical Stack, Zero Truncation) -->
   <section class="secondary-telemetry-grid" aria-label="Operational Stock and Logistics Telemetry">
     <!-- Finished Goods Inventory -->
     <div class="telemetry-pill-card" (click)="quickNavigate('inventory')" role="button" tabindex="0" title="Click to view finished goods inventory">
-      <div class="tpc-icon" style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: #ffffff; box-shadow: 0 4px 14px rgba(245,158,11,0.35);"><i class="bi bi-box-seam"></i></div>
+      <div class="tpc-top-row">
+        <div class="tpc-icon tpc-icon-warning"><i class="bi bi-box-seam"></i></div>
+        <span class="tpc-badge warning">{{ warehouseUtilizationPct }}% Full</span>
+      </div>
       <div class="tpc-content">
-        <div class="tpc-header">
-          <span class="tpc-title">{{ 'dashboard.inventoryStock' | translate:currentLang }}</span>
-          <span class="tpc-badge warning">{{ warehouseUtilizationPct }}% Full</span>
-        </div>
-        <strong class="tpc-val">{{ stats.inventoryStock | number }} crates</strong>
+        <div class="tpc-title">{{ 'dashboard.inventoryStock' | translate:currentLang }}</div>
+        <div class="tpc-val">{{ stats.inventoryStock | number }} <span class="tpc-unit">crates</span></div>
         <div class="tpc-progress-bar" role="progressbar" [attr.aria-valuenow]="warehouseUtilizationPct" aria-valuemin="0" aria-valuemax="100">
           <div class="tpc-progress-fill warning-fill" [style.width.%]="warehouseUtilizationPct"></div>
         </div>
-        <span class="tpc-sub">Warehouse: {{ stats.inventoryStock | number }} / 50k crates capacity</span>
+        <div class="tpc-sub">Warehouse: {{ stats.inventoryStock | number }} / 50k crates capacity</div>
       </div>
     </div>
 
     <!-- Raw Material Polymer -->
     <div class="telemetry-pill-card" (click)="quickNavigate('raw-materials')" role="button" tabindex="0" title="Click to view raw polymer inventory">
-      <div class="tpc-icon" style="background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%); color: #ffffff; box-shadow: 0 4px 14px rgba(11,71,212,0.32);"><i class="bi bi-droplet-half"></i></div>
+      <div class="tpc-top-row">
+        <div class="tpc-icon tpc-icon-info"><i class="bi bi-droplet-half"></i></div>
+        <span class="tpc-badge info">{{ polymerBufferPct }}% Buffer</span>
+      </div>
       <div class="tpc-content">
-        <div class="tpc-header">
-          <span class="tpc-title">{{ 'dashboard.rawMaterialStock' | translate:currentLang }}</span>
-          <span class="tpc-badge info">{{ polymerBufferPct }}% Buffer</span>
-        </div>
-        <strong class="tpc-val">{{ stats.rawMaterialStock | number }} kg</strong>
+        <div class="tpc-title">{{ 'dashboard.rawMaterialStock' | translate:currentLang }}</div>
+        <div class="tpc-val">{{ stats.rawMaterialStock | number }} <span class="tpc-unit">kg</span></div>
         <div class="tpc-progress-bar" role="progressbar" [attr.aria-valuenow]="polymerBufferPct" aria-valuemin="0" aria-valuemax="100">
           <div class="tpc-progress-fill info-fill" [style.width.%]="polymerBufferPct"></div>
         </div>
-        <span class="tpc-sub">Buffer stock: ~16,300 crates production reserve</span>
+        <div class="tpc-sub">Buffer stock: ~16,300 crates reserve</div>
       </div>
     </div>
 
     <!-- Active Factory Staff -->
     <div class="telemetry-pill-card" (click)="quickNavigate('employees')" role="button" tabindex="0" title="Click to view factory workforce">
-      <div class="tpc-icon" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #ffffff; box-shadow: 0 4px 14px rgba(16,185,129,0.32);"><i class="bi bi-people-fill"></i></div>
+      <div class="tpc-top-row">
+        <div class="tpc-icon tpc-icon-success"><i class="bi bi-people-fill"></i></div>
+        <span class="tpc-badge success">100% Present</span>
+      </div>
       <div class="tpc-content">
-        <div class="tpc-header">
-          <span class="tpc-title">{{ 'dashboard.employees' | translate:currentLang }}</span>
-          <span class="tpc-badge success">100% Present</span>
-        </div>
-        <strong class="tpc-val">{{ stats.employeeCount | number }} staff</strong>
+        <div class="tpc-title">{{ 'dashboard.employees' | translate:currentLang }}</div>
+        <div class="tpc-val">{{ stats.employeeCount | number }} <span class="tpc-unit">staff</span></div>
         <div class="tpc-progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
           <div class="tpc-progress-fill success-fill" style="width: 100%;"></div>
         </div>
-        <span class="tpc-sub">All operators & technical crew on shift</span>
+        <div class="tpc-sub">All operators & crew active on shift</div>
       </div>
     </div>
 
     <!-- Logistics & Freight Balance -->
     <div class="telemetry-pill-card" (click)="quickNavigate('transports')" role="button" tabindex="0" title="Click to view freight logistics">
-      <div class="tpc-icon" style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); color: #ffffff; box-shadow: 0 4px 14px rgba(239,68,68,0.32);"><i class="bi bi-truck"></i></div>
+      <div class="tpc-top-row">
+        <div class="tpc-icon tpc-icon-danger"><i class="bi bi-truck"></i></div>
+        <span class="tpc-badge danger">14 Trips</span>
+      </div>
       <div class="tpc-content">
-        <div class="tpc-header">
-          <span class="tpc-title">{{ 'dashboard.transportCost' | translate:currentLang }}</span>
-          <span class="tpc-badge danger">14 Trips</span>
-        </div>
-        <strong class="tpc-val">₹{{ stats.transportCost | number:'1.0-0' }}</strong>
+        <div class="tpc-title">{{ 'dashboard.transportCost' | translate:currentLang }}</div>
+        <div class="tpc-val">₹{{ stats.transportCost | number:'1.0-0' }}</div>
         <div class="tpc-progress-bar" role="progressbar" aria-valuenow="78" aria-valuemin="0" aria-valuemax="100">
           <div class="tpc-progress-fill danger-fill" style="width: 78%;"></div>
         </div>
-        <span class="tpc-sub">Logistics cleared: 14 outbound freight trips</span>
+        <div class="tpc-sub">Freight cleared: 14 outbound trips</div>
       </div>
     </div>
   </section>
@@ -441,7 +447,7 @@
     <div class="diagnostics-grid">
       <div class="diagnostics-item">
         <span class="diagnostics-label">Spring Boot API</span>
-        <span class="badge badge-success">UP (8080/8081)</span>
+        <span class="badge badge-success">ONLINE</span>
       </div>
       <div class="diagnostics-item">
         <span class="diagnostics-label">MySQL InnoDB</span>

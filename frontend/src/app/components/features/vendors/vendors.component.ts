@@ -132,6 +132,12 @@ export class VendorsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    try {
+      localStorage.removeItem('cols_width_vendor_table');
+      localStorage.removeItem('cols_width_vendors_table');
+    } catch (e) {
+      // ignore
+    }
     this.loadData();
   }
 
@@ -367,6 +373,10 @@ export class VendorsComponent implements OnInit {
     return this.filteredList.reduce((sum, v) => sum + this.getVendorProcurementSummary(v.id || v.vendorId).totalSpendAmount, 0);
   }
 
+  get filteredTotalBatches(): number {
+    return this.filteredList.reduce((sum, v) => sum + this.getVendorProcurementSummary(v.id || v.vendorId).batchesCount, 0);
+  }
+
   setSort(field: string): void {
     if (this.sortField === field) {
       this.sortAsc = !this.sortAsc;
@@ -497,9 +507,12 @@ export class VendorsComponent implements OnInit {
     this.isAddFormOpen = true;
     this.notificationService.info('Editing Supplier', `Loaded vendor: ${this.getCleanVendorName(vendor.vendorName)}`);
     setTimeout(() => {
-      const el = document.getElementById('vendor-form-container');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+      const el = document.querySelector('.erp-drawer') as HTMLElement;
+      if (el) {
+        const firstInput = el.querySelector('input:not([disabled])') as HTMLElement;
+        if (firstInput) firstInput.focus();
+      }
+    }, 60);
   }
 
   cancelEdit(): void {

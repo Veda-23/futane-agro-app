@@ -1,14 +1,16 @@
-<!-- 1. Stable Enterprise Page Header with Embedded Breadcrumbs -->
-<header class="reports-page-header no-print">
-  <div class="breadcrumb-trail" style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; width: 100%;">
-    <i class="bi bi-house" style="font-size: 12px; color: #94a3b8;"></i>
+<div class="reports-breadcrumb-trail no-print">
+  <div class="breadcrumb-trail">
+    <i class="bi bi-house me-1"></i>
     <span>Futane Agro ERP</span>
-    <span style="color: #cbd5e1;">/</span>
+    <span class="sep">/</span>
     <span>Business Intelligence</span>
-    <span style="color: #cbd5e1;">/</span>
-    <span style="color: #0B47D4; font-weight: 700;">Executive Reports &amp; Data Export</span>
+    <span class="sep">/</span>
+    <span class="active">Executive Reports &amp; Data Export</span>
   </div>
+</div>
 
+<!-- 1. Stable Enterprise Page Header -->
+<header class="reports-page-header no-print">
   <div class="header-main-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 14px;">
     <div class="header-left-col">
       <div class="header-icon-box">
@@ -323,7 +325,7 @@
     <div class="report-table-responsive" [class.table-compact]="tableDensity === 'compact'" [class.table-comfortable]="tableDensity === 'comfortable'" [class.table-spacious]="tableDensity === 'spacious'">
 
       <!-- 1. Daily Production Report -->
-      <table class="enterprise-data-table" *ngIf="reportFilter.type === 'production'">
+      <table class="enterprise-data-table" appResizableTable [tableId]="'reports_table'" *ngIf="reportFilter.type === 'production'">
         <thead>
           <tr>
             <th class="col-sticky-left" style="width:115px;">Date</th>
@@ -360,7 +362,7 @@
             </td>
           </tr>
         </tbody>
-        <tfoot *ngIf="filteredReportData.length > 0">
+        <tfoot class="table-summary-tfoot" *ngIf="filteredReportData.length > 0">
           <tr>
             <td class="col-sticky-left" colspan="3">TOTAL ({{ filteredReportData.length }} records)</td>
             <td style="text-align:right; font-variant-numeric:tabular-nums;">{{ reportTotals.qty | number }}</td>
@@ -372,7 +374,7 @@
       </table>
 
       <!-- 2. Monthly Production Summary -->
-      <table class="enterprise-data-table" *ngIf="reportFilter.type === 'production_monthly'">
+      <table class="enterprise-data-table" appResizableTable [tableId]="'reports_table'" *ngIf="reportFilter.type === 'production_monthly'">
         <thead>
           <tr>
             <th class="col-sticky-left">Month</th>
@@ -405,7 +407,7 @@
       </table>
 
       <!-- 3. Sales Report with Totals -->
-      <table class="enterprise-data-table" *ngIf="reportFilter.type === 'sales'">
+      <table class="enterprise-data-table" appResizableTable [tableId]="'reports_table'" *ngIf="reportFilter.type === 'sales'">
         <thead>
           <tr>
             <th class="col-sticky-left" style="width:110px;">Date</th>
@@ -435,7 +437,7 @@
             </td>
           </tr>
         </tbody>
-        <tfoot *ngIf="filteredReportData.length > 0">
+        <tfoot class="table-summary-tfoot" *ngIf="filteredReportData.length > 0">
           <tr>
             <td class="col-sticky-left" colspan="3">TOTAL ({{ filteredReportData.length }} records)</td>
             <td style="text-align:right; font-variant-numeric:tabular-nums;">{{ reportTotals.qty | number }}</td>
@@ -465,7 +467,7 @@
             </div>
           </div>
 
-          <table class="enterprise-data-table">
+          <table class="enterprise-data-table" appResizableTable [tableId]="'reports_table'">
             <thead>
               <tr>
                 <th class="col-sticky-left" style="width:115px;">Date</th>
@@ -507,7 +509,7 @@
       </div>
 
       <!-- 5. Inventory Stock Report -->
-      <table class="enterprise-data-table" *ngIf="reportFilter.type === 'inventory'">
+      <table class="enterprise-data-table" appResizableTable [tableId]="'reports_table'" *ngIf="reportFilter.type === 'inventory'">
         <thead>
           <tr>
             <th class="col-sticky-left">Item / Crate Type</th>
@@ -553,7 +555,7 @@
           </div>
         </div>
 
-        <table class="enterprise-data-table">
+        <table class="enterprise-data-table" appResizableTable [tableId]="'reports_table'">
           <thead>
             <tr>
               <th class="col-sticky-left">Employee</th>
@@ -583,7 +585,7 @@
               </td>
             </tr>
           </tbody>
-          <tfoot *ngIf="filteredReportData.length > 0">
+          <tfoot class="table-summary-tfoot" *ngIf="filteredReportData.length > 0">
             <tr>
               <td class="col-sticky-left" colspan="3">TOTAL PAYROLL ({{ filteredReportData.length }} records)</td>
               <td style="text-align:right; font-variant-numeric:tabular-nums;">{{ reportTotals.amount | inr }}</td>
@@ -605,7 +607,7 @@
           </div>
         </div>
 
-        <table class="enterprise-data-table">
+        <table class="enterprise-data-table" appResizableTable [tableId]="'reports_table'">
           <thead>
             <tr>
               <th class="col-sticky-left" style="width:115px;">Date</th>
@@ -629,7 +631,7 @@
               </td>
             </tr>
           </tbody>
-          <tfoot *ngIf="filteredReportData.length > 0">
+          <tfoot class="table-summary-tfoot" *ngIf="filteredReportData.length > 0">
             <tr>
               <td class="col-sticky-left" colspan="4">TOTAL EXPENSES ({{ filteredReportData.length }} records)</td>
               <td style="text-align:right; font-variant-numeric:tabular-nums; color:var(--accent-warning, #f59e0b);">{{ reportTotals.amount | inr }}</td>
@@ -639,7 +641,7 @@
       </div>
 
       <!-- 8. Transport Logistics & Outstanding -->
-      <table class="enterprise-data-table" *ngIf="reportFilter.type === 'transport'">
+      <table class="enterprise-data-table" appResizableTable [tableId]="'reports_table'" *ngIf="reportFilter.type === 'transport'">
         <thead>
           <tr>
             <th class="col-sticky-left" style="width:115px;">Date</th>
@@ -681,7 +683,7 @@
             </td>
           </tr>
         </tbody>
-        <tfoot *ngIf="filteredReportData.length > 0">
+        <tfoot class="table-summary-tfoot" *ngIf="filteredReportData.length > 0">
           <tr>
             <td class="col-sticky-left" colspan="3">TOTAL ({{ filteredReportData.length }} records)</td>
             <td style="text-align:right; font-variant-numeric:tabular-nums;">{{ reportTotals.amount | inr }}</td>

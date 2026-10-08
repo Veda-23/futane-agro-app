@@ -65,7 +65,22 @@ export class TransportsComponent implements OnInit {
   filterDriver: string = 'ALL';
   filterMonth: string = 'ALL';
   filterYear: string = 'ALL';
+  showFilterPopover: boolean = false;
   tableDensity: 'compact' | 'normal' | 'spacious' = 'normal';
+
+  get activeFilterCount(): number {
+    let count = 0;
+    if (this.filterStatus && this.filterStatus !== 'ALL') count++;
+    if (this.filterDriver && this.filterDriver !== 'ALL') count++;
+    if (this.filterMonth && this.filterMonth !== 'ALL') count++;
+    if (this.filterYear && this.filterYear !== 'ALL') count++;
+    return count;
+  }
+
+  getVisibleColCount(table: string): number {
+    const cols = this.columnsVisibility[table] || {};
+    return Object.keys(cols).filter(k => cols[k]).length;
+  }
 
   // Pagination & Sorting
   currentPage = 1;
@@ -92,6 +107,9 @@ export class TransportsComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    try {
+      localStorage.removeItem('cols_width_transports_table');
+    } catch (_) {}
     this.initColumns();
     this.loadData();
   }
@@ -105,6 +123,7 @@ export class TransportsComponent implements OnInit {
   onDocumentClick() {
     this.showExportDropdown = false;
     this.showColDropdown['transports'] = false;
+    this.showFilterPopover = false;
   }
 
   private initColumns() {
@@ -193,6 +212,21 @@ export class TransportsComponent implements OnInit {
   get totalPendingBalance(): number {
     return (this.transportsList || []).reduce((acc: number, curr: any) => {
       const rem = (Number(curr.rent) || 0) - (Number(curr.advance) || 0);
+      return acc + (rem > 0 ? rem : 0);
+    }, 0);
+  }
+
+  get totalFilteredRent(): number {
+    return (this.filteredTransports || []).reduce((acc: number, curr: any) => acc + (Number(curr.rent) || 0), 0);
+  }
+
+  get totalFilteredAdvance(): number {
+    return (this.filteredTransports || []).reduce((acc: number, curr: any) => acc + (Number(curr.advance) || 0), 0);
+  }
+
+  get totalFilteredBalance(): number {
+    return (this.filteredTransports || []).reduce((acc: number, curr: any) => {
+      const rem = Number(curr.remaining ?? ((Number(curr.rent) || 0) - (Number(curr.advance) || 0)));
       return acc + (rem > 0 ? rem : 0);
     }, 0);
   }

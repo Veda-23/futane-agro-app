@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AutoSelectDirective } from '../../../directives/auto-select.directive';
 import { FormStateDirective } from '../../../directives/form-state.directive';
+import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 import { NotificationService } from '../../../services/notification.service';
 import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
@@ -34,6 +35,7 @@ export interface PartyRecord {
     TranslatePipe,
     AutoSelectDirective,
     FormStateDirective,
+    ResizableTableDirective,
     UniversalImporterComponent
   ],
   templateUrl: './party.component.html',
@@ -50,6 +52,10 @@ export class PartyComponent implements OnInit {
   isFormVisible: boolean = false;
   isDrawerOpen: boolean = false;
   selectedPartyForDrawer: PartyRecord | null = null;
+
+  // Dedicated Read-Only Client Dossier Inspection Modal
+  showDossierModal: boolean = false;
+  selectedPartyForDossier: PartyRecord | null = null;
 
   // Active Subtab filter
   subTab: 'all' | 'wholesalers' | 'gst' | 'mh' | 'interstate' = 'all';
@@ -378,12 +384,27 @@ export class PartyComponent implements OnInit {
     this.isFormVisible = !this.isFormVisible;
     if (this.isFormVisible) {
       this.cancelEditParty();
+      this.isFormVisible = true;
+      setTimeout(() => {
+        const el = document.querySelector('.party-modal-dialog') as HTMLElement;
+        if (el) {
+          const firstInput = el.querySelector('input:not([disabled])') as HTMLElement;
+          if (firstInput) firstInput.focus();
+        }
+      }, 60);
     }
   }
 
   openForm() {
-    this.isFormVisible = true;
     this.cancelEditParty();
+    this.isFormVisible = true;
+    setTimeout(() => {
+      const el = document.querySelector('.party-modal-dialog') as HTMLElement;
+      if (el) {
+        const firstInput = el.querySelector('input:not([disabled])') as HTMLElement;
+        if (firstInput) firstInput.focus();
+      }
+    }, 60);
   }
 
   // --- Slide-in Edit Drawer ---
@@ -410,6 +431,22 @@ export class PartyComponent implements OnInit {
   closeEditDrawer() {
     this.isDrawerOpen = false;
     this.selectedPartyForDrawer = null;
+  }
+
+  // --- Official Client Dossier (Read-Only Inspection Mode) ---
+  openPartyDossier(party: PartyRecord): void {
+    this.selectedPartyForDossier = party;
+    this.showDossierModal = true;
+    this.logAudit('Viewed party dossier: ' + party.partyName);
+  }
+
+  closePartyDossier(): void {
+    this.showDossierModal = false;
+    this.selectedPartyForDossier = null;
+  }
+
+  printPartyDossier(): void {
+    window.print();
   }
 
   saveDrawerParty() {
@@ -453,13 +490,17 @@ export class PartyComponent implements OnInit {
     this.isFormVisible = true;
     this.notificationService.info('Editing Party', `Loaded "${party.partyName}" into editor.`);
     setTimeout(() => {
-      const el = document.querySelector('.party-form-card');
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
+      const el = document.querySelector('.party-modal-dialog') as HTMLElement;
+      if (el) {
+        const firstInput = el.querySelector('input:not([disabled])') as HTMLElement;
+        if (firstInput) firstInput.focus();
+      }
+    }, 60);
   }
 
   cancelEditParty() {
     this.editingPartyId = null;
+    this.isFormVisible = false;
     this.partyForm = {
       partyName: '',
       partyAddress: '',

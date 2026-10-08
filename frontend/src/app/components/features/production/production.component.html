@@ -3,58 +3,69 @@
 <!-- ============================================================ -->
 <div *ngIf="activeTab === 'production'" class="production-screen-wrapper">
   
-  <!-- 1. COMPACT PROFESSIONAL PAGE HEADER -->
-  <header class="production-page-header">
-    <div class="header-left-col">
-      <div class="header-title-row">
+  <!-- 1. BREADCRUMB TRAIL (LAYER 1) -->
+  <div class="production-breadcrumb-trail no-print">
+    <i class="bi bi-house breadcrumb-home-ico"></i>
+    <span>Futane Agro ERP</span>
+    <span class="crumb-separator">/</span>
+    <span>Manufacturing</span>
+    <span class="crumb-separator">/</span>
+    <span class="crumb-active">Daily Production &amp; Shift Operations</span>
+  </div>
+
+  <!-- 2. MASTER PAGE HEADER CARD (LAYER 2) -->
+  <header class="production-page-header no-print">
+    <div class="header-primary-row">
+      <div class="header-left-col">
         <div class="header-icon-box">
           <i class="bi bi-boxes"></i>
         </div>
-        <div>
-          <h1 class="header-main-title">{{ 'nav.production' | translate:currentLang }}</h1>
-          <p class="header-subtitle">Daily manufacturing, shift-wise output, rejection rates & quality telemetry</p>
+        <div class="header-titles">
+          <div class="title-with-badge">
+            <h1 class="header-main-title">{{ 'nav.production' | translate:currentLang }}</h1>
+            <span class="header-count-pill">{{ ppdList.length }} Batches</span>
+          </div>
         </div>
+      </div>
+
+      <!-- Right-side actions: Refresh, CSV, Excel, + New Production -->
+      <div class="header-right-actions">
+        <button type="button" class="btn-header-action btn-header-secondary" (click)="loadData()" [disabled]="isRefreshing" title="Refresh production data" aria-label="Refresh production data">
+          <i class="bi bi-arrow-clockwise" [class.spin-anim]="isRefreshing"></i>
+          <span>Refresh</span>
+        </button>
+
+        <button type="button" class="btn-header-action btn-header-secondary" (click)="exportCurrentFilteredCsv('ppd', getFullFilteredList(ppdList, 'ppd'))" title="Export production batches to CSV" aria-label="Export to CSV">
+          <i class="bi bi-download"></i>
+          <span>CSV</span>
+        </button>
+
+        <button type="button" class="btn-header-action btn-header-secondary" (click)="exportCurrentFilteredExcel('ppd', getFullFilteredList(ppdList, 'ppd'))" title="Export production batches for Microsoft Excel" aria-label="Export to Excel">
+          <i class="bi bi-file-earmark-excel"></i>
+          <span>Excel</span>
+        </button>
+
+        <button type="button" *ngIf="!isViewer()" class="btn-header-action btn-primary btn-header-primary" (click)="toggleFormVisibility()" [title]="isFormVisible ? 'Collapse Entry Form' : 'Open Production Entry Form'" aria-label="Add Production Entry">
+          <i class="bi" [ngClass]="isFormVisible ? 'bi-dash-lg' : 'bi-plus-lg'"></i>
+          <span>{{ isFormVisible ? 'Hide Form' : '+ Add Production' }}</span>
+        </button>
       </div>
     </div>
 
-    <!-- Right-side quick controls: Date, Shift, Refresh, + New Production -->
-    <div class="header-right-col">
-      <!-- Quick Date Selector -->
-      <div class="quick-control-item">
-        <label class="control-mini-label"><i class="bi bi-calendar3 me-1"></i>Date</label>
-        <div class="input-with-clear">
-          <input type="date" [(ngModel)]="filterDate" class="form-control-compact" title="Filter by production date" (change)="currentPage = 1">
-          <button *ngIf="filterDate" type="button" class="btn-input-clear" (click)="filterDate = ''; currentPage = 1" title="Clear date filter" aria-label="Clear date">
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </div>
-      </div>
-
-      <!-- Quick Shift Filter Dropdown -->
-      <div class="quick-control-item">
-        <label class="control-mini-label"><i class="bi bi-clock-history me-1"></i>Shift</label>
-        <select [(ngModel)]="tabFilterShift" class="form-select-compact" title="Filter by operational shift" (change)="currentPage = 1">
-          <option value="">All Shifts</option>
-          <option *ngFor="let s of shifts" [value]="s">{{ s }}</option>
-        </select>
-      </div>
-
-      <!-- Refresh Data Button (Utility) -->
-      <button type="button" class="btn btn-secondary btn-header-action" (click)="loadData()" [disabled]="isRefreshing" title="Refresh production data" aria-label="Refresh production data">
-        <i class="bi bi-arrow-clockwise" [class.spin-anim]="isRefreshing"></i>
-        <span class="btn-label-text">Refresh</span>
-      </button>
-
-      <!-- Primary Action Button: + Add Production / Toggle Form -->
-      <button type="button" *ngIf="!isViewer()" class="btn btn-primary btn-header-action" (click)="toggleFormVisibility()" [title]="isFormVisible ? 'Collapse Entry Form' : 'Open Production Entry Form'" aria-label="Add Production Entry">
-        <i class="bi" [ngClass]="isFormVisible ? 'bi-dash-lg' : 'bi-plus-lg'"></i>
-        <span class="btn-label-text">{{ isFormVisible ? 'Hide Form' : 'Add Production' }}</span>
-      </button>
+    <!-- Secondary Row: Subtitle & Contextual Manufacturing Formula -->
+    <div class="header-secondary-row">
+      <p class="header-subtitle">
+        Daily manufacturing, shift-wise output, rejection rates &amp; quality telemetry
+      </p>
+      <span class="header-formula-badge" title="Manufacturing Yield Formula: Total Produced – Rejections = Net Stock Ready">
+        <i class="bi bi-calculator me-1"></i>
+        <span>Total Produced &minus; Rejections = Net Stock Ready</span>
+      </span>
     </div>
   </header>
 
-  <!-- 2. PRODUCTION MODULE SUB-NAVIGATION (Tabs) -->
-  <div class="production-subnav-bar">
+  <!-- 3. PILL SUBTABS NAVIGATION BAR -->
+  <div class="production-subnav-bar no-print">
     <div class="subnav-tabs-group" role="tablist">
       <button type="button" role="tab" class="subnav-tab-btn" [class.active]="activeTab === 'production'" (click)="switchSubTab('production')">
         <i class="bi bi-calendar2-check"></i>
@@ -69,47 +80,68 @@
     </div>
   </div>
 
-  <!-- 3. PRODUCTION TELEMETRY SUMMARY RIBBON (KPI Area) -->
-  <section class="production-kpi-grid">
-    <div class="kpi-card total-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-boxes"></i></div>
-      <div class="kpi-content">
-        <span class="kpi-label">TOTAL PRODUCED</span>
-        <strong class="kpi-value">{{ getPpdTotal() | number }} <span class="kpi-unit">crates</span></strong>
-        <span class="kpi-meta"><i class="bi bi-layers me-1"></i>Across {{ ppdList.length }} logged batches</span>
+  <!-- 4. 5-COLUMN RESPONSIVE KPI TELEMETRY CARDS -->
+  <section class="production-kpi-grid no-print">
+    <div class="production-kpi-card">
+      <div class="production-kpi-icon kpi-blue">
+        <i class="bi bi-boxes"></i>
+      </div>
+      <div class="production-kpi-body">
+        <span class="production-kpi-label">TOTAL PRODUCED</span>
+        <div class="production-kpi-value">{{ getPpdTotal() | number }}</div>
+        <div class="production-kpi-sub">Across {{ ppdList.length }} logged batches</div>
       </div>
     </div>
-    <div class="kpi-card success-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-check2-circle"></i></div>
-      <div class="kpi-content">
-        <span class="kpi-label">SUCCESSFUL CRATES</span>
-        <strong class="kpi-value text-success">{{ getPpdSuccessful() | number }} <span class="kpi-unit">crates</span></strong>
-        <span class="kpi-meta"><i class="bi bi-shield-check me-1"></i>Passed quality gate</span>
+
+    <div class="production-kpi-card">
+      <div class="production-kpi-icon kpi-green">
+        <i class="bi bi-check2-circle"></i>
+      </div>
+      <div class="production-kpi-body">
+        <span class="production-kpi-label">SUCCESSFUL CRATES</span>
+        <div class="production-kpi-value">{{ getPpdSuccessful() | number }}</div>
+        <div class="production-kpi-sub">Passed quality gate</div>
       </div>
     </div>
-    <div class="kpi-card danger-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-x-octagon"></i></div>
-      <div class="kpi-content">
-        <span class="kpi-label">REJECTIONS</span>
-        <strong class="kpi-value text-danger">{{ getPpdRejected() | number }} <span class="kpi-unit">crates</span></strong>
-        <span class="kpi-meta"><i class="bi bi-exclamation-triangle me-1"></i>{{ getPpdTotal() > 0 ? ((getPpdRejected() / getPpdTotal()) * 100 | number:'1.1-1') : 0 }}% scrap rate</span>
+
+    <div class="production-kpi-card">
+      <div class="production-kpi-icon kpi-amber">
+        <i class="bi bi-x-octagon"></i>
+      </div>
+      <div class="production-kpi-body">
+        <span class="production-kpi-label">REJECTIONS</span>
+        <div class="production-kpi-value">{{ getPpdRejected() | number }}</div>
+        <div class="production-kpi-sub">{{ getPpdTotal() > 0 ? ((getPpdRejected() / getPpdTotal()) * 100 | number:'1.1-1') : 0 }}% scrap rate</div>
       </div>
     </div>
-    <div class="kpi-card efficiency-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-speedometer2"></i></div>
-      <div class="kpi-content">
-        <span class="kpi-label">OVERALL BATCH YIELD</span>
-        <strong class="kpi-value text-primary">{{ getPpdEfficiency() | number:'1.1-1' }}%</strong>
-        <div class="kpi-progress-bar">
-          <div class="kpi-progress-fill" [style.width.%]="getPpdEfficiency()"></div>
-        </div>
+
+    <div class="production-kpi-card">
+      <div class="production-kpi-icon kpi-purple">
+        <i class="bi bi-layers"></i>
+      </div>
+      <div class="production-kpi-body">
+        <span class="production-kpi-label">LOGGED BATCHES</span>
+        <div class="production-kpi-value">{{ ppdList.length }}</div>
+        <div class="production-kpi-sub">Manufacturing shift cycles</div>
+      </div>
+    </div>
+
+    <div class="production-kpi-card">
+      <div class="production-kpi-icon kpi-slate">
+        <i class="bi bi-speedometer2"></i>
+      </div>
+      <div class="production-kpi-body">
+        <span class="production-kpi-label">OVERALL BATCH YIELD</span>
+        <div class="production-kpi-value">{{ getPpdEfficiency() | number:'1.1-1' }}%</div>
+        <div class="production-kpi-sub">Plant efficiency index</div>
       </div>
     </div>
   </section>
 
-  <!-- 4. ADD / EDIT PRODUCTION ENTRY FORM (Collapsible 2-3 Column Card) -->
-  <div class="glass-panel form-expansion-panel animate-fade-in" *ngIf="!isViewer() && isFormVisible" [class.editing-mode]="ppdForm.id">
-    <div class="form-panel-header">
+  <!-- 4. FIXED CENTERED MODAL: ADD / EDIT PRODUCTION ENTRY -->
+  <div class="production-modal-overlay" *ngIf="!isViewer() && isFormVisible" (click)="toggleFormVisibility()" aria-hidden="true"></div>
+  <div class="production-modal-dialog" *ngIf="!isViewer() && isFormVisible" role="dialog" aria-modal="true" aria-label="Daily Production Batch Modal">
+    <div class="form-header-banner">
       <div class="form-header-title">
         <span class="form-icon-pill" [class.editing]="ppdForm.id">
           <i class="bi" [ngClass]="ppdForm.id ? 'bi-pencil-square' : 'bi-plus-circle-fill'"></i>
@@ -124,78 +156,80 @@
         <button *ngIf="ppdForm.id" type="button" class="btn btn-secondary btn-sm" (click)="ppdForm = { id: '', date: '', crateType: 'Apple Crate', totalProduction: 0, successful: 0, rejected: 0, shift: 'Morning Shift' }">
           <i class="bi bi-x-circle me-1"></i> Cancel Edit
         </button>
-        <button type="button" class="btn-panel-close" (click)="toggleFormVisibility()" title="Collapse form" aria-label="Collapse form">
-          <i class="bi bi-chevron-up"></i>
+        <button type="button" class="btn-panel-close" (click)="toggleFormVisibility()" title="Close Form" aria-label="Close Form">
+          <i class="bi bi-x-lg"></i>
         </button>
       </div>
     </div>
 
     <form (submit)="savePpd()" class="production-entry-form">
-      <div class="form-fields-grid">
-        <!-- Date -->
-        <div class="form-field-col">
-          <label class="field-label"><i class="bi bi-calendar-event me-1 text-primary"></i>{{ 'label.date' | translate:currentLang }} <span class="req-star">*</span></label>
-          <input appAutoSelect type="date" [(ngModel)]="ppdForm.date" name="ppdDate" required class="form-input-control">
+      <div class="production-modal-scroll-body">
+        <div class="form-fields-grid">
+          <!-- Date -->
+          <div class="form-field-col">
+            <label class="field-label"><i class="bi bi-calendar-event me-1 text-primary"></i>{{ 'label.date' | translate:currentLang }} <span class="req-star">*</span></label>
+            <input appAutoSelect type="date" [(ngModel)]="ppdForm.date" name="ppdDate" required class="form-input-control">
+          </div>
+
+          <!-- Crate Type -->
+          <div class="form-field-col">
+            <label class="field-label"><i class="bi bi-box-seam me-1 text-primary"></i>{{ 'ppd.crateType' | translate:currentLang }} <span class="req-star">*</span></label>
+            <select [(ngModel)]="ppdForm.crateType" name="ppdCrateType" required class="form-input-control">
+              <option *ngFor="let c of crateTypes" [value]="c">{{ c }}</option>
+            </select>
+          </div>
+
+          <!-- Shift -->
+          <div class="form-field-col">
+            <label class="field-label"><i class="bi bi-clock me-1 text-primary"></i>Shift <span class="req-star">*</span></label>
+            <select [(ngModel)]="ppdForm.shift" name="ppdShift" required class="form-input-control">
+              <option *ngFor="let s of shifts" [value]="s">{{ s }}</option>
+            </select>
+          </div>
+
+          <!-- Successful -->
+          <div class="form-field-col">
+            <label class="field-label"><i class="bi bi-check2-circle me-1 text-success"></i>{{ 'ppd.successful' | translate:currentLang }} <span class="req-star">*</span></label>
+            <input appAutoSelect type="number" [(ngModel)]="ppdForm.successful" (ngModelChange)="recalculateTotal()" (input)="onProductionFieldChange()" name="ppdSuccessful" required min="0" placeholder="0" class="form-input-control font-mono">
+          </div>
+
+          <!-- Rejected -->
+          <div class="form-field-col">
+            <label class="field-label"><i class="bi bi-x-octagon me-1 text-danger"></i>{{ 'ppd.rejected' | translate:currentLang }} <span class="req-star">*</span></label>
+            <input appAutoSelect type="number" [(ngModel)]="ppdForm.rejected" (ngModelChange)="recalculateTotal()" (input)="onProductionFieldChange()" name="ppdRejected" required min="0" placeholder="0" class="form-input-control font-mono">
+          </div>
+
+          <!-- Total Production (Auto computed) -->
+          <div class="form-field-col">
+            <label class="field-label"><i class="bi bi-calculator me-1 text-muted"></i>{{ 'ppd.totalProduction' | translate:currentLang }} <span class="auto-badge">(Auto)</span></label>
+            <input appAutoSelect type="number" [value]="ppdForm.totalProduction" name="ppdTotal" readonly class="form-input-control readonly-input font-mono" placeholder="0">
+          </div>
         </div>
 
-        <!-- Crate Type -->
-        <div class="form-field-col">
-          <label class="field-label"><i class="bi bi-box-seam me-1 text-primary"></i>{{ 'ppd.crateType' | translate:currentLang }} <span class="req-star">*</span></label>
-          <select [(ngModel)]="ppdForm.crateType" name="ppdCrateType" required class="form-input-control">
-            <option *ngFor="let c of crateTypes" [value]="c">{{ c }}</option>
-          </select>
-        </div>
-
-        <!-- Shift -->
-        <div class="form-field-col">
-          <label class="field-label"><i class="bi bi-clock me-1 text-primary"></i>Shift <span class="req-star">*</span></label>
-          <select [(ngModel)]="ppdForm.shift" name="ppdShift" required class="form-input-control">
-            <option *ngFor="let s of shifts" [value]="s">{{ s }}</option>
-          </select>
-        </div>
-
-        <!-- Successful -->
-        <div class="form-field-col">
-          <label class="field-label"><i class="bi bi-check2-circle me-1 text-success"></i>{{ 'ppd.successful' | translate:currentLang }} <span class="req-star">*</span></label>
-          <input appAutoSelect type="number" [(ngModel)]="ppdForm.successful" (ngModelChange)="recalculateTotal()" (input)="onProductionFieldChange()" name="ppdSuccessful" required min="0" placeholder="0" class="form-input-control font-mono">
-        </div>
-
-        <!-- Rejected -->
-        <div class="form-field-col">
-          <label class="field-label"><i class="bi bi-x-octagon me-1 text-danger"></i>{{ 'ppd.rejected' | translate:currentLang }} <span class="req-star">*</span></label>
-          <input appAutoSelect type="number" [(ngModel)]="ppdForm.rejected" (ngModelChange)="recalculateTotal()" (input)="onProductionFieldChange()" name="ppdRejected" required min="0" placeholder="0" class="form-input-control font-mono">
-        </div>
-
-        <!-- Total Production (Auto computed) -->
-        <div class="form-field-col">
-          <label class="field-label"><i class="bi bi-calculator me-1 text-muted"></i>{{ 'ppd.totalProduction' | translate:currentLang }} <span class="auto-badge">(Auto)</span></label>
-          <input appAutoSelect type="number" [value]="ppdForm.totalProduction" name="ppdTotal" readonly class="form-input-control readonly-input font-mono" placeholder="0">
-        </div>
-      </div>
-
-      <!-- Live Quality & Batch Yield Telemetry Preview -->
-      <div *ngIf="ppdForm.totalProduction > 0" class="form-live-yield-bar animate-fade-in">
-        <div class="yield-header">
-          <span class="yield-title"><i class="bi bi-speedometer2 me-1 text-primary"></i>Batch Efficiency Preview:</span>
-          <strong class="yield-val" [style.color]="(ppdForm.successful / ppdForm.totalProduction >= 0.95) ? 'var(--primary)' : 'var(--color-warning)'">
-            {{ (ppdForm.successful / ppdForm.totalProduction * 100) | number:'1.1-1' }}%
-          </strong>
-        </div>
-        <div class="yield-track">
-          <div class="yield-progress" [style.width.%]="ppdForm.successful / ppdForm.totalProduction * 100"></div>
-        </div>
-        <div class="yield-meta">
-          <span>Rejections: {{ (ppdForm.rejected / ppdForm.totalProduction * 100) | number:'1.1-1' }}% ({{ ppdForm.rejected }} units)</span>
-          <span class="quality-badge" [class.quality-good]="ppdForm.successful / ppdForm.totalProduction >= 0.95">
-            {{ (ppdForm.successful / ppdForm.totalProduction >= 0.95) ? '● Optimal Quality Gate' : '▲ Higher Than Normal Scrap' }}
-          </span>
+        <!-- Live Quality & Batch Yield Telemetry Preview -->
+        <div *ngIf="ppdForm.totalProduction > 0" class="form-live-yield-bar animate-fade-in">
+          <div class="yield-header">
+            <span class="yield-title"><i class="bi bi-speedometer2 me-1 text-primary"></i>Batch Efficiency Preview:</span>
+            <strong class="yield-val" [style.color]="(ppdForm.successful / ppdForm.totalProduction >= 0.95) ? 'var(--primary)' : 'var(--color-warning)'">
+              {{ (ppdForm.successful / ppdForm.totalProduction * 100) | number:'1.1-1' }}%
+            </strong>
+          </div>
+          <div class="yield-track">
+            <div class="yield-progress" [style.width.%]="ppdForm.successful / ppdForm.totalProduction * 100"></div>
+          </div>
+          <div class="yield-meta">
+            <span>Rejections: {{ (ppdForm.rejected / ppdForm.totalProduction * 100) | number:'1.1-1' }}% ({{ ppdForm.rejected }} units)</span>
+            <span class="quality-badge" [class.quality-good]="ppdForm.successful / ppdForm.totalProduction >= 0.95">
+              {{ (ppdForm.successful / ppdForm.totalProduction >= 0.95) ? '● Optimal Quality Gate' : '▲ Higher Than Normal Scrap' }}
+            </span>
+          </div>
         </div>
       </div>
 
       <!-- Form Action Buttons -->
       <div class="form-actions-row">
-        <button type="button" class="btn btn-secondary" (click)="ppdForm = { id: '', date: '', crateType: 'Apple Crate', totalProduction: 0, successful: 0, rejected: 0, shift: 'Morning Shift' }">
-          <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Fields
+        <button type="button" class="btn btn-secondary" (click)="toggleFormVisibility()">
+          Cancel
         </button>
         <button type="submit" class="btn btn-primary btn-save-entry">
           <i class="bi" [ngClass]="ppdForm.id ? 'bi-floppy-fill' : 'bi-check2-circle'"></i>
@@ -222,31 +256,67 @@
           </button>
         </div>
 
-        <!-- Crate Type Filter -->
-        <div class="toolbar-filter-select">
-          <select [(ngModel)]="tabFilterCrateType" (change)="currentPage = 1" class="toolbar-select" title="Filter by crate product type">
-            <option value="">All Crate Types</option>
-            <option *ngFor="let c of crateTypes" [value]="c">{{ c }}</option>
-          </select>
-        </div>
-
-        <!-- Shift Filter -->
-        <div class="toolbar-filter-select">
-          <select [(ngModel)]="tabFilterShift" (change)="currentPage = 1" class="toolbar-select" title="Filter by shift">
-            <option value="">All Shifts</option>
-            <option *ngFor="let s of shifts" [value]="s">{{ s }}</option>
-          </select>
-        </div>
-
-        <!-- Active Filter Indicator & Reset Button -->
-        <div *ngIf="getActiveFilterCount('ppd') > 0" class="active-filter-badge-wrap">
-          <span class="active-filter-pill">
-            <i class="bi bi-funnel-fill me-1"></i>Filtered ({{ getActiveFilterCount('ppd') }})
-          </span>
-          <button type="button" class="btn-filter-reset" (click)="resetFilters('ppd')" title="Reset all applied filters" aria-label="Reset filters">
-            <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+        <!-- Consolidated Filter Popover -->
+        <div class="filter-popover-wrapper" (click)="$event.stopPropagation()">
+          <button 
+            type="button" 
+            class="filter-trigger-btn"
+            [class.active-filters]="getPpdFilterCount() > 0"
+            (click)="showFilterPopover['ppd'] = !showFilterPopover['ppd']"
+            title="Filter daily production records">
+            <i class="bi bi-funnel"></i>
+            <span>Filters</span>
+            <span class="filter-badge" *ngIf="getPpdFilterCount() > 0">{{ getPpdFilterCount() }}</span>
           </button>
+
+          <div class="filter-popover-panel shadow-lg" *ngIf="showFilterPopover['ppd']">
+            <div class="popover-title-row">
+              <span><i class="bi bi-sliders me-1 text-primary"></i>Refine Production Entries</span>
+              <button type="button" class="btn-text" (click)="resetFilters('ppd'); showFilterPopover['ppd'] = false">Reset All</button>
+            </div>
+
+            <div class="popover-content-body">
+              <!-- Production Date Filter -->
+              <div class="filter-field-group">
+                <label>Production Date</label>
+                <input type="date" [(ngModel)]="filterDate" class="filter-select" (change)="currentPage = 1">
+              </div>
+
+              <!-- Crate Type Filter -->
+              <div class="filter-field-group">
+                <label>Crate Product Type</label>
+                <select [(ngModel)]="tabFilterCrateType" (change)="currentPage = 1" class="filter-select">
+                  <option value="">All Crate Types</option>
+                  <option *ngFor="let c of crateTypes" [value]="c">{{ c }}</option>
+                </select>
+              </div>
+
+              <!-- Shift Filter -->
+              <div class="filter-field-group">
+                <label>Production Shift</label>
+                <select [(ngModel)]="tabFilterShift" (change)="currentPage = 1" class="filter-select">
+                  <option value="">All Shifts</option>
+                  <option *ngFor="let s of shifts" [value]="s">{{ s }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="popover-footer-row">
+              <button type="button" class="btn btn-sm btn-secondary" (click)="showFilterPopover['ppd'] = false">Close</button>
+              <button type="button" class="btn btn-sm btn-primary" (click)="showFilterPopover['ppd'] = false">Apply Filters</button>
+            </div>
+          </div>
         </div>
+
+        <!-- Quick Reset Trigger -->
+        <button *ngIf="getActiveFilterCount('ppd') > 0" 
+                type="button" 
+                class="btn btn-secondary btn-action-compact" 
+                (click)="resetFilters('ppd')" 
+                title="Reset all applied filters" 
+                aria-label="Reset filters">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+        </button>
       </div>
 
       <!-- Right side: Density, Column Manager, Exports -->
@@ -435,6 +505,7 @@
             <!-- Data Rows with Multi-select and Inline Double-click Editing -->
             <tr *ngFor="let ppd of getProcessedList(ppdList, 'ppd'); trackBy: trackById" 
               [class.row-selected]="isRowSelected('ppd', ppd.id)"
+              [class.row-high-scrap]="ppd.totalProduction > 0 && (ppd.rejected / ppd.totalProduction) > 0.05"
               class="enterprise-data-row">
 
               <ng-container *ngFor="let col of columnsConfig['ppd']">
@@ -517,15 +588,16 @@
                   <span class="badge efficiency-pill" [style.background]="getEfficiencyColor(ppd.successful, ppd.totalProduction)">
                     ● {{ getEfficiencyPct(ppd.successful, ppd.totalProduction) }}%
                   </span>
-                </td>
-
-                <!-- Actions -->
+                               <!-- Actions -->
                 <td *ngIf="col.visible && col.key === 'actions'" class="table-action-col text-end" style="padding-right: 16px;">
-                  <div class="row-actions-group">
-                    <button type="button" class="btn-row-action btn-edit" *ngIf="!isViewer()" (click)="openDrawerEdit('ppd', ppd)" title="Open Drawer Edit" aria-label="Edit record">
-                      <i class="bi bi-pencil-square me-1"></i> Edit
+                  <div class="action-buttons-group">
+                    <button type="button" class="btn-action-icon btn-view" (click)="openPpdDossier(ppd)" title="View Batch QC Inspection Slip" aria-label="View Batch Slip">
+                      <i class="bi bi-eye"></i>
                     </button>
-                    <button type="button" class="btn-row-action btn-delete" *ngIf="canDelete()" (click)="deletePpd(ppd.id)" title="Delete Record" aria-label="Delete record">
+                    <button type="button" class="btn-action-icon btn-edit" *ngIf="!isViewer()" (click)="editPpd(ppd)" title="Edit production record" aria-label="Edit Record">
+                      <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button type="button" class="btn-action-icon btn-delete" *ngIf="canDelete()" (click)="deletePpd(ppd.id)" title="Delete record" aria-label="Delete Record">
                       <i class="bi bi-trash3"></i>
                     </button>
                   </div>
@@ -533,40 +605,229 @@
               </ng-container>
             </tr>
           </tbody>
+          <tfoot class="table-summary-tfoot" *ngIf="ppdList.length > 0 || getProcessedList(ppdList, 'ppd').length > 0">
+            <tr>
+              <ng-container *ngFor="let col of columnsConfig['ppd']">
+                <td *ngIf="col.visible && col.key === 'select'" style="text-align: center;"></td>
+                <td *ngIf="col.visible && col.key === 'date'" class="tfoot-label"><strong>TOTALS</strong></td>
+                <td *ngIf="col.visible && col.key === 'crateType'">
+                  <strong>{{ getProcessedList(ppdList, 'ppd').length }} runs</strong>
+                </td>
+                <td *ngIf="col.visible && col.key === 'shift'"></td>
+                <td *ngIf="col.visible && col.key === 'totalProduction'" class="text-end font-mono">
+                  <strong>{{ getFilteredPpdSum('totalProduction') | number }}</strong>
+                </td>
+                <td *ngIf="col.visible && col.key === 'successful'" class="text-end font-mono text-success">
+                  <strong>{{ getFilteredPpdSum('successful') | number }}</strong>
+                </td>
+                <td *ngIf="col.visible && col.key === 'rejected'" class="text-end font-mono text-danger">
+                  <strong>{{ getFilteredPpdSum('rejected') | number }}</strong>
+                </td>
+                <td *ngIf="col.visible && col.key === 'efficiency'" class="text-center font-mono">
+                  <strong>{{ getFilteredPpdOverallYield() }}%</strong>
+                </td>
+                <td *ngIf="col.visible && col.key === 'actions'" class="table-action-col text-end"></td>
+              </ng-container>
+            </tr>
+          </tfoot>
         </table>
       </div>
 
-      <!-- Pagination Toolbar -->
-      <div class="table-pagination-footer no-print">
-        <div class="pagination-info">
-          <span>Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['ppd'] || 0) }} of {{ tableFilteredCounts['ppd'] || 0 }} records</span>
+      <!-- ── STANDARD PAGINATION FOOTER ── -->
+      <div class="erp-table-footer no-print">
+        <div class="erp-footer-info">
+          Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to
+          <strong>{{ Math.min(currentPage * pageSize, tableFilteredCounts['ppd'] || 0) }}</strong> of
+          <strong>{{ tableFilteredCounts['ppd'] || 0 }}</strong> daily records
         </div>
-
-        <div class="pagination-controls">
-          <div class="page-size-selector">
-            <label>Rows per page:</label>
-            <select [(ngModel)]="pageSize" (change)="currentPage = 1" class="page-size-select" title="Select rows per page">
+        <div class="erp-footer-controls">
+          <div class="erp-rows-selector">
+            <span>Rows:</span>
+            <select [(ngModel)]="pageSize" (change)="currentPage = 1" class="erp-rows-select" title="Select rows per page">
               <option [ngValue]="10">10</option>
               <option [ngValue]="25">25</option>
               <option [ngValue]="50">50</option>
               <option [ngValue]="100">100</option>
             </select>
           </div>
-
-          <div class="page-nav-btns">
-            <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" title="Previous page" aria-label="Previous page">
-              <i class="bi bi-chevron-left me-1"></i> Previous
+          <div class="erp-page-buttons">
+            <button type="button" class="erp-page-nav-btn" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
+              <i class="bi bi-chevron-left"></i> Prev
             </button>
-            <span class="current-page-pill">Page {{ currentPage }}</span>
-            <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['ppd'] || 0)" (click)="currentPage = currentPage + 1" title="Next page" aria-label="Next page">
-              Next <i class="bi bi-chevron-right ms-1"></i>
+            <span class="erp-page-counter">Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong></span>
+            <button type="button" class="erp-page-nav-btn" [disabled]="currentPage * pageSize >= (tableFilteredCounts['ppd'] || 0)" (click)="currentPage = currentPage + 1">
+              Next <i class="bi bi-chevron-right"></i>
             </button>
           </div>
         </div>
       </div>
+    </div>
+  </div>
 
+  <!-- 6. PRODUCTION BATCH QC INSPECTION SLIP / DOSSIER MODAL -->
+  <div class="dossier-modal-backdrop" *ngIf="showPpdDossierModal" (click)="closePpdDossier()" aria-hidden="true"></div>
+  <div class="dossier-modal-container" *ngIf="showPpdDossierModal && selectedPpdForDossier" role="dialog" aria-modal="true" aria-label="Batch QC Inspection Slip">
+    <!-- Pinned Header Bar -->
+    <div class="dossier-header-bar no-print">
+      <div class="dossier-header-title">
+        <i class="bi bi-shield-check text-primary"></i>
+        <span>Official Quality Inspection Slip • Batch #{{ selectedPpdForDossier.id }}</span>
+      </div>
+      <div class="dossier-header-controls">
+        <button type="button" class="btn-dossier-print" (click)="printPpdDossier()" title="Print Batch Slip">
+          <i class="bi bi-printer me-1"></i> Print Batch Slip
+        </button>
+        <button type="button" class="btn-dossier-close" (click)="closePpdDossier()" title="Close Dossier" aria-label="Close Dossier">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
     </div>
 
+    <!-- Printable Sheet Content -->
+    <div class="dossier-scroll-viewport">
+      <div class="printable-dossier-sheet" id="printableProductionSheet">
+        <!-- Corporate Letterhead -->
+        <div class="dossier-letterhead">
+          <div class="dossier-logo-box">
+            <img src="assets/logo.svg" alt="Futane Agro" class="dossier-company-logo" (error)="ppdLogoErr = true" *ngIf="!ppdLogoErr">
+            <i class="bi bi-boxes dossier-fallback-icon" *ngIf="ppdLogoErr"></i>
+          </div>
+          <div class="dossier-company-info">
+            <h2 class="company-legal-name">FUTANE AGRO INDUSTRIES PVT. LTD.</h2>
+            <p class="company-tagline">Industrial Manufacturing, Agricultural Packaging &amp; Supply Chain Logistics</p>
+            <div class="company-tax-chips">
+              <span class="tax-chip font-mono">GSTIN: 27AAACF2920A1ZX</span>
+              <span class="tax-chip font-mono">PAN: AAACF2920A</span>
+              <span class="tax-chip">Plant: MIDC Baramati, Pune (MH)</span>
+            </div>
+          </div>
+          <div class="dossier-account-badge">
+            <span class="badge-type-label">BATCH QC CERTIFICATE</span>
+            <strong class="badge-account-id font-mono">#BATCH-{{ selectedPpdForDossier.id }}</strong>
+            <span class="badge-verified-tag text-success">
+              <i class="bi bi-patch-check-fill me-1"></i>Quality Gate Passed
+            </span>
+          </div>
+        </div>
+
+        <div class="dossier-divider-line"></div>
+
+        <!-- Document Title Banner -->
+        <div class="dossier-doc-banner">
+          <div class="doc-title-group">
+            <h3>DAILY PRODUCTION &amp; DEFECT INSPECTION SLIP</h3>
+            <span class="doc-subtitle font-mono">Log Date: {{ selectedPpdForDossier.date | indianDate }} | Shift: {{ selectedPpdForDossier.shift || 'Morning Shift' }}</span>
+          </div>
+          <div class="doc-audit-stamp font-mono">
+            <span>RECORD ID: #{{ selectedPpdForDossier.id }}</span>
+            <span>STATUS: VERIFIED COMMITTED</span>
+          </div>
+        </div>
+
+        <!-- Primary Production Metadata Grid -->
+        <div class="dossier-section-title">
+          <i class="bi bi-box-seam me-2"></i>1. Manufacturing Run Telemetry
+        </div>
+        <div class="dossier-meta-grid">
+          <div class="meta-field-card">
+            <span class="field-lbl">Crate Product SKU</span>
+            <strong class="field-val">{{ selectedPpdForDossier.crateType }}</strong>
+          </div>
+          <div class="meta-field-card">
+            <span class="field-lbl">Shift Classification</span>
+            <strong class="field-val">{{ selectedPpdForDossier.shift || 'Morning Shift' }}</strong>
+          </div>
+          <div class="meta-field-card">
+            <span class="field-lbl">Production Date</span>
+            <strong class="field-val font-mono">{{ selectedPpdForDossier.date | indianDate }}</strong>
+          </div>
+          <div class="meta-field-card">
+            <span class="field-lbl">Manufacturing Gate</span>
+            <strong class="field-val">Line #1 — Injection Molding</strong>
+          </div>
+        </div>
+
+        <!-- Detailed Metrics Table -->
+        <div class="dossier-section-title mt-3">
+          <i class="bi bi-clipboard2-check me-2"></i>2. Shift Volume &amp; Defect Audit
+        </div>
+        <table class="dossier-table">
+          <thead>
+            <tr>
+              <th>Metric Description</th>
+              <th class="text-end">Crates Output</th>
+              <th class="text-end">Percentage</th>
+              <th>Quality Verification</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Gross Production Output</strong></td>
+              <td class="text-end font-mono"><strong>{{ selectedPpdForDossier.totalProduction | number }}</strong></td>
+              <td class="text-end font-mono">100.0%</td>
+              <td>Shift Total Logged</td>
+            </tr>
+            <tr class="table-row-success">
+              <td><i class="bi bi-check-circle-fill text-success me-2"></i><strong>Successful / Passed QC</strong></td>
+              <td class="text-end font-mono text-success"><strong>{{ selectedPpdForDossier.successful | number }}</strong></td>
+              <td class="text-end font-mono text-success"><strong>{{ (selectedPpdForDossier.totalProduction > 0 ? (selectedPpdForDossier.successful / selectedPpdForDossier.totalProduction * 100) : 0) | number:'1.1-1' }}%</strong></td>
+              <td>Approved for Inventory Transfer</td>
+            </tr>
+            <tr class="table-row-danger">
+              <td><i class="bi bi-x-circle-fill text-danger me-2"></i><strong>Rejections / Defective Scrap</strong></td>
+              <td class="text-end font-mono text-danger"><strong>{{ selectedPpdForDossier.rejected | number }}</strong></td>
+              <td class="text-end font-mono text-danger"><strong>{{ (selectedPpdForDossier.totalProduction > 0 ? (selectedPpdForDossier.rejected / selectedPpdForDossier.totalProduction * 100) : 0) | number:'1.1-1' }}%</strong></td>
+              <td>Regrind / Recycling Reprocessing</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Official Stamp & Authorization -->
+        <div class="dossier-footer-signatures">
+          <div class="signature-col">
+            <div class="sign-line"></div>
+            <span class="sign-label">Shift Production Supervisor</span>
+            <span class="sign-sub">Futane Agro Mfg Operations</span>
+          </div>
+
+          <!-- Official Stamp Seal -->
+          <div class="official-stamp-seal">
+            <div class="stamp-outer-ring">
+              <div class="stamp-inner-ring">
+                <span class="stamp-company-text">FUTANE AGRO MANUFACTURING</span>
+                <i class="bi bi-award-fill stamp-star-icon"></i>
+                <span class="stamp-audit-text">QC INSPECTION SEAL</span>
+                <span class="stamp-valid font-mono">VERIFIED</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="signature-col">
+            <div class="sign-line"></div>
+            <span class="sign-label">Plant Quality Assurance Head</span>
+            <span class="sign-sub">Authorized Plant Signatory</span>
+          </div>
+        </div>
+
+        <div class="dossier-print-legal-notice">
+          <span>Futane Agro ERP Enterprise Quality Ledger • Computer Generated Quality Inspection Document • ISO 9001 Compliant</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pinned Footer -->
+    <div class="dossier-footer-bar no-print">
+      <div class="footer-status-pill">
+        <i class="bi bi-check-circle-fill text-success me-1"></i>
+        <span>Production Batch Validated</span>
+      </div>
+      <div class="footer-btn-group">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="closePpdDossier()">Close</button>
+        <button type="button" class="btn btn-primary btn-sm" (click)="printPpdDossier()">
+          <i class="bi bi-printer me-1"></i> Print Batch Slip
+        </button>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -590,32 +851,8 @@
       </div>
     </div>
 
-    <!-- Right-side quick controls: Month/Year Stepper, Refresh, + New Summary -->
+    <!-- Right-side actions: Refresh, + New Summary -->
     <div class="header-right-col">
-      <!-- Month & Year Navigator / Quick Selector -->
-      <div class="quick-control-item">
-        <label class="control-mini-label"><i class="bi bi-calendar-range me-1"></i>Period Navigation</label>
-        <div class="month-stepper-group" role="group" aria-label="Month and year navigation">
-          <button type="button" class="btn-stepper-arrow" (click)="prevMonth()" title="Previous month" aria-label="Previous month">
-            <i class="bi bi-chevron-left"></i>
-          </button>
-          
-          <select [(ngModel)]="tabFilterPpmMonth" class="header-select-month" (change)="currentPage = 1; updatePpmChart()" title="Select month" aria-label="Select month">
-            <option value="">All Months</option>
-            <option *ngFor="let m of months" [value]="m">{{ m }}</option>
-          </select>
-
-          <select [(ngModel)]="tabFilterPpmYear" class="header-select-year" (change)="currentPage = 1; updatePpmChart()" title="Select year" aria-label="Select year">
-            <option value="">All Years</option>
-            <option *ngFor="let y of getPpmYears()" [value]="y">{{ y }}</option>
-          </select>
-
-          <button type="button" class="btn-stepper-arrow" (click)="nextMonth()" title="Next month" aria-label="Next month">
-            <i class="bi bi-chevron-right"></i>
-          </button>
-        </div>
-      </div>
-
       <!-- Refresh Data Button -->
       <button type="button" class="btn btn-secondary btn-header-action" (click)="loadData()" [disabled]="isRefreshing" title="Refresh monthly data" aria-label="Refresh monthly data">
         <i class="bi bi-arrow-clockwise" [class.spin-anim]="isRefreshing"></i>
@@ -835,31 +1072,61 @@
           </button>
         </div>
 
-        <!-- Month Filter -->
-        <div class="toolbar-filter-select">
-          <select [(ngModel)]="tabFilterPpmMonth" (change)="currentPage = 1; updatePpmChart()" class="toolbar-select" title="Filter by month">
-            <option value="">All Months</option>
-            <option *ngFor="let m of months" [value]="m">{{ m }}</option>
-          </select>
-        </div>
-
-        <!-- Year Filter -->
-        <div class="toolbar-filter-select">
-          <select [(ngModel)]="tabFilterPpmYear" (change)="currentPage = 1; updatePpmChart()" class="toolbar-select" title="Filter by year">
-            <option value="">All Years</option>
-            <option *ngFor="let y of getPpmYears()" [value]="y">{{ y }}</option>
-          </select>
-        </div>
-
-        <!-- Active Filter Indicator & Reset -->
-        <div *ngIf="getActiveFilterCount('ppm') > 0" class="active-filter-badge-wrap">
-          <span class="active-filter-pill">
-            <i class="bi bi-funnel-fill me-1"></i>Filtered ({{ getActiveFilterCount('ppm') }})
-          </span>
-          <button type="button" class="btn-filter-reset" (click)="resetFilters('ppm'); updatePpmChart()" title="Reset filters" aria-label="Reset filters">
-            <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+        <!-- Consolidated Filter Popover -->
+        <div class="filter-popover-wrapper" (click)="$event.stopPropagation()">
+          <button 
+            type="button" 
+            class="filter-trigger-btn"
+            [class.active-filters]="getPpmFilterCount() > 0"
+            (click)="showFilterPopover['ppm'] = !showFilterPopover['ppm']"
+            title="Filter monthly records">
+            <i class="bi bi-funnel"></i>
+            <span>Filters</span>
+            <span class="filter-badge" *ngIf="getPpmFilterCount() > 0">{{ getPpmFilterCount() }}</span>
           </button>
+
+          <div class="filter-popover-panel shadow-lg" *ngIf="showFilterPopover['ppm']">
+            <div class="popover-title-row">
+              <span><i class="bi bi-sliders me-1 text-primary"></i>Refine Monthly Summaries</span>
+              <button type="button" class="btn-text" (click)="resetFilters('ppm'); updatePpmChart(); showFilterPopover['ppm'] = false">Reset All</button>
+            </div>
+
+            <div class="popover-content-body">
+              <!-- Month Filter -->
+              <div class="filter-field-group">
+                <label>Billing Month</label>
+                <select [(ngModel)]="tabFilterPpmMonth" (change)="currentPage = 1; updatePpmChart()" class="filter-select">
+                  <option value="">All Months</option>
+                  <option *ngFor="let m of months" [value]="m">{{ m }}</option>
+                </select>
+              </div>
+
+              <!-- Year Filter -->
+              <div class="filter-field-group">
+                <label>Financial Year</label>
+                <select [(ngModel)]="tabFilterPpmYear" (change)="currentPage = 1; updatePpmChart()" class="filter-select">
+                  <option value="">All Years</option>
+                  <option *ngFor="let y of getPpmYears()" [value]="y">{{ y }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="popover-footer-row">
+              <button type="button" class="btn btn-sm btn-secondary" (click)="showFilterPopover['ppm'] = false">Close</button>
+              <button type="button" class="btn btn-sm btn-primary" (click)="showFilterPopover['ppm'] = false">Apply Filters</button>
+            </div>
+          </div>
         </div>
+
+        <!-- Quick Reset Trigger -->
+        <button *ngIf="getActiveFilterCount('ppm') > 0" 
+                type="button" 
+                class="btn btn-secondary btn-action-compact" 
+                (click)="resetFilters('ppm'); updatePpmChart()" 
+                title="Reset filters" 
+                aria-label="Reset filters">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+        </button>
       </div>
 
       <!-- Right side: Density, Column Manager, Exports -->
@@ -1045,7 +1312,7 @@
               <td *ngIf="col.visible && col.key === 'actions'" class="table-action-col text-end" style="padding-right: 16px;">
                 <div class="row-actions-group">
                   <button type="button" class="btn-row-action btn-edit" *ngIf="!isViewer()" (click)="openDrawerEdit('ppm', ppm)" title="Edit Summary" aria-label="Edit summary">
-                    <i class="bi bi-pencil-square me-1"></i> Edit
+                    <i class="bi bi-pencil-square"></i>
                   </button>
                   <button type="button" class="btn-row-action btn-delete" *ngIf="canDelete()" (click)="deletePpm(ppm.id)" title="Delete Summary" aria-label="Delete summary">
                     <i class="bi bi-trash3"></i>
@@ -1057,7 +1324,7 @@
         </tbody>
 
         <!-- Table Summary / Totals Footer Row -->
-        <tfoot class="table-summary-tfoot" *ngIf="getProcessedList(ppmList, 'ppm').length > 0">
+        <tfoot class="table-summary-tfoot" *ngIf="ppmList.length > 0 || getProcessedList(ppmList, 'ppm').length > 0">
           <tr>
             <td *ngIf="isColVisible('ppm', 'select')"></td>
             <td *ngIf="isColVisible('ppm', 'monthYear')" class="tfoot-label">
@@ -1084,24 +1351,30 @@
       </table>
     </div>
 
-    <!-- Pagination -->
-    <div class="table-pagination-footer no-print">
-      <div class="pagination-info">
-        <span>Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, tableFilteredCounts['ppm'] || 0) }} of {{ tableFilteredCounts['ppm'] || 0 }} summaries</span>
+    <!-- ── STANDARD PAGINATION FOOTER ── -->
+    <div class="erp-table-footer no-print">
+      <div class="erp-footer-info">
+        Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to
+        <strong>{{ Math.min(currentPage * pageSize, tableFilteredCounts['ppm'] || 0) }}</strong> of
+        <strong>{{ tableFilteredCounts['ppm'] || 0 }}</strong> monthly summaries
       </div>
-      <div class="pagination-controls">
-        <div class="page-size-selector">
-          <label>Rows per page:</label>
-          <select [(ngModel)]="pageSize" (change)="currentPage = 1" class="page-size-select" title="Rows per page">
+      <div class="erp-footer-controls">
+        <div class="erp-rows-selector">
+          <span>Rows:</span>
+          <select [(ngModel)]="pageSize" (change)="currentPage = 1" class="erp-rows-select" title="Rows per page">
             <option [ngValue]="10">10</option>
             <option [ngValue]="25">25</option>
             <option [ngValue]="50">50</option>
           </select>
         </div>
-        <div class="page-nav-btns">
-          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" title="Previous page" aria-label="Previous page"><i class="bi bi-chevron-left me-1"></i> Previous</button>
-          <span class="current-page-pill">Page {{ currentPage }}</span>
-          <button type="button" class="btn btn-secondary btn-sm" [disabled]="currentPage * pageSize >= (tableFilteredCounts['ppm'] || 0)" (click)="currentPage = currentPage + 1" title="Next page" aria-label="Next page">Next <i class="bi bi-chevron-right ms-1"></i></button>
+        <div class="erp-page-buttons">
+          <button type="button" class="erp-page-nav-btn" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
+            <i class="bi bi-chevron-left"></i> Prev
+          </button>
+          <span class="erp-page-counter">Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong></span>
+          <button type="button" class="erp-page-nav-btn" [disabled]="currentPage * pageSize >= (tableFilteredCounts['ppm'] || 0)" (click)="currentPage = currentPage + 1">
+            Next <i class="bi bi-chevron-right"></i>
+          </button>
         </div>
       </div>
     </div>

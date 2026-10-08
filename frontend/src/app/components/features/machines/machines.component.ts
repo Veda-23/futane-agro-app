@@ -1,7 +1,7 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of, catchError } from 'rxjs';
 import { ApiService } from '../../../api.service';
 import { NotificationService } from '../../../services/notification.service';
 import { TranslatePipe } from '../../../translate.service';
@@ -89,6 +89,7 @@ export class MachinesComponent implements OnInit {
   tableDensity: 'compact' | 'comfortable' | 'spacious' = 'comfortable';
   currentPage = 1;
   pageSize = 10;
+  pageSizeOptions = [10, 25, 50, 100];
   sortField = 'id';
   sortAsc = false;
   selectedRowIds = new Set<any>();
@@ -115,6 +116,12 @@ export class MachinesComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    try {
+      localStorage.removeItem('cols_width_machines_registry_table');
+      localStorage.removeItem('cols_width_machines_breakdowns_table');
+    } catch (e) {
+      // ignore
+    }
     this.initColumns();
     this.loadData();
   }
@@ -132,8 +139,8 @@ export class MachinesComponent implements OnInit {
     this.hasError = false;
 
     forkJoin({
-      machines: this.apiService.getMachines(true),
-      breakdowns: this.apiService.getMachineBreakdowns()
+      machines: this.apiService.getMachines(true).pipe(catchError(() => of([]))),
+      breakdowns: this.apiService.getMachineBreakdowns().pipe(catchError(() => of([])))
     }).subscribe({
       next: ({ machines, breakdowns }) => {
         this.machinesList = Array.isArray(machines) ? machines : [];
@@ -187,6 +194,14 @@ export class MachinesComponent implements OnInit {
 
   get totalDowntimeHours(): number {
     return (this.machineBreakdownsList || []).reduce((sum, b) => sum + (Number(b.downtimeHours) || 0), 0);
+  }
+
+  get totalFilteredCapacity(): number {
+    return (this.filteredMachines || []).reduce((sum, m) => sum + (Number(m.capacityPerHour) || 0), 0);
+  }
+
+  get totalFilteredDowntimeHours(): number {
+    return (this.filteredBreakdowns || []).reduce((sum, b) => sum + (Number(b.downtimeHours) || 0), 0);
   }
 
   getMachineStatus(machine: any): { label: string; color: string; badgeClass: string } {
@@ -666,6 +681,10 @@ export class MachinesComponent implements OnInit {
 
   getTableColumns(table: string): string[] {
     return table === 'machines' ? this.defaultMachineCols : this.defaultBreakdownCols;
+  }
+
+  getVisibleColCount(table: string): number {
+    return this.getTableColumns(table).filter(col => this.isColumnVisible(table, col)).length;
   }
 
   isColumnVisible(table: string, col: string): boolean {

@@ -1,170 +1,189 @@
 <div class="drivers-enterprise-container">
 
-  <!-- ── 1. UNIFIED BREADCRUMB & STABLE HEADER ────────────────────── -->
-  <div class="header-section-wrapper no-print">
-    <!-- Row 1a: Breadcrumbs -->
-    <div class="breadcrumb-nav">
-      <span class="breadcrumb-item"><i class="bi bi-house-door me-1"></i>Futane Agro ERP</span>
-      <span class="breadcrumb-separator">/</span>
-      <span class="breadcrumb-item">Supply Chain</span>
-      <span class="breadcrumb-separator">/</span>
-      <span class="breadcrumb-item active">Commercial Vehicle Drivers Directory</span>
-    </div>
+  <!-- ── 1. UNIFIED BREADCRUMB TRAIL ─────────────────────────────── -->
+  <div class="drivers-breadcrumb-trail no-print">
+    <i class="bi bi-house breadcrumb-home-ico"></i>
+    <span>Futane Agro ERP</span>
+    <span class="crumb-separator">/</span>
+    <span>Supply Chain</span>
+    <span class="crumb-separator">/</span>
+    <span class="crumb-active">Commercial Vehicle Drivers Directory</span>
+  </div>
 
-    <!-- Row 1b: Stable Header with Title & Primary Actions -->
-    <div class="stable-page-header">
-      <div class="header-left">
-        <div class="header-icon-badge">
+  <!-- ── 2. MASTER PAGE HEADER CARD ── -->
+  <header class="drivers-page-header no-print">
+    <!-- Top Row: Icon + Title + Count Pill on Left | Action Buttons on Right -->
+    <div class="header-primary-row">
+      <div class="header-left-col">
+        <div class="header-icon-box">
           <i class="bi bi-person-badge"></i>
         </div>
-        <div class="header-text-group">
-          <h1 class="header-main-title">Commercial Vehicle Drivers Directory</h1>
-          <p class="header-desc-text">
-            Manage commercial haulage drivers, RTO license compliance, trip dispatches and cumulative earnings
-          </p>
+        <div class="header-titles">
+          <div class="title-with-badge">
+            <h1 class="header-main-title">Commercial Vehicle Drivers Directory</h1>
+            <span class="header-count-pill">{{ totalDriversCount }} Drivers</span>
+          </div>
         </div>
       </div>
 
+      <!-- Right-side actions -->
       <div class="header-right-actions">
-        <!-- Refresh Button -->
         <button type="button" 
-                class="btn btn-secondary btn-header-action" 
+                class="btn-header-action btn-header-secondary" 
                 (click)="loadData(true)" 
                 [disabled]="isRefreshing"
                 title="Reload driver records and trip logs from server">
-          <i class="bi bi-arrow-clockwise me-1" [class.spin-anim]="isRefreshing"></i>
+          <i class="bi bi-arrow-clockwise" [class.spin-anim]="isRefreshing"></i>
           <span>Refresh</span>
         </button>
 
-        <!-- Export CSV Button -->
         <button type="button" 
-                class="btn btn-secondary btn-header-action" 
+                class="btn-header-action btn-header-secondary" 
                 (click)="exportCsv()" 
                 title="Export driver directory to CSV file">
-          <i class="bi bi-file-earmark-spreadsheet me-1 text-success"></i>
-          <span>Export CSV</span>
+          <i class="bi bi-download"></i>
+          <span>CSV</span>
         </button>
 
-        <!-- Primary Action: Enroll Driver -->
         <button type="button" 
-                class="btn btn-primary btn-action-primary" 
+                class="btn-header-action btn-header-secondary" 
+                (click)="exportExcel()" 
+                title="Export driver directory for Microsoft Excel">
+          <i class="bi bi-file-earmark-excel"></i>
+          <span>Excel</span>
+        </button>
+
+        <button type="button" 
+                class="btn-header-action btn-primary btn-header-primary" 
                 *ngIf="!isViewer()"
                 (click)="openEnrollDrawer()" 
                 title="Enroll a new commercial vehicle driver to the fleet roster">
-          <i class="bi bi-person-plus-fill me-1"></i>
-          <span>Enroll Commercial Driver</span>
+          <i class="bi bi-person-plus-fill"></i>
+          <span>+ Enroll Driver</span>
         </button>
       </div>
     </div>
 
-    <!-- ── 2. SUBTABS CLASSIFICATION RIBBON ──────────────────────────── -->
-    <div class="subtabs-classification-bar">
-      <div class="subtabs-scroll-container">
-        <!-- All Drivers -->
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="filterStatus === 'ALL'"
-                (click)="setSubtabStatus('ALL')">
-          <i class="bi bi-people-fill me-1"></i>
-          <span>All Drivers</span>
-          <span class="tab-count-badge">{{ getSubtabCount('ALL') }}</span>
-        </button>
+    <!-- Bottom Row: Subtitle on Left | Live Formula Hint on Right -->
+    <div class="header-secondary-row">
+      <p class="header-subtitle">
+        Manage commercial haulage drivers, RTO license compliance, trip dispatches and cumulative freight earnings
+      </p>
+      <span class="header-formula-badge" title="Roster Reconciliation: Active on Trips + Standby = Total Fleet Roster">
+        <i class="bi bi-calculator me-1"></i>
+        <span>Active + Standby = Total Fleet Roster</span>
+      </span>
+    </div>
+  </header>
 
-        <!-- Active on Trips -->
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="filterStatus === 'ACTIVE'"
-                (click)="setSubtabStatus('ACTIVE')">
-          <i class="bi bi-truck text-primary me-1"></i>
-          <span>Active on Trips</span>
-          <span class="tab-count-badge">{{ getSubtabCount('ACTIVE') }}</span>
-        </button>
+  <!-- ── 3. PILL SUBTABS NAVIGATION BAR ── -->
+  <div class="drivers-subnav-bar no-print">
+    <div class="subnav-tabs-group" role="tablist">
+      <button type="button" 
+              role="tab"
+              class="subnav-tab-btn" 
+              [class.active]="filterStatus === 'ALL'"
+              (click)="setSubtabStatus('ALL')">
+        <i class="bi bi-people-fill"></i>
+        <span>All Drivers</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('ALL') }}</span>
+      </button>
 
-        <!-- Licensed & Verified -->
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="filterStatus === 'LICENSED'"
-                (click)="setSubtabStatus('LICENSED')">
-          <i class="bi bi-shield-check text-success me-1"></i>
-          <span>Licensed &amp; Verified</span>
-          <span class="tab-count-badge">{{ getSubtabCount('LICENSED') }}</span>
-        </button>
+      <button type="button" 
+              role="tab"
+              class="subnav-tab-btn" 
+              [class.active]="filterStatus === 'ACTIVE'"
+              (click)="setSubtabStatus('ACTIVE')">
+        <i class="bi bi-truck text-primary"></i>
+        <span>Active on Trips</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('ACTIVE') }}</span>
+      </button>
 
-        <!-- Standby -->
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="filterStatus === 'STANDBY'"
-                (click)="setSubtabStatus('STANDBY')">
-          <i class="bi bi-clock-history text-secondary me-1"></i>
-          <span>Standby / Unassigned</span>
-          <span class="tab-count-badge">{{ getSubtabCount('STANDBY') }}</span>
-        </button>
-      </div>
+      <button type="button" 
+              role="tab"
+              class="subnav-tab-btn" 
+              [class.active]="filterStatus === 'LICENSED'"
+              (click)="setSubtabStatus('LICENSED')">
+        <i class="bi bi-shield-check text-success"></i>
+        <span>Licensed &amp; Verified</span>
+        <span class="tab-badge-pill success">{{ getSubtabCount('LICENSED') }}</span>
+      </button>
+
+      <button type="button" 
+              role="tab"
+              class="subnav-tab-btn" 
+              [class.active]="filterStatus === 'STANDBY'"
+              (click)="setSubtabStatus('STANDBY')">
+        <i class="bi bi-clock-history text-secondary"></i>
+        <span>Standby / Unassigned</span>
+        <span class="tab-badge-pill warning">{{ getSubtabCount('STANDBY') }}</span>
+      </button>
     </div>
   </div>
 
-  <!-- ── 3. 4-COLUMN TELEMETRY KPI METRICS GRID ────────────────────── -->
+  <!-- ── 4. 5-CARD RESPONSIVE KPI TELEMETRY GRID ── -->
   <section class="drivers-kpi-grid no-print" aria-label="Commercial Drivers Key Performance Indicators">
     <!-- Card 1: Active Fleet Roster -->
-    <div class="kpi-card">
-      <div class="kpi-icon-badge kpi-blue">
+    <div class="driver-kpi-card" (click)="setSubtabStatus('ALL')">
+      <div class="driver-kpi-icon kpi-blue">
         <i class="bi bi-person-badge"></i>
       </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Active Fleet Roster</span>
-        <div class="kpi-value font-mono">{{ totalDriversCount }} Drivers</div>
-        <div class="kpi-subtext">
-          <span class="badge-tag tag-primary">Registered Drivers</span>
-          <span class="kpi-subtext-muted">Commercial fleet roster</span>
-        </div>
+      <div class="driver-kpi-body">
+        <div class="driver-kpi-label">FLEET ROSTER</div>
+        <div class="driver-kpi-value">{{ totalDriversCount }}</div>
+        <div class="driver-kpi-sub">Total registered drivers</div>
       </div>
     </div>
 
     <!-- Card 2: Licensed & Verified -->
-    <div class="kpi-card">
-      <div class="kpi-icon-badge kpi-emerald">
+    <div class="driver-kpi-card" (click)="setSubtabStatus('LICENSED')">
+      <div class="driver-kpi-icon kpi-green">
         <i class="bi bi-shield-check"></i>
       </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Licensed &amp; Verified</span>
-        <div class="kpi-value font-mono">{{ licensedDriversCount }} Verified</div>
-        <div class="kpi-subtext">
-          <span class="badge-tag tag-success">RTO Compliant</span>
-          <span class="kpi-subtext-muted">Valid commercial licenses</span>
-        </div>
+      <div class="driver-kpi-body">
+        <div class="driver-kpi-label">LICENSED &amp; VERIFIED</div>
+        <div class="driver-kpi-value text-success">{{ licensedDriversCount }}</div>
+        <div class="driver-kpi-sub">RTO license compliance</div>
       </div>
     </div>
 
-    <!-- Card 3: Total Trips Logged -->
-    <div class="kpi-card">
-      <div class="kpi-icon-badge kpi-purple">
+    <!-- Card 3: Active on Trips -->
+    <div class="driver-kpi-card" (click)="setSubtabStatus('ACTIVE')">
+      <div class="driver-kpi-icon kpi-blue">
         <i class="bi bi-truck"></i>
       </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Total Trips Logged</span>
-        <div class="kpi-value font-mono">{{ totalTripsLogged }} Dispatches</div>
-        <div class="kpi-subtext">
-          <span class="badge-tag tag-purple">Haulage Trips</span>
-          <span class="kpi-subtext-muted">Transport trip dispatches</span>
-        </div>
+      <div class="driver-kpi-body">
+        <div class="driver-kpi-label">ACTIVE ON TRIPS</div>
+        <div class="driver-kpi-value">{{ activeDriversCount }}</div>
+        <div class="driver-kpi-sub">Currently hauling cargo</div>
       </div>
     </div>
 
-    <!-- Card 4: Cumulative Freight -->
-    <div class="kpi-card">
-      <div class="kpi-icon-badge kpi-amber">
+    <!-- Card 4: Standby -->
+    <div class="driver-kpi-card" (click)="setSubtabStatus('STANDBY')">
+      <div class="driver-kpi-icon kpi-amber">
+        <i class="bi bi-clock-history"></i>
+      </div>
+      <div class="driver-kpi-body">
+        <div class="driver-kpi-label">STANDBY / UNASSIGNED</div>
+        <div class="driver-kpi-value">{{ standbyDriversCount }}</div>
+        <div class="driver-kpi-sub">Ready for next dispatch</div>
+      </div>
+    </div>
+
+    <!-- Card 5: Cumulative Freight -->
+    <div class="driver-kpi-card">
+      <div class="driver-kpi-icon kpi-purple">
         <i class="bi bi-cash-stack"></i>
       </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Cumulative Freight</span>
-        <div class="kpi-value font-mono">₹{{ totalFreightVolume | number:'1.0-0' }}</div>
-        <div class="kpi-subtext">
-          <span class="badge-tag tag-warning">Gross Freight</span>
-          <span class="kpi-subtext-muted">Total freight revenue handled</span>
-        </div>
+      <div class="driver-kpi-body">
+        <div class="driver-kpi-label">FREIGHT VOLUME</div>
+        <div class="driver-kpi-value font-mono">₹{{ totalFreightVolume | number:'1.0-0' }}</div>
+        <div class="driver-kpi-sub">{{ totalTripsLogged }} total trips logged</div>
       </div>
     </div>
   </section>
+
 
   <!-- ── 4. FILTER & SEARCH TOOLBAR ────────────────────────────────── -->
   <div class="table-unified-toolbar no-print">
@@ -308,9 +327,9 @@
 
       <!-- Enterprise Table -->
       <table *ngIf="!hasError && filteredDrivers.length > 0" 
-             class="table enterprise-table" 
-             appResizableTable 
-             [tableId]="'drivers_table'">
+             class="table enterprise-table enterprise-drivers-table" 
+             appResizableTable [tableId]="'drivers_table'"
+             aria-label="Commercial Vehicle Drivers Directory">
         <thead>
           <tr>
             <th *ngIf="isColumnVisible('drivers', 'Driver')" 
@@ -465,39 +484,48 @@
             </td>
           </tr>
         </tbody>
+        <tfoot class="table-summary-tfoot" *ngIf="filteredDrivers.length > 0">
+          <tr>
+            <td *ngIf="isColumnVisible('drivers', 'Driver')" class="tfoot-label"><strong>TOTALS</strong></td>
+            <td *ngIf="isColumnVisible('drivers', 'Mobile Contact')"></td>
+            <td *ngIf="isColumnVisible('drivers', 'Driving License')"></td>
+            <td *ngIf="isColumnVisible('drivers', 'Base Depot / Address')"><strong>{{ filteredDrivers.length }} drivers</strong></td>
+            <td *ngIf="isColumnVisible('drivers', 'Trips Logged')" class="text-center font-mono">
+              <strong>{{ getTotalFilteredTrips() }}</strong>
+            </td>
+            <td *ngIf="isColumnVisible('drivers', 'Gross Earnings')" class="text-end font-mono">
+              <strong>₹{{ getTotalFilteredEarnings() | number:'1.2-2' }}</strong>
+            </td>
+            <td *ngIf="isColumnVisible('drivers', 'Status')" class="text-center"></td>
+            <td *ngIf="isColumnVisible('drivers', 'Actions')" class="table-action-col text-center"></td>
+          </tr>
+        </tfoot>
       </table>
     </div>
 
-    <!-- PAGINATION FOOTER -->
-    <div class="table-pagination no-print" *ngIf="!hasError && filteredDrivers.length > 0">
-      <div class="pagination-info-group">
-        <span class="pagination-info">
-          Showing {{ filteredDrivers.length === 0 ? 0 : (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, filteredDrivers.length) }} of {{ filteredDrivers.length }} driver entries
-        </span>
-        <div class="page-size-selector">
-          <label class="page-size-label">Per page:</label>
-          <select class="page-size-select" [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
+    <!-- ── STANDARD PAGINATION FOOTER ── -->
+    <div class="erp-table-footer no-print" *ngIf="!hasError && filteredDrivers.length > 0">
+      <div class="erp-footer-info">
+        Showing <strong>{{ filteredDrivers.length === 0 ? 0 : (currentPage - 1) * pageSize + 1 }}</strong> to
+        <strong>{{ Math.min(currentPage * pageSize, filteredDrivers.length) }}</strong> of
+        <strong>{{ filteredDrivers.length }}</strong> driver entries
+      </div>
+      <div class="erp-footer-controls">
+        <div class="erp-rows-selector">
+          <span>Rows:</span>
+          <select class="erp-rows-select" [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
             <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
           </select>
         </div>
-      </div>
-
-      <div class="pagination-controls">
-        <button type="button" 
-                class="btn btn-secondary btn-sm btn-page" 
-                [disabled]="currentPage === 1" 
-                (click)="currentPage = currentPage - 1"
-                aria-label="Previous page">
-          <i class="bi bi-chevron-left me-1"></i> Previous
-        </button>
-        <span class="page-indicator">Page {{ currentPage }}</span>
-        <button type="button" 
-                class="btn btn-secondary btn-sm btn-page" 
-                [disabled]="currentPage * pageSize >= filteredDrivers.length" 
-                (click)="currentPage = currentPage + 1"
-                aria-label="Next page">
-          Next <i class="bi bi-chevron-right ms-1"></i>
-        </button>
+        <div class="erp-page-buttons">
+          <button type="button" class="erp-page-nav-btn" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
+            <i class="bi bi-chevron-left"></i> Prev
+          </button>
+          <span class="erp-page-counter">Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong></span>
+          <button type="button" class="erp-page-nav-btn" [disabled]="currentPage * pageSize >= filteredDrivers.length" (click)="currentPage = currentPage + 1">
+            Next <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
       </div>
     </div>
   </div>

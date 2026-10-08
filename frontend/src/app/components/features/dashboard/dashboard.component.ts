@@ -74,6 +74,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return Math.min(100, Math.round((stock / this.plantTelemetry.polymerBufferMax) * 100));
   }
 
+  get currentPeriodLabel(): string {
+    const now = new Date();
+    const month = now.toLocaleString('en-US', { month: 'short' });
+    const year = now.getFullYear();
+    return `${month} ${year} MTD`;
+  }
+
   // Excel Upload State
   excelFile: File | null = null;
   uploadStatus = '';

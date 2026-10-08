@@ -5,6 +5,7 @@ import { TranslatePipe } from '../../../translate.service';
 import { ApiService } from '../../../api.service';
 import { NotificationService } from '../../../services/notification.service';
 import { AutoSelectDirective } from '../../../directives/auto-select.directive';
+import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 import * as XLSX from 'xlsx';
 
 export interface InventoryItem {
@@ -25,7 +26,7 @@ export interface InventoryItem {
 @Component({
   selector: 'app-inventory',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective],
+  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, ResizableTableDirective],
   templateUrl: './inventory.component.html',
   styleUrls: ['./inventory.component.css']
 })
@@ -58,7 +59,6 @@ export class InventoryComponent implements OnInit {
   filterStockHealth = '';
   filterWarehouseZone = '';
   showFilterPopover = false;
-  activeFilterCount = 0;
 
   // ---- Table UI & Density ----
   tableDensity: 'compact' | 'comfortable' | 'spacious' = 'comfortable';
@@ -256,6 +256,15 @@ export class InventoryComponent implements OnInit {
   get warehouseCapacityPct(): number {
     const total = this.totalAvailableStock;
     return Math.min(100, Math.round((total / this.WAREHOUSE_CAPACITY) * 100));
+  }
+
+  get activeFilterCount(): number {
+    let count = 0;
+    if (this.filterMaterial) count++;
+    if (this.filterStockHealth) count++;
+    if (this.filterWarehouseZone) count++;
+    if (this.selectedSubtab && this.selectedSubtab !== 'all') count++;
+    return count;
   }
 
   // ======================================================
@@ -477,7 +486,6 @@ export class InventoryComponent implements OnInit {
   applyFilters() {
     this.currentPage = 1;
     this.showFilterPopover = false;
-    this.recountFilters();
   }
 
   resetFilters() {
@@ -487,14 +495,10 @@ export class InventoryComponent implements OnInit {
     this.searchQuery = '';
     this.currentPage = 1;
     this.showFilterPopover = false;
-    this.activeFilterCount = 0;
   }
 
   private recountFilters() {
-    this.activeFilterCount =
-      (this.filterMaterial ? 1 : 0) +
-      (this.filterStockHealth ? 1 : 0) +
-      (this.filterWarehouseZone ? 1 : 0);
+    // Computed dynamically via activeFilterCount getter
   }
 
   // ======================================================

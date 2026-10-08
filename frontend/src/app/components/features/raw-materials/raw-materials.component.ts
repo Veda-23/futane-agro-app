@@ -95,7 +95,7 @@ export class RawMaterialsComponent implements OnInit {
     'Weight': true,
     'Rate': true,
     'Amount': true,
-    'References': true,
+    'References': false,
     'Actions': true
   };
 
@@ -148,6 +148,11 @@ export class RawMaterialsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    try {
+      localStorage.removeItem('cols_width_raw_materials_procurement_table');
+    } catch (e) {
+      // ignore
+    }
     this.loadData();
   }
 

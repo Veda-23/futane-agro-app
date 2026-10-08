@@ -1,141 +1,118 @@
 <div class="inventory-enterprise-container">
 
-  <!-- ── 1. UNIFIED BREADCRUMB & STABLE HEADER ────────────────────── -->
-  <div class="header-section-wrapper no-print">
-    <div class="breadcrumb-nav">
-      <span class="breadcrumb-item"><i class="bi bi-house-door me-1"></i>Futane Agro ERP</span>
-      <span class="breadcrumb-separator">/</span>
-      <span class="breadcrumb-item">Warehouse &amp; Logistics</span>
-      <span class="breadcrumb-separator">/</span>
-      <span class="breadcrumb-item active">Finished Goods Crates Warehouse Stock</span>
-    </div>
+  <!-- ── LAYER 1: BREADCRUMB TRAIL ── -->
+  <div class="breadcrumb-trail inventory-breadcrumb-trail no-print">
+    <i class="bi bi-house me-1"></i>
+    <span>Futane Agro ERP</span>
+    <span class="sep">/</span>
+    <span>Warehouse &amp; Logistics</span>
+    <span class="sep">/</span>
+    <span class="active">Finished Goods Crates Warehouse Stock</span>
+  </div>
 
-    <div class="stable-page-header">
-      <div class="header-left">
-        <div class="header-icon-badge">
+  <!-- ── LAYER 2: MASTER PAGE HEADER CARD ── -->
+  <header class="production-page-header inventory-page-header no-print">
+    <!-- Top Row: Icon + Title + Count Pill on Left | Action Buttons on Right -->
+    <div class="header-primary-row">
+      <div class="header-left-col">
+        <div class="header-icon-box">
           <i class="bi bi-boxes"></i>
         </div>
-        <div class="header-text-group">
-          <h1 class="header-main-title">Finished Goods Crates Warehouse Stock</h1>
-          <p class="header-desc-text">
-            Operational crate SKU inventory ledger, stock formula reconciliation, warehouse bay allocation &amp; valuation
-          </p>
+        <div class="header-titles">
+          <div class="title-with-badge">
+            <h1 class="header-main-title">Finished Goods Crates Warehouse Stock</h1>
+            <span class="header-count-pill">{{ inventoryList.length }} SKUs</span>
+          </div>
         </div>
       </div>
 
+      <!-- Right-side actions: Refresh, CSV, Excel, Quick Adjust, + Log Crate Entry -->
       <div class="header-right-actions">
-        <!-- Live Formula Hint -->
-        <span class="header-formula-badge" title="Stock Calculation Formula: Opening + Produced - Sold = Available Stock">
-          <i class="bi bi-calculator me-1"></i>
-          <span>Opening + Produced &minus; Sold = Available</span>
-        </span>
-
         <!-- Refresh Button -->
-        <button type="button" class="btn btn-secondary btn-action-compact" (click)="loadData(true)" title="Refresh inventory records from server">
-          <i class="bi bi-arrow-clockwise me-1" [class.spin-anim]="isLoading"></i>
-          <span class="btn-label-desktop">Refresh</span>
+        <button type="button" class="btn-header-action btn-header-secondary" (click)="loadData(true)" [disabled]="isLoading" title="Refresh inventory records from server">
+          <i class="bi bi-arrow-clockwise" [class.spin-anim]="isLoading"></i>
+          <span>Refresh</span>
         </button>
 
-        <!-- Consolidated Export Dropdown -->
-        <div class="export-dropdown-wrapper" (click)="$event.stopPropagation()">
-          <button type="button" class="btn btn-secondary btn-action-compact" (click)="toggleExportDropdown($event)" title="Export finished goods stock records">
-            <i class="bi bi-download me-1"></i>
-            <span>Export ▾</span>
-          </button>
-          <div class="export-menu shadow-lg animate-fade-in" *ngIf="showExportDropdown">
-            <button type="button" class="export-menu-item" (click)="exportToCSV()">
-              <i class="bi bi-file-earmark-spreadsheet text-success me-2"></i>Export CSV (.csv)
-            </button>
-            <button type="button" class="export-menu-item" (click)="exportToExcel()">
-              <i class="bi bi-file-earmark-excel text-primary me-2"></i>Export Excel (.xlsx)
-            </button>
-          </div>
-        </div>
+        <!-- CSV Export Button -->
+        <button type="button" class="btn-header-action btn-header-secondary" (click)="exportToCSV()" title="Export inventory records to CSV">
+          <i class="bi bi-download"></i>
+          <span>CSV</span>
+        </button>
+
+        <!-- Excel Export Button -->
+        <button type="button" class="btn-header-action btn-header-secondary" (click)="exportToExcel()" title="Export inventory records for Microsoft Excel">
+          <i class="bi bi-file-earmark-excel"></i>
+          <span>Excel</span>
+        </button>
 
         <!-- Quick Stock Adjustment -->
         <button type="button" 
-                class="btn btn-secondary btn-action-compact" 
+                class="btn-header-action btn-header-secondary" 
                 *ngIf="!isViewer() && inventoryList.length > 0"
                 (click)="openAdjustmentModal()" 
                 title="Perform physical stock audit or crate count adjustment">
-          <i class="bi bi-sliders2-vertical me-1"></i>
+          <i class="bi bi-sliders2-vertical"></i>
           <span>Quick Adjust</span>
         </button>
 
         <!-- Primary Action: Log Crate Entry -->
         <button type="button" 
-                class="btn btn-primary btn-action-primary" 
+                class="btn-header-action btn-primary btn-header-primary" 
                 *ngIf="!isViewer()"
                 (click)="openAddForm()" 
                 title="Register a new finished goods crate SKU entry">
-          <i class="bi bi-plus-circle-fill me-1"></i>
+          <i class="bi bi-plus-lg"></i>
           <span>Log Crate Entry</span>
         </button>
       </div>
     </div>
 
-    <!-- ── 2. SUBTABS CLASSIFICATION RIBBON ──────────────────────────── -->
-    <div class="subtabs-classification-bar">
-      <div class="subtabs-scroll-container">
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="selectedSubtab === 'all'"
-                (click)="setSubtab('all')">
-          <i class="bi bi-grid-fill me-1"></i>
-          <span>All Crates</span>
-          <span class="tab-count-badge">{{ getSubtabCount('all') }}</span>
-        </button>
+    <!-- Bottom Row: Subtitle on Left | Live Formula Hint on Right -->
+    <div class="header-secondary-row">
+      <p class="header-subtitle">
+        Operational crate SKU inventory ledger, stock formula reconciliation, warehouse bay allocation &amp; valuation
+      </p>
+      <span class="header-formula-badge" title="Stock Calculation Formula: Opening + Produced - Sold = Available Stock">
+        <i class="bi bi-calculator me-1"></i>
+        <span>Opening + Produced &minus; Sold = Available</span>
+      </span>
+    </div>
+  </header>
 
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="selectedSubtab === 'in-stock'"
-                (click)="setSubtab('in-stock')">
-          <i class="bi bi-check-circle-fill text-success me-1"></i>
-          <span>In Stock</span>
-          <span class="tab-count-badge">{{ getSubtabCount('in-stock') }}</span>
-        </button>
-
-        <button type="button" 
-                class="subtab-pill-btn subtab-pill-alert" 
-                [class.active]="selectedSubtab === 'low'"
-                (click)="setSubtab('low')">
-          <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
-          <span>Low / Critical (&lt;200)</span>
-          <span class="tab-count-badge badge-warning">{{ getSubtabCount('low') }}</span>
-        </button>
-
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="selectedSubtab === 'vegetable'"
-                (click)="setSubtab('vegetable')">
-          <i class="bi bi-basket2-fill text-primary me-1"></i>
-          <span>Vegetable Crates</span>
-          <span class="tab-count-badge">{{ getSubtabCount('vegetable') }}</span>
-        </button>
-
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="selectedSubtab === 'dairy'"
-                (click)="setSubtab('dairy')">
-          <i class="bi bi-box2-heart-fill text-info me-1"></i>
-          <span>Universal &amp; Storage</span>
-          <span class="tab-count-badge">{{ getSubtabCount('dairy') }}</span>
-        </button>
-
-        <button type="button" 
-                class="subtab-pill-btn subtab-pill-danger" 
-                [class.active]="selectedSubtab === 'stockout'"
-                (click)="setSubtab('stockout')">
-          <i class="bi bi-x-circle-fill text-danger me-1"></i>
-          <span>Out of Stock</span>
-          <span class="tab-count-badge badge-danger">{{ getSubtabCount('stockout') }}</span>
-        </button>
-      </div>
+  <!-- ── LAYER 3: PILL SUBTABS NAVIGATION BAR ── -->
+  <div class="production-subnav-bar no-print">
+    <div class="subnav-tabs-group" role="tablist">
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="selectedSubtab === 'all'" (click)="setSubtab('all')">
+        <i class="bi bi-grid-fill"></i>
+        <span>All SKUs</span>
+        <span class="tab-badge-pill">{{ inventoryList.length }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="selectedSubtab === 'in-stock'" (click)="setSubtab('in-stock')">
+        <i class="bi bi-box-seam text-success"></i>
+        <span>In Stock</span>
+        <span class="tab-badge-pill success">{{ getSubtabCount('in-stock') }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="selectedSubtab === 'low'" (click)="setSubtab('low')">
+        <i class="bi bi-exclamation-triangle text-warning"></i>
+        <span>Low Stock Alert</span>
+        <span class="tab-badge-pill warning">{{ getSubtabCount('low') }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="selectedSubtab === 'vegetable'" (click)="setSubtab('vegetable')">
+        <i class="bi bi-flower1 text-info"></i>
+        <span>Vegetable &amp; Fruit</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('vegetable') }}</span>
+      </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="selectedSubtab === 'dairy'" (click)="setSubtab('dairy')">
+        <i class="bi bi-cup-straw text-primary"></i>
+        <span>Dairy &amp; Storage</span>
+        <span class="tab-badge-pill primary">{{ getSubtabCount('dairy') }}</span>
+      </button>
     </div>
   </div>
 
-  <!-- ── 3. COMPACT KPI TELEMETRY CARDS ────────────────────────────── -->
-  <div class="inv-telemetry-grid no-print">
+  <!-- ── 2. COMPACT KPI TELEMETRY CARDS (STRUCTURE 2) ──────────────── -->
+  <section class="inv-telemetry-grid no-print">
     <!-- Total Finished SKUs -->
     <div class="inv-kpi-card">
       <div class="inv-kpi-icon kpi-blue">
@@ -202,49 +179,121 @@
         <div class="inv-kpi-sub">{{ totalAvailableStock | number:'1.0-0' }} / {{ WAREHOUSE_CAPACITY | number:'1.0-0' }} max capacity</div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- ── 4. AI SHORTFALL PREDICTION BANNER (IF CRITICAL) ───────────── -->
-  <ng-container *ngFor="let pred of materialShortfallPrediction">
-    <div *ngIf="pred.riskLevel !== 'HEALTHY'" class="inv-alert-banner no-print"
-         [class.alert-critical]="pred.riskLevel === 'CRITICAL'"
-         [class.alert-warning]="pred.riskLevel === 'WARNING'">
-      <div class="alert-banner-left">
-        <div class="alert-banner-icon-wrap">
-          <i class="bi bi-cpu-fill alert-icon"></i>
+  <!-- ── 3. MAIN TABLE CARD (STRUCTURE 3 - LIKE PRODUCTION TAB) ──────── -->
+  <div class="glass-panel table-panel-card inv-main-panel">
+
+    <!-- ── UNIFIED TWO-ZONE TABLE TOOLBAR ────────────────────────────── -->
+    <div class="table-unified-toolbar inv-toolbar no-print">
+      <!-- Left side: Search & Filter inputs -->
+      <div class="toolbar-left-group d-flex align-items-center gap-2">
+        <!-- Search Box -->
+        <div class="toolbar-search-box inv-search-box">
+          <i class="bi bi-search inv-search-icon"></i>
+          <input appAutoSelect 
+                 type="text" 
+                 class="inv-search-input" 
+                 [(ngModel)]="searchQuery"
+                 (ngModelChange)="currentPage = 1"
+                 placeholder="Search crate SKU, material, category, ID or warehouse zone...">
+          <button type="button" class="inv-search-clear" *ngIf="searchQuery" (click)="searchQuery = ''; currentPage = 1;" title="Clear search">
+            <i class="bi bi-x-circle-fill"></i>
+          </button>
         </div>
-        <div>
-          <div class="alert-title">AI Polymer Burn Alert: {{ pred.material }}</div>
-          <div class="alert-detail">
-            {{ pred.currentStock }} kg available in stock • Est. daily crate burn: {{ pred.burnoutRatePerDay }} kg/day •
-            Projected raw material stockout in <strong>{{ pred.daysRemaining }} days</strong>
+
+        <!-- Consolidated Filter Popover (All Filters Unified) -->
+        <div class="filter-popover-wrapper" (click)="$event.stopPropagation()">
+          <button type="button" 
+                  class="filter-trigger-btn" 
+                  [class.active-filters]="activeFilterCount > 0"
+                  (click)="toggleFilterPopover($event)" 
+                  title="Open advanced inventory filters">
+            <i class="bi bi-funnel"></i>
+            <span>Filters</span>
+            <span class="filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
+          </button>
+
+          <!-- Filter Popover Panel -->
+          <div class="filter-popover-panel shadow-lg animate-fade-in" *ngIf="showFilterPopover">
+            <div class="popover-title-row">
+              <strong><i class="bi bi-sliders me-1 text-primary"></i> Refine Crate Inventory</strong>
+              <button type="button" class="btn-text" (click)="resetFilters(); setSubtab('all')">Reset All</button>
+            </div>
+
+            <div class="popover-content-body">
+              <!-- Filter 1: Crate Stock State / Classification -->
+              <div class="filter-field-group">
+                <label>Crate Stock State</label>
+                <select class="filter-select" [(ngModel)]="selectedSubtab" (ngModelChange)="currentPage = 1">
+                  <option value="all">All Crates ({{ getSubtabCount('all') }})</option>
+                  <option value="in-stock">In Stock ({{ getSubtabCount('in-stock') }})</option>
+                  <option value="low">Low / Critical (&lt;200) ({{ getSubtabCount('low') }})</option>
+                  <option value="vegetable">Vegetable Crates ({{ getSubtabCount('vegetable') }})</option>
+                  <option value="dairy">Universal &amp; Storage ({{ getSubtabCount('dairy') }})</option>
+                  <option value="stockout">Out of Stock ({{ getSubtabCount('stockout') }})</option>
+                </select>
+              </div>
+
+              <!-- Filter 2: Polymer Material -->
+              <div class="filter-field-group">
+                <label>Polymer Material</label>
+                <select class="filter-select" [(ngModel)]="filterMaterial">
+                  <option value="">All Materials</option>
+                  <option value="Plastic">Plastic</option>
+                  <option value="HDPE">HDPE</option>
+                  <option value="PP">PP / Polypropylene</option>
+                  <option value="Mixed">Mixed Polymer</option>
+                </select>
+              </div>
+
+              <!-- Filter 3: Stock Health Level -->
+              <div class="filter-field-group">
+                <label>Stock Health Level</label>
+                <select class="filter-select" [(ngModel)]="filterStockHealth">
+                  <option value="">All Health Levels</option>
+                  <option value="optimal">Optimal Stock</option>
+                  <option value="surplus">Surplus</option>
+                  <option value="low">Low Stock (&lt;600)</option>
+                  <option value="critical">Critical (&lt;200)</option>
+                  <option value="stockout">Out of Stock (0)</option>
+                </select>
+              </div>
+
+              <!-- Filter 4: Warehouse Bay -->
+              <div class="filter-field-group">
+                <label>Warehouse Staging Bay</label>
+                <select class="filter-select" [(ngModel)]="filterWarehouseZone">
+                  <option value="">All Warehouse Bays</option>
+                  <option value="Zone A">Zone A - Vegetable Crate Staging</option>
+                  <option value="Zone B">Zone B - Dairy Perforated Bay</option>
+                  <option value="Zone C">Zone C - Heavy Duty Warehouse</option>
+                  <option value="Zone D">Zone D - Finished Goods Yard</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="popover-footer-row">
+              <button type="button" class="btn btn-secondary btn-sm" (click)="showFilterPopover = false">Close</button>
+              <button type="button" class="btn btn-primary btn-sm" (click)="applyFilters()">Apply Filters</button>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="alert-banner-right">
-        <span class="badge" [class.badge-danger]="pred.riskLevel === 'CRITICAL'" [class.badge-warning]="pred.riskLevel === 'WARNING'">
-          <i class="bi bi-exclamation-circle me-1"></i>{{ pred.riskLevel }} RISK
-        </span>
-        <button type="button" class="btn btn-secondary btn-sm" (click)="navigateToRawMaterials()">
-          <i class="bi bi-arrow-right-short me-1"></i>Raw Materials
+
+        <!-- Reset Filters Button -->
+        <button type="button" 
+                class="btn btn-secondary btn-action-compact" 
+                *ngIf="searchQuery || filterMaterial || filterStockHealth || filterWarehouseZone || selectedSubtab !== 'all'"
+                (click)="resetFilters(); setSubtab('all')" 
+                title="Reset all active filters">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>
+          <span>Clear Filters</span>
         </button>
       </div>
-    </div>
-  </ng-container>
 
-  <!-- ── 5. MAIN INVENTORY GLASS PANEL ─────────────────────────────── -->
-  <div class="glass-panel inv-main-panel">
-
-    <!-- Panel Header & Formula Legend -->
-    <div class="inv-panel-header">
-      <div class="inv-panel-title">
-        <i class="bi bi-boxes text-success me-2"></i>
-        <span>Finished Goods Crate Ledger</span>
-        <span class="inv-count-pill">{{ filteredList.length }} of {{ inventoryList.length }} SKUs</span>
-      </div>
-
-      <div class="inv-panel-actions">
-        <!-- Density Switcher -->
+      <!-- Right side: Density & Columns Controls -->
+      <div class="toolbar-right-controls d-flex align-items-center gap-2 ms-auto">
+        <!-- Table Density Switcher -->
         <div class="density-group" role="group" aria-label="Table row density">
           <button type="button" class="density-btn" [class.active]="tableDensity === 'compact'" (click)="setDensity('compact')" title="Compact Density">
             <i class="bi bi-view-list"></i>
@@ -257,95 +306,25 @@
           </button>
         </div>
 
-        <!-- Columns Dropdown -->
+        <!-- Columns Manager Dropdown -->
         <div class="col-manager-dropdown-wrapper" (click)="$event.stopPropagation()">
           <button type="button" class="btn btn-secondary btn-action-compact" (click)="toggleColDropdown()" title="Manage visible table columns">
             <i class="bi bi-layout-three-columns me-1"></i>
-            <span>Columns</span>
-            <span class="badge-count ms-1">{{ visibleColumnCount }}</span>
+            <span>Columns ({{ visibleColumnCount }})</span>
           </button>
-          <div class="col-manager-dropdown shadow-lg animate-fade-in" *ngIf="showColDropdown">
-            <div class="col-manager-header">
-              <span>Visible Columns</span>
-              <button type="button" class="btn-link-sm" (click)="resetColumns()">Reset All</button>
+          <div class="col-manager-popover shadow-lg animate-fade-in" *ngIf="showColDropdown">
+            <div class="popover-header">
+              <strong>Manage Columns</strong>
+              <button type="button" class="btn-text" (click)="resetColumns()"><i class="bi bi-arrow-counterclockwise me-1"></i>Reset</button>
             </div>
-            <div class="col-manager-body">
-              <label *ngFor="let col of defaultColumns" class="col-manager-item">
+            <div class="popover-body">
+              <label *ngFor="let col of defaultColumns" class="col-check-label">
                 <input type="checkbox" [checked]="isColumnVisible(col)" (change)="toggleColumn(col)">
                 <span>{{ col }}</span>
               </label>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- ── 6. UNIFIED SEARCH & FILTER TOOLBAR ────────────────────────── -->
-    <div class="inv-toolbar">
-      <!-- Search Box -->
-      <div class="inv-search-box">
-        <i class="bi bi-search inv-search-icon"></i>
-        <input appAutoSelect 
-               type="text" 
-               class="inv-search-input" 
-               [(ngModel)]="searchQuery"
-               (ngModelChange)="currentPage = 1"
-               placeholder="Search crate SKU, material, category, ID or warehouse zone...">
-        <button type="button" class="inv-search-clear" *ngIf="searchQuery" (click)="searchQuery = ''; currentPage = 1;" title="Clear search">
-          <i class="bi bi-x-circle-fill"></i>
-        </button>
-      </div>
-
-      <!-- Quick Material Filter -->
-      <div class="toolbar-filter-select">
-        <select class="form-control form-control-sm" [(ngModel)]="filterMaterial" (ngModelChange)="applyFilters()" title="Filter by polymer material">
-          <option value="">All Materials</option>
-          <option value="Plastic">Plastic</option>
-          <option value="HDPE">HDPE</option>
-          <option value="PP">PP / Polypropylene</option>
-          <option value="Mixed">Mixed Polymer</option>
-        </select>
-      </div>
-
-      <!-- Quick Health Filter -->
-      <div class="toolbar-filter-select">
-        <select class="form-control form-control-sm" [(ngModel)]="filterStockHealth" (ngModelChange)="applyFilters()" title="Filter by stock health">
-          <option value="">All Health Levels</option>
-          <option value="optimal">Optimal Stock</option>
-          <option value="surplus">Surplus</option>
-          <option value="low">Low Stock (&lt;600)</option>
-          <option value="critical">Critical (&lt;200)</option>
-          <option value="stockout">Out of Stock (0)</option>
-        </select>
-      </div>
-
-      <!-- Quick Warehouse Zone Filter -->
-      <div class="toolbar-filter-select">
-        <select class="form-control form-control-sm" [(ngModel)]="filterWarehouseZone" (ngModelChange)="applyFilters()" title="Filter by warehouse bay / zone">
-          <option value="">All Warehouse Bays</option>
-          <option value="Zone A">Zone A - Vegetable Crate Staging</option>
-          <option value="Zone B">Zone B - Dairy Perforated Bay</option>
-          <option value="Zone C">Zone C - Heavy Duty Warehouse</option>
-          <option value="Zone D">Zone D - Finished Goods Yard</option>
-        </select>
-      </div>
-
-      <!-- Reset Filters Button -->
-      <button type="button" 
-              class="btn btn-secondary btn-action-compact" 
-              *ngIf="searchQuery || filterMaterial || filterStockHealth || filterWarehouseZone || selectedSubtab !== 'all'"
-              (click)="resetFilters(); setSubtab('all')" 
-              title="Reset all active filters">
-        <i class="bi bi-arrow-counterclockwise me-1"></i>
-        <span>Clear Filters</span>
-      </button>
-
-      <!-- Page Size Selector -->
-      <div class="page-size-selector">
-        <label class="page-size-label">Show:</label>
-        <select class="form-control form-control-sm" [(ngModel)]="pageSize" (ngModelChange)="currentPage = 1">
-          <option *ngFor="let ps of pageSizeOptions" [value]="ps">{{ ps }} / page</option>
-        </select>
       </div>
     </div>
 
@@ -393,7 +372,7 @@
 
     <!-- ── 11. FINISHED GOODS TABLE ──────────────────────────────────── -->
     <div class="table-container" *ngIf="!isLoading && !hasError && filteredList.length > 0" [class]="'density-' + tableDensity">
-      <table class="inv-table">
+      <table class="inv-table" appResizableTable [tableId]="'inventory_table'">
         <thead>
           <tr>
             <th *ngIf="isColumnVisible('ID')" class="col-id" (click)="setSort('id')">
@@ -405,47 +384,47 @@
 
             <th *ngIf="isColumnVisible('Crate Type')" class="col-crate" (click)="setSort('crateType')">
               <div class="th-content">
-                <span>Crate Profile / Description</span>
+                <span>Crate Profile</span>
                 <i class="bi sort-icon" *ngIf="sortField === 'crateType'" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
               </div>
             </th>
 
             <th *ngIf="isColumnVisible('Material')" class="col-material" (click)="setSort('materialType')">
               <div class="th-content">
-                <span>Polymer Material</span>
+                <span>Material</span>
                 <i class="bi sort-icon" *ngIf="sortField === 'materialType'" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
               </div>
             </th>
 
-            <th *ngIf="isColumnVisible('Opening')" class="col-num" (click)="setSort('openingStock')" title="Opening balance recorded at cycle start">
+            <th *ngIf="isColumnVisible('Opening')" class="col-opening text-end" (click)="setSort('openingStock')" title="Opening balance recorded at cycle start">
               <div class="th-content justify-end">
                 <span>Opening</span>
                 <i class="bi sort-icon" *ngIf="sortField === 'openingStock'" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
               </div>
             </th>
 
-            <th *ngIf="isColumnVisible('Produced')" class="col-num" (click)="setSort('producedStock')" title="Total finished crates received from production plant">
+            <th *ngIf="isColumnVisible('Produced')" class="col-produced text-end" (click)="setSort('producedStock')" title="Total finished crates received from production plant">
               <div class="th-content justify-end">
-                <span>Produced (+)</span>
+                <span>Produced</span>
                 <i class="bi sort-icon" *ngIf="sortField === 'producedStock'" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
               </div>
             </th>
 
-            <th *ngIf="isColumnVisible('Sold')" class="col-num" (click)="setSort('soldStock')" title="Total crates dispatched & sold to parties">
+            <th *ngIf="isColumnVisible('Sold')" class="col-sold text-end" (click)="setSort('soldStock')" title="Total crates dispatched & sold to parties">
               <div class="th-content justify-end">
-                <span>Dispatched (&minus;)</span>
+                <span>Dispatched</span>
                 <i class="bi sort-icon" *ngIf="sortField === 'soldStock'" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
               </div>
             </th>
 
-            <th *ngIf="isColumnVisible('Available')" class="col-num col-available" (click)="setSort('currentStock')" title="Current physically available warehouse stock">
+            <th *ngIf="isColumnVisible('Available')" class="col-available text-end" (click)="setSort('currentStock')" title="Current physically available warehouse stock">
               <div class="th-content justify-end">
-                <span>Available Stock</span>
+                <span>Available</span>
                 <i class="bi sort-icon" *ngIf="sortField === 'currentStock'" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
               </div>
             </th>
 
-            <th *ngIf="isColumnVisible('Valuation')" class="col-num" (click)="setSort('valuation')" title="Estimated inventory asset value (Available × ₹85/unit)">
+            <th *ngIf="isColumnVisible('Valuation')" class="col-valuation text-end" (click)="setSort('valuation')" title="Estimated inventory asset value (Available × ₹85/unit)">
               <div class="th-content justify-end">
                 <span>Valuation</span>
                 <i class="bi sort-icon" *ngIf="sortField === 'valuation'" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
@@ -454,19 +433,19 @@
 
             <th *ngIf="isColumnVisible('Health')" class="col-badge">
               <div class="th-content">
-                <span>Stock Health</span>
+                <span>Health</span>
               </div>
             </th>
 
             <th *ngIf="isColumnVisible('Warehouse Zone')" class="col-location">
               <div class="th-content">
-                <span>Warehouse Location</span>
+                <span>Location</span>
               </div>
             </th>
 
             <th *ngIf="isColumnVisible('Last Updated')" class="col-date" (click)="setSort('lastUpdated')">
               <div class="th-content">
-                <span>Last Updated</span>
+                <span>Updated</span>
                 <i class="bi sort-icon" *ngIf="sortField === 'lastUpdated'" [ngClass]="sortAsc ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
               </div>
             </th>
@@ -492,7 +471,7 @@
                 </div>
                 <div class="crate-title-group">
                   <span class="crate-title">{{ inv.crateType }}</span>
-                  <span class="crate-category-sub">{{ inv.category || 'Standard Heavy Duty Crate' }}</span>
+                  <span class="crate-category-sub" *ngIf="inv.category && inv.category !== 'Standard Heavy Duty Crate'">{{ inv.category }}</span>
                 </div>
               </div>
             </td>
@@ -503,23 +482,25 @@
             </td>
 
             <!-- Opening Stock -->
-            <td *ngIf="isColumnVisible('Opening')" class="col-num formula-cell">
-              <span class="qty-num">{{ inv.openingStock | number:'1.0-0' }}</span>
-              <span class="qty-unit">crates</span>
+            <td *ngIf="isColumnVisible('Opening')" class="col-opening formula-cell">
+              <span class="qty-num" [class.text-muted]="inv.openingStock === 0">{{ inv.openingStock | number:'1.0-0' }}</span>
+              <span class="qty-unit" *ngIf="inv.openingStock > 0">crates</span>
             </td>
 
             <!-- Produced (+) Receipts -->
-            <td *ngIf="isColumnVisible('Produced')" class="col-num formula-cell">
-              <span class="delta-badge delta-add">+{{ inv.producedStock | number:'1.0-0' }}</span>
+            <td *ngIf="isColumnVisible('Produced')" class="col-produced formula-cell">
+              <span class="delta-badge delta-add" *ngIf="inv.producedStock > 0">+{{ inv.producedStock | number:'1.0-0' }}</span>
+              <span class="text-muted font-mono" *ngIf="!inv.producedStock || inv.producedStock === 0" style="font-size: 12px;">—</span>
             </td>
 
             <!-- Sold (-) Dispatches -->
-            <td *ngIf="isColumnVisible('Sold')" class="col-num formula-cell">
-              <span class="delta-badge delta-sub">&minus;{{ inv.soldStock | number:'1.0-0' }}</span>
+            <td *ngIf="isColumnVisible('Sold')" class="col-sold formula-cell">
+              <span class="delta-badge delta-sub" *ngIf="inv.soldStock > 0">&minus;{{ inv.soldStock | number:'1.0-0' }}</span>
+              <span class="text-muted font-mono" *ngIf="!inv.soldStock || inv.soldStock === 0" style="font-size: 12px;">—</span>
             </td>
 
             <!-- Available Stock -->
-            <td *ngIf="isColumnVisible('Available')" class="col-num col-available">
+            <td *ngIf="isColumnVisible('Available')" class="col-available">
               <div class="closing-stock-wrapper">
                 <span class="closing-stock" 
                       [class.text-danger]="inv.currentStock === 0 || inv.currentStock < 200"
@@ -527,13 +508,13 @@
                       [class.text-success]="inv.currentStock >= 600">
                   {{ inv.currentStock | number:'1.0-0' }}
                 </span>
-                <span class="qty-unit">crates</span>
+                <span class="qty-unit" *ngIf="inv.currentStock > 0">crates</span>
               </div>
             </td>
 
             <!-- Valuation -->
-            <td *ngIf="isColumnVisible('Valuation')" class="col-num valuation-cell">
-              <span class="valuation-value">₹{{ (inv.currentStock * (inv.unitPrice || CRATE_RATE)) | number:'1.0-0' }}</span>
+            <td *ngIf="isColumnVisible('Valuation')" class="col-valuation valuation-cell">
+              <span class="valuation-value font-mono">₹{{ (inv.currentStock * (inv.unitPrice || CRATE_RATE)) | number:'1.0-0' }}</span>
             </td>
 
             <!-- Health Status -->
@@ -604,24 +585,24 @@
         </tbody>
 
         <!-- Table Summary Totals Footer -->
-        <tfoot>
+        <tfoot class="table-summary-tfoot" *ngIf="filteredList.length > 0">
           <tr class="summary-row">
-            <td *ngIf="isColumnVisible('ID')"></td>
+            <td *ngIf="isColumnVisible('ID')" class="tfoot-label"><strong>TOTALS</strong></td>
             <td *ngIf="isColumnVisible('Crate Type')">
-              <strong>Filtered Totals ({{ filteredList.length }} SKUs)</strong>
+              <strong>{{ filteredList.length }} SKUs</strong>
             </td>
             <td *ngIf="isColumnVisible('Material')"></td>
             <td *ngIf="isColumnVisible('Opening')" class="col-num"></td>
             <td *ngIf="isColumnVisible('Produced')" class="col-num"></td>
             <td *ngIf="isColumnVisible('Sold')" class="col-num"></td>
             <td *ngIf="isColumnVisible('Available')" class="col-num col-available">
-              <div class="closing-stock-wrapper">
+              <div class="closing-stock-wrapper" style="white-space: nowrap !important;">
                 <strong class="total-qty">{{ filteredTotalAvailable | number:'1.0-0' }}</strong>
-                <span class="qty-unit">crates</span>
+                <span class="qty-unit">&nbsp;crates</span>
               </div>
             </td>
             <td *ngIf="isColumnVisible('Valuation')" class="col-num valuation-cell">
-              <strong class="total-val">₹{{ filteredTotalValuation | number:'1.0-0' }}</strong>
+              <strong class="total-val font-mono" style="white-space: nowrap !important;">₹{{ filteredTotalValuation | number:'1.0-0' }}</strong>
             </td>
             <td *ngIf="isColumnVisible('Health')"></td>
             <td *ngIf="isColumnVisible('Warehouse Zone')"></td>
@@ -632,26 +613,36 @@
       </table>
     </div>
 
-    <!-- ── 12. ENTERPRISE PAGINATION FOOTER ──────────────────────────── -->
-    <div class="inv-pagination" *ngIf="!isLoading && !hasError && filteredList.length > 0">
-      <span class="inv-pagination-info">
-        Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> &ndash; <strong>{{ Math.min(currentPage * pageSize, filteredList.length) }}</strong> of <strong>{{ filteredList.length }}</strong> crate records
-      </span>
-
-      <div class="inv-pagination-nav">
-        <button type="button" class="btn btn-secondary btn-pagination" [disabled]="currentPage === 1" (click)="currentPage = 1" title="First Page">
-          <i class="bi bi-chevron-double-left"></i>
-        </button>
-        <button type="button" class="btn btn-secondary btn-pagination" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1" title="Previous Page">
-          <i class="bi bi-chevron-left"></i>
-        </button>
-        <span class="inv-page-indicator">Page {{ currentPage }} of {{ totalPages }}</span>
-        <button type="button" class="btn btn-secondary btn-pagination" [disabled]="currentPage >= totalPages" (click)="currentPage = currentPage + 1" title="Next Page">
-          <i class="bi bi-chevron-right"></i>
-        </button>
-        <button type="button" class="btn btn-secondary btn-pagination" [disabled]="currentPage >= totalPages" (click)="currentPage = totalPages" title="Last Page">
-          <i class="bi bi-chevron-double-right"></i>
-        </button>
+    <!-- ── 12. STANDARD PAGINATION FOOTER ─────────────────────────────── -->
+    <div class="erp-table-footer no-print" *ngIf="!isLoading && !hasError && filteredList.length > 0">
+      <div class="erp-footer-info">
+        Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to
+        <strong>{{ Math.min(currentPage * pageSize, filteredList.length) }}</strong> of
+        <strong>{{ filteredList.length }}</strong> crate records
+        <span *ngIf="filteredList.length < inventoryList.length" class="erp-footer-filtered">
+          (filtered from {{ inventoryList.length }} total)
+        </span>
+      </div>
+      <div class="erp-footer-controls">
+        <div class="erp-rows-selector">
+          <span>Rows:</span>
+          <select [(ngModel)]="pageSize" (change)="currentPage = 1" class="erp-rows-select">
+            <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+        <div class="erp-page-buttons">
+          <button type="button" class="erp-page-nav-btn"
+                  [disabled]="currentPage === 1"
+                  (click)="currentPage = currentPage - 1">
+            <i class="bi bi-chevron-left"></i> Prev
+          </button>
+          <span class="erp-page-counter">Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong></span>
+          <button type="button" class="erp-page-nav-btn"
+                  [disabled]="currentPage >= totalPages"
+                  (click)="currentPage = currentPage + 1">
+            Next <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
       </div>
     </div>
   </div>

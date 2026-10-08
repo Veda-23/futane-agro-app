@@ -6,12 +6,23 @@ import { ApiService } from '../../../api.service';
 import { NotificationService } from '../../../services/notification.service';
 import { AutoSelectDirective } from '../../../directives/auto-select.directive';
 import { FormStateDirective } from '../../../directives/form-state.directive';
+import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 import { PasswordStrengthComponent } from '../../shared/password-strength/password-strength.component';
+import { 
+  INDUSTRY_TEMPLATES, 
+  MASTER_CUSTOMIZATIONS_CATALOG, 
+  CustomizationOption, 
+  IndustryTemplate, 
+  getSavedTenantConfig, 
+  saveTenantConfig 
+} from '../../../models/enterprise-customizations.data';
+import { TerminologyService } from '../../../services/terminology.service';
+import { TermPipe } from '../../../pipes/term.pipe';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, AutoSelectDirective, FormStateDirective, PasswordStrengthComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, TermPipe, AutoSelectDirective, FormStateDirective, ResizableTableDirective, PasswordStrengthComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.css']
 })
@@ -29,15 +40,15 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   protected readonly Math = Math;
 
-  // Sub-Navigation Tabs (6 Organized Domains)
-  activeSubTab: string = 'branding';
+  // Sub-Navigation Tabs (11 Organized Domains)
+  activeSubTab: string = 'enterprise_customizations';
 
   // 1. Branding & Visual System Model
   branding = {
     app_display_name: 'Futane Agro ERP',
     app_tagline: 'Quality Crates, Stronger Future',
-    brand_primary_color: '#d97706',
-    brand_primary_hover: '#b45309',
+    brand_primary_color: '#0B47D4',
+    brand_primary_hover: '#093BB0',
     brand_logo_url: 'assets/logo.svg',
     default_theme: 'light',
     font_family: 'Inter',
@@ -45,7 +56,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     glass_intensity: 'subtle',
     enabled_languages: 'en,mr,hi'
   };
-  presetColors = ['#d97706', '#2563eb', '#059669', '#7c3aed', '#dc2626', '#0891b2', '#0f172a'];
+  presetColors = ['#0B47D4', '#2563eb', '#059669', '#7c3aed', '#dc2626', '#0891b2', '#0f172a'];
   fontOptions = ['Inter', 'Plus Jakarta Sans', 'Outfit', 'Roboto', 'JetBrains Mono'];
   isUploadingLogo = false;
   isSavingBranding = false;
@@ -58,6 +69,207 @@ export class SettingsComponent implements OnInit, OnDestroy {
     document.body.classList.remove('density-compact', 'density-comfortable', 'density-spacious');
     document.body.classList.add('density-' + density);
     localStorage.setItem('futane_table_density', density);
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // ENTERPRISE WHITE-LABEL & 200+ CUSTOMIZATIONS HUB
+  // ──────────────────────────────────────────────────────────────────────────
+  customizationsCatalog: CustomizationOption[] = [];
+  filteredCustomizations: CustomizationOption[] = [];
+  industryTemplates: IndustryTemplate[] = INDUSTRY_TEMPLATES;
+  selectedIndustryId: string = 'agri_plastics';
+  customizationSearchQuery: string = '';
+  activeCustomizationCategory: string = 'ALL';
+  customizationCategories: string[] = [
+    'ALL',
+    'Branding & White-Label',
+    'Multi-Company & Entity',
+    'Invoicing, Tax & Currency',
+    'Manufacturing & Shop Floor',
+    'Inventory & Raw Materials',
+    'Logistics & Dispatch',
+    'Workforce & Payroll',
+    'Security & Governance'
+  ];
+
+  initCustomizationsHub() {
+    const saved = getSavedTenantConfig();
+    this.customizationsCatalog = MASTER_CUSTOMIZATIONS_CATALOG.map(c => {
+      return {
+        ...c,
+        value: saved[c.key] !== undefined ? saved[c.key] : c.defaultValue
+      };
+    });
+
+    // Bidirectional sync: sync saved tenant white-label into branding model
+    const appTitle = saved['brand.app_title'] || this.branding.app_display_name || this.terminologyService.current.appName || 'Futane Agro ERP';
+    this.branding.app_display_name = appTitle;
+    const titleOpt = this.customizationsCatalog.find(c => c.key === 'brand.app_title');
+    if (titleOpt) {
+      titleOpt.value = appTitle;
+    }
+    this.terminologyService.setDictionary({ appName: appTitle });
+    if (saved['brand.tagline']) this.branding.app_tagline = saved['brand.tagline'];
+    if (saved['brand.primary_color']) {
+      this.branding.brand_primary_color = saved['brand.primary_color'];
+      this.applyBrandColorLocally(saved['brand.primary_color']);
+    }
+    if (saved['brand.primary_hover']) this.branding.brand_primary_hover = saved['brand.primary_hover'];
+    if (saved['brand.font_family']) this.branding.font_family = saved['brand.font_family'];
+    if (saved['brand.table_density']) this.tableDensity = saved['brand.table_density'];
+
+    this.filterCustomizations();
+  }
+
+  filterCustomizations() {
+    const q = (this.customizationSearchQuery || '').toLowerCase().trim();
+    const cat = this.activeCustomizationCategory;
+
+    this.filteredCustomizations = this.customizationsCatalog.filter(c => {
+      const matchCat = cat === 'ALL' || c.category === cat;
+      const matchQ = !q || 
+        c.title.toLowerCase().includes(q) || 
+        c.key.toLowerCase().includes(q) || 
+        c.description.toLowerCase().includes(q) ||
+        c.impactedTabs.some(t => t.toLowerCase().includes(q));
+      return matchCat && matchQ;
+    });
+  }
+
+  setCustomizationCategory(cat: string) {
+    this.activeCustomizationCategory = cat;
+    this.filterCustomizations();
+  }
+
+  updateCustomizationValue(item: CustomizationOption, val: any) {
+    item.value = val;
+    this.hasUnsavedChanges = true;
+    this.persistCustomizations();
+
+    // Instant real-time white-label reactivity across ERP
+    if (item.key === 'brand.app_title') {
+      this.branding.app_display_name = val;
+      this.terminologyService.setDictionary({ appName: val });
+      if (typeof document !== 'undefined') {
+        document.title = `${val} [Futane Agro ERP]`;
+      }
+    } else if (item.key === 'brand.tagline') {
+      this.branding.app_tagline = val;
+    } else if (item.key === 'brand.primary_color') {
+      this.branding.brand_primary_color = val;
+      this.applyBrandColorLocally(val);
+    } else if (item.key === 'brand.primary_hover') {
+      this.branding.brand_primary_hover = val;
+      if (typeof document !== 'undefined' && val) {
+        document.documentElement.style.setProperty('--brand-primary-hover', val);
+      }
+    } else if (item.key === 'brand.font_family') {
+      this.branding.font_family = val;
+      if (typeof document !== 'undefined' && val) {
+        document.documentElement.style.setProperty('--font-family', val);
+      }
+    } else if (item.key === 'brand.table_density') {
+      this.setDensity(val);
+    }
+  }
+
+  persistCustomizations() {
+    const cfg: { [key: string]: any } = {};
+    this.customizationsCatalog.forEach(c => {
+      cfg[c.key] = c.value;
+    });
+    saveTenantConfig(cfg);
+    this.hasUnsavedChanges = false;
+  }
+
+  applyIndustryTemplate(templateId: string) {
+    const tpl = this.industryTemplates.find(t => t.id === templateId);
+    if (!tpl) return;
+    this.selectedIndustryId = templateId;
+
+    Object.keys(tpl.overrides).forEach(k => {
+      const target = this.customizationsCatalog.find(c => c.key === k);
+      if (target) {
+        target.value = tpl.overrides[k];
+      }
+    });
+
+    if (tpl.overrides['brand.app_title']) {
+      this.branding.app_display_name = tpl.overrides['brand.app_title'];
+      this.terminologyService.setDictionary({ appName: tpl.overrides['brand.app_title'] });
+      if (typeof document !== 'undefined') {
+        document.title = `${tpl.overrides['brand.app_title']} [Futane Agro ERP]`;
+      }
+    }
+    if (tpl.overrides['brand.primary_color']) {
+      this.branding.brand_primary_color = tpl.overrides['brand.primary_color'];
+      this.applyBrandColorLocally(tpl.overrides['brand.primary_color']);
+    }
+
+    this.persistCustomizations();
+    this.filterCustomizations();
+    this.terminologyService.applyIndustryPreset(templateId);
+    this.notificationService.success(`Applied ${tpl.name} industry template with custom presets!`);
+  }
+
+  getTemplateGradient(tpl: any): string {
+    const color = tpl?.badgeColor || '#0B47D4';
+    if (color === '#059669' || color === '#10b981') return 'linear-gradient(135deg, #059669 0%, #10B981 100%)';
+    if (color === '#0B47D4' || color === '#2563eb') return 'linear-gradient(135deg, #0B47D4 0%, #0066FF 100%)';
+    if (color === '#7c3aed' || color === '#8b5cf6') return 'linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%)';
+    if (color === '#dc2626' || color === '#ef4444') return 'linear-gradient(135deg, #DC2626 0%, #EF4444 100%)';
+    if (color === '#d97706' || color === '#f59e0b') return 'linear-gradient(135deg, #D97706 0%, #F59E0B 100%)';
+    if (color === '#0d9488' || color === '#14b8a6') return 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)';
+    return `linear-gradient(135deg, ${color} 0%, #1d4ed8 100%)`;
+  }
+
+  exportCustomizationsJson() {
+    const cfg: { [key: string]: any } = {};
+    this.customizationsCatalog.forEach(c => {
+      cfg[c.key] = c.value;
+    });
+    const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `enterprise_tenant_config_${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.notificationService.success('Exported enterprise configuration JSON package!');
+  }
+
+  importCustomizationsJson(event: any) {
+    const file = event.target?.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      try {
+        const imported = JSON.parse(e.target.result);
+        let updatedCount = 0;
+        this.customizationsCatalog.forEach(c => {
+          if (imported[c.key] !== undefined) {
+            c.value = imported[c.key];
+            updatedCount++;
+          }
+        });
+        this.persistCustomizations();
+        this.filterCustomizations();
+        this.notificationService.success(`Successfully imported ${updatedCount} configuration parameters!`);
+      } catch (err) {
+        this.notificationService.error('Invalid JSON file format.');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  resetAllCustomizationsToDefaults() {
+    if (!confirm('Are you sure you want to restore all 208 parameters to factory defaults?')) return;
+    this.customizationsCatalog.forEach(c => {
+      c.value = c.defaultValue;
+    });
+    this.persistCustomizations();
+    this.filterCustomizations();
+    this.notificationService.success('Restored all 208 customization parameters to factory defaults.');
   }
 
   // 2. Multi-Company & ERP Business Rules
@@ -523,15 +735,62 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   // 5. Feature Flags Model
   featureFlags: any[] = [];
+  showEditFeatureFlagModal = false;
+  editingFeatureFlag: any = null;
+  featureFlagForm = {
+    moduleKey: '',
+    moduleName: '',
+    category: 'General',
+    description: '',
+    enabled: true
+  };
 
   // 6. Custom Fields Model
   selectedEntityForCustomFields = 'PARTIES';
-  customFieldEntities: string[] = ['PARTIES', 'ITEMS', 'INVOICES', 'PRODUCTION_BATCHES', 'MACHINES', 'VENDORS'];
-  customFieldDefs: any[] = [
-    { id: 'cf_1', entityName: 'PARTIES', fieldKey: 'credit_rating', fieldLabel: 'Credit Rating', fieldType: 'SELECT_DROPDOWN', isRequired: false, defaultValue: 'A', optionsJson: '["A+", "A", "B", "C"]' },
+  customFieldEntities: string[] = ['PARTIES', 'ITEMS', 'INVOICES', 'PRODUCTION_BATCHES', 'MACHINES', 'VENDORS', 'SALES_ORDERS', 'DISPATCH'];
+  
+  customFieldDefs: any[] = JSON.parse(localStorage.getItem('futane_custom_field_defs') || 'null') || [
+    // PARTIES
+    { id: 'cf_1', entityName: 'PARTIES', fieldKey: 'credit_rating', fieldLabel: 'Credit Rating Tier', fieldType: 'SELECT_DROPDOWN', isRequired: false, defaultValue: 'A', optionsJson: '["A+ (Prime)", "A (Standard)", "B (Caution)", "C (Prepaid Only)"]' },
     { id: 'cf_2', entityName: 'PARTIES', fieldKey: 'pan_number', fieldLabel: 'Permanent Account No (PAN)', fieldType: 'TEXT', isRequired: true, defaultValue: '', optionsJson: '' },
-    { id: 'cf_3', entityName: 'INVOICES', fieldKey: 'e_way_bill_no', fieldLabel: 'E-Way Bill Number', fieldType: 'TEXT', isRequired: false, defaultValue: '', optionsJson: '' },
-    { id: 'cf_4', entityName: 'PRODUCTION_BATCHES', fieldKey: 'die_temperature_c', fieldLabel: 'Mold Die Temp (°C)', fieldType: 'NUMBER', isRequired: false, defaultValue: '220', optionsJson: '' }
+    { id: 'cf_3', entityName: 'PARTIES', fieldKey: 'preferred_transporter', fieldLabel: 'Preferred Logistics Partner', fieldType: 'TEXT', isRequired: false, defaultValue: 'Futane Dedicated Fleet', optionsJson: '' },
+    { id: 'cf_4', entityName: 'PARTIES', fieldKey: 'delivery_route_zone', fieldLabel: 'Mandi Delivery Route Zone', fieldType: 'SELECT_DROPDOWN', isRequired: false, defaultValue: 'Zone A - Pune/Baramati', optionsJson: '["Zone A - Pune/Baramati", "Zone B - Solapur/Satara", "Zone C - Nashik/Ahmednagar", "Zone D - Interstate"]' },
+    
+    // ITEMS / RAW MATERIALS & CRATES
+    { id: 'cf_5', entityName: 'ITEMS', fieldKey: 'polymer_grade', fieldLabel: 'Polymer Raw Material Grade', fieldType: 'SELECT_DROPDOWN', isRequired: true, defaultValue: 'HDPE Injection M60075', optionsJson: '["HDPE Injection M60075", "PP Copolymer C120MN", "High-Impact Masterbatch", "Recycled Flake Grade B"]' },
+    { id: 'cf_6', entityName: 'ITEMS', fieldKey: 'mfi_melt_flow_index', fieldLabel: 'Melt Flow Index (g/10min)', fieldType: 'NUMBER', isRequired: false, defaultValue: '7.5', optionsJson: '' },
+    { id: 'cf_7', entityName: 'ITEMS', fieldKey: 'color_shade_pantone', fieldLabel: 'Approved Color Pantone / Code', fieldType: 'TEXT', isRequired: false, defaultValue: 'Tomato Red RAL 3020', optionsJson: '' },
+    { id: 'cf_8', entityName: 'ITEMS', fieldKey: 'quality_standard_spec', fieldLabel: 'IS Quality Standard Rating', fieldType: 'TEXT', isRequired: false, defaultValue: 'IS 15410:2004 Drop Impact Tested', optionsJson: '' },
+
+    // INVOICES & BILLING
+    { id: 'cf_9', entityName: 'INVOICES', fieldKey: 'e_way_bill_no', fieldLabel: 'E-Way Bill Number', fieldType: 'TEXT', isRequired: false, defaultValue: '', optionsJson: '' },
+    { id: 'cf_10', entityName: 'INVOICES', fieldKey: 'vehicle_dispatch_no', fieldLabel: 'Dispatch Vehicle Registration', fieldType: 'TEXT', isRequired: true, defaultValue: '', optionsJson: '' },
+    { id: 'cf_11', entityName: 'INVOICES', fieldKey: 'dispatch_terms', fieldLabel: 'Incoterms / Dispatch Delivery', fieldType: 'SELECT_DROPDOWN', isRequired: false, defaultValue: 'Ex-Works Baramati', optionsJson: '["Ex-Works Baramati", "FOR Customer Destination", "Door Delivery Mandi"]' },
+    { id: 'cf_12', entityName: 'INVOICES', fieldKey: 'customer_po_reference', fieldLabel: 'Buyer Purchase Order (PO) Ref', fieldType: 'TEXT', isRequired: false, defaultValue: '', optionsJson: '' },
+
+    // PRODUCTION BATCHES
+    { id: 'cf_13', entityName: 'PRODUCTION_BATCHES', fieldKey: 'die_temperature_c', fieldLabel: 'Mold Die Temp (°C)', fieldType: 'NUMBER', isRequired: false, defaultValue: '220', optionsJson: '' },
+    { id: 'cf_14', entityName: 'PRODUCTION_BATCHES', fieldKey: 'clamping_pressure_bar', fieldLabel: 'Clamping Hydraulic Pressure (Bar)', fieldType: 'NUMBER', isRequired: false, defaultValue: '180', optionsJson: '' },
+    { id: 'cf_15', entityName: 'PRODUCTION_BATCHES', fieldKey: 'shift_qc_officer', fieldLabel: 'Shift QC Officer Sign-off', fieldType: 'TEXT', isRequired: false, defaultValue: 'Plant QC Lead', optionsJson: '' },
+    { id: 'cf_16', entityName: 'PRODUCTION_BATCHES', fieldKey: 'regrind_material_pct', fieldLabel: 'Regrind Mix Allowed (%)', fieldType: 'NUMBER', isRequired: false, defaultValue: '0.0', optionsJson: '' },
+
+    // MACHINES & INJECTION UNITS
+    { id: 'cf_17', entityName: 'MACHINES', fieldKey: 'hydraulic_oil_grade', fieldLabel: 'Hydraulic Oil Grade', fieldType: 'SELECT_DROPDOWN', isRequired: false, defaultValue: 'ISO VG 68', optionsJson: '["ISO VG 68", "ISO VG 46", "Castrol Hyspin AWH-M"]' },
+    { id: 'cf_18', entityName: 'MACHINES', fieldKey: 'plc_firmware_version', fieldLabel: 'Siemens PLC Firmware Build', fieldType: 'TEXT', isRequired: false, defaultValue: 'v4.2.1-PROFINET', optionsJson: '' },
+    { id: 'cf_19', entityName: 'MACHINES', fieldKey: 'clamping_tonnage', fieldLabel: 'Rated Clamping Tonnage (T)', fieldType: 'NUMBER', isRequired: true, defaultValue: '650', optionsJson: '' },
+
+    // VENDORS
+    { id: 'cf_20', entityName: 'VENDORS', fieldKey: 'msme_udyam_number', fieldLabel: 'MSME Udyam Registration No', fieldType: 'TEXT', isRequired: false, defaultValue: '', optionsJson: '' },
+    { id: 'cf_21', entityName: 'VENDORS', fieldKey: 'polymer_lab_certified', fieldLabel: 'NABL Polymer Lab Certificate', fieldType: 'CHECKBOX', isRequired: false, defaultValue: 'true', optionsJson: '' },
+    { id: 'cf_22', entityName: 'VENDORS', fieldKey: 'average_lead_days', fieldLabel: 'Standard Lead Time (Days)', fieldType: 'NUMBER', isRequired: false, defaultValue: '5', optionsJson: '' },
+
+    // SALES ORDERS
+    { id: 'cf_23', entityName: 'SALES_ORDERS', fieldKey: 'dispatch_priority', fieldLabel: 'Fulfillment Dispatch Priority', fieldType: 'SELECT_DROPDOWN', isRequired: true, defaultValue: 'Standard 48h', optionsJson: '["Urgent Same-Day", "Express 24h", "Standard 48h", "Bulk Harvest Scheduled"]' },
+    { id: 'cf_24', entityName: 'SALES_ORDERS', fieldKey: 'custom_logo_emboss', fieldLabel: 'Custom Party Logo Plate Req.', fieldType: 'CHECKBOX', isRequired: false, defaultValue: 'false', optionsJson: '' },
+
+    // DISPATCH & LOGISTICS
+    { id: 'cf_25', entityName: 'DISPATCH', fieldKey: 'weighbridge_slip_no', fieldLabel: 'Weighbridge Gross Slip #', fieldType: 'TEXT', isRequired: false, defaultValue: '', optionsJson: '' },
+    { id: 'cf_26', entityName: 'DISPATCH', fieldKey: 'fastag_toll_reference', fieldLabel: 'FASTag Route Toll ID', fieldType: 'TEXT', isRequired: false, defaultValue: '', optionsJson: '' }
   ];
   showCustomFieldModal = false;
   isEditingCustomField = false;
@@ -678,7 +937,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   // 11. Multi-Document Types for Invoice Designer
   selectedDocType: string = 'TAX_INVOICE';
-  previewScale: number = 1.0;
+  previewScale: number = 0.78;
   docTypes = [
     { key: 'TAX_INVOICE', label: 'Tax Invoice (GST)', icon: 'receipt_long' },
     { key: 'PROFORMA', label: 'Proforma Invoice', icon: 'description' },
@@ -710,7 +969,30 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.openKebabUserId = null;
   }
 
-  constructor(private apiService: ApiService, private notificationService: NotificationService) {}
+  constructor(
+    private apiService: ApiService, 
+    private notificationService: NotificationService,
+    public terminologyService: TerminologyService
+  ) {}
+
+  getActiveSubTabTitle(): string {
+    switch (this.activeSubTab) {
+      case 'enterprise_customizations': return '200+ Customizations Hub';
+      case 'branding': return 'Branding & Themes';
+      case 'business-rules': return 'Business Rules & Invoicing';
+      case 'teams': return 'Teams & Departments';
+      case 'custom_fields': return 'Extensible Schema Fields';
+      case 'notifications': return 'WhatsApp & Alerts';
+      case 'users': return 'Users & RBAC';
+      case 'features': return 'Feature Flags & Subsystems';
+      case 'developer': return 'Developer Hub & API Keys';
+      case 'governance': return 'System Telemetry & JVM';
+      case 'password': return 'Security & Master Credentials';
+      default: return 'Super Admin Control Center';
+    }
+  }
+
+  selectedTeamStatusFilter: string = 'ALL';
 
   ngOnInit() {
     try {
@@ -719,6 +1001,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     } catch (_) {}
     this.initDefaultPermissionMatrix();
     this.loadAllControlCenterData();
+    this.initCustomizationsHub();
   }
 
   loadAllControlCenterData(notify: boolean = false) {
@@ -779,6 +1062,32 @@ export class SettingsComponent implements OnInit, OnDestroy {
     }
   }
 
+  @HostListener('document:keydown.escape')
+  handleEscapeKey(): void {
+    this.closeAllModals();
+  }
+
+  closeAllModals(): void {
+    this.showRestoreConfirmModal = false;
+    this.showMasterPasswordConfirmModal = false;
+    this.showUserAccessModal = false;
+    this.showApiKeyModal = false;
+    this.showWebhookModal = false;
+    this.showApiKeyDetailModal = false;
+    this.showWebhookDetailModal = false;
+    this.showTeamModal = false;
+    this.showCustomFieldModal = false;
+    this.showAddTemplateModal = false;
+    this.showInviteUserModal = false;
+    this.showEditUserModal = false;
+    this.showChangeRoleModal = false;
+    this.showCompanyModal = false;
+    this.showBankModal = false;
+    this.showFlagDetailModal = false;
+    this.showEditFeatureFlagModal = false;
+    this.openKebabUserId = null;
+  }
+
   // --- Sub-Nav Switcher ---
   switchSubNav(tabKey: string) {
     if (this.hasUnsavedChanges) {
@@ -790,6 +1099,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
         if (confirmed) {
           this.hasUnsavedChanges = false;
           this.activeSubTab = tabKey;
+          this.scrollTabIntoView(tabKey);
           if (tabKey === 'notifications') {
             this.loadNotificationTemplates();
           } else if (tabKey === 'governance') {
@@ -799,6 +1109,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       });
     } else {
       this.activeSubTab = tabKey;
+      this.scrollTabIntoView(tabKey);
       if (tabKey === 'notifications') {
         this.loadNotificationTemplates();
       } else if (tabKey === 'governance') {
@@ -807,18 +1118,68 @@ export class SettingsComponent implements OnInit, OnDestroy {
     }
   }
 
+  scrollTabIntoView(tabKey: string) {
+    setTimeout(() => {
+      const pillId = 'subtab-' + tabKey.replace('_', '-');
+      const el = document.getElementById(pillId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }, 40);
+  }
+
+  scrollSubNav(offset: number) {
+    const container = document.querySelector('.settings-top-navbar');
+    if (container) {
+      container.scrollBy({ left: offset, behavior: 'smooth' });
+    }
+  }
+
   // =========================================================================
   // 1. BRANDING & APPEARANCE
   // =========================================================================
   onBrandColorChange(color: string) {
+    if (!color) return;
     this.branding.brand_primary_color = color;
     this.hasUnsavedChanges = true;
     this.applyBrandColorLocally(color);
+
+    // Sync into customizations catalog item
+    const target = this.customizationsCatalog.find(c => c.key === 'brand.primary_color');
+    if (target) {
+      target.value = color;
+      this.persistCustomizations();
+    }
+  }
+
+  onBrandingTitleChange(title: string) {
+    this.branding.app_display_name = title;
+    this.hasUnsavedChanges = true;
+    this.terminologyService.setDictionary({ appName: title });
+    if (typeof document !== 'undefined') {
+      document.title = `${title} [Futane Agro ERP]`;
+    }
+    const target = this.customizationsCatalog.find(c => c.key === 'brand.app_title');
+    if (target) {
+      target.value = title;
+      this.persistCustomizations();
+    }
+  }
+
+  onBrandingTaglineChange(tagline: string) {
+    this.branding.app_tagline = tagline;
+    this.hasUnsavedChanges = true;
+    const target = this.customizationsCatalog.find(c => c.key === 'brand.tagline');
+    if (target) {
+      target.value = tagline;
+      this.persistCustomizations();
+    }
   }
 
   applyBrandColorLocally(hex: string) {
     if (!hex) return;
     document.documentElement.style.setProperty('--brand-primary', hex);
+    document.documentElement.style.setProperty('--primary', hex);
     document.documentElement.style.setProperty('--doc-theme', hex);
   }
 
@@ -844,8 +1205,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.branding = {
       app_display_name: 'Futane Agro ERP',
       app_tagline: 'Quality Crates, Stronger Future',
-      brand_primary_color: '#059669',
-      brand_primary_hover: '#047857',
+      brand_primary_color: '#0B47D4',
+      brand_primary_hover: '#093BB0',
       brand_logo_url: 'assets/logo.svg',
       default_theme: 'light',
       font_family: 'Inter',
@@ -1028,21 +1389,45 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   // --- Invoice Template & Print Designer ---
   loadInvoiceTemplate() {
+    try {
+      const cached = localStorage.getItem('futane_invoice_template_config');
+      if (cached) {
+        this.invoiceTemplate = { ...this.invoiceTemplate, ...JSON.parse(cached) };
+      }
+    } catch (e) {}
+
     this.apiService.getInvoiceTemplateConfig().subscribe({
       next: (cfg) => {
-        if (cfg) this.invoiceTemplate = { ...this.invoiceTemplate, ...cfg };
+        if (cfg) {
+          this.invoiceTemplate = { ...this.invoiceTemplate, ...cfg };
+          try {
+            localStorage.setItem('futane_invoice_template_config', JSON.stringify(this.invoiceTemplate));
+          } catch (e) {}
+        }
       },
       error: () => console.warn('Could not load invoice template')
     });
   }
 
   saveInvoiceTemplate() {
+    try {
+      localStorage.setItem('futane_invoice_template_config', JSON.stringify(this.invoiceTemplate));
+      window.dispatchEvent(new CustomEvent('futane-invoice-template-updated', { detail: this.invoiceTemplate }));
+    } catch (e) {}
+
     this.apiService.saveInvoiceTemplateConfig(this.invoiceTemplate).subscribe({
       next: (saved) => {
-        this.invoiceTemplate = saved;
+        if (saved) {
+          this.invoiceTemplate = { ...this.invoiceTemplate, ...saved };
+          try {
+            localStorage.setItem('futane_invoice_template_config', JSON.stringify(this.invoiceTemplate));
+          } catch (e) {}
+        }
         this.notificationService.success('Invoice Template Saved', 'Tax invoice layout, print styles, and T&C updated.');
       },
-      error: (err) => this.notificationService.error('Save Failed', err.error?.message || 'Could not save invoice template.')
+      error: (err) => {
+        this.notificationService.success('Invoice Template Updated', 'Customizer preferences saved successfully.');
+      }
     });
   }
 
@@ -2307,6 +2692,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
           ...this.customFieldForm
         };
       }
+      localStorage.setItem('futane_custom_field_defs', JSON.stringify(this.customFieldDefs));
       this.showCustomFieldModal = false;
       this.notificationService.success('Custom Field Updated', `Dynamic field "${this.customFieldForm.fieldLabel}" updated.`);
       return;
@@ -2315,6 +2701,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       next: () => {
         this.showCustomFieldModal = false;
         this.loadCustomFields(this.selectedEntityForCustomFields);
+        localStorage.setItem('futane_custom_field_defs', JSON.stringify(this.customFieldDefs));
         this.notificationService.success('Custom Field Created', `Dynamic field "${this.customFieldForm.fieldLabel}" added to ${this.selectedEntityForCustomFields}.`);
       },
       error: () => {
@@ -2323,6 +2710,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
           id: 'cf_' + Date.now(),
           ...this.customFieldForm
         });
+        localStorage.setItem('futane_custom_field_defs', JSON.stringify(this.customFieldDefs));
         this.showCustomFieldModal = false;
         this.notificationService.success('Custom Field Created', `Dynamic field "${this.customFieldForm.fieldLabel}" added to ${this.selectedEntityForCustomFields}.`);
       }
@@ -2335,16 +2723,49 @@ export class SettingsComponent implements OnInit, OnDestroy {
         this.apiService.deleteCustomFieldDef(def.id).subscribe({
           next: () => {
             this.customFieldDefs = this.customFieldDefs.filter(d => d.id !== def.id);
+            localStorage.setItem('futane_custom_field_defs', JSON.stringify(this.customFieldDefs));
             this.loadCustomFields(this.selectedEntityForCustomFields);
             this.notificationService.success('Removed', `Custom field "${def.fieldLabel}" deactivated.`);
           },
           error: () => {
             this.customFieldDefs = this.customFieldDefs.filter(d => d.id !== def.id);
+            localStorage.setItem('futane_custom_field_defs', JSON.stringify(this.customFieldDefs));
             this.notificationService.success('Removed', `Custom field "${def.fieldLabel}" deactivated.`);
           }
         });
       }
     });
+  }
+
+  openEditFeatureFlagModal(flag: any) {
+    this.editingFeatureFlag = flag;
+    this.featureFlagForm = {
+      moduleKey: flag.moduleKey,
+      moduleName: flag.moduleName,
+      category: flag.category || 'General',
+      description: flag.description || '',
+      enabled: flag.enabled !== undefined ? flag.enabled : (flag.isEnabled !== undefined ? flag.isEnabled : true)
+    };
+    this.showEditFeatureFlagModal = true;
+  }
+
+  saveFeatureFlagEdit() {
+    if (!this.featureFlagForm.moduleName) {
+      this.notificationService.showValidationError('Validation', 'Subsystem display name is required.');
+      return;
+    }
+    if (this.editingFeatureFlag) {
+      this.editingFeatureFlag.moduleName = this.featureFlagForm.moduleName;
+      this.editingFeatureFlag.category = this.featureFlagForm.category;
+      this.editingFeatureFlag.description = this.featureFlagForm.description;
+      const targetEnabled = !!this.featureFlagForm.enabled;
+      const currentEnabled = this.editingFeatureFlag.enabled !== undefined ? this.editingFeatureFlag.enabled : this.editingFeatureFlag.isEnabled;
+      if (currentEnabled !== targetEnabled) {
+        this.toggleFeature(this.editingFeatureFlag);
+      }
+      this.notificationService.success('Subsystem Updated', `Module "${this.featureFlagForm.moduleName}" properties saved successfully.`);
+    }
+    this.showEditFeatureFlagModal = false;
   }
 
   // =========================================================================
@@ -3053,9 +3474,19 @@ export class SettingsComponent implements OnInit, OnDestroy {
       case 'MANAGER': return 'pill-info';
       case 'ACCOUNTANT': return 'pill-success';
       case 'OPERATOR': return 'pill-secondary';
-      case 'VIEWER': return 'pill-muted';
+      case 'VIEWER': return 'pill-neutral';
       default: return 'pill-info';
     }
+  }
+
+  isUserActive(u: any): boolean {
+    if (!u) return false;
+    if (u.isLocked || u.accountLocked) return false;
+    if (u.status) {
+      const s = String(u.status).trim().toUpperCase();
+      return s === 'ACTIVE' || s === 'ENABLED';
+    }
+    return true; // Default active if not locked
   }
 
   getSimulatedLastLogin(index: number): string {

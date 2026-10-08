@@ -1,80 +1,89 @@
 <div class="payments-enterprise-container" [attr.data-density]="tableDensity">
-  <!-- 1. BREADCRUMB NAVIGATION -->
-  <div class="payments-breadcrumb-bar" aria-label="Breadcrumb">
-    <span class="crumb-root">ERP</span>
-    <i class="bi bi-chevron-right crumb-sep"></i>
-    <span class="crumb-section">Financial Management</span>
-    <i class="bi bi-chevron-right crumb-sep"></i>
-    <span class="crumb-current">Customer Receipts & Payment Collections</span>
+  <!-- 1. BREADCRUMB TRAIL -->
+  <div class="payments-breadcrumb-trail no-print">
+    <i class="bi bi-house breadcrumb-home-ico"></i>
+    <span>Futane Agro ERP</span>
+    <span class="crumb-separator">/</span>
+    <span>Financial Management</span>
+    <span class="crumb-separator">/</span>
+    <span class="crumb-active">Customer Receipts &amp; Payment Collections</span>
   </div>
 
-  <!-- 2. STABLE PAGE HEADER -->
-  <header class="payments-page-header">
-    <div class="header-left-col">
-      <div class="header-icon-box">
-        <i class="bi bi-cash-stack"></i>
-      </div>
-      <div class="header-title-meta">
-        <h1 class="header-main-title">Customer Receipts & Payment Collections</h1>
-        <div class="header-sub-row">
-          <span class="header-desc-text">Official payment vouchers, invoice settlements, digital collections & customer receivables ledger</span>
-          <span class="header-badge-live">
-            <span class="pulse-dot"></span>
-            <span>Real-time Financial Ledger</span>
-          </span>
+  <!-- 2. MASTER PAGE HEADER CARD -->
+  <header class="payments-page-header no-print">
+    <div class="header-primary-row">
+      <div class="header-left-col">
+        <div class="header-icon-box">
+          <i class="bi bi-cash-stack"></i>
         </div>
+        <div class="header-titles">
+          <div class="title-with-badge">
+            <h1 class="header-main-title">Customer Receipts &amp; Payment Collections</h1>
+            <span class="header-count-pill">{{ getAllCount() }} Receipts</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Header Actions -->
+      <div class="header-right-actions">
+        <button 
+          type="button" 
+          class="btn-header-action btn-header-secondary" 
+          (click)="loadData(true)" 
+          [disabled]="isRefreshing"
+          title="Reload fresh payment records from database"
+          aria-label="Refresh data">
+          <i class="bi bi-arrow-clockwise" [class.spin-anim]="isRefreshing"></i>
+          <span>Refresh</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="btn-header-action btn-header-secondary" 
+          (click)="exportToCsv()"
+          title="Export receipt ledger to CSV"
+          aria-label="Export to CSV">
+          <i class="bi bi-download"></i>
+          <span>CSV</span>
+        </button>
+
+        <button 
+          type="button" 
+          class="btn-header-action btn-header-secondary" 
+          (click)="exportToExcel()"
+          title="Export receipt ledger for Microsoft Excel"
+          aria-label="Export to Excel">
+          <i class="bi bi-file-earmark-excel"></i>
+          <span>Excel</span>
+        </button>
+
+        <button 
+          *ngIf="!isViewer()" 
+          type="button" 
+          class="btn-header-action btn-primary btn-header-primary" 
+          (click)="toggleFormVisibility()"
+          [title]="isFormVisible ? 'Close Entry Form' : 'Record new customer receipt voucher'"
+          aria-label="Record Payment">
+          <i class="bi" [ngClass]="isFormVisible ? 'bi-dash-lg' : 'bi-plus-lg'"></i>
+          <span>{{ isFormVisible ? 'Close Form' : '+ Record Payment' }}</span>
+        </button>
       </div>
     </div>
 
-    <!-- Header Actions -->
-    <div class="header-right-col">
-      <button 
-        type="button" 
-        class="btn-header-action btn-secondary" 
-        (click)="loadData(true)" 
-        [disabled]="isRefreshing"
-        title="Reload fresh payment records from database"
-        aria-label="Refresh data">
-        <i class="bi bi-arrow-clockwise" [class.spin-anim]="isRefreshing"></i>
-        <span>Refresh</span>
-      </button>
-
-      <button 
-        type="button" 
-        class="btn-header-action btn-secondary" 
-        (click)="exportToCsv()"
-        title="Export receipt ledger to CSV"
-        aria-label="Export to CSV">
-        <i class="bi bi-download"></i>
-        <span>CSV</span>
-      </button>
-
-      <button 
-        type="button" 
-        class="btn-header-action btn-secondary" 
-        (click)="exportToExcel()"
-        title="Export receipt ledger for Microsoft Excel"
-        aria-label="Export to Excel">
-        <i class="bi bi-file-earmark-excel"></i>
-        <span>Excel</span>
-      </button>
-
-      <!-- Primary Action: + Record Payment -->
-      <button 
-        *ngIf="!isViewer()" 
-        type="button" 
-        class="btn-header-action btn-primary" 
-        (click)="toggleFormVisibility()"
-        [title]="isFormVisible ? 'Close Entry Form' : 'Record new customer receipt voucher'"
-        aria-label="Record Payment">
-        <i class="bi" [ngClass]="isFormVisible ? 'bi-dash-lg' : 'bi-plus-lg'"></i>
-        <span>{{ isFormVisible ? 'Close Form' : 'Record Payment' }}</span>
-      </button>
+    <!-- Secondary Row: Subtitle + Live Formula Hint -->
+    <div class="header-secondary-row">
+      <p class="header-subtitle">
+        Official payment vouchers, invoice settlements, digital collections &amp; customer receivables ledger
+      </p>
+      <span class="header-formula-badge" title="Collections Formula: Digital (Bank + UPI) + Cash Collections = Total Realized Inflows">
+        <i class="bi bi-calculator me-1"></i>
+        <span>Digital (Bank + UPI) + Cash Collections = Total Realized Receipts</span>
+      </span>
     </div>
   </header>
 
-  <!-- 2. PAYMENTS MODULE SUB-NAVIGATION (Tabs) -->
-  <div class="production-subnav-bar no-print">
+  <!-- 3. PILL SUBTABS NAVIGATION BAR -->
+  <div class="payments-subnav-bar no-print">
     <div class="subnav-tabs-group" role="tablist">
       <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'all'" (click)="setSubTab('all')">
         <i class="bi bi-cash-stack"></i>
@@ -82,71 +91,99 @@
         <span class="tab-badge-pill">{{ getAllCount() }}</span>
       </button>
       <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'upi'" (click)="setSubTab('upi')">
-        <i class="bi bi-qr-code-scan text-primary"></i>
+        <i class="bi bi-qr-code-scan"></i>
         <span>UPI / QR</span>
         <span class="tab-badge-pill primary">{{ getUpiCount() }}</span>
       </button>
       <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'bank'" (click)="setSubTab('bank')">
-        <i class="bi bi-bank text-info"></i>
+        <i class="bi bi-bank"></i>
         <span>Bank / NEFT</span>
         <span class="tab-badge-pill">{{ getBankCount() }}</span>
       </button>
       <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'cash'" (click)="setSubTab('cash')">
-        <i class="bi bi-wallet2 text-success"></i>
+        <i class="bi bi-wallet2"></i>
         <span>Cash Collections</span>
         <span class="tab-badge-pill success">{{ getCashCount() }}</span>
       </button>
       <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'high_value'" (click)="setSubTab('high_value')">
-        <i class="bi bi-shield-check text-warning"></i>
+        <i class="bi bi-shield-check"></i>
         <span>High Value (&ge; ₹50k)</span>
         <span class="tab-badge-pill warning">{{ getHighValueCount() }}</span>
       </button>
     </div>
   </div>
 
-  <!-- 3. PAYMENTS TELEMETRY SUMMARY RIBBON (Exact Reference KPI Cards) -->
-  <section class="production-kpi-grid no-print" aria-label="Receipts Telemetry KPIs">
-    <div class="kpi-card total-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-cash-stack"></i></div>
-      <div class="kpi-content">
-        <span class="kpi-label">TOTAL COLLECTIONS</span>
-        <strong class="kpi-value">₹{{ getTotalCollections() | number }} <span class="kpi-unit">INR</span></strong>
-        <span class="kpi-meta"><i class="bi bi-receipt me-1"></i>Across {{ paymentsList.length }} payment vouchers</span>
+  <!-- 4. 5-COLUMN RESPONSIVE KPI TELEMETRY CARDS -->
+  <section class="payments-kpi-grid no-print" aria-label="Receipts Telemetry KPIs">
+    <!-- Card 1: Total Collections -->
+    <div class="payment-kpi-card">
+      <div class="payment-kpi-icon kpi-blue">
+        <i class="bi bi-currency-rupee"></i>
+      </div>
+      <div class="payment-kpi-body">
+        <span class="payment-kpi-label">TOTAL COLLECTIONS</span>
+        <div class="payment-kpi-value">₹{{ getTotalCollections() | number }}</div>
+        <div class="payment-kpi-sub">Across {{ paymentsList.length }} payment vouchers</div>
       </div>
     </div>
-    <div class="kpi-card success-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-calendar2-check"></i></div>
-      <div class="kpi-content">
-        <span class="kpi-label">CURRENT MONTH RECEIPTS</span>
-        <strong class="kpi-value text-success">₹{{ getMonthlyCollections() | number }} <span class="kpi-unit">INR</span></strong>
-        <span class="kpi-meta"><i class="bi bi-arrow-up-right me-1"></i>Realized in current cycle</span>
+
+    <!-- Card 2: Current Month -->
+    <div class="payment-kpi-card">
+      <div class="payment-kpi-icon kpi-green">
+        <i class="bi bi-calendar2-check"></i>
+      </div>
+      <div class="payment-kpi-body">
+        <span class="payment-kpi-label">CURRENT MONTH RECEIPTS</span>
+        <div class="payment-kpi-value">₹{{ getMonthlyCollections() | number }}</div>
+        <div class="payment-kpi-sub">Realized in current cycle</div>
       </div>
     </div>
-    <div class="kpi-card danger-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-qr-code-scan"></i></div>
-      <div class="kpi-content">
-        <span class="kpi-label">DIGITAL COLLECTIONS (UPI/BANK)</span>
-        <strong class="kpi-value text-primary">₹{{ getDigitalCollections() | number }} <span class="kpi-unit">INR</span></strong>
-        <span class="kpi-meta"><i class="bi bi-shield-check me-1"></i>Direct electronic settlement</span>
+
+    <!-- Card 3: Digital Collections -->
+    <div class="payment-kpi-card">
+      <div class="payment-kpi-icon kpi-amber">
+        <i class="bi bi-qr-code-scan"></i>
+      </div>
+      <div class="payment-kpi-body">
+        <span class="payment-kpi-label">DIGITAL COLLECTIONS</span>
+        <div class="payment-kpi-value">₹{{ getDigitalCollections() | number }}</div>
+        <div class="payment-kpi-sub">Direct UPI &amp; bank transfers</div>
       </div>
     </div>
-    <div class="kpi-card efficiency-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-wallet2"></i></div>
-      <div class="kpi-content">
-        <span class="kpi-label">CASH COLLECTIONS</span>
-        <strong class="kpi-value text-warning">₹{{ getCashCollections() | number }} <span class="kpi-unit">INR</span></strong>
-        <div class="kpi-progress-bar">
-          <div class="kpi-progress-fill" [style.width.%]="getTotalCollections() > 0 ? (getDigitalCollections() / getTotalCollections()) * 100 : 0"></div>
-        </div>
+
+    <!-- Card 4: Cash Collections -->
+    <div class="payment-kpi-card">
+      <div class="payment-kpi-icon kpi-purple">
+        <i class="bi bi-wallet2"></i>
+      </div>
+      <div class="payment-kpi-body">
+        <span class="payment-kpi-label">CASH COLLECTIONS</span>
+        <div class="payment-kpi-value">₹{{ getCashCollections() | number }}</div>
+        <div class="payment-kpi-sub">Physical counter cash vouchers</div>
+      </div>
+    </div>
+
+    <!-- Card 5: Digital Realization Share -->
+    <div class="payment-kpi-card">
+      <div class="payment-kpi-icon kpi-slate">
+        <i class="bi bi-pie-chart-fill"></i>
+      </div>
+      <div class="payment-kpi-body">
+        <span class="payment-kpi-label">DIGITAL REALIZATION SHARE</span>
+        <div class="payment-kpi-value">{{ getTotalCollections() > 0 ? (getDigitalCollections() / getTotalCollections()) * 100 : 0 | number:'1.0-0' }}%</div>
+        <div class="payment-kpi-sub">Bank &amp; electronic share</div>
       </div>
     </div>
   </section>
 
-  <!-- 4. COLLAPSIBLE ADD / EDIT RECEIPT FORM -->
-  <section 
-    *ngIf="isFormVisible && !isViewer()" 
-    class="payments-form-card animated-fade-in" 
-    aria-label="Payment receipt registration form">
+  <!-- 4. MODAL OVERLAY: ADD / EDIT RECEIPT FORM -->
+  <div *ngIf="isFormVisible && !isViewer()" class="payments-modal-overlay" (click)="cancelEditPayment()" aria-hidden="true"></div>
+  <div
+    *ngIf="isFormVisible && !isViewer()"
+    class="payments-modal-dialog animated-fade-in"
+    role="dialog"
+    aria-label="Payment receipt registration form"
+    (click)="$event.stopPropagation()">
     <div class="form-header-banner">
       <div class="form-header-title-group">
         <i class="bi" [ngClass]="editingPaymentId ? 'bi-pencil-square' : 'bi-receipt-cutoff'"></i>
@@ -311,7 +348,7 @@
         </button>
       </div>
     </form>
-  </section>
+  </div>
 
 
   <!-- 6. CONTEXTUAL TOOLBAR & SEARCH FILTERS (PLACED CLOSE TO TABLE) -->
@@ -325,13 +362,13 @@
           class="search-input" 
           placeholder="Search receipt #, customer, invoice, mode..." 
           [(ngModel)]="searchQuery" 
-          (ngModelChange)="currentPage = 1"
+          (ngModelChange)="currentPage = 1; updateFilteredPayments()"
           aria-label="Search payment records" />
         <button 
           *ngIf="searchQuery" 
           type="button" 
           class="btn-clear-search" 
-          (click)="searchQuery = ''; currentPage = 1" 
+          (click)="searchQuery = ''; currentPage = 1; updateFilteredPayments()" 
           title="Clear search query"
           aria-label="Clear search">
           <i class="bi bi-x-circle-fill"></i>
@@ -399,12 +436,12 @@
             <!-- Filter: Date Range -->
             <div class="filter-field-group">
               <label class="filter-field-label">Date From</label>
-              <input type="date" class="form-control-filter" [(ngModel)]="filterDateFrom" (change)="currentPage = 1">
+              <input type="date" class="form-control-filter" [(ngModel)]="filterDateFrom" (change)="currentPage = 1; updateFilteredPayments()">
             </div>
 
             <div class="filter-field-group">
               <label class="filter-field-label">Date To</label>
-              <input type="date" class="form-control-filter" [(ngModel)]="filterDateTo" (change)="currentPage = 1">
+              <input type="date" class="form-control-filter" [(ngModel)]="filterDateTo" (change)="currentPage = 1; updateFilteredPayments()">
             </div>
           </div>
           <div class="filter-popover-footer">
@@ -547,7 +584,8 @@
       <!-- Real Data Table -->
       <table 
         *ngIf="!isLoading && !hasError && getFilteredPayments().length > 0" 
-        class="enterprise-payments-table">
+        class="enterprise-payments-table"
+        appResizableTable [tableId]="'payments_table'">
         <thead>
           <tr>
             <th class="th-checkbox">
@@ -560,65 +598,65 @@
                 aria-label="Select all" />
             </th>
 
-            <th *ngIf="isColVisible('paymentDate')" (click)="setSort('paymentDate')" class="sortable-th">
+            <th *ngIf="isColVisible('paymentDate')" (click)="setSort('paymentDate')" class="sortable-th th-date">
               <div class="th-content">
                 <span>Receipt Date</span>
                 <i class="bi" [ngClass]="sortField === 'paymentDate' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up text-muted'"></i>
               </div>
             </th>
 
-            <th *ngIf="isColVisible('voucherRef')" (click)="setSort('voucherRef')" class="sortable-th">
+            <th *ngIf="isColVisible('voucherRef')" (click)="setSort('voucherRef')" class="sortable-th th-voucher">
               <div class="th-content">
                 <span>Voucher #</span>
                 <i class="bi" [ngClass]="sortField === 'voucherRef' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up text-muted'"></i>
               </div>
             </th>
 
-            <th *ngIf="isColVisible('party')" (click)="setSort('party')" class="sortable-th">
+            <th *ngIf="isColVisible('party')" (click)="setSort('party')" class="sortable-th th-party">
               <div class="th-content">
                 <span>Customer / Party</span>
                 <i class="bi" [ngClass]="sortField === 'party' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up text-muted'"></i>
               </div>
             </th>
 
-            <th *ngIf="isColVisible('invoiceRef')" class="th-normal">
+            <th *ngIf="isColVisible('invoiceRef')" class="th-invoice">
               <div class="th-content">
                 <span>Invoice Linkage</span>
               </div>
             </th>
 
-            <th *ngIf="isColVisible('paymentMode')" class="th-normal">
+            <th *ngIf="isColVisible('paymentMode')" class="th-mode">
               <div class="th-content">
                 <span>Channel / Mode</span>
               </div>
             </th>
 
-            <th *ngIf="isColVisible('amountReceived')" (click)="setSort('amountReceived')" class="sortable-th th-right">
+            <th *ngIf="isColVisible('amountReceived')" (click)="setSort('amountReceived')" class="sortable-th th-amount th-right">
               <div class="th-content th-right-content">
                 <span>Amount Received (₹)</span>
                 <i class="bi" [ngClass]="sortField === 'amountReceived' ? (sortAsc ? 'bi-arrow-up' : 'bi-arrow-down') : 'bi-arrow-down-up text-muted'"></i>
               </div>
             </th>
 
-            <th *ngIf="isColVisible('outstanding')" class="th-right">
+            <th *ngIf="isColVisible('outstanding')" class="th-balance th-right">
               <div class="th-content th-right-content">
                 <span>Party Balance (₹)</span>
               </div>
             </th>
 
-            <th *ngIf="isColVisible('status')" class="th-center">
+            <th *ngIf="isColVisible('status')" class="th-status th-center">
               <div class="th-content th-center-content">
                 <span>Status</span>
               </div>
             </th>
 
-            <th *ngIf="isColVisible('actions')" class="th-actions">Actions</th>
+            <th *ngIf="isColVisible('actions')" class="th-actions text-right">Actions</th>
           </tr>
         </thead>
 
         <tbody>
           <tr 
-            *ngFor="let payment of getPaginatedPayments(); trackBy: trackByPaymentId" 
+            *ngFor="let payment of pagedPayments; trackBy: trackByPaymentId" 
             [class.row-selected]="isPaymentSelected(payment.id || payment.paymentId)">
             <!-- Checkbox -->
             <td class="td-checkbox">
@@ -631,15 +669,15 @@
             </td>
 
             <!-- Date -->
-            <td *ngIf="isColVisible('paymentDate')">
+            <td *ngIf="isColVisible('paymentDate')" class="td-date">
               <span class="date-badge">{{ payment.paymentDate | indianDate }}</span>
             </td>
 
             <!-- Voucher Ref -->
-            <td *ngIf="isColVisible('voucherRef')">
+            <td *ngIf="isColVisible('voucherRef')" class="td-voucher">
               <button 
                 type="button" 
-                class="voucher-ref-link" 
+                class="voucher-ref-link font-mono" 
                 (click)="openVoucherModal(payment)" 
                 title="View & Print Official Receipt Voucher Slip">
                 <i class="bi bi-file-earmark-text me-1"></i>{{ getVoucherNumber(payment) }}
@@ -647,7 +685,7 @@
             </td>
 
             <!-- Party / Customer -->
-            <td *ngIf="isColVisible('party')">
+            <td *ngIf="isColVisible('party')" class="td-party">
               <div class="party-info-cell">
                 <div class="party-avatar">
                   {{ (payment.party?.partyName || 'C').substring(0, 2).toUpperCase() }}
@@ -664,8 +702,8 @@
             </td>
 
             <!-- Invoice Reference -->
-            <td *ngIf="isColVisible('invoiceRef')">
-              <span *ngIf="payment.invoiceNo" class="invoice-badge" title="Linked to Invoice">
+            <td *ngIf="isColVisible('invoiceRef')" class="td-invoice">
+              <span *ngIf="payment.invoiceNo" class="invoice-badge font-mono" title="Linked to Invoice">
                 <i class="bi bi-file-text me-1"></i>{{ payment.invoiceNo }}
               </span>
               <span *ngIf="!payment.invoiceNo" class="general-credit-badge" title="General Ledger Credit">
@@ -674,7 +712,7 @@
             </td>
 
             <!-- Payment Mode -->
-            <td *ngIf="isColVisible('paymentMode')">
+            <td *ngIf="isColVisible('paymentMode')" class="td-mode">
               <span class="mode-badge" [ngClass]="getModeMeta(payment.paymentMode).badgeClass">
                 <i class="bi me-1" [ngClass]="getModeMeta(payment.paymentMode).icon"></i>
                 <span>{{ payment.paymentMode || 'UPI' }}</span>
@@ -682,17 +720,17 @@
             </td>
 
             <!-- Amount Received -->
-            <td *ngIf="isColVisible('amountReceived')" class="cell-numeric text-success-num cell-bold">
+            <td *ngIf="isColVisible('amountReceived')" class="td-amount cell-numeric text-success-num cell-bold font-mono">
               {{ payment.amountReceived | inr }}
             </td>
 
             <!-- Party Outstanding Balance -->
-            <td *ngIf="isColVisible('outstanding')" class="cell-numeric" [class.text-danger-num]="getOutstandingBalance(payment.party?.id || payment.partyId) > 0">
+            <td *ngIf="isColVisible('outstanding')" class="td-balance cell-numeric font-mono" [class.text-danger-num]="getOutstandingBalance(payment.party?.id || payment.partyId) > 0">
               {{ getOutstandingBalance(payment.party?.id || payment.partyId) | inr }}
             </td>
 
             <!-- Reconciliation Status -->
-            <td *ngIf="isColVisible('status')" class="cell-center">
+            <td *ngIf="isColVisible('status')" class="td-status cell-center">
               <span class="status-reconciled-badge">
                 <i class="bi bi-shield-check me-1"></i> Reconciled
               </span>
@@ -738,89 +776,52 @@
         </tbody>
 
         <!-- Accounting Table Summary Footer -->
-        <tfoot class="table-summary-tfoot">
+        <tfoot class="table-summary-tfoot" *ngIf="getFilteredPayments().length > 0">
           <tr>
-            <td colspan="4" class="tfoot-summary-title">
-              <strong>SUBTOTAL ({{ getFilteredPayments().length }} Filtered Collections)</strong>
+            <td class="td-checkbox"></td>
+            <td *ngIf="isColVisible('paymentDate')" class="tfoot-label"><strong>TOTALS</strong></td>
+            <td *ngIf="isColVisible('voucherRef')"></td>
+            <td *ngIf="isColVisible('party')">
+              <strong>{{ getFilteredPayments().length }} collections</strong>
             </td>
-            <td colspan="2"></td>
-            <td class="cell-numeric cell-bold text-success-num">
-              {{ getTotalCollections() | inr }}
+            <td *ngIf="isColVisible('invoiceRef')"></td>
+            <td *ngIf="isColVisible('paymentMode')"></td>
+            <td *ngIf="isColVisible('amountReceived')" class="td-amount cell-numeric text-success-num cell-bold font-mono">
+              <strong>{{ getTotalCollections() | inr }}</strong>
             </td>
-            <td class="cell-numeric cell-bold text-danger-num">
-              {{ getTotalOutstandingAcrossAllParties() | inr }}
+            <td *ngIf="isColVisible('outstanding')" class="td-balance cell-numeric text-danger-num font-mono cell-bold">
+              <strong>{{ getTotalOutstandingAcrossAllParties() | inr }}</strong>
             </td>
-            <td colspan="2"></td>
+            <td *ngIf="isColVisible('status')"></td>
+            <td *ngIf="isColVisible('actions')"></td>
           </tr>
         </tfoot>
       </table>
     </div>
 
-    <!-- 9. COMPACT PAGINATION CONTROLS -->
-    <div class="table-pagination-bar" *ngIf="!isLoading && !hasError && getFilteredPayments().length > 0">
-      <div class="pagination-left-info">
-        <span>
-          Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to 
-          <strong>{{ Math.min(currentPage * pageSize, getFilteredPayments().length) }}</strong> of 
-          <strong>{{ getFilteredPayments().length }}</strong> receipts
-        </span>
-
-        <div class="pagesize-selector-wrap">
-          <label for="pageSizeSelect">Rows per page:</label>
-          <select 
-            id="pageSizeSelect" 
-            class="form-select-pagesize" 
-            [(ngModel)]="pageSize" 
-            (ngModelChange)="currentPage = 1">
+    <!-- ── STANDARD PAGINATION FOOTER ── -->
+    <div class="erp-table-footer no-print" *ngIf="!isLoading && !hasError && filteredPaymentsCount > 0">
+      <div class="erp-footer-info">
+        Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to
+        <strong>{{ Math.min(currentPage * pageSize, filteredPaymentsCount) }}</strong> of
+        <strong>{{ filteredPaymentsCount }}</strong> payment records
+      </div>
+      <div class="erp-footer-controls">
+        <div class="erp-rows-selector">
+          <span>Rows:</span>
+          <select class="erp-rows-select" [ngModel]="pageSize" (ngModelChange)="setPageSize($event)">
             <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
           </select>
         </div>
-      </div>
-
-      <div class="pagination-controls">
-        <button 
-          type="button" 
-          class="btn-page" 
-          [disabled]="currentPage === 1" 
-          (click)="currentPage = 1" 
-          title="First page"
-          aria-label="First page">
-          <i class="bi bi-chevron-double-left"></i>
-        </button>
-
-        <button 
-          type="button" 
-          class="btn-page btn-page-nav" 
-          [disabled]="currentPage === 1" 
-          (click)="currentPage = currentPage - 1" 
-          title="Previous page"
-          aria-label="Previous page">
-          <i class="bi bi-chevron-left me-1"></i> Previous
-        </button>
-
-        <span class="page-indicator">
-          Page <strong>{{ currentPage }}</strong> of <strong>{{ getTotalPages() }}</strong>
-        </span>
-
-        <button 
-          type="button" 
-          class="btn-page btn-page-nav" 
-          [disabled]="currentPage >= getTotalPages()" 
-          (click)="currentPage = currentPage + 1" 
-          title="Next page"
-          aria-label="Next page">
-          Next <i class="bi bi-chevron-right ms-1"></i>
-        </button>
-
-        <button 
-          type="button" 
-          class="btn-page" 
-          [disabled]="currentPage >= getTotalPages()" 
-          (click)="currentPage = getTotalPages()" 
-          title="Last page"
-          aria-label="Last page">
-          <i class="bi bi-chevron-double-right"></i>
-        </button>
+        <div class="erp-page-buttons">
+          <button type="button" class="erp-page-nav-btn" [disabled]="currentPage === 1" (click)="setPage(currentPage - 1)">
+            <i class="bi bi-chevron-left"></i> Prev
+          </button>
+          <span class="erp-page-counter">Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong></span>
+          <button type="button" class="erp-page-nav-btn" [disabled]="currentPage >= totalPages" (click)="setPage(currentPage + 1)">
+            Next <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
       </div>
     </div>
   </section>
@@ -838,19 +839,27 @@
     class="receipt-voucher-dialog" 
     role="dialog" 
     aria-label="Customer Receipt Voucher Slip">
+    
+    <!-- Modal Header -->
     <div class="voucher-modal-header no-print">
       <div class="voucher-modal-title">
-        <i class="bi bi-receipt text-primary me-2"></i>
+        <div class="voucher-icon-badge">
+          <i class="bi bi-receipt-cutoff"></i>
+        </div>
         <div>
-          <h3>Official Payment Receipt Voucher</h3>
-          <p>{{ getVoucherNumber(selectedPaymentForVoucher!) }} — {{ selectedPaymentForVoucher?.party?.partyName }}</p>
+          <h3>Payment Receipt Voucher</h3>
+          <p>
+            Doc Ref: <span class="voucher-doc-pill">{{ getVoucherNumber(selectedPaymentForVoucher!) }}</span>
+            <span class="voucher-party-sep">&bull;</span>
+            <span class="voucher-party-highlight">{{ selectedPaymentForVoucher?.party?.partyName }}</span>
+          </p>
         </div>
       </div>
       <div class="header-modal-actions">
-        <button type="button" class="btn btn-primary btn-sm me-2" (click)="printVoucher()">
-          <i class="bi bi-printer me-1"></i> Print Receipt
+        <button type="button" class="btn btn-secondary btn-sm header-print-btn" (click)="printVoucher()" title="Print Receipt Voucher">
+          <i class="bi bi-printer me-1"></i> Print
         </button>
-        <button type="button" class="btn-close-modal" (click)="closeVoucherModal()" title="Close Voucher" aria-label="Close">
+        <button type="button" class="btn-close-modal" (click)="closeVoucherModal()" title="Close Voucher (Esc)" aria-label="Close">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
@@ -858,102 +867,160 @@
 
     <!-- Printable Official Voucher Sheet -->
     <div class="voucher-sheet-body" id="printableVoucherSheet">
+      
       <!-- Company Letterhead Strip -->
       <div class="voucher-letterhead">
         <div class="company-brand-row">
-          <div class="brand-logo-text">
-            <h2>FUTANE AGRO INDUSTRIES</h2>
-            <p>High-Density Polyethylene & Polymer Crate Manufacturing</p>
-            <span class="gst-label">GSTIN: 27AABCF1234F1Z8 • CIN: U25200MH2021PTC123456</span>
+          <div class="brand-brand-group">
+            <div class="voucher-logo-box">
+              <img src="assets/logo.svg" alt="Futane Agro" class="voucher-company-logo" (error)="$any($event.target).style.display='none'; logoFallback.style.display='flex'">
+              <div #logoFallback class="company-logo-fallback" style="display: none;">
+                <i class="bi bi-building text-primary"></i>
+              </div>
+            </div>
+            <div class="brand-logo-text">
+              <h2>FUTANE AGRO INDUSTRIES PVT. LTD.</h2>
+              <p class="brand-tagline">Manufacturers of Premium Plastic Crates &amp; Material Handling Trays</p>
+              <p class="brand-address">Gate No 144, Hadapsar Industrial Area, Pune – 411028 | Tel: +91 98234 56789</p>
+              <div class="gst-label-wrap">
+                <span class="corp-tax-chip"><strong>GSTIN:</strong> 27AAACF2920A1ZX</span>
+                <span class="corp-tax-chip"><strong>PAN:</strong> AAACF2920A</span>
+                <span class="corp-tax-chip"><strong>State:</strong> Maharashtra (27)</span>
+              </div>
+            </div>
           </div>
           <div class="voucher-badge-box">
-            <span class="v-title">RECEIPT VOUCHER</span>
+            <span class="v-title">PAYMENT RECEIPT</span>
             <strong class="v-num">{{ getVoucherNumber(selectedPaymentForVoucher!) }}</strong>
             <span class="v-date">Date: {{ selectedPaymentForVoucher?.paymentDate | indianDate }}</span>
+            <div class="v-status-wrapper">
+              <span class="v-status-pill"><i class="bi bi-patch-check-fill me-1"></i>Verified Receipt</span>
+            </div>
           </div>
         </div>
         <div class="letterhead-divider"></div>
       </div>
 
-      <!-- Customer & Payment Metadata -->
+      <!-- Customer & Payment Metadata Grid (Structured Balanced Cards) -->
       <div class="voucher-grid-info">
-        <div class="v-info-col">
-          <span class="v-label">Received With Thanks From:</span>
-          <strong class="v-party-name">{{ selectedPaymentForVoucher?.party?.partyName || 'Customer' }}</strong>
-          <span class="v-address" *ngIf="selectedPaymentForVoucher?.party?.city">
-            {{ selectedPaymentForVoucher?.party?.city }}, Maharashtra, India
-          </span>
-          <span class="v-gstin" *ngIf="selectedPaymentForVoucher?.party?.gstNumber">
-            Customer GSTIN: {{ selectedPaymentForVoucher?.party?.gstNumber }}
-          </span>
+        <!-- Payer Dossier Card -->
+        <div class="v-info-card">
+          <div class="v-card-title">
+            <i class="bi bi-building me-1 text-primary"></i>
+            <span>RECEIVED WITH THANKS FROM</span>
+          </div>
+          <div class="v-card-content">
+            <div class="v-party-name">{{ selectedPaymentForVoucher?.party?.partyName || 'Valued Customer' }}</div>
+            <div class="v-address" *ngIf="selectedPaymentForVoucher?.party?.city || selectedPaymentForVoucher?.party?.address">
+              <i class="bi bi-geo-alt text-muted me-1"></i>{{ selectedPaymentForVoucher?.party?.city || selectedPaymentForVoucher?.party?.address }}, Maharashtra, India
+            </div>
+            <div class="v-gstin-row" *ngIf="selectedPaymentForVoucher?.party?.gstNumber">
+              <span class="v-gstin-chip">
+                <i class="bi bi-shield-check text-success me-1"></i>GSTIN: <strong class="font-mono">{{ selectedPaymentForVoucher?.party?.gstNumber }}</strong>
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div class="v-info-col right-aligned">
-          <div class="v-meta-row">
-            <span class="v-label">Payment Channel:</span>
-            <strong>{{ selectedPaymentForVoucher?.paymentMode }}</strong>
+        <!-- Transaction & Allocation Card -->
+        <div class="v-info-card">
+          <div class="v-card-title">
+            <i class="bi bi-journal-text me-1 text-primary"></i>
+            <span>PAYMENT &amp; LEDGER ALLOCATION</span>
           </div>
-          <div class="v-meta-row" *ngIf="selectedPaymentForVoucher?.referenceNo">
-            <span class="v-label">Ref / UTR #:</span>
-            <code>{{ selectedPaymentForVoucher?.referenceNo }}</code>
-          </div>
-          <div class="v-meta-row">
-            <span class="v-label">Invoice Linkage:</span>
-            <strong>{{ selectedPaymentForVoucher?.invoiceNo || 'General Ledger Credit (On-Account)' }}</strong>
+          <div class="v-card-content v-table-data">
+            <div class="v-key-val">
+              <span class="k-label">Payment Channel:</span>
+              <span class="voucher-channel-pill">{{ selectedPaymentForVoucher?.paymentMode || 'Bank Transfer' }}</span>
+            </div>
+            <div class="v-key-val" *ngIf="selectedPaymentForVoucher?.referenceNo">
+              <span class="k-label">Ref / UTR Number:</span>
+              <code class="v-utr-code">{{ selectedPaymentForVoucher?.referenceNo }}</code>
+            </div>
+            <div class="v-key-val">
+              <span class="k-label">Allocated Invoice:</span>
+              <strong class="v-linkage-text">{{ selectedPaymentForVoucher?.invoiceNo || 'General Ledger Credit (On-Account)' }}</strong>
+            </div>
+            <div class="v-key-val">
+              <span class="k-label">Ledger Status:</span>
+              <span class="v-ledger-tag"><i class="bi bi-check2-circle text-success me-1"></i>Credited &amp; Reconciled</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Amount Highlight Box -->
+      <!-- Executive Amount Received Box -->
       <div class="voucher-amount-box">
-        <div class="amount-figures">
-          <span class="curr-label">Amount Received:</span>
-          <span class="amount-num">{{ selectedPaymentForVoucher?.amountReceived | inr }}</span>
+        <div class="amount-top-row">
+          <div>
+            <span class="curr-label">TOTAL AMOUNT RECEIVED (INR)</span>
+            <div class="amount-num">{{ selectedPaymentForVoucher?.amountReceived | inr }}</div>
+          </div>
+          <div class="amount-settled-pill">
+            <i class="bi bi-check-circle-fill text-success me-1"></i>
+            <span>Full Realized Inflow</span>
+          </div>
         </div>
-        <div class="amount-words">
-          <span class="words-lbl">The sum of:</span>
-          <span class="words-val">**{{ getAmountInWords(selectedPaymentForVoucher?.amountReceived || 0) }}**</span>
+        <div class="amount-words-separator"></div>
+        <div class="amount-words-row">
+          <span class="words-lbl">AMOUNT IN WORDS:</span>
+          <span class="words-val">&ldquo;{{ getAmountInWords(selectedPaymentForVoucher?.amountReceived || 0) }}&rdquo;</span>
         </div>
       </div>
 
-      <!-- Party Ledger Balance Status in Voucher -->
+      <!-- Ledger Summary Bar -->
       <div class="voucher-ledger-summary">
         <div class="v-leg-item">
-          <span class="lbl">Settlement Status:</span>
-          <strong class="text-success"><i class="bi bi-shield-check me-1"></i>Reconciled in Commercial Ledger</strong>
+          <span class="lbl">Accounting Ledger:</span>
+          <strong class="text-success"><i class="bi bi-shield-fill-check me-1"></i>Reconciled in Official Commercial Books</strong>
         </div>
         <div class="v-leg-item">
-          <span class="lbl">Unrecovered Balance Due:</span>
-          <strong [class.text-danger]="getOutstandingBalance(selectedPaymentForVoucher?.party?.id || selectedPaymentForVoucher?.partyId) > 0">
+          <span class="lbl">Party Outstanding Balance:</span>
+          <strong [class.text-danger]="getOutstandingBalance(selectedPaymentForVoucher?.party?.id || selectedPaymentForVoucher?.partyId) > 0"
+                  [class.text-success]="getOutstandingBalance(selectedPaymentForVoucher?.party?.id || selectedPaymentForVoucher?.partyId) <= 0">
             {{ getOutstandingBalance(selectedPaymentForVoucher?.party?.id || selectedPaymentForVoucher?.partyId) | inr }}
           </strong>
         </div>
       </div>
 
-      <!-- Signatures Footer -->
+      <!-- Official Signatures Row -->
       <div class="voucher-signatures-row">
         <div class="sig-box">
           <div class="sig-line"></div>
-          <span class="sig-title">Customer / Payee Signature</span>
+          <span class="sig-title">Payer / Customer Representative</span>
+          <small class="sig-subtitle">Authorized Signature &amp; Stamp</small>
+        </div>
+        <div class="sig-box center">
+          <div class="official-stamp-seal">
+            <i class="bi bi-shield-fill-check text-primary"></i>
+            <div class="stamp-details">
+              <span class="stamp-company">FUTANE AGRO ERP</span>
+              <span class="stamp-verified">OFFICIAL AUDIT STAMP</span>
+            </div>
+          </div>
         </div>
         <div class="sig-box right">
-          <div class="official-stamp-seal">
-            <i class="bi bi-patch-check-fill text-success me-1"></i>
-            <span>FUTANE AGRO SEALED</span>
-          </div>
           <div class="sig-line"></div>
-          <span class="sig-title">For Futane Agro Industries (Authorized Signatory)</span>
+          <span class="sig-title">For FUTANE AGRO INDUSTRIES PVT. LTD.</span>
+          <small class="sig-subtitle">Authorized Financial Signatory</small>
         </div>
       </div>
     </div>
 
+    <!-- Modal Footer -->
     <div class="voucher-modal-footer no-print">
-      <button type="button" class="btn btn-secondary" (click)="closeVoucherModal()">
-        Close
-      </button>
-      <button type="button" class="btn btn-primary" (click)="printVoucher()">
-        <i class="bi bi-printer me-1"></i> Print Receipt Voucher
-      </button>
+      <div class="footer-note">
+        <i class="bi bi-info-circle me-1 text-muted"></i>
+        <span>Official Computer-Generated Commercial Payment Receipt.</span>
+      </div>
+      <div class="footer-actions">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="closeVoucherModal()">
+          Close
+        </button>
+        <button type="button" class="btn btn-primary btn-sm btn-print-voucher" (click)="printVoucher()">
+          <i class="bi bi-printer me-1"></i> Print Receipt Voucher
+        </button>
+      </div>
     </div>
   </div>
 </div>

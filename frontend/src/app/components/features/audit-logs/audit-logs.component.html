@@ -1,15 +1,18 @@
+<div class="audit-breadcrumb-trail no-print">
+  <div class="breadcrumb-trail">
+    <i class="bi bi-house me-1"></i>
+    <span>Futane Agro ERP</span>
+    <span class="sep">/</span>
+    <span>Administration</span>
+    <span class="sep">/</span>
+    <span class="active">Security Audit &amp; System Telemetry</span>
+  </div>
+</div>
+
 <div class="audit-enterprise-container">
   
   <!-- 1. SECURITY HEADER (Master Reference Standard) -->
   <div class="security-header-wrapper no-print">
-    <div class="breadcrumb-trail" style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; width: 100%;">
-      <i class="bi bi-house" style="font-size: 12px; color: #94a3b8;"></i>
-      <span>Futane Agro ERP</span>
-      <span style="color: #cbd5e1;">/</span>
-      <span>Administration</span>
-      <span style="color: #cbd5e1;">/</span>
-      <span style="color: #0B47D4; font-weight: 700;">Security Audit &amp; System Telemetry</span>
-    </div>
 
     <div class="header-main-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 14px;">
       <div class="header-left-group">
@@ -94,50 +97,50 @@
   <!-- 3. STRICT LOG DATA GRID -->
   <div class="security-grid-wrapper" [class]="'density-' + tableDensity">
     <div class="table-responsive">
-      <table class="security-log-table">
+      <table class="security-log-table" appResizableTable [tableId]="'audit_logs_table'">
         <thead>
           <tr>
-            <th style="width: 120px;">Event ID</th>
-            <th style="width: 160px;">Timestamp (UTC+5:30)</th>
-            <th style="min-width: 180px;">System Actor</th>
-            <th style="width: 150px;">Action Type</th>
-            <th style="width: 160px;">Target Resource</th>
-            <th style="width: 140px;">Source IP</th>
-            <th style="min-width: 250px;">Event Truncated Payload</th>
+            <th class="th-id">Event ID</th>
+            <th class="th-time">Timestamp (UTC+5:30)</th>
+            <th class="th-actor">System Actor</th>
+            <th class="th-action">Action Type</th>
+            <th class="th-resource">Target Resource</th>
+            <th class="th-ip">Source IP</th>
+            <th class="th-payload">Event Payload</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let log of paginatedAuditLogs; trackBy: trackById" (click)="openLogDetail(log)">
-            <td>
-              <span class="font-mono text-muted">#{{ log.auditId || log.id }}</span>
+            <td class="td-id">
+              <span class="font-mono text-muted text-truncate">#{{ log.auditId || log.id }}</span>
             </td>
-            <td>
-              <div class="d-flex align-items-center gap-2">
+            <td class="td-time">
+              <div class="d-flex align-items-center gap-2 text-truncate">
                 <i class="bi bi-clock-history text-muted"></i>
-                <span class="font-mono">{{ log.timestamp | date:'dd MMM, HH:mm:ss' }}</span>
+                <span class="font-mono text-truncate">{{ log.timestamp | date:'dd MMM, HH:mm:ss' }}</span>
               </div>
             </td>
-            <td>
-              <div class="d-flex flex-column">
-                <span class="font-mono fw-bold" style="color: #0F172A;">&#64;{{ log.username }}</span>
-                <span class="text-xs text-muted font-mono">{{ log.userRole || 'USER' }}</span>
+            <td class="td-actor">
+              <div class="d-flex flex-column text-truncate">
+                <span class="font-mono fw-bold text-truncate" style="color: #0F172A;">&#64;{{ log.username }}</span>
+                <span class="text-xs text-muted font-mono text-truncate">{{ log.userRole || 'USER' }}</span>
               </div>
             </td>
-            <td>
-              <span class="badge-action" [ngClass]="getActionBadgeClass(log.action)">{{ log.action }}</span>
+            <td class="td-action">
+              <span class="badge-action text-truncate" [ngClass]="getActionBadgeClass(log.action)">{{ log.action }}</span>
             </td>
-            <td>
-              <span class="font-mono text-secondary"><i class="bi bi-box-seam me-2"></i>{{ log.tableName || log.resourceName || 'system_core' }}</span>
+            <td class="td-resource">
+              <span class="font-mono text-secondary text-truncate"><i class="bi bi-box-seam me-1"></i>{{ log.tableName || log.resourceName || 'system_core' }}</span>
             </td>
-            <td>
-              <span class="font-mono text-xs text-muted"><i class="bi bi-ethernet me-1"></i>{{ log.ipAddress || '127.0.0.1' }}</span>
+            <td class="td-ip">
+              <span class="font-mono text-xs text-muted text-truncate"><i class="bi bi-ethernet me-1"></i>{{ log.ipAddress || '127.0.0.1' }}</span>
             </td>
-            <td>
+            <td class="td-payload">
               <div class="d-flex justify-content-between align-items-center">
-                <span class="log-detail-text font-mono" [title]="log.details || log.newValue || ''">
+                <span class="log-detail-text font-mono text-truncate" [title]="log.details || log.newValue || ''">
                   {{ log.details || log.newValue || 'System event recorded.' }}
                 </span>
-                <i class="bi bi-arrow-right-circle text-muted"></i>
+                <i class="bi bi-arrow-right-circle text-muted ms-1"></i>
               </div>
             </td>
           </tr>
@@ -153,6 +156,12 @@
             </td>
           </tr>
         </tbody>
+        <tfoot class="table-summary-tfoot" *ngIf="paginatedAuditLogs.length > 0">
+          <tr>
+            <td class="tfoot-label font-mono"><strong>TOTALS</strong></td>
+            <td colspan="6" class="font-mono"><strong>{{ filteredAuditLogs.length }} telemetry events recorded</strong></td>
+          </tr>
+        </tfoot>
       </table>
     </div>
     

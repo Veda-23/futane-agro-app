@@ -20,11 +20,18 @@
 }
 
 @keyframes subtabFluidEnter {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* ── 1. SECURITY HEADER (Enterprise Consistent Light & Dark) ────────── */
+.audit-breadcrumb-trail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
 .security-header-wrapper {
   display: flex;
   flex-direction: column;
@@ -289,10 +296,23 @@ body.dark-theme .security-select {
 }
 
 .security-log-table {
-  width: 100%;
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
   border-collapse: collapse;
   font-size: 13px;
 }
+
+/* 100.0% Column Budget:
+   ID (10%) + Timestamp (14%) + Actor (14%) + Action (12%) + Resource (14%) + IP (10%) + Payload (26%) = 100.0% */
+.th-id, .td-id { width: 10% !important; max-width: 10% !important; }
+.th-time, .td-time { width: 14% !important; max-width: 14% !important; }
+.th-actor, .td-actor { width: 14% !important; max-width: 14% !important; }
+.th-action, .td-action { width: 12% !important; max-width: 12% !important; }
+.th-resource, .td-resource { width: 14% !important; max-width: 14% !important; }
+.th-ip, .td-ip { width: 10% !important; max-width: 10% !important; }
+.th-payload, .td-payload { width: 26% !important; max-width: 26% !important; }
 
 .security-log-table th {
   position: sticky;
@@ -303,21 +323,27 @@ body.dark-theme .security-select {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-weight: 600;
-  padding: 12px 16px;
+  padding: 10px 12px;
   border-bottom: 1px solid #CBD5E1;
   z-index: 10;
   text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .security-log-table td {
-  padding: 12px 16px;
+  padding: 8px 12px;
   border-bottom: 1px solid #F1F5F9;
   color: #334155;
   vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .security-log-table tbody tr {
-  transition: background-color 0.15s ease;
+  transition: background-color 0.08s ease;
   cursor: pointer;
 }
 
@@ -404,10 +430,10 @@ body.dark-theme .security-select {
 .audit-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 1050;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  z-index: 2000;
   display: flex;
   align-items: center;
   justify-content: center;

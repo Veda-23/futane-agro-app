@@ -1,221 +1,256 @@
 <div class="expenses-enterprise-container" [attr.data-density]="tableDensity">
 
-  <!-- 2. STABLE ENTERPRISE PAGE HEADER -->
+  <!-- ── 1. CANONICAL ENTERPRISE PAGE HEADER ──────────────────────────── -->
   <header class="expenses-page-header no-print">
-    <div class="breadcrumb-trail" style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; width: 100%;">
-      <i class="bi bi-house" style="font-size: 12px; color: #94a3b8;"></i>
+    <div class="breadcrumb-trail">
+      <i class="bi bi-house-door-fill"></i>
       <span>Futane Agro ERP</span>
-      <span style="color: #cbd5e1;">/</span>
-      <span>Financial Management</span>
-      <span style="color: #cbd5e1;">/</span>
-      <span style="color: #0B47D4; font-weight: 700;">Operational Expenditures &amp; Vouchers</span>
+      <span class="sep">/</span>
+      <span>FINANCE &amp; ACCOUNTS</span>
+      <span class="sep">/</span>
+      <span class="active">OPERATIONAL EXPENDITURES &amp; VOUCHERS</span>
     </div>
 
-    <div class="header-left-col">
-      <div class="header-icon-box">
-        <i class="bi bi-receipt-cutoff"></i>
-      </div>
-      <div class="header-title-meta">
-        <h1 class="header-main-title">{{ 'expense.title' | translate:currentLang }}</h1>
-        <div class="header-sub-row">
-          <span class="header-desc-text">Operational expenditures, factory utilities, plant maintenance logs, and overhead tracking</span>
-          <span class="header-badge-live">
-            <span class="pulse-dot"></span>
-            <span>Active Financial Ledger</span>
-          </span>
+    <!-- Header Primary Row -->
+    <div class="header-primary-row">
+      <div class="header-title-box">
+        <div class="header-icon-box">
+          <i class="bi bi-receipt-cutoff"></i>
+        </div>
+        <div>
+          <div class="title-with-badge">
+            <h1 class="header-main-title">{{ 'expense.title' | translate:currentLang }}</h1>
+            <span class="header-count-pill">{{ expensesList.length }} Vouchers</span>
+          </div>
         </div>
       </div>
+
+      <!-- Actions Group -->
+      <div class="header-actions-group">
+        <!-- Refresh Button -->
+        <button 
+          type="button" 
+          class="btn-header-action btn-secondary" 
+          (click)="loadData(true)" 
+          [disabled]="isLoading"
+          title="Reload fresh expense records from database"
+          aria-label="Refresh data">
+          <i class="bi bi-arrow-clockwise" [class.spin-anim]="isLoading"></i>
+          <span>Refresh</span>
+        </button>
+
+        <!-- CSV Export -->
+        <button 
+          type="button" 
+          class="btn-header-action btn-secondary" 
+          (click)="exportCSV()" 
+          [disabled]="expensesList.length === 0" 
+          title="Export expense ledger to CSV"
+          aria-label="Export to CSV">
+          <i class="bi bi-filetype-csv"></i>
+          <span>CSV</span>
+        </button>
+
+        <!-- Excel Export -->
+        <button 
+          type="button" 
+          class="btn-header-action btn-secondary" 
+          (click)="exportExcel()" 
+          [disabled]="expensesList.length === 0" 
+          title="Export expense ledger for Excel"
+          aria-label="Export to Excel">
+          <i class="bi bi-file-earmark-excel"></i>
+          <span>Excel</span>
+        </button>
+
+        <!-- Print Ledger -->
+        <button 
+          type="button" 
+          class="btn-header-action btn-secondary" 
+          (click)="printLedger()" 
+          [disabled]="expensesList.length === 0" 
+          title="Print expense ledger statement"
+          aria-label="Print ledger">
+          <i class="bi bi-printer"></i>
+          <span>Print</span>
+        </button>
+
+        <!-- Primary CTA: Add Expense -->
+        <button 
+          *ngIf="!isViewer()" 
+          type="button" 
+          class="btn-header-action btn-primary" 
+          (click)="openDrawer()"
+          title="Log new operational expense voucher"
+          aria-label="Add Expense">
+          <i class="bi bi-plus-lg"></i>
+          <span>+ Add Expense</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Header Actions -->
-    <div class="header-right-col">
-      <button 
-        type="button" 
-        class="btn-header-action btn-secondary" 
-        (click)="loadData(true)" 
-        [disabled]="isLoading"
-        title="Reload fresh expense records from database"
-        aria-label="Refresh data">
-        <i class="bi bi-arrow-clockwise" [class.spin-anim]="isLoading"></i>
-        <span>Refresh</span>
-      </button>
-
-      <button 
-        type="button" 
-        class="btn-header-action btn-secondary" 
-        (click)="exportCSV()" 
-        [disabled]="expensesList.length === 0" 
-        title="Export expense ledger to CSV"
-        aria-label="Export to CSV">
-        <i class="bi bi-download"></i>
-        <span>CSV</span>
-      </button>
-
-      <button 
-        type="button" 
-        class="btn-header-action btn-secondary" 
-        (click)="printLedger()" 
-        [disabled]="expensesList.length === 0" 
-        title="Print expense ledger statement"
-        aria-label="Print ledger">
-        <i class="bi bi-printer"></i>
-        <span>Print</span>
-      </button>
-
-      <!-- Primary Action: + Add Expense -->
-      <button 
-        *ngIf="!isViewer()" 
-        type="button" 
-        class="btn-header-action btn-primary" 
-        (click)="openDrawer()"
-        title="Log new operational expense voucher"
-        aria-label="Add Expense">
-        <i class="bi bi-plus-lg"></i>
-        <span>Add Expense</span>
-      </button>
+    <!-- Header Secondary Row -->
+    <div class="header-secondary-row">
+      <p class="header-subtitle">
+        Operational expenditures, factory utilities, plant maintenance logs, and overhead tracking
+      </p>
+      <div class="header-formula-badge" title="Cost Center Formula">
+        <i class="bi bi-calculator"></i>
+        <span>Formula: Utilities + Maintenance + Overheads + Labour = Total Operating Expenditure</span>
+      </div>
     </div>
   </header>
 
-  <!-- 3. SUBTABS CLASSIFICATION BAR -->
-  <nav class="subtabs-classification-bar no-print" aria-label="Expense Category Filter Subtabs">
-    <div class="subtabs-scroll-container">
+  <!-- ── 2. LAYER 3: PILL SUBTABS NAVIGATION BAR ────────────────────────── -->
+  <nav class="expenses-subnav-bar no-print" role="tablist" aria-label="Expense Category Filter Subtabs">
+    <div class="subnav-tabs-group">
       <button 
         type="button" 
+        role="tab" 
         class="subnav-tab-btn" 
         [class.active]="activeSubtab === 'ALL'" 
         (click)="setSubtab('ALL')"
         [attr.aria-selected]="activeSubtab === 'ALL'">
-        <i class="bi bi-collection me-1"></i>
+        <i class="bi bi-collection"></i>
         <span>All Expenses</span>
-        <span class="tab-badge default">{{ getSubtabCount('ALL') }}</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('ALL') }}</span>
       </button>
 
       <button 
         type="button" 
+        role="tab" 
         class="subnav-tab-btn" 
         [class.active]="activeSubtab === 'Maintenance'" 
         (click)="setSubtab('Maintenance')"
         [attr.aria-selected]="activeSubtab === 'Maintenance'">
-        <i class="bi bi-tools text-warning me-1"></i>
+        <i class="bi bi-tools text-warning"></i>
         <span>Plant Maintenance</span>
-        <span class="tab-badge warning">{{ getSubtabCount('Maintenance') }}</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('Maintenance') }}</span>
       </button>
 
       <button 
         type="button" 
+        role="tab" 
         class="subnav-tab-btn" 
         [class.active]="activeSubtab === 'Utilities'" 
         (click)="setSubtab('Utilities')"
         [attr.aria-selected]="activeSubtab === 'Utilities'">
-        <i class="bi bi-lightning-charge text-info me-1"></i>
+        <i class="bi bi-lightning-charge text-info"></i>
         <span>Power &amp; Utilities</span>
-        <span class="tab-badge info">{{ getSubtabCount('Utilities') }}</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('Utilities') }}</span>
       </button>
 
       <button 
         type="button" 
+        role="tab" 
         class="subnav-tab-btn" 
         [class.active]="activeSubtab === 'Factory Overhead'" 
         (click)="setSubtab('Factory Overhead')"
         [attr.aria-selected]="activeSubtab === 'Factory Overhead'">
-        <i class="bi bi-buildings text-primary me-1"></i>
+        <i class="bi bi-buildings text-primary"></i>
         <span>Factory Overhead</span>
-        <span class="tab-badge primary-badge">{{ getSubtabCount('Factory Overhead') }}</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('Factory Overhead') }}</span>
       </button>
 
       <button 
         type="button" 
+        role="tab" 
         class="subnav-tab-btn" 
         [class.active]="activeSubtab === 'Labour'" 
         (click)="setSubtab('Labour')"
         [attr.aria-selected]="activeSubtab === 'Labour'">
-        <i class="bi bi-people text-secondary me-1"></i>
+        <i class="bi bi-people text-secondary"></i>
         <span>Labour &amp; Wages</span>
-        <span class="tab-badge default">{{ getSubtabCount('Labour') }}</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('Labour') }}</span>
       </button>
 
       <button 
         type="button" 
+        role="tab" 
         class="subnav-tab-btn" 
         [class.active]="activeSubtab === 'Transport & Fuel'" 
         (click)="setSubtab('Transport & Fuel')"
         [attr.aria-selected]="activeSubtab === 'Transport & Fuel'">
-        <i class="bi bi-truck text-emerald me-1"></i>
+        <i class="bi bi-truck text-emerald"></i>
         <span>Transport &amp; Fuel</span>
-        <span class="tab-badge success">{{ getSubtabCount('Transport & Fuel') }}</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('Transport & Fuel') }}</span>
       </button>
 
       <button 
         type="button" 
+        role="tab" 
         class="subnav-tab-btn" 
         [class.active]="activeSubtab === 'high_value'" 
         (click)="setSubtab('high_value')"
         [attr.aria-selected]="activeSubtab === 'high_value'">
-        <i class="bi bi-shield-check text-rose me-1"></i>
-        <span>High Value (&ge; ₹10k)</span>
-        <span class="tab-badge danger">{{ getSubtabCount('high_value') }}</span>
+        <i class="bi bi-shield-check text-danger"></i>
+        <span>High Value (≥ ₹10k)</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('high_value') }}</span>
       </button>
     </div>
   </nav>
 
-  <!-- 4. ENTERPRISE KPI SUMMARY METRICS RIBBON -->
-  <section class="expenses-kpi-ribbon no-print" aria-label="Operational expenditure metrics">
-    <!-- Card 1: Total Expenditure -->
-    <div class="kpi-card">
-      <div class="kpi-icon-wrapper danger">
-        <i class="bi bi-wallet2"></i>
-      </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Total Expenditure</span>
-        <div class="kpi-value-row">
-          <span class="kpi-number text-danger">₹{{ totalExpenses | number:'1.2-2' }}</span>
-          <span class="kpi-trend down"><i class="bi bi-arrow-down-right me-1"></i>Debit</span>
+  <!-- ── 3. LAYER 4: 5-COLUMN KPI TELEMETRY GRID ───────────────────────── -->
+  <section class="expenses-kpi-grid no-print" aria-label="Operational expenditure metrics">
+    <!-- Card 1: Total Expenditure (Red) -->
+    <div class="expenses-kpi-card" (click)="setSubtab('ALL')" title="All-time recorded operational spend">
+      <div class="expenses-kpi-icon kpi-red"><i class="bi bi-wallet2"></i></div>
+      <div class="expenses-kpi-content">
+        <span class="expenses-kpi-label">TOTAL EXPENDITURE</span>
+        <div class="expenses-kpi-value-row">
+          <strong class="expenses-kpi-value text-danger">₹{{ totalExpenses | number:'1.2-2' }}</strong>
         </div>
-        <span class="kpi-meta">All-time recorded spend</span>
+        <span class="expenses-kpi-meta"><i class="bi bi-arrow-down-right me-1"></i>All-time recorded spend</span>
       </div>
     </div>
 
-    <!-- Card 2: Monthly Burn Rate -->
-    <div class="kpi-card">
-      <div class="kpi-icon-wrapper warning">
-        <i class="bi bi-calendar2-week-fill"></i>
-      </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Monthly Burn Rate</span>
-        <div class="kpi-value-row">
-          <span class="kpi-number text-warning">₹{{ currentMonthBurn | number:'1.2-2' }}</span>
+    <!-- Card 2: Monthly Burn Rate (Amber) -->
+    <div class="expenses-kpi-card" title="Active monthly expenditure cycle">
+      <div class="expenses-kpi-icon kpi-amber"><i class="bi bi-calendar2-week-fill"></i></div>
+      <div class="expenses-kpi-content">
+        <span class="expenses-kpi-label">MONTHLY BURN RATE</span>
+        <div class="expenses-kpi-value-row">
+          <strong class="expenses-kpi-value text-warning">₹{{ currentMonthBurn | number:'1.2-2' }}</strong>
         </div>
-        <span class="kpi-meta">Active billing cycle</span>
+        <span class="expenses-kpi-meta"><i class="bi bi-clock me-1"></i>Current billing cycle</span>
       </div>
     </div>
 
-    <!-- Card 3: Top Cost Category -->
-    <div class="kpi-card">
-      <div class="kpi-icon-wrapper info">
-        <i class="bi bi-pie-chart-fill"></i>
-      </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Top Cost Category</span>
-        <div class="kpi-value-row">
-          <span class="kpi-number text-info">{{ topCategoryInfo.name }}</span>
-          <span class="kpi-trend up"><i class="bi bi-percent me-1"></i>{{ topCategoryInfo.percentage }}%</span>
+    <!-- Card 3: Top Cost Center (Blue) -->
+    <div class="expenses-kpi-card" title="Primary cost center expenditure">
+      <div class="expenses-kpi-icon kpi-blue"><i class="bi bi-pie-chart-fill"></i></div>
+      <div class="expenses-kpi-content">
+        <span class="expenses-kpi-label">TOP COST CENTER</span>
+        <div class="expenses-kpi-value-row">
+          <strong class="expenses-kpi-value font-mono expenses-title-sm">{{ topCategoryInfo.name }}</strong>
         </div>
-        <span class="kpi-meta">₹{{ topCategoryInfo.amount | number:'1.0-0' }} allocated</span>
+        <span class="expenses-kpi-meta"><i class="bi bi-percent me-1"></i>{{ topCategoryInfo.percentage }}% (₹{{ topCategoryInfo.amount | number:'1.0-0' }})</span>
       </div>
     </div>
 
-    <!-- Card 4: Expense Vouchers -->
-    <div class="kpi-card">
-      <div class="kpi-icon-wrapper primary">
-        <i class="bi bi-receipt"></i>
-      </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Expense Vouchers</span>
-        <div class="kpi-value-row">
-          <span class="kpi-number">{{ expensesList.length }}</span>
-          <span class="kpi-trend up"><i class="bi bi-check-circle me-1"></i>Logged</span>
+    <!-- Card 4: Expense Vouchers (Purple) -->
+    <div class="expenses-kpi-card" (click)="setSubtab('ALL')" title="Total reconciled expense vouchers">
+      <div class="expenses-kpi-icon kpi-purple"><i class="bi bi-receipt"></i></div>
+      <div class="expenses-kpi-content">
+        <span class="expenses-kpi-label">EXPENSE VOUCHERS</span>
+        <div class="expenses-kpi-value-row">
+          <strong class="expenses-kpi-value">{{ expensesList.length }}</strong>
+          <span class="expenses-kpi-unit">Vouchers</span>
         </div>
-        <span class="kpi-meta">Reconciled vouchers</span>
+        <span class="expenses-kpi-meta"><i class="bi bi-check-circle me-1"></i>Reconciled vouchers</span>
+      </div>
+    </div>
+
+    <!-- Card 5: High Value Vouchers (Slate) -->
+    <div class="expenses-kpi-card" (click)="setSubtab('high_value')" title="High value vouchers ≥ ₹10,000">
+      <div class="expenses-kpi-icon kpi-slate"><i class="bi bi-shield-check"></i></div>
+      <div class="expenses-kpi-content">
+        <span class="expenses-kpi-label">HIGH VALUE VOUCHERS</span>
+        <div class="expenses-kpi-value-row">
+          <strong class="expenses-kpi-value">{{ getSubtabCount('high_value') }}</strong>
+          <span class="expenses-kpi-unit">≥ ₹10k</span>
+        </div>
+        <span class="expenses-kpi-meta"><i class="bi bi-shield me-1"></i>Audit flagged vouchers</span>
       </div>
     </div>
   </section>
@@ -256,19 +291,53 @@
           </button>
         </div>
 
-        <!-- Category Dropdown -->
-        <div class="filter-select-box">
-          <select [(ngModel)]="selectedCategory" (change)="activeSubtab = selectedCategory; currentPage = 1" class="toolbar-select">
-            <option value="ALL">All Categories ({{ expensesList.length }})</option>
-            <option *ngFor="let cat of categories" [value]="cat">{{ cat }} ({{ categoryCounts[cat] || 0 }})</option>
-          </select>
-        </div>
+        <!-- Consolidated Filter Popover -->
+        <div class="filter-popover-wrapper" (click)="$event.stopPropagation()">
+          <button 
+            type="button" 
+            class="filter-trigger-btn"
+            [class.active-filters]="activeFilterCount > 0"
+            (click)="showFilterPopover = !showFilterPopover"
+            title="Filter expense vouchers">
+            <i class="bi bi-funnel"></i>
+            <span>Filters</span>
+            <span class="filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
+          </button>
 
-        <!-- Date Range Filter -->
-        <div class="date-range-box">
-          <input type="date" [(ngModel)]="filterDateFrom" (change)="currentPage = 1" class="date-picker-input" title="From Date">
-          <span class="date-sep">to</span>
-          <input type="date" [(ngModel)]="filterDateTo" (change)="currentPage = 1" class="date-picker-input" title="To Date">
+          <div class="filter-popover-panel shadow-lg" *ngIf="showFilterPopover">
+            <div class="popover-title-row">
+              <span><i class="bi bi-sliders me-1 text-primary"></i>Refine Expense Vouchers</span>
+              <button type="button" class="btn-text" (click)="resetFilters(); activeSubtab = 'ALL'; showFilterPopover = false">Reset All</button>
+            </div>
+
+            <div class="popover-content-body">
+              <!-- Category Filter -->
+              <div class="filter-field-group">
+                <label>Expense Category</label>
+                <select [(ngModel)]="selectedCategory" (change)="activeSubtab = selectedCategory; currentPage = 1" class="filter-select">
+                  <option value="ALL">All Categories ({{ expensesList.length }})</option>
+                  <option *ngFor="let cat of categories" [value]="cat">{{ cat }} ({{ categoryCounts[cat] || 0 }})</option>
+                </select>
+              </div>
+
+              <!-- From Date Filter -->
+              <div class="filter-field-group">
+                <label>From Date</label>
+                <input type="date" [(ngModel)]="filterDateFrom" (change)="currentPage = 1" class="filter-select">
+              </div>
+
+              <!-- To Date Filter -->
+              <div class="filter-field-group">
+                <label>To Date</label>
+                <input type="date" [(ngModel)]="filterDateTo" (change)="currentPage = 1" class="filter-select">
+              </div>
+            </div>
+
+            <div class="popover-footer-row">
+              <button type="button" class="btn btn-sm btn-secondary" (click)="showFilterPopover = false">Close</button>
+              <button type="button" class="btn btn-sm btn-primary" (click)="showFilterPopover = false">Apply Filters</button>
+            </div>
+          </div>
         </div>
 
         <!-- Reset Button -->
@@ -339,42 +408,42 @@
 
     <!-- Table Container -->
     <div class="table-container" *ngIf="filteredList.length > 0">
-      <table class="enterprise-table" [ngClass]="'density-' + tableDensity" appResizableTable [tableId]="'expenses_table'">
+      <table class="enterprise-table enterprise-expenses-table" [ngClass]="'density-' + tableDensity" appResizableTable [tableId]="'expenses_table'">
         <thead>
           <tr>
-            <th *ngIf="isColumnVisible('expenses', 'Date')" (click)="setSort('expenseDate')" class="sortable-th">
+            <th *ngIf="isColumnVisible('expenses', 'Date')" (click)="setSort('expenseDate')" class="sortable-th th-date" style="width: 12%;">
               <div class="th-content">
                 <span>{{ 'label.date' | translate:currentLang }}</span>
                 <i class="bi" [ngClass]="sortField === 'expenseDate' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-arrow-down-up opacity-25'"></i>
               </div>
             </th>
-            <th *ngIf="isColumnVisible('expenses', 'Category')" (click)="setSort('category')" class="sortable-th">
+            <th *ngIf="isColumnVisible('expenses', 'Category')" (click)="setSort('category')" class="sortable-th th-category" style="width: 16%;">
               <div class="th-content">
                 <span>{{ 'expense.category' | translate:currentLang }}</span>
                 <i class="bi" [ngClass]="sortField === 'category' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-arrow-down-up opacity-25'"></i>
               </div>
             </th>
-            <th *ngIf="isColumnVisible('expenses', 'Description')">
+            <th *ngIf="isColumnVisible('expenses', 'Description')" class="th-desc" style="width: 30%;">
               <div class="th-content">
                 <span>{{ 'expense.description' | translate:currentLang }}</span>
               </div>
             </th>
-            <th *ngIf="isColumnVisible('expenses', 'Amount')" (click)="setSort('amount')" class="sortable-th text-end">
+            <th *ngIf="isColumnVisible('expenses', 'Amount')" (click)="setSort('amount')" class="sortable-th text-end th-amount" style="width: 14%;">
               <div class="th-content justify-content-end">
                 <span>{{ 'label.amount' | translate:currentLang }}</span>
                 <i class="bi" [ngClass]="sortField === 'amount' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-arrow-down-up opacity-25'"></i>
               </div>
             </th>
-            <th *ngIf="isColumnVisible('expenses', 'Paid By')" (click)="setSort('paidBy')" class="sortable-th">
+            <th *ngIf="isColumnVisible('expenses', 'Paid By')" (click)="setSort('paidBy')" class="sortable-th th-payer" style="width: 14%;">
               <div class="th-content">
                 <span>{{ 'expense.paidBy' | translate:currentLang }}</span>
                 <i class="bi" [ngClass]="sortField === 'paidBy' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-arrow-down-up opacity-25'"></i>
               </div>
             </th>
-            <th *ngIf="isColumnVisible('expenses', 'Mode')">
+            <th *ngIf="isColumnVisible('expenses', 'Mode')" class="th-mode" style="width: 6%;">
               <div class="th-content">Mode</div>
             </th>
-            <th *ngIf="isColumnVisible('expenses', 'Actions')" class="text-end" style="width: 90px;">
+            <th *ngIf="isColumnVisible('expenses', 'Actions')" class="text-end th-actions" style="width: 8%;">
               <div class="th-content justify-content-end">Actions</div>
             </th>
           </tr>
@@ -402,17 +471,35 @@
               <span class="mode-badge">{{ e.paymentMode || 'Cash' }}</span>
             </td>
             <td *ngIf="isColumnVisible('expenses', 'Actions')" class="text-end">
-              <div class="table-actions-cell">
-                <button type="button" class="btn-action-icon edit-icon" (click)="editExpense(e)" title="Edit Voucher">
-                  <i class="bi bi-pencil"></i>
+              <div class="table-actions-cell justify-content-end">
+                <button type="button" class="btn-action-icon btn-view view-icon" (click)="openVoucherModal(e)" title="View Expense Voucher & Disbursement Slip">
+                  <i class="bi bi-eye"></i>
                 </button>
-                <button *ngIf="canDelete()" type="button" class="btn-action-icon delete-icon" (click)="deleteExpense(e.id)" title="Delete Voucher">
+                <button type="button" class="btn-action-icon btn-edit edit-icon" (click)="editExpense(e)" title="Edit Voucher">
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+                <button *ngIf="canDelete()" type="button" class="btn-action-icon btn-delete delete-icon" (click)="deleteExpense(e.id)" title="Delete Voucher">
                   <i class="bi bi-trash3"></i>
                 </button>
               </div>
             </td>
           </tr>
         </tbody>
+        <tfoot class="table-summary-tfoot" *ngIf="filteredList.length > 0">
+          <tr>
+            <td *ngIf="isColumnVisible('expenses', 'Date')" class="tfoot-label"><strong>TOTALS</strong></td>
+            <td *ngIf="isColumnVisible('expenses', 'Category')">
+              <strong>{{ filteredList.length }} expenses</strong>
+            </td>
+            <td *ngIf="isColumnVisible('expenses', 'Description')"></td>
+            <td *ngIf="isColumnVisible('expenses', 'Amount')" class="text-end font-mono">
+              <strong class="text-danger">₹{{ filteredTotalAmount | number:'1.2-2' }}</strong>
+            </td>
+            <td *ngIf="isColumnVisible('expenses', 'Paid By')"></td>
+            <td *ngIf="isColumnVisible('expenses', 'Mode')"></td>
+            <td *ngIf="isColumnVisible('expenses', 'Actions')"></td>
+          </tr>
+        </tfoot>
       </table>
     </div>
 
@@ -429,36 +516,31 @@
       (action)="resetFilters(); activeSubtab = 'ALL'">
     </app-empty-state>
 
-    <!-- Enterprise Pagination Footer -->
-    <footer class="table-pagination-footer no-print" *ngIf="filteredList.length > 0">
-      <div class="pagination-info">
-        Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to 
-        <strong>{{ Math.min(currentPage * pageSize, filteredList.length) }}</strong> of 
+    <!-- ── STANDARD PAGINATION FOOTER ── -->
+    <div class="erp-table-footer no-print" *ngIf="filteredList.length > 0">
+      <div class="erp-footer-info">
+        Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to
+        <strong>{{ Math.min(currentPage * pageSize, filteredList.length) }}</strong> of
         <strong>{{ filteredList.length }}</strong> expense vouchers
       </div>
-
-      <div class="pagination-controls">
-        <button 
-          type="button" 
-          class="btn-page-nav" 
-          [disabled]="currentPage === 1" 
-          (click)="currentPage = currentPage - 1">
-          <i class="bi bi-chevron-left me-1"></i>Prev
-        </button>
-
-        <span class="page-indicator">
-          Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong>
-        </span>
-
-        <button 
-          type="button" 
-          class="btn-page-nav" 
-          [disabled]="currentPage >= totalPages" 
-          (click)="currentPage = currentPage + 1">
-          Next<i class="bi bi-chevron-right ms-1"></i>
-        </button>
+      <div class="erp-footer-controls">
+        <div class="erp-rows-selector">
+          <span>Rows:</span>
+          <select [(ngModel)]="pageSize" (change)="currentPage = 1" class="erp-rows-select">
+            <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+        <div class="erp-page-buttons">
+          <button type="button" class="erp-page-nav-btn" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
+            <i class="bi bi-chevron-left"></i> Prev
+          </button>
+          <span class="erp-page-counter">Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong></span>
+          <button type="button" class="erp-page-nav-btn" [disabled]="currentPage >= totalPages" (click)="currentPage = currentPage + 1">
+            Next <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
       </div>
-    </footer>
+    </div>
   </section>
 </div>
 
@@ -565,5 +647,136 @@
         </button>
       </div>
     </form>
+  </div>
+
+  <!-- ── 5. OFFICIAL EXPENSE VOUCHER & DISBURSEMENT SLIP MODAL ───────── -->
+  <div class="voucher-modal-overlay no-print-backdrop" *ngIf="showVoucherModal && selectedExpenseForVoucher" (click)="closeVoucherModal()">
+    <div class="voucher-modal-dialog animate-scale-up" (click)="$event.stopPropagation()">
+      <!-- Voucher Top Bar -->
+      <div class="dossier-top-bar no-print">
+        <div class="dossier-top-title">
+          <i class="bi bi-receipt text-primary fs-5"></i>
+          <div>
+            <h3 class="dossier-heading">Expense Voucher &amp; Disbursement Slip</h3>
+            <span class="dossier-subheading">Voucher Ref: #EXP-{{ selectedExpenseForVoucher.id }} &bull; Treasury Audited</span>
+          </div>
+        </div>
+        <div class="dossier-top-actions">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="printVoucher()">
+            <i class="bi bi-printer me-1"></i> Print Voucher
+          </button>
+          <button type="button" class="btn-action-icon ms-2" (click)="closeVoucherModal()" title="Close">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Voucher Sheet -->
+      <div class="voucher-printable-sheet">
+        <!-- Letterhead -->
+        <div class="letterhead-header">
+          <div class="letterhead-brand">
+            <img src="assets/logo.svg" alt="Futane Agro" class="letterhead-logo" (error)="$any($event.target).style.display='none'">
+            <div>
+              <h2 class="company-name">FUTANE AGRO INDUSTRIES PVT. LTD.</h2>
+              <p class="company-sub">Industrial Packaging &amp; Agricultural Crates Manufacturing Division</p>
+              <p class="company-tax">Gate No 144, Hadapsar Industrial Area, Pune - 411028 | GSTIN: 27AAACF2920A1ZX | State: 27 (Maharashtra)</p>
+            </div>
+          </div>
+          <div class="letterhead-badge">
+            <span class="challan-badge-title">PAYMENT VOUCHER</span>
+            <span class="challan-badge-rule">Financial Accounting Standard</span>
+            <span class="challan-doc-no font-mono">#EXP-{{ selectedExpenseForVoucher.id }}</span>
+          </div>
+        </div>
+
+        <div class="dossier-divider"></div>
+
+        <!-- Telemetry Metadata Grid -->
+        <div class="dossier-meta-grid">
+          <div class="meta-card">
+            <span class="meta-label">VOUCHER DATE</span>
+            <span class="meta-value font-mono">{{ selectedExpenseForVoucher.expenseDate | indianDate }}</span>
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">ACCOUNTING CATEGORY</span>
+            <span class="meta-value text-primary fw-bold">{{ selectedExpenseForVoucher.category }}</span>
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">PAYMENT MODE</span>
+            <span class="meta-value">{{ selectedExpenseForVoucher.paymentMode || 'Cash' }}</span>
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">PAID BY / BENEFICIARY</span>
+            <span class="meta-value">{{ selectedExpenseForVoucher.paidBy || 'Factory Treasury' }}</span>
+          </div>
+        </div>
+
+        <!-- Voucher Description Card -->
+        <div class="voucher-desc-card">
+          <span class="block-title"><i class="bi bi-info-circle me-1"></i>EXPENDITURE DESCRIPTION &amp; JUSTIFICATION</span>
+          <p class="voucher-desc-text">{{ selectedExpenseForVoucher.description || 'General plant operational and manufacturing expenditure' }}</p>
+        </div>
+
+        <!-- Financial Summary Table -->
+        <table class="dossier-items-table">
+          <thead>
+            <tr>
+              <th style="width: 8%;">#</th>
+              <th>Accounting Particulars</th>
+              <th style="width: 25%; text-align: center;">Account Head</th>
+              <th style="width: 25%; text-align: right;">Disbursed Amount (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-center font-mono">01</td>
+              <td>
+                <strong>{{ selectedExpenseForVoucher.category }} Expenditure</strong>
+                <div class="item-sub">{{ selectedExpenseForVoucher.description }}</div>
+              </td>
+              <td class="text-center font-mono">OPERATIONAL OVERHEAD</td>
+              <td class="text-end font-mono fs-5 fw-bold text-rose">
+                ₹{{ selectedExpenseForVoucher.amount | number:'1.2-2' }}
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="summary-tfoot-row">
+              <td colspan="3" class="text-end fw-bold">TOTAL DISBURSED AMOUNT:</td>
+              <td class="text-end font-mono fs-5 fw-bold text-rose">₹{{ selectedExpenseForVoucher.amount | number:'1.2-2' }}</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <!-- Signatures & Official Corporate Seal -->
+        <div class="dossier-signoff-row">
+          <div class="signoff-box">
+            <div class="sign-line"></div>
+            <span class="sign-title">Prepared By (Cashier / Clerk)</span>
+          </div>
+          <div class="signoff-box">
+            <div class="sign-line"></div>
+            <span class="sign-title">Receiver's Signature</span>
+          </div>
+          <div class="signoff-box official-seal-box">
+            <div class="corporate-seal">
+              <div class="seal-inner">
+                <i class="bi bi-shield-check seal-icon"></i>
+                <span class="seal-brand">FUTANE AGRO</span>
+                <span class="seal-dept">TREASURY</span>
+                <span class="seal-status">APPROVED</span>
+              </div>
+            </div>
+            <span class="sign-title mt-1">Authorized Treasury Manager</span>
+          </div>
+        </div>
+
+        <div class="challan-footer-note">
+          <span>Official cash disbursement voucher certified under Futane Agro Internal Financial Controls.</span>
+          <span class="font-mono">VOUCHER-REF-{{ selectedExpenseForVoucher.id }}</span>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

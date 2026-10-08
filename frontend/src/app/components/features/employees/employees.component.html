@@ -1,200 +1,242 @@
 <div class="employees-enterprise-container">
 
-  <!-- ── 1. UNIFIED BREADCRUMB & STABLE HEADER ────────────────────── -->
-  <div class="header-section-wrapper no-print">
-    <!-- Row 1a: Breadcrumbs -->
-    <div class="breadcrumb-nav">
-      <span class="breadcrumb-item"><i class="bi bi-house-door me-1"></i>Futane Agro ERP</span>
-      <span class="breadcrumb-separator">/</span>
-      <span class="breadcrumb-item">Factory Workforce &amp; HR</span>
-      <span class="breadcrumb-separator">/</span>
-      <span class="breadcrumb-item active">Personnel &amp; Staff Directory</span>
+  <!-- ── 1. CANONICAL ENTERPRISE PAGE HEADER ──────────────────────────── -->
+  <header class="employees-page-header no-print">
+    <div class="breadcrumb-trail">
+      <i class="bi bi-house-door-fill"></i>
+      <span>Futane Agro ERP</span>
+      <span class="sep">/</span>
+      <span>WORKFORCE &amp; HR</span>
+      <span class="sep">/</span>
+      <span class="active">PERSONNEL &amp; STAFF DIRECTORY</span>
     </div>
 
-    <!-- Row 1b: Stable Header with Title & Primary Actions -->
-    <div class="stable-page-header">
-      <div class="header-left">
-        <div class="header-icon-badge">
+    <!-- Header Primary Row -->
+    <div class="header-primary-row">
+      <div class="header-title-box">
+        <div class="header-icon-box">
           <i class="bi bi-people-fill"></i>
         </div>
-        <div class="header-text-group">
-          <h1 class="header-main-title">Factory Personnel &amp; Staff Directory</h1>
-          <p class="header-desc-text">
-            Master employee registry, operational job designations, monthly wage benchmarks, and compliance credentials
-          </p>
+        <div>
+          <div class="title-with-badge">
+            <h1 class="header-main-title">Factory Personnel &amp; Staff Directory</h1>
+            <span class="header-count-pill">{{ totalEmployees }} Staff</span>
+          </div>
         </div>
       </div>
 
-      <div class="header-right-actions">
-        <!-- Payroll & Salaries Navigation Shortcut -->
-        <button type="button" 
-                class="btn btn-secondary btn-action-compact" 
-                (click)="goToSalaries()" 
-                title="Navigate to Salaries &amp; Payroll Ledger">
-          <i class="bi bi-wallet2 me-1 text-primary"></i>
-          <span class="btn-label-desktop">Payroll &amp; Salaries</span>
+      <!-- Actions Group -->
+      <div class="header-actions-group">
+        <!-- Payroll Shortcut -->
+        <button 
+          type="button" 
+          class="btn-header-action btn-secondary" 
+          (click)="goToSalaries()" 
+          title="Navigate to Salaries &amp; Payroll Ledger"
+          aria-label="Payroll &amp; Salaries">
+          <i class="bi bi-wallet2 text-primary"></i>
+          <span>Payroll &amp; Salaries</span>
         </button>
 
         <!-- Refresh Button -->
-        <button type="button" 
-                class="btn btn-secondary btn-action-compact" 
-                (click)="loadData(true)" 
-                [disabled]="isLoading" 
-                title="Refresh workforce roster from server">
-          <i class="bi bi-arrow-clockwise me-1" [class.spin-anim]="isLoading"></i>
-          <span class="btn-label-desktop">Refresh</span>
+        <button 
+          type="button" 
+          class="btn-header-action btn-secondary" 
+          (click)="loadData(true)" 
+          [disabled]="isLoading" 
+          title="Refresh workforce roster from server"
+          aria-label="Refresh employees">
+          <i class="bi bi-arrow-clockwise" [class.spin-anim]="isLoading"></i>
+          <span>Refresh</span>
         </button>
 
-        <!-- Consolidated Export Dropdown -->
-        <div class="export-dropdown-wrapper" (click)="$event.stopPropagation()">
-          <button type="button" 
-                  class="btn btn-secondary btn-action-compact" 
-                  (click)="toggleExportDropdown($event)" 
-                  title="Export staff records">
-            <i class="bi bi-download me-1"></i>
-            <span>Export ▾</span>
-          </button>
-          <div class="export-menu shadow-lg animate-fade-in" *ngIf="showExportDropdown">
-            <button type="button" class="export-menu-item" (click)="exportCsv()">
-              <i class="bi bi-file-earmark-spreadsheet text-success me-2"></i>Export CSV (.csv)
-            </button>
-            <button type="button" class="export-menu-item" (click)="exportExcel()">
-              <i class="bi bi-file-earmark-excel text-primary me-2"></i>Export Excel (.xlsx)
-            </button>
-          </div>
-        </div>
-
-        <!-- Primary Action: Enroll Staff Member -->
-        <button type="button" 
-                class="btn btn-primary btn-action-primary" 
-                *ngIf="!isViewer()"
-                (click)="openAddDrawer()" 
-                title="Enroll a new staff member into factory roster">
-          <i class="bi bi-person-plus-fill me-1"></i>
-          <span>Enroll Staff Member</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- ── 2. SUBTABS CLASSIFICATION RIBBON ──────────────────────────── -->
-    <div class="subtabs-classification-bar">
-      <div class="subtabs-scroll-container">
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="filterRole === 'ALL'"
-                (click)="setSubtabRole('ALL')">
-          <i class="bi bi-people-fill me-1"></i>
-          <span>All Personnel</span>
-          <span class="tab-count-badge">{{ getSubtabCount('ALL') }}</span>
+        <!-- CSV Export -->
+        <button 
+          type="button" 
+          class="btn-header-action btn-secondary" 
+          (click)="exportCsv()" 
+          title="Export staff records to CSV"
+          aria-label="Export CSV">
+          <i class="bi bi-filetype-csv"></i>
+          <span>CSV</span>
         </button>
 
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="filterRole === 'Operator'"
-                (click)="setSubtabRole('Operator')">
-          <i class="bi bi-gear-wide-connected text-primary me-1"></i>
-          <span>Machine Operators</span>
-          <span class="tab-count-badge">{{ getSubtabCount('Operator') }}</span>
+        <!-- Excel Export -->
+        <button 
+          type="button" 
+          class="btn-header-action btn-secondary" 
+          (click)="exportExcel()" 
+          title="Export staff records for Excel"
+          aria-label="Export Excel">
+          <i class="bi bi-file-earmark-excel"></i>
+          <span>Excel</span>
         </button>
 
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="filterRole === 'Quality'"
-                (click)="setSubtabRole('Quality')">
-          <i class="bi bi-shield-check text-success me-1"></i>
-          <span>Quality &amp; Inspection</span>
-          <span class="tab-count-badge">{{ getSubtabCount('Quality') }}</span>
-        </button>
-
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="filterRole === 'Warehouse'"
-                (click)="setSubtabRole('Warehouse')">
-          <i class="bi bi-box-seam text-warning me-1"></i>
-          <span>Warehouse &amp; Loading</span>
-          <span class="tab-count-badge">{{ getSubtabCount('Warehouse') }}</span>
-        </button>
-
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="filterRole === 'Maintenance'"
-                (click)="setSubtabRole('Maintenance')">
-          <i class="bi bi-tools text-info me-1"></i>
-          <span>Maintenance &amp; Tech</span>
-          <span class="tab-count-badge">{{ getSubtabCount('Maintenance') }}</span>
-        </button>
-
-        <button type="button" 
-                class="subtab-pill-btn" 
-                [class.active]="filterRole === 'Supervisor'"
-                (click)="setSubtabRole('Supervisor')">
-          <i class="bi bi-person-badge text-purple me-1"></i>
-          <span>Supervisors &amp; Office</span>
-          <span class="tab-count-badge">{{ getSubtabCount('Supervisor') }}</span>
+        <!-- Primary CTA: Enroll Staff Member -->
+        <button 
+          type="button" 
+          class="btn-header-action btn-primary" 
+          *ngIf="!isViewer()"
+          (click)="openAddDrawer()" 
+          title="Enroll a new staff member into factory roster"
+          aria-label="Enroll Staff Member">
+          <i class="bi bi-person-plus-fill"></i>
+          <span>+ Enroll Staff Member</span>
         </button>
       </div>
     </div>
-  </div>
 
-  <!-- ── 3. COMPACT HR KPI METRICS GRID ────────────────────────────── -->
-  <section class="employees-kpi-grid no-print" aria-label="Human Resources Metrics">
-    <!-- Active Headcount -->
-    <div class="kpi-card">
-      <div class="kpi-icon-badge kpi-blue">
-        <i class="bi bi-people-fill"></i>
-      </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Total Workforce</span>
-        <div class="kpi-value font-mono">{{ totalEmployees }} Staff</div>
-        <div class="kpi-subtext">
-          <span class="badge-tag tag-primary">Factory Roster</span>
-          <span class="kpi-subtext-muted">Active personnel</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Monthly Direct Payroll Commitment -->
-    <div class="kpi-card">
-      <div class="kpi-icon-badge kpi-emerald">
-        <i class="bi bi-cash-stack"></i>
-      </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Monthly Payroll</span>
-        <div class="kpi-value font-mono">₹{{ totalMonthlyPayroll | number:'1.0-0' }}</div>
-        <div class="kpi-subtext">
-          <span class="badge-tag tag-success">Base Salary</span>
-          <span class="kpi-subtext-muted">Direct compensation</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Average Benchmark Salary -->
-    <div class="kpi-card">
-      <div class="kpi-icon-badge kpi-violet">
+    <!-- Header Secondary Row -->
+    <div class="header-secondary-row">
+      <p class="header-subtitle">
+        Master employee registry, operational job designations, monthly wage benchmarks, and compliance credentials
+      </p>
+      <div class="header-formula-badge" title="Payroll Formula">
         <i class="bi bi-calculator"></i>
+        <span>Formula: Base Salary + Overtime - Statutory Deductions (PF/ESI) = Net Take-Home Pay</span>
       </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Avg Compensation</span>
-        <div class="kpi-value font-mono">₹{{ averageSalary | number:'1.0-0' }}</div>
-        <div class="kpi-subtext">
-          <span class="badge-tag tag-purple">Benchmark Wage</span>
-          <span class="kpi-subtext-muted">Per active worker</span>
+    </div>
+  </header>
+
+  <!-- ── 2. LAYER 3: PILL SUBTABS NAVIGATION BAR ────────────────────────── -->
+  <nav class="employees-subnav-bar no-print" role="tablist" aria-label="Role Classification">
+    <div class="subnav-tabs-group">
+      <button 
+        type="button" 
+        role="tab" 
+        class="subnav-tab-btn" 
+        [class.active]="filterRole === 'ALL'" 
+        (click)="setSubtabRole('ALL')" 
+        [attr.aria-selected]="filterRole === 'ALL'">
+        <i class="bi bi-people-fill"></i>
+        <span>All Personnel</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('ALL') }}</span>
+      </button>
+
+      <button 
+        type="button" 
+        role="tab" 
+        class="subnav-tab-btn" 
+        [class.active]="filterRole === 'Operator'" 
+        (click)="setSubtabRole('Operator')" 
+        [attr.aria-selected]="filterRole === 'Operator'">
+        <i class="bi bi-gear-wide-connected text-primary"></i>
+        <span>Machine Operators</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('Operator') }}</span>
+      </button>
+
+      <button 
+        type="button" 
+        role="tab" 
+        class="subnav-tab-btn" 
+        [class.active]="filterRole === 'Quality'" 
+        (click)="setSubtabRole('Quality')" 
+        [attr.aria-selected]="filterRole === 'Quality'">
+        <i class="bi bi-shield-check text-success"></i>
+        <span>Quality &amp; Inspection</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('Quality') }}</span>
+      </button>
+
+      <button 
+        type="button" 
+        role="tab" 
+        class="subnav-tab-btn" 
+        [class.active]="filterRole === 'Warehouse'" 
+        (click)="setSubtabRole('Warehouse')" 
+        [attr.aria-selected]="filterRole === 'Warehouse'">
+        <i class="bi bi-box-seam text-warning"></i>
+        <span>Warehouse &amp; Loading</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('Warehouse') }}</span>
+      </button>
+
+      <button 
+        type="button" 
+        role="tab" 
+        class="subnav-tab-btn" 
+        [class.active]="filterRole === 'Maintenance'" 
+        (click)="setSubtabRole('Maintenance')" 
+        [attr.aria-selected]="filterRole === 'Maintenance'">
+        <i class="bi bi-tools text-info"></i>
+        <span>Maintenance &amp; Tech</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('Maintenance') }}</span>
+      </button>
+
+      <button 
+        type="button" 
+        role="tab" 
+        class="subnav-tab-btn" 
+        [class.active]="filterRole === 'Supervisor'" 
+        (click)="setSubtabRole('Supervisor')" 
+        [attr.aria-selected]="filterRole === 'Supervisor'">
+        <i class="bi bi-person-badge text-purple"></i>
+        <span>Supervisors &amp; Office</span>
+        <span class="tab-badge-pill">{{ getSubtabCount('Supervisor') }}</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── 3. LAYER 4: 5-COLUMN KPI TELEMETRY GRID ───────────────────────── -->
+  <section class="employees-kpi-grid no-print" aria-label="Human Resources Metrics">
+    <!-- Card 1: Total Workforce (Blue) -->
+    <div class="employees-kpi-card" (click)="setSubtabRole('ALL')" title="Total active workforce headcount">
+      <div class="employees-kpi-icon kpi-blue"><i class="bi bi-people-fill"></i></div>
+      <div class="employees-kpi-content">
+        <span class="employees-kpi-label">TOTAL WORKFORCE</span>
+        <div class="employees-kpi-value-row">
+          <strong class="employees-kpi-value">{{ totalEmployees }}</strong>
+          <span class="employees-kpi-unit">Staff</span>
         </div>
+        <span class="employees-kpi-meta"><i class="bi bi-person-check me-1"></i>Active factory roster</span>
       </div>
     </div>
 
-    <!-- Distinct Operational Roles -->
-    <div class="kpi-card">
-      <div class="kpi-icon-badge kpi-amber">
-        <i class="bi bi-diagram-3-fill"></i>
-      </div>
-      <div class="kpi-details">
-        <span class="kpi-label">Operational Roles</span>
-        <div class="kpi-value font-mono">{{ distinctRolesCount }} Designations</div>
-        <div class="kpi-subtext">
-          <span class="badge-tag tag-warning">Active Titles</span>
-          <span class="kpi-subtext-muted">Job classifications</span>
+    <!-- Card 2: Monthly Payroll Commitment (Green) -->
+    <div class="employees-kpi-card" title="Monthly direct payroll commitment">
+      <div class="employees-kpi-icon kpi-green"><i class="bi bi-cash-stack"></i></div>
+      <div class="employees-kpi-content">
+        <span class="employees-kpi-label">MONTHLY PAYROLL</span>
+        <div class="employees-kpi-value-row">
+          <strong class="employees-kpi-value">₹{{ totalMonthlyPayroll | number:'1.0-0' }}</strong>
         </div>
+        <span class="employees-kpi-meta"><i class="bi bi-wallet2 me-1"></i>Direct base compensation</span>
+      </div>
+    </div>
+
+    <!-- Card 3: Avg Compensation (Amber) -->
+    <div class="employees-kpi-card" title="Average compensation benchmark">
+      <div class="employees-kpi-icon kpi-amber"><i class="bi bi-calculator"></i></div>
+      <div class="employees-kpi-content">
+        <span class="employees-kpi-label">AVG COMPENSATION</span>
+        <div class="employees-kpi-value-row">
+          <strong class="employees-kpi-value">₹{{ averageSalary | number:'1.0-0' }}</strong>
+        </div>
+        <span class="employees-kpi-meta"><i class="bi bi-graph-up me-1"></i>Benchmark wage per worker</span>
+      </div>
+    </div>
+
+    <!-- Card 4: Operational Roles (Purple) -->
+    <div class="employees-kpi-card" title="Distinct operational job classifications">
+      <div class="employees-kpi-icon kpi-purple"><i class="bi bi-diagram-3-fill"></i></div>
+      <div class="employees-kpi-content">
+        <span class="employees-kpi-label">OPERATIONAL ROLES</span>
+        <div class="employees-kpi-value-row">
+          <strong class="employees-kpi-value">{{ distinctRolesCount }}</strong>
+          <span class="employees-kpi-unit">Roles</span>
+        </div>
+        <span class="employees-kpi-meta"><i class="bi bi-award me-1"></i>Active job classifications</span>
+      </div>
+    </div>
+
+    <!-- Card 5: Compliance Status (Slate) -->
+    <div class="employees-kpi-card" title="Workforce compliance and statutory records">
+      <div class="employees-kpi-icon kpi-slate"><i class="bi bi-patch-check-fill"></i></div>
+      <div class="employees-kpi-content">
+        <span class="employees-kpi-label">FACTORY COMPLIANCE</span>
+        <div class="employees-kpi-value-row">
+          <strong class="employees-kpi-value text-success">100%</strong>
+          <span class="employees-kpi-unit">Active</span>
+        </div>
+        <span class="employees-kpi-meta"><i class="bi bi-shield-check me-1"></i>PF/ESI documentation valid</span>
       </div>
     </div>
   </section>
@@ -225,22 +267,52 @@
         </button>
       </div>
 
-      <!-- Quick Role Filter Dropdown -->
-      <div class="toolbar-filter-select">
-        <select class="form-control form-control-sm" [(ngModel)]="filterRole" (ngModelChange)="currentPage = 1" title="Filter by designation">
-          <option value="ALL">All Designations</option>
-          <option *ngFor="let role of distinctRoles" [value]="role">{{ role }}</option>
-        </select>
-      </div>
+      <!-- Consolidated Filter Popover -->
+      <div class="filter-popover-wrapper" (click)="$event.stopPropagation()">
+        <button 
+          type="button" 
+          class="filter-trigger-btn"
+          [class.active-filters]="activeFilterCount > 0"
+          (click)="showFilterPopover = !showFilterPopover"
+          title="Filter workforce roster">
+          <i class="bi bi-funnel"></i>
+          <span>Filters</span>
+          <span class="filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
+        </button>
 
-      <!-- Compliance Credential Filter -->
-      <div class="toolbar-filter-select">
-        <select class="form-control form-control-sm" [(ngModel)]="filterCompliance" (ngModelChange)="currentPage = 1" title="Filter by compliance verification">
-          <option value="ALL">All Compliance</option>
-          <option value="VERIFIED">Fully Compliant (UID + Bank)</option>
-          <option value="PENDING_AADHAAR">Pending Aadhaar</option>
-          <option value="PENDING_BANK">Pending Bank Account</option>
-        </select>
+        <div class="filter-popover-panel shadow-lg" *ngIf="showFilterPopover">
+          <div class="popover-title-row">
+            <span><i class="bi bi-sliders me-1 text-primary"></i>Refine Staff Directory</span>
+            <button type="button" class="btn-text" (click)="resetFilters(); showFilterPopover = false">Reset All</button>
+          </div>
+
+          <div class="popover-content-body">
+            <!-- Designation / Role Filter -->
+            <div class="filter-field-group">
+              <label>Role / Designation</label>
+              <select class="filter-select" [(ngModel)]="filterRole" (ngModelChange)="currentPage = 1">
+                <option value="ALL">All Designations</option>
+                <option *ngFor="let role of distinctRoles" [value]="role">{{ role }}</option>
+              </select>
+            </div>
+
+            <!-- Compliance Status Filter -->
+            <div class="filter-field-group">
+              <label>Compliance Verification</label>
+              <select class="filter-select" [(ngModel)]="filterCompliance" (ngModelChange)="currentPage = 1">
+                <option value="ALL">All Compliance</option>
+                <option value="VERIFIED">Fully Compliant (UID + Bank)</option>
+                <option value="PENDING_AADHAAR">Pending Aadhaar</option>
+                <option value="PENDING_BANK">Pending Bank Account</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="popover-footer-row">
+            <button type="button" class="btn btn-sm btn-secondary" (click)="showFilterPopover = false">Close</button>
+            <button type="button" class="btn btn-sm btn-primary" (click)="showFilterPopover = false">Apply Filters</button>
+          </div>
+        </div>
       </div>
 
       <!-- Reset Filters Trigger -->
@@ -308,14 +380,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Page Size Selector -->
-      <div class="page-size-selector">
-        <label class="page-size-label">Show:</label>
-        <select class="form-control form-control-sm" [(ngModel)]="pageSize" (ngModelChange)="currentPage = 1">
-          <option *ngFor="let ps of pageSizeOptions" [value]="ps">{{ ps }} / page</option>
-        </select>
-      </div>
     </div>
 
     <!-- ── 6. LOADING SKELETON STATE ─────────────────────────────────── -->
@@ -350,47 +414,47 @@
         <table class="table modern-table" [ngClass]="'density-' + tableDensity" appResizableTable [tableId]="'employees_table'">
           <thead>
             <tr>
-              <th *ngIf="isColumnVisible('employees', 'Staff Member')" (click)="setSort('empName')" class="sortable-th min-w-160">
+              <th *ngIf="isColumnVisible('employees', 'Staff Member')" (click)="setSort('empName')" class="sortable-th th-staff">
                 <div class="th-content">
                   <span>Staff Member</span>
                   <i class="bi ms-1" [ngClass]="sortField === 'empName' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-chevron-expand opacity-40'"></i>
                 </div>
               </th>
 
-              <th *ngIf="isColumnVisible('employees', 'Role / Designation')" (click)="setSort('designation')" class="sortable-th min-w-130">
+              <th *ngIf="isColumnVisible('employees', 'Role / Designation')" (click)="setSort('designation')" class="sortable-th th-designation">
                 <div class="th-content">
                   <span>Role / Designation</span>
                   <i class="bi ms-1" [ngClass]="sortField === 'designation' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-chevron-expand opacity-40'"></i>
                 </div>
               </th>
 
-              <th *ngIf="isColumnVisible('employees', 'Mobile Contact')" class="min-w-120">
+              <th *ngIf="isColumnVisible('employees', 'Mobile Contact')" class="th-contact">
                 <div class="th-content">
                   <span>Contact Number</span>
                 </div>
               </th>
 
-              <th *ngIf="isColumnVisible('employees', 'Base Salary')" (click)="setSort('salary')" class="sortable-th min-w-120 text-end">
+              <th *ngIf="isColumnVisible('employees', 'Base Salary')" (click)="setSort('salary')" class="sortable-th th-salary text-end">
                 <div class="th-content justify-end">
                   <span>Base Salary (₹/mo)</span>
                   <i class="bi ms-1" [ngClass]="sortField === 'salary' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-chevron-expand opacity-40'"></i>
                 </div>
               </th>
 
-              <th *ngIf="isColumnVisible('employees', 'Joining Date')" (click)="setSort('joiningDate')" class="sortable-th min-w-110">
+              <th *ngIf="isColumnVisible('employees', 'Joining Date')" (click)="setSort('joiningDate')" class="sortable-th th-date">
                 <div class="th-content">
                   <span>Joining Date</span>
                   <i class="bi ms-1" [ngClass]="sortField === 'joiningDate' ? (sortAsc ? 'bi-chevron-up text-primary' : 'bi-chevron-down text-primary') : 'bi-chevron-expand opacity-40'"></i>
                 </div>
               </th>
 
-              <th *ngIf="isColumnVisible('employees', 'Credentials')" class="min-w-110">
+              <th *ngIf="isColumnVisible('employees', 'Credentials')" class="th-compliance">
                 <div class="th-content">
                   <span>Compliance Verification</span>
                 </div>
               </th>
 
-              <th *ngIf="isColumnVisible('employees', 'Actions')" class="min-w-120 text-end">
+              <th *ngIf="isColumnVisible('employees', 'Actions')" class="th-actions text-end">
                 <span>Actions</span>
               </th>
             </tr>
@@ -399,45 +463,45 @@
           <tbody>
             <tr *ngFor="let emp of getProcessedList(filteredEmployees, 'employees'); trackBy: trackById" class="ledger-row">
               <!-- Staff Member Name + Avatar + ID -->
-              <td *ngIf="isColumnVisible('employees', 'Staff Member')">
+              <td *ngIf="isColumnVisible('employees', 'Staff Member')" class="td-staff">
                 <div class="emp-cell-group">
                   <div class="emp-avatar-circle">
                     {{ (emp.empName || 'Staff').charAt(0).toUpperCase() }}
                   </div>
                   <div class="emp-info-wrap">
-                    <span class="emp-name-text">{{ emp.empName }}</span>
-                    <span class="emp-id-text">EMP-{{ emp.id }}</span>
+                    <span class="emp-name-text text-truncate">{{ emp.empName }}</span>
+                    <span class="emp-id-text font-mono">EMP-{{ emp.id }}</span>
                   </div>
                 </div>
               </td>
 
               <!-- Designation Pill Badge -->
-              <td *ngIf="isColumnVisible('employees', 'Role / Designation')">
-                <span class="designation-badge">{{ emp.designation || 'Staff Member' }}</span>
+              <td *ngIf="isColumnVisible('employees', 'Role / Designation')" class="td-designation">
+                <span class="designation-badge text-truncate">{{ emp.designation || 'Staff Member' }}</span>
               </td>
 
               <!-- Mobile Contact Link -->
-              <td *ngIf="isColumnVisible('employees', 'Mobile Contact')">
-                <a [href]="'tel:' + emp.empContact" class="contact-link font-mono" title="Click to call staff member">
+              <td *ngIf="isColumnVisible('employees', 'Mobile Contact')" class="td-contact">
+                <a [href]="'tel:' + emp.empContact" class="contact-link font-mono text-truncate" title="Click to call staff member">
                   <i class="bi bi-telephone me-1 text-primary"></i>+91 {{ emp.empContact }}
                 </a>
               </td>
 
               <!-- Monthly Base Salary -->
-              <td *ngIf="isColumnVisible('employees', 'Base Salary')" class="text-end">
+              <td *ngIf="isColumnVisible('employees', 'Base Salary')" class="td-salary text-end">
                 <span class="amount-val font-mono">₹{{ emp.salary | number:'1.2-2' }}</span>
               </td>
 
               <!-- Joining Date -->
-              <td *ngIf="isColumnVisible('employees', 'Joining Date')">
-                <span class="date-val font-mono" *ngIf="emp.joiningDate">
+              <td *ngIf="isColumnVisible('employees', 'Joining Date')" class="td-date">
+                <span class="date-val font-mono text-truncate" *ngIf="emp.joiningDate">
                   <i class="bi bi-calendar-event me-1 text-secondary"></i>{{ emp.joiningDate | indianDate }}
                 </span>
                 <span class="date-val text-muted" *ngIf="!emp.joiningDate">—</span>
               </td>
 
               <!-- Compliance Credentials Badges -->
-              <td *ngIf="isColumnVisible('employees', 'Credentials')">
+              <td *ngIf="isColumnVisible('employees', 'Credentials')" class="td-compliance">
                 <div class="credentials-badge-group">
                   <span class="credential-pill" [class.verified]="emp.aadhaarNo" [title]="emp.aadhaarNo ? 'Aadhaar: ' + emp.aadhaarNo : 'Aadhaar verification pending'">
                     <i class="bi" [ngClass]="emp.aadhaarNo ? 'bi-shield-check text-success' : 'bi-shield-x text-muted'"></i> UID
@@ -449,8 +513,8 @@
               </td>
 
               <!-- Row Action Buttons -->
-              <td *ngIf="isColumnVisible('employees', 'Actions')" class="text-end">
-                <div class="row-actions">
+              <td *ngIf="isColumnVisible('employees', 'Actions')" class="td-actions text-end">
+                <div class="row-actions justify-content-end">
                   <!-- View Details -->
                   <button 
                     type="button" 
@@ -476,7 +540,7 @@
                     class="btn-row-action btn-edit" 
                     (click)="openEditDrawer(emp)" 
                     title="Edit staff profile">
-                    <i class="bi bi-pencil"></i>
+                    <i class="bi bi-pencil-square"></i>
                   </button>
 
                   <!-- Delete Record -->
@@ -486,39 +550,53 @@
                     class="btn-row-action btn-delete" 
                     (click)="deleteEmployee(emp.id)" 
                     title="Delete staff record">
-                    <i class="bi bi-trash"></i>
+                    <i class="bi bi-trash3"></i>
                   </button>
                 </div>
               </td>
             </tr>
           </tbody>
+          <tfoot class="table-summary-tfoot" *ngIf="filteredEmployees.length > 0">
+            <tr class="ledger-row">
+              <td *ngIf="isColumnVisible('employees', 'Staff Member')" class="tfoot-label"><strong>TOTALS</strong></td>
+              <td *ngIf="isColumnVisible('employees', 'Role / Designation')"></td>
+              <td *ngIf="isColumnVisible('employees', 'Mobile Contact')">
+                <strong>{{ filteredEmployees.length }} employees</strong>
+              </td>
+              <td *ngIf="isColumnVisible('employees', 'Base Salary')" class="td-salary text-end font-mono">
+                <strong>₹{{ filteredTotalSalary | number:'1.2-2' }}</strong>
+              </td>
+              <td *ngIf="isColumnVisible('employees', 'Joining Date')"></td>
+              <td *ngIf="isColumnVisible('employees', 'Credentials')"></td>
+              <td *ngIf="isColumnVisible('employees', 'Actions')" class="th-actions text-end"></td>
+            </tr>
+          </tfoot>
         </table>
       </div>
 
-      <!-- ── 10. ENTERPRISE PAGINATION FOOTER ───────────────────────── -->
-      <div class="table-pagination-bar no-print">
-        <span class="pagination-info">
-          Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to <strong>{{ Math.min(currentPage * pageSize, tableFilteredCounts['employees'] || 0) }}</strong> of <strong>{{ tableFilteredCounts['employees'] || 0 }}</strong> staff records
-        </span>
-
-        <div class="pagination-controls">
-          <button 
-            type="button" 
-            class="btn-page" 
-            [disabled]="currentPage === 1" 
-            (click)="currentPage = currentPage - 1"
-            title="Previous Page">
-            <i class="bi bi-chevron-left me-1"></i>Previous
-          </button>
-          <span class="page-indicator font-mono">Page {{ currentPage }} of {{ totalPages }}</span>
-          <button 
-            type="button" 
-            class="btn-page" 
-            [disabled]="currentPage * pageSize >= (tableFilteredCounts['employees'] || 0)" 
-            (click)="currentPage = currentPage + 1"
-            title="Next Page">
-            Next<i class="bi bi-chevron-right ms-1"></i>
-          </button>
+      <!-- ── STANDARD PAGINATION FOOTER ── -->
+      <div class="erp-table-footer no-print" *ngIf="(tableFilteredCounts['employees'] || 0) > 0">
+        <div class="erp-footer-info">
+          Showing <strong>{{ (currentPage - 1) * pageSize + 1 }}</strong> to
+          <strong>{{ Math.min(currentPage * pageSize, tableFilteredCounts['employees'] || 0) }}</strong> of
+          <strong>{{ tableFilteredCounts['employees'] || 0 }}</strong> staff records
+        </div>
+        <div class="erp-footer-controls">
+          <div class="erp-rows-selector">
+            <span>Rows:</span>
+            <select [(ngModel)]="pageSize" (change)="currentPage = 1" class="erp-rows-select">
+              <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
+            </select>
+          </div>
+          <div class="erp-page-buttons">
+            <button type="button" class="erp-page-nav-btn" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
+              <i class="bi bi-chevron-left"></i> Prev
+            </button>
+            <span class="erp-page-counter">Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong></span>
+            <button type="button" class="erp-page-nav-btn" [disabled]="currentPage * pageSize >= (tableFilteredCounts['employees'] || 0)" (click)="currentPage = currentPage + 1">
+              Next <i class="bi bi-chevron-right"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>

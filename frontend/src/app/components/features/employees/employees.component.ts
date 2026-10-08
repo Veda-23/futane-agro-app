@@ -76,7 +76,15 @@ export class EmployeesComponent implements OnInit {
   filterSearchQuery: string = '';
   filterRole: string = 'ALL';
   filterCompliance: string = 'ALL';
+  showFilterPopover = false;
   tableDensity: 'compact' | 'normal' | 'spacious' = 'normal';
+
+  get activeFilterCount(): number {
+    let count = 0;
+    if (this.filterRole && this.filterRole !== 'ALL') count++;
+    if (this.filterCompliance && this.filterCompliance !== 'ALL') count++;
+    return count;
+  }
 
   // Dropdown States
   showColDropdown: { [key: string]: boolean } = {};
@@ -119,8 +127,15 @@ export class EmployeesComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    try {
+      localStorage.removeItem('cols_width_employees_table');
+    } catch (e) {}
     this.initColumns();
     this.loadData();
+  }
+
+  get filteredTotalSalary(): number {
+    return (this.filteredEmployees || []).reduce((sum, e) => sum + (Number(e.salary) || 0), 0);
   }
 
   // Close floating menus on outside click
@@ -128,6 +143,7 @@ export class EmployeesComponent implements OnInit {
   onDocumentClick() {
     this.showExportDropdown = false;
     this.showColDropdown['employees'] = false;
+    this.showFilterPopover = false;
   }
 
   private initColumns() {

@@ -101,6 +101,30 @@ export class ProductionComponent implements OnInit, AfterViewInit, OnDestroy {
   };
 
   showColManager: { [tableKey: string]: boolean } = { ppd: false, ppm: false };
+  showFilterPopover: { [tableKey: string]: boolean } = { ppd: false, ppm: false };
+
+  getPpdFilterCount(): number {
+    let count = 0;
+    if (this.filterDate) count++;
+    if (this.tabFilterCrateType) count++;
+    if (this.tabFilterShift) count++;
+    return count;
+  }
+
+  getPpmFilterCount(): number {
+    let count = 0;
+    if (this.tabFilterPpmMonth) count++;
+    if (this.tabFilterPpmYear) count++;
+    return count;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick() {
+    this.showColManager['ppd'] = false;
+    this.showColManager['ppm'] = false;
+    this.showFilterPopover['ppd'] = false;
+    this.showFilterPopover['ppm'] = false;
+  }
 
   // Sorting & Pagination
   sortField = '';
@@ -120,6 +144,36 @@ export class ProductionComponent implements OnInit, AfterViewInit, OnDestroy {
   drawerOpen = false;
   drawerMode: 'ppd' | 'ppm' = 'ppd';
   drawerRecord: any = null;
+
+  // Dedicated Read-Only Batch QC Inspection Sheet / Dossier Modal
+  showPpdDossierModal: boolean = false;
+  selectedPpdForDossier: any = null;
+
+  openPpdDossier(ppd: any) {
+    this.selectedPpdForDossier = ppd;
+    this.showPpdDossierModal = true;
+  }
+
+  closePpdDossier() {
+    this.showPpdDossierModal = false;
+    this.selectedPpdForDossier = null;
+  }
+
+  printPpdDossier() {
+    window.print();
+  }
+
+  editPpd(ppd: any) {
+    if (!this.canEdit()) return;
+    this.ppdForm = { ...ppd };
+    this.isFormVisible = true;
+  }
+
+  editPpm(ppm: any) {
+    if (!this.canEdit()) return;
+    this.ppmForm = { ...ppm };
+    this.isPpmFormVisible = true;
+  }
 
   // Options
   crateTypes = ['Apple Crate', 'Tomato Tray', 'Mango Box', 'Grape Box'];
@@ -425,6 +479,17 @@ export class ProductionComponent implements OnInit, AfterViewInit, OnDestroy {
   getFilteredSum(field: string): number {
     const list = this.getProcessedList(this.ppmList, 'ppm');
     return list.reduce((sum, item) => sum + (Number(item[field]) || 0), 0);
+  }
+
+  getFilteredPpdSum(field: string): number {
+    const list = this.getProcessedList(this.ppdList, 'ppd');
+    return list.reduce((sum, item) => sum + (Number(item[field]) || 0), 0);
+  }
+
+  getFilteredPpdOverallYield(): number {
+    const total = this.getFilteredPpdSum('totalProduction');
+    const successful = this.getFilteredPpdSum('successful');
+    return total > 0 ? Math.round((successful / total) * 100) : 0;
   }
 
   getFilteredWeightedCostPerCrate(): number {

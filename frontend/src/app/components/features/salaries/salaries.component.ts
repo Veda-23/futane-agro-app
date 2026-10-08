@@ -65,7 +65,17 @@ export class SalariesComponent implements OnInit {
   filterMonth: string = 'ALL';
   filterYear: string = 'ALL';
   filterEmployee: string = 'ALL';
+  showFilterPopover = false;
   tableDensity: 'compact' | 'normal' | 'spacious' = 'normal';
+
+  get activeFilterCount(): number {
+    let count = 0;
+    if (this.filterMonth && this.filterMonth !== 'ALL') count++;
+    if (this.filterYear && this.filterYear !== 'ALL') count++;
+    if (this.filterEmployee && this.filterEmployee !== 'ALL') count++;
+    if (this.filterStatus && this.filterStatus !== 'ALL') count++;
+    return count;
+  }
 
   // Pagination & Sorting
   currentPage = 1;
@@ -91,15 +101,23 @@ export class SalariesComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    try {
+      localStorage.removeItem('cols_width_salaries_table');
+    } catch (e) {}
     this.initColumns();
     this.setDefaultDates();
     this.loadData();
+  }
+
+  get filteredTotalDisbursed(): number {
+    return (this.filteredSalaries || []).reduce((sum, s) => sum + (Number(s.salaryAmount) || 0), 0);
   }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick() {
     this.showExportDropdown = false;
     this.showColDropdown['salaries'] = false;
+    this.showFilterPopover = false;
   }
 
   private initColumns() {

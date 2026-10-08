@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, OnChanges } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, HostListener } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -15,6 +15,7 @@ import { NotificationService } from '../../../services/notification.service';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
+import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
 
 @Component({
@@ -24,7 +25,7 @@ import { SearchableSelectComponent } from '../../shared/searchable-select/search
     CommonModule, FormsModule, TranslatePipe, DecimalPipe,
     AutoSelectDirective, FormStateDirective, InrPipe, IndianDatePipe,
     QrCodeComponent, FilterBarComponent, EmptyStateComponent,
-    SearchableSelectComponent
+    ResizableTableDirective, SearchableSelectComponent
   ],
   templateUrl: './billing-hub.component.html',
   styleUrls: ['./billing-hub.component.css']
@@ -86,6 +87,111 @@ export class BillingHubComponent implements OnInit, OnChanges {
     transport_receipt: { primary: '#9A3412', secondary: '#FFF7ED', accent: '#C2410C', title: 'TRANSPORT RECEIPT', prefix: 'FA/TR/25-26/' },
     salary_slip: { primary: '#0369A1', secondary: '#F0F9FF', accent: '#0284C7', title: 'SALARY SLIP', prefix: 'FA/SAL/25-26/' }
   };
+
+  // Canvas Viewport Zoom Control (default to 0.78 for perfect A4 viewport fit)
+  zoomLevel: number = 0.78;
+
+  setZoom(level: number) {
+    this.zoomLevel = level;
+  }
+
+  // Invoice Print & Layout Designer Model (Dynamic from Settings & Admin)
+  invoiceTemplate: any = {
+    templateName: 'Standard Tax Invoice',
+    invoiceTitle: 'TAX INVOICE',
+    invoiceSubtitle: 'Original for Recipient (B2B)',
+    termsAndConditions: '1. Goods once sold will not be accepted back or exchanged under any circumstances.\n2. Interest @ 18% p.a. will be charged on delayed payments exceeding credit terms.\n3. Any discrepancies must be reported in writing within 48 hours of delivery.',
+    jurisdictionClause: 'Subject to Pune Jurisdiction only',
+    signatoryTitle: 'Authorized Signatory',
+    showBankDetails: true,
+    showUpiQrCode: true,
+    showCompanyLogo: true,
+    showHsnSummary: true,
+    headerNotes: 'Goods supplied for Agricultural & Industrial Material Handling purposes.',
+    footerNotes: 'Thank you for partnering with Futane Agro. Quality Crates for a Stronger Future.'
+  };
+
+  companyProfiles: any[] = [];
+  bankProfiles: any[] = [];
+
+  getItemTaxableAmount(item: any): number {
+    if (!item) return 0;
+    if (item.quantity && item.rate) {
+      return Math.round((item.quantity * item.rate) * 100) / 100;
+    }
+    if (item.totalAmount) {
+      return Math.round((item.totalAmount / 1.18) * 100) / 100;
+    }
+    return item.amount || 0;
+  }
+
+  getItemCgst(item: any): number {
+    return Math.round((this.getItemTaxableAmount(item) * 0.09) * 100) / 100;
+  }
+
+  getItemSgst(item: any): number {
+    return Math.round((this.getItemTaxableAmount(item) * 0.09) * 100) / 100;
+  }
+
+  getItemTotal(item: any): number {
+    if (!item) return 0;
+    if (item.totalAmount) return item.totalAmount;
+    const taxable = this.getItemTaxableAmount(item);
+    return Math.round((taxable + (taxable * 0.18)) * 100) / 100;
+  }
+
+  get totalQueueCount(): number {
+    return this.getFilteredRecords().length;
+  }
+
+  get totalQueueValue(): number {
+    const list = this.getFilteredRecords();
+    return list.reduce((acc, item) => acc + this.getRecordAmount(item), 0);
+  }
+
+  get totalQueueTax(): number {
+    if (this.activeBillType === 'tax_invoice' || this.activeBillType === 'purchase_invoice') {
+      return Math.round((this.totalQueueValue * 0.18) * 100) / 100;
+    }
+    return 0;
+  }
+
+  get activeDocTypeTitle(): string {
+    return this.currentTheme.title;
+  }
+
+  getRecordAmount(item: any): number {
+    if (!item) return 0;
+    return item.totalAmount || (item.quantity && item.rate ? item.quantity * item.rate : 0) || item.amountReceived || item.amount || item.salaryAmount || 0;
+  }
+
+  getRecordPartyName(item: any): string {
+    if (!item) return 'Customer';
+    return item.party?.partyName || item.partyName || item.customerName || item.sale?.party?.partyName || item.vendor?.vendorName || item.employee?.empName || item.driver?.driverName || item.driverName || 'Customer';
+  }
+
+  getRecordRefId(item: any): string {
+    if (!item) return 'DOC';
+    if (item.saleId) return `INV-${item.saleId}`;
+    if (item.referenceNo) return `${item.referenceNo}`;
+    if (item.id) {
+      const idStr = String(item.id);
+      return idStr.length > 8 ? idStr.substring(0, 8).toUpperCase() : idStr.toUpperCase();
+    }
+    return 'DOC';
+  }
+
+  selectRecordItem(item: any) {
+    this.selectedRecord = item;
+    this.selectedRecordId = String(this.getRecordId(item));
+    this.generateDocNumber();
+  }
+
+  isItemSelected(item: any): boolean {
+    if (!item) return false;
+    if (this.selectedRecord === item) return true;
+    return String(this.getRecordId(item)) === String(this.selectedRecordId);
+  }
 
   constructor(
     private apiService: ApiService,
@@ -238,6 +344,44 @@ export class BillingHubComponent implements OnInit, OnChanges {
       });
     }
 
+    // Dynamic Invoice Template, Company Profiles & Bank Coordinates from Settings & Admin
+    try {
+      const cached = localStorage.getItem('futane_invoice_template_config');
+      if (cached) {
+        this.invoiceTemplate = { ...this.invoiceTemplate, ...JSON.parse(cached) };
+      }
+    } catch (e) {}
+
+    this.apiService.getInvoiceTemplateConfig().subscribe({
+      next: (cfg) => {
+        if (cfg) {
+          this.invoiceTemplate = { ...this.invoiceTemplate, ...cfg };
+          try {
+            localStorage.setItem('futane_invoice_template_config', JSON.stringify(this.invoiceTemplate));
+          } catch (e) {}
+        }
+      },
+      error: () => {}
+    });
+
+    this.apiService.getCompanyProfiles().subscribe({
+      next: (res) => {
+        if (Array.isArray(res) && res.length > 0) {
+          this.companyProfiles = res;
+        }
+      },
+      error: () => {}
+    });
+
+    this.apiService.getBankProfiles().subscribe({
+      next: (res) => {
+        if (Array.isArray(res) && res.length > 0) {
+          this.bankProfiles = res;
+        }
+      },
+      error: () => {}
+    });
+
     setTimeout(() => {
       this.isLoading = false;
       this.autoSelectFirst();
@@ -249,6 +393,22 @@ export class BillingHubComponent implements OnInit, OnChanges {
         }
       }
     }, 600);
+  }
+
+  @HostListener('window:storage', ['$event'])
+  onStorageChange(event: StorageEvent) {
+    if (event.key === 'futane_invoice_template_config' && event.newValue) {
+      try {
+        this.invoiceTemplate = { ...this.invoiceTemplate, ...JSON.parse(event.newValue) };
+      } catch (e) {}
+    }
+  }
+
+  @HostListener('window:futane-invoice-template-updated', ['$event'])
+  onTemplateUpdated(event: any) {
+    if (event.detail) {
+      this.invoiceTemplate = { ...this.invoiceTemplate, ...event.detail };
+    }
   }
 
   get currentTheme() {
@@ -385,7 +545,7 @@ export class BillingHubComponent implements OnInit, OnChanges {
     });
   }
 
-  private getRecordDateString(item: any): string {
+  getRecordDateString(item: any): string {
     if (!item) return '';
     return item.date || item.dispatchDate || item.paymentDate || item.inwardDate || item.transportDate || item.disbursementDate || '';
   }
@@ -477,8 +637,8 @@ export class BillingHubComponent implements OnInit, OnChanges {
 
   get upiQrString(): string {
     const amount = this.getTotalPayableAmount();
-    const upiId = 'futaneagro@upi';
-    const name = encodeURIComponent('Futane Agro Industries');
+    const upiId = this.bankProfiles[0]?.upiId || 'futaneagro@okhdfcbank';
+    const name = encodeURIComponent(this.companyProfiles[0]?.companyName || 'Futane Agro Industries');
     const note = encodeURIComponent(`Invoice_${this.currentDocumentNumber}`);
     return `upi://pay?pa=${upiId}&pn=${name}&am=${amount.toFixed(2)}&tn=${note}&cu=INR`;
   }
@@ -486,12 +646,11 @@ export class BillingHubComponent implements OnInit, OnChanges {
   getTotalPayableAmount(): number {
     if (!this.selectedRecord) return 0;
     if (this.activeBillType === 'tax_invoice') {
-      const base = this.selectedRecord.totalAmount || (this.selectedRecord.quantity * this.selectedRecord.rate) || 0;
-      return base * 1.18; // base + 18% GST
+      return this.getItemTotal(this.selectedRecord);
     }
     if (this.activeBillType === 'purchase_invoice') {
       const base = this.selectedRecord.amount || (this.selectedRecord.weight * this.selectedRecord.rate) || 0;
-      return base * 1.18; // base + 18% GST
+      return Math.round((base * 1.18) * 100) / 100;
     }
     return this.selectedRecord.totalAmount || this.selectedRecord.amountReceived || this.selectedRecord.amount || this.selectedRecord.salaryAmount || (this.selectedRecord.quantity * this.selectedRecord.rate) || 0;
   }

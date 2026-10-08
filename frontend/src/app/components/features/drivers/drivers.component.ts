@@ -95,6 +95,9 @@ export class DriversComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    try {
+      localStorage.removeItem('cols_width_drivers_table');
+    } catch (_) {}
     this.loadData();
   }
 
@@ -190,6 +193,14 @@ export class DriversComponent implements OnInit {
       trips: trips.length,
       earnings: trips.reduce((acc: number, t: any) => acc + (Number(t.rent) || 0), 0)
     };
+  }
+
+  getTotalFilteredTrips(): number {
+    return (this.filteredDrivers || []).reduce((sum: number, d: any) => sum + this.getDriverStats(d.id).trips, 0);
+  }
+
+  getTotalFilteredEarnings(): number {
+    return (this.filteredDrivers || []).reduce((sum: number, d: any) => sum + this.getDriverStats(d.id).earnings, 0);
   }
 
   // Filter Counts
@@ -525,5 +536,37 @@ export class DriversComponent implements OnInit {
     link.click();
     document.body.removeChild(link);
     this.notificationService.success('Export Ready', 'Drivers roster exported to CSV successfully.');
+  }
+
+  exportExcel() {
+    const dataToExport = this.filteredDrivers;
+    if (!dataToExport || dataToExport.length === 0) {
+      this.notificationService.warning('Export Empty', 'No driver records to export.');
+      return;
+    }
+
+    const headers = ['Driver Name', 'Mobile Number', 'Driving License Number', 'Base Depot / Address', 'Lifetime Trips', 'Total Freight Earned (INR)', 'RTO Status'];
+    const rows = dataToExport.map((d: any) => {
+      const stats = this.getDriverStats(d.id);
+      const isLicensed = !!d.licenseNumber && d.licenseNumber.trim() !== '';
+
+      return [
+        `"${d.driverName || ''}"`,
+        `"${d.mobile || ''}"`,
+        `"${d.licenseNumber || ''}"`,
+        `"${(d.address || '').replace(/"/g, '""')}"`,
+        stats.trips,
+        stats.earnings,
+        `"${isLicensed ? 'Verified License' : 'Unlicensed'}"`
+      ];
+    });
+
+    const csvString = '\uFEFF' + [headers.join(','), ...rows.map((r: any) => r.join(','))].join('\r\n');
+    const blob = new Blob([csvString], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `futane_drivers_roster_${new Date().toISOString().substring(0, 10)}.xls`;
+    link.click();
+    this.notificationService.success('Export Ready', 'Drivers roster downloaded for Excel.');
   }
 }
