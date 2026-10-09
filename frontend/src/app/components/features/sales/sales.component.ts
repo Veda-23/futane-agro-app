@@ -785,11 +785,15 @@ export class SalesComponent implements OnInit {
         </div>
       `,
       showCancelButton: true,
+      showCloseButton: true,
       cancelButtonText: 'Close',
       cancelButtonColor: '#94a3b8',
       confirmButtonText: '<i class="bi bi-printer-fill me-1"></i> Print Voucher',
       confirmButtonColor: '#0B47D4',
-      width: '520px'
+      width: '540px',
+      customClass: {
+        popup: 'futane-dialog-popup futane-receipt-popup'
+      }
     }).then((result) => {
       if (result.isConfirmed) {
         window.print();
