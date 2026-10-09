@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, retry, shareReplay, tap, catchError, timer } from 'rxjs';
+import { Observable, of, retry, shareReplay, tap, catchError, timer } from 'rxjs';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -18,6 +18,11 @@ export class ApiService {
   private cachedCharts$?: Observable<any>;
   private statsCacheTime = 0;
   private chartsCacheTime = 0;
+
+  // Enterprise SWR In-Memory Response Cache (Amazon & Flipkart Grade)
+  private dataCache = new Map<string, { data: any; timestamp: number }>();
+  private readonly DEFAULT_CACHE_TTL = 5 * 60 * 1000; // 5 min TTL
+  private inFlightRequests = new Map<string, Observable<any>>();
 
   constructor(private http: HttpClient) {
     const savedBackend = localStorage.getItem('backend_url');
@@ -49,35 +54,76 @@ export class ApiService {
     });
   }
 
-  private inFlightRequests = new Map<string, Observable<any>>();
-
-  public dedupeGet<T = any>(url: string): Observable<T> {
-    if (!this.inFlightRequests.has(url)) {
-      const req$ = this.http.get<T>(url).pipe(
-        this.retryPolicy(1),
-        shareReplay({ bufferSize: 1, refCount: true }),
-        tap({
-          complete: () => {
-            setTimeout(() => this.inFlightRequests.delete(url), 1200);
-          },
-          error: () => {
-            this.inFlightRequests.delete(url);
-          }
-        })
-      );
-      this.inFlightRequests.set(url, req$);
+  /**
+   * High-Performance Stale-While-Revalidate In-Memory Fetch:
+   * Returns cached data immediately (0ms) if available, eliminating blank loading screens on tab changes.
+   */
+  public getCachedOrFetch<T = any>(url: string, forceRefresh: boolean = false, ttl: number = this.DEFAULT_CACHE_TTL): Observable<T> {
+    const cached = this.dataCache.get(url);
+    const now = Date.now();
+    if (!forceRefresh && cached && (now - cached.timestamp < ttl)) {
+      return of(cached.data as T);
     }
-    return this.inFlightRequests.get(url)!;
+
+    if (this.inFlightRequests.has(url)) {
+      return this.inFlightRequests.get(url)!;
+    }
+
+    const req$ = this.http.get<T>(url).pipe(
+      this.retryPolicy(1),
+      tap({
+        next: (data) => {
+          this.dataCache.set(url, { data, timestamp: Date.now() });
+        },
+        complete: () => {
+          this.inFlightRequests.delete(url);
+        },
+        error: () => {
+          this.inFlightRequests.delete(url);
+        }
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+
+    this.inFlightRequests.set(url, req$);
+    return req$;
+  }
+
+  public dedupeGet<T = any>(url: string, forceRefresh: boolean = false): Observable<T> {
+    return this.getCachedOrFetch<T>(url, forceRefresh);
+  }
+
+  // Targeted Cache Invalidation
+  public invalidateCache(urlKeyOrPrefix: string): void {
+    for (const key of Array.from(this.dataCache.keys())) {
+      if (key.includes(urlKeyOrPrefix)) {
+        this.dataCache.delete(key);
+      }
+    }
+    for (const key of Array.from(this.inFlightRequests.keys())) {
+      if (key.includes(urlKeyOrPrefix)) {
+        this.inFlightRequests.delete(key);
+      }
+    }
+  }
+
+  public setCacheData(urlKey: string, data: any): void {
+    this.dataCache.set(urlKey, { data, timestamp: Date.now() });
+  }
+
+  public getCacheData<T = any>(urlKey: string): T | null {
+    const item = this.dataCache.get(urlKey);
+    return item ? (item.data as T) : null;
   }
 
   // Cache invalidation helpers
-  invalidatePartiesCache(): void { this.cachedParties$ = undefined; this.inFlightRequests.delete(`${this.baseUrl}/parties`); }
-  invalidateVendorsCache(): void { this.cachedVendors$ = undefined; this.inFlightRequests.delete(`${this.baseUrl}/vendors`); }
-  invalidateDriversCache(): void { this.cachedDrivers$ = undefined; this.inFlightRequests.delete(`${this.baseUrl}/drivers`); }
-  invalidateEmployeesCache(): void { this.cachedEmployees$ = undefined; this.inFlightRequests.delete(`${this.baseUrl}/employees`); }
-  invalidateMachinesCache(): void { this.cachedMachines$ = undefined; this.inFlightRequests.delete(`${this.baseUrl}/machines`); }
-  invalidateStatsCache(): void { this.cachedStats$ = undefined; this.inFlightRequests.delete(`${this.baseUrl}/dashboard/stats`); }
-  invalidateChartsCache(): void { this.cachedCharts$ = undefined; this.inFlightRequests.delete(`${this.baseUrl}/dashboard/charts`); }
+  invalidatePartiesCache(): void { this.cachedParties$ = undefined; this.invalidateCache('/parties'); }
+  invalidateVendorsCache(): void { this.cachedVendors$ = undefined; this.invalidateCache('/vendors'); }
+  invalidateDriversCache(): void { this.cachedDrivers$ = undefined; this.invalidateCache('/drivers'); }
+  invalidateEmployeesCache(): void { this.cachedEmployees$ = undefined; this.invalidateCache('/employees'); }
+  invalidateMachinesCache(): void { this.cachedMachines$ = undefined; this.invalidateCache('/machines'); }
+  invalidateStatsCache(): void { this.cachedStats$ = undefined; this.invalidateCache('/dashboard/stats'); }
+  invalidateChartsCache(): void { this.cachedCharts$ = undefined; this.invalidateCache('/dashboard/charts'); }
   clearAllReferenceCache(): void {
     this.cachedParties$ = undefined;
     this.cachedVendors$ = undefined;
@@ -86,6 +132,7 @@ export class ApiService {
     this.cachedMachines$ = undefined;
     this.cachedStats$ = undefined;
     this.cachedCharts$ = undefined;
+    this.dataCache.clear();
     this.inFlightRequests.clear();
   }
 
@@ -166,15 +213,9 @@ export class ApiService {
     return this.http.get(`${this.baseUrl}/env`);
   }
 
-  // Parties (Cached with shareReplay)
+  // Parties (Cached with SWR)
   getParties(forceRefresh: boolean = false): Observable<any> {
-    if (forceRefresh || !this.cachedParties$) {
-      this.cachedParties$ = this.http.get(`${this.baseUrl}/parties`).pipe(
-        this.retryPolicy(1),
-        shareReplay({ bufferSize: 1, refCount: true })
-      );
-    }
-    return this.cachedParties$;
+    return this.getCachedOrFetch(`${this.baseUrl}/parties`, forceRefresh);
   }
   createParty(party: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/parties`, party).pipe(
@@ -192,15 +233,9 @@ export class ApiService {
     );
   }
 
-  // Vendors (Cached with shareReplay)
+  // Vendors (Cached with SWR)
   getVendors(forceRefresh: boolean = false): Observable<any> {
-    if (forceRefresh || !this.cachedVendors$) {
-      this.cachedVendors$ = this.http.get(`${this.baseUrl}/vendors`).pipe(
-        this.retryPolicy(1),
-        shareReplay({ bufferSize: 1, refCount: true })
-      );
-    }
-    return this.cachedVendors$;
+    return this.getCachedOrFetch(`${this.baseUrl}/vendors`, forceRefresh);
   }
   createVendor(vendor: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/vendors`, vendor).pipe(
@@ -218,15 +253,9 @@ export class ApiService {
     );
   }
 
-  // Drivers (Cached with shareReplay)
+  // Drivers (Cached with SWR)
   getDrivers(forceRefresh: boolean = false): Observable<any> {
-    if (forceRefresh || !this.cachedDrivers$) {
-      this.cachedDrivers$ = this.http.get(`${this.baseUrl}/drivers`).pipe(
-        this.retryPolicy(1),
-        shareReplay({ bufferSize: 1, refCount: true })
-      );
-    }
-    return this.cachedDrivers$;
+    return this.getCachedOrFetch(`${this.baseUrl}/drivers`, forceRefresh);
   }
   createDriver(driver: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/drivers`, driver).pipe(
@@ -244,69 +273,84 @@ export class ApiService {
     );
   }
 
-  // PPD Production
-  getPpd(): Observable<any> {
-    return this.dedupeGet(`${this.baseUrl}/ppd`);
+  // PPD Production (Cached with SWR)
+  getPpd(forceRefresh: boolean = false): Observable<any> {
+    return this.getCachedOrFetch(`${this.baseUrl}/ppd`, forceRefresh);
   }
   createPpd(ppd: any): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/ppd`);
-    return this.http.post(`${this.baseUrl}/ppd`, ppd);
+    return this.http.post(`${this.baseUrl}/ppd`, ppd).pipe(
+      tap(() => this.invalidateCache('/ppd'))
+    );
   }
   updatePpd(id: string, ppd: any): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/ppd`);
-    return this.http.put(`${this.baseUrl}/ppd/${id}`, ppd);
+    return this.http.put(`${this.baseUrl}/ppd/${id}`, ppd).pipe(
+      tap(() => this.invalidateCache('/ppd'))
+    );
   }
   deletePpd(id: string): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/ppd`);
-    return this.http.delete(`${this.baseUrl}/ppd/${id}`);
+    return this.http.delete(`${this.baseUrl}/ppd/${id}`).pipe(
+      tap(() => this.invalidateCache('/ppd'))
+    );
   }
 
-  // PPM Production
-  getPpm(): Observable<any> {
-    return this.dedupeGet(`${this.baseUrl}/ppm`);
+  // PPM Production (Cached with SWR)
+  getPpm(forceRefresh: boolean = false): Observable<any> {
+    return this.getCachedOrFetch(`${this.baseUrl}/ppm`, forceRefresh);
   }
   createPpm(ppm: any): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/ppm`);
-    return this.http.post(`${this.baseUrl}/ppm`, ppm);
+    return this.http.post(`${this.baseUrl}/ppm`, ppm).pipe(
+      tap(() => this.invalidateCache('/ppm'))
+    );
   }
   updatePpm(id: string, ppm: any): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/ppm`);
-    return this.http.put(`${this.baseUrl}/ppm/${id}`, ppm);
+    return this.http.put(`${this.baseUrl}/ppm/${id}`, ppm).pipe(
+      tap(() => this.invalidateCache('/ppm'))
+    );
   }
   deletePpm(id: string): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/ppm`);
-    return this.http.delete(`${this.baseUrl}/ppm/${id}`);
+    return this.http.delete(`${this.baseUrl}/ppm/${id}`).pipe(
+      tap(() => this.invalidateCache('/ppm'))
+    );
   }
 
-  // Raw Materials
-  getRawMaterials(): Observable<any> {
-    return this.dedupeGet(`${this.baseUrl}/raw-materials`);
+  // Raw Materials (Cached with SWR)
+  getRawMaterials(forceRefresh: boolean = false): Observable<any> {
+    return this.getCachedOrFetch(`${this.baseUrl}/raw-materials`, forceRefresh);
   }
   createRawMaterial(rm: any): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/raw-materials`);
-    return this.http.post(`${this.baseUrl}/raw-materials`, rm);
+    return this.http.post(`${this.baseUrl}/raw-materials`, rm).pipe(
+      tap(() => this.invalidateCache('/raw-materials'))
+    );
   }
   updateRawMaterial(id: string, rm: any): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/raw-materials`);
-    return this.http.put(`${this.baseUrl}/raw-materials/${id}`, rm);
+    return this.http.put(`${this.baseUrl}/raw-materials/${id}`, rm).pipe(
+      tap(() => this.invalidateCache('/raw-materials'))
+    );
   }
   deleteRawMaterial(id: string): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/raw-materials`);
-    return this.http.delete(`${this.baseUrl}/raw-materials/${id}`);
+    return this.http.delete(`${this.baseUrl}/raw-materials/${id}`).pipe(
+      tap(() => this.invalidateCache('/raw-materials'))
+    );
   }
 
-  // Sales
-  getSales(): Observable<any> {
-    return this.dedupeGet(`${this.baseUrl}/sales`);
+  // Sales (Cached with SWR)
+  getSales(forceRefresh: boolean = false): Observable<any> {
+    return this.getCachedOrFetch(`${this.baseUrl}/sales`, forceRefresh);
   }
   createSale(sale: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/sales`, sale);
+    return this.http.post(`${this.baseUrl}/sales`, sale).pipe(
+      tap(() => this.invalidateCache('/sales'))
+    );
   }
   updateSale(id: string, sale: any): Observable<any> {
-    return this.http.put(`${this.baseUrl}/sales/${id}`, sale);
+    return this.http.put(`${this.baseUrl}/sales/${id}`, sale).pipe(
+      tap(() => this.invalidateCache('/sales'))
+    );
   }
   deleteSale(id: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/sales/${id}`);
+    return this.http.delete(`${this.baseUrl}/sales/${id}`).pipe(
+      tap(() => this.invalidateCache('/sales'))
+    );
   }
   generatePaymentLink(saleId: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/sales/${saleId}/payment-link`, {});
@@ -322,37 +366,34 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/sales/checkout/verify?razorpay_order_id=${data.razorpay_order_id}&razorpay_payment_id=${data.razorpay_payment_id}&razorpay_signature=${data.razorpay_signature}`, {});
   }
 
-  // Payments
-  getPayments(): Observable<any> {
-    return this.dedupeGet(`${this.baseUrl}/payments`);
+  // Payments (Cached with SWR)
+  getPayments(forceRefresh: boolean = false): Observable<any> {
+    return this.getCachedOrFetch(`${this.baseUrl}/payments`, forceRefresh);
   }
   createPayment(payment: any): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/payments`);
-    return this.http.post(`${this.baseUrl}/payments`, payment);
+    return this.http.post(`${this.baseUrl}/payments`, payment).pipe(
+      tap(() => this.invalidateCache('/payments'))
+    );
   }
   updatePayment(id: string, payment: any): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/payments`);
-    return this.http.put(`${this.baseUrl}/payments/${id}`, payment);
+    return this.http.put(`${this.baseUrl}/payments/${id}`, payment).pipe(
+      tap(() => this.invalidateCache('/payments'))
+    );
   }
   deletePayment(id: string): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/payments`);
-    return this.http.delete(`${this.baseUrl}/payments/${id}`);
+    return this.http.delete(`${this.baseUrl}/payments/${id}`).pipe(
+      tap(() => this.invalidateCache('/payments'))
+    );
   }
 
-  // Invoices
-  getInvoices(): Observable<any> {
-    return this.dedupeGet(`${this.baseUrl}/invoices`);
+  // Invoices (Cached with SWR)
+  getInvoices(forceRefresh: boolean = false): Observable<any> {
+    return this.getCachedOrFetch(`${this.baseUrl}/invoices`, forceRefresh);
   }
 
-  // Employees (Cached with shareReplay)
+  // Employees (Cached with SWR)
   getEmployees(forceRefresh: boolean = false): Observable<any> {
-    if (forceRefresh || !this.cachedEmployees$) {
-      this.cachedEmployees$ = this.http.get(`${this.baseUrl}/employees`).pipe(
-        this.retryPolicy(1),
-        shareReplay({ bufferSize: 1, refCount: true })
-      );
-    }
-    return this.cachedEmployees$;
+    return this.getCachedOrFetch(`${this.baseUrl}/employees`, forceRefresh);
   }
   createEmployee(employee: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/employees`, employee).pipe(
@@ -370,55 +411,64 @@ export class ApiService {
     );
   }
 
-  // Salaries
-  getSalaries(): Observable<any> {
-    return this.dedupeGet(`${this.baseUrl}/salaries`);
+  // Salaries (Cached with SWR)
+  getSalaries(forceRefresh: boolean = false): Observable<any> {
+    return this.getCachedOrFetch(`${this.baseUrl}/salaries`, forceRefresh);
   }
   createSalary(salary: any): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/salaries`);
-    return this.http.post(`${this.baseUrl}/salaries`, salary);
+    return this.http.post(`${this.baseUrl}/salaries`, salary).pipe(
+      tap(() => this.invalidateCache('/salaries'))
+    );
   }
   updateSalary(id: string, salary: any): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/salaries`);
-    return this.http.put(`${this.baseUrl}/salaries/${id}`, salary);
+    return this.http.put(`${this.baseUrl}/salaries/${id}`, salary).pipe(
+      tap(() => this.invalidateCache('/salaries'))
+    );
   }
   deleteSalary(id: string): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/salaries`);
-    return this.http.delete(`${this.baseUrl}/salaries/${id}`);
+    return this.http.delete(`${this.baseUrl}/salaries/${id}`).pipe(
+      tap(() => this.invalidateCache('/salaries'))
+    );
   }
 
-  // Transports
-  getTransports(): Observable<any> {
-    return this.dedupeGet(`${this.baseUrl}/transports`);
+  // Transports (Cached with SWR)
+  getTransports(forceRefresh: boolean = false): Observable<any> {
+    return this.getCachedOrFetch(`${this.baseUrl}/transports`, forceRefresh);
   }
   createTransport(transport: any): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/transports`);
-    return this.http.post(`${this.baseUrl}/transports`, transport);
+    return this.http.post(`${this.baseUrl}/transports`, transport).pipe(
+      tap(() => this.invalidateCache('/transports'))
+    );
   }
   updateTransport(id: string, transport: any): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/transports`);
-    return this.http.put(`${this.baseUrl}/transports/${id}`, transport);
+    return this.http.put(`${this.baseUrl}/transports/${id}`, transport).pipe(
+      tap(() => this.invalidateCache('/transports'))
+    );
   }
   deleteTransport(id: string): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/transports`);
-    return this.http.delete(`${this.baseUrl}/transports/${id}`);
+    return this.http.delete(`${this.baseUrl}/transports/${id}`).pipe(
+      tap(() => this.invalidateCache('/transports'))
+    );
   }
 
-  // Inventory
-  getInventory(): Observable<any> {
-    return this.dedupeGet(`${this.baseUrl}/inventory`);
+  // Inventory (Cached with SWR)
+  getInventory(forceRefresh: boolean = false): Observable<any> {
+    return this.getCachedOrFetch(`${this.baseUrl}/inventory`, forceRefresh);
   }
   createInventory(inventory: any): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/inventory`);
-    return this.http.post(`${this.baseUrl}/inventory`, inventory);
+    return this.http.post(`${this.baseUrl}/inventory`, inventory).pipe(
+      tap(() => this.invalidateCache('/inventory'))
+    );
   }
   updateInventory(id: string, inventory: any): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/inventory`);
-    return this.http.put(`${this.baseUrl}/inventory/${id}`, inventory);
+    return this.http.put(`${this.baseUrl}/inventory/${id}`, inventory).pipe(
+      tap(() => this.invalidateCache('/inventory'))
+    );
   }
   deleteInventory(id: string): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/inventory`);
-    return this.http.delete(`${this.baseUrl}/inventory/${id}`);
+    return this.http.delete(`${this.baseUrl}/inventory/${id}`).pipe(
+      tap(() => this.invalidateCache('/inventory'))
+    );
   }
 
   // Audit Logs
@@ -429,15 +479,9 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/audit-logs`, log);
   }
 
-  // Machines (Cached with shareReplay)
+  // Machines (Cached with SWR)
   getMachines(forceRefresh: boolean = false): Observable<any> {
-    if (forceRefresh || !this.cachedMachines$) {
-      this.cachedMachines$ = this.http.get(`${this.baseUrl}/machines`).pipe(
-        this.retryPolicy(1),
-        shareReplay({ bufferSize: 1, refCount: true })
-      );
-    }
-    return this.cachedMachines$;
+    return this.getCachedOrFetch(`${this.baseUrl}/machines`, forceRefresh);
   }
   createMachine(machine: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/machines`, machine).pipe(
@@ -456,73 +500,97 @@ export class ApiService {
   }
 
   // Machine Breakdowns
-  getMachineBreakdowns(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/breakdowns`).pipe(
-      catchError(() => this.http.get(`${this.baseUrl}/machine-breakdowns`))
+  getMachineBreakdowns(forceRefresh: boolean = false): Observable<any> {
+    return this.getCachedOrFetch(`${this.baseUrl}/breakdowns`, forceRefresh).pipe(
+      catchError(() => this.getCachedOrFetch(`${this.baseUrl}/machine-breakdowns`, forceRefresh))
     );
   }
   createMachineBreakdown(bd: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/breakdowns`, bd).pipe(
-      catchError(() => this.http.post(`${this.baseUrl}/machine-breakdowns`, bd))
+      catchError(() => this.http.post(`${this.baseUrl}/machine-breakdowns`, bd)),
+      tap(() => {
+        this.invalidateCache('/breakdowns');
+        this.invalidateCache('/machine-breakdowns');
+      })
     );
   }
   updateMachineBreakdown(id: string, bd: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/breakdowns/${id}`, bd).pipe(
-      catchError(() => this.http.put(`${this.baseUrl}/machine-breakdowns/${id}`, bd))
+      catchError(() => this.http.put(`${this.baseUrl}/machine-breakdowns/${id}`, bd)),
+      tap(() => {
+        this.invalidateCache('/breakdowns');
+        this.invalidateCache('/machine-breakdowns');
+      })
     );
   }
   deleteMachineBreakdown(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/breakdowns/${id}`).pipe(
-      catchError(() => this.http.delete(`${this.baseUrl}/machine-breakdowns/${id}`))
+      catchError(() => this.http.delete(`${this.baseUrl}/machine-breakdowns/${id}`)),
+      tap(() => {
+        this.invalidateCache('/breakdowns');
+        this.invalidateCache('/machine-breakdowns');
+      })
     );
   }
 
-  // Dispatches
-  getDispatches(): Observable<any> {
-    return this.dedupeGet(`${this.baseUrl}/dispatches`);
+  // Dispatches (Cached with SWR)
+  getDispatches(forceRefresh: boolean = false): Observable<any> {
+    return this.getCachedOrFetch(`${this.baseUrl}/dispatches`, forceRefresh);
   }
   createDispatch(dispatch: any): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/dispatches`);
-    return this.http.post(`${this.baseUrl}/dispatches`, dispatch);
+    return this.http.post(`${this.baseUrl}/dispatches`, dispatch).pipe(
+      tap(() => this.invalidateCache('/dispatches'))
+    );
   }
   updateDispatch(id: string, dispatch: any): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/dispatches`);
-    return this.http.put(`${this.baseUrl}/dispatches/${id}`, dispatch);
+    return this.http.put(`${this.baseUrl}/dispatches/${id}`, dispatch).pipe(
+      tap(() => this.invalidateCache('/dispatches'))
+    );
   }
   deleteDispatch(id: string): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/dispatches`);
-    return this.http.delete(`${this.baseUrl}/dispatches/${id}`);
+    return this.http.delete(`${this.baseUrl}/dispatches/${id}`).pipe(
+      tap(() => this.invalidateCache('/dispatches'))
+    );
   }
 
-  // Expenses
-  getExpenses(): Observable<any> {
-    return this.dedupeGet(`${this.baseUrl}/expenses`);
+  // Expenses (Cached with SWR)
+  getExpenses(forceRefresh: boolean = false): Observable<any> {
+    return this.getCachedOrFetch(`${this.baseUrl}/expenses`, forceRefresh);
   }
   createExpense(expense: any): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/expenses`);
-    return this.http.post(`${this.baseUrl}/expenses`, expense);
+    return this.http.post(`${this.baseUrl}/expenses`, expense).pipe(
+      tap(() => this.invalidateCache('/expenses'))
+    );
   }
   updateExpense(id: string, expense: any): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/expenses`);
-    return this.http.put(`${this.baseUrl}/expenses/${id}`, expense);
+    return this.http.put(`${this.baseUrl}/expenses/${id}`, expense).pipe(
+      tap(() => this.invalidateCache('/expenses'))
+    );
   }
   deleteExpense(id: string): Observable<any> {
-    this.inFlightRequests.delete(`${this.baseUrl}/expenses`);
-    return this.http.delete(`${this.baseUrl}/expenses/${id}`);
+    return this.http.delete(`${this.baseUrl}/expenses/${id}`).pipe(
+      tap(() => this.invalidateCache('/expenses'))
+    );
   }
 
-  // Bank Transactions
-  getBankTransactions(): Observable<any> {
-    return this.dedupeGet(`${this.baseUrl}/bank-transactions`);
+  // Bank Transactions (Cached with SWR)
+  getBankTransactions(forceRefresh: boolean = false): Observable<any> {
+    return this.getCachedOrFetch(`${this.baseUrl}/bank-transactions`, forceRefresh);
   }
   createBankTransaction(txn: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/bank-transactions`, txn);
+    return this.http.post(`${this.baseUrl}/bank-transactions`, txn).pipe(
+      tap(() => this.invalidateCache('/bank-transactions'))
+    );
   }
   updateBankTransaction(id: string, txn: any): Observable<any> {
-    return this.http.put(`${this.baseUrl}/bank-transactions/${id}`, txn);
+    return this.http.put(`${this.baseUrl}/bank-transactions/${id}`, txn).pipe(
+      tap(() => this.invalidateCache('/bank-transactions'))
+    );
   }
   deleteBankTransaction(id: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/bank-transactions/${id}`);
+    return this.http.delete(`${this.baseUrl}/bank-transactions/${id}`).pipe(
+      tap(() => this.invalidateCache('/bank-transactions'))
+    );
   }
 
   // Settings (Power BI URL)

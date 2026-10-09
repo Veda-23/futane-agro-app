@@ -297,6 +297,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
   // UI Tabs State
   activeTab = 'dashboard';
+  renderedTabs: { [key: string]: boolean } = { 'dashboard': true };
+  loadedTabsSet = new Set<string>(['dashboard']);
   accessibleTabs: { [key: string]: boolean } = {};
   dbRolePermissions: any[] = [];
   dbFeatureFlags: any[] = [];
@@ -644,6 +646,8 @@ export class AppComponent implements OnInit, OnDestroy {
         const savedTab = sessionStorage.getItem('activeTab');
         if (savedTab && this.accessibleTabs[savedTab]) {
           this.activeTab = savedTab;
+          this.renderedTabs[savedTab] = true;
+          this.loadedTabsSet.add(savedTab);
         }
         this.resetIdleTimer();
       }
@@ -1008,6 +1012,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.sessionDuration = '';
 
     this.accessibleTabs = {};
+    this.renderedTabs = { 'dashboard': true };
+    this.loadedTabsSet.clear();
+    this.loadedTabsSet.add('dashboard');
     this.apiService.clearAllReferenceCache();
   }
 
@@ -1518,12 +1525,17 @@ export class AppComponent implements OnInit, OnDestroy {
       this.dismissPreviousTabState();
 
       this.activeTab = tab;
+      this.renderedTabs[tab] = true;
       sessionStorage.setItem('activeTab', tab);
       this.currentPage = 1;
       if (tab === 'reports') {
         this.runReport();
       }
-      this.loadDataForTab(tab);
+      // Instant Switching (Flipkart/Amazon style): Only fetch if never loaded before in this session
+      if (!this.loadedTabsSet.has(tab)) {
+        this.loadedTabsSet.add(tab);
+        this.loadDataForTab(tab);
+      }
       
       // Auto-collapse navigation sidebar on mobile/tablet screens after tab selection
       if (window.innerWidth <= 1024) {
