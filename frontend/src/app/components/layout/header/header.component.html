@@ -10,17 +10,18 @@
 
     <!-- Contextual Breadcrumb -->
     <div class="header-breadcrumb">
-      <span class="breadcrumb-root"><i class="bi bi-buildings me-1"></i>ERP</span>
-      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-chip"><i class="bi bi-buildings"></i> ERP</span>
+      <i class="bi bi-chevron-right breadcrumb-chevron"></i>
       <span class="breadcrumb-current" [title]="getFormattedTabTitle(activeTab)">{{ getFormattedTabTitle(activeTab) }}</span>
     </div>
 
     <!-- Proper Enterprise Date & Time Badge (Visible for all tabs) -->
     <div class="header-date-badge" [title]="'Operational Time (IST): ' + currentDate + ' • ' + currentTime">
-      <i class="bi bi-calendar3 header-date-icon"></i>
+      <span class="date-live-dot"></span>
+      <i class="bi bi-calendar2-check header-date-icon"></i>
       <span class="header-date-text">{{ currentDate }}</span>
       <span class="header-date-sep">•</span>
-      <i class="bi bi-clock header-time-icon"></i>
+      <i class="bi bi-clock-history header-time-icon"></i>
       <span class="header-time-text">{{ currentTime }}</span>
     </div>
   </div>
@@ -197,13 +198,19 @@
 
     <!-- Language Selector Button (36px × 36px) -->
     <button class="header-icon-btn lang-cycle-btn" (click)="cycleLanguage()" [title]="'Active Language: ' + (currentLang === 'en' ? 'English' : currentLang === 'mr' ? 'मराठी' : 'हिंदी') + ' (Click to toggle)'" aria-label="Change language">
-      <span class="lang-code-text">{{ currentLang.toUpperCase() }}</span>
+      <span class="lang-badge">{{ currentLang.toUpperCase() }}</span>
     </button>
+
+    <!-- Sleek Vertical Separation Divider -->
+    <div class="header-divider"></div>
 
     <!-- User Profile Dropdown Button (36px × 36px) -->
     <div class="user-profile-wrapper">
       <button class="header-icon-btn user-profile-btn" (click)="toggleUserDropdown()" [title]="(loggedInUser?.name || loggedInUser?.username || 'Super Administrator') + ' (Profile & Session)'" aria-label="User profile">
-        <div class="user-avatar-circle">{{ getUserInitials(loggedInUser) }}</div>
+        <div class="user-avatar-circle">
+          <span class="avatar-initials">{{ getUserInitials(loggedInUser) }}</span>
+          <span class="avatar-online-dot"></span>
+        </div>
       </button>
 
       <!-- Interactive User Menu Flyout -->
