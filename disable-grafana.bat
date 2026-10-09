@@ -1,0 +1,3 @@
+@echo off
+echo Requesting administrator privileges to stop Grafana...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File \"%~dp0disable-grafana.ps1\"' -Wait"

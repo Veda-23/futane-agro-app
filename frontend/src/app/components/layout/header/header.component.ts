@@ -279,6 +279,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.onSetLanguage.emit(lang);
   }
 
+  cycleLanguage() {
+    const langs = ['en', 'mr', 'hi'];
+    const nextIdx = (langs.indexOf(this.currentLang) + 1) % langs.length;
+    this.setLanguage(langs[nextIdx]);
+  }
+
   navigateTo(tab: string) {
     this.showUserDropdown = false;
     this.onNavigateTab.emit(tab);

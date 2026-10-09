@@ -99,11 +99,11 @@
       <i class="bi" [ngClass]="themeService.isDark ? 'bi-sun-fill text-warning' : 'bi-moon-stars-fill'"></i>
     </button>
 
-    <!-- Telemetry & Infrastructure Health Popover -->
+    <!-- Telemetry & Infrastructure Health Popover (36px × 36px) -->
     <div class="telemetry-popover-wrapper" *ngIf="telemetryHealth">
-      <button class="telemetry-health-btn" (click)="toggleAlertDropdown()" title="View System Telemetry & Cluster Health">
-        <span class="pulse-indicator" [ngClass]="telemetryHealth?.allHealthy ? 'pulse-healthy' : 'pulse-warning'"></span>
-        <span class="health-btn-text">System</span>
+      <button class="header-icon-btn telemetry-health-btn" (click)="toggleAlertDropdown()" title="System Telemetry & Cluster Health" aria-label="System telemetry">
+        <i class="bi bi-activity telemetry-health-icon" [ngClass]="telemetryHealth?.allHealthy ? 'text-success' : 'text-warning'"></i>
+        <span class="telemetry-indicator-dot" [ngClass]="telemetryHealth?.allHealthy ? 'indicator-healthy' : 'indicator-warning'"></span>
       </button>
 
       <!-- Dropdown -->
@@ -149,7 +149,7 @@
       </div>
     </div>
 
-    <!-- Notifications Bell -->
+    <!-- Notifications Bell (36px × 36px) -->
     <div class="notif-wrapper">
       <button class="header-icon-btn notif-btn" (click)="toggleNotifDropdown()" title="System Alerts & Notifications" aria-label="Notifications">
         <i class="bi bi-bell-fill"></i>
@@ -195,21 +195,15 @@
       </div>
     </div>
 
-    <!-- Language Selector Pill -->
-    <div class="lang-selector-pill" role="group" aria-label="Language selector">
-      <button class="lang-option-btn" [class.active]="currentLang === 'en'" (click)="setLanguage('en')">EN</button>
-      <span class="lang-sep">|</span>
-      <button class="lang-option-btn" [class.active]="currentLang === 'mr'" (click)="setLanguage('mr')">मराठी</button>
-      <span class="lang-sep">|</span>
-      <button class="lang-option-btn" [class.active]="currentLang === 'hi'" (click)="setLanguage('hi')">हिंदी</button>
-    </div>
+    <!-- Language Selector Button (36px × 36px) -->
+    <button class="header-icon-btn lang-cycle-btn" (click)="cycleLanguage()" [title]="'Active Language: ' + (currentLang === 'en' ? 'English' : currentLang === 'mr' ? 'मराठी' : 'हिंदी') + ' (Click to toggle)'" aria-label="Change language">
+      <span class="lang-code-text">{{ currentLang.toUpperCase() }}</span>
+    </button>
 
-    <!-- User Profile Dropdown -->
+    <!-- User Profile Dropdown Button (36px × 36px) -->
     <div class="user-profile-wrapper">
-      <button class="user-profile-btn" (click)="toggleUserDropdown()" title="User Profile & Session">
+      <button class="header-icon-btn user-profile-btn" (click)="toggleUserDropdown()" [title]="(loggedInUser?.name || loggedInUser?.username || 'Super Administrator') + ' (Profile & Session)'" aria-label="User profile">
         <div class="user-avatar-circle">{{ getUserInitials(loggedInUser) }}</div>
-        <span class="user-name-text">{{ loggedInUser?.name || loggedInUser?.username || 'Admin' }}</span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
 
       <!-- Interactive User Menu Flyout -->
