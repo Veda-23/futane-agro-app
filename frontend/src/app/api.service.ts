@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of, retry, shareReplay, tap, catchError, timer } from 'rxjs';
+import { Observable, of, retry, shareReplay, tap, catchError, timer, MonoTypeOperatorFunction } from 'rxjs';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -42,8 +42,8 @@ export class ApiService {
   }
 
   // Safe retry policy: Retries transient errors once after 1s, but NEVER retries 401 Unauthorized, 403 Forbidden, or 404 Not Found
-  private retryPolicy(count: number = 1) {
-    return retry({
+  private retryPolicy<T = any>(count: number = 1): MonoTypeOperatorFunction<T> {
+    return retry<T>({
       count,
       delay: (err: any) => {
         if (err && (err.status === 401 || err.status === 403 || err.status === 404)) {
@@ -66,11 +66,11 @@ export class ApiService {
     }
 
     if (this.inFlightRequests.has(url)) {
-      return this.inFlightRequests.get(url)!;
+      return this.inFlightRequests.get(url)! as Observable<T>;
     }
 
-    const req$ = this.http.get<T>(url).pipe(
-      this.retryPolicy(1),
+    const req$: Observable<T> = this.http.get<T>(url).pipe(
+      this.retryPolicy<T>(1),
       tap({
         next: (data) => {
           this.dataCache.set(url, { data, timestamp: Date.now() });
