@@ -36,8 +36,8 @@ if (-not (Test-Path $JAR)) {
 }
 
 # ---- Start Backend ----
-Write-Host "[1/2] Starting PROD Backend (port 8080)..." -ForegroundColor Green
-$backendArgs = "-jar `"$JAR`" --spring.profiles.active=prod --server.port=8080 --spring.liquibase.enabled=false"
+Write-Host "[1/2] Starting PROD Backend (port 8080 with 512MB RAM ceiling)..." -ForegroundColor Green
+$backendArgs = "-Xms256m -Xmx512m -jar `"$JAR`" --spring.profiles.active=prod --server.port=8080 --spring.liquibase.enabled=false"
 $backend = Start-Process "$JAVA17" -ArgumentList $backendArgs -PassThru -WindowStyle Minimized
 Write-Host "      Backend PID: $($backend.Id)" -ForegroundColor Gray
 Write-Host "      Waiting 20s for Spring Boot startup..." -ForegroundColor Gray

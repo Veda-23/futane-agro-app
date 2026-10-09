@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe } from '../../../translate.service';
+import { TerminologyService } from '../../../services/terminology.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -10,6 +11,7 @@ import { TranslatePipe } from '../../../translate.service';
   styleUrls: ['./sidebar.component.css']
 })
 export class SidebarComponent implements OnInit {
+  public terminologyService = inject(TerminologyService);
   @Input() isSidebarOpen: boolean = false;
   @Input() isCollapsed: boolean = false;
   @Input() loggedInUser: any = null;

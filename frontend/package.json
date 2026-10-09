@@ -3,17 +3,20 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "node --max-old-space-size=4096 ./node_modules/@angular/cli/bin/ng.js serve --port=4200",
-    "start:uat": "node --max-old-space-size=4096 ./node_modules/@angular/cli/bin/ng.js serve --configuration=uat --port=4200 --host=0.0.0.0",
-    "start:prod": "node --max-old-space-size=4096 ./node_modules/@angular/cli/bin/ng.js serve --configuration=production --port=4201",
-    "build": "node --max-old-space-size=4096 ./node_modules/@angular/cli/bin/ng.js build",
-    "build:uat": "node --max-old-space-size=4096 ./node_modules/@angular/cli/bin/ng.js build --configuration=uat",
+    "start": "node --max-old-space-size=1536 ./node_modules/@angular/cli/bin/ng.js serve --port=4300",
+    "start:uat": "node --max-old-space-size=1536 ./node_modules/@angular/cli/bin/ng.js serve --configuration=uat --port=4300 --host=0.0.0.0",
+    "start:prod": "node --max-old-space-size=1536 ./node_modules/@angular/cli/bin/ng.js serve --configuration=production --port=4301",
+    "build": "node --max-old-space-size=1536 ./node_modules/@angular/cli/bin/ng.js build",
+    "build:uat": "node --max-old-space-size=1536 ./node_modules/@angular/cli/bin/ng.js build --configuration=uat",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "lint:design-system": "node scripts/check-design-system-lint.mjs",
+    "test:visual": "node scripts/verify-visual-regression.mjs"
   },
   "private": true,
   "dependencies": {
     "@angular/animations": "^17.2.0",
+    "@angular/cdk": "^17.2.0",
     "@angular/common": "^17.2.0",
     "@angular/compiler": "^17.2.0",
     "@angular/core": "^17.2.0",
@@ -54,6 +57,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "pdf-lib": "^1.17.1",
     "typescript": "~5.3.2"
   }
 }

@@ -8,9 +8,9 @@
 
 ## Canonical Rules
 
-**All canonical rules are in [PROJECT_RULES.md](../PROJECT_RULES.md).**
+**All canonical rules are in [PROJECT_RULES.md](../PROJECT_RULES.md) and [.agents/rules/MASTER_PERFORMANCE_RULES.md](../.agents/rules/MASTER_PERFORMANCE_RULES.md).**
 
-This file provides Gemini-specific integration. For the complete methodology, see PROJECT_RULES.md.
+This file provides Gemini-specific integration. For hardware RAM limits (8GB workstation) and performance invariants, see MASTER_PERFORMANCE_RULES.md.
 
 ---
 

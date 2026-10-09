@@ -7,7 +7,7 @@ import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="modal-backdrop" style="position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1100; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div class="modal-backdrop" style="position:fixed; inset:0; background:rgba(15,23,42,0.7); z-index:1100; display:flex; align-items:center; justify-content:center;">
       <div class="glass-panel" style="padding:24px; width:90%; max-width:420px; border-radius:16px; text-align:center; background:var(--card-bg, #ffffff); box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
           <h3 style="margin:0; font-size:16px; font-weight:700; display:flex; align-items:center; gap:8px;"><i class="bi bi-qr-code-scan" style="color:#d97706; font-size:18px;"></i> Scan Dispatch Crate / Batch QR</h3>

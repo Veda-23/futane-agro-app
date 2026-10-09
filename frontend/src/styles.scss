@@ -12,6 +12,10 @@
 /* ── 2. Bootstrap Icon Font ─────────────────────────────────────────────── */
 @import 'bootstrap-icons/font/bootstrap-icons.css';
 
+/* ── 3. Canonical Design Tokens (Single Source of Truth) ─────────────────── */
+@import './styles/tokens';
+@import './styles/module-hub';
+
 /* ──────────────────────────────────────────────────────────────────────────
    3. ENTERPRISE DESIGN TOKENS (LIGHT MODE / DEFAULT)
    ────────────────────────────────────────────────────────────────────────── */
@@ -181,9 +185,7 @@
   --btn-height-sm:           32px;
   --btn-height-md:           38px;
   --btn-height-lg:           42px;
-  --input-height-sm:         32px;
-  --input-height-md:         38px;
-  --content-max-width:       1680px;
+  --content-max-width:       100%;
 
   /* Z-Index Scale */
   --z-base:               0;
@@ -350,8 +352,8 @@ body.dark-theme,
   padding: 0;
 }
 
-/* Clean Global Invisible Scrollbars — Zero Visible Scrollbars Across All Tabs, Subtabs, and Content */
-*, *::before, *::after, html, body {
+/* Universal Zero-Scrollbar Design — Hide all scrollbars cleanly while preserving 100% fluid scrolling */
+* {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
 }
@@ -361,18 +363,6 @@ body.dark-theme,
   display: none !important;
   width: 0 !important;
   height: 0 !important;
-  background: transparent !important;
-}
-
-::-webkit-scrollbar-track,
-*::-webkit-scrollbar-track {
-  display: none !important;
-  background: transparent !important;
-}
-
-::-webkit-scrollbar-thumb,
-*::-webkit-scrollbar-thumb {
-  display: none !important;
   background: transparent !important;
 }
 
@@ -486,18 +476,18 @@ code, kbd, samp, pre {
 
 /* Button Variants */
 .btn-primary {
-  background: var(--primary) !important;
+  background: var(--brand-primary, #0B47D4) !important;
   color: #FFFFFF !important;
-  border-color: var(--primary) !important;
-  box-shadow: 0 1px 3px rgba(5, 150, 105, 0.2);
+  border-color: var(--brand-primary, #0B47D4) !important;
+  box-shadow: 0 1px 3px rgba(11, 71, 212, 0.25);
   border-radius: var(--radius-md, 8px) !important;
 }
-.btn-primary:hover {
-  background: var(--primary-hover) !important;
-  border-color: var(--primary-hover) !important;
+.btn-primary:hover:not(:disabled) {
+  background: var(--brand-primary-hover, #093BB0) !important;
+  border-color: var(--brand-primary-hover, #093BB0) !important;
   color: #FFFFFF !important;
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3);
+  box-shadow: 0 4px 10px rgba(11, 71, 212, 0.35);
 }
 
 .btn-secondary {
@@ -695,9 +685,33 @@ code, kbd, samp, pre {
   margin-bottom: 4px;
 }
 
-.req-star, .required {
-  color: var(--color-danger);
+.req-star {
+  color: var(--color-danger, #ef4444);
   font-weight: 700;
+}
+
+label.required,
+.erp-label.required,
+.form-label.required,
+.field-label.required,
+.label-required {
+  color: var(--text-primary, #0f172a) !important;
+  font-weight: 600 !important;
+
+  &::after {
+    content: " *" !important;
+    color: var(--color-danger, #ef4444) !important;
+    font-weight: 700 !important;
+    margin-left: 2px !important;
+  }
+}
+
+.erp-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
+  margin-bottom: 5px;
 }
 
 .form-control,
@@ -871,6 +885,19 @@ textarea.ng-invalid.ng-touched:focus {
 
 .glass-panel {
   padding: 14px 16px;
+  /* Never clip child .table-container scroll */
+  overflow: visible;
+}
+
+/* Inventory main panel: allow inner .table-container to scroll horizontally */
+.glass-panel.inv-main-panel {
+  overflow: hidden; /* needed for border-radius clipping — inner elements scroll */
+}
+
+/* Ensure horizontal table scroll works inside inv-main-panel */
+.glass-panel.inv-main-panel .table-container {
+  overflow-x: auto !important;
+  overflow-y: visible;
 }
 
 .section-title-badge {
@@ -1052,11 +1079,11 @@ textarea.ng-invalid.ng-touched:focus {
   height: 44px;
   min-height: 44px;
   background-color: var(--bg-hover) !important;
-  color: var(--text-secondary) !important;
-  font-weight: 700;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  color: var(--text-secondary, #475569) !important;
+  font-weight: var(--font-weight-semibold, 600) !important;
+  font-size: var(--font-size-xs, 11px) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.4px !important;
   padding: 8px 14px;
   border-bottom: 1px solid var(--border-color) !important;
   border-top: none;
@@ -1273,7 +1300,8 @@ body.density-comfortable,
 }
 
 /* Density Switcher */
-.density-switch-group {
+.density-switch-group,
+.density-group {
   display: inline-flex;
   align-items: center;
   background: var(--bg-hover, #f1f5f9);
@@ -1674,6 +1702,57 @@ body.dark-theme .density-btn.active {
   border-color: var(--primary-border) !important;
 }
 
+/* Global Canonical Pill Badges (Mapped 1:1 to Semantic Tokens) */
+.pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs, 11px) !important;
+  font-weight: var(--font-weight-semibold, 600) !important;
+  line-height: 1;
+  padding: 3px 8px !important;
+  border-radius: var(--radius-pill, 9999px) !important;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.pill-success {
+  background: var(--semantic-success-bg, #ECFDF5) !important;
+  color: var(--semantic-success-text, #065F46) !important;
+  border-color: var(--semantic-success-border, #A7F3D0) !important;
+}
+
+.pill-warning {
+  background: var(--semantic-warning-bg, #FFFBEB) !important;
+  color: var(--semantic-warning-text, #92400E) !important;
+  border-color: var(--semantic-warning-border, #FDE68A) !important;
+}
+
+.pill-danger {
+  background: var(--semantic-danger-bg, #FEF2F2) !important;
+  color: var(--semantic-danger-text, #991B1B) !important;
+  border-color: var(--semantic-danger-border, #FECACA) !important;
+}
+
+.pill-info {
+  background: var(--semantic-info-bg, #F0F9FF) !important;
+  color: var(--semantic-info-text, #0369A1) !important;
+  border-color: var(--semantic-info-border, #BAE6FD) !important;
+}
+
+.pill-primary {
+  background: var(--semantic-primary-bg, #EFF6FF) !important;
+  color: var(--semantic-primary-text, #1D4ED8) !important;
+  border-color: var(--semantic-primary-border, #BFDBFE) !important;
+}
+
+.pill-secondary, .pill-neutral, .pill-muted {
+  background: var(--semantic-secondary-bg, #F1F5F9) !important;
+  color: var(--semantic-secondary-text, #334155) !important;
+  border-color: var(--semantic-secondary-border, #CBD5E1) !important;
+}
+
 /* ──────────────────────────────────────────────────────────────────────────
    12. SKELETON LOADERS & EMPTY STATES
    ────────────────────────────────────────────────────────────────────────── */
@@ -1768,9 +1847,10 @@ body.dark-theme .density-btn.active {
 }
 
 /* Content fade — used for page/tab transitions */
+/* Content fade — used for page/tab transitions (pure opacity to preserve fixed modal viewport centering) */
 @keyframes contentFadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* Pulse — used for live indicators */
@@ -1795,9 +1875,10 @@ body.dark-theme .density-btn.active {
 .animate-spin        { animation: spin         0.8s linear infinite; }
 .animate-pulse       { animation: pulse        2s ease-in-out infinite; }
 
-/* Page / tab transition (used on .content-body) */
+/* Page / tab transition (used on .content-body) — ensure no transform containing block */
 .animated-fade {
-  animation: contentFadeIn 0.2s var(--transition-ease) both;
+  animation: contentFadeIn 0.18s var(--transition-ease) both;
+  transform: none !important;
 }
 
 /* ── Loading Spinner ────────────────────────────────────────────────────── */
@@ -2696,10 +2777,63 @@ input.ps-5,
   padding-left: 3rem !important;
 }
 
-.input-with-icon input,
-.erp-input-icon-left input,
-.input-icon-left input {
-  padding-left: 36px !important;
+.erp-input-icon-left,
+.input-with-icon,
+.input-icon-left {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+
+  > i, > .bi {
+    position: absolute !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: var(--text-muted, #94a3b8) !important;
+    font-size: 14px !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+  }
+
+  > input, > select, > textarea {
+    padding-left: 36px !important;
+    width: 100% !important;
+  }
+}
+
+.erp-input {
+  width: 100%;
+  height: 38px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text-primary, #0f172a);
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: var(--radius-md, 8px);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:focus {
+    border-color: var(--primary, #0B47D4);
+    box-shadow: 0 0 0 3px rgba(11, 71, 212, 0.12);
+  }
+}
+
+textarea.erp-input {
+  height: auto;
+  min-height: 72px;
+  padding-left: 12px !important;
+  resize: vertical;
+}
+
+.subtab-pill-btn .subtab-label {
+  display: inline-block !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  color: inherit !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .search-input-wrapper,
@@ -3228,39 +3362,207 @@ textarea:focus,
   }
 }
 
-@keyframes backdropSoftFadeIn {
+/* ══════════════════════════════════════════════════════════════════════════
+   UNIVERSAL POPUP & MODAL CARD CENTERING SYSTEM (ALL TABS)
+   - Zero background blur (crystal clear dimmed view behind modal)
+   - Guaranteed full-viewport centering (never shifted to right or bottom)
+   - Resilient against containing blocks and transformed containers
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Prevent background document scrolling while any modal or drawer is active */
+body.modal-open {
+  overflow: hidden !important;
+}
+
+/* Fluid clean fade animations (no blur, pure opacity & scale) */
+@keyframes backdropCleanFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modalCenterScaleIn {
   from {
     opacity: 0;
-    backdrop-filter: blur(0px);
+    transform: scale(0.96);
   }
   to {
     opacity: 1;
-    backdrop-filter: blur(8px);
+    transform: scale(1);
   }
 }
 
-.modal-backdrop,
-.invoice-modal-overlay,
-.drawer-backdrop,
-.invoice-drawer-backdrop,
-.erp-drawer-overlay {
-  position: fixed !important;
-  inset: 0 !important;
-  background: rgba(15, 23, 42, 0.6) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  z-index: 2000 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 16px !important;
-  animation: backdropSoftFadeIn 0.22s ease both !important;
+@keyframes modalFixedCenterIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
-/* Modals, pop-cards, and panels nested within backdrops */
+/* Critical Guard: Prevent layout wrappers and module hosts from trapping fixed backdrops */
+.main-content,
+.content-body,
+.app-container,
+.audit-enterprise-container,
+.employees-enterprise-container,
+.machines-enterprise-container,
+.inventory-enterprise-container,
+.production-enterprise-container,
+.salaries-enterprise-container,
+.transports-enterprise-container,
+.drivers-enterprise-container,
+.dispatch-module-container,
+.dashboard-enterprise-container,
+.bank-enterprise-container,
+.expenses-enterprise-container,
+.invoices-enterprise-container,
+.parties-enterprise-container,
+.payments-enterprise-container,
+.vendors-enterprise-container,
+.raw-materials-enterprise-container,
+.reports-enterprise-container,
+.settings-enterprise-container,
+.analytics-enterprise-container,
+.erp-module-container,
+app-audit-logs,
+app-employees,
+app-machines,
+app-inventory,
+app-production,
+app-sales,
+app-payments,
+app-raw-materials,
+app-vendors,
+app-salaries,
+app-transports,
+app-drivers,
+app-invoices,
+app-billing-hub,
+app-reports,
+app-dispatch,
+app-expenses,
+app-bank,
+app-analytics,
+app-settings {
+  transform: none !important;
+  filter: none !important;
+  contain: none !important;
+  perspective: none !important;
+}
+
+/* Elevate content-body and app components above sticky app-header when any modal/drawer is open */
+.content-body:has(.modal-backdrop),
+.content-body:has(.drawer-backdrop),
+.content-body:has(.erp-drawer-overlay),
+.content-body:has(.dossier-modal-backdrop),
+.content-body:has([role="dialog"]),
+.content-body:has(.erp-drawer.open),
+.content-body:has(.slide-in-drawer),
+body:has(.modal-backdrop) .content-body,
+body:has(.drawer-backdrop) .content-body,
+body:has(.erp-drawer.open) .content-body,
+body:has(.dossier-modal-backdrop) .content-body,
+body:has([role="dialog"]) .content-body {
+  position: relative !important;
+  z-index: 1500 !important;
+}
+
+body:has(.modal-backdrop) app-header,
+body:has(.drawer-backdrop) app-header,
+body:has(.erp-drawer.open) app-header,
+body:has(.dossier-modal-backdrop) app-header,
+body:has(.sales-outward-backdrop) app-header,
+body:has(.sales-dossier-overlay) app-header,
+body:has(.dispatch-modal-overlay) app-header,
+body:has(.dispatch-dossier-overlay) app-header,
+body:has(.receipt-voucher-backdrop) app-header,
+body:has(.payments-modal-overlay) app-header,
+body:has(.invoice-modal-overlay) app-header,
+body:has([class*="-backdrop"]) app-header,
+body:has([class*="-overlay"]) app-header,
+body:has([role="dialog"]) app-header,
+.main-content:has(.modal-backdrop) app-header,
+.main-content:has(.drawer-backdrop) app-header,
+.main-content:has(.erp-drawer.open) app-header,
+.main-content:has(.dossier-modal-backdrop) app-header {
+  z-index: 10 !important;
+}
+
+/* 1. All Full-Screen Backdrops & Overlays across every tab — Zero Background Blur */
+.modal-backdrop,
+.modal-backdrop-custom,
+.cf-modal-backdrop,
+.notif-modal-backdrop,
+.sec-modal-backdrop,
+.restore-modal-backdrop,
+.invoice-modal-overlay,
+.party-modal-overlay,
+.payments-modal-overlay,
+.receipt-voucher-backdrop,
+.sales-outward-backdrop,
+.sales-dossier-overlay,
+.dispatch-modal-overlay,
+.dispatch-dossier-overlay,
+.drawer-backdrop,
+.invoice-drawer-backdrop,
+.erp-drawer-overlay,
+.dossier-modal-backdrop,
+.waybill-modal-backdrop,
+.voucher-modal-backdrop,
+.voucher-modal-overlay,
+.grn-voucher-backdrop,
+.salary-modal-backdrop,
+.audit-modal-backdrop,
+.custom-modal-backdrop,
+[class*="-modal-overlay"],
+[class*="-modal-backdrop"],
+[class*="-drawer-overlay"],
+[class*="-drawer-backdrop"] {
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+  z-index: 2000 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  padding: 24px 16px !important;
+  box-sizing: border-box !important;
+  animation: backdropCleanFadeIn 0.18s ease both !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  margin: 0 !important;
+}
+
+@media (min-width: 1025px) {
+  .sidebar-backdrop {
+    display: none !important;
+    pointer-events: none !important;
+  }
+}
+
+/* 2. Modals, pop-cards, and panels nested within backdrops */
 .modal-dialog,
 .modal-card,
 .modal-content,
+.modal-dialog-box,
+.modal-dialog-custom,
+.cf-modal-dialog,
+.notif-modal-dialog,
+.sec-confirm-modal,
+.restore-modal-content,
 .invoice-modal-card,
 .importer-modal,
 .audit-modal-content,
@@ -3270,16 +3572,24 @@ textarea:focus,
 .side-drawer,
 .invoice-drawer-panel,
 .dossier-voucher-dialog,
+.dossier-modal-dialog,
+.waybill-modal-dialog,
 .receipt-voucher-dialog,
-.grn-voucher-dialog {
+.voucher-modal-dialog,
+.grn-voucher-dialog,
+.dispatch-modal-dialog,
+.dispatch-dossier-dialog,
+.outward-modal-dialog,
+.sales-dossier-dialog,
+.modal-dialog-voucher {
   background: var(--bg-surface, #ffffff) !important;
   border: 1px solid var(--border-card, #e2e8f0) !important;
   border-radius: var(--radius-xl, 14px) !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
-  width: 700px !important;
-  max-width: 95vw !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
+  width: 720px !important;
+  max-width: calc(100vw - 32px) !important;
   height: auto !important;
-  max-height: 88vh !important;
+  max-height: calc(100vh - 48px) !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
@@ -3290,22 +3600,38 @@ textarea:focus,
   left: auto !important;
   margin: auto !important;
   transform: none !important;
-  animation: modalSpringPop 0.28s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+  z-index: 2005 !important;
+  animation: modalCenterScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both !important;
 }
 
-/* Sibling popups/drawers: centered via fixed coordinates */
+/* 3. Sibling popups/drawers: centered via fixed coordinates, clamped within viewport */
 .erp-drawer,
 .enterprise-drawer,
 .sales-drawer,
-.party-drawer.drawer-open {
+.party-drawer,
+.party-drawer.drawer-open,
+.party-modal-dialog,
+.payments-modal-dialog,
+.waybill-modal-dialog,
+.dossier-modal-dialog,
+.dossier-modal-container,
+.dispatch-modal-dialog,
+.dispatch-dossier-dialog,
+.outward-modal-dialog,
+.sales-dossier-dialog,
+.grn-voucher-dialog,
+.receipt-voucher-dialog,
+[role="dialog"].party-modal-dialog,
+[role="dialog"].payments-modal-dialog,
+[role="dialog"].dossier-modal-container {
   background: var(--bg-surface, #ffffff) !important;
   border: 1px solid var(--border-card, #e2e8f0) !important;
   border-radius: var(--radius-xl, 14px) !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
-  width: 720px !important;
-  max-width: 95vw !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
+  width: 760px !important;
+  max-width: calc(100vw - 32px) !important;
   height: auto !important;
-  max-height: 88vh !important;
+  max-height: calc(100vh - 48px) !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
@@ -3315,42 +3641,94 @@ textarea:focus,
   transform: translate(-50%, -50%) !important;
   z-index: 2005 !important;
   margin: 0 !important;
-  animation: modalSpringPop 0.28s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  animation: modalFixedCenterIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both !important;
 }
 
 .drawer-panel.drawer-panel-wide,
 .drawer-panel-wide,
 .drawer-wide,
-.modal-large {
-  width: 880px !important;
-  max-width: 96vw !important;
+.modal-large,
+.modal-lg,
+.erp-drawer-wide,
+.dossier-modal-container,
+.dispatch-dossier-dialog,
+.sales-dossier-dialog,
+.voucher-modal-dialog {
+  width: 860px !important;
+  max-width: calc(100vw - 32px) !important;
 }
 
+/* Universal Pinned Headers across all popups/drawers */
 .drawer-header,
-.modal-header {
-  padding: 16px 20px !important;
+.modal-header,
+.erp-drawer-header,
+.dossier-header-bar,
+.details-tab-nav,
+.drawer-header-strip,
+.outward-modal-header,
+.grn-voucher-header,
+.waybill-modal-header,
+.voucher-modal-header,
+.modal-header-toolbar,
+.cf-modal-header,
+.notif-modal-header,
+.form-header-banner,
+.invoice-modal-header {
+  padding: 14px 20px !important;
   border-bottom: 1px solid var(--border-color, #e2e8f0) !important;
   background: var(--bg-surface, #ffffff) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
   flex-shrink: 0 !important;
+  z-index: 2 !important;
 }
 
+/* Universal Scrollable Bodies */
 .drawer-content,
 .drawer-body,
 .drawer-form-body,
 .drawer-scroll-body,
-.modal-body {
+.modal-body,
+.erp-drawer-body,
+.dossier-modal-body,
+.dossier-scroll-viewport,
+.dossier-body-content,
+.details-content,
+.details-tab-content,
+.outward-modal-body,
+.grn-voucher-body,
+.voucher-sheet-body,
+.cf-modal-body,
+.notif-modal-body,
+.invoice-modal-body,
+.payments-form-content,
+.party-modal-scroll-body,
+.production-modal-scroll-body,
+.drawer-form-layout,
+.drawer-fields-grid {
   overflow-y: auto !important;
+  overflow-x: hidden !important;
   flex: 1 1 auto !important;
-  max-height: calc(88vh - 128px) !important;
+  min-height: 0 !important;
+  max-height: calc(100vh - 140px) !important;
 }
 
+/* Universal Pinned Footers */
 .drawer-footer,
 .drawer-actions,
 .drawer-action-footer,
-.modal-footer {
+.modal-footer,
+.erp-drawer-footer,
+.outward-modal-footer,
+.grn-voucher-footer,
+.voucher-modal-footer,
+.cf-modal-footer,
+.notif-modal-footer,
+.invoice-modal-footer,
+.form-actions-row {
   padding: 12px 20px !important;
   border-top: 1px solid var(--border-color, #e2e8f0) !important;
   background: var(--bg-surface, #ffffff) !important;
@@ -3359,21 +3737,11 @@ textarea:focus,
   justify-content: flex-end !important;
   gap: 10px !important;
   flex-shrink: 0 !important;
+  z-index: 2 !important;
 }
 
 .erp-drawer:not(.open) {
   display: none !important;
-}
-
-.erp-drawer-header {
-  padding: 16px 20px !important;
-  border-bottom: 1px solid var(--border-color, #e2e8f0) !important;
-  background: var(--bg-surface, #ffffff) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 12px !important;
-  flex-shrink: 0 !important;
 }
 
 .erp-drawer-title {
@@ -4766,7 +5134,14 @@ button.btn-action-primary,
   overflow-x: auto !important;
   padding: 4px 2px 8px !important;
   margin-bottom: 12px !important;
-  scrollbar-width: thin !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+
+  &::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
 
   .subtab-pill-btn,
   .subnav-tab-btn,
@@ -4858,52 +5233,91 @@ button.btn-action-primary,
   }
 }
 
-/* ── C. High-Density KPI / Telemetry Ribbon Cards (Exact Vendors Reference Standard) ───────────── */
+/* ── C. High-Density KPI / Telemetry Ribbon Cards (Master Universal Standard Across All 18 Tabs) ── */
+
+/* 1. Universal 5-Column Responsive Grids */
+.inv-kpi-grid,
+.inv-stats-grid,
+.inv-telemetry-grid,
+.stock-telemetry-ribbon,
+.dispatch-kpi-grid,
+.raw-materials-kpi-grid,
+.drivers-kpi-grid,
+.vendors-kpi-grid,
+.transports-kpi-grid,
+.sales-kpi-grid,
+.party-kpi-grid,
 .production-kpi-grid,
-.erp-kpi-grid,
+.ppm-kpi-grid,
+.machines-kpi-grid,
+.payments-kpi-grid,
+.invoices-kpi-grid,
+.billinghub-kpi-grid,
+.employees-kpi-grid,
+.salaries-kpi-grid,
+.expenses-kpi-grid,
+.expenses-kpi-ribbon,
+.bank-kpi-grid,
+.bank-kpi-ribbon,
 .kpi-grid,
+.erp-kpi-grid,
 .stats-grid,
 .metrics-grid,
 .overview-grid,
-.inv-stats-grid,
-.inv-kpi-grid,
-.inv-telemetry-grid,
 .telemetry-ribbon-grid,
-.stock-telemetry-ribbon,
-.transports-kpi-grid,
-.drivers-kpi-grid,
-.salaries-kpi-grid,
-.employees-kpi-grid,
-.expenses-kpi-ribbon,
-.bank-kpi-ribbon,
 .metrics-cards-grid {
   display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
-  gap: 14px !important;
-  margin-bottom: 16px !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  margin-bottom: 14px !important;
+  width: 100% !important;
 
-  @media (max-width: 640px) {
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  @media (max-width: 480px) {
     grid-template-columns: 1fr !important;
   }
 }
 
+/* 2. Universal Telemetry Card Container */
+.inv-kpi-card,
+.inv-summary-card,
+.dispatch-kpi-card,
+.raw-kpi-card,
+.driver-kpi-card,
+.vendor-kpi-card,
+.transport-kpi-card,
+.sales-kpi-card,
+.party-kpi-card,
+.production-kpi-card,
+.machine-kpi-card,
+.payment-kpi-card,
+.invoices-kpi-card,
+.billinghub-kpi-card,
+.employees-kpi-card,
+.salaries-kpi-card,
+.expenses-kpi-card,
+.bank-kpi-card,
 .kpi-card,
 .erp-kpi-card,
 .stat-card,
 .metric-card,
 .summary-card,
 .analytics-kpi-card,
-.inv-summary-card,
-.inv-kpi-card,
 .telemetry-card,
 .metrics-summary-card {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
-  gap: 14px !important;
-  padding: 16px 18px !important;
-  min-height: 82px !important;
-  border-radius: 18px !important;
+  gap: 10px !important;
+  padding: 10px 14px !important;
+  min-height: 84px !important;
+  height: 84px !important;
+  border-radius: 14px !important;
   background: var(--bg-surface, #ffffff) !important;
   border: 1px solid var(--border-card, rgba(99, 102, 241, 0.12)) !important;
   box-shadow: var(--shadow-card, 0 4px 20px -2px rgba(11, 71, 212, 0.06), 0 2px 6px -1px rgba(30, 27, 75, 0.04)) !important;
@@ -4911,228 +5325,378 @@ button.btn-action-primary,
   position: relative !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
+  cursor: pointer;
 
   &:hover {
     transform: translateY(-3px) !important;
     box-shadow: var(--shadow-card-hover, 0 14px 30px -4px rgba(11, 71, 212, 0.14), 0 4px 12px -2px rgba(30, 27, 75, 0.06)) !important;
     border-color: rgba(11, 71, 212, 0.25) !important;
+  }
+}
 
-    .kpi-icon-wrap,
-    .erp-kpi-icon,
-    .stat-icon,
-    .metric-icon,
-    .kpi-icon-badge,
-    .telemetry-icon-wrap,
-    .telemetry-icon-box,
-    .inv-kpi-icon,
-    .kpi-icon-wrapper {
-      transform: scale(1.06) rotate(1deg) !important;
-    }
+/* 3. Universal Icon Badge */
+.inv-kpi-icon,
+.dispatch-kpi-icon,
+.raw-kpi-icon,
+.driver-kpi-icon,
+.vendor-kpi-icon,
+.transport-kpi-icon,
+.sales-kpi-icon,
+.party-kpi-icon,
+.production-kpi-icon,
+.machine-kpi-icon,
+.payment-kpi-icon,
+.invoices-kpi-icon,
+.billinghub-kpi-icon,
+.employees-kpi-icon,
+.salaries-kpi-icon,
+.expenses-kpi-icon,
+.bank-kpi-icon,
+.kpi-icon-wrap,
+.erp-kpi-icon,
+.stat-icon,
+.metric-icon,
+.kpi-icon-badge,
+.telemetry-icon-wrap,
+.telemetry-icon-box,
+.kpi-icon-wrapper {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+  border-radius: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 18px !important;
+  flex-shrink: 0 !important;
+  color: #ffffff !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16) !important;
+
+  &::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    width: 60% !important;
+    height: 50% !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 100%) !important;
+    border-radius: 0 10px 0 80px !important;
+    pointer-events: none !important;
   }
 
-  .kpi-icon-wrap,
-  .erp-kpi-icon,
-  .stat-icon,
-  .metric-icon,
-  .kpi-icon-badge,
-  .telemetry-icon-wrap,
-  .telemetry-icon-box,
-  .inv-kpi-icon,
-  .kpi-icon-wrapper {
-    width: 46px !important;
-    height: 46px !important;
-    min-width: 46px !important;
-    min-height: 46px !important;
-    border-radius: 14px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 20px !important;
-    flex-shrink: 0 !important;
+  i, .bi {
+    font-size: 18px !important;
+    line-height: 1 !important;
     color: #ffffff !important;
-    position: relative !important;
-    overflow: hidden !important;
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16) !important;
-
-    &::after {
-      content: '' !important;
-      position: absolute !important;
-      top: 0 !important;
-      right: 0 !important;
-      width: 60% !important;
-      height: 50% !important;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 100%) !important;
-      border-radius: 0 14px 0 80px !important;
-      pointer-events: none !important;
-    }
-
-    i, .bi {
-      font-size: 20px !important;
-      line-height: 1 !important;
-      color: #ffffff !important;
-    }
   }
+}
 
-  &.total-card .kpi-icon-wrap,
-  &.card-procurements .telemetry-icon-wrap,
-  .kpi-blue,
-  .icon-blue,
-  .kpi-icon-purple,
-  .bg-blue-light {
-    background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
-    box-shadow: 0 4px 14px rgba(11, 71, 212, 0.32) !important;
+/* 4. Universal Icon Colors & Gradients (100% Solid & White Icons) */
+.total-card .kpi-icon-wrap,
+.card-procurements .telemetry-icon-wrap,
+.kpi-blue,
+.icon-blue,
+.bg-blue-light,
+.kpi-icon-wrapper.primary {
+  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.32) !important;
+  color: #ffffff !important;
+  i, .bi { color: #ffffff !important; }
+}
+
+.success-card .kpi-icon-wrap,
+.card-valuation .telemetry-icon-wrap,
+.kpi-emerald,
+.kpi-green,
+.icon-emerald,
+.bg-green-light,
+.bg-emerald-light,
+.kpi-icon-wrapper.success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.32) !important;
+  color: #ffffff !important;
+  i, .bi { color: #ffffff !important; }
+}
+
+.danger-card .kpi-icon-wrap,
+.kpi-red,
+.kpi-rose,
+.icon-red,
+.kpi-icon-wrapper.danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.32) !important;
+  color: #ffffff !important;
+  i, .bi { color: #ffffff !important; }
+}
+
+.efficiency-card .kpi-icon-wrap,
+.warning-card .kpi-icon-wrap,
+.card-rate .telemetry-icon-wrap,
+.kpi-amber,
+.icon-amber,
+.bg-amber-light,
+.kpi-icon-wrapper.warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35) !important;
+  color: #ffffff !important;
+  i, .bi { color: #ffffff !important; }
+}
+
+.peak-card .kpi-icon-wrap,
+.kpi-purple,
+.kpi-indigo,
+.kpi-icon-purple,
+.bg-indigo-light {
+  background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%) !important;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35) !important;
+  color: #ffffff !important;
+  i, .bi { color: #ffffff !important; }
+}
+
+.kpi-slate,
+.kpi-navy,
+.icon-slate {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+  box-shadow: 0 4px 14px rgba(30, 41, 59, 0.35) !important;
+  color: #ffffff !important;
+  i, .bi { color: #ffffff !important; }
+}
+
+/* 5. Universal Card Content / Body */
+.inv-kpi-body,
+.dispatch-kpi-body,
+.raw-kpi-body,
+.driver-kpi-body,
+.vendor-kpi-body,
+.transport-kpi-body,
+.sales-kpi-body,
+.party-kpi-body,
+.production-kpi-body,
+.machine-kpi-body,
+.payment-kpi-body,
+.invoices-kpi-content,
+.billinghub-kpi-content,
+.employees-kpi-content,
+.salaries-kpi-content,
+.expenses-kpi-content,
+.bank-kpi-content,
+.kpi-content,
+.kpi-details,
+.erp-kpi-body,
+.telemetry-body,
+.telemetry-info,
+.kpi-body,
+.stat-body {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+  justify-content: center !important;
+  gap: 1px !important;
+  overflow: hidden !important;
+}
+
+/* 6. Universal Card Label — 2-Line Auto-Wrapping (Zero Truncation) */
+.inv-kpi-label,
+.dispatch-kpi-label,
+.raw-kpi-label,
+.driver-kpi-label,
+.vendor-kpi-label,
+.transport-kpi-label,
+.sales-kpi-label,
+.party-kpi-label,
+.production-kpi-label,
+.machine-kpi-label,
+.payment-kpi-label,
+.invoices-kpi-label,
+.billinghub-kpi-label,
+.employees-kpi-label,
+.salaries-kpi-label,
+.expenses-kpi-label,
+.bank-kpi-label,
+.kpi-label,
+.erp-kpi-title,
+.stat-title,
+.stat-label,
+.metric-title,
+.metric-label,
+.telemetry-label {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.03em !important;
+  text-transform: uppercase !important;
+  color: #64748b !important;
+  margin: 0 !important;
+  line-height: 1.2 !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  max-height: 2.4em !important;
+}
+
+/* 7. Universal Card Value Row */
+.inv-kpi-value-row,
+.invoices-kpi-value-row,
+.billinghub-kpi-value-row,
+.employees-kpi-value-row,
+.salaries-kpi-value-row,
+.expenses-kpi-value-row,
+.bank-kpi-value-row {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 3px !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+}
+
+/* 8. Universal Card Value Number */
+.inv-kpi-value,
+.dispatch-kpi-value,
+.raw-kpi-value,
+.driver-kpi-value,
+.vendor-kpi-value,
+.transport-kpi-value,
+.sales-kpi-value,
+.party-kpi-value,
+.production-kpi-value,
+.machine-kpi-value,
+.payment-kpi-value,
+.invoices-kpi-value,
+.billinghub-kpi-value,
+.employees-kpi-value,
+.salaries-kpi-value,
+.expenses-kpi-value,
+.bank-kpi-value,
+.kpi-value,
+.erp-kpi-value,
+.stat-value,
+.metric-value,
+.telemetry-number,
+.telemetry-value,
+.kpi-number {
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.02em !important;
+  color: #0f172a !important;
+  margin: 1px 0 !important;
+  font-variant-numeric: tabular-nums !important;
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 3px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+
+  &.text-success, &.success { color: #10b981 !important; }
+  &.text-danger, &.danger { color: #ef4444 !important; }
+  &.text-primary, &.primary { color: #0B47D4 !important; }
+  &.text-warning, &.warning { color: #d97706 !important; }
+  &.text-emerald { color: #059669 !important; }
+  &.text-info { color: #0284c7 !important; }
+}
+
+/* 9. Universal Card Unit */
+.inv-kpi-unit,
+.invoices-kpi-unit,
+.billinghub-kpi-unit,
+.employees-kpi-unit,
+.salaries-kpi-unit,
+.expenses-kpi-unit,
+.bank-kpi-unit,
+.kpi-unit,
+.unit-text,
+.telemetry-unit,
+.stat-unit {
+  font-size: 10.5px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+  margin-left: 2px !important;
+  white-space: nowrap !important;
+}
+
+/* 10. Universal Subtitle / Meta — 2-Line Auto-Wrapping */
+.inv-kpi-sub,
+.dispatch-kpi-sub,
+.raw-kpi-sub,
+.driver-kpi-sub,
+.vendor-kpi-sub,
+.transport-kpi-sub,
+.sales-kpi-sub,
+.party-kpi-sub,
+.production-kpi-sub,
+.machine-kpi-sub,
+.payment-kpi-sub,
+.invoices-kpi-meta,
+.billinghub-kpi-meta,
+.employees-kpi-meta,
+.salaries-kpi-meta,
+.expenses-kpi-meta,
+.bank-kpi-meta,
+.kpi-meta,
+.erp-kpi-trend,
+.erp-kpi-subtext,
+.stat-meta,
+.telemetry-meta,
+.telemetry-subtext,
+.kpi-subtext {
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+  margin: 0 !important;
+  line-height: 1.2 !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  max-height: 2.4em !important;
+
+  i, .bi {
+    font-size: 10px !important;
+    margin-right: 2px !important;
+    flex-shrink: 0 !important;
   }
+}
 
-  &.success-card .kpi-icon-wrap,
-  &.card-valuation .telemetry-icon-wrap,
-  .kpi-emerald,
-  .kpi-green,
-  .icon-emerald,
-  .bg-green-light,
-  .bg-emerald-light,
-  .kpi-icon-wrapper.success {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.32) !important;
+/* 11. Universal Progress Bars */
+.inv-kpi-progress-bar,
+.dispatch-kpi-progress-bar,
+.kpi-progress-bar,
+.telemetry-progress-track {
+  width: 100% !important;
+  height: 3px !important;
+  background: #e2e8f0 !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+  margin-top: 2px !important;
+  margin-bottom: 2px !important;
+
+  .inv-kpi-progress-fill,
+  .dispatch-kpi-progress-fill,
+  .kpi-progress-fill,
+  .telemetry-progress-fill {
+    height: 100% !important;
+    border-radius: 999px !important;
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important;
+
+    &.fill-green { background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important; }
+    &.fill-amber { background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%) !important; }
+    &.fill-red { background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%) !important; }
   }
+}
 
-  &.danger-card .kpi-icon-wrap,
-  .kpi-red,
-  .kpi-rose,
-  .icon-red,
-  .kpi-icon-wrapper.danger {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
-    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.32) !important;
-  }
-
-  &.efficiency-card .kpi-icon-wrap,
-  &.warning-card .kpi-icon-wrap,
-  &.card-rate .telemetry-icon-wrap,
-  .kpi-amber,
-  .icon-amber,
-  .bg-amber-light,
-  .kpi-icon-wrapper.warning {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35) !important;
-  }
-
-  .bg-indigo-light {
-    background: linear-gradient(135deg, #1E1B4B 0%, #31106A 100%) !important;
-    box-shadow: 0 4px 14px rgba(30, 27, 75, 0.35) !important;
-  }
-
-  .kpi-content,
-  .kpi-details,
-  .erp-kpi-body,
-  .telemetry-body,
-  .telemetry-info,
-  .inv-kpi-body,
-  .kpi-body,
-  .stat-body {
-    display: flex !important;
-    flex-direction: column !important;
-    flex: 1 !important;
-    min-width: 0 !important;
-    justify-content: center !important;
-    gap: 2px !important;
-    overflow: visible !important;
-
-    .kpi-label,
-    .erp-kpi-title,
-    .stat-title,
-    .stat-label,
-    .metric-title,
-    .metric-label,
-    .telemetry-label,
-    .inv-kpi-label {
-      font-size: 11px !important;
-      font-weight: 700 !important;
-      letter-spacing: 0.04em !important;
-      text-transform: uppercase !important;
-      color: #64748b !important;
-      margin: 0 !important;
-      line-height: 1.25 !important;
-      white-space: nowrap !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
-    }
-
-    .kpi-value,
-    .erp-kpi-value,
-    .stat-value,
-    .metric-value,
-    .telemetry-number,
-    .telemetry-value,
-    .inv-kpi-value,
-    .kpi-number {
-      font-size: 20px !important;
-      font-weight: 800 !important;
-      line-height: 1.2 !important;
-      letter-spacing: -0.02em !important;
-      color: #0f172a !important;
-      margin: 2px 0 !important;
-      font-variant-numeric: tabular-nums !important;
-      display: flex !important;
-      align-items: baseline !important;
-      gap: 4px !important;
-      white-space: nowrap !important;
-      overflow: visible !important;
-    }
-
-    .kpi-unit,
-    .unit-text,
-    .telemetry-unit,
-    .stat-unit {
-      font-size: 11.5px !important;
-      font-weight: 500 !important;
-      color: #64748b !important;
-      margin-left: 2px !important;
-      white-space: nowrap !important;
-    }
-
-    .kpi-meta,
-    .erp-kpi-trend,
-    .erp-kpi-subtext,
-    .stat-meta,
-    .telemetry-meta,
-    .telemetry-subtext,
-    .inv-kpi-sub,
-    .kpi-subtext {
-      font-size: 11px !important;
-      font-weight: 500 !important;
-      color: #64748b !important;
-      margin: 0 !important;
-      line-height: 1.25 !important;
-      display: flex !important;
-      align-items: center !important;
-      gap: 4px !important;
-      white-space: nowrap !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
-    }
-
-    .kpi-progress-bar,
-    .telemetry-progress-track {
-      width: 100% !important;
-      height: 4px !important;
-      background: #e2e8f0 !important;
-      border-radius: 999px !important;
-      overflow: hidden !important;
-      margin-top: 5px !important;
-
-      .kpi-progress-fill,
-      .telemetry-progress-fill {
-        height: 100% !important;
-        border-radius: 999px !important;
-        background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important;
-      }
-    }
-  }
-
-  .erp-kpi-header,
-  .erp-kpi-footer {
-    display: none !important;
-  }
+.erp-kpi-header,
+.erp-kpi-footer {
+  display: none !important;
 }
 
 /* ── D. High-Density Unified Table Toolbars ─────────────────────────────── */
@@ -5443,8 +6007,15 @@ body.dark-theme .btn-outline-secondary {
   }
 }
 
-/* ── 2. Commanding High-Contrast Table Headers ─────────────────────────────── */
+/* ── 2. Commanding High-Contrast Table Headers (Standard Across ALL Tabs) ── */
 .enterprise-table,
+.enterprise-sales-table,
+.vendor-data-table,
+.inv-table,
+.enterprise-raw-table,
+.modern-table,
+.enterprise-data-table,
+.doc-table,
 .erp-table,
 .data-table,
 table.enterprise-table,
@@ -5454,7 +6025,10 @@ table.enterprise-table,
 .production-table,
 .inventory-table,
 .bank-table,
-.table {
+.expenses-table,
+.reports-table,
+.table,
+table {
   border-collapse: separate !important;
   border-spacing: 0 !important;
 
@@ -5465,37 +6039,59 @@ table.enterprise-table,
   }
 
   thead th,
-  th.sortable-th {
-    background: #f1f5f9 !important;
-    background-color: #f1f5f9 !important;
-    color: #1e293b !important;
-    font-family: var(--font-sans, 'Plus Jakarta Sans', system-ui, sans-serif) !important;
+  th.sortable-th,
+  .table-header-row th {
+    background: var(--bg-hover, #f8fafc) !important;
+    background-color: var(--bg-hover, #f8fafc) !important;
+    color: var(--text-secondary, #475569) !important;
+    font-family: var(--font-heading, 'Plus Jakarta Sans', system-ui, sans-serif) !important;
     font-size: 11.5px !important;
-    font-weight: 800 !important;
+    font-weight: 700 !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.05em !important;
-    padding: 11px 14px !important;
+    letter-spacing: 0.04em !important;
+    padding: 10px 14px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
     border-top: none !important;
-    border-bottom: 2px solid #cbd5e1 !important;
+    border-bottom: 2px solid var(--border-color, #cbd5e1) !important;
     border-left: none !important;
     border-right: none !important;
     vertical-align: middle !important;
     white-space: nowrap !important;
     user-select: none !important;
+    box-sizing: border-box !important;
     transition: background 0.15s ease, color 0.15s ease !important;
 
-    i.bi {
+    .th-content {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 5px !important;
+      font-weight: 700 !important;
+      color: inherit !important;
+      font-size: inherit !important;
+      text-transform: inherit !important;
+      letter-spacing: inherit !important;
+
+      &.th-right-content,
+      &.justify-end {
+        justify-content: flex-end !important;
+      }
+    }
+
+    i, .bi {
       font-size: 12px !important;
       vertical-align: middle !important;
-      opacity: 0.75;
+      opacity: 0.75 !important;
+      color: inherit !important;
       transition: opacity 0.15s ease, color 0.15s ease;
     }
 
     &:hover {
       background: #e2e8f0 !important;
-      color: #0f172a !important;
+      color: var(--text-primary, #0f172a) !important;
 
-      i.bi {
+      i, .bi {
         opacity: 1 !important;
         color: #059669 !important;
       }
@@ -5555,6 +6151,121 @@ body.dark-theme table tbody tr:nth-child(even) {
 body.dark-theme .enterprise-table tbody tr:hover,
 body.dark-theme table tbody tr:hover {
   background-color: rgba(51, 65, 85, 0.6) !important;
+}
+
+/* ── 2.1 Universal ERP Table Container Scrollbar & Responsive Scrolling ────── */
+.table-container,
+.table-responsive,
+.table-responsive-viewport,
+.table-responsive-wrapper,
+.table-wrapper-custom,
+.erp-table-scroll,
+.enterprise-table-container,
+.inv-table-wrapper,
+.report-table-responsive,
+.users-table-container,
+.data-table-wrapper,
+.table-content-wrap {
+  overflow-x: auto !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  position: relative !important;
+  -webkit-overflow-scrolling: touch !important;
+  
+  /* HIDE ALL TABLE HORIZONTAL SCROLLBARS — COMPLETELY INVISIBLE */
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+
+  &::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    background: transparent !important;
+  }
+
+  &::-webkit-scrollbar-track,
+  &::-webkit-scrollbar-thumb {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    background: transparent !important;
+  }
+}
+
+/* Ensure tables have proper min-width so columns never squish into illegible cutoffs */
+.table-container > table,
+.table-responsive > table,
+.table-responsive-viewport > table,
+.table-responsive-wrapper > table,
+.table-wrapper-custom > table,
+.erp-table-scroll > table,
+.enterprise-table-container > table,
+.inv-table-wrapper > table,
+.report-table-responsive > table,
+.users-table-container > table,
+.table-content-wrap > table,
+.enterprise-table,
+.enterprise-sales-table,
+.vendor-data-table,
+.inv-table,
+.enterprise-raw-table,
+.modern-table,
+.enterprise-data-table,
+.enterprise-machines-table,
+.enterprise-breakdowns-table,
+.enterprise-transports-table,
+.enterprise-dispatch-table,
+.enterprise-expenses-table,
+.security-log-table {
+  min-width: 1060px !important;
+  width: 100% !important;
+}
+
+// Printable A4 document & invoice tables must NEVER have 1060px min-width!
+.doc-table,
+.document-sheet .doc-table,
+.preview-paper .inv-items-table,
+.inv-items-table,
+.inv-hsn-table {
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
+}
+
+body.dark-theme,
+body.dark-mode,
+[data-theme='dark'] {
+  .table-container,
+  .table-responsive,
+  .table-responsive-viewport,
+  .table-responsive-wrapper,
+  .table-wrapper-custom,
+  .erp-table-scroll,
+  .enterprise-table-container,
+  .inv-table-wrapper,
+  .report-table-responsive,
+  .users-table-container,
+  .data-table-wrapper,
+  .table-content-wrap {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+
+    &::-webkit-scrollbar,
+    &::-webkit-scrollbar-track,
+    &::-webkit-scrollbar-thumb {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      background: transparent !important;
+    }
+  }
 }
 
 /* ── 3. Unified Table Toolbar Controls (Strict 32px Baseline) ────────────────── */
@@ -5812,17 +6523,23 @@ body.dark-theme table tbody tr:hover {
   }
 }
 
-/* Universal Columns Visibility Dropdown Wrap */
+/* Universal Columns & Filter Tool Buttons (Strict 32px Standard Across All Tabs) */
 .columns-dropdown-wrap,
 .col-manager-dropdown-wrapper,
 .column-visibility-dropdown,
 .column-manager-wrapper,
+.filter-popover-wrapper,
+.filter-wrapper,
 .erp-dropdown {
   position: relative !important;
 
   button,
-  .btn {
+  .btn,
+  .btn-filter-toggle,
+  .btn-toolbar-tool {
     height: 32px !important;
+    min-height: 32px !important;
+    max-height: 32px !important;
     padding: 0 12px !important;
     font-size: 12px !important;
     font-weight: 600 !important;
@@ -5834,9 +6551,10 @@ body.dark-theme table tbody tr:hover {
     align-items: center !important;
     gap: 6px !important;
     cursor: pointer !important;
+    box-sizing: border-box !important;
     transition: all 0.15s ease !important;
 
-    i {
+    i, .bi {
       font-size: 13px !important;
       color: #059669 !important;
     }
@@ -5979,14 +6697,16 @@ body.dark-theme .feature-toolbar {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
-  gap: 14px !important;
-  padding: 16px 18px !important;
-  min-height: 82px !important;
+  gap: 10px !important;
+  padding: 10px 14px !important;
+  min-height: 84px !important;
+  height: 84px !important;
   background: var(--bg-surface, #ffffff) !important;
   border: 1px solid var(--border-card, rgba(99, 102, 241, 0.12)) !important;
-  border-radius: 18px !important;
+  border-radius: 14px !important;
   box-shadow: var(--shadow-card, 0 4px 20px -2px rgba(11, 71, 212, 0.06), 0 2px 6px -1px rgba(30, 27, 75, 0.04)) !important;
   transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.24s ease !important;
+  box-sizing: border-box !important;
 
   &:hover {
     transform: translateY(-3px) !important;
@@ -5996,26 +6716,33 @@ body.dark-theme .feature-toolbar {
 
   .kpi-value,
   .stat-value {
-    font-size: 20px !important;
+    font-size: 18px !important;
     font-weight: 800 !important;
     color: var(--text-primary, #0f172a) !important;
-    line-height: 1.2 !important;
+    line-height: 1.15 !important;
     letter-spacing: -0.02em !important;
     font-variant-numeric: tabular-nums !important;
     white-space: nowrap !important;
-    overflow: visible !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 
   .kpi-label,
   .stat-label {
-    font-size: 11px !important;
+    font-size: 10.5px !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.04em !important;
+    letter-spacing: 0.03em !important;
     color: var(--text-secondary, #64748b) !important;
-    white-space: nowrap !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
     overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    max-height: 2.4em !important;
   }
 }
 
@@ -6212,7 +6939,7 @@ body.dark-theme {
   box-shadow:
     0 4px 20px -2px rgba(11, 71, 212, 0.06),
     0 2px 6px -1px rgba(30, 27, 75, 0.04) !important;
-  margin-bottom: 0 !important;
+  margin-bottom: 16px;
   box-sizing: border-box !important;
 }
 
@@ -6636,18 +7363,21 @@ button.btn-header-action.btn-primary {
 .devhub-telemetry-card,
 .module-kpi-card {
   background: var(--bg-surface, #ffffff) !important;
-  border: 1px solid var(--border-color, #e2e8f0) !important;
-  border-radius: 10px !important;
-  padding: 12px 14px !important;
+  border: 1px solid var(--border-card, rgba(99, 102, 241, 0.12)) !important;
+  border-radius: 14px !important;
+  padding: 10px 14px !important;
   display: flex !important;
   align-items: center !important;
-  gap: 12px !important;
-  box-shadow: var(--shadow-card, 0 1px 3px rgba(15, 23, 42, 0.06)) !important;
-  transition: box-shadow 0.2s ease !important;
+  gap: 10px !important;
+  min-height: 84px !important;
+  height: 84px !important;
+  box-shadow: var(--shadow-card, 0 4px 20px -2px rgba(11, 71, 212, 0.06), 0 2px 6px -1px rgba(30, 27, 75, 0.04)) !important;
+  transition: box-shadow 0.2s ease, transform 0.2s ease !important;
   box-sizing: border-box !important;
 
   &:hover {
-    box-shadow: var(--shadow-card-hover, 0 4px 12px -2px rgba(15, 23, 42, 0.08)) !important;
+    transform: translateY(-3px) !important;
+    box-shadow: var(--shadow-card-hover, 0 14px 30px -4px rgba(11, 71, 212, 0.14), 0 4px 12px -2px rgba(30, 27, 75, 0.06)) !important;
   }
 }
 
@@ -6719,7 +7449,7 @@ button.btn-header-action.btn-primary {
   width: 38px !important;
   height: 38px !important;
   min-width: 38px !important;
-  border-radius: 8px !important;
+  border-radius: 10px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -6749,14 +7479,19 @@ button.btn-header-action.btn-primary {
 .metric-label,
 .telemetry-label,
 .inv-kpi-label {
-  font-size: 11px !important;
-  font-weight: 600 !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
   color: var(--text-muted, #64748b) !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.3px !important;
-  white-space: nowrap !important;
+  letter-spacing: 0.03em !important;
+  line-height: 1.2 !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
   overflow: hidden !important;
-  text-overflow: ellipsis !important;
+  max-height: 2.4em !important;
   margin: 0 !important;
 }
 
@@ -6766,23 +7501,35 @@ button.btn-header-action.btn-primary {
 .metric-value,
 .telemetry-value,
 .inv-kpi-value {
-  font-size: 16px !important;
+  font-size: 18px !important;
   font-weight: 800 !important;
   color: var(--text-primary, #0f172a) !important;
-  line-height: 1.2 !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.02em !important;
+  font-variant-numeric: tabular-nums !important;
   margin: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 /* KPI meta line (small subtitle under value) */
 .kpi-meta,
 .kpi-sub,
 .metric-meta,
-.telemetry-meta {
-  font-size: 10.5px !important;
-  color: var(--text-muted, #94a3b8) !important;
-  white-space: nowrap !important;
+.telemetry-meta,
+.inv-kpi-sub {
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  color: var(--text-muted, #64748b) !important;
+  line-height: 1.2 !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
   overflow: hidden !important;
-  text-overflow: ellipsis !important;
+  max-height: 2.4em !important;
   margin: 0 !important;
 }
 
@@ -6803,6 +7550,22 @@ button.btn-header-action.btn-primary {
 /* Dark mode KPI */
 body.dark-theme .kpi-card,
 body.dark-theme .inv-kpi-card,
+body.dark-theme .dispatch-kpi-card,
+body.dark-theme .raw-kpi-card,
+body.dark-theme .driver-kpi-card,
+body.dark-theme .vendor-kpi-card,
+body.dark-theme .transport-kpi-card,
+body.dark-theme .sales-kpi-card,
+body.dark-theme .party-kpi-card,
+body.dark-theme .production-kpi-card,
+body.dark-theme .machine-kpi-card,
+body.dark-theme .payment-kpi-card,
+body.dark-theme .invoices-kpi-card,
+body.dark-theme .billinghub-kpi-card,
+body.dark-theme .employees-kpi-card,
+body.dark-theme .salaries-kpi-card,
+body.dark-theme .expenses-kpi-card,
+body.dark-theme .bank-kpi-card,
 body.dark-theme .telemetry-card,
 body.dark-theme .report-kpi-card,
 body.dark-theme .powerbi-kpi-card,
@@ -6979,9 +7742,6 @@ button.btn-filter-tool {
 .crm-table-container,
 .grid-container,
 .erp-data-grid,
-.table-responsive-wrapper,
-.table-responsive-viewport,
-.table-wrapper-custom,
 .module-table-card {
   background: var(--bg-surface, #ffffff) !important;
   border: 1px solid var(--border-card, rgba(99, 102, 241, 0.12)) !important;
@@ -6990,6 +7750,15 @@ button.btn-filter-tool {
     0 4px 20px -2px rgba(11, 71, 212, 0.06),
     0 2px 6px -1px rgba(30, 27, 75, 0.04) !important;
   overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.table-responsive-wrapper,
+.table-responsive-viewport,
+.table-wrapper-custom {
+  width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
   box-sizing: border-box !important;
 }
 
@@ -7173,27 +7942,51 @@ textarea.enterprise-textarea {
 .table-responsive,
 .table-responsive-wrapper,
 .table-responsive-viewport,
-.subtabs-classification-bar,
-.subtabs-scroll-container {
-  scrollbar-width: thin !important;
-  scrollbar-color: rgba(148, 163, 184, 0.4) transparent !important;
+.erp-table-scroll,
+.inv-table-responsive,
+.table-content-wrap,
+.data-table-wrapper,
+.grid-scroll-wrapper {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 
   &::-webkit-scrollbar {
-    width: 6px !important;
-    height: 6px !important;
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
+}
 
-  &::-webkit-scrollbar-track {
+
+.subtabs-classification-bar,
+.subtabs-scroll-container {
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+
+  &::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+}
+
+[data-theme="dark"] .table-container,
+[data-theme="dark"] .table-responsive,
+[data-theme="dark"] .table-responsive-wrapper,
+[data-theme="dark"] .table-responsive-viewport,
+[data-theme="dark"] .erp-table-scroll,
+body.dark-theme .table-responsive-wrapper {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+
+  &::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
     background: transparent !important;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background-color: rgba(148, 163, 184, 0.4) !important;
-    border-radius: 3px !important;
-
-    &:hover {
-      background-color: rgba(148, 163, 184, 0.7) !important;
-    }
   }
 }
 
@@ -7406,35 +8199,66 @@ textarea.enterprise-textarea {
 .production-kpi-grid.ppm-kpi-grid {
   display: grid !important;
   grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-  gap: 10px !important;
+  gap: 12px !important;
   width: 100% !important;
 
   .kpi-card {
-    padding: 10px 12px !important;
+    padding: 10px 14px !important;
+    min-height: 84px !important;
+    height: 84px !important;
+    border-radius: 14px !important;
     min-width: 0 !important;
+    box-sizing: border-box !important;
   }
 
   .kpi-label {
-    font-size: 10px !important;
-    letter-spacing: 0.2px !important;
-    white-space: nowrap !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.03em !important;
+    text-transform: uppercase !important;
+    line-height: 1.2 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
     overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    max-height: 2.4em !important;
   }
 
   .kpi-value {
-    font-size: 15px !important;
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.02em !important;
+    font-variant-numeric: tabular-nums !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 
   .kpi-meta {
     font-size: 10px !important;
-    white-space: nowrap !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    line-height: 1.2 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
     overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    max-height: 2.4em !important;
   }
 
-  @media (max-width: 1280px) {
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr !important;
   }
 }
 
@@ -7773,31 +8597,35 @@ textarea.enterprise-textarea {
 .production-kpi-grid.ppm-kpi-grid {
   display: grid !important;
   grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-  gap: 8px !important;
+  gap: 12px !important;
   width: 100% !important;
 
   .kpi-card {
-    padding: 10px 10px !important;
-    gap: 8px !important;
+    padding: 10px 14px !important;
+    gap: 10px !important;
     min-width: 0 !important;
     overflow: hidden !important;
     background: var(--bg-surface, #ffffff) !important;
-    border: 1px solid var(--border-color, #e2e8f0) !important;
-    border-radius: 10px !important;
+    border: 1px solid var(--border-card, rgba(99, 102, 241, 0.12)) !important;
+    border-radius: 14px !important;
+    min-height: 84px !important;
+    height: 84px !important;
     display: flex !important;
     align-items: center !important;
     box-sizing: border-box !important;
 
     .kpi-icon-wrap {
-      width: 34px !important;
-      height: 34px !important;
-      min-width: 34px !important;
-      border-radius: 8px !important;
-      font-size: 16px !important;
+      width: 38px !important;
+      height: 38px !important;
+      min-width: 38px !important;
+      border-radius: 10px !important;
+      font-size: 18px !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       flex-shrink: 0 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16) !important;
     }
 
     .kpi-content {
@@ -7805,38 +8633,52 @@ textarea.enterprise-textarea {
       overflow: hidden !important;
       display: flex !important;
       flex-direction: column !important;
+      flex: 1 1 0% !important;
       gap: 1px !important;
     }
 
     .kpi-label {
-      font-size: 9.5px !important;
+      font-size: 10.5px !important;
       font-weight: 700 !important;
-      letter-spacing: 0.02em !important;
-      white-space: nowrap !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
-      color: var(--text-muted, #64748b) !important;
+      letter-spacing: 0.03em !important;
       text-transform: uppercase !important;
+      line-height: 1.2 !important;
+      white-space: normal !important;
+      word-break: break-word !important;
+      display: -webkit-box !important;
+      -webkit-line-clamp: 2 !important;
+      -webkit-box-orient: vertical !important;
+      overflow: hidden !important;
+      max-height: 2.4em !important;
+      color: var(--text-muted, #64748b) !important;
       margin: 0 !important;
     }
 
     .kpi-value {
-      font-size: 15px !important;
+      font-size: 18px !important;
       font-weight: 800 !important;
       color: var(--text-primary, #0f172a) !important;
       white-space: nowrap !important;
       overflow: hidden !important;
       text-overflow: ellipsis !important;
-      line-height: 1.2 !important;
+      line-height: 1.15 !important;
+      letter-spacing: -0.02em !important;
+      font-variant-numeric: tabular-nums !important;
       margin: 0 !important;
     }
 
     .kpi-meta {
-      font-size: 9px !important;
-      color: var(--text-muted, #94a3b8) !important;
-      white-space: nowrap !important;
+      font-size: 10px !important;
+      font-weight: 500 !important;
+      color: #64748b !important;
+      line-height: 1.2 !important;
+      white-space: normal !important;
+      word-break: break-word !important;
+      display: -webkit-box !important;
+      -webkit-line-clamp: 2 !important;
+      -webkit-box-orient: vertical !important;
       overflow: hidden !important;
-      text-overflow: ellipsis !important;
+      max-height: 2.4em !important;
       margin: 0 !important;
     }
   }
@@ -7847,6 +8689,10 @@ textarea.enterprise-textarea {
 
   @media (max-width: 768px) {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr !important;
   }
 }
 
@@ -8473,6 +9319,1467 @@ button.btn-retry,
   box-shadow: 0 4px 14px rgba(11, 71, 212, 0.28) !important;
   font-weight: 600 !important;
 }
+
+
+
+/* ────────────────────────────────────────────────────────────────────────────
+   § 15. GLOBAL PERFORMANCE & ANIMATION ENHANCEMENTS
+   Ultra-light optimizations for 8 GB RAM device — GPU-compositor only
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* ── A. Hardware-accelerated select/input transitions ── */
+select,
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="email"],
+input[type="tel"],
+textarea {
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  /* Let browser keep these on the compositor thread */
+  will-change: border-color;
+}
+
+/* Remove will-change after interaction to avoid GPU memory waste */
+select:focus,
+input:focus,
+textarea:focus {
+  will-change: auto;
+}
+
+/* ── B. Subtab pill smooth transitions (all modules) ── */
+.subtab-pill-btn,
+.erp-filter-pill,
+.filter-pill,
+.nav-pill,
+.tab-pill {
+  transition: background 0.14s ease, color 0.14s ease,
+              box-shadow 0.14s ease, border-color 0.14s ease,
+              transform 0.12s ease !important;
+}
+
+.subtab-pill-btn:active,
+.erp-filter-pill:active {
+  transform: scale(0.97);
+}
+
+/* ── C. Universal table row hover — coherent across all modules ── */
+.inv-table-row:hover,
+.erp-table-row:hover,
+.data-row:hover,
+tr.table-row:hover {
+  background: var(--primary-soft, #EFF6FF) !important;
+}
+
+/* ── D. Dropdown menu entrance — smooth scale + fade (no jank) ── */
+.export-menu,
+.col-manager-dropdown,
+.col-manager-popover,
+.filter-popover-card,
+.filter-popover-panel,
+.columns-dropdown-menu,
+.col-manager-menu,
+.search-flyout {
+  animation: dropdownOpen 0.16s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: top right;
+}
+
+@keyframes dropdownOpen {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── E. KPI card hover lift — subtle, low-cost translate ── */
+.inv-kpi-card:hover,
+.kpi-card:hover,
+.erp-kpi-card:hover {
+  transform: translateY(-2px);
+  transition: transform 0.18s var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+              box-shadow 0.18s ease !important;
+}
+
+/* ── F. Smooth page-level fade in on route change ── */
+router-outlet + * {
+  animation: pageFadeIn 0.2s ease-out both;
+}
+
+@keyframes pageFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── G. Reduce motion — respect system preference ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   § 16. UNIVERSAL TABLE FOOTER — Standard across ALL ERP modules
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* ── A. UNIVERSAL TABLE CARD WRAPPER ── */
+.erp-table-card {
+  width: 100%;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-card, rgba(99, 102, 241, 0.12));
+  border-radius: var(--radius-card, 18px);
+  box-shadow: var(--shadow-card, 0 4px 20px -2px rgba(11, 71, 212, 0.06));
+  overflow: hidden;
+}
+
+/* ── B. UNIVERSAL TABLE SCROLL WRAPPER ── */
+.erp-table-scroll {
+  width: 100%;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+}
+
+
+/* ── C. UNIVERSAL PAGINATION FOOTER ── */
+.erp-table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 18px;
+  background: var(--bg-card, #ffffff);
+  border-top: 1px solid var(--border-color, #e2e8f0);
+  flex-wrap: wrap;
+  min-height: 50px;
+}
+
+.erp-footer-info {
+  font-size: 12.5px;
+  color: var(--text-secondary, #475569);
+  font-weight: 500;
+}
+
+.erp-footer-info strong {
+  color: var(--text-primary, #0f172a);
+  font-weight: 700;
+}
+
+.erp-footer-filtered {
+  font-size: 11.5px;
+  color: var(--text-muted, #94a3b8);
+  margin-left: 4px;
+}
+
+.erp-footer-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+/* Rows: N selector */
+.erp-rows-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-secondary, #475569);
+  font-weight: 500;
+}
+
+.erp-rows-select {
+  height: 32px;
+  padding: 0 8px;
+  font-size: 12px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 6px;
+  background: var(--bg-surface, #ffffff);
+  color: var(--text-primary, #0f172a);
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+}
+
+.erp-rows-select:focus {
+  outline: none;
+  border-color: var(--primary, #0B47D4);
+  box-shadow: 0 0 0 2px rgba(11, 71, 212, 0.1);
+}
+
+/* Page buttons group */
+.erp-page-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.erp-page-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-surface, #ffffff);
+  color: var(--text-secondary, #475569);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+}
+
+.erp-page-nav-btn:hover:not(:disabled) {
+  background: var(--primary-soft, #EFF6FF);
+  border-color: var(--primary, #0B47D4);
+  color: var(--primary, #0B47D4);
+}
+
+.erp-page-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.erp-page-counter {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #475569);
+  padding: 0 6px;
+  white-space: nowrap;
+}
+
+.erp-page-counter strong {
+  color: var(--primary, #0B47D4);
+}
+
+/* ── D. DARK MODE SUPPORT ── */
+[data-theme="dark"] .erp-table-footer {
+  background: var(--bg-card-dark, #1e293b);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .erp-rows-select {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .erp-page-nav-btn {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+}
+
+/* ── E. RESPONSIVE ── */
+@media (max-width: 640px) {
+  .erp-table-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 14px;
+  }
+
+  .erp-footer-controls {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   ENTERPRISE DESIGN UNIFICATION & UNIVERSAL SCROLLBAR ELIMINATION
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* 1. Global Complete Scrollbar Suppression across all browsers and elements */
+*, *::before, *::after {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  &::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+}
+
+html, body, div, span, app-root, main, section, nav, aside, table, tbody, thead, tr, td, th,
+.table-container, .table-responsive, .data-table-wrapper, .erp-drawer,
+.erp-drawer-body, .slide-drawer, .drawer-content, .modal, .modal-body,
+.subtabs-classification-bar, .subtabs-scroll-container, .subnav-bar,
+.erp-table-scroll, .table-wrapper-custom, .dossier-body-content, .voucher-body,
+.erp-table-viewport, .table-responsive-wrapper, .dataTables_wrapper {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  &::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+}
+
+/* 2. Standardized Breadcrumb Trail Across All Modules */
+.breadcrumb-trail {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  margin-bottom: 10px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  width: 100% !important;
+
+  i {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  span.sep, span.separator {
+    color: #cbd5e1;
+    font-weight: 400;
+  }
+
+  span.active, span.active-crumb {
+    color: #0B47D4 !important;
+    font-weight: 700 !important;
+  }
+}
+
+/* 3. Standardized Title with Counter Pill */
+.title-with-badge, .erp-title-with-badge {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+
+.header-count-pill {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  padding: 3px 10px !important;
+  border-radius: 12px !important;
+  background: rgba(14, 165, 233, 0.12) !important;
+  color: #0284c7 !important;
+  border: 1px solid rgba(14, 165, 233, 0.25) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  line-height: 1.2 !important;
+}
+
+/* 4. Universal Zero-Scrollbar Enforcement (Hides Page & Drawer Scrollbars, while Preserving Table Horizontal Scrollbars) */
+html, body, div:not(.table-container):not(.table-responsive):not(.table-responsive-viewport):not(.table-responsive-wrapper):not(.table-wrapper-custom):not(.erp-table-scroll):not(.data-table-wrapper):not(.enterprise-table-container):not(.inv-table-wrapper):not(.report-table-responsive):not(.users-table-container):not(.table-content-wrap),
+section, article, aside, main, header, footer,
+.erp-drawer, .erp-drawer-body,
+.slide-drawer, .drawer-content, .modal, .modal-body, .party-modal-scroll-body, .dossier-body-content,
+.voucher-sheet-body, .voucher-body, .subtabs-classification-bar, .subtabs-scroll-container,
+.subnav-tabs-group, .subnav-bar,
+.matrix-table-scroll-container, .settings-table-scroll {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+/* Global Scrollbar Suppression: Completely Invisible Scrollbars Across Entire ERP */
+::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+/* Explicit Table Scroll Containers: Preserve Full Horizontal Scroll Capability while keeping Scrollbars 100% Invisible */
+.table-container,
+.table-responsive,
+.table-responsive-viewport,
+.table-responsive-wrapper,
+.table-wrapper-custom,
+.erp-table-scroll,
+.enterprise-table-container,
+.inv-table-wrapper,
+.report-table-responsive,
+.users-table-container,
+.data-table-wrapper,
+.table-content-wrap {
+  overflow-x: auto !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  position: relative !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+
+  &::-webkit-scrollbar,
+  &::-webkit-scrollbar-track,
+  &::-webkit-scrollbar-thumb {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    background: transparent !important;
+  }
+}
+
+/* 5. Ultra-Fast Button Responsiveness & Instant Click Feedback */
+button,
+.btn,
+.btn-row-action,
+.btn-toolbar-action,
+.btn-action-compact,
+.btn-action-primary,
+.density-btn,
+.search-clear-btn,
+.btn-icon-action,
+.btn-view,
+.btn-edit,
+.btn-delete,
+.btn-print,
+.btn-pdf,
+.btn-excel {
+  transition: transform 0.08s ease, background-color 0.1s ease, border-color 0.1s ease, color 0.1s ease, box-shadow 0.1s ease !important;
+  user-select: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  touch-action: manipulation !important;
+  cursor: pointer !important;
+
+  &:active {
+    transform: scale(0.96) !important;
+    transition-duration: 0.04s !important;
+  }
+}
+
+/* 6. Universal Enterprise Summary Footers (.table-summary-tfoot) */
+tfoot.table-summary-tfoot {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  background: var(--bg-surface, #ffffff) !important;
+  border-top: 2px solid var(--border-color, #e2e8f0) !important;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.03);
+
+  tr {
+    background: rgba(248, 250, 252, 0.96) !important;
+  }
+
+  td {
+    padding: 10px 14px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary, #0f172a) !important;
+    vertical-align: middle !important;
+    border-bottom: none !important;
+    font-variant-numeric: tabular-nums;
+
+    &.tfoot-label {
+      color: var(--text-muted, #64748b) !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.05em !important;
+      font-size: 11px !important;
+      font-weight: 700 !important;
+    }
+
+    strong {
+      font-weight: 700 !important;
+    }
+  }
+}
+
+body.dark-mode tfoot.table-summary-tfoot,
+[data-theme='dark'] tfoot.table-summary-tfoot {
+  background: var(--bg-surface, #1e293b) !important;
+  border-top: 2px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+
+  tr {
+    background: rgba(15, 23, 42, 0.85) !important;
+  }
+
+  td {
+    color: var(--text-primary, #f1f5f9) !important;
+
+    &.tfoot-label {
+      color: var(--text-muted, #94a3b8) !important;
+    }
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────── */
+/* 7. FUTURISTIC NEXT-GEN COLUMN RESIZER SYSTEM (CYBER HUD, GUIDE BEAM & MENU) */
+/* ────────────────────────────────────────────────────────────────────────── */
+.column-resizer-handle {
+  position: absolute !important;
+  right: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 10px !important;
+  cursor: col-resize !important;
+  user-select: none !important;
+  z-index: 30 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+
+  &::after {
+    content: '' !important;
+    display: block !important;
+    width: 2px !important;
+    height: 60% !important;
+    background: rgba(148, 163, 184, 0.45) !important;
+    border-radius: 2px !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  &:hover::after,
+  &.resizing-active::after {
+    background: linear-gradient(180deg, #38bdf8 0%, #2563eb 50%, #6366f1 100%) !important;
+    width: 3px !important;
+    height: 100% !important;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.9), 0 0 18px rgba(37, 99, 235, 0.6) !important;
+  }
+
+  &:hover {
+    background: rgba(56, 189, 248, 0.12) !important;
+  }
+}
+
+/* Header Action Trigger Icon (Mini ⋮ on Hover) */
+.column-header-action-trigger {
+  position: absolute !important;
+  right: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 20px !important;
+  height: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(241, 245, 249, 0.85) !important;
+  border: 1px solid rgba(203, 213, 225, 0.6) !important;
+  border-radius: 4px !important;
+  color: #64748b !important;
+  font-size: 11px !important;
+  cursor: pointer !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: all 0.18s ease !important;
+  z-index: 25 !important;
+  padding: 0 !important;
+
+  &:hover {
+    background: #ffffff !important;
+    color: #2563eb !important;
+    border-color: #93c5fd !important;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2) !important;
+    transform: translateY(-50%) scale(1.08) !important;
+  }
+}
+
+th:hover .column-header-action-trigger {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+th.col-resizing-active {
+  background: rgba(37, 99, 235, 0.08) !important;
+  border-right: 2px solid #2563eb !important;
+}
+
+body.resizing-column-active {
+  cursor: col-resize !important;
+  user-select: none !important;
+
+  *, *::before, *::after {
+    cursor: col-resize !important;
+    user-select: none !important;
+  }
+}
+
+/* ── Cybernetic Live Resizer HUD Tooltip ────────────────────────────────── */
+.cyber-resizer-hud {
+  pointer-events: none !important;
+  background: rgba(15, 23, 42, 0.94) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(56, 189, 248, 0.4) !important;
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.5), 0 0 15px rgba(56, 189, 248, 0.3) !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  color: #ffffff !important;
+  font-family: inherit !important;
+  animation: hudFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  min-width: 170px !important;
+
+  .hud-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-bottom: 4px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    padding-bottom: 4px !important;
+
+    .hud-icon {
+      color: #38bdf8 !important;
+      font-size: 11px !important;
+    }
+
+    .hud-col-name {
+      font-size: 11px !important;
+      font-weight: 700 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.05em !important;
+      color: #e2e8f0 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      max-width: 150px !important;
+    }
+  }
+
+  .hud-body {
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 8px !important;
+
+    .hud-current-width {
+      font-size: 16px !important;
+      font-weight: 800 !important;
+      color: #38bdf8 !important;
+      font-family: 'JetBrains Mono', monospace !important;
+      text-shadow: 0 0 8px rgba(56, 189, 248, 0.4) !important;
+    }
+
+    .hud-delta {
+      font-size: 11px !important;
+      font-weight: 600 !important;
+
+      &.text-emerald {
+        color: #34d399 !important;
+      }
+      &.text-amber {
+        color: #fbbf24 !important;
+      }
+    }
+
+    .hud-status {
+      margin-left: auto !important;
+      font-size: 9px !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.04em !important;
+      color: #94a3b8 !important;
+    }
+  }
+}
+
+@keyframes hudFadeIn {
+  from { opacity: 0; transform: translateY(4px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Full-Height Cyber Neon Guide Beam ─────────────────────────────────── */
+.cyber-guide-beam {
+  pointer-events: none !important;
+  width: 2px !important;
+  background: linear-gradient(180deg, #38bdf8 0%, #2563eb 50%, #818cf8 100%) !important;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.85), 0 0 24px rgba(37, 99, 235, 0.5) !important;
+  border-radius: 2px !important;
+  opacity: 0.95 !important;
+  transform: translateX(-50%) !important;
+  animation: pulseLaser 1.5s infinite alternate ease-in-out !important;
+}
+
+@keyframes pulseLaser {
+  0% { box-shadow: 0 0 10px rgba(56, 189, 248, 0.8), 0 0 20px rgba(37, 99, 235, 0.4); }
+  100% { box-shadow: 0 0 16px rgba(56, 189, 248, 1), 0 0 30px rgba(99, 102, 241, 0.6); }
+}
+
+/* ── Glassmorphic Column Context Menu ──────────────────────────────────── */
+.cyber-column-menu {
+  background: rgba(255, 255, 255, 0.97) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(203, 213, 225, 0.8) !important;
+  box-shadow: 0 12px 36px -4px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+  border-radius: 10px !important;
+  padding: 8px !important;
+  min-width: 210px !important;
+  animation: menuPopIn 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
+
+  .menu-header {
+    padding: 6px 8px 4px 8px !important;
+    .menu-col-title {
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      color: #0f172a !important;
+    }
+    .menu-col-sub {
+      font-size: 11px !important;
+      color: #64748b !important;
+      margin-top: 2px !important;
+      strong { color: #2563eb !important; }
+    }
+  }
+
+  .menu-divider {
+    height: 1px !important;
+    background: #f1f5f9 !important;
+    margin: 6px 0 !important;
+  }
+
+  .menu-subheading {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.06em !important;
+    color: #94a3b8 !important;
+    padding: 4px 8px !important;
+  }
+
+  .menu-presets-row {
+    display: flex !important;
+    gap: 4px !important;
+    padding: 2px 4px !important;
+
+    .preset-btn {
+      flex: 1 !important;
+      padding: 5px 4px !important;
+      font-size: 10px !important;
+      font-weight: 600 !important;
+      background: #f8fafc !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 6px !important;
+      color: #334155 !important;
+      cursor: pointer !important;
+      transition: all 0.14s ease !important;
+      white-space: nowrap !important;
+      text-align: center !important;
+
+      &:hover {
+        background: #eff6ff !important;
+        border-color: #bfdbfe !important;
+        color: #1d4ed8 !important;
+      }
+    }
+  }
+
+  .menu-item {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 7px 10px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 6px !important;
+    color: #1e293b !important;
+    cursor: pointer !important;
+    text-align: left !important;
+    transition: all 0.14s ease !important;
+
+    i { font-size: 13px !important; }
+
+    &:hover {
+      background: #f1f5f9 !important;
+      color: #0f172a !important;
+    }
+
+    &.text-danger:hover {
+      background: #fef2f2 !important;
+      color: #b91c1c !important;
+    }
+  }
+}
+
+@keyframes menuPopIn {
+  from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── Futuristic Toast Notification Pill ────────────────────────────────── */
+.cyber-toast-notification {
+  position: fixed !important;
+  bottom: 28px !important;
+  right: 28px !important;
+  z-index: 9999999 !important;
+  background: rgba(15, 23, 42, 0.95) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(56, 189, 248, 0.4) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 0 20px rgba(56, 189, 248, 0.25) !important;
+  color: #ffffff !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 10px 18px !important;
+  border-radius: 30px !important;
+  display: flex !important;
+  align-items: center !important;
+  animation: toastSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: all 0.25s ease !important;
+
+  &.type-success {
+    border-color: rgba(52, 211, 153, 0.5) !important;
+    i { color: #34d399 !important; }
+  }
+  &.type-info {
+    border-color: rgba(56, 189, 248, 0.5) !important;
+    i { color: #38bdf8 !important; }
+  }
+  &.type-warn {
+    border-color: rgba(251, 191, 36, 0.5) !important;
+    i { color: #fbbf24 !important; }
+  }
+
+  &.hide {
+    opacity: 0 !important;
+    transform: translateY(12px) scale(0.92) !important;
+  }
+}
+
+@keyframes toastSlideUp {
+  from { opacity: 0; transform: translateY(16px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ────────────────────────────────────────────────────────────────────────── */
+/* 8. PROFESSIONAL ENTERPRISE COLOR PALETTE & DATA VISIBILITY STANDARDS       */
+/* ────────────────────────────────────────────────────────────────────────── */
+/* Replaces harsh rainbow colors with refined, muted, professional corporate palettes */
+.badge-soft-emerald,
+.badge-success,
+.badge-status-paid,
+.badge-status-completed,
+.badge-status-active,
+.status-pill.success,
+.status-pill.running {
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+  border: 1px solid #a7f3d0 !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  border-radius: 6px !important;
+  padding: 3px 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.badge-soft-cobalt,
+.badge-primary,
+.badge-status-b2b,
+.badge-status-in-transit,
+.status-pill.primary,
+.status-pill.info {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  border-radius: 6px !important;
+  padding: 3px 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.badge-soft-amber,
+.badge-warning,
+.badge-status-pending,
+.badge-status-partial,
+.status-pill.warning,
+.status-pill.maintenance {
+  background: #fffbeb !important;
+  color: #b45309 !important;
+  border: 1px solid #fde68a !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  border-radius: 6px !important;
+  padding: 3px 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.badge-soft-crimson,
+.badge-danger,
+.badge-status-rejected,
+.badge-status-breakdown,
+.badge-status-overdue,
+.status-pill.danger,
+.status-pill.error {
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+  border: 1px solid #fecaca !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  border-radius: 6px !important;
+  padding: 3px 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.badge-soft-slate,
+.badge-secondary,
+.badge-status-draft,
+.badge-status-idle,
+.status-pill.secondary,
+.status-pill.neutral {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  border-radius: 6px !important;
+  padding: 3px 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+/* Dark Mode Palette Harmonization */
+body.dark-theme,
+body.dark-mode,
+[data-theme='dark'] {
+  .badge-soft-emerald,
+  .badge-success,
+  .status-pill.success {
+    background: rgba(16, 185, 129, 0.15) !important;
+    color: #34d399 !important;
+    border-color: rgba(16, 185, 129, 0.3) !important;
+  }
+
+  .badge-soft-cobalt,
+  .badge-primary,
+  .status-pill.primary {
+    background: rgba(59, 130, 246, 0.15) !important;
+    color: #60a5fa !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
+  }
+
+  .badge-soft-amber,
+  .badge-warning,
+  .status-pill.warning {
+    background: rgba(245, 158, 11, 0.15) !important;
+    color: #fbbf24 !important;
+    border-color: rgba(245, 158, 11, 0.3) !important;
+  }
+
+  .badge-soft-crimson,
+  .badge-danger,
+  .status-pill.danger {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #f87171 !important;
+    border-color: rgba(239, 68, 68, 0.3) !important;
+  }
+
+  .badge-soft-slate,
+  .badge-secondary,
+  .status-pill.secondary {
+    background: rgba(148, 163, 184, 0.12) !important;
+    color: #cbd5e1 !important;
+    border-color: rgba(148, 163, 184, 0.25) !important;
+  }
+}
+
+/* Universal Monospace Numbers for Financial & Quantitative Columns */
+.font-mono,
+.font-monospace,
+.text-numeric,
+.col-th-total,
+.col-th-success,
+.col-th-rejected,
+.col-th-efficiency,
+.amount-cell,
+.spend-cell,
+.qty-cell,
+td.text-end {
+  font-family: 'JetBrains Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* =========================================================================
+   ENTERPRISE UNIFIED TABLE & ACTION BUTTON DESIGN SYSTEM
+   Standardized across ALL tabs: Production, Raw Materials, Inventory,
+   Vendors, Transports, Drivers, Machines, Sales, Invoices, Payments, etc.
+   ========================================================================= */
+
+/* 1. Global Table Typography & Row Rhythm */
+table.table,
+table.enterprise-table,
+table.inv-table,
+table.enterprise-sales-table,
+table.enterprise-transports-table,
+table.enterprise-vendors-table,
+table.enterprise-raw-table,
+table.enterprise-machines-table {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+
+  thead th {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    color: #64748b !important;
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    white-space: nowrap !important;
+    vertical-align: middle !important;
+    user-select: none !important;
+  }
+
+  tbody td {
+    font-size: 12.5px !important;
+    font-weight: 500 !important;
+    color: #0f172a !important;
+    line-height: 1.4 !important;
+    vertical-align: middle !important;
+  }
+
+  tfoot td,
+  tfoot th {
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    font-variant-numeric: tabular-nums !important;
+    color: #0f172a !important;
+    background: #f8fafc !important;
+    border-top: 2px solid #e2e8f0 !important;
+  }
+}
+
+/* 2. Standardized Row Action Buttons (View, Edit, Delete, Adjust, Salary/Voucher) */
+.btn-row-action,
+.row-actions-group button,
+.row-actions button,
+.enterprise-row-actions button,
+.table-actions-cell button,
+.action-buttons-group button,
+td .btn-icon-action,
+td .btn-action-icon,
+td .btn-table-action,
+td .view-icon,
+td .edit-icon,
+td .delete-icon {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  max-width: 28px !important;
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+  border: 1px solid transparent !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-sizing: border-box !important;
+  box-shadow: none !important;
+
+  /* Standard View Action — Sky Slate */
+  &.btn-view,
+  &.view-icon,
+  &[title*="View" i],
+  &[aria-label*="View" i] {
+    color: #0284c7 !important;
+    background: rgba(2, 132, 199, 0.08) !important;
+    border-color: rgba(2, 132, 199, 0.22) !important;
+
+    &:hover {
+      background: #0284c7 !important;
+      color: #ffffff !important;
+      border-color: #0284c7 !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 3px 8px rgba(2, 132, 199, 0.32) !important;
+    }
+  }
+
+  /* Standard Edit Action — Royal Indigo Blue */
+  &.btn-edit,
+  &.edit-icon,
+  &[title*="Edit" i],
+  &[aria-label*="Edit" i] {
+    color: #0B47D4 !important;
+    background: rgba(11, 71, 212, 0.08) !important;
+    border-color: rgba(11, 71, 212, 0.22) !important;
+
+    &:hover {
+      background: #0B47D4 !important;
+      color: #ffffff !important;
+      border-color: #0B47D4 !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 3px 8px rgba(11, 71, 212, 0.32) !important;
+    }
+  }
+
+  /* Standard Delete Action — Crimson Rose */
+  &.btn-delete,
+  &.delete-icon,
+  &[title*="Delete" i],
+  &[aria-label*="Delete" i] {
+    color: #ef4444 !important;
+    background: rgba(239, 68, 68, 0.08) !important;
+    border-color: rgba(239, 68, 68, 0.22) !important;
+
+    &:hover {
+      background: #ef4444 !important;
+      color: #ffffff !important;
+      border-color: #ef4444 !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 3px 8px rgba(239, 68, 68, 0.32) !important;
+    }
+  }
+
+  /* Standard Adjust / Config Action — Amber */
+  &.btn-adjust,
+  &[title*="Adjust" i] {
+    color: #d97706 !important;
+    background: rgba(245, 158, 11, 0.08) !important;
+    border-color: rgba(245, 158, 11, 0.22) !important;
+
+    &:hover {
+      background: #d97706 !important;
+      color: #ffffff !important;
+      border-color: #d97706 !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 3px 8px rgba(245, 158, 11, 0.32) !important;
+    }
+  }
+
+  /* Standard Salary / Disbursement / Voucher Action — Emerald Green */
+  &.btn-salary,
+  &[title*="Salary" i],
+  &[title*="Voucher" i],
+  &[title*="Slip" i] {
+    color: #059669 !important;
+    background: rgba(5, 150, 105, 0.08) !important;
+    border-color: rgba(5, 150, 105, 0.22) !important;
+
+    &:hover {
+      background: #059669 !important;
+      color: #ffffff !important;
+      border-color: #059669 !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 3px 8px rgba(5, 150, 105, 0.32) !important;
+    }
+  }
+}
+
+/* Row Action Container Clean Alignment */
+td.td-actions,
+td.th-actions,
+td.col-actions,
+td.table-action-col,
+th.th-actions,
+th.col-actions {
+  white-space: nowrap !important;
+  text-align: right !important;
+  vertical-align: middle !important;
+}
+
+.row-actions,
+.row-actions-group,
+.enterprise-row-actions,
+.table-actions-cell,
+.action-buttons-group {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 5px !important;
+  white-space: nowrap !important;
+}
+
+.btn-action-compact,
+.btn-reset-filters,
+.btn-filter-reset {
+  height: 34px !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  color: #475569 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+
+  &:hover {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    border-color: #94a3b8 !important;
+  }
+}
+
+/* 3. Universal Filter Popover Panel & Trigger Button */
+.filter-popover-wrapper {
+  position: relative !important;
+  display: inline-block !important;
+
+  .filter-trigger-btn {
+    height: 34px !important;
+    padding: 0 12px !important;
+    border-radius: 8px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    color: #334155 !important;
+    transition: all 0.15s ease !important;
+
+    &:hover {
+      background: #f8fafc !important;
+      border-color: #94a3b8 !important;
+      color: #0f172a !important;
+    }
+
+    &.active-filters {
+      border-color: #0B47D4 !important;
+      color: #0B47D4 !important;
+      background: rgba(11, 71, 212, 0.05) !important;
+    }
+
+    .filter-badge {
+      background: #0B47D4 !important;
+      color: #ffffff !important;
+      border-radius: 10px !important;
+      padding: 1px 6px !important;
+      font-size: 10.5px !important;
+      font-weight: 700 !important;
+      margin-left: 2px !important;
+    }
+  }
+
+  .filter-popover-panel {
+    position: absolute !important;
+    top: calc(100% + 6px) !important;
+    left: 0 !important;
+    z-index: 1060 !important;
+    width: 340px !important;
+    max-width: 90vw !important;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.15), 0 2px 6px rgba(15, 23, 42, 0.06) !important;
+    padding: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    animation: fadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+
+    .popover-title-row {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      font-size: 13px !important;
+      font-weight: 700 !important;
+      color: #0f172a !important;
+      padding-bottom: 8px !important;
+      border-bottom: 1px solid #e2e8f0 !important;
+
+      .btn-text {
+        font-size: 12px !important;
+        color: #0B47D4 !important;
+        background: none !important;
+        border: none !important;
+        cursor: pointer !important;
+        font-weight: 600 !important;
+        padding: 0 !important;
+        text-decoration: underline !important;
+
+        &:hover {
+          color: #0036ab !important;
+        }
+      }
+    }
+
+    .popover-content-body {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 10px !important;
+      max-height: 380px !important;
+      overflow-y: auto !important;
+
+      .filter-field-group {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 4px !important;
+
+        label {
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.5px !important;
+          color: #64748b !important;
+          margin-bottom: 0 !important;
+        }
+
+        .filter-select,
+        select,
+        input[type="date"],
+        input[type="text"] {
+          width: 100% !important;
+          height: 34px !important;
+          border: 1px solid #cbd5e1 !important;
+          border-radius: 6px !important;
+          padding: 0 10px !important;
+          font-size: 12.5px !important;
+          background: #f8fafc !important;
+          color: #0f172a !important;
+          transition: border-color 0.15s ease !important;
+
+          &:focus {
+            border-color: #0B47D4 !important;
+            background: #ffffff !important;
+            outline: none !important;
+            box-shadow: 0 0 0 3px rgba(11, 71, 212, 0.12) !important;
+          }
+        }
+      }
+    }
+
+    .popover-footer-row {
+      display: flex !important;
+      justify-content: flex-end !important;
+      gap: 8px !important;
+      padding-top: 10px !important;
+      border-top: 1px solid #e2e8f0 !important;
+    }
+  }
+}
+
+/* 4. Universal Panel Header & Hero Title Group Standard (ERP-TABLE-STD-2026-V1) */
+.erp-panel-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 16px 20px !important;
+  background: var(--bg-card, #ffffff) !important;
+  border-bottom: 1px solid var(--border-color, #e2e8f0) !important;
+  gap: 16px !important;
+  flex-wrap: wrap !important;
+
+  .erp-panel-title-group {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+
+    .erp-panel-icon {
+      width: 42px !important;
+      height: 42px !important;
+      border-radius: 11px !important;
+      background: linear-gradient(135deg, #059669 0%, #0B47D4 100%) !important;
+      color: #ffffff !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 20px !important;
+      box-shadow: 0 4px 14px rgba(11, 71, 212, 0.22) !important;
+      flex-shrink: 0 !important;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+
+      &:hover {
+        transform: scale(1.05) !important;
+      }
+    }
+
+    .erp-panel-heading-text {
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+
+      .erp-panel-title-row {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        flex-wrap: wrap !important;
+
+        .erp-panel-title {
+          font-size: 16px !important;
+          font-weight: 700 !important;
+          color: var(--text-primary, #0f172a) !important;
+          margin: 0 !important;
+          letter-spacing: -0.01em !important;
+          display: flex !important;
+          align-items: center !important;
+          line-height: 1.25 !important;
+        }
+
+        .erp-record-count-pill {
+          display: inline-flex !important;
+          align-items: center !important;
+          padding: 2px 10px !important;
+          font-size: 11.5px !important;
+          font-weight: 700 !important;
+          border-radius: 9999px !important;
+          background: var(--primary-soft, #EFF6FF) !important;
+          color: var(--primary, #0B47D4) !important;
+          border: 1px solid var(--primary-border, #BFDBFE) !important;
+          white-space: nowrap !important;
+        }
+      }
+
+      .erp-panel-subtitle {
+        font-size: 12px !important;
+        color: var(--text-muted, #64748b) !important;
+        margin: 3px 0 0 0 !important;
+        line-height: 1.3 !important;
+      }
+    }
+  }
+}
+
+[data-theme="dark"] .erp-panel-header,
+.dark-theme .erp-panel-header,
+body.dark-theme .erp-panel-header {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+
+  .erp-panel-title {
+    color: #f8fafc !important;
+  }
+  .erp-panel-subtitle {
+    color: #94a3b8 !important;
+  }
+  .erp-record-count-pill {
+    background: rgba(11, 71, 212, 0.2) !important;
+    color: #60a5fa !important;
+    border-color: rgba(96, 165, 250, 0.3) !important;
+  }
+}
+
 
 
 

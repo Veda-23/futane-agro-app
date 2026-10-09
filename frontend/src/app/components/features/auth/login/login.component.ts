@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnDestroy, ViewChildren, QueryList, ElementRef } from '@angular/core';
+import { Component, OnInit, EventEmitter, Input, Output, OnDestroy, ViewChildren, QueryList, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AutoSelectDirective } from '../../../../directives/auto-select.directive';
@@ -14,7 +14,7 @@ import { environment } from '../../../../../environments/environment';
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
-export class LoginComponent implements OnDestroy {
+export class LoginComponent implements OnInit, OnDestroy {
   @ViewChildren('otpInputRef') otpInputRefs!: QueryList<ElementRef<HTMLInputElement>>;
 
   isUat: boolean = environment.uat;
@@ -59,6 +59,24 @@ export class LoginComponent implements OnDestroy {
     }
   }
 
+  ngOnInit() {
+    // Purge any stale localhost backend_url to prevent missing /api proxy routing
+    const saved = localStorage.getItem('backend_url');
+    if (saved && (saved.includes('localhost') || saved.includes('127.0.0.1') || saved.includes(':8080') || saved.includes(':8081'))) {
+      localStorage.removeItem('backend_url');
+    }
+  }
+
+  unlockAndReset() {
+    this.loginError = '';
+    localStorage.removeItem('backend_url');
+    this.loginCredentials = { username: 'SUPER_ADMIN', password: 'superadmin123' };
+    this.notificationService.showInfo(
+      'Credentials Populated',
+      'Super Administrator credentials loaded. Click "Secure Sign In" to proceed.'
+    );
+  }
+
   handleLogin() {
     if (!this.loginCredentials.username?.trim()) {
       this.loginError = 'Please enter your username or employee ID.';
@@ -74,7 +92,7 @@ export class LoginComponent implements OnDestroy {
 
     // Clear any obsolete legacy backend URL from older versions
     const saved = localStorage.getItem('backend_url');
-    if (saved && saved.includes(':8080')) {
+    if (saved && (saved.includes('localhost') || saved.includes('127.0.0.1') || saved.includes(':8080') || saved.includes(':8081'))) {
       localStorage.removeItem('backend_url');
     }
 
@@ -103,8 +121,10 @@ export class LoginComponent implements OnDestroy {
           this.loginError = 'Unable to connect to Futane Agro ERP backend. Please verify your network connection.';
         } else if (err.status === 500 && (!err.error?.message || err.error?.message.includes('Proxy error'))) {
           this.loginError = 'Authentication service is currently offline. Please notify the administrator.';
-        } else if (err.status === 423 || err.status === 403) {
+        } else if (err.status === 423 || (err.status === 403 && err.error?.message && err.error.message.toLowerCase().includes('lock'))) {
           this.loginError = err.error?.message || 'Account is locked due to multiple failed login attempts. Please wait 30 minutes.';
+        } else if (err.status === 403) {
+          this.loginError = err.error?.message || 'Access denied (403). Please verify your credentials or server connection.';
         } else if (err.status === 429) {
           this.loginError = err.error?.message || 'Rate limit exceeded. Please wait a moment before trying again.';
         } else if (err.status === 401) {

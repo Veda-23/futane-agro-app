@@ -44,6 +44,7 @@ import { UniversalImporterComponent } from './components/shared/universal-import
 import { NotificationService } from './services/notification.service';
 import { AppNotificationService } from './services/app-notification.service';
 import { WebSocketService } from './services/websocket.service';
+import { ModalManagerService } from './services/modal-manager.service';
 import { PaymentService } from './services/payment.service';
 Chart.register(...registerables);
 
@@ -566,6 +567,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private appNotificationService: AppNotificationService,
     private wsService: WebSocketService,
     private paymentService: PaymentService,
+    private modalManager: ModalManagerService,
     private ngZone: NgZone,
     private cdr: ChangeDetectorRef
   ) {}
@@ -582,6 +584,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.modalManager.init();
     this.titleService.setTitle((environment as any).appTitle || 'Futane Agro ERP');
     this.translateService.init();
     this.currentLang = this.translateService.getCurrentLanguage();
@@ -598,9 +601,8 @@ export class AppComponent implements OnInit, OnDestroy {
     (window as any).notificationService = this.notificationService;
 
     this.updateGrafanaUrl();
-    this.pollTelemetryHealth();
     this.telemetrySub = interval(30000).subscribe(() => {
-      if (!document.hidden) {
+      if (!document.hidden && this.isAuthenticated) {
         this.pollTelemetryHealth();
       }
     });
@@ -665,9 +667,11 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   setupIdleTimer() {
-    const events = ['mousemove', 'click', 'keypress', 'scroll', 'touchstart'];
-    events.forEach(event => {
-      window.addEventListener(event, () => this.resetIdleTimer());
+    this.ngZone.runOutsideAngular(() => {
+      const events = ['mousemove', 'click', 'keypress', 'scroll', 'touchstart'];
+      events.forEach(event => {
+        window.addEventListener(event, () => this.resetIdleTimer(), { passive: true });
+      });
     });
   }
 
@@ -739,25 +743,27 @@ export class AppComponent implements OnInit, OnDestroy {
       error: () => {}
     });
 
-    this.apiService.getAdminRolePermissions().subscribe({
-      next: (perms) => {
-        if (perms && perms.length > 0) {
-          this.dbRolePermissions = perms;
-          this.updateAccessibleTabs();
-        }
-      },
-      error: () => {}
-    });
+    if (this.isAuthenticated) {
+      this.apiService.getAdminRolePermissions().subscribe({
+        next: (perms) => {
+          if (perms && perms.length > 0) {
+            this.dbRolePermissions = perms;
+            this.updateAccessibleTabs();
+          }
+        },
+        error: () => {}
+      });
 
-    this.apiService.getAdminFeatureFlags().subscribe({
-      next: (flags) => {
-        if (flags && flags.length > 0) {
-          this.dbFeatureFlags = flags;
-          this.updateAccessibleTabs();
-        }
-      },
-      error: () => {}
-    });
+      this.apiService.getAdminFeatureFlags().subscribe({
+        next: (flags) => {
+          if (flags && flags.length > 0) {
+            this.dbFeatureFlags = flags;
+            this.updateAccessibleTabs();
+          }
+        },
+        error: () => {}
+      });
+    }
   }
 
   updateAccessibleTabs() {
@@ -1002,6 +1008,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.sessionDuration = '';
 
     this.accessibleTabs = {};
+    this.apiService.clearAllReferenceCache();
   }
 
   cleanEntityName(name: any): string {
@@ -3231,6 +3238,9 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   pollTelemetryHealth() {
+    if (!this.isAuthenticated) {
+      return;
+    }
     this.telemetryHealth.checking = true;
 
     this.apiService.getStats().pipe(catchError(() => of(null))).subscribe((stats: any) => {
@@ -3274,6 +3284,9 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    if (this.modalManager) {
+      this.modalManager.destroy();
+    }
     if (this.clockInterval) {
       clearInterval(this.clockInterval);
       this.clockInterval = null;

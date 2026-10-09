@@ -256,5 +256,21 @@ Before "Done"    → Empirical proof captured
 
 ---
 
+## 8GB Hardware Resource Invariants (Developer Laptop Protection)
+
+To prevent laptop slowdown, system lag, and RAM exhaustion on 8 GB workstations:
+
+1. **Angular Dev Server Heap**: Never exceed `--max-old-space-size=1536` in `package.json` scripts.
+2. **Spring Boot JVM Heap**: Always start with `-Xms256m -Xmx512m` to prevent Java from defaulting to 25% of total system RAM.
+3. **Database Connection Pool**: Keep `spring.datasource.hikari.maximum-pool-size=8` and `minimum-idle=2` in local dev/UAT.
+4. **RxJS In-Memory Streams**: Always specify `shareReplay({ bufferSize: 1, refCount: true })` so unreferenced streams disconnect when components unmount.
+5. **No 401/403 Retries**: Never retry unauthenticated or forbidden HTTP requests (`retry` must filter out 401/403/404).
+6. **No Pre-Auth Polling**: Telemetry, notifications, or stat polling must always be guarded by `this.isAuthenticated`.
+7. **Maven Builds**: `backend/.mvn/jvm.config` enforces `-Xmx512m` for all local Maven tasks.
+8. **Process Hygiene**: Run `clean-processes.bat` or `clean-processes.ps1` to terminate orphaned Node/Java processes before starting new runs.
+9. **Antivirus Exclusions**: Keep `frontend/node_modules`, `frontend/.angular/cache`, and `backend/target` excluded from Windows Defender scanning.
+
+---
+
 *GSD Methodology — Model-Agnostic Edition*
 *Reference implementation for multi-LLM environments*

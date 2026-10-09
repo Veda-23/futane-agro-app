@@ -16,8 +16,10 @@ export class IdleTimerService implements OnDestroy {
   constructor(private zone: NgZone) {}
 
   start() {
-    const events = ['mousemove', 'click', 'keypress', 'scroll', 'touchstart'];
-    events.forEach(e => window.addEventListener(e, () => this.reset()));
+    this.zone.runOutsideAngular(() => {
+      const events = ['mousemove', 'click', 'keypress', 'scroll', 'touchstart'];
+      events.forEach(e => window.addEventListener(e, () => this.reset(), { passive: true }));
+    });
     this.startCountdown();
   }
 

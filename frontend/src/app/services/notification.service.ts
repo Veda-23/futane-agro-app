@@ -135,8 +135,12 @@ export class NotificationService {
     this.success('Action completed', message);
   }
 
-  showInfo(message: string = '') {
-    this.info('Information', message);
+  showInfo(titleOrMessage: string = '', subtitle?: string) {
+    if (subtitle !== undefined) {
+      this.info(titleOrMessage, subtitle);
+    } else {
+      this.info('Information', titleOrMessage);
+    }
   }
 
   showSaveSuccess(message: string = 'Record added to database.') {

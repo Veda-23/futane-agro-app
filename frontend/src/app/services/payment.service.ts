@@ -74,7 +74,15 @@ export class PaymentService {
       requestedAmount: intent.amount
     }).pipe(
       timeout(15000), // 15 second timeout
-      retry(2),
+      retry({
+        count: 1,
+        delay: (err) => {
+          if (err && err.status >= 400 && err.status < 500) {
+            throw err;
+          }
+          return of(null);
+        }
+      }),
       switchMap(orderResponse => {
         if (!orderResponse.order_id) {
           throw new Error('Invalid order response from Razorpay');
@@ -272,7 +280,15 @@ export class PaymentService {
     };
 
     return this.http.post<any>(`${environment.apiUrl}/payments`, paymentData).pipe(
-      retry(2),
+      retry({
+        count: 1,
+        delay: (err) => {
+          if (err && err.status >= 400 && err.status < 500) {
+            throw err;
+          }
+          return of(null);
+        }
+      }),
       map(result => {
         const paymentResult: PaymentResult = {
           success: true,

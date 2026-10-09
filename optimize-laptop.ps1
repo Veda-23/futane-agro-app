@@ -27,20 +27,27 @@ foreach ($c in $CachePaths) {
     }
 }
 
-# 2. Add Windows Defender Exclusion (eliminates 100% disk thrashing from MsMpEng.exe)
+# 2. Add Windows Defender Targeted Exclusions (eliminates disk thrashing from MsMpEng.exe)
 Write-Host "`n[2/3] Checking Windows Defender Exclusions..." -ForegroundColor Yellow
 $IsAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
+$ExcludedDirs = @(
+    "$WorkspacePath\frontend\node_modules",
+    "$WorkspacePath\frontend\.angular\cache",
+    "$WorkspacePath\backend\target"
+)
+
 if ($IsAdmin) {
-    try {
-        Add-MpPreference -ExclusionPath $WorkspacePath -ErrorAction Stop
-        Write-Host "  ✓ Successfully added Windows Defender exclusion for: $WorkspacePath" -ForegroundColor Green
-        Write-Host "    (Antivirus will no longer thrash CPU/disk on node_modules!)" -ForegroundColor Green
-    } catch {
-        Write-Host "  ⚠️ Could not add exclusion: $_" -ForegroundColor Red
+    foreach ($dir in $ExcludedDirs) {
+        try {
+            Add-MpPreference -ExclusionPath $dir -ErrorAction Stop
+            Write-Host "  ✓ Excluded: $dir" -ForegroundColor Green
+        } catch {
+            Write-Host "  ⚠️ Could not add exclusion for $dir : $_" -ForegroundColor DarkGray
+        }
     }
 } else {
-    Write-Host "  ℹ️ To exempt node_modules from Windows Defender antivirus scanning:" -ForegroundColor Yellow
+    Write-Host "  ℹ️ To exempt node_modules and target from Windows Defender scanning:" -ForegroundColor Yellow
     Write-Host "     Right-click this script (optimize-laptop.ps1) and choose 'Run with PowerShell as Administrator'." -ForegroundColor White
 }
 
