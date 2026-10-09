@@ -126,7 +126,9 @@ export class DispatchComponent implements OnInit {
   }
 
   loadData(): void {
-    this.isLoading = true;
+    if (this.dispatches.length === 0 && (!this.dispatchesList || this.dispatchesList.length === 0)) {
+      this.isLoading = true;
+    }
     this.hasError = false;
 
     forkJoin({

@@ -104,7 +104,9 @@ export class ReportsComponent implements OnInit, OnDestroy {
   }
 
   loadData() {
-    this.isLoading = true;
+    if ((!this.salesList || this.salesList.length === 0) && (!this.ppdList || this.ppdList.length === 0)) {
+      this.isLoading = true;
+    }
     this.hasError = false;
     forkJoin({
       parties: this.apiService.getParties(),

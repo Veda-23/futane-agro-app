@@ -241,7 +241,9 @@ export class ProductionComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // --- Data Loading ---
   loadData() {
-    this.isLoading = true;
+    if (this.ppdList.length === 0 && this.ppmList.length === 0) {
+      this.isLoading = true;
+    }
     this.isRefreshing = true;
     this.hasError = false;
     forkJoin({

@@ -164,7 +164,7 @@ export class ExpensesComponent implements OnInit {
   }
 
   loadData(isManual: boolean = false) {
-    this.isLoading = true;
+    if (this.expensesList.length === 0) this.isLoading = true;
     this.hasError = false;
     this.errorMessage = '';
 

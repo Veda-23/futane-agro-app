@@ -118,7 +118,7 @@ export class PartyComponent implements OnInit {
 
   loadData(notify: boolean = false) {
     this.isRefreshing = true;
-    this.apiService.getParties(true).subscribe({
+    this.apiService.getParties(notify).subscribe({
       next: (res: any[]) => {
         this.parties = res || [];
         this.isRefreshing = false;
@@ -542,10 +542,14 @@ export class PartyComponent implements OnInit {
       // UPDATE
       this.apiService.updateParty(this.editingPartyId, this.partyForm).subscribe({
         next: (res) => {
-          this.loadData();
+          const idx = this.parties.findIndex(p => String(p.id) === String(this.editingPartyId));
+          if (idx !== -1) {
+            this.parties[idx] = { ...this.parties[idx], ...this.partyForm, ...(res || {}) };
+            this.parties = [...this.parties];
+          }
           this.cancelEditParty();
-          this.notificationService.success('Success', `Party "${res.partyName}" updated successfully!`);
-          this.logAudit('Updated party: ' + res.partyName);
+          this.notificationService.success('Success', `Party "${res?.partyName || this.partyForm.partyName}" updated successfully!`);
+          this.logAudit('Updated party: ' + (res?.partyName || this.partyForm.partyName));
         },
         error: (err) => this.notificationService.error('Error', 'Failed to update party: ' + (err.error?.message || err.message))
       });
@@ -554,10 +558,12 @@ export class PartyComponent implements OnInit {
       if (this.isDuplicateParty()) return;
       this.apiService.createParty(this.partyForm).subscribe({
         next: (res) => {
-          this.loadData();
+          const created = res || { ...this.partyForm, id: Date.now() };
+          this.parties.unshift(created);
+          this.parties = [...this.parties];
           this.cancelEditParty();
-          this.notificationService.success('Success', `Registered new party "${res.partyName}"!`);
-          this.logAudit('Registered new party: ' + res.partyName);
+          this.notificationService.success('Success', `Registered new party "${created.partyName}"!`);
+          this.logAudit('Registered new party: ' + created.partyName);
         },
         error: (err) => {
           if (err.status === 409) {

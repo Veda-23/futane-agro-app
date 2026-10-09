@@ -104,8 +104,10 @@ export class DriversComponent implements OnInit {
   loadData(forceRefresh: boolean = false) {
     if (forceRefresh) {
       this.isRefreshing = true;
-    } else {
+    } else if (this.drivers.length === 0) {
       this.isLoading = true;
+    } else {
+      this.isRefreshing = true;
     }
     this.hasError = false;
 

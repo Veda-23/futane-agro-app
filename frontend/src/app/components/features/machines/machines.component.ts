@@ -135,11 +135,13 @@ export class MachinesComponent implements OnInit {
   }
 
   loadData(): void {
-    this.isLoading = true;
+    if (this.machinesList.length === 0) {
+      this.isLoading = true;
+    }
     this.hasError = false;
 
     forkJoin({
-      machines: this.apiService.getMachines(true).pipe(catchError(() => of([]))),
+      machines: this.apiService.getMachines(false).pipe(catchError(() => of([]))),
       breakdowns: this.apiService.getMachineBreakdowns().pipe(catchError(() => of([])))
     }).subscribe({
       next: ({ machines, breakdowns }) => {

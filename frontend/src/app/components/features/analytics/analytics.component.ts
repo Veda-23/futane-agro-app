@@ -73,7 +73,9 @@ export class AnalyticsComponent implements OnInit {
   }
 
   loadAllData(): void {
-    this.isLoading = true;
+    if ((!this.salesList || this.salesList.length === 0) && (!this.ppdList || this.ppdList.length === 0)) {
+      this.isLoading = true;
+    }
     this.hasError = false;
 
     forkJoin({

@@ -242,7 +242,9 @@ export class BillingHubComponent implements OnInit, OnChanges {
   }
 
   loadAllSources(isManual: boolean = false) {
-    this.isLoading = true;
+    if ((!this.salesList || this.salesList.length === 0) && (!this.dispatchesList || this.dispatchesList.length === 0)) {
+      this.isLoading = true;
+    }
     this.hasError = false;
     this.errorMessage = '';
 

@@ -154,7 +154,7 @@ export class EmployeesComponent implements OnInit {
   }
 
   loadData(forceRefresh: boolean = false) {
-    this.isLoading = true;
+    if (this.employees.length === 0) this.isLoading = true;
     this.hasError = false;
 
     this.apiService.getEmployees(forceRefresh).subscribe({

@@ -172,7 +172,7 @@ export class RawMaterialsComponent implements OnInit {
   }
 
   loadData(notify: boolean = false): void {
-    this.isLoading = true;
+    if (this.rawMaterialsList.length === 0) this.isLoading = true;
     this.hasError = false;
 
     forkJoin({

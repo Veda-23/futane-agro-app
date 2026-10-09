@@ -43,11 +43,13 @@
 
     <div class="content-body animated-fade">
       <!-- 1. Dashboard Tab — eager: it's the landing page, must render immediately -->
-      <app-dashboard *ngIf="activeTab === 'dashboard'" [currentLang]="currentLang" [loggedInUser]="loggedInUser" (onNavigateTab)="switchTab($event)"></app-dashboard>
+      <app-dashboard *ngIf="renderedTabs['dashboard']" [hidden]="activeTab !== 'dashboard'" [style.display]="activeTab === 'dashboard' ? 'block' : 'none'" [currentLang]="currentLang" [loggedInUser]="loggedInUser" (onNavigateTab)="switchTab($event)"></app-dashboard>
 
       <!-- 2 & 3. Production Tabs (Daily & Monthly) -->
-      @defer (when activeTab === 'production' || activeTab === 'monthly-production') {
-        <app-production *ngIf="activeTab === 'production' || activeTab === 'monthly-production'"
+      @defer (when renderedTabs['production'] || renderedTabs['monthly-production']) {
+        <app-production *ngIf="renderedTabs['production'] || renderedTabs['monthly-production']"
+          [hidden]="activeTab !== 'production' && activeTab !== 'monthly-production'"
+          [style.display]="(activeTab === 'production' || activeTab === 'monthly-production') ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser"
@@ -69,8 +71,10 @@
       }
 
       <!-- 4. Party Tab -->
-      @defer (when activeTab === 'parties') {
-        <app-party *ngIf="activeTab === 'parties'"
+      @defer (when renderedTabs['parties']) {
+        <app-party *ngIf="renderedTabs['parties']"
+          [hidden]="activeTab !== 'parties'"
+          [style.display]="activeTab === 'parties' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser"
@@ -81,9 +85,11 @@
       }
 
       <!-- 5. Sales Entry Component -->
-      @defer (when activeTab === 'sales') {
+      @defer (when renderedTabs['sales']) {
         <app-sales
-          *ngIf="activeTab === 'sales'"
+          *ngIf="renderedTabs['sales']"
+          [hidden]="activeTab !== 'sales'"
+          [style.display]="activeTab === 'sales' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser"
@@ -94,9 +100,11 @@
       }
 
       <!-- 6. Customer Receipts & Payment Collections -->
-      @defer (when activeTab === 'payments') {
+      @defer (when renderedTabs['payments']) {
         <app-payments
-          *ngIf="activeTab === 'payments'"
+          *ngIf="renderedTabs['payments']"
+          [hidden]="activeTab !== 'payments'"
+          [style.display]="activeTab === 'payments' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser"
@@ -107,9 +115,11 @@
       }
 
       <!-- 7. Polymer Raw Materials & PP Granules Inventory -->
-      @defer (when activeTab === 'raw-materials') {
+      @defer (when renderedTabs['raw-materials']) {
         <app-raw-materials
-          *ngIf="activeTab === 'raw-materials'"
+          *ngIf="renderedTabs['raw-materials']"
+          [hidden]="activeTab !== 'raw-materials'"
+          [style.display]="activeTab === 'raw-materials' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser"
@@ -120,9 +130,11 @@
       }
 
       <!-- 8. Polymer Suppliers & Vendor Directory Tab -->
-      @defer (when activeTab === 'vendors') {
+      @defer (when renderedTabs['vendors']) {
         <app-vendors
-          *ngIf="activeTab === 'vendors'"
+          *ngIf="renderedTabs['vendors']"
+          [hidden]="activeTab !== 'vendors'"
+          [style.display]="activeTab === 'vendors' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser"
@@ -133,9 +145,11 @@
       }
 
       <!-- 9. Finished Goods & Crate Warehouse Inventory -->
-      @defer (when activeTab === 'inventory') {
+      @defer (when renderedTabs['inventory']) {
         <app-inventory
-          *ngIf="activeTab === 'inventory'"
+          *ngIf="renderedTabs['inventory']"
+          [hidden]="activeTab !== 'inventory'"
+          [style.display]="activeTab === 'inventory' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser"
@@ -146,8 +160,10 @@
       }
 
       <!-- 10. Employees Directory & Workforce Management -->
-      @defer (when activeTab === 'employees') {
-        <app-employees *ngIf="activeTab === 'employees'"
+      @defer (when renderedTabs['employees']) {
+        <app-employees *ngIf="renderedTabs['employees']"
+          [hidden]="activeTab !== 'employees'"
+          [style.display]="activeTab === 'employees' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser"
@@ -158,8 +174,10 @@
       }
 
       <!-- 11. Salaries & Payroll Registry -->
-      @defer (when activeTab === 'salaries') {
-        <app-salaries *ngIf="activeTab === 'salaries'"
+      @defer (when renderedTabs['salaries']) {
+        <app-salaries *ngIf="renderedTabs['salaries']"
+          [hidden]="activeTab !== 'salaries'"
+          [style.display]="activeTab === 'salaries' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser"
@@ -170,8 +188,10 @@
       }
 
       <!-- 12. Transport & Logistics Management -->
-      @defer (when activeTab === 'transports') {
-        <app-transports *ngIf="activeTab === 'transports'"
+      @defer (when renderedTabs['transports']) {
+        <app-transports *ngIf="renderedTabs['transports']"
+          [hidden]="activeTab !== 'transports'"
+          [style.display]="activeTab === 'transports' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser"
@@ -182,8 +202,10 @@
       }
 
       <!-- 13. Driver Directory & Fleet Personnel -->
-      @defer (when activeTab === 'drivers') {
-        <app-drivers *ngIf="activeTab === 'drivers'"
+      @defer (when renderedTabs['drivers']) {
+        <app-drivers *ngIf="renderedTabs['drivers']"
+          [hidden]="activeTab !== 'drivers'"
+          [style.display]="activeTab === 'drivers' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser"
@@ -195,8 +217,10 @@
       }
 
       <!-- 14. Invoice Generation Tab -->
-      @defer (when activeTab === 'invoices') {
-        <app-invoices *ngIf="activeTab === 'invoices'"
+      @defer (when renderedTabs['invoices']) {
+        <app-invoices *ngIf="renderedTabs['invoices']"
+          [hidden]="activeTab !== 'invoices'"
+          [style.display]="activeTab === 'invoices' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser"
@@ -207,8 +231,10 @@
       }
 
       <!-- 14b. Billing Hub & Document Center -->
-      @defer (when activeTab === 'billinghub') {
-        <app-billing-hub *ngIf="activeTab === 'billinghub'"
+      @defer (when renderedTabs['billinghub']) {
+        <app-billing-hub *ngIf="renderedTabs['billinghub']"
+          [hidden]="activeTab !== 'billinghub'"
+          [style.display]="activeTab === 'billinghub' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser"
@@ -225,8 +251,10 @@
       }
 
       <!-- 15. Reports Tab -->
-      @defer (when activeTab === 'reports') {
-        <app-reports *ngIf="activeTab === 'reports'"
+      @defer (when renderedTabs['reports']) {
+        <app-reports *ngIf="renderedTabs['reports']"
+          [hidden]="activeTab !== 'reports'"
+          [style.display]="activeTab === 'reports' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [parties]="parties"
@@ -243,8 +271,10 @@
       }
 
       <!-- 17. Machines & Factory Assets Registry -->
-      @defer (when activeTab === 'machines') {
-        <app-machines *ngIf="activeTab === 'machines'"
+      @defer (when renderedTabs['machines']) {
+        <app-machines *ngIf="renderedTabs['machines']"
+          [hidden]="activeTab !== 'machines'"
+          [style.display]="activeTab === 'machines' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser"
@@ -255,8 +285,10 @@
       }
 
       <!-- 18. Logistics & Dispatch Registry Tab -->
-      @defer (when activeTab === 'dispatch') {
-        <app-dispatch *ngIf="activeTab === 'dispatch'"
+      @defer (when renderedTabs['dispatch']) {
+        <app-dispatch *ngIf="renderedTabs['dispatch']"
+          [hidden]="activeTab !== 'dispatch'"
+          [style.display]="activeTab === 'dispatch' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser"
@@ -269,8 +301,10 @@
       }
 
       <!-- 19. Expenses Registry & Cost Center Tab -->
-      @defer (when activeTab === 'expenses') {
-        <app-expenses *ngIf="activeTab === 'expenses'"
+      @defer (when renderedTabs['expenses']) {
+        <app-expenses *ngIf="renderedTabs['expenses']"
+          [hidden]="activeTab !== 'expenses'"
+          [style.display]="activeTab === 'expenses' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser">
@@ -280,8 +314,10 @@
       }
 
       <!-- 20. Bank & Cash Reconciliation Ledger Tab -->
-      @defer (when activeTab === 'bank') {
-        <app-bank *ngIf="activeTab === 'bank'"
+      @defer (when renderedTabs['bank']) {
+        <app-bank *ngIf="renderedTabs['bank']"
+          [hidden]="activeTab !== 'bank'"
+          [style.display]="activeTab === 'bank' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser">
@@ -291,8 +327,10 @@
       }
 
       <!-- 21. Real Power BI–Style Executive Business Intelligence Suite -->
-      @defer (when activeTab === 'analytics') {
-        <app-analytics *ngIf="activeTab === 'analytics'"
+      @defer (when renderedTabs['analytics']) {
+        <app-analytics *ngIf="renderedTabs['analytics']"
+          [hidden]="activeTab !== 'analytics'"
+          [style.display]="activeTab === 'analytics' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser"
@@ -309,8 +347,10 @@
       }
 
       <!-- 16. Security Audit Logs & Activity Trail -->
-      @defer (when activeTab === 'audit-logs') {
-        <app-audit-logs *ngIf="activeTab === 'audit-logs'"
+      @defer (when renderedTabs['audit-logs']) {
+        <app-audit-logs *ngIf="renderedTabs['audit-logs']"
+          [hidden]="activeTab !== 'audit-logs'"
+          [style.display]="activeTab === 'audit-logs' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser">
@@ -320,8 +360,10 @@
       }
 
       <!-- 23. Super Admin & Settings Control Center -->
-      @defer (when activeTab === 'settings') {
-        <app-settings *ngIf="activeTab === 'settings'"
+      @defer (when renderedTabs['settings']) {
+        <app-settings *ngIf="renderedTabs['settings']"
+          [hidden]="activeTab !== 'settings'"
+          [style.display]="activeTab === 'settings' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser"

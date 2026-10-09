@@ -149,7 +149,7 @@ export class InventoryComponent implements OnInit {
   // ======================================================
 
   loadData(silent = false) {
-    if (!silent) this.isLoading = true;
+    if (!silent && this.inventoryList.length === 0) this.isLoading = true;
     this.hasError = false;
 
     this.apiService.getInventory().subscribe({

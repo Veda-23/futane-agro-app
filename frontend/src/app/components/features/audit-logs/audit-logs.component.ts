@@ -89,7 +89,9 @@ export class AuditLogsComponent implements OnInit {
   }
 
   loadData(isManual: boolean = false) {
-    this.isLoading = true;
+    if (this.auditLogsList.length === 0) {
+      this.isLoading = true;
+    }
     this.apiService.getAuditLogs().subscribe({
       next: (res: any[]) => {
         if (res && res.length > 0) {

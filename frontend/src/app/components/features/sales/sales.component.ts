@@ -194,8 +194,13 @@ export class SalesComponent implements OnInit {
   }
 
   loadData(notify: boolean = false) {
-    if (notify) this.isRefreshing = true;
-    else this.isLoading = true;
+    if (notify) {
+      this.isRefreshing = true;
+    } else if (this.salesList.length === 0) {
+      this.isLoading = true;
+    } else {
+      this.isRefreshing = true;
+    }
     this.hasError = false;
 
     forkJoin({
@@ -443,8 +448,12 @@ export class SalesComponent implements OnInit {
       };
 
       this.apiService.updateSale(this.editingSaleId, payload).subscribe({
-        next: () => {
-          this.loadData();
+        next: (res) => {
+          const idx = this.salesList.findIndex(s => String(s.id || s.saleId) === String(this.editingSaleId));
+          if (idx !== -1) {
+            this.salesList[idx] = { ...this.salesList[idx], ...payload, ...(res || {}) };
+            this.salesList = [...this.salesList];
+          }
           this.notificationService.success('Updated', 'Sales order updated successfully.');
           this.logAudit('Updated sales record ID: ' + this.editingSaleId);
           this.resetSalesForm();
@@ -471,8 +480,9 @@ export class SalesComponent implements OnInit {
 
       this.apiService.createSale(payload).subscribe({
         next: (res) => {
-          if (res) this.salesList.unshift(res);
-          this.loadData();
+          const created = res || { ...payload, id: Date.now() };
+          this.salesList.unshift(created);
+          this.salesList = [...this.salesList];
           this.notificationService.success('Order Created', 'New commercial sales order created successfully.');
           this.logAudit('Added new sale record for party: ' + (selectedParty?.partyName || this.salesForm.partyId));
           this.resetSalesForm();
@@ -586,8 +596,12 @@ export class SalesComponent implements OnInit {
     };
 
     this.apiService.updateSale(String(this.drawerSaleForm.id), payload).subscribe({
-      next: () => {
-        this.loadData();
+      next: (res) => {
+        const idx = this.salesList.findIndex(s => String(s.id || s.saleId) === String(this.drawerSaleForm.id));
+        if (idx !== -1) {
+          this.salesList[idx] = { ...this.salesList[idx], ...payload, ...(res || {}) };
+          this.salesList = [...this.salesList];
+        }
         this.notificationService.success('Order Updated', 'Changes saved successfully.');
         this.logAudit('Updated sales order ID via drawer: ' + this.drawerSaleForm.id);
         this.closeDrawer();

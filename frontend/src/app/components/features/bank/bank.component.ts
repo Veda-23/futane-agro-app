@@ -134,7 +134,7 @@ export class BankComponent implements OnInit {
   }
 
   loadData(isManual: boolean = false) {
-    this.isLoading = true;
+    if (this.bankTransactionsList.length === 0) this.isLoading = true;
     this.hasError = false;
     this.errorMessage = '';
 

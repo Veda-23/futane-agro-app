@@ -157,7 +157,7 @@ export class VendorsComponent implements OnInit {
   }
 
   loadData(notify: boolean = false): void {
-    this.isLoading = true;
+    if (this.vendorsList.length === 0) this.isLoading = true;
     this.hasError = false;
 
     forkJoin({

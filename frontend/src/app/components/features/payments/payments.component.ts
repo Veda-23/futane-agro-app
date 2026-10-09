@@ -159,8 +159,13 @@ export class PaymentsComponent implements OnInit {
   }
 
   loadData(notify: boolean = false) {
-    if (notify) this.isRefreshing = true;
-    else this.isLoading = true;
+    if (notify) {
+      this.isRefreshing = true;
+    } else if (this.paymentsList.length === 0) {
+      this.isLoading = true;
+    } else {
+      this.isRefreshing = true;
+    }
     this.hasError = false;
 
     forkJoin({
@@ -589,8 +594,12 @@ export class PaymentsComponent implements OnInit {
     if (this.editingPaymentId) {
       // Update safe metadata fields
       this.apiService.updatePayment(this.editingPaymentId, payload).subscribe({
-        next: () => {
-          this.loadData();
+        next: (res) => {
+          const idx = this.paymentsList.findIndex(p => String(p.id) === String(this.editingPaymentId));
+          if (idx !== -1) {
+            this.paymentsList[idx] = { ...this.paymentsList[idx], ...payload, ...(res || {}) };
+            this.paymentsList = [...this.paymentsList];
+          }
           this.notificationService.success('Receipt Updated', 'Customer payment record updated successfully.');
           this.logAudit('Updated payment record ID: ' + this.editingPaymentId);
           this.cancelEditPayment();
@@ -617,7 +626,9 @@ export class PaymentsComponent implements OnInit {
 
       this.apiService.createPayment(payload).subscribe({
         next: (res) => {
-          this.loadData();
+          const created = res || { ...payload, id: Date.now() };
+          this.paymentsList.unshift(created);
+          this.paymentsList = [...this.paymentsList];
           this.notificationService.success('Receipt Recorded', 'Customer payment collection successfully registered.');
           this.logAudit(`Recorded payment of ₹${payload.amountReceived} for party ${payload.party.id}`);
           this.cancelEditPayment();

@@ -176,7 +176,7 @@ export class InvoicesComponent implements OnInit {
   }
 
   loadData(isManual: boolean = false) {
-    this.isLoading = true;
+    if (this.invoicesList.length === 0) this.isLoading = true;
     this.hasError = false;
     this.errorMessage = '';
     this.apiService.getInvoices().subscribe({
