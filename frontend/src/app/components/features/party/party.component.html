@@ -163,13 +163,20 @@
   <div *ngIf="isFormVisible && !isViewer()" class="party-modal-dialog" role="dialog" aria-modal="true" aria-label="Register Party Form">
     <div class="form-header-banner">
       <div class="form-header-title">
-        <i class="bi bi-building-add text-primary"></i>
+        <div class="party-header-squircle" [class.editing-squircle]="editingPartyId">
+          <i class="bi" [ngClass]="editingPartyId ? 'bi-pencil-square' : 'bi-building-add'"></i>
+        </div>
         <div>
-          <h3>{{ editingPartyId ? 'Edit Party Account' : 'Register Commercial Party Account' }}</h3>
+          <div class="d-flex align-items-center gap-2">
+            <h3>{{ editingPartyId ? 'Edit Party Account' : 'Register Commercial Party Account' }}</h3>
+            <span *ngIf="editingPartyId" class="badge bg-primary-subtle text-primary border border-primary-subtle font-mono fw-semibold px-2" [title]="'Client Database Record ID: ' + editingPartyId">
+              #{{ formatPartyId(editingPartyId) }}
+            </span>
+          </div>
           <p>Configure commercial master profile, GSTIN validation &amp; billing credentials</p>
         </div>
       </div>
-      <button type="button" class="btn-panel-close" (click)="cancelEditParty()" title="Close Form" aria-label="Close Form">
+      <button type="button" class="btn-panel-close" (click)="cancelEditParty()" title="Close Form (Esc)" aria-label="Close Form">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -744,7 +751,7 @@
           </div>
           <div class="dossier-badge-box">
             <span class="d-title">CLIENT MASTER DOSSIER</span>
-            <strong class="d-code font-mono">#CLI-{{ selectedPartyForDossier.id || selectedPartyForDossier.partyId }}</strong>
+            <strong class="d-code font-mono" [title]="'Client Database Record ID: ' + (selectedPartyForDossier.id || selectedPartyForDossier.partyId)">#{{ formatPartyId(selectedPartyForDossier.id || selectedPartyForDossier.partyId) }}</strong>
             <div class="d-status-pill">
               <i class="bi bi-patch-check-fill me-1"></i>Verified Commercial Account
             </div>
@@ -757,7 +764,7 @@
       <div class="dossier-status-banner">
         <div class="banner-cell">
           <span class="banner-label">Account Code</span>
-          <strong class="banner-value font-mono">#CLI-{{ selectedPartyForDossier.id || selectedPartyForDossier.partyId }}</strong>
+          <strong class="banner-value font-mono" [title]="'Client Database Record ID: ' + (selectedPartyForDossier.id || selectedPartyForDossier.partyId)">#{{ formatPartyId(selectedPartyForDossier.id || selectedPartyForDossier.partyId) }}</strong>
         </div>
         <div class="banner-cell">
           <span class="banner-label">Account Type</span>

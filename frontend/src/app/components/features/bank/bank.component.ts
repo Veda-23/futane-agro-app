@@ -413,6 +413,27 @@ export class BankComponent implements OnInit {
     window.print();
   }
 
+  formatTxnId(id: any): string {
+    if (!id && id !== 0) return 'BNK-000';
+    const str = String(id).trim();
+    if (/^\d+$/.test(str)) return `BNK-${str.padStart(4, '0')}`;
+    if (str.includes('-')) {
+      const parts = str.split('-');
+      return `BNK-${parts[0].toUpperCase()}`;
+    }
+    if (str.length > 8) return `BNK-${str.slice(0, 8).toUpperCase()}`;
+    return `BNK-${str.toUpperCase()}`;
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.showViewModal) {
+      this.closeViewModal();
+    } else if (this.isDrawerOpen) {
+      this.cancelEdit();
+    }
+  }
+
   editBankTransaction(bt: BankTransactionItem) {
     this.editingId = bt.id;
     this.bankTxnForm = {
@@ -425,7 +446,7 @@ export class BankComponent implements OnInit {
     };
     this.isDrawerOpen = true;
 
-    this.notificationService.info('Editing Transaction', `Editing record #${bt.id}`);
+    this.notificationService.info('Editing Transaction', `Editing record #${this.formatTxnId(bt.id)}`);
   }
 
   cancelEdit() {

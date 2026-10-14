@@ -1514,30 +1514,62 @@ button.btn-primary.btn-header-primary:hover:not(:disabled) {
 }
 
 /* ── Delivery Challan & Dispatch Dossier Modal ───────────────────────── */
+.dispatch-modal-overlay,
 .dispatch-dossier-overlay {
-  position: fixed;
-  inset: 0;
+  position: fixed !important;
+  inset: 0 !important;
   background: rgba(15, 23, 42, 0.65) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000 !important;
-  padding: 24px;
+  backdrop-filter: blur(8px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(140%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99990 !important;
+  padding: 16px !important;
 }
 
+.dispatch-modal-dialog,
 .dispatch-dossier-dialog {
-  background: #ffffff;
-  border-radius: 16px;
-  width: 100%;
-  max-width: 860px;
-  max-height: 92vh;
-  overflow-y: auto;
-  box-shadow: 0 25px 60px -12px rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(11, 71, 212, 0.18);
-  display: flex;
-  flex-direction: column;
+  background: #ffffff !important;
+  opacity: 1 !important;
+  border-radius: 16px !important;
+  width: clamp(320px, 94vw, 840px) !important;
+  max-width: calc(100vw - var(--sidebar-effective-width, 240px) - 32px) !important;
+  max-height: min(calc(100dvh - 80px), 840px) !important;
+  box-shadow: 0 25px 60px -12px rgba(15, 23, 42, 0.45) !important;
+  border: 1px solid #cbd5e1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 100000 !important;
+}
+
+@media (min-width: 1025px) {
+  body:not(.sidebar-closed) .dispatch-modal-dialog,
+  body:not(.sidebar-closed) .dispatch-dossier-dialog,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .dispatch-modal-dialog,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .dispatch-dossier-dialog {
+    left: calc(50% + (var(--sidebar-width, 240px) / 2)) !important;
+    transform: translate(-50%, -50%) !important;
+  }
+}
+
+.dispatch-printable-sheet {
+  background: #ffffff !important;
+  overflow-y: auto !important;
+  flex: 1 1 auto !important;
+  padding: 28px 32px !important;
+  color: #0f172a !important;
+}
+
+.erp-form-grid {
+  background: #ffffff !important;
+  overflow-y: auto !important;
+  flex: 1 1 auto !important;
 }
 
 .dossier-top-bar {
@@ -1572,6 +1604,40 @@ button.btn-primary.btn-header-primary:hover:not(:disabled) {
 .dossier-top-actions {
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.dossier-squircle-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(11, 71, 212, 0.12) 0%, rgba(0, 102, 255, 0.18) 100%);
+  color: #0B47D4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  border: 1px solid rgba(11, 71, 212, 0.2);
+}
+
+.btn-close-modal {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-close-modal:hover {
+  background: #e2e8f0;
+  color: #ef4444;
 }
 
 .dispatch-printable-sheet {

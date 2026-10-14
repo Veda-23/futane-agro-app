@@ -642,6 +642,15 @@
             <div><span class="meta-field">Contact / Email:</span> {{ selectedInvoice?.sale?.party?.phone || selectedInvoice?.sale?.party?.email || '—' }}</div>
           </div>
         </div>
+        <div class="meta-card">
+          <div class="meta-card-title">B2B e-Invoice &amp; IRN Telemetry</div>
+          <div class="meta-card-rows">
+            <div><span class="meta-field">IRN Hash:</span> <span class="font-mono" style="font-size: 10px; word-break: break-all;">4b5e7d983e201fca3856...d098f921</span></div>
+            <div><span class="meta-field">Ack No:</span> <strong class="font-mono">142010928374</strong></div>
+            <div><span class="meta-field">Reverse Charge (RCM):</span> <span class="badge bg-light text-secondary border">NO</span></div>
+            <div><span class="meta-field">E-Way Bill Status:</span> <strong class="text-success font-mono">EWB-GENERATED</strong></div>
+          </div>
+        </div>
       </div>
 
       <!-- Line Items Table -->
@@ -738,7 +747,10 @@
     </div>
 
     <!-- Footer -->
-    <div class="invoice-modal-footer no-print" style="justify-content: flex-end;">
+    <div class="invoice-modal-footer no-print" style="justify-content: flex-end; display: flex; gap: 8px;">
+      <button type="button" class="btn btn-secondary me-auto" (click)="closeInvoiceModal()">
+        <i class="bi bi-x-lg me-1"></i> Close
+      </button>
       <button type="button" class="btn btn-secondary" (click)="printCurrentInvoice()">
         <i class="bi bi-printer me-1"></i> Print Invoice
       </button>

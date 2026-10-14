@@ -53,6 +53,8 @@ public class SecurityConfig {
             .antMatchers(HttpMethod.GET, "/api/uploads/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "ACCOUNTANT", "OPERATOR", "VIEWER")
             .antMatchers(HttpMethod.POST, "/api/uploads/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "ACCOUNTANT", "OPERATOR")
             .antMatchers("/api/health").permitAll()
+            .antMatchers("/api/v1/storefront/**").permitAll()
+            .antMatchers("/api/erp/web-orders/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "ACCOUNTANT", "OPERATOR")
 
             // ── SECURITY: Dev endpoints require explicit non-prod guard in the controller ──
             .antMatchers("/api/dev/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
@@ -103,7 +105,7 @@ public class SecurityConfig {
             .and()
             // Referrer policy
             .referrerPolicy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN).and()
-            // Content Security Policy — hardened (no unsafe-eval, supports WebSockets for live notifications)
+            // Content Security Policy — hardened (no unsafe-eval, frame-ancestors none, supports Razorpay & WebSockets)
             .addHeaderWriter(new StaticHeadersWriter(
                 "Content-Security-Policy",
                 "default-src 'self'; " +
@@ -111,6 +113,7 @@ public class SecurityConfig {
                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
                 "font-src 'self' https://fonts.gstatic.com; " +
                 "frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com http://localhost:3000; " +
+                "frame-ancestors 'none'; " +
                 "img-src 'self' data: blob:; " +
                 "connect-src 'self' https://api.razorpay.com ws: wss:; " +
                 "object-src 'none'; " +
@@ -122,8 +125,10 @@ public class SecurityConfig {
                 "Permissions-Policy",
                 "camera=(), microphone=(), geolocation=(), payment=(self), usb=(), fullscreen=(self)"
             ))
-            // Legacy XSS protection
+            // Anti-tamper & Cross-Domain security headers
             .addHeaderWriter(new StaticHeadersWriter("X-XSS-Protection", "1; mode=block"))
+            .addHeaderWriter(new StaticHeadersWriter("X-Permitted-Cross-Domain-Policies", "none"))
+            .addHeaderWriter(new StaticHeadersWriter("X-Download-Options", "noopen"))
             // Cross-Origin policies
             .addHeaderWriter(new StaticHeadersWriter("Cross-Origin-Opener-Policy", "same-origin"))
             .addHeaderWriter(new StaticHeadersWriter("Cross-Origin-Resource-Policy", "same-site"))

@@ -599,11 +599,14 @@
             <i class="bi" [ngClass]="isEditing() ? 'bi-pencil-square' : 'bi-truck'"></i>
           </div>
           <div>
-            <h2 class="drawer-title">{{ isEditing() ? 'Edit Transport Record' : 'Register Freight Trip' }}</h2>
+            <div class="d-flex align-items-center gap-2">
+              <h2 class="drawer-title">{{ isEditing() ? 'Edit Transport Record' : 'Register Freight Trip' }}</h2>
+              <span *ngIf="isEditing()" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle font-mono fw-semibold px-2">#{{ formatTripId(transportsForm.id) }}</span>
+            </div>
             <p class="drawer-subtitle">{{ isEditing() ? 'Update recorded vehicle haulage & settlement data' : 'Log vehicle haulage, driver rental and advance cash' }}</p>
           </div>
         </div>
-        <button type="button" class="btn-drawer-close" (click)="closeFormDrawer()" aria-label="Close drawer">
+        <button type="button" class="btn-close-modal" (click)="closeFormDrawer()" title="Close drawer" aria-label="Close drawer">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
@@ -789,14 +792,22 @@
       <!-- Modal Header with Actions -->
       <div class="waybill-modal-header no-print">
         <div class="header-left-title">
-          <i class="bi bi-file-earmark-text text-primary me-2 fs-5"></i>
-          <span class="fw-bold">Consignment Waybill &amp; Freight Slip</span>
+          <div class="waybill-squircle-icon">
+            <i class="bi bi-file-earmark-text"></i>
+          </div>
+          <div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="waybill-heading">Consignment Waybill &amp; Freight Slip</span>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-mono fw-semibold px-2">#{{ formatTripId(selectedTrip?.id) }}</span>
+            </div>
+            <span class="waybill-subheading">Official logistics haulage receipt &bull; Freight advance settlement slip</span>
+          </div>
         </div>
         <div class="header-right-tools">
-          <button type="button" class="btn btn-primary btn-sm" (click)="printWaybill()">
-            <i class="bi bi-printer me-1"></i>Print Waybill
+          <button type="button" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1 fw-semibold" (click)="printWaybill()">
+            <i class="bi bi-printer"></i> Print Waybill
           </button>
-          <button type="button" class="btn btn-secondary btn-sm" (click)="closeViewModal()">
+          <button type="button" class="btn-close-modal ms-2" (click)="closeViewModal()" title="Close Waybill" aria-label="Close">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -813,7 +824,7 @@
           </div>
           <div class="slip-badge-group">
             <span class="slip-title-badge">FREIGHT DISPATCH SLIP</span>
-            <span class="slip-number font-mono">#TRP-{{ selectedTrip?.id }}</span>
+            <span class="slip-number font-mono" [title]="'Trip Record ID: ' + selectedTrip?.id">#{{ formatTripId(selectedTrip?.id) }}</span>
           </div>
         </div>
 
@@ -922,6 +933,17 @@
           <span>Futane Agro ERP Logistics Module</span>
           <span>Generated on: {{ selectedTrip?.date | indianDate }}</span>
           <span>System Verified Slip</span>
+        </div>
+      </div>
+
+      <!-- Docked Modal Footer Actions -->
+      <div class="waybill-modal-footer no-print d-flex align-items-center justify-content-between p-3 border-top bg-light">
+        <span class="text-muted small"><i class="bi bi-info-circle me-1"></i>Official Computer-Generated Consignment Slip.</span>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeViewModal()">Close</button>
+          <button type="button" class="btn btn-primary btn-sm" (click)="printWaybill()">
+            <i class="bi bi-printer me-1"></i>Print Waybill
+          </button>
         </div>
       </div>
     </div>

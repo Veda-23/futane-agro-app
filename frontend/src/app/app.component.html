@@ -1,5 +1,14 @@
-<app-login *ngIf="!isAuthenticated" (onLoginSuccess)="completeLogin($event)"></app-login>
-<div *ngIf="isAuthenticated" class="app-container" [class.sidebar-closed]="!isSidebarOpen" [class.sidebar-collapsed]="isSidebarCollapsed && isSidebarOpen">
+<!-- Zero-Trust Security Handshake Screen -->
+<div *ngIf="isVerifyingSession" class="zero-trust-verifier-screen">
+  <div class="verifier-card">
+    <div class="spinner-border text-primary" role="status"></div>
+    <h5 class="mt-3 fw-bold text-dark">Zero-Trust Security Verification</h5>
+    <p class="text-muted small mb-0">Performing cryptographic handshake with Futane Agro Security Gateway...</p>
+  </div>
+</div>
+
+<app-login *ngIf="!isVerifyingSession && !isAuthenticated" (onLoginSuccess)="completeLogin($event)"></app-login>
+<div *ngIf="!isVerifyingSession && isAuthenticated" class="app-container" [class.sidebar-closed]="!isSidebarOpen" [class.sidebar-collapsed]="isSidebarCollapsed && isSidebarOpen">
   <!-- Sidebar Backdrop (Mobile/Tablet only) -->
   <div class="sidebar-backdrop" *ngIf="isSidebarOpen" (click)="toggleSidebar()"></div>
 
@@ -42,12 +51,20 @@
     </app-header>
 
     <div class="content-body animated-fade">
-      <!-- 1. Dashboard Tab — eager: it's the landing page, must render immediately -->
-      <app-dashboard *ngIf="renderedTabs['dashboard']" [hidden]="activeTab !== 'dashboard'" [style.display]="activeTab === 'dashboard' ? 'block' : 'none'" [currentLang]="currentLang" [loggedInUser]="loggedInUser" (onNavigateTab)="switchTab($event)"></app-dashboard>
+      <!-- 1. Dashboard Tab -->
+      <app-dashboard
+        [class.tab-active-view]="activeTab === 'dashboard'"
+        [hidden]="activeTab !== 'dashboard'"
+        [style.display]="activeTab === 'dashboard' ? 'block' : 'none'"
+        [currentLang]="currentLang"
+        [loggedInUser]="loggedInUser"
+        (onNavigateTab)="switchTab($event)">
+      </app-dashboard>
 
       <!-- 2 & 3. Production Tabs (Daily & Monthly) -->
-      @defer (when renderedTabs['production'] || renderedTabs['monthly-production']) {
-        <app-production *ngIf="renderedTabs['production'] || renderedTabs['monthly-production']"
+      @defer (when renderedTabs['production'] || activeTab === 'production' || activeTab === 'monthly-production'; prefetch on idle) {
+        <app-production
+          [class.tab-active-view]="activeTab === 'production' || activeTab === 'monthly-production'"
           [hidden]="activeTab !== 'production' && activeTab !== 'monthly-production'"
           [style.display]="(activeTab === 'production' || activeTab === 'monthly-production') ? 'block' : 'none'"
           [currentLang]="currentLang"
@@ -66,13 +83,12 @@
           [tabFilterMinEfficiency]="filterMinEfficiency"
           (onNavigateTab)="switchTab($event)">
         </app-production>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 4. Party Tab -->
-      @defer (when renderedTabs['parties']) {
-        <app-party *ngIf="renderedTabs['parties']"
+      @defer (when renderedTabs['parties'] || activeTab === 'parties'; prefetch on idle) {
+        <app-party
+          [class.tab-active-view]="activeTab === 'parties'"
           [hidden]="activeTab !== 'parties'"
           [style.display]="activeTab === 'parties' ? 'block' : 'none'"
           [currentLang]="currentLang"
@@ -80,14 +96,12 @@
           [loggedInUser]="loggedInUser"
           (onNavigateTab)="switchTab($event)">
         </app-party>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 5. Sales Entry Component -->
-      @defer (when renderedTabs['sales']) {
+      @defer (when renderedTabs['sales'] || activeTab === 'sales'; prefetch on idle) {
         <app-sales
-          *ngIf="renderedTabs['sales']"
+          [class.tab-active-view]="activeTab === 'sales'"
           [hidden]="activeTab !== 'sales'"
           [style.display]="activeTab === 'sales' ? 'block' : 'none'"
           [currentLang]="currentLang"
@@ -95,14 +109,12 @@
           [loggedInUser]="loggedInUser"
           (onNavigateTab)="switchTab($event)">
         </app-sales>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 6. Customer Receipts & Payment Collections -->
-      @defer (when renderedTabs['payments']) {
+      @defer (when renderedTabs['payments'] || activeTab === 'payments'; prefetch on idle) {
         <app-payments
-          *ngIf="renderedTabs['payments']"
+          [class.tab-active-view]="activeTab === 'payments'"
           [hidden]="activeTab !== 'payments'"
           [style.display]="activeTab === 'payments' ? 'block' : 'none'"
           [currentLang]="currentLang"
@@ -110,14 +122,12 @@
           [loggedInUser]="loggedInUser"
           (onNavigateTab)="switchTab($event)">
         </app-payments>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 7. Polymer Raw Materials & PP Granules Inventory -->
-      @defer (when renderedTabs['raw-materials']) {
+      @defer (when renderedTabs['raw-materials'] || activeTab === 'raw-materials'; prefetch on idle) {
         <app-raw-materials
-          *ngIf="renderedTabs['raw-materials']"
+          [class.tab-active-view]="activeTab === 'raw-materials'"
           [hidden]="activeTab !== 'raw-materials'"
           [style.display]="activeTab === 'raw-materials' ? 'block' : 'none'"
           [currentLang]="currentLang"
@@ -125,14 +135,12 @@
           [loggedInUser]="loggedInUser"
           (onNavigateTab)="switchTab($event)">
         </app-raw-materials>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 8. Polymer Suppliers & Vendor Directory Tab -->
-      @defer (when renderedTabs['vendors']) {
+      @defer (when renderedTabs['vendors'] || activeTab === 'vendors'; prefetch on idle) {
         <app-vendors
-          *ngIf="renderedTabs['vendors']"
+          [class.tab-active-view]="activeTab === 'vendors'"
           [hidden]="activeTab !== 'vendors'"
           [style.display]="activeTab === 'vendors' ? 'block' : 'none'"
           [currentLang]="currentLang"
@@ -140,14 +148,12 @@
           [loggedInUser]="loggedInUser"
           (onNavigateTab)="switchTab($event)">
         </app-vendors>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 9. Finished Goods & Crate Warehouse Inventory -->
-      @defer (when renderedTabs['inventory']) {
+      @defer (when renderedTabs['inventory'] || activeTab === 'inventory'; prefetch on idle) {
         <app-inventory
-          *ngIf="renderedTabs['inventory']"
+          [class.tab-active-view]="activeTab === 'inventory'"
           [hidden]="activeTab !== 'inventory'"
           [style.display]="activeTab === 'inventory' ? 'block' : 'none'"
           [currentLang]="currentLang"
@@ -155,13 +161,12 @@
           [loggedInUser]="loggedInUser"
           (onNavigateTab)="switchTab($event)">
         </app-inventory>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 10. Employees Directory & Workforce Management -->
-      @defer (when renderedTabs['employees']) {
-        <app-employees *ngIf="renderedTabs['employees']"
+      @defer (when renderedTabs['employees'] || activeTab === 'employees'; prefetch on idle) {
+        <app-employees
+          [class.tab-active-view]="activeTab === 'employees'"
           [hidden]="activeTab !== 'employees'"
           [style.display]="activeTab === 'employees' ? 'block' : 'none'"
           [currentLang]="currentLang"
@@ -169,13 +174,12 @@
           [loggedInUser]="loggedInUser"
           (onNavigateTab)="switchTab($event)">
         </app-employees>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 11. Salaries & Payroll Registry -->
-      @defer (when renderedTabs['salaries']) {
-        <app-salaries *ngIf="renderedTabs['salaries']"
+      @defer (when renderedTabs['salaries'] || activeTab === 'salaries'; prefetch on idle) {
+        <app-salaries
+          [class.tab-active-view]="activeTab === 'salaries'"
           [hidden]="activeTab !== 'salaries'"
           [style.display]="activeTab === 'salaries' ? 'block' : 'none'"
           [currentLang]="currentLang"
@@ -183,13 +187,12 @@
           [loggedInUser]="loggedInUser"
           (onNavigateTab)="switchTab($event)">
         </app-salaries>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 12. Transport & Logistics Management -->
-      @defer (when renderedTabs['transports']) {
-        <app-transports *ngIf="renderedTabs['transports']"
+      @defer (when renderedTabs['transports'] || activeTab === 'transports'; prefetch on idle) {
+        <app-transports
+          [class.tab-active-view]="activeTab === 'transports'"
           [hidden]="activeTab !== 'transports'"
           [style.display]="activeTab === 'transports' ? 'block' : 'none'"
           [currentLang]="currentLang"
@@ -197,13 +200,12 @@
           [loggedInUser]="loggedInUser"
           (onNavigateTab)="switchTab($event)">
         </app-transports>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 13. Driver Directory & Fleet Personnel -->
-      @defer (when renderedTabs['drivers']) {
-        <app-drivers *ngIf="renderedTabs['drivers']"
+      @defer (when renderedTabs['drivers'] || activeTab === 'drivers'; prefetch on idle) {
+        <app-drivers
+          [class.tab-active-view]="activeTab === 'drivers'"
           [hidden]="activeTab !== 'drivers'"
           [style.display]="activeTab === 'drivers' ? 'block' : 'none'"
           [currentLang]="currentLang"
@@ -212,13 +214,12 @@
           [transportsList]="transportsList"
           (onNavigateTab)="switchTab($event)">
         </app-drivers>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 14. Invoice Generation Tab -->
-      @defer (when renderedTabs['invoices']) {
-        <app-invoices *ngIf="renderedTabs['invoices']"
+      @defer (when renderedTabs['invoices'] || activeTab === 'invoices'; prefetch on idle) {
+        <app-invoices
+          [class.tab-active-view]="activeTab === 'invoices'"
           [hidden]="activeTab !== 'invoices'"
           [style.display]="activeTab === 'invoices' ? 'block' : 'none'"
           [currentLang]="currentLang"
@@ -226,13 +227,12 @@
           [loggedInUser]="loggedInUser"
           [parties]="parties">
         </app-invoices>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 14b. Billing Hub & Document Center -->
-      @defer (when renderedTabs['billinghub']) {
-        <app-billing-hub *ngIf="renderedTabs['billinghub']"
+      @defer (when renderedTabs['billinghub'] || activeTab === 'billinghub'; prefetch on idle) {
+        <app-billing-hub
+          [class.tab-active-view]="activeTab === 'billinghub'"
           [hidden]="activeTab !== 'billinghub'"
           [style.display]="activeTab === 'billinghub' ? 'block' : 'none'"
           [currentLang]="currentLang"
@@ -246,13 +246,12 @@
           [salariesList]="salariesList"
           [settingsList]="settingsList">
         </app-billing-hub>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 15. Reports Tab -->
-      @defer (when renderedTabs['reports']) {
-        <app-reports *ngIf="renderedTabs['reports']"
+      @defer (when renderedTabs['reports'] || activeTab === 'reports'; prefetch on idle) {
+        <app-reports
+          [class.tab-active-view]="activeTab === 'reports'"
           [hidden]="activeTab !== 'reports'"
           [style.display]="activeTab === 'reports' ? 'block' : 'none'"
           [currentLang]="currentLang"
@@ -266,13 +265,12 @@
           [paymentsList]="paymentsList"
           [expensesList]="expensesList">
         </app-reports>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 17. Machines & Factory Assets Registry -->
-      @defer (when renderedTabs['machines']) {
-        <app-machines *ngIf="renderedTabs['machines']"
+      @defer (when renderedTabs['machines'] || activeTab === 'machines'; prefetch on idle) {
+        <app-machines
+          [class.tab-active-view]="activeTab === 'machines'"
           [hidden]="activeTab !== 'machines'"
           [style.display]="activeTab === 'machines' ? 'block' : 'none'"
           [currentLang]="currentLang"
@@ -280,13 +278,12 @@
           [loggedInUser]="loggedInUser"
           (onNavigateTab)="switchTab($event)">
         </app-machines>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 18. Logistics & Dispatch Registry Tab -->
-      @defer (when renderedTabs['dispatch']) {
-        <app-dispatch *ngIf="renderedTabs['dispatch']"
+      @defer (when renderedTabs['dispatch'] || activeTab === 'dispatch'; prefetch on idle) {
+        <app-dispatch
+          [class.tab-active-view]="activeTab === 'dispatch'"
           [hidden]="activeTab !== 'dispatch'"
           [style.display]="activeTab === 'dispatch' ? 'block' : 'none'"
           [currentLang]="currentLang"
@@ -296,39 +293,36 @@
           [dispatchesList]="dispatchesList"
           (onNavigateTab)="switchTab($event)">
         </app-dispatch>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 19. Expenses Registry & Cost Center Tab -->
-      @defer (when renderedTabs['expenses']) {
-        <app-expenses *ngIf="renderedTabs['expenses']"
+      @defer (when renderedTabs['expenses'] || activeTab === 'expenses'; prefetch on idle) {
+        <app-expenses
+          [class.tab-active-view]="activeTab === 'expenses'"
           [hidden]="activeTab !== 'expenses'"
           [style.display]="activeTab === 'expenses' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser">
         </app-expenses>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 20. Bank & Cash Reconciliation Ledger Tab -->
-      @defer (when renderedTabs['bank']) {
-        <app-bank *ngIf="renderedTabs['bank']"
+      @defer (when renderedTabs['bank'] || activeTab === 'bank'; prefetch on idle) {
+        <app-bank
+          [class.tab-active-view]="activeTab === 'bank'"
           [hidden]="activeTab !== 'bank'"
           [style.display]="activeTab === 'bank' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser">
         </app-bank>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 21. Real Power BI–Style Executive Business Intelligence Suite -->
-      @defer (when renderedTabs['analytics']) {
-        <app-analytics *ngIf="renderedTabs['analytics']"
+      @defer (when renderedTabs['analytics'] || activeTab === 'analytics'; prefetch on idle) {
+        <app-analytics
+          [class.tab-active-view]="activeTab === 'analytics'"
           [hidden]="activeTab !== 'analytics'"
           [style.display]="activeTab === 'analytics' ? 'block' : 'none'"
           [currentLang]="currentLang"
@@ -342,26 +336,24 @@
           [computedNetProfit]="computedNetProfit"
           (onNavigateTab)="navigateTo($event)">
         </app-analytics>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 16. Security Audit Logs & Activity Trail -->
-      @defer (when renderedTabs['audit-logs']) {
-        <app-audit-logs *ngIf="renderedTabs['audit-logs']"
+      @defer (when renderedTabs['audit-logs'] || activeTab === 'audit-logs'; prefetch on idle) {
+        <app-audit-logs
+          [class.tab-active-view]="activeTab === 'audit-logs'"
           [hidden]="activeTab !== 'audit-logs'"
           [style.display]="activeTab === 'audit-logs' ? 'block' : 'none'"
           [currentLang]="currentLang"
           [activeTab]="activeTab"
           [loggedInUser]="loggedInUser">
         </app-audit-logs>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
       <!-- 23. Super Admin & Settings Control Center -->
-      @defer (when renderedTabs['settings']) {
-        <app-settings *ngIf="renderedTabs['settings']"
+      @defer (when renderedTabs['settings'] || activeTab === 'settings'; prefetch on idle) {
+        <app-settings
+          [class.tab-active-view]="activeTab === 'settings'"
           [hidden]="activeTab !== 'settings'"
           [style.display]="activeTab === 'settings' ? 'block' : 'none'"
           [currentLang]="currentLang"
@@ -374,8 +366,6 @@
           (toggleTheme)="toggleDarkMode($event)"
           (reloadData)="refreshCurrentTab()">
         </app-settings>
-      } @loading {
-        <div class="tab-loading-state"><div class="tab-spinner"></div></div>
       }
 
     </div>

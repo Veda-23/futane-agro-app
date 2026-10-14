@@ -647,6 +647,7 @@ export class InventoryComponent implements OnInit {
     this.adjustItem = null;
   }
 
+
   get calculatedAdjustedStock(): number {
     if (!this.adjustItem) return 0;
     const current = this.adjustItem.currentStock || 0;
@@ -733,6 +734,45 @@ export class InventoryComponent implements OnInit {
   closeDetails() {
     this.isDetailsOpen = false;
     this.selectedItem = null;
+  }
+
+  @HostListener('document:keydown.escape')
+  handleEscapeKey(): void {
+    if (this.isDetailsOpen) {
+      this.closeDetails();
+    } else if (this.isFormOpen) {
+      this.closeForm();
+    } else if (this.isAdjustmentOpen) {
+      this.closeAdjustmentModal();
+    }
+  }
+
+  formatSkuBadge(item: any): string {
+    if (!item) return '';
+    const rawId = String(item.id ?? item.inventoryId ?? '');
+    if (!rawId) return 'SKU-CR-001';
+    if (rawId.toUpperCase().startsWith('CR-') || rawId.toUpperCase().startsWith('SKU-')) {
+      return rawId.toUpperCase();
+    }
+    if (rawId.includes('-') || rawId.length > 8) {
+      const clean = rawId.replace(/[^a-zA-Z0-9]/g, '');
+      const prefix = clean.substring(0, 6).toUpperCase();
+      return `SKU-CR-${prefix}`;
+    }
+    return `SKU-CR-${rawId.padStart(3, '0')}`;
+  }
+
+  formatShortId(id: any): string {
+    if (!id && id !== 0) return '';
+    const str = String(id);
+    if (str.toUpperCase().startsWith('CR-') || str.toUpperCase().startsWith('SKU-')) {
+      return str.toUpperCase();
+    }
+    if (str.includes('-') || str.length > 8) {
+      const clean = str.replace(/[^a-zA-Z0-9]/g, '');
+      return clean.substring(0, 6).toUpperCase();
+    }
+    return str;
   }
 
   // ======================================================

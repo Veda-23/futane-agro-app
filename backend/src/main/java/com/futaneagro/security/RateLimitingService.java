@@ -32,6 +32,7 @@ public class RateLimitingService {
         OTP_VERIFY(5, 60_000L),        // 5 attempts / 1 min
         PASSWORD_CHANGE(5, 60_000L),   // 5 attempts / 1 min
         REFRESH_TOKEN(15, 60_000L),    // 15 requests / 1 min
+        SESSION_VERIFY(30, 60_000L),   // 30 requests / 1 min (anti-fuzzing / anti-DDoS)
         WEBHOOK(60, 60_000L),          // 60 requests / 1 min
         UPLOAD(20, 60_000L),           // 20 uploads / 1 min
         DATA_IMPORT(10, 60_000L);      // 10 imports / 1 min

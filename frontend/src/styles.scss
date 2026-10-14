@@ -20,16 +20,16 @@
    3. ENTERPRISE DESIGN TOKENS (LIGHT MODE / DEFAULT)
    ────────────────────────────────────────────────────────────────────────── */
 :root {
-  /* ── 3.1 FUTANE AGRO ENTERPRISE BRAND PALETTE (COBALT BLUE) ── */
-  /* Primary: Professional Cobalt Blue for Manufacturing ERP */
-  --primary:              #0B47D4; /* Cobalt 600 - Main Brand */
-  --primary-hover:        #093bb0; /* Cobalt 700 */
-  --primary-active:       #072f8c; /* Cobalt 800 */
-  --primary-soft:         #EFF6FF; /* Blue 50 - Subtle background */
-  --primary-subtle:       #DBEAFE; /* Blue 100 */
-  --primary-glow:         rgba(11, 71, 212, 0.16);
-  --primary-border:       #BFDBFE; /* Blue 200 */
-  --primary-gradient:     linear-gradient(135deg, #0B47D4 0%, #0066FF 100%);
+  /* ── 3.1 FUTANE AGRO ENTERPRISE BRAND PALETTE (IMPERIAL FOREST EMERALD) ── */
+  /* Primary: Bespoke Swiss Industrial Manufacturing Palette (Zero eCommerce retail vibe) */
+  --primary:              #065F46; /* Emerald 800 - Imperial Forest Brand */
+  --primary-hover:        #047857; /* Emerald 700 */
+  --primary-active:       #064E3B; /* Emerald 900 */
+  --primary-soft:         #ECFDF5; /* Emerald 50 - Subtle background */
+  --primary-subtle:       #D1FAE5; /* Emerald 100 */
+  --primary-glow:         rgba(6, 95, 70, 0.16);
+  --primary-border:       #A7F3D0; /* Emerald 200 */
+  --primary-gradient:     linear-gradient(135deg, #065F46 0%, #047857 100%);
 
   /* Neutral Slate Palette (Surfaces, Borders, Text) */
   --neutral-50:           #F8FAFC;
@@ -168,9 +168,10 @@
   --space-10:             40px;
 
   /* Layout Dimensions (Enterprise Scale) */
-  --sidebar-width:           220px;
-  --sidebar-collapsed-width: 64px;
-  --sidebar-width-mini:      64px;
+  --sidebar-width:           240px;
+  --sidebar-collapsed-width: 68px;
+  --sidebar-effective-width: 240px;
+  --sidebar-width-mini:      68px;
   --header-height:           56px;
   --header-global-height:    56px;
   --header-padding-x:        16px;
@@ -2924,9 +2925,38 @@ input.search-field,
 .dropdown-search-box input,
 .filter-search-box input,
 .party-table-toolbar input,
-.table-toolbar input {
-  padding-left: 36px !important;
+.table-toolbar input,
+.users-search-input,
+.users-search-box input,
+.devhub-search-input,
+.devhub-search-wrap input,
+.notif-search-input,
+.notif-search-wrap input,
+.dept-search-input,
+.dept-search-box input,
+.cf-search-input,
+.cf-search-box input,
+.cf-key-input,
+.cf-input-key-wrap input {
+  padding-left: 38px !important;
   padding-right: 32px !important;
+}
+
+.users-search-box .search-icon,
+.users-search-box i.bi-search,
+.notif-search-wrap .notif-search-icon,
+.notif-search-wrap i.bi-search,
+.devhub-search-icon,
+.dept-search-icon,
+.cf-search-icon {
+  position: absolute !important;
+  left: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 14px !important;
+  color: var(--text-muted, #94a3b8) !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
 }
 
 /* Bootstrap padding utilities on inputs */
@@ -3341,19 +3371,19 @@ textarea:focus,
 .subtab-pill-btn.active,
 .subnav-tab-btn.active,
 .subtab-btn.active {
-  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+  background: linear-gradient(135deg, #065F46 0%, #047857 100%) !important;
   border-color: transparent !important;
   color: #ffffff !important;
   font-weight: 700 !important;
-  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.32) !important;
+  box-shadow: 0 4px 14px rgba(6, 95, 70, 0.32) !important;
   animation: subtabPillActivePop 0.24s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 
 /* Emerald theme override where active is emerald green */
 .subtabs-classification-bar .subtab-pill-btn.active,
 .vendors-enterprise-container .subtab-pill-btn.active {
-  background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
-  box-shadow: 0 4px 14px rgba(11, 71, 212, 0.32) !important;
+  background: linear-gradient(135deg, #065F46 0%, #047857 100%) !important;
+  box-shadow: 0 4px 14px rgba(6, 95, 70, 0.32) !important;
 }
 
 .settings-nav-pill.active i,
@@ -3614,6 +3644,7 @@ app-settings {
   filter: none !important;
   contain: none !important;
   perspective: none !important;
+  will-change: auto !important;
 }
 
 /* Elevate content-body and app components above sticky app-header when any modal/drawer is open */
@@ -3669,6 +3700,7 @@ body:has([role="dialog"]) app-header,
 .sales-dossier-overlay,
 .dispatch-modal-overlay,
 .dispatch-dossier-overlay,
+.production-modal-overlay,
 .drawer-backdrop,
 .invoice-drawer-backdrop,
 .erp-drawer-overlay,
@@ -3680,6 +3712,12 @@ body:has([role="dialog"]) app-header,
 .salary-modal-backdrop,
 .audit-modal-backdrop,
 .custom-modal-backdrop,
+.drawer-backdrop,
+.modal-backdrop,
+.payments-modal-overlay,
+.receipt-voucher-backdrop,
+.voucher-modal-backdrop,
+.invoice-modal-overlay,
 [class*="-modal-overlay"],
 [class*="-modal-backdrop"],
 [class*="-drawer-overlay"],
@@ -3693,15 +3731,15 @@ body:has([role="dialog"]) app-header,
   width: 100vw !important;
   height: 100vh !important;
   background: rgba(15, 23, 42, 0.65) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  backdrop-filter: blur(8px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(140%) !important;
   filter: none !important;
-  z-index: 2000 !important;
+  z-index: 99990 !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  justify-content: flex-start !important;
-  padding: 24px 16px !important;
+  justify-content: center !important;
+  padding: 16px !important;
   box-sizing: border-box !important;
   animation: backdropCleanFadeIn 0.18s ease both !important;
   overflow-y: auto !important;
@@ -3726,33 +3764,20 @@ body:has([role="dialog"]) app-header,
 .notif-modal-dialog,
 .sec-confirm-modal,
 .restore-modal-content,
-.invoice-modal-card,
 .importer-modal,
 .audit-modal-content,
 .drawer-panel,
-.slide-drawer,
-.slide-in-drawer,
 .side-drawer,
 .invoice-drawer-panel,
-.dossier-voucher-dialog,
-.dossier-modal-dialog,
-.waybill-modal-dialog,
-.receipt-voucher-dialog,
-.voucher-modal-dialog,
-.grn-voucher-dialog,
-.dispatch-modal-dialog,
-.dispatch-dossier-dialog,
-.outward-modal-dialog,
-.sales-dossier-dialog,
-.modal-dialog-voucher {
+.dept-modal-content {
   background: var(--bg-surface, #ffffff) !important;
   border: 1px solid var(--border-card, #e2e8f0) !important;
   border-radius: var(--radius-xl, 14px) !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
-  width: 720px !important;
-  max-width: calc(100vw - 32px) !important;
+  width: clamp(320px, 92vw, 640px) !important;
+  max-width: calc(100vw - var(--sidebar-effective-width, 240px) - 32px) !important;
   height: auto !important;
-  max-height: calc(100vh - 48px) !important;
+  max-height: min(calc(100dvh - 80px), 820px) !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
@@ -3767,9 +3792,48 @@ body:has([role="dialog"]) app-header,
   animation: modalCenterScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both !important;
 }
 
-/* 3. Sibling popups/drawers: centered via fixed coordinates, clamped within viewport */
-.erp-drawer,
+/* Wide Modals, Vouchers & Large Dossiers */
+.modal-large,
+.modal-lg,
+.modal-content.modal-large,
+.party-modal-dialog,
+.payments-modal-dialog,
+.production-modal-dialog,
+.voucher-modal-dialog,
+.outward-modal-dialog,
+.dispatch-modal-dialog,
+.dispatch-dossier-dialog,
+.sales-dossier-dialog,
+.dossier-modal-dialog,
+.dossier-modal-container,
+.waybill-modal-dialog,
+.receipt-voucher-dialog,
+.invoice-modal-card,
+.audit-modal-content,
+.importer-modal,
+.drawer-panel.drawer-panel-wide,
+.drawer-panel-wide,
+.drawer-wide,
+.erp-drawer-wide {
+  width: clamp(320px, 94vw, 840px) !important;
+  max-width: calc(100vw - var(--sidebar-effective-width, 240px) - 32px) !important;
+}
+
+/* Compact Confirmation & Alert Dialogs */
+.modal-small,
+.modal-sm,
+.sec-confirm-modal,
+.restore-modal-content {
+  width: clamp(280px, 88vw, 440px) !important;
+  max-width: calc(100vw - var(--sidebar-effective-width, 240px) - 32px) !important;
+}
+
+/* 3. Sibling popups/drawers & vouchers: centered via fixed coordinates, clamped within workspace */
 .enterprise-drawer,
+.enterprise-drawer.drawer-open,
+.voucher-modal-container,
+.voucher-modal-dialog,
+.invoice-modal-card,
 .sales-drawer,
 .party-drawer,
 .party-drawer.drawer-open,
@@ -3778,23 +3842,31 @@ body:has([role="dialog"]) app-header,
 .waybill-modal-dialog,
 .dossier-modal-dialog,
 .dossier-modal-container,
-.dispatch-modal-dialog,
-.dispatch-dossier-dialog,
+.dossier-voucher-dialog,
+.grn-voucher-dialog,
+.production-modal-dialog,
 .outward-modal-dialog,
 .sales-dossier-dialog,
-.grn-voucher-dialog,
+.dispatch-modal-dialog,
+.dispatch-dossier-dialog,
 .receipt-voucher-dialog,
+.slide-drawer,
+.slide-in-drawer,
+.erp-drawer,
+.drawer-panel,
+.modal-dialog-box,
 [role="dialog"].party-modal-dialog,
 [role="dialog"].payments-modal-dialog,
+[role="dialog"].production-modal-dialog,
 [role="dialog"].dossier-modal-container {
   background: var(--bg-surface, #ffffff) !important;
   border: 1px solid var(--border-card, #e2e8f0) !important;
   border-radius: var(--radius-xl, 14px) !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
-  width: 760px !important;
-  max-width: calc(100vw - 32px) !important;
+  width: clamp(320px, 94vw, 760px) !important;
+  max-width: calc(100vw - var(--sidebar-effective-width, 240px) - 32px) !important;
   height: auto !important;
-  max-height: calc(100vh - 48px) !important;
+  max-height: min(calc(100dvh - 80px), 820px) !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
@@ -3802,11 +3874,123 @@ body:has([role="dialog"]) app-header,
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
-  z-index: 2005 !important;
+  z-index: 100000 !important;
   margin: 0 !important;
   opacity: 1 !important;
   pointer-events: auto !important;
   animation: modalFixedCenterIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+}
+
+@media (min-width: 1025px) {
+  /* Mathematical Workspace Centering for fixed-positioned modals & vouchers */
+  body:not(.sidebar-closed) .party-modal-dialog,
+  body:not(.sidebar-closed) .payments-modal-dialog,
+  body:not(.sidebar-closed) .waybill-modal-dialog,
+  body:not(.sidebar-closed) .dossier-modal-dialog,
+  body:not(.sidebar-closed) .dossier-modal-container,
+  body:not(.sidebar-closed) .production-modal-dialog,
+  body:not(.sidebar-closed) .outward-modal-dialog,
+  body:not(.sidebar-closed) .sales-dossier-dialog,
+  body:not(.sidebar-closed) .sales-drawer,
+  body:not(.sidebar-closed) .dispatch-modal-dialog,
+  body:not(.sidebar-closed) .dispatch-dossier-dialog,
+  body:not(.sidebar-closed) .receipt-voucher-dialog,
+  body:not(.sidebar-closed) .erp-drawer,
+  body:not(.sidebar-closed) .enterprise-drawer,
+  body:not(.sidebar-closed) .voucher-modal-container,
+  body:not(.sidebar-closed) .voucher-modal-dialog,
+  body:not(.sidebar-closed) .invoice-modal-card,
+  body:not(.sidebar-closed) .grn-voucher-dialog,
+  body:not(.sidebar-closed) .dossier-voucher-dialog,
+  body:not(.sidebar-closed) .slide-drawer,
+  body:not(.sidebar-closed) .slide-in-drawer,
+  body:not(.sidebar-closed) .drawer-panel,
+  body:not(.sidebar-closed) .modal-dialog-box,
+  body:not(.sidebar-closed) [role="dialog"].party-modal-dialog,
+  body:not(.sidebar-closed) [role="dialog"].payments-modal-dialog,
+  body:not(.sidebar-closed) [role="dialog"].production-modal-dialog,
+  body:not(.sidebar-closed) [role="dialog"].dossier-modal-container,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .party-modal-dialog,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .payments-modal-dialog,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .waybill-modal-dialog,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .dossier-modal-dialog,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .dossier-modal-container,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .dispatch-modal-dialog,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .dispatch-dossier-dialog,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .production-modal-dialog,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .outward-modal-dialog,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .sales-dossier-dialog,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .sales-drawer,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .receipt-voucher-dialog,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .erp-drawer,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .enterprise-drawer,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .voucher-modal-container,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .voucher-modal-dialog,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .invoice-modal-card,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .grn-voucher-dialog,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .dossier-voucher-dialog,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .slide-drawer,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .slide-in-drawer,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .drawer-panel,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .modal-dialog-box,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) [role="dialog"].party-modal-dialog,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) [role="dialog"].payments-modal-dialog,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) [role="dialog"].production-modal-dialog,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) [role="dialog"].dossier-modal-container {
+    left: calc(50% + (var(--sidebar-width, 240px) / 2)) !important;
+    transform: translate(-50%, -50%) !important;
+  }
+
+  .app-container.sidebar-collapsed .party-modal-dialog,
+  .app-container.sidebar-collapsed .payments-modal-dialog,
+  .app-container.sidebar-collapsed .waybill-modal-dialog,
+  .app-container.sidebar-collapsed .dossier-modal-dialog,
+  .app-container.sidebar-collapsed .dossier-modal-container,
+  .app-container.sidebar-collapsed .dispatch-modal-dialog,
+  .app-container.sidebar-collapsed .dispatch-dossier-dialog,
+  .app-container.sidebar-collapsed .production-modal-dialog,
+  .app-container.sidebar-collapsed .outward-modal-dialog,
+  .app-container.sidebar-collapsed .sales-dossier-dialog,
+  .app-container.sidebar-collapsed .receipt-voucher-dialog,
+  .app-container.sidebar-collapsed .erp-drawer,
+  .app-container.sidebar-collapsed .enterprise-drawer,
+  .app-container.sidebar-collapsed .voucher-modal-container,
+  .app-container.sidebar-collapsed .invoice-modal-card,
+  .app-container.sidebar-collapsed .grn-voucher-dialog,
+  .app-container.sidebar-collapsed .dossier-voucher-dialog,
+  .app-container.sidebar-collapsed .slide-drawer,
+  .app-container.sidebar-collapsed [role="dialog"].party-modal-dialog,
+  .app-container.sidebar-collapsed [role="dialog"].payments-modal-dialog,
+  .app-container.sidebar-collapsed [role="dialog"].production-modal-dialog,
+  .app-container.sidebar-collapsed [role="dialog"].dossier-modal-container {
+    left: calc(50% + (var(--sidebar-collapsed-width, 70px) / 2)) !important;
+    transform: translate(-50%, -50%) !important;
+  }
+
+  .app-container.sidebar-closed .party-modal-dialog,
+  .app-container.sidebar-closed .payments-modal-dialog,
+  .app-container.sidebar-closed .waybill-modal-dialog,
+  .app-container.sidebar-closed .dossier-modal-dialog,
+  .app-container.sidebar-closed .dossier-modal-container,
+  .app-container.sidebar-closed .dispatch-modal-dialog,
+  .app-container.sidebar-closed .dispatch-dossier-dialog,
+  .app-container.sidebar-closed .production-modal-dialog,
+  .app-container.sidebar-closed .outward-modal-dialog,
+  .app-container.sidebar-closed .sales-dossier-dialog,
+  .app-container.sidebar-closed .receipt-voucher-dialog,
+  .app-container.sidebar-closed .erp-drawer,
+  .app-container.sidebar-closed .enterprise-drawer,
+  .app-container.sidebar-closed .voucher-modal-container,
+  .app-container.sidebar-closed .invoice-modal-card,
+  .app-container.sidebar-closed .grn-voucher-dialog,
+  .app-container.sidebar-closed .dossier-voucher-dialog,
+  .app-container.sidebar-closed .slide-drawer,
+  .app-container.sidebar-closed [role="dialog"].party-modal-dialog,
+  .app-container.sidebar-closed [role="dialog"].payments-modal-dialog,
+  .app-container.sidebar-closed [role="dialog"].production-modal-dialog,
+  .app-container.sidebar-closed [role="dialog"].dossier-modal-container {
+    left: 50% !important;
+  }
 }
 
 .drawer-panel.drawer-panel-wide,
@@ -3819,8 +4003,8 @@ body:has([role="dialog"]) app-header,
 .dispatch-dossier-dialog,
 .sales-dossier-dialog,
 .voucher-modal-dialog {
-  width: 860px !important;
-  max-width: calc(100vw - 32px) !important;
+  width: clamp(320px, 94vw, 840px) !important;
+  max-width: calc(100vw - var(--sidebar-effective-width, 240px) - 32px) !important;
 }
 
 /* Universal Pinned Headers across all popups/drawers */
@@ -3963,7 +4147,11 @@ body:has([role="dialog"]) app-header,
   flex-shrink: 0 !important;
 }
 
-.modal-header {
+.modal-header,
+.cf-modal-header,
+.notif-modal-header,
+.sec-modal-header,
+.dept-modal-header {
   padding: 14px 20px !important;
   border-bottom: 1px solid var(--border-color) !important;
   display: flex !important;
@@ -3972,13 +4160,23 @@ body:has([role="dialog"]) app-header,
   flex-shrink: 0 !important;
 }
 
-.modal-body {
-  padding: 20px !important;
+.modal-body,
+.cf-modal-body,
+.notif-modal-body,
+.sec-modal-body,
+.dept-modal-body {
+  padding: 16px 20px !important;
   overflow-y: auto !important;
-  flex: 1 !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overscroll-behavior: contain !important;
 }
 
-.modal-footer {
+.modal-footer,
+.cf-modal-footer,
+.notif-modal-footer,
+.sec-modal-footer,
+.dept-modal-footer {
   padding: 12px 20px !important;
   border-top: 1px solid var(--border-color) !important;
   display: flex !important;
@@ -5345,11 +5543,11 @@ button.btn-action-primary,
     }
 
     &.active {
-      background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+      background: linear-gradient(135deg, #065F46 0%, #047857 100%) !important;
       color: #ffffff !important;
       border-color: transparent !important;
       font-weight: 700 !important;
-      box-shadow: 0 4px 14px rgba(11, 71, 212, 0.32) !important;
+      box-shadow: 0 4px 14px rgba(6, 95, 70, 0.32) !important;
       animation: subtabPillActivePop 0.24s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 
       i, .bi {
@@ -7444,11 +7642,11 @@ button.btn-header-action.btn-primary {
   }
 
   &.active {
-    background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+    background: linear-gradient(135deg, #065F46 0%, #047857 100%) !important;
     color: #ffffff !important;
     border-color: transparent !important;
     font-weight: 700 !important;
-    box-shadow: 0 4px 14px rgba(11, 71, 212, 0.32) !important;
+    box-shadow: 0 4px 14px rgba(6, 95, 70, 0.32) !important;
 
     i, .bi {
       color: #ffffff !important;
@@ -8323,9 +8521,9 @@ body.dark-theme .table-responsive-wrapper {
 /* ── 1. Production Toolbar Select Dropdowns ──────────────────────────────── */
 .production-screen-wrapper {
   .header-icon-box {
-    background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%) !important;
+    background: linear-gradient(135deg, #065F46 0%, #047857 100%) !important;
     color: #ffffff !important;
-    box-shadow: 0 4px 14px rgba(11, 71, 212, 0.28) !important;
+    box-shadow: 0 4px 14px rgba(6, 95, 70, 0.28) !important;
 
     i, .bi {
       color: #ffffff !important;

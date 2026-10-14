@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
@@ -76,7 +76,13 @@ export class SalesComponent implements OnInit {
   dispatchesList: any[] = [];
 
   // Subtab filtering
-  subTab: 'all' | 'pending' | 'paid' | 'dispatched' | 'awaiting_outward' | 'high_volume' = 'all';
+  subTab: 'all' | 'pending' | 'paid' | 'dispatched' | 'awaiting_outward' | 'high_volume' | 'web_orders' = 'all';
+
+  // Customer Web Orders (Storefront Integration Bridge)
+  webOrdersList: any[] = [];
+  webOrdersLoading: boolean = false;
+  selectedWebOrder: any = null;
+  showWebOrderDossier: boolean = false;
 
   // Toolbar & Search Filters
   searchQuery: string = '';
@@ -94,7 +100,11 @@ export class SalesComponent implements OnInit {
     vehicleNumber: '',
     driverName: '',
     deliveryAddress: '',
-    status: 'In Transit'
+    status: 'In Transit',
+    ewayBillNo: 'EWB-9821-4455-8899',
+    carrierFleet: 'VRL Logistics Ltd.',
+    grossWeightKg: 14850,
+    tareWeightKg: 9850
   };
 
   // Sales Order Dossier Modal State
@@ -109,6 +119,17 @@ export class SalesComponent implements OnInit {
   closeSalesDossier(): void {
     this.showSalesDossierModal = false;
     this.selectedSaleForDossier = null;
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.showSalesDossierModal) {
+      this.closeSalesDossier();
+    } else if (this.isOutwardModalOpen) {
+      this.closeOutwardModal();
+    } else if (this.isFormVisible) {
+      this.cancelEditSale();
+    }
   }
 
   printSalesDossier(): void {
@@ -166,6 +187,10 @@ export class SalesComponent implements OnInit {
 
   // Preset options
   crateTypes = [
+    'Fresh Tomato Commercial Tray',
+    'Kesar Mango Export Box (10kg)',
+    'Pomegranate Super-Red Crate (5kg)',
+    'Export Grade A Grapes Crate',
     'Apple Crate',
     'Mango Crate',
     'Tomato Crate',
@@ -177,6 +202,7 @@ export class SalesComponent implements OnInit {
   ];
 
   crateMaterials = [
+    'Plastic',
     'Plastic (Virgin HDPE)',
     'Plastic (Recycled)',
     'Heavy Duty Polypropylene',
@@ -214,6 +240,7 @@ export class SalesComponent implements OnInit {
         this.dispatchesList = dispatches || [];
         this.isLoading = false;
         this.isRefreshing = false;
+        this.loadWebOrders();
         if (notify) {
           this.notificationService.success('Refreshed', 'Sales orders and outward dispatches updated.');
         }
@@ -223,6 +250,131 @@ export class SalesComponent implements OnInit {
         this.isRefreshing = false;
         this.hasError = true;
         this.notificationService.error('Load Failed', 'Could not load sales orders.');
+      }
+    });
+  }
+
+  // Load Storefront Web Orders
+  loadWebOrders(): void {
+    this.webOrdersLoading = true;
+    this.apiService.getWebOrders().pipe(catchError(() => of({ content: [] }))).subscribe({
+      next: (res: any) => {
+        this.webOrdersList = res?.content || (Array.isArray(res) ? res : []);
+        this.webOrdersLoading = false;
+      },
+      error: () => {
+        this.webOrdersLoading = false;
+      }
+    });
+  }
+
+  getWebOrdersCount(): number {
+    return this.webOrdersList.length;
+  }
+
+  openWebOrderDossier(order: any): void {
+    this.selectedWebOrder = order;
+    this.showWebOrderDossier = true;
+  }
+
+  closeWebOrderDossier(): void {
+    this.showWebOrderDossier = false;
+    this.selectedWebOrder = null;
+  }
+
+  approveWebOrder(order: any): void {
+    Swal.fire({
+      title: 'Approve Customer Web Order?',
+      text: `Reserve stock and schedule batch for Order #${order.orderNumber} (${order.customerName})`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Approve & Reserve Stock',
+      confirmButtonColor: '#065F46'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.apiService.updateWebOrderStatus(order.id, {
+          status: 'APPROVED',
+          note: 'Order approved by Plant Sales Desk. Stock reserved in warehouse.'
+        }).subscribe({
+          next: () => {
+            this.notificationService.success('Approved', `Order #${order.orderNumber} approved and stock reserved.`);
+            this.loadWebOrders();
+          },
+          error: (err) => {
+            this.notificationService.error('Error', err?.error?.message || 'Could not approve order.');
+          }
+        });
+      }
+    });
+  }
+
+  convertWebOrderToSale(order: any): void {
+    Swal.fire({
+      title: 'Generate Official GST Tax Invoice?',
+      text: `Convert web order #${order.orderNumber} into an official commercial Sales record and generate a Tax Invoice.`,
+      icon: 'info',
+      showCancelButton: true,
+      confirmButtonText: 'Convert & Invoice',
+      confirmButtonColor: '#d97706'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.apiService.convertWebOrderToSale(order.id).subscribe({
+          next: (resp: any) => {
+            this.notificationService.success('Converted', `Official Tax Invoice #${resp.invoiceNo} generated for order #${order.orderNumber}!`);
+            this.loadData();
+            this.loadWebOrders();
+          },
+          error: (err) => {
+            this.notificationService.error('Error', err?.error?.message || 'Failed to convert web order.');
+          }
+        });
+      }
+    });
+  }
+
+  dispatchWebOrder(order: any): void {
+    Swal.fire({
+      title: 'Dispatch Fleet for Web Order',
+      html: `
+        <div style="display:flex; flex-direction:column; gap:8px; text-align:left;">
+          <label style="font-size:12px; font-weight:700;">Vehicle Number</label>
+          <input id="swalVehicle" class="swal2-input" style="margin:0;" placeholder="MH-12-QB-4921">
+          <label style="font-size:12px; font-weight:700; margin-top:8px;">Driver Name</label>
+          <input id="swalDriver" class="swal2-input" style="margin:0;" placeholder="Sunil Gaikwad">
+          <label style="font-size:12px; font-weight:700; margin-top:8px;">Driver Mobile</label>
+          <input id="swalMobile" class="swal2-input" style="margin:0;" placeholder="9822011223">
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Dispatch Fleet',
+      confirmButtonColor: '#065F46',
+      preConfirm: () => {
+        const vehicle = (document.getElementById('swalVehicle') as HTMLInputElement)?.value;
+        const driver = (document.getElementById('swalDriver') as HTMLInputElement)?.value;
+        const mobile = (document.getElementById('swalMobile') as HTMLInputElement)?.value;
+        if (!vehicle || !driver) {
+          Swal.showValidationMessage('Vehicle number and Driver name are required');
+          return false;
+        }
+        return { vehicle, driver, mobile };
+      }
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        this.apiService.updateWebOrderStatus(order.id, {
+          status: 'DISPATCHED',
+          vehicleNumber: result.value.vehicle,
+          driverName: result.value.driver,
+          driverMobile: result.value.mobile,
+          note: `Dispatched on fleet ${result.value.vehicle}`
+        }).subscribe({
+          next: () => {
+            this.notificationService.success('Dispatched', `Order #${order.orderNumber} marked as DISPATCHED. Customer tracker updated in real time.`);
+            this.loadWebOrders();
+          },
+          error: (err) => {
+            this.notificationService.error('Error', err?.error?.message || 'Could not update dispatch.');
+          }
+        });
       }
     });
   }
@@ -237,10 +389,13 @@ export class SalesComponent implements OnInit {
   }
 
   // Subtab switching
-  setSubTab(tab: 'all' | 'pending' | 'paid' | 'dispatched' | 'awaiting_outward' | 'high_volume') {
+  setSubTab(tab: 'all' | 'pending' | 'paid' | 'dispatched' | 'awaiting_outward' | 'high_volume' | 'web_orders') {
     this.subTab = tab;
     this.currentPage = 1;
     this.clearSelection();
+    if (tab === 'web_orders') {
+      this.loadWebOrders();
+    }
   }
 
   // Material Outward & Dispatch Helpers
@@ -266,12 +421,17 @@ export class SalesComponent implements OnInit {
   openOutwardModal(sale: SaleItem) {
     this.selectedSaleForOutward = sale;
     const existingDispatch = this.getDispatchForSale(sale);
+    const estWeight = Math.round((sale.quantity || 1000) * 1.85);
     this.outwardForm = {
       dispatchDate: existingDispatch ? (existingDispatch.date || existingDispatch.dispatchDate) : new Date().toISOString().split('T')[0],
       vehicleNumber: existingDispatch ? existingDispatch.vehicleNumber : '',
       driverName: existingDispatch ? existingDispatch.driverName : '',
       deliveryAddress: existingDispatch ? existingDispatch.deliveryAddress : (sale.party?.city ? `${sale.party?.partyName}, ${sale.party?.city}` : ''),
-      status: existingDispatch ? existingDispatch.status : 'In Transit'
+      status: existingDispatch ? existingDispatch.status : 'In Transit',
+      ewayBillNo: 'EWB-' + Math.floor(100000000000 + Math.random() * 900000000000),
+      carrierFleet: 'VRL Logistics Ltd.',
+      grossWeightKg: 9500 + estWeight,
+      tareWeightKg: 9500
     };
     this.isOutwardModalOpen = true;
   }
@@ -554,15 +714,18 @@ export class SalesComponent implements OnInit {
   // Drawer Management
   openDrawer(sale: SaleItem) {
     this.selectedSaleForDrawer = sale;
+    const idStr = String(sale.id || '');
+    const cleanRef = sale.saleId ? String(sale.saleId) : (idStr.length > 8 ? idStr.substring(0, 8) : idStr);
     this.drawerSaleForm = {
-      id: sale.id || sale.saleId,
+      id: cleanRef,
+      rawId: sale.id || sale.saleId,
       date: sale.date || '',
       partyId: String(sale.party?.id || sale.partyId || ''),
       partyName: sale.party?.partyName || 'Customer',
       city: sale.party?.city || '',
       state: sale.party?.state || '',
       gstNumber: sale.party?.gstNumber || '',
-      crateType: sale.crateType || 'Apple Crate',
+      crateType: sale.crateType || 'Fresh Tomato Commercial Tray',
       crateMaterial: sale.crateMaterial || 'Plastic',
       quantity: sale.quantity || 0,
       rate: sale.rate || 0,
@@ -595,9 +758,10 @@ export class SalesComponent implements OnInit {
       party: selectedParty || { id: this.drawerSaleForm.partyId }
     };
 
-    this.apiService.updateSale(String(this.drawerSaleForm.id), payload).subscribe({
+    const targetId = String(this.drawerSaleForm.rawId || this.drawerSaleForm.id);
+    this.apiService.updateSale(targetId, payload).subscribe({
       next: (res) => {
-        const idx = this.salesList.findIndex(s => String(s.id || s.saleId) === String(this.drawerSaleForm.id));
+        const idx = this.salesList.findIndex(s => String(s.id) === targetId || String(s.saleId) === targetId);
         if (idx !== -1) {
           this.salesList[idx] = { ...this.salesList[idx], ...payload, ...(res || {}) };
           this.salesList = [...this.salesList];

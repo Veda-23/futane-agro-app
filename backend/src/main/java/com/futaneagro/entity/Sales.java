@@ -2,6 +2,9 @@ package com.futaneagro.entity;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
@@ -14,6 +17,7 @@ import java.time.LocalDate;
 @Table(name = "t_sal_sales")
 @Where(clause = "is_active = true AND is_deleted = false")
 @SQLDelete(sql = "UPDATE t_sal_sales SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
+@JsonIgnoreProperties(value = {"hibernateLazyInitializer", "handler"}, ignoreUnknown = true)
 public class Sales extends BaseEntity {
     @Column(name = "sale_id")
     private Integer saleId;

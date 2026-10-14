@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of, catchError } from 'rxjs';
@@ -31,6 +31,15 @@ export class MachinesComponent implements OnInit {
   @Input() loggedInUser: any = null;
   @Output() onNavigateTab = new EventEmitter<string>();
 
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKeyDown(event: KeyboardEvent): void {
+    if (this.isMachineFormOpen) {
+      this.cancelEditMachine();
+    } else if (this.isBreakdownFormOpen) {
+      this.cancelEditBreakdown();
+    }
+  }
+
   machinesList: any[] = [];
   machineBreakdownsList: any[] = [];
   isLoading = false;
@@ -48,6 +57,7 @@ export class MachinesComponent implements OnInit {
     id: any;
     machineName: string;
     machineCode: string;
+    manufacturer: string;
     capacityPerHour: number;
     installedDate: string;
     status: string;
@@ -55,6 +65,7 @@ export class MachinesComponent implements OnInit {
     id: null,
     machineName: '',
     machineCode: '',
+    manufacturer: 'Windsor Machines Ltd.',
     capacityPerHour: 450,
     installedDate: '',
     status: 'Running'
@@ -66,6 +77,7 @@ export class MachinesComponent implements OnInit {
     machineId: any;
     breakdownDate: string;
     description: string;
+    resolvedBy: string;
     downtimeHours: number;
     resolvedDate: string;
     _editId?: any;
@@ -74,6 +86,7 @@ export class MachinesComponent implements OnInit {
     machineId: '',
     breakdownDate: '',
     description: '',
+    resolvedBy: 'Rajesh Patil (Sr. Maintenance Eng.)',
     downtimeHours: 0,
     resolvedDate: ''
   };
@@ -363,6 +376,7 @@ export class MachinesComponent implements OnInit {
     const payload = {
       machineName: this.machineForm.machineName.trim(),
       machineCode: this.machineForm.machineCode.trim().toUpperCase(),
+      manufacturer: this.machineForm.manufacturer ? this.machineForm.manufacturer.trim() : 'Windsor Machines Ltd.',
       capacityPerHour: Number(this.machineForm.capacityPerHour) || 0,
       installedDate: this.machineForm.installedDate || new Date().toISOString().split('T')[0],
       status: this.machineForm.status || 'Running'
@@ -436,6 +450,7 @@ export class MachinesComponent implements OnInit {
       id: null,
       machineName: '',
       machineCode: '',
+      manufacturer: 'Windsor Machines Ltd.',
       capacityPerHour: 450,
       installedDate: '',
       status: 'Running'
@@ -470,6 +485,7 @@ export class MachinesComponent implements OnInit {
       machineId: '',
       breakdownDate: '',
       description: '',
+      resolvedBy: 'Rajesh Patil (Sr. Maintenance Eng.)',
       downtimeHours: 0,
       resolvedDate: ''
     };

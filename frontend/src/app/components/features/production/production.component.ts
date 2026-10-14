@@ -159,6 +159,38 @@ export class ProductionComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectedPpdForDossier = null;
   }
 
+  formatLotBadge(ppd: any): string {
+    if (!ppd) return 'LOT-PPD-001';
+    const rawId = String(ppd.id || ppd.batchNumber || '');
+    if (!rawId) return 'LOT-PPD-001';
+    if (rawId.toUpperCase().startsWith('LOT-')) return rawId.toUpperCase();
+    if (rawId.includes('-') || rawId.length > 8) {
+      const clean = rawId.replace(/[^a-zA-Z0-9]/g, '');
+      return `LOT-PPD-${clean.substring(0, 6).toUpperCase()}`;
+    }
+    return `LOT-PPD-${rawId.padStart(3, '0')}`;
+  }
+
+  formatShortId(id: any): string {
+    if (!id && id !== 0) return '001';
+    const str = String(id);
+    if (str.toUpperCase().startsWith('PPD-')) return str.toUpperCase().replace('PPD-', '');
+    if (str.includes('-') || str.length > 8) {
+      const clean = str.replace(/[^a-zA-Z0-9]/g, '');
+      return clean.substring(0, 6).toUpperCase();
+    }
+    return str;
+  }
+
+  @HostListener('document:keydown.escape')
+  handleEscapeKey(): void {
+    if (this.showPpdDossierModal) {
+      this.closePpdDossier();
+    } else if (this.drawerOpen) {
+      this.closeDrawerEdit();
+    }
+  }
+
   printPpdDossier() {
     window.print();
   }

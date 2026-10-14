@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -199,6 +199,25 @@ export class DriversComponent implements OnInit {
 
   getTotalFilteredTrips(): number {
     return (this.filteredDrivers || []).reduce((sum: number, d: any) => sum + this.getDriverStats(d.id).trips, 0);
+  }
+
+  formatDriverId(id: any): string {
+    if (!id && id !== 0) return 'DRV-000';
+    const str = String(id).trim();
+    if (/^\d+$/.test(str)) return `DRV-${str.padStart(4, '0')}`;
+    if (str.includes('-')) {
+      const parts = str.split('-');
+      return `DRV-${parts[0].toUpperCase()}`;
+    }
+    if (str.length > 8) return `DRV-${str.slice(0, 8).toUpperCase()}`;
+    return `DRV-${str.toUpperCase()}`;
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.isFormDrawerOpen) {
+      this.closeFormDrawer();
+    }
   }
 
   getTotalFilteredEarnings(): number {

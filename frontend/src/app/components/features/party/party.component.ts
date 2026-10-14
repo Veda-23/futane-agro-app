@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AutoSelectDirective } from '../../../directives/auto-select.directive';
@@ -449,6 +449,29 @@ export class PartyComponent implements OnInit {
     window.print();
   }
 
+  formatPartyId(id: any): string {
+    if (!id && id !== 0) return 'CLI-000';
+    const str = String(id).trim();
+    if (/^\d+$/.test(str)) return `CLI-${str.padStart(4, '0')}`;
+    if (str.includes('-')) {
+      const parts = str.split('-');
+      return `CLI-${parts[0].toUpperCase()}`;
+    }
+    if (str.length > 8) return `CLI-${str.slice(0, 8).toUpperCase()}`;
+    return `CLI-${str.toUpperCase()}`;
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.showDossierModal) {
+      this.closePartyDossier();
+    } else if (this.isFormVisible) {
+      this.cancelEditParty();
+    } else if (this.isDrawerOpen) {
+      this.closeEditDrawer();
+    }
+  }
+
   saveDrawerParty() {
     if (!this.drawerPartyForm.partyName || !this.drawerPartyForm.partyContact) {
       this.notificationService.warning('Validation Error', 'Party Name and Contact Number are required.');
@@ -471,9 +494,9 @@ export class PartyComponent implements OnInit {
 
   // --- Form CRUD Operations ---
   editParty(party: PartyRecord) {
-    this.editingPartyId = String(party.id);
+    this.editingPartyId = String(party.id || party.partyId || '');
     this.partyForm = {
-      id: party.id,
+      id: party.id || party.partyId,
       partyId: party.partyId,
       partyName: party.partyName || '',
       partyAddress: party.partyAddress || '',
@@ -481,7 +504,7 @@ export class PartyComponent implements OnInit {
       gstNumber: party.gstNumber || '',
       email: party.email || '',
       city: party.city || '',
-      state: party.state || '',
+      state: party.state || 'Maharashtra',
       isActive: party.isActive !== false,
       gstCertPath: party.gstCertPath || '',
       panCardPath: party.panCardPath || '',
@@ -542,7 +565,8 @@ export class PartyComponent implements OnInit {
       // UPDATE
       this.apiService.updateParty(this.editingPartyId, this.partyForm).subscribe({
         next: (res) => {
-          const idx = this.parties.findIndex(p => String(p.id) === String(this.editingPartyId));
+          const matchId = String(this.editingPartyId);
+          const idx = this.parties.findIndex(p => String(p.id) === matchId || String(p.partyId) === matchId);
           if (idx !== -1) {
             this.parties[idx] = { ...this.parties[idx], ...this.partyForm, ...(res || {}) };
             this.parties = [...this.parties];

@@ -539,83 +539,90 @@
             <i class="bi" [ngClass]="isEditing() ? 'bi-pencil-square' : 'bi-person-plus-fill'"></i>
           </div>
           <div>
-            <h3 class="drawer-title">{{ isEditing() ? 'Edit Driver Profile' : 'Enroll Commercial Driver' }}</h3>
+            <div class="d-flex align-items-center gap-2">
+              <h3 class="drawer-title">{{ isEditing() ? 'Edit Driver Profile' : 'Enroll Commercial Driver' }}</h3>
+              <span *ngIf="isEditing()" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle font-mono fw-semibold px-2" [title]="'Driver Record ID: ' + driverForm.id">
+                #{{ formatDriverId(driverForm.id) }}
+              </span>
+            </div>
             <p class="drawer-subtitle">
               {{ isEditing() ? 'Update commercial driving license & contact records' : 'Register haulage driver to fleet roster with RTO credentials' }}
             </p>
           </div>
         </div>
-        <button type="button" class="btn-drawer-close" (click)="closeFormDrawer()" title="Close drawer" aria-label="Close drawer">
+        <button type="button" class="btn-drawer-close" (click)="closeFormDrawer()" title="Close drawer (Esc)" aria-label="Close drawer">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
 
       <div class="drawer-content">
         <form (submit)="saveDriver()" class="driver-form">
-          <!-- Full Driver Name -->
-          <div class="form-group">
-            <label class="field-label">
-              Driver Full Name <span class="required-star">*</span>
-            </label>
-            <div class="input-with-icon">
-              <i class="bi bi-person input-leading-icon"></i>
-              <input type="text" 
-                     class="form-control" 
-                     [(ngModel)]="driverForm.driverName" 
-                     name="driverName" 
-                     placeholder="e.g. Sanjay B. Shinde" 
-                     required
-                     appAutoSelect>
+          <div class="driver-grid-2col">
+            <!-- Full Driver Name -->
+            <div class="form-group">
+              <label class="field-label">
+                Driver Full Name <span class="required-star">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="bi bi-person input-leading-icon"></i>
+                <input type="text" 
+                       class="form-control" 
+                       [(ngModel)]="driverForm.driverName" 
+                       name="driverName" 
+                       placeholder="e.g. Sanjay B. Shinde" 
+                       required
+                       appAutoSelect>
+              </div>
             </div>
-          </div>
 
-          <!-- Mobile Phone Number -->
-          <div class="form-group">
-            <label class="field-label">
-              Mobile Contact (+91) <span class="required-star">*</span>
-            </label>
-            <div class="input-with-icon">
-              <i class="bi bi-telephone input-leading-icon"></i>
-              <input type="tel" 
-                     class="form-control font-mono" 
-                     [(ngModel)]="driverForm.mobile" 
-                     name="mobile" 
-                     placeholder="98XXXXXXXX" 
-                     maxlength="14"
-                     required>
+            <!-- Mobile Phone Number -->
+            <div class="form-group">
+              <label class="field-label">
+                Mobile Contact (+91) <span class="required-star">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="bi bi-telephone input-leading-icon"></i>
+                <input type="tel" 
+                       class="form-control font-mono" 
+                       [(ngModel)]="driverForm.mobile" 
+                       name="mobile" 
+                       placeholder="98XXXXXXXX" 
+                       maxlength="14"
+                       required>
+              </div>
             </div>
-          </div>
 
-          <!-- Commercial Driving License Number -->
-          <div class="form-group">
-            <label class="field-label">
-              Commercial Driving License (DL) <span class="required-star">*</span>
-            </label>
-            <div class="input-with-icon">
-              <i class="bi bi-card-text input-leading-icon"></i>
-              <input type="text" 
-                     class="form-control font-mono text-uppercase" 
-                     [(ngModel)]="driverForm.licenseNumber" 
-                     (input)="onLicenseInput()" 
-                     name="licenseNumber" 
-                     placeholder="MH-12-2018-0012345" 
-                     required>
+            <!-- Commercial Driving License Number -->
+            <div class="form-group">
+              <label class="field-label">
+                Commercial Driving License (DL) <span class="required-star">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="bi bi-card-text input-leading-icon"></i>
+                <input type="text" 
+                       class="form-control font-mono text-uppercase" 
+                       [(ngModel)]="driverForm.licenseNumber" 
+                       (input)="onLicenseInput()" 
+                       name="licenseNumber" 
+                       placeholder="MH-12-2018-0012345" 
+                       required>
+              </div>
             </div>
-          </div>
 
-          <!-- Depot / Residential Address -->
-          <div class="form-group">
-            <label class="field-label">
-              Base Depot / Residential Address <span class="required-star">*</span>
-            </label>
-            <div class="input-with-icon">
-              <i class="bi bi-geo-alt input-leading-icon"></i>
-              <textarea class="form-control address-textarea" 
-                        [(ngModel)]="driverForm.address" 
-                        name="address" 
-                        rows="3" 
-                        placeholder="Depot location, town, district..." 
-                        required></textarea>
+            <!-- Depot / Residential Address -->
+            <div class="form-group">
+              <label class="field-label">
+                Base Depot / Residential Address <span class="required-star">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="bi bi-geo-alt input-leading-icon"></i>
+                <input type="text" 
+                       class="form-control" 
+                       [(ngModel)]="driverForm.address" 
+                       name="address" 
+                       placeholder="Depot location, town, district..." 
+                       required>
+              </div>
             </div>
           </div>
 
@@ -635,6 +642,11 @@
       </div>
 
       <div class="drawer-footer" style="justify-content: flex-end;">
+        <button type="button" 
+                class="btn btn-secondary btn-sm me-2" 
+                (click)="closeFormDrawer()">
+          Cancel
+        </button>
         <button type="button" 
                 class="btn btn-primary btn-sm" 
                 [class.btn-amber]="isEditing()" 

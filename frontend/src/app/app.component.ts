@@ -65,6 +65,7 @@ export class AppComponent implements OnInit, OnDestroy {
   readonly isUat: boolean = (environment as any).uat === true;
   readonly isProd: boolean = environment.production && !(environment as any).uat;
   isProduction = environment.production;
+  isVerifyingSession = false;
 
   // Expose Math helper for template calls
   Math = Math;
@@ -628,29 +629,48 @@ export class AppComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Check session/local storage for session and active tab persistence
-    const cachedUser = sessionStorage.getItem('user') || localStorage.getItem('user');
+    // ── ZERO-TRUST SESSION VERIFICATION ──────────────────────────────────────────
+    // NEVER trust unvalidated client storage. Cryptographically verify token with server.
     const cachedToken = sessionStorage.getItem('jwtToken') || localStorage.getItem('jwtToken');
-    if (cachedUser) {
-      if (cachedToken && this.isTokenExpired(cachedToken)) {
-        this.handleLogout();
-      } else {
-        if (cachedToken) {
-          sessionStorage.setItem('jwtToken', cachedToken);
+    if (cachedToken && !this.isTokenExpired(cachedToken)) {
+      this.isVerifyingSession = true;
+      this.apiService.verifySession(cachedToken).subscribe({
+        next: (res: any) => {
+          this.isVerifyingSession = false;
+          if (res && res.status === 'VALID') {
+            const verifiedUser = res.user || {
+              username: res.username,
+              role: res.role || 'VIEWER',
+              name: res.name || res.username
+            };
+            sessionStorage.setItem('jwtToken', cachedToken);
+            sessionStorage.setItem('user', JSON.stringify(verifiedUser));
+            this.loggedInUser = verifiedUser;
+            this.isAuthenticated = true;
+            this.loginTime = sessionStorage.getItem('loginTime') || new Date().toString();
+            this.updateAccessibleTabs();
+            const savedTab = sessionStorage.getItem('activeTab');
+            if (savedTab && this.accessibleTabs[savedTab]) {
+              this.activeTab = savedTab;
+              this.renderedTabs[savedTab] = true;
+              this.loadedTabsSet.add(savedTab);
+            }
+            this.resetIdleTimer();
+            this.loadAllData();
+            this.cdr.detectChanges();
+          } else {
+            this.handleLogout();
+            this.cdr.detectChanges();
+          }
+        },
+        error: () => {
+          this.isVerifyingSession = false;
+          this.handleLogout();
+          this.cdr.detectChanges();
         }
-        sessionStorage.setItem('user', cachedUser);
-        this.loggedInUser = JSON.parse(cachedUser);
-        this.isAuthenticated = true;
-        this.loginTime = sessionStorage.getItem('loginTime') || new Date().toString();
-        this.updateAccessibleTabs();
-        const savedTab = sessionStorage.getItem('activeTab');
-        if (savedTab && this.accessibleTabs[savedTab]) {
-          this.activeTab = savedTab;
-          this.renderedTabs[savedTab] = true;
-          this.loadedTabsSet.add(savedTab);
-        }
-        this.resetIdleTimer();
-      }
+      });
+    } else {
+      this.handleLogout();
     }
 
     // Use environment-specific key so PROD and UAT dark mode states don't bleed into each other
@@ -676,6 +696,13 @@ export class AppComponent implements OnInit, OnDestroy {
       events.forEach(event => {
         window.addEventListener(event, () => this.resetIdleTimer(), { passive: true });
       });
+
+      // Active In-App Inactivity Watchdog: triggers if laptop left unattended for 15 minutes
+      setInterval(() => {
+        if (this.isAuthenticated && (Date.now() - this.lastActivityTime >= 900000)) { // 15 minutes
+          this.ngZone.run(() => this.logoutDueToInactivity());
+        }
+      }, 30000);
     });
   }
 
@@ -998,6 +1025,10 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   handleLogout() {
+    this.apiService.logout().subscribe({
+      next: () => {},
+      error: () => {}
+    });
     this.logAudit("Logged out");
     this.isAuthenticated = false;
     this.loggedInUser = null;
@@ -1007,7 +1038,7 @@ export class AppComponent implements OnInit, OnDestroy {
     sessionStorage.removeItem('activeTab');
     localStorage.removeItem('user');
     localStorage.removeItem('jwtToken');
-    document.cookie = "erp_session_cookie=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "erp_session_cookie=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Strict";
     this.loginTime = '';
     this.sessionDuration = '';
 
@@ -1276,6 +1307,80 @@ export class AppComponent implements OnInit, OnDestroy {
       },
       error: () => {}
     });
+    this.prewarmBackgroundTabs();
+    this.preloadTabsProgressively();
+  }
+
+  /**
+   * Enterprise Cooperative Tab Data Pre-Warmer:
+   * Staggers data pre-fetching in low-priority background ticks.
+   * Ensures that when the user switches to any tab, all tables, ledgers,
+   * and counters are already resident in memory for instantaneous (0ms) display.
+   */
+  private prewarmBackgroundTabs() {
+    if (!this.isAuthenticated) return;
+    const warmTasks: (() => void)[] = [
+      () => this.apiService.getParties().subscribe({ next: list => { if (list) this.parties = list; } }),
+      () => this.apiService.getSales().subscribe({ next: list => { if (list) this.salesList = list; } }),
+      () => this.apiService.getPpd().subscribe({ next: list => { if (list) this.ppdList = list; } }),
+      () => this.apiService.getPpm().subscribe({ next: list => { if (list) this.ppmList = list; } }),
+      () => this.apiService.getPayments().subscribe({ next: list => { if (list) this.paymentsList = list; } }),
+      () => this.apiService.getVendors().subscribe({ next: list => { if (list) this.vendors = list; } }),
+      () => this.apiService.getRawMaterials().subscribe({ next: list => { if (list) this.rawMaterialsList = list; } }),
+      () => this.apiService.getEmployees().subscribe({ next: list => { if (list) this.employees = list; } }),
+      () => this.apiService.getInvoices().subscribe({ next: list => { if (list) this.invoicesList = list; } }),
+      () => this.apiService.getDispatches().subscribe({ next: list => { if (list) this.dispatchesList = list; } }),
+      () => this.apiService.getExpenses().subscribe({ next: list => { if (list) this.expensesList = list; } }),
+      () => this.apiService.getDrivers().subscribe({ next: list => { if (list) this.drivers = list; } }),
+      () => this.apiService.getSalaries().subscribe({ next: list => { if (list) this.salariesList = list; } }),
+      () => this.apiService.getBankTransactions().subscribe({ next: list => { if (list) this.bankTransactionsList = list; } })
+    ];
+
+    let taskIndex = 0;
+    const runNext = () => {
+      if (!this.isAuthenticated) return;
+      if (taskIndex < warmTasks.length) {
+        try {
+          warmTasks[taskIndex]();
+        } catch (e) {
+          console.warn('Tab prewarming non-critical warning:', e);
+        }
+        taskIndex++;
+        setTimeout(runNext, 45);
+      }
+    };
+
+    setTimeout(runNext, 180);
+  }
+
+  /**
+   * Enterprise Progressive Component Hydrator:
+   * Staggers DOM hydration for all ERP modules in the background.
+   * Ensures that before the user ever clicks any tab, the component
+   * is already compiled, hydrated, and sitting resident in DOM.
+   * Tab switches become pure CSS display toggles (0ms latency).
+   */
+  private preloadTabsProgressively() {
+    if (!this.isAuthenticated) return;
+    const tabsToPreload = [
+      'production', 'parties', 'sales', 'payments', 'inventory',
+      'raw-materials', 'vendors', 'employees', 'salaries', 'transports',
+      'drivers', 'invoices', 'billinghub', 'machines', 'dispatch',
+      'expenses', 'bank', 'reports', 'analytics', 'audit-logs', 'settings'
+    ];
+    let idx = 0;
+    const step = () => {
+      if (!this.isAuthenticated) return;
+      if (idx < tabsToPreload.length) {
+        const tab = tabsToPreload[idx];
+        this.renderedTabs[tab] = true;
+        this.loadedTabsSet.add(tab);
+        idx++;
+        this.cdr.markForCheck();
+        setTimeout(step, 45);
+      }
+    };
+    setTimeout(step, 90);
   }
 
   loadDataForTab(tab: string, notify: boolean = false) {
@@ -1541,6 +1646,11 @@ export class AppComponent implements OnInit, OnDestroy {
       if (window.innerWidth <= 1024) {
         this.isSidebarOpen = false;
       }
+
+      try {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      } catch (e) {}
+      this.cdr.markForCheck();
     }
   }
 
@@ -2137,26 +2247,79 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   generateReceipt(sale: any, paidAmount: number, paymentId: string) {
+    const invoiceNum = sale.saleId || sale.id;
+    const balanceRemaining = Math.max(0, (Number(sale.remaining) || 0) - paidAmount);
+    const dateFormatted = new Date().toLocaleString('en-IN', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true
+    });
+
     Swal.fire({
-      title: 'Payment Receipt',
+      title: '',
       html: `
-        <div style="text-align: left; font-family: monospace;">
-          <b>FUTANE AGRO INDUSTRIES PVT. LTD.</b><br>
-          ---------------------------------------<br>
-          Receipt No: RZP-${paymentId}<br>
-          Date: ${new Date().toLocaleDateString()}<br>
-          Invoice Ref: ${sale.saleId}<br>
-          Customer: ${sale.party?.partyName}<br>
-          ---------------------------------------<br>
-          Total Amount: ₹${sale.totalAmount}<br>
-          <b>Amount Paid: ₹${paidAmount}</b><br>
-          Balance Due: ₹${sale.remaining - paidAmount}<br>
-          ---------------------------------------<br>
-          Thank you for your business!
+        <div style="text-align: left; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; background: #ffffff; border-radius: 12px; padding: 4px 6px; color: #0f172a;">
+          <!-- Voucher Header -->
+          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #0B47D4; padding-bottom: 12px; margin-bottom: 14px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #0B47D4 0%, #0066FF 100%); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px;">
+                <i class="bi bi-receipt-cutoff"></i>
+              </div>
+              <div>
+                <div style="font-weight: 800; font-size: 14px; color: #0f172a; letter-spacing: -0.01em;">FUTANE AGRO INDUSTRIES PVT. LTD.</div>
+                <div style="font-size: 11px; color: #64748b; font-weight: 500;">Fruit Crate Moulding & Commercial Division</div>
+              </div>
+            </div>
+            <span style="background: rgba(11, 71, 212, 0.08); color: #0B47D4; font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.04em; text-transform: uppercase;">Payment Voucher</span>
+          </div>
+
+          <!-- Metadata Grid -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; background: #f8fafc; padding: 12px 14px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 12px; margin-bottom: 14px;">
+            <div><span style="color: #64748b; font-size: 11px;">Receipt Number:</span><br><strong style="color: #0f172a; font-family: monospace; font-size: 12.5px;">RZP-${paymentId}</strong></div>
+            <div><span style="color: #64748b; font-size: 11px;">Date & Time:</span><br><strong style="color: #0f172a;">${dateFormatted}</strong></div>
+            <div><span style="color: #64748b; font-size: 11px;">Order Reference:</span><br><strong style="color: #0B47D4; font-family: monospace;">#${invoiceNum}</strong></div>
+            <div><span style="color: #64748b; font-size: 11px;">Customer / Party:</span><br><strong style="color: #0f172a;">${sale.party?.partyName || 'Valued Customer'}</strong></div>
+            <div style="grid-column: span 2;"><span style="color: #64748b; font-size: 11px;">Ordered Items:</span><br><strong style="color: #334155;">${sale.quantity || 0} units • ${sale.crateType || 'Agricultural Crates'}</strong></div>
+          </div>
+
+          <!-- Financial Summary Strip -->
+          <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 12px; color: #475569;">Gross Order Value</span>
+              <span style="font-size: 13px; font-weight: 700; color: #1e293b;">₹${(Number(sale.totalAmount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 6px; border-top: 1px dashed #86efac; margin-bottom: 6px;">
+              <span style="font-size: 13px; font-weight: 700; color: #15803d; display: flex; align-items: center; gap: 4px;">
+                <i class="bi bi-check-circle-fill"></i> Amount Received
+              </span>
+              <span style="font-size: 16px; font-weight: 800; color: #15803d;">₹${paidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 6px; border-top: 1px dashed #86efac;">
+              <span style="font-size: 12px; color: #475569;">Remaining Due</span>
+              <span style="font-size: 13px; font-weight: 700; color: ${balanceRemaining > 0 ? '#dc2626' : '#15803d'};">₹${balanceRemaining.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            </div>
+          </div>
+
+          <!-- Footer Verification Note -->
+          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #64748b; padding-top: 6px;">
+            <span><i class="bi bi-shield-check text-success me-1"></i>Verified Gateway Transaction</span>
+            <span>Computer-Generated Receipt</span>
+          </div>
         </div>
       `,
-      icon: 'success',
-      confirmButtonText: 'Print / Close'
+      showCancelButton: true,
+      showCloseButton: true,
+      cancelButtonText: 'Close',
+      cancelButtonColor: '#94a3b8',
+      confirmButtonText: '<i class="bi bi-printer-fill me-1"></i> Print Voucher',
+      confirmButtonColor: '#0B47D4',
+      width: '540px',
+      customClass: {
+        popup: 'futane-dialog-popup futane-receipt-popup'
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.print();
+      }
     });
   }
 

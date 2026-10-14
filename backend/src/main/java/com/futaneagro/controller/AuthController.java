@@ -135,15 +135,8 @@ public class AuthController {
             }
         }
 
-        // Verify password
+        // Verify password: Strictly enforce cryptographic BCrypt hash comparison (Zero fallbacks / hardcoded credentials)
         boolean passwordMatches = passwordEncoder.matches(password, user.getPassword());
-        if (!passwordMatches && !isProductionProfile()) {
-            // Flexible fallback for Super Admin / Admin in UAT / Dev
-            if (("SUPER_ADMIN".equalsIgnoreCase(user.getUsername()) || "admin".equalsIgnoreCase(user.getUsername())) &&
-                ("superadmin123".equals(password) || "admin123".equals(password) || "admin".equals(password) || "password123".equals(password))) {
-                passwordMatches = true;
-            }
-        }
 
         if (passwordMatches) {
             // Reset attempts on successful password verification
@@ -285,12 +278,8 @@ public class AuthController {
                 }
             }
 
-            boolean otpValid = false;
-            if (cached != null && !cached.expiry.isBefore(LocalDateTime.now()) && passwordEncoder.matches(otp.trim(), cached.hashedCode)) {
-                otpValid = true;
-            } else if (!isProductionProfile() && ("666698".equals(otp.trim()) || "654321".equals(otp.trim()) || "123456".equals(otp.trim()) || (cached != null && "000000".equals(otp.trim())))) {
-                otpValid = true;
-            }
+            // Zero-Trust OTP: Strictly require valid, unexpired, BCrypt-matching cryptographic OTP (Zero static bypasses)
+            boolean otpValid = (cached != null && !cached.expiry.isBefore(LocalDateTime.now()) && passwordEncoder.matches(otp.trim(), cached.hashedCode));
 
             if (!otpValid) {
                 securityAuditService.logOtpFailed(username, request);
@@ -345,7 +334,13 @@ public class AuthController {
 
     @GetMapping("/verify-session")
     public ResponseEntity<?> verifySession(@CookieValue(value = "erp_session_cookie", required = false) String token,
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            HttpServletRequest request) {
+        if (rateLimitingService != null && rateLimitingService.isRateLimited(request, com.futaneagro.security.RateLimitingService.Action.SESSION_VERIFY)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(
+                    createErrorResponse("Too Many Requests", "Too many session verification attempts. Please wait 60 seconds.", 429));
+        }
+
         String jwtToken = token;
         if (jwtToken == null && authHeader != null && authHeader.startsWith("Bearer ")) {
             jwtToken = authHeader.substring(7);
@@ -360,13 +355,35 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
                     createErrorResponse("Unauthorized", "Session token has been revoked. Please log in again.", 401));
         }
-
         try {
             String username = jwtUtils.extractUsername(jwtToken);
             if (jwtUtils.validateToken(jwtToken, username)) {
+                String role = jwtUtils.extractClaim(jwtToken, claims -> claims.get("role", String.class));
+                Optional<User> uOpt = userRepository.findByUsernameIgnoreCase(username);
                 Map<String, Object> resp = new HashMap<>();
                 resp.put("status", "VALID");
                 resp.put("username", username);
+                resp.put("role", role != null ? role : (uOpt.isPresent() ? uOpt.get().getRole() : "VIEWER"));
+                if (uOpt.isPresent()) {
+                    User u = uOpt.get();
+                    if (Boolean.TRUE.equals(u.getAccountLocked())) {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                                createErrorResponse("Forbidden", "Account is locked due to security policy.", 403));
+                    }
+                    Map<String, Object> uData = new HashMap<>();
+                    uData.put("id", u.getId());
+                    uData.put("username", u.getUsername());
+                    uData.put("name", u.getName());
+                    uData.put("role", u.getRole());
+                    uData.put("email", u.getEmail());
+                    resp.put("user", uData);
+                } else {
+                    Map<String, Object> uData = new HashMap<>();
+                    uData.put("username", username);
+                    uData.put("role", role);
+                    uData.put("name", username);
+                    resp.put("user", uData);
+                }
                 return ResponseEntity.ok(resp);
             }
         } catch (Exception e) {
@@ -535,8 +552,23 @@ public class AuthController {
         user.setForcePasswordChange(false);
         userRepository.save(user);
 
+        // Security Fix: Invalidate all existing refresh tokens for this user upon password change
+        final String u = user.getUsername();
+        refreshTokenCache.entrySet().removeIf(e -> e.getValue().username.equalsIgnoreCase(u));
+
+        // Blacklist current session token if present
+        String authHeader = httpReq.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7).trim();
+            long expiryMs = jwtUtils.getTokenExpiryMs(token);
+            tokenBlacklistService.blacklistToken(token, expiryMs);
+        }
+
+        // Record immutable audit event
+        securityAuditService.logPasswordChanged(user.getUsername(), httpReq);
+
         Map<String, Object> res = new HashMap<>();
-        res.put("message", "Password changed successfully.");
+        res.put("message", "Password changed successfully. Active sessions have been invalidated.");
         return ResponseEntity.ok(res);
     }
 

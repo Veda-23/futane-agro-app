@@ -368,12 +368,6 @@ export class InvoicesComponent implements OnInit {
     window.print();
   }
 
-  @HostListener('document:keydown.escape')
-  onEscapeKey() {
-    if (this.selectedInvoice) this.closeInvoiceModal();
-    if (this.isCreateDrawerOpen) this.closeCreateDrawer();
-  }
-
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;

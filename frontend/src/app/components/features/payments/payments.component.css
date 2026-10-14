@@ -2767,9 +2767,9 @@ body.dark-mode .btn-page,
   position: fixed !important;
   inset: 0 !important;
   background: rgba(15, 23, 42, 0.65) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  z-index: 2000 !important;
+  backdrop-filter: blur(8px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(140%) !important;
+  z-index: 99990 !important;
 }
 
 .payments-modal-dialog {
@@ -2779,13 +2779,20 @@ body.dark-mode .btn-page,
   transform: translate(-50%, -50%) !important;
   width: min(860px, 96vw) !important;
   max-height: 92vh !important;
-  z-index: 2005 !important;
+  z-index: 100000 !important;
   background: #ffffff !important;
   border-radius: 20px !important;
   box-shadow: 0 24px 80px rgba(15, 23, 42, 0.3), 0 8px 32px rgba(11, 71, 212, 0.15) !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
+}
+
+@media (min-width: 1025px) {
+  body:not(.sidebar-closed) .payments-modal-dialog {
+    left: calc(50% + (var(--sidebar-width, 240px) / 2)) !important;
+    transform: translate(-50%, -50%) !important;
+  }
 }
 
 .payments-modal-dialog .form-header-banner {
@@ -2798,12 +2805,46 @@ body.dark-mode .btn-page,
   flex-shrink: 0 !important;
 }
 
-.payments-modal-dialog .form-header-title-group i {
-  font-size: 24px !important;
+.payments-modal-dialog .form-header-title-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+}
+
+.payments-modal-dialog .header-squircle-icon {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 10px !important;
+  background: linear-gradient(135deg, rgba(11, 71, 212, 0.12) 0%, rgba(16, 185, 129, 0.12) 100%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  border: 1px solid rgba(11, 71, 212, 0.18) !important;
+}
+
+.payments-modal-dialog .header-squircle-icon i {
+  font-size: 20px !important;
   background: linear-gradient(135deg, #0B47D4 0%, #10B981 100%) !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
-  background-clip: text !important;
+}
+
+.payments-modal-dialog .header-title-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.payments-modal-dialog .header-id-pill {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 2px 8px !important;
+  border-radius: 6px !important;
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe !important;
+  letter-spacing: 0.04em !important;
 }
 
 .payments-modal-dialog .form-header-title-group h3 {
@@ -2811,12 +2852,14 @@ body.dark-mode .btn-page,
   font-weight: 800 !important;
   color: #0f172a !important;
   letter-spacing: -0.02em !important;
+  margin: 0 !important;
 }
 
 .payments-modal-dialog .form-header-title-group p {
   font-size: 12.5px !important;
   color: #64748b !important;
   margin-top: 2px !important;
+  margin-bottom: 0 !important;
 }
 
 .payments-modal-dialog .btn-close-form {
@@ -2865,9 +2908,9 @@ body.dark-mode .btn-page,
   position: fixed !important;
   inset: 0 !important;
   background: rgba(15, 23, 42, 0.65) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  z-index: 2000 !important;
+  backdrop-filter: blur(8px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(140%) !important;
+  z-index: 99990 !important;
 }
 
 .receipt-voucher-dialog {
@@ -2877,7 +2920,7 @@ body.dark-mode .btn-page,
   transform: translate(-50%, -50%) !important;
   width: min(720px, 96vw) !important;
   max-height: 94vh !important;
-  z-index: 2005 !important;
+  z-index: 100000 !important;
   background: #ffffff !important;
   border-radius: 16px !important;
   border: 1px solid #cbd5e1 !important;
@@ -2886,6 +2929,13 @@ body.dark-mode .btn-page,
   flex-direction: column !important;
   overflow: hidden !important;
   animation: voucher-appear 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+@media (min-width: 1025px) {
+  body:not(.sidebar-closed) .receipt-voucher-dialog {
+    left: calc(50% + (var(--sidebar-width, 240px) / 2)) !important;
+    transform: translate(-50%, -50%) !important;
+  }
 }
 
 @keyframes voucher-appear {
@@ -3499,6 +3549,12 @@ body.dark-mode .btn-page,
   padding: 9px 12px !important;
   transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
   background: #ffffff !important;
+}
+
+.payments-modal-dialog .input-with-icon .form-control,
+.payments-modal-dialog .input-with-icon select.form-control,
+.payments-modal-dialog .input-with-icon input.form-control {
+  padding-left: 38px !important;
 }
 
 .payments-modal-dialog .form-control:focus,

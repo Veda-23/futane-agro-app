@@ -165,6 +165,7 @@ public class EnterpriseController {
 
     // --- Dispatch ---
     @GetMapping("/dispatches")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public List<Dispatch> getAllDispatches() {
         return dispatchRepo.findAll();
     }

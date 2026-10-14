@@ -186,13 +186,20 @@
     (click)="$event.stopPropagation()">
     <div class="form-header-banner">
       <div class="form-header-title-group">
-        <i class="bi" [ngClass]="editingPaymentId ? 'bi-pencil-square' : 'bi-receipt-cutoff'"></i>
+        <div class="header-squircle-icon">
+          <i class="bi" [ngClass]="editingPaymentId ? 'bi-pencil-square' : 'bi-receipt-cutoff'"></i>
+        </div>
         <div>
-          <h3>{{ editingPaymentId ? 'Edit Payment Record #' + editingPaymentId : 'Record Customer Payment Collection' }}</h3>
+          <div class="header-title-row">
+            <h3>{{ editingPaymentId ? 'Edit Payment Record' : 'Record Customer Payment Collection' }}</h3>
+            <span *ngIf="editingPaymentId" class="header-id-pill font-mono" [title]="editingPaymentId">
+              #{{ formatPaymentId(editingPaymentId) }}
+            </span>
+          </div>
           <p>Register official customer money inflows, link invoices, or post on-account credit</p>
         </div>
       </div>
-      <button type="button" class="btn-close-form" (click)="cancelEditPayment()" title="Close Form" aria-label="Close Form">
+      <button type="button" class="btn-close-form" (click)="cancelEditPayment()" title="Close Form (Esc)" aria-label="Close Form">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>

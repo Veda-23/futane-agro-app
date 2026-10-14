@@ -237,7 +237,16 @@
         </div>
         <pre class="payload-content">{{ selectedLogForDetail.details || selectedLogForDetail.newValue || 'System audit log entry recorded without explicit payload data.' }}</pre>
       </div>
+    <!-- Standard Action Footer -->
+    <div class="audit-modal-footer no-print d-flex align-items-center justify-content-between p-3 border-top bg-light">
+      <span class="text-muted small font-mono"><i class="bi bi-shield-lock me-1"></i>Immutable Security Event Node</span>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="closeLogDetail()">Close Inspector</button>
+        <button type="button" class="btn btn-primary btn-sm" (click)="copyPayload()">
+          <i class="bi" [ngClass]="copiedPayload ? 'bi-check2' : 'bi-clipboard'"></i>
+          {{ copiedPayload ? 'Copied' : 'Copy Payload' }}
+        </button>
+      </div>
     </div>
-    <!-- Note: Redundant footer buttons intentionally omitted as per standard -->
   </div>
 </div>

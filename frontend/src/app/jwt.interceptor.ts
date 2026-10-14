@@ -53,7 +53,7 @@ export const jwtInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, nex
 function performSecureLogout(token: string | null): void {
   // Call backend to blacklist the JWT server-side (prevents reuse even if intercepted)
   if (token) {
-    const backendUrl = localStorage.getItem('backend_url') || 'http://localhost:8080';
+    const backendUrl = localStorage.getItem('backend_url') || '';
     fetch(`${backendUrl}/api/users/logout`, {
       method: 'POST',
       headers: {

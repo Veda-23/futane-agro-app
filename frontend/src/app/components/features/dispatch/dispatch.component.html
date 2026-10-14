@@ -241,15 +241,17 @@
     <div class="dispatch-modal-dialog animate-scale-up" (click)="$event.stopPropagation()">
       <div class="erp-panel-header">
         <div class="erp-panel-title-group">
-          <span class="erp-panel-icon"><i class="bi bi-box-arrow-up-right"></i></span>
+          <span class="erp-panel-icon"><i class="bi bi-truck-flatbed"></i></span>
           <div>
-            <h3 class="erp-panel-title">{{ editingDispatchId ? 'Edit Dispatch Manifest' : 'Create Dispatch Manifest' }}</h3>
+            <div class="d-flex align-items-center gap-2">
+              <h3 class="erp-panel-title">{{ editingDispatchId ? 'Edit Dispatch Manifest' : 'Create Dispatch Manifest' }}</h3>
+              <span *ngIf="editingDispatchId" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle font-mono fw-semibold px-2">{{ formatManifestId(editingDispatchId) }}</span>
+            </div>
             <p class="erp-panel-subtitle">Vehicle registration, driver assignment &amp; consignment notes</p>
           </div>
         </div>
         <div class="d-flex align-items-center gap-2">
-          <span *ngIf="editingDispatchId" class="erp-badge erp-badge-warning">EDITING</span>
-          <button type="button" class="btn-action-icon" (click)="toggleForm()" title="Close Form">
+          <button type="button" class="btn-close-modal" (click)="toggleForm()" title="Close Form" aria-label="Close">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -564,17 +566,22 @@
       <!-- Dossier Header Bar -->
       <div class="dossier-top-bar no-print">
         <div class="dossier-top-title">
-          <i class="bi bi-truck text-primary fs-5"></i>
+          <div class="dossier-squircle-icon">
+            <i class="bi bi-truck"></i>
+          </div>
           <div>
-            <h3 class="dossier-heading">Consignment Outward &amp; Delivery Challan</h3>
-            <span class="dossier-subheading">Manifest ID: {{ formatManifestId(selectedDispatchForDossier.id) }} &bull; Gate Pass Verified</span>
+            <div class="d-flex align-items-center gap-2">
+              <h3 class="dossier-heading">Consignment Outward &amp; Delivery Challan</h3>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-mono fw-semibold px-2">{{ formatManifestId(selectedDispatchForDossier.id) }}</span>
+            </div>
+            <span class="dossier-subheading">Official Rule 55 CGST Outward Transport Document &bull; Gate Pass Certified</span>
           </div>
         </div>
         <div class="dossier-top-actions">
-          <button type="button" class="btn btn-secondary btn-sm" (click)="printDispatchDossier()">
-            <i class="bi bi-printer me-1"></i> Print Challan
+          <button type="button" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1 fw-semibold" (click)="printDispatchDossier()">
+            <i class="bi bi-printer"></i> Print Challan
           </button>
-          <button type="button" class="btn-action-icon ms-2" (click)="closeDispatchDossier()" title="Close">
+          <button type="button" class="btn-close-modal ms-2" (click)="closeDispatchDossier()" title="Close Challan" aria-label="Close">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -689,6 +696,16 @@
           <span>This goods delivery challan is issued under Rule 55 of CGST Rules 2017 for supply of goods without tax invoice at the time of delivery.</span>
           <span class="font-mono">FUTANE-AGRO-CHALLAN-{{ selectedDispatchForDossier.id }}</span>
         </div>
+      </div>
+
+      <!-- Dossier Docked Footer Bar -->
+      <div class="dossier-footer-bar no-print" style="display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px; border-top: 1px solid #e2e8f0; background: #ffffff;">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="closeDispatchDossier()">
+          Close
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" (click)="printDispatchDossier()">
+          <i class="bi bi-printer-fill me-1"></i> Print Challan
+        </button>
       </div>
     </div>
   </div>

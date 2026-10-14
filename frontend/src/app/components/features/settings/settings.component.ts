@@ -71,6 +71,13 @@ export class SettingsComponent implements OnInit, OnDestroy {
     localStorage.setItem('futane_table_density', density);
   }
 
+  previewButtonClick() {
+    this.notificationService.info(
+      'Live Theme Accent Active',
+      `Demonstrating primary accent: ${this.branding.brand_primary_color || '#0B47D4'}`
+    );
+  }
+
   // ──────────────────────────────────────────────────────────────────────────
   // ENTERPRISE WHITE-LABEL & 200+ CUSTOMIZATIONS HUB
   // ──────────────────────────────────────────────────────────────────────────
@@ -1659,7 +1666,11 @@ export class SettingsComponent implements OnInit, OnDestroy {
   // =========================================================================
   loadTeams() {
     this.apiService.getAdminTeams().subscribe({
-      next: (teams) => { if (Array.isArray(teams) && teams.length > 0) this.teamsList = teams; },
+      next: (teams) => {
+        if (Array.isArray(teams) && teams.length > 0) {
+          this.teamsList = teams.map(t => ({ ...t, icon: this.getDepartmentIcon(t.icon) }));
+        }
+      },
       error: () => console.warn('Using default teams')
     });
   }
@@ -1682,7 +1693,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.editingTeam = team;
     this.teamForm = {
       ...team,
-      icon: team.icon || 'bi-gear-wide-connected',
+      icon: this.getDepartmentIcon(team.icon),
       colorTag: team.colorTag || '#059669',
       sidebarOrder: team.sidebarOrder || 1,
       showInSidebar: team.showInSidebar !== false
@@ -2471,7 +2482,9 @@ export class SettingsComponent implements OnInit, OnDestroy {
     const escaped = text
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
     return escaped
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')

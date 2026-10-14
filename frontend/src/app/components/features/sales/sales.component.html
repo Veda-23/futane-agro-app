@@ -115,6 +115,11 @@
         <span>Awaiting Dispatch</span>
         <span class="tab-badge-pill">{{ getAwaitingOutwardCount() }}</span>
       </button>
+      <button type="button" role="tab" class="subnav-tab-btn" [class.active]="subTab === 'web_orders'" (click)="setSubTab('web_orders')">
+        <i class="bi bi-globe2 text-warning"></i>
+        <span>Online Storefront Orders</span>
+        <span class="tab-badge-pill" [class.warning]="getWebOrdersCount() > 0">{{ getWebOrdersCount() }}</span>
+      </button>
     </div>
   </div>
 
@@ -188,11 +193,14 @@
     aria-label="Sales entry form">
     <div class="form-card-header">
       <div class="form-header-title">
-        <div class="form-icon-pill">
+        <div class="form-icon-pill" [class.editing-pill]="editingSaleId">
           <i class="bi" [ngClass]="editingSaleId ? 'bi-pencil-square' : 'bi-cart-plus-fill'"></i>
         </div>
         <div>
-          <h2 class="form-title-text">{{ editingSaleId ? 'Edit Commercial Sales Order' : 'Create New Commercial Sales Order' }}</h2>
+          <div class="d-flex align-items-center gap-2">
+            <h2 class="form-title-text">{{ editingSaleId ? 'Edit Commercial Sales Order' : 'Create New Commercial Sales Order' }}</h2>
+            <span *ngIf="editingSaleId" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle font-mono fw-semibold px-2">#ORDER-{{ editingSaleId }}</span>
+          </div>
           <span class="form-subtitle-text">
             {{ editingSaleId ? 'Modify existing sales transaction and update financial accounts.' : 'Enter customer details, crate model specifications, volume, and initial payment.' }}
           </span>
@@ -570,7 +578,7 @@
   </div>
 
   <!-- 7. AUDITED ENTERPRISE DATA TABLE -->
-  <section class="sales-table-card">
+  <section class="sales-table-card" *ngIf="subTab !== 'web_orders'">
     <!-- Loading State -->
     <div *ngIf="isLoading" class="table-loading-container">
       <div class="loading-spinner"></div>
@@ -967,6 +975,105 @@
     </div>
   </section>
 
+  <!-- 7B. STOREFRONT CUSTOMER WEB ORDERS TABLE (SUBTAB: WEB_ORDERS) -->
+  <section class="sales-table-card" *ngIf="subTab === 'web_orders'">
+    <!-- Loading -->
+    <div *ngIf="webOrdersLoading" class="table-loading-container">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Fetching online customer orders from Storefront API...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!webOrdersLoading && webOrdersList.length === 0" class="table-empty-container">
+      <div class="empty-icon-circle">
+        <i class="bi bi-globe2 text-warning"></i>
+      </div>
+      <h3>No Incoming Web Orders</h3>
+      <p>Customer orders placed on the Futane Direct storefront will appear here with live notifications.</p>
+      <div class="empty-actions">
+        <button type="button" class="btn-header-action btn-secondary" (click)="loadWebOrders()">
+          <i class="bi bi-arrow-clockwise me-1"></i> Refresh Web Orders
+        </button>
+      </div>
+    </div>
+
+    <!-- Web Orders Table Viewport -->
+    <div *ngIf="!webOrdersLoading && webOrdersList.length > 0" class="table-responsive-viewport density-comfortable">
+      <table class="enterprise-sales-table" aria-label="Customer Web Orders">
+        <thead>
+          <tr>
+            <th>Order Ref #</th>
+            <th>Order Date</th>
+            <th>Customer &amp; Contact</th>
+            <th>Delivery Destination</th>
+            <th>Items &amp; Quantity</th>
+            <th class="th-right">Grand Total (Incl. GST)</th>
+            <th>Order Status</th>
+            <th class="text-center">Operations &amp; Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of webOrdersList">
+            <td>
+              <span class="badge-order-id font-mono">{{ order.orderNumber }}</span>
+            </td>
+            <td>{{ order.orderDate || order.createdAt | indianDate }}</td>
+            <td>
+              <div class="party-name-primary font-bold">{{ order.customerName }}</div>
+              <div class="party-meta-secondary text-muted"><i class="bi bi-telephone me-1"></i>{{ order.customerMobile }}</div>
+              <div *ngIf="order.companyName" class="text-xs text-info">{{ order.companyName }}</div>
+            </td>
+            <td>
+              <div class="text-sm">{{ order.city }}, {{ order.state }}</div>
+              <div class="text-xs text-muted" [title]="order.deliveryAddress">{{ (order.deliveryAddress || '').substring(0, 32) }}...</div>
+            </td>
+            <td>
+              <span *ngIf="order.items && order.items.length > 0">
+                <span class="badge bg-secondary me-1">{{ order.items[0].quantity }}x</span> {{ order.items[0].crateType }}
+                <span *ngIf="order.items.length > 1" class="text-xs text-muted">(+{{ order.items.length - 1 }} more)</span>
+              </span>
+              <span *ngIf="!order.items || order.items.length === 0" class="text-muted">Crates order</span>
+            </td>
+            <td class="th-right cell-numeric">
+              <strong class="text-warning font-mono">{{ order.grandTotal | inr }}</strong>
+              <div class="text-xs text-muted">18% GST incl.</div>
+            </td>
+            <td>
+              <span class="status-pill" [ngClass]="{
+                'pending': order.orderStatus === 'NEW_ORDER',
+                'partial': order.orderStatus === 'APPROVED' || order.orderStatus === 'IN_PRODUCTION',
+                'settled': order.orderStatus === 'PACKED' || order.orderStatus === 'DELIVERED',
+                'dispatched': order.orderStatus === 'DISPATCHED'
+              }">
+                {{ order.orderStatus }}
+              </span>
+            </td>
+            <td class="cell-actions">
+              <div class="row-actions-group">
+                <!-- 1. Approve & Reserve Stock -->
+                <button *ngIf="order.orderStatus === 'NEW_ORDER'" type="button" class="btn-row-action btn-action-view" (click)="approveWebOrder(order)" title="Approve & Reserve Stock in Warehouse">
+                  <i class="bi bi-check-circle-fill text-success"></i>
+                </button>
+                <!-- 2. Convert to ERP Sales & Invoice -->
+                <button *ngIf="order.orderStatus === 'APPROVED' && !order.erpSaleId" type="button" class="btn-row-action btn-action-pay" (click)="convertWebOrderToSale(order)" title="Generate Official Sales Entry & GST Tax Invoice">
+                  <i class="bi bi-receipt text-warning"></i>
+                </button>
+                <!-- 3. Dispatch Fleet -->
+                <button *ngIf="order.orderStatus !== 'DISPATCHED' && order.orderStatus !== 'DELIVERED'" type="button" class="btn-row-action btn-action-edit" (click)="dispatchWebOrder(order)" title="Dispatch with Vehicle & Driver (Updates Live Customer Tracker)">
+                  <i class="bi bi-truck text-info"></i>
+                </button>
+                <!-- 4. Inspect Dossier -->
+                <button type="button" class="btn-row-action btn-action-view" (click)="openWebOrderDossier(order)" title="View Order Dossier & Tracking History">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
   <!-- 9. SLIDE-IN ORDER DETAIL & QUICK EDIT DRAWER -->
   <div 
     *ngIf="isDrawerOpen" 
@@ -1071,12 +1178,14 @@
           <div class="drawer-field">
             <label for="drwCrateType">Crate Type</label>
             <select id="drwCrateType" class="drawer-input" [(ngModel)]="drawerSaleForm.crateType">
+              <option *ngIf="drawerSaleForm.crateType && !crateTypes.includes(drawerSaleForm.crateType)" [value]="drawerSaleForm.crateType">{{ drawerSaleForm.crateType }}</option>
               <option *ngFor="let ct of crateTypes" [value]="ct">{{ ct }}</option>
             </select>
           </div>
           <div class="drawer-field">
             <label for="drwCrateMat">Material</label>
             <select id="drwCrateMat" class="drawer-input" [(ngModel)]="drawerSaleForm.crateMaterial">
+              <option *ngIf="drawerSaleForm.crateMaterial && !crateMaterials.includes(drawerSaleForm.crateMaterial)" [value]="drawerSaleForm.crateMaterial">{{ drawerSaleForm.crateMaterial }}</option>
               <option *ngFor="let cm of crateMaterials" [value]="cm">{{ cm }}</option>
             </select>
           </div>
@@ -1156,15 +1265,20 @@
 
   <div 
     *ngIf="isOutwardModalOpen" 
-    class="outward-modal-dialog" 
+    class="outward-modal-dialog animate-scale-up" 
     role="dialog" 
     aria-label="Material Outward Modal">
     <div class="outward-modal-header">
       <div class="outward-modal-title">
-        <i class="bi bi-truck-front-fill text-primary me-2"></i>
+        <div class="modal-squircle-icon">
+          <i class="bi bi-truck-front-fill"></i>
+        </div>
         <div>
-          <h3>Material Outward & Dispatch</h3>
-          <p>Order #{{ selectedSaleForOutward?.saleId || selectedSaleForOutward?.id }} — {{ selectedSaleForOutward?.party?.partyName }}</p>
+          <div class="d-flex align-items-center gap-2">
+            <h3>Material Outward &amp; Dispatch</h3>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-mono fw-semibold px-2">#ORDER-{{ selectedSaleForOutward?.saleId || selectedSaleForOutward?.id }}</span>
+          </div>
+          <p class="outward-subtitle">{{ selectedSaleForOutward?.party?.partyName || 'Commercial Client' }} &bull; Dispatch Manifest Staging</p>
         </div>
       </div>
       <button type="button" class="btn-close-modal" (click)="closeOutwardModal()" title="Close Modal" aria-label="Close">
@@ -1223,9 +1337,62 @@
           </div>
         </div>
 
+        <div class="form-row-grid">
+          <div class="form-group-item">
+            <label class="form-item-label">Logistics Carrier Fleet</label>
+            <select [(ngModel)]="outwardForm.carrierFleet" name="outwardFleet" class="form-control-standard">
+              <option value="VRL Logistics Ltd.">VRL Logistics Ltd.</option>
+              <option value="SafeXpress Supply Chain">SafeXpress Supply Chain</option>
+              <option value="TCI Freight Transport">TCI Freight Transport</option>
+              <option value="Direct Factory Dedicated Fleet">Direct Factory Dedicated Fleet</option>
+              <option value="Customer Self-Arranged Vehicle">Customer Self-Arranged Vehicle</option>
+            </select>
+          </div>
+
+          <div class="form-group-item">
+            <label class="form-item-label">GST E-Way Bill Number</label>
+            <input type="text" [(ngModel)]="outwardForm.ewayBillNo" name="outwardEwb" class="form-control-standard font-mono" placeholder="e.g. EWB-9821-4455-8899">
+          </div>
+        </div>
+
+        <!-- Weighbridge Mass Split Telemetry Card -->
+        <div class="weighbridge-telemetry-box">
+          <div class="telemetry-left">
+            <div class="telemetry-pill">
+              <i class="bi bi-speedometer2 text-primary me-1"></i>
+              <span class="telemetry-lbl">Gross:</span>
+              <strong class="font-mono text-dark">{{ outwardForm.grossWeightKg | number }} kg</strong>
+            </div>
+            <span class="telemetry-operator">&minus;</span>
+            <div class="telemetry-pill">
+              <span class="telemetry-lbl">Tare:</span>
+              <strong class="font-mono text-muted">{{ outwardForm.tareWeightKg | number }} kg</strong>
+            </div>
+          </div>
+          <div class="telemetry-right">
+            <span class="telemetry-lbl text-muted">Net Payload:</span>
+            <div class="net-payload-badge">
+              <i class="bi bi-box-seam me-1"></i>
+              <span class="font-mono fw-bold">{{ (outwardForm.grossWeightKg - outwardForm.tareWeightKg) | number }} kg</span>
+            </div>
+          </div>
+        </div>
+
         <div class="form-group-item full-width-item">
           <label class="form-item-label">Destination / Delivery Address</label>
           <input type="text" [(ngModel)]="outwardForm.deliveryAddress" name="outwardAddress" class="form-control-standard" placeholder="Destination godown / depot address">
+        </div>
+
+        <!-- Digital Gate Pass Security Stamp -->
+        <div class="gate-pass-stamp-bar">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-shield-check text-success fs-5"></i>
+            <div>
+              <span class="fw-bold text-dark d-block" style="font-size: 11.5px;">Factory Gate Pass Certified</span>
+              <span class="text-muted" style="font-size: 10px;">E-Way Bill Rule 138 CGST Compliant</span>
+            </div>
+          </div>
+          <span class="badge bg-light text-primary border font-mono px-2 py-1">GATE-PASS-VERIFIED</span>
         </div>
       </form>
     </div>
@@ -1250,17 +1417,22 @@
       <!-- Dossier Header Bar -->
       <div class="dossier-top-bar no-print">
         <div class="dossier-top-title">
-          <i class="bi bi-cart-check-fill text-primary fs-5"></i>
+          <div class="dossier-squircle-icon">
+            <i class="bi bi-cart-check-fill"></i>
+          </div>
           <div>
-            <h3 class="dossier-heading">Commercial Sales Contract &amp; Order Dossier</h3>
-            <span class="dossier-subheading">Contract Order #{{ selectedSaleForDossier.saleId || selectedSaleForDossier.id }} &bull; Enterprise Certified</span>
+            <div class="d-flex align-items-center gap-2">
+              <h3 class="dossier-heading">Commercial Sales Contract &amp; Order Dossier</h3>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-mono fw-semibold px-2">#ORDER-{{ selectedSaleForDossier.saleId || selectedSaleForDossier.id }}</span>
+            </div>
+            <span class="dossier-subheading">Contract Order #{{ selectedSaleForDossier.saleId || selectedSaleForDossier.id }} &bull; Enterprise Certified CGST Compliant</span>
           </div>
         </div>
         <div class="dossier-top-actions">
-          <button type="button" class="btn btn-secondary btn-sm" (click)="printSalesDossier()">
-            <i class="bi bi-printer me-1"></i> Print Order Dossier
+          <button type="button" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1 fw-semibold" (click)="printSalesDossier()">
+            <i class="bi bi-printer"></i> Print Order Dossier
           </button>
-          <button type="button" class="btn-action-icon ms-2" (click)="closeSalesDossier()" title="Close">
+          <button type="button" class="btn-close-modal ms-2" (click)="closeSalesDossier()" title="Close Dossier" aria-label="Close">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -1375,11 +1547,13 @@
         <div class="dossier-signoff-row">
           <div class="signoff-box">
             <div class="sign-line"></div>
-            <span class="sign-title">Prepared By (Sales Officer)</span>
+            <span class="sign-title">Commercial Sales Head</span>
+            <span class="sign-sub">Futane Agro Industries</span>
           </div>
           <div class="signoff-box">
             <div class="sign-line"></div>
-            <span class="sign-title">Buyer's Authorized Acceptance</span>
+            <span class="sign-title">Store / Dispatch Officer</span>
+            <span class="sign-sub">Plant Loading &amp; Logistics</span>
           </div>
           <div class="signoff-box official-seal-box">
             <div class="corporate-seal">
@@ -1390,7 +1564,7 @@
                 <span class="seal-status">AUTHENTICATED</span>
               </div>
             </div>
-            <span class="sign-title mt-1">Futane Agro Industries Corporate Seal</span>
+            <span class="sign-title mt-1">Authorized Signatory</span>
           </div>
         </div>
 
@@ -1398,6 +1572,97 @@
           <span>This commercial sales contract record is generated by Futane Agro ERP and forms a legally binding sales agreement.</span>
           <span class="font-mono">CONTRACT-REF-{{ selectedSaleForDossier.saleId || selectedSaleForDossier.id }}</span>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11. WEB ORDER INSPECTION DOSSIER MODAL -->
+  <div *ngIf="showWebOrderDossier && selectedWebOrder" class="sales-modal-backdrop" (click)="closeWebOrderDossier()">
+    <div class="sales-dossier-modal" (click)="$event.stopPropagation()">
+      <div class="sales-dossier-header no-print">
+        <div class="header-left">
+          <div class="dossier-badge"><i class="bi bi-globe2 text-warning"></i> ONLINE STOREFRONT ORDER</div>
+          <h2 class="dossier-title">Customer Web Order Dossier</h2>
+          <span class="dossier-doc-no font-mono">{{ selectedWebOrder.orderNumber }}</span>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="btn-dossier-close" (click)="closeWebOrderDossier()" aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="sales-dossier-body">
+        <div class="dossier-party-card">
+          <div class="party-card-header">
+            <div>
+              <span class="text-xs uppercase text-muted font-bold">Buyer Details</span>
+              <h3 class="party-name">{{ selectedWebOrder.customerName }}</h3>
+              <p *ngIf="selectedWebOrder.companyName" class="text-sm font-semibold text-primary">{{ selectedWebOrder.companyName }}</p>
+            </div>
+            <span class="status-pill settled">{{ selectedWebOrder.orderStatus }}</span>
+          </div>
+          <div class="party-grid">
+            <div><span class="label">Mobile:</span> <strong>{{ selectedWebOrder.customerMobile }}</strong></div>
+            <div><span class="label">GSTIN:</span> <strong>{{ selectedWebOrder.gstNumber || 'Unregistered Buyer' }}</strong></div>
+            <div><span class="label">Delivery Location:</span> <strong>{{ selectedWebOrder.city }}, {{ selectedWebOrder.state }} ({{ selectedWebOrder.pincode }})</strong></div>
+            <div><span class="label">Address:</span> <span>{{ selectedWebOrder.deliveryAddress }}</span></div>
+          </div>
+        </div>
+
+        <!-- Items Table -->
+        <table class="dossier-items-table mt-3" *ngIf="selectedWebOrder.items && selectedWebOrder.items.length > 0">
+          <thead>
+            <tr>
+              <th>Crate Item</th>
+              <th>Polymer / Grade</th>
+              <th>Color</th>
+              <th>Custom Stamp</th>
+              <th class="th-right">Qty</th>
+              <th class="th-right">Rate</th>
+              <th class="th-right">Gross (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let it of selectedWebOrder.items">
+              <td><strong>{{ it.crateType }}</strong></td>
+              <td>{{ it.materialType }}</td>
+              <td>{{ it.color }}</td>
+              <td><span class="badge bg-light text-dark font-mono">{{ it.embossingText || 'None' }}</span></td>
+              <td class="th-right font-mono">{{ it.quantity }}</td>
+              <td class="th-right font-mono">{{ it.unitPrice | inr }}</td>
+              <td class="th-right font-mono font-bold">{{ it.grossAmount | inr }}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6" class="th-right">Subtotal:</td>
+              <td class="th-right font-mono">{{ selectedWebOrder.subtotal | inr }}</td>
+            </tr>
+            <tr>
+              <td colspan="6" class="th-right">CGST (9%) + SGST (9%):</td>
+              <td class="th-right font-mono">{{ (selectedWebOrder.cgst + selectedWebOrder.sgst) | inr }}</td>
+            </tr>
+            <tr>
+              <td colspan="6" class="th-right">Logistics / Freight:</td>
+              <td class="th-right font-mono">{{ selectedWebOrder.freightCharges | inr }}</td>
+            </tr>
+            <tr class="tfoot-total-row">
+              <td colspan="6" class="th-right font-bold">GRAND TOTAL:</td>
+              <td class="th-right font-mono font-bold text-warning">{{ selectedWebOrder.grandTotal | inr }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="sales-dossier-footer no-print">
+        <button *ngIf="selectedWebOrder.orderStatus === 'NEW_ORDER'" type="button" class="btn-primary" (click)="approveWebOrder(selectedWebOrder); closeWebOrderDossier()">
+          <i class="bi bi-check-circle-fill me-1"></i> Approve &amp; Reserve Stock
+        </button>
+        <button *ngIf="selectedWebOrder.orderStatus === 'APPROVED' && !selectedWebOrder.erpSaleId" type="button" class="btn-primary" style="background:#d97706;" (click)="convertWebOrderToSale(selectedWebOrder); closeWebOrderDossier()">
+          <i class="bi bi-receipt me-1"></i> Generate Tax Invoice
+        </button>
+        <button type="button" class="btn-secondary" (click)="closeWebOrderDossier()">Close</button>
       </div>
     </div>
   </div>

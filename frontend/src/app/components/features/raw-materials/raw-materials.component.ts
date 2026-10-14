@@ -171,6 +171,24 @@ export class RawMaterialsComponent implements OnInit {
     }
   }
 
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKeyDown(event: KeyboardEvent): void {
+    if (this.showInspectionModal) {
+      this.closeInspectionModal();
+    } else if (this.isAddFormOpen) {
+      this.cancelEdit();
+    }
+  }
+
+  getCleanBatchCode(id: any): string {
+    if (!id) return '';
+    const str = String(id);
+    if (str.length > 8) {
+      return str.substring(0, 8).toUpperCase();
+    }
+    return str.toUpperCase();
+  }
+
   loadData(notify: boolean = false): void {
     if (this.rawMaterialsList.length === 0) this.isLoading = true;
     this.hasError = false;

@@ -145,6 +145,25 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/users/login/verify`, payload);
   }
 
+  verifySession(token?: string): Observable<any> {
+    const headers: { [key: string]: string } = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return this.http.get(`${this.baseUrl}/users/verify-session`, { headers });
+  }
+
+  logout(): Observable<any> {
+    const token = sessionStorage.getItem('jwtToken') || localStorage.getItem('jwtToken');
+    const headers: { [key: string]: string } = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return this.http.post(`${this.baseUrl}/users/logout`, {}, { headers }).pipe(
+      catchError(() => of({ status: 'LOGGED_OUT' }))
+    );
+  }
+
   changePassword(data: { username: string; currentPassword: string; newPassword: string }): Observable<any> {
     return this.http.put(`${this.baseUrl}/users/change-password`, data);
   }
@@ -366,6 +385,24 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/sales/checkout/verify?razorpay_order_id=${data.razorpay_order_id}&razorpay_payment_id=${data.razorpay_payment_id}&razorpay_signature=${data.razorpay_signature}`, {});
   }
 
+  // Customer Web Orders (Storefront Integration Bridge)
+  getWebOrders(status: string = 'ALL'): Observable<any> {
+    return this.http.get(`${this.baseUrl}/erp/web-orders?status=${status}`).pipe(
+      catchError(() => of([])),
+      this.retryPolicy(1)
+    );
+  }
+
+  updateWebOrderStatus(id: string, payload: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/erp/web-orders/${id}/status`, payload);
+  }
+
+  convertWebOrderToSale(id: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/erp/web-orders/${id}/create-sale`, {}).pipe(
+      tap(() => this.invalidateCache('/sales'))
+    );
+  }
+
   // Payments (Cached with SWR)
   getPayments(forceRefresh: boolean = false): Observable<any> {
     return this.getCachedOrFetch(`${this.baseUrl}/payments`, forceRefresh);
@@ -471,12 +508,17 @@ export class ApiService {
     );
   }
 
-  // Audit Logs
-  getAuditLogs(params?: any): Observable<any> {
+  // Audit Logs (Cached with SWR)
+  getAuditLogs(params?: any, forceRefresh: boolean = false): Observable<any> {
+    if (!params || Object.keys(params).length === 0) {
+      return this.getCachedOrFetch(`${this.baseUrl}/audit-logs`, forceRefresh);
+    }
     return this.http.get(`${this.baseUrl}/audit-logs`, { params });
   }
   createAuditLog(log: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/audit-logs`, log);
+    return this.http.post(`${this.baseUrl}/audit-logs`, log).pipe(
+      tap(() => this.invalidateCache('/audit-logs'))
+    );
   }
 
   // Machines (Cached with SWR)
@@ -593,26 +635,34 @@ export class ApiService {
     );
   }
 
-  // Settings (Power BI URL)
-  getSettings(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/settings`);
+  // Settings (Cached with SWR)
+  getSettings(forceRefresh: boolean = false): Observable<any> {
+    return this.getCachedOrFetch(`${this.baseUrl}/settings`, forceRefresh);
   }
   saveSetting(key: string, value: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/settings`, { settingKey: key, settingValue: value });
+    return this.http.post(`${this.baseUrl}/settings`, { settingKey: key, settingValue: value }).pipe(
+      tap(() => this.invalidateCache('/settings'))
+    );
   }
 
-  // User Management
-  getUsers(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/users`);
+  // User Management (Cached with SWR)
+  getUsers(forceRefresh: boolean = false): Observable<any> {
+    return this.getCachedOrFetch(`${this.baseUrl}/users`, forceRefresh);
   }
   createUser(user: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/users`, user);
+    return this.http.post(`${this.baseUrl}/users`, user).pipe(
+      tap(() => this.invalidateCache('/users'))
+    );
   }
   updateUser(username: string, updates: any): Observable<any> {
-    return this.http.put(`${this.baseUrl}/users/${username}`, updates);
+    return this.http.put(`${this.baseUrl}/users/${username}`, updates).pipe(
+      tap(() => this.invalidateCache('/users'))
+    );
   }
   deleteUser(username: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/users/${username}`);
+    return this.http.delete(`${this.baseUrl}/users/${username}`).pipe(
+      tap(() => this.invalidateCache('/users'))
+    );
   }
 
   uploadFile(file: File): Observable<any> {
@@ -621,16 +671,20 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/uploads/upload`, formData);
   }
 
-  getBackups(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/settings/backups`);
+  getBackups(forceRefresh: boolean = false): Observable<any> {
+    return this.getCachedOrFetch(`${this.baseUrl}/settings/backups`, forceRefresh);
   }
 
   runBackup(): Observable<any> {
-    return this.http.post(`${this.baseUrl}/settings/backup`, {});
+    return this.http.post(`${this.baseUrl}/settings/backup`, {}).pipe(
+      tap(() => this.invalidateCache('/settings/backups'))
+    );
   }
 
   runRestore(filename: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/settings/restore`, { filename });
+    return this.http.post(`${this.baseUrl}/settings/restore`, { filename }).pipe(
+      tap(() => this.invalidateCache('/settings/backups'))
+    );
   }
 
   // Tally Prime XML Export (Z-02)

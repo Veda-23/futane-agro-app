@@ -47,7 +47,7 @@
 
         <button type="button" *ngIf="!isViewer()" class="btn-header-action btn-primary btn-header-primary" (click)="toggleFormVisibility()" [title]="isFormVisible ? 'Collapse Entry Form' : 'Open Production Entry Form'" aria-label="Add Production Entry">
           <i class="bi" [ngClass]="isFormVisible ? 'bi-dash-lg' : 'bi-plus-lg'"></i>
-          <span>{{ isFormVisible ? 'Hide Form' : '+ Add Production' }}</span>
+          <span>{{ isFormVisible ? 'Hide Form' : 'Add Production' }}</span>
         </button>
       </div>
     </div>
@@ -664,9 +664,9 @@
     </div>
   </div>
 
-  <!-- 6. PRODUCTION BATCH QC INSPECTION SLIP / DOSSIER MODAL -->
-  <div class="dossier-modal-backdrop" *ngIf="showPpdDossierModal" (click)="closePpdDossier()" aria-hidden="true"></div>
-  <div class="dossier-modal-container" *ngIf="showPpdDossierModal && selectedPpdForDossier" role="dialog" aria-modal="true" aria-label="Batch QC Inspection Slip">
+  <!-- 6. PRODUCTION BATCH QC INSPECTION SLIP / DOSSIER MODAL (DEPRECATED - MASTER DOSSIER AT BOTTOM OF TEMPLATE) -->
+  <div class="dossier-modal-backdrop" *ngIf="false" (click)="closePpdDossier()" aria-hidden="true"></div>
+  <div class="dossier-modal-container" *ngIf="false" role="dialog" aria-modal="true" aria-label="Batch QC Inspection Slip">
     <!-- Pinned Header Bar -->
     <div class="dossier-header-bar no-print">
       <div class="dossier-header-title">
@@ -862,7 +862,7 @@
         </div>
       </div>
 
-      <!-- Right-side actions: Refresh, + New Summary -->
+      <!-- Right-side actions: Refresh, CSV, Excel, Add Monthly Summary -->
       <div class="header-right-actions">
         <!-- Refresh Data Button -->
         <button type="button" class="btn-header-action btn-header-secondary" (click)="loadData()" [disabled]="isRefreshing" title="Refresh monthly data" aria-label="Refresh monthly data">
@@ -870,10 +870,20 @@
           <span>Refresh</span>
         </button>
 
-        <!-- Primary Action: + Add Monthly Summary -->
+        <button type="button" class="btn-header-action btn-header-secondary" (click)="exportCurrentFilteredCsv('ppm', getFullFilteredList(ppmList, 'ppm'))" title="Export monthly summaries to CSV" aria-label="Export to CSV">
+          <i class="bi bi-download"></i>
+          <span>CSV</span>
+        </button>
+
+        <button type="button" class="btn-header-action btn-header-secondary" (click)="exportCurrentFilteredExcel('ppm', getFullFilteredList(ppmList, 'ppm'))" title="Export monthly summaries for Microsoft Excel" aria-label="Export to Excel">
+          <i class="bi bi-file-earmark-excel"></i>
+          <span>Excel</span>
+        </button>
+
+        <!-- Primary Action: Add Monthly Summary -->
         <button type="button" *ngIf="!isViewer()" class="btn-header-action btn-primary btn-header-primary" (click)="togglePpmFormVisibility()" [title]="isPpmFormVisible ? 'Collapse Summary Form' : 'Add Monthly Summary'" aria-label="Add Monthly Summary">
           <i class="bi" [ngClass]="isPpmFormVisible ? 'bi-dash-lg' : 'bi-plus-lg'"></i>
-          <span>{{ isPpmFormVisible ? 'Hide Form' : '+ Add Summary' }}</span>
+          <span>{{ isPpmFormVisible ? 'Hide Form' : 'Add Summary' }}</span>
         </button>
       </div>
     </div>
@@ -910,7 +920,7 @@
   <section class="production-kpi-grid ppm-kpi-grid" aria-label="Monthly Production KPIs">
     <!-- Card 1: Total Crates -->
     <div class="kpi-card total-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-boxes"></i></div>
+      <div class="kpi-icon-wrap kpi-icon-emerald"><i class="bi bi-boxes"></i></div>
       <div class="kpi-content">
         <span class="kpi-label">TOTAL PRODUCTION</span>
         <strong class="kpi-value">{{ getPpmTotalCrates() | number }} <span class="kpi-unit">crates</span></strong>
@@ -919,41 +929,41 @@
     </div>
 
     <!-- Card 2: Electricity kWh -->
-    <div class="kpi-card success-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-lightning-charge-fill"></i></div>
+    <div class="kpi-card energy-card">
+      <div class="kpi-icon-wrap kpi-icon-amber"><i class="bi bi-lightning-charge-fill"></i></div>
       <div class="kpi-content">
         <span class="kpi-label">TOTAL ELECTRICITY</span>
-        <strong class="kpi-value text-info">{{ getPpmTotalUnits() | number:'1.1-1' }} <span class="kpi-unit">kWh</span></strong>
+        <strong class="kpi-value text-amber">{{ getPpmTotalUnits() | number:'1.1-1' }} <span class="kpi-unit">kWh</span></strong>
         <span class="kpi-meta"><i class="bi bi-speedometer2 me-1"></i>{{ getPpmAverageUnitsPerMonth() | number:'1.0-0' }} kWh / mo avg</span>
       </div>
     </div>
 
     <!-- Card 3: Total Power Bill -->
-    <div class="kpi-card danger-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-currency-rupee"></i></div>
+    <div class="kpi-card bill-card">
+      <div class="kpi-icon-wrap kpi-icon-rose"><i class="bi bi-currency-rupee"></i></div>
       <div class="kpi-content">
         <span class="kpi-label">POWER UTILITY BILL</span>
-        <strong class="kpi-value text-warning">₹{{ getPpmTotalBill() | number:'1.2-2' }}</strong>
+        <strong class="kpi-value text-rose">₹{{ getPpmTotalBill() | number:'1.2-2' }}</strong>
         <span class="kpi-meta"><i class="bi bi-receipt me-1"></i>₹{{ getPpmAverageBillPerMonth() | number:'1.0-0' }} / mo avg</span>
       </div>
     </div>
 
     <!-- Card 4: Average Cost / Crate -->
-    <div class="kpi-card efficiency-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-pie-chart-fill"></i></div>
+    <div class="kpi-card overhead-card">
+      <div class="kpi-icon-wrap kpi-icon-slate"><i class="bi bi-pie-chart-fill"></i></div>
       <div class="kpi-content">
         <span class="kpi-label">OVERHEAD / CRATE</span>
-        <strong class="kpi-value text-primary">₹{{ getPpmAvgCostPerCrate() | number:'1.2-2' }}</strong>
+        <strong class="kpi-value text-slate">₹{{ getPpmAvgCostPerCrate() | number:'1.2-2' }}</strong>
         <span class="kpi-meta"><i class="bi bi-cpu me-1"></i>{{ getPpmAvgUnitsPerCrate() | number:'1.2-2' }} kWh per finished crate</span>
       </div>
     </div>
 
     <!-- Card 5: Peak Monthly Volume -->
     <div class="kpi-card peak-card">
-      <div class="kpi-icon-wrap"><i class="bi bi-trophy-fill"></i></div>
+      <div class="kpi-icon-wrap kpi-icon-teal"><i class="bi bi-trophy-fill"></i></div>
       <div class="kpi-content">
         <span class="kpi-label">PEAK OUTPUT MONTH</span>
-        <strong class="kpi-value text-success font-compact">{{ getPpmPeakMonth() }}</strong>
+        <strong class="kpi-value text-teal font-compact">{{ getPpmPeakMonth() }}</strong>
         <span class="kpi-meta"><i class="bi bi-graph-up-arrow me-1"></i>Record manufacturing batch</span>
       </div>
     </div>
@@ -1411,11 +1421,16 @@
 <div class="drawer-backdrop animate-fade-in" *ngIf="drawerOpen" (click)="closeDrawerEdit()">
   <div class="slide-in-drawer" (click)="$event.stopPropagation()">
     <div class="drawer-header">
-      <div class="drawer-title">
-        <h3><i class="bi bi-pencil-square me-2 text-primary"></i>{{ drawerMode === 'ppd' ? 'Edit Daily Production Record' : 'Edit Monthly Production Summary' }}</h3>
-        <p>Modify record parameters with live auto-recalculation.</p>
+      <div class="drawer-header-left">
+        <div class="drawer-header-icon">
+          <i class="bi bi-pencil-square"></i>
+        </div>
+        <div class="drawer-title">
+          <h3 class="mb-0">{{ drawerMode === 'ppd' ? 'Edit Daily Production Record' : 'Edit Monthly Production Summary' }}</h3>
+          <p class="drawer-subtitle mb-0">Modify record parameters with live auto-recalculation.</p>
+        </div>
       </div>
-      <button type="button" class="drawer-close-btn" (click)="closeDrawerEdit()" title="Close drawer" aria-label="Close drawer"><i class="bi bi-x-lg"></i></button>
+      <button type="button" class="drawer-close-btn" (click)="closeDrawerEdit()" title="Close drawer (Esc)" aria-label="Close drawer"><i class="bi bi-x-lg"></i></button>
     </div>
 
     <div class="drawer-body" *ngIf="drawerRecord">
@@ -1427,15 +1442,15 @@
           <input type="date" [(ngModel)]="drawerRecord.date" class="form-control">
         </div>
         <div class="form-group">
-          <label class="field-label">Crate Type <span class="req-star">*</span></label>
-          <select [(ngModel)]="drawerRecord.crateType" class="form-control">
-            <option *ngFor="let c of crateTypes" [value]="c">{{ c }}</option>
-          </select>
-        </div>
-        <div class="form-group">
           <label class="field-label">Shift <span class="req-star">*</span></label>
           <select [(ngModel)]="drawerRecord.shift" class="form-control">
             <option *ngFor="let s of shifts" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="field-label">Crate Type <span class="req-star">*</span></label>
+          <select [(ngModel)]="drawerRecord.crateType" class="form-control">
+            <option *ngFor="let c of crateTypes" [value]="c">{{ c }}</option>
           </select>
         </div>
         <div class="form-group">
@@ -1478,11 +1493,11 @@
         </div>
         <div class="form-group">
           <label class="field-label">Est. Cost / Crate <span class="auto-badge">(Live)</span></label>
-          <input type="text" [value]="'₹' + ((drawerRecord.cratesProduced ? (drawerRecord.electricityBill / drawerRecord.cratesProduced) : 0) | number:'1.2-2')" readonly class="form-control readonly-input font-mono">
+          <input type="text" [value]="'₹' + ((drawerRecord.cratesProduced ? (drawerRecord.electricityBill / drawerRecord.cratesProduced) : 0) | number:'1.2-2')" readonly class="form-control readonly-input font-mono text-success fw-bold">
         </div>
-        <div class="form-group">
+        <div class="form-group col-span-2">
           <label class="field-label">Est. Energy / Crate <span class="auto-badge">(Live)</span></label>
-          <input type="text" [value]="((drawerRecord.cratesProduced ? (drawerRecord.electricityUnits / drawerRecord.cratesProduced) : 0) | number:'1.2-2') + ' kWh'" readonly class="form-control readonly-input font-mono">
+          <input type="text" [value]="((drawerRecord.cratesProduced ? (drawerRecord.electricityUnits / drawerRecord.cratesProduced) : 0) | number:'1.2-2') + ' kWh / crate'" readonly class="form-control readonly-input font-mono">
         </div>
       </div>
 
@@ -1494,3 +1509,241 @@
     </div>
   </div>
 </div>
+
+<!-- ============================================================ -->
+<!-- BATCH QC INSPECTION SHEET & MANUFACTURING DOSSIER MODAL -->
+<!-- ============================================================ -->
+<div class="dossier-modal-backdrop" *ngIf="showPpdDossierModal && selectedPpdForDossier" (click)="closePpdDossier()"></div>
+<div class="dossier-modal-container animate-fade-in" *ngIf="showPpdDossierModal && selectedPpdForDossier" role="dialog" aria-modal="true" aria-labelledby="productionDossierTitle">
+  
+  <!-- Header Bar -->
+  <div class="dossier-header-bar">
+    <div class="dossier-header-title" id="productionDossierTitle">
+      <div class="dossier-header-icon">
+        <i class="bi bi-file-earmark-check-fill"></i>
+      </div>
+      <div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <span class="dossier-main-title">Batch QC Inspection &amp; Manufacturing Release Dossier</span>
+          <span class="dossier-lot-pill font-mono" [title]="'Batch ID: ' + selectedPpdForDossier.id">
+            {{ formatLotBadge(selectedPpdForDossier) }}
+          </span>
+        </div>
+        <div class="dossier-header-sub">Statutory Shift Inspection Standard &bull; BIS IS:15473 Compliance</div>
+      </div>
+    </div>
+    <div class="dossier-header-controls">
+      <button type="button" class="btn-dossier-print" (click)="printPpdDossier()" title="Print A4 Batch Inspection Slip">
+        <i class="bi bi-printer me-1"></i> Print / PDF
+      </button>
+      <button type="button" class="btn-dossier-close" (click)="closePpdDossier()" title="Close Dossier (Esc)" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Scroll Viewport -->
+  <div class="dossier-scroll-viewport">
+    <div id="printableProductionSheet" class="printable-dossier-sheet">
+      
+      <!-- Letterhead -->
+      <div class="dossier-letterhead">
+        <div class="d-flex align-items-center gap-3">
+          <div class="dossier-logo-box">
+            <i class="bi bi-boxes dossier-fallback-icon"></i>
+          </div>
+          <div class="dossier-company-info">
+            <h2 class="company-legal-name">FUTANE AGRO INDUSTRIES PVT. LTD.</h2>
+            <p class="company-tagline">Advanced Precision Plastics &amp; Agricultural Crates Division &bull; Plant Unit #1</p>
+            <div class="company-tax-chips">
+              <span class="tax-chip font-mono">GSTIN: 27AABCF1234F1Z8</span>
+              <span class="tax-chip font-mono">CIN: U01111MH2021PTC356789</span>
+              <span class="tax-chip">ISO 9001:2015 QA Certified</span>
+            </div>
+          </div>
+        </div>
+        <div class="dossier-account-badge">
+          <span class="badge-type-label">BATCH RELEASE VOUCHER</span>
+          <span class="badge-account-id font-mono" [title]="'Full ID: ' + selectedPpdForDossier.id">#PPD-{{ formatShortId(selectedPpdForDossier.id) }}</span>
+          <span class="badge-verified-tag text-success">
+            <i class="bi bi-shield-check me-1"></i> CIPET VERIFIED
+          </span>
+        </div>
+      </div>
+
+      <div class="dossier-divider-line"></div>
+
+      <!-- Document Banner -->
+      <div class="dossier-doc-banner">
+        <div class="doc-title-group">
+          <h3>DAILY INJECTION MOULDING LOG &amp; QUALITY CLEARANCE</h3>
+          <span class="doc-subtitle">Statutory Shift Inspection Standard &bull; BIS IS:15473 Polymer Compliance</span>
+        </div>
+        <div class="doc-audit-stamp">
+          <span class="text-muted font-mono">Timestamp: {{ selectedPpdForDossier.date | indianDate }}</span>
+          <span class="text-primary font-mono fw-bold">{{ selectedPpdForDossier.shift || 'General Shift' }}</span>
+        </div>
+      </div>
+
+      <!-- Metadata Grid -->
+      <div class="dossier-section-title">
+        <i class="bi bi-info-circle me-1 text-primary"></i> 1. Manufacturing Batch Parameters
+      </div>
+      <div class="dossier-meta-grid">
+        <div class="meta-field-card">
+          <span class="field-lbl">Production Date</span>
+          <strong class="field-val font-mono">{{ selectedPpdForDossier.date | indianDate }}</strong>
+        </div>
+        <div class="meta-field-card">
+          <span class="field-lbl">Shift &amp; Crew</span>
+          <strong class="field-val">{{ selectedPpdForDossier.shift || 'Morning Shift' }} (Crew Alpha)</strong>
+        </div>
+        <div class="meta-field-card">
+          <span class="field-lbl">Crate / Mould Profile</span>
+          <strong class="field-val text-primary">{{ selectedPpdForDossier.crateType }}</strong>
+        </div>
+        <div class="meta-field-card">
+          <span class="field-lbl">Moulding Unit</span>
+          <strong class="field-val font-mono">IMM Line #04 (550T Press)</strong>
+        </div>
+        <div class="meta-field-card">
+          <span class="field-lbl">Polymer Raw Material</span>
+          <span class="field-val">PP-CP MFI 12 + 2% UV</span>
+        </div>
+        <div class="meta-field-card">
+          <span class="field-lbl">Tooling Cavity Count</span>
+          <span class="field-val font-mono">Single Cavity Hot Runner</span>
+        </div>
+        <div class="meta-field-card">
+          <span class="field-lbl">Cycle Time</span>
+          <span class="field-val font-mono">48.2 sec / cycle</span>
+        </div>
+        <div class="meta-field-card">
+          <span class="field-lbl">Polymer Consumed</span>
+          <strong class="field-val font-mono text-dark">{{ (selectedPpdForDossier.totalProduction * 1.85) | number:'1.1-1' }} kg</strong>
+        </div>
+      </div>
+
+      <!-- Telemetry Output Table -->
+      <div class="dossier-section-title">
+        <i class="bi bi-graph-up-arrow me-1 text-primary"></i> 2. Shift Production Run Telemetry
+      </div>
+      <table class="dossier-table">
+        <thead>
+          <tr>
+            <th>Production Metric</th>
+            <th>Standard Nominal</th>
+            <th class="text-end">Actual Recorded</th>
+            <th class="text-center">QC Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Gross Shots / Total Run</strong></td>
+            <td class="font-mono text-muted">Planned Shift Target</td>
+            <td class="text-end font-mono"><strong>{{ selectedPpdForDossier.totalProduction | number }} Units</strong></td>
+            <td class="text-center"><span class="badge bg-secondary-subtle text-secondary font-mono">RECORDED</span></td>
+          </tr>
+          <tr class="table-row-success">
+            <td><strong>Successful Quality Pass Crates</strong></td>
+            <td class="font-mono text-muted">Net Warehouse Inward</td>
+            <td class="text-end font-mono"><strong class="text-success">{{ selectedPpdForDossier.successful | number }} Units</strong></td>
+            <td class="text-center"><span class="badge bg-success font-mono"><i class="bi bi-check-lg me-1"></i>PASSED</span></td>
+          </tr>
+          <tr class="table-row-danger">
+            <td><strong>Rejection Scrap / Defect Run</strong></td>
+            <td class="font-mono text-muted">Max Scrap Allowable: &le; 2.5%</td>
+            <td class="text-end font-mono"><strong class="text-danger">{{ selectedPpdForDossier.rejected | number }} Units</strong></td>
+            <td class="text-center">
+              <span class="badge font-mono" [ngClass]="(selectedPpdForDossier.rejected / selectedPpdForDossier.totalProduction) > 0.025 ? 'bg-danger' : 'bg-success-subtle text-success'">
+                {{ selectedPpdForDossier.totalProduction > 0 ? ((selectedPpdForDossier.rejected / selectedPpdForDossier.totalProduction) * 100 | number:'1.1-1') : 0 }}% SCRAP
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Overall First-Pass Efficiency Yield</strong></td>
+            <td class="font-mono text-muted">Target Threshold: &ge; 95.0%</td>
+            <td class="text-end font-mono">
+              <strong [style.color]="getEfficiencyColor(selectedPpdForDossier.successful, selectedPpdForDossier.totalProduction)">
+                {{ getEfficiencyPct(selectedPpdForDossier.successful, selectedPpdForDossier.totalProduction) }}%
+              </strong>
+            </td>
+            <td class="text-center">
+              <span class="badge font-mono" [style.background]="getEfficiencyColor(selectedPpdForDossier.successful, selectedPpdForDossier.totalProduction)">
+                {{ getEfficiencyPct(selectedPpdForDossier.successful, selectedPpdForDossier.totalProduction) >= 95 ? 'OPTIMAL' : 'MONITOR' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 3-Point Laboratory Physical QC -->
+      <div class="dossier-section-title mt-3">
+        <i class="bi bi-shield-check me-1 text-primary"></i> 3. Laboratory Physical &amp; Stress Testing Strip
+      </div>
+      <div class="dossier-meta-grid">
+        <div class="meta-field-card">
+          <span class="field-lbl">Drop Impact Test</span>
+          <strong class="field-val text-success"><i class="bi bi-check-circle-fill me-1"></i> PASS (2.0m height)</strong>
+        </div>
+        <div class="meta-field-card">
+          <span class="field-lbl">Stacking Compressive Load</span>
+          <strong class="field-val text-success"><i class="bi bi-check-circle-fill me-1"></i> PASS (500 kg static)</strong>
+        </div>
+        <div class="meta-field-card">
+          <span class="field-lbl">Mean Crate Tare Weight</span>
+          <strong class="field-val font-mono">1,848g (Spec: 1,850 &plusmn; 25g)</strong>
+        </div>
+        <div class="meta-field-card">
+          <span class="field-lbl">UV &amp; Thermal Resistance</span>
+          <strong class="field-val text-success"><i class="bi bi-check-circle-fill me-1"></i> CONFORMANT</strong>
+        </div>
+      </div>
+
+      <!-- Signatures & Stamp -->
+      <div class="dossier-footer-signatures">
+        <div class="signature-col">
+          <div class="sign-line"></div>
+          <span class="sign-label">Shift Floor Supervisor</span>
+          <span class="sign-sub">Manufacturing Operations</span>
+        </div>
+
+        <div class="official-stamp-seal">
+          <div class="stamp-outer-ring">
+            <div class="stamp-inner-ring">
+              <span class="stamp-company-text">FUTANE AGRO QA</span>
+              <i class="bi bi-award-fill stamp-star-icon"></i>
+              <span class="stamp-audit-text">INSPECTED &amp; CLEARED</span>
+              <span class="stamp-valid">RELEASED FOR DISPATCH</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="signature-col">
+          <div class="sign-line"></div>
+          <span class="sign-label">Quality Assurance Manager</span>
+          <span class="sign-sub">ISO 9001 Compliance Lead</span>
+        </div>
+      </div>
+
+      <div class="dossier-print-legal-notice">
+        System-generated manufacturing quality certificate under Futane Agro ERP core release engine. Verified under Factory Rule 44 / BIS IS:15473.
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Bar -->
+  <div class="dossier-footer-bar">
+    <div class="footer-status-pill">
+      <i class="bi bi-check-circle-fill me-1"></i>
+      <span>Batch Ready for Warehouse Inventory Transfer</span>
+    </div>
+    <div class="footer-btn-group">
+      <button type="button" class="btn btn-secondary" (click)="closePpdDossier()">Close</button>
+      <button type="button" class="btn btn-primary" (click)="printPpdDossier()">
+        <i class="bi bi-printer me-1"></i> Print Batch Sheet
+      </button>
+    </div>
+  </div>
+</div>
+

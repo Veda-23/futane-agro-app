@@ -218,6 +218,27 @@ export class TransportsComponent implements OnInit {
     }, 0);
   }
 
+  formatTripId(id: any): string {
+    if (!id && id !== 0) return 'TRP-000';
+    const str = String(id).trim();
+    if (/^\d+$/.test(str)) return `TRP-${str.padStart(4, '0')}`;
+    if (str.includes('-')) {
+      const parts = str.split('-');
+      return `TRP-${parts[0].toUpperCase()}`;
+    }
+    if (str.length > 8) return `TRP-${str.slice(0, 8).toUpperCase()}`;
+    return `TRP-${str.toUpperCase()}`;
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.isViewModalOpen) {
+      this.closeViewModal();
+    } else if (this.isFormDrawerOpen) {
+      this.closeFormDrawer();
+    }
+  }
+
   get totalFilteredRent(): number {
     return (this.filteredTransports || []).reduce((acc: number, curr: any) => acc + (Number(curr.rent) || 0), 0);
   }

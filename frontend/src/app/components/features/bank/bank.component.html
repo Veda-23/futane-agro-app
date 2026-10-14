@@ -527,11 +527,14 @@
         <i class="bi" [ngClass]="editingId ? 'bi-pencil-square' : 'bi-bank2'"></i>
       </div>
       <div>
-        <h3 class="drawer-heading">{{ editingId ? 'Edit Bank Entry #' + editingId : 'Record Treasury Bank Transaction' }}</h3>
+        <div class="drawer-heading-row">
+          <h3 class="drawer-heading">{{ editingId ? 'Edit Bank Entry' : 'Record Treasury Bank Transaction' }}</h3>
+          <span *ngIf="editingId" class="drawer-id-pill font-mono" [title]="editingId">#{{ formatTxnId(editingId) }}</span>
+        </div>
         <p class="drawer-subheading">{{ editingId ? 'Modify recorded bank ledger transaction details' : 'Log official bank credits, debits, contra or reconciliations' }}</p>
       </div>
     </div>
-    <button type="button" class="btn-drawer-close" (click)="cancelEdit()" title="Close Drawer">
+    <button type="button" class="btn-drawer-close" (click)="cancelEdit()" title="Close Drawer (Esc)">
       <i class="bi bi-x-lg"></i>
     </button>
   </div>
@@ -628,10 +631,13 @@
         </div>
         <div>
           <span class="voucher-eyebrow">Futane Agro Treasury & Bank Voucher</span>
-          <h3 class="voucher-title">Transaction Receipt #{{ selectedTxnForView.id }}</h3>
+          <div class="voucher-title-row">
+            <h3 class="voucher-title">Transaction Receipt</h3>
+            <span class="voucher-id-pill font-mono" [title]="selectedTxnForView.id">#{{ formatTxnId(selectedTxnForView.id) }}</span>
+          </div>
         </div>
       </div>
-      <button type="button" class="btn-voucher-close no-print" (click)="closeViewModal()">
+      <button type="button" class="btn-voucher-close no-print" (click)="closeViewModal()" title="Close Voucher (Esc)">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>

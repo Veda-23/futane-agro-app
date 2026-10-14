@@ -648,8 +648,9 @@
       </div>
     </form>
   </div>
+</div>
 
-  <!-- ── 5. OFFICIAL EXPENSE VOUCHER & DISBURSEMENT SLIP MODAL ───────── -->
+<!-- ── 5. OFFICIAL EXPENSE VOUCHER & DISBURSEMENT SLIP MODAL ───────── -->
   <div class="voucher-modal-overlay no-print-backdrop" *ngIf="showVoucherModal && selectedExpenseForVoucher" (click)="closeVoucherModal()">
     <div class="voucher-modal-dialog animate-scale-up" (click)="$event.stopPropagation()">
       <!-- Voucher Top Bar -->
@@ -777,6 +778,17 @@
           <span class="font-mono">VOUCHER-REF-{{ selectedExpenseForVoucher.id }}</span>
         </div>
       </div>
+
+      <!-- Docked Modal Action Footer -->
+      <div class="dossier-footer-bar no-print d-flex align-items-center justify-content-between p-3 border-top bg-light">
+        <span class="text-muted small"><i class="bi bi-info-circle me-1"></i>Official Cash Disbursement Voucher.</span>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeVoucherModal()">Close</button>
+          <button type="button" class="btn btn-primary btn-sm" (click)="printVoucher()">
+            <i class="bi bi-printer me-1"></i>Print Voucher
+          </button>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+

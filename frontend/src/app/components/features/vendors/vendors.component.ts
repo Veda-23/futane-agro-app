@@ -156,6 +156,24 @@ export class VendorsComponent implements OnInit {
     }
   }
 
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKeyDown(event: KeyboardEvent): void {
+    if (this.showDossierModal) {
+      this.closeDossierModal();
+    } else if (this.isAddFormOpen) {
+      this.cancelEdit();
+    }
+  }
+
+  formatVendorDisplayCode(id: any): string {
+    if (!id) return '';
+    const str = String(id);
+    if (str.length > 8) {
+      return `#VND-${str.substring(0, 6).toUpperCase()}`;
+    }
+    return `#VND-${str.toUpperCase()}`;
+  }
+
   loadData(notify: boolean = false): void {
     if (this.vendorsList.length === 0) this.isLoading = true;
     this.hasError = false;

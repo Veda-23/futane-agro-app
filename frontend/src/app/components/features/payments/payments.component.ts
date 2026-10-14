@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
@@ -543,6 +543,27 @@ export class PaymentsComponent implements OnInit {
     };
   }
 
+  formatPaymentId(id: any): string {
+    if (!id && id !== 0) return 'PAY-000';
+    const str = String(id).trim();
+    if (/^\d+$/.test(str)) return `PAY-${str.padStart(4, '0')}`;
+    if (str.includes('-')) {
+      const parts = str.split('-');
+      return `PAY-${parts[0].toUpperCase()}`;
+    }
+    if (str.length > 8) return `PAY-${str.slice(0, 8).toUpperCase()}`;
+    return `PAY-${str.toUpperCase()}`;
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.isVoucherModalOpen) {
+      this.closeVoucherModal();
+    } else if (this.isFormVisible) {
+      this.cancelEditPayment();
+    }
+  }
+
   editPayment(p: PaymentItem) {
     if (this.isViewer()) return;
     this.editingPaymentId = String(p.id || p.paymentId);
@@ -557,7 +578,7 @@ export class PaymentsComponent implements OnInit {
     };
     this.isFormVisible = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    this.notificationService.info('Edit Mode', `Loaded payment record for ${p.party?.partyName || 'Customer'}.`);
+    this.notificationService.info('Edit Mode', `Loaded payment record #${this.formatPaymentId(this.editingPaymentId)} for ${p.party?.partyName || 'Customer'}.`);
   }
 
   cancelEditPayment() {

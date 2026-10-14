@@ -58,8 +58,8 @@ if (-not $backendConn) {
 
 # 4. Start Lightweight Static Server on Port 4300 (Uses ~30MB RAM)
 Write-Host '[2/2] Starting lightweight frontend server on port 4300 with API proxy...' -ForegroundColor Green
-$serveScript = Join-Path $ROOT 'scratch\serve-uat.js'
-$frontend = Start-Process 'node' -ArgumentList @($serveScript) -PassThru -WindowStyle Normal
+$serveScript = Join-Path $ROOT 'scripts\lightweight-server.js'
+$frontend = Start-Process 'node' -ArgumentList @($serveScript, '4300') -PassThru -WindowStyle Normal
 
 Write-Host '=================================================================' -ForegroundColor Green
 Write-Host '  ERP IS RUNNING IN ULTRA-LIGHTWEIGHT MODE!' -ForegroundColor Green

@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -155,6 +155,17 @@ export class DispatchComponent implements OnInit {
         }
       }
     });
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.showDispatchDossierModal) {
+      this.closeDispatchDossier();
+    } else if (this.isFormOpen) {
+      this.cancelEditDispatch();
+    } else if (this.showScannerModal) {
+      this.showScannerModal = false;
+    }
   }
 
   // --- Telemetry & KPI Computations ---

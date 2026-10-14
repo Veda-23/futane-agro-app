@@ -1277,9 +1277,9 @@ button.btn-primary.btn-header-primary:hover:not(:disabled) {
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.65) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  z-index: 2000 !important;
+  backdrop-filter: blur(8px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(140%) !important;
+  z-index: 99990 !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1287,6 +1287,10 @@ button.btn-primary.btn-header-primary:hover:not(:disabled) {
 }
 
 .slide-drawer {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
   width: 720px;
   max-width: 95vw;
   height: auto;
@@ -1296,11 +1300,19 @@ button.btn-primary.btn-header-primary:hover:not(:disabled) {
   border-radius: 14px;
   display: flex;
   flex-direction: column;
-  z-index: 2005 !important;
+  z-index: 100000 !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
   animation: modalSpringPop 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
   overflow: hidden;
-  margin: auto;
+  margin: 0 !important;
+}
+
+@media (min-width: 1025px) {
+  body:not(.sidebar-closed) .slide-drawer,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .slide-drawer {
+    left: calc(50% + (var(--sidebar-width, 240px) / 2)) !important;
+    transform: translate(-50%, -50%) !important;
+  }
 }
 
 .drawer-header {
@@ -1599,9 +1611,9 @@ button.btn-primary.btn-header-primary:hover:not(:disabled) {
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.65) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  z-index: 2000 !important;
+  backdrop-filter: blur(8px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(140%) !important;
+  z-index: 99990 !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1609,6 +1621,10 @@ button.btn-primary.btn-header-primary:hover:not(:disabled) {
 }
 
 .waybill-modal-dialog {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
   width: 720px;
   max-width: 96vw;
   max-height: 92vh;
@@ -1618,17 +1634,26 @@ button.btn-primary.btn-header-primary:hover:not(:disabled) {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  z-index: 2005 !important;
+  z-index: 100000 !important;
+  margin: 0 !important;
   animation: modalZoomIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+@media (min-width: 1025px) {
+  body:not(.sidebar-closed) .waybill-modal-dialog,
+  .app-container:not(.sidebar-closed):not(.sidebar-collapsed) .waybill-modal-dialog {
+    left: calc(50% + (var(--sidebar-width, 240px) / 2)) !important;
+    transform: translate(-50%, -50%) !important;
+  }
+}
+
 @keyframes modalZoomIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 .waybill-modal-header {
-  padding: 12px 18px;
+  padding: 14px 22px;
   border-bottom: 1px solid var(--border-color, #e2e8f0);
   background: var(--bg-surface, #ffffff);
   display: flex;
@@ -1640,13 +1665,59 @@ button.btn-primary.btn-header-primary:hover:not(:disabled) {
 .header-left-title {
   display: flex;
   align-items: center;
+  gap: 12px;
   color: var(--text-primary, #0f172a);
+}
+
+.waybill-squircle-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(11, 71, 212, 0.12) 0%, rgba(0, 102, 255, 0.18) 100%);
+  color: #0B47D4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  border: 1px solid rgba(11, 71, 212, 0.2);
+}
+
+.waybill-heading {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.waybill-subheading {
+  font-size: 11.5px;
+  color: #64748b;
+  display: block;
 }
 
 .header-right-tools {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.btn-close-modal {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-close-modal:hover {
+  background: #e2e8f0;
+  color: #ef4444;
 }
 
 .waybill-slip-content {

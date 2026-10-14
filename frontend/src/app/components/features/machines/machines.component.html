@@ -129,7 +129,7 @@
   <section class="machines-kpi-grid no-print" aria-label="Machinery Fleet Key Performance Indicators">
     <!-- Card 1: Total Fleet Units -->
     <div class="machine-kpi-card" (click)="statusFilter = 'ALL'; switchSubTab('machines')">
-      <div class="machine-kpi-icon kpi-blue">
+      <div class="machine-kpi-icon kpi-emerald">
         <i class="bi bi-cpu-fill"></i>
       </div>
       <div class="machine-kpi-body">
@@ -197,26 +197,46 @@
     <div class="erp-drawer-overlay" *ngIf="isMachineFormOpen && !isViewer()" (click)="cancelEditMachine()"></div>
     <div class="erp-drawer" *ngIf="isMachineFormOpen && !isViewer()" [class.open]="isMachineFormOpen && !isViewer()">
       <div class="erp-drawer-header">
-        <div>
-          <h3 class="erp-drawer-title">{{ editingMachineId ? 'Edit Equipment Profile' : 'Register Machine' }}</h3>
-          <p class="erp-drawer-subtitle">Injection moulding unit configuration & throughput</p>
+        <div class="d-flex align-items-center gap-3">
+          <div class="drawer-header-icon mach-icon">
+            <i class="bi bi-cpu-fill"></i>
+          </div>
+          <div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <h3 class="erp-drawer-title">{{ editingMachineId ? 'Edit Equipment Profile' : 'Register Machine' }}</h3>
+              <span *ngIf="machineForm.machineCode" class="badge-code-pill font-mono">{{ machineForm.machineCode }}</span>
+            </div>
+            <p class="erp-drawer-subtitle">Injection moulding unit configuration &amp; throughput</p>
+          </div>
         </div>
-        <button type="button" class="btn-action-icon" (click)="cancelEditMachine()" title="Close Form">
+        <button type="button" class="drawer-close-btn" (click)="cancelEditMachine()" title="Close Form (Esc)" aria-label="Close">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
       
       <form (ngSubmit)="saveMachine()" class="d-flex flex-column h-100" style="overflow: hidden; min-height: 0; flex: 1 1 auto; margin: 0;">
         <div class="erp-drawer-body">
-          <div class="d-flex flex-column gap-3">
+          <div class="erp-fields-grid-2col">
             <div class="erp-form-group">
               <label class="erp-label required">Machine Name</label>
-              <input type="text" class="erp-input" [(ngModel)]="machineForm.machineName" name="mName" required placeholder="e.g. Windsor IMM 180T">
+              <input type="text" class="erp-input" [(ngModel)]="machineForm.machineName" name="mName" required placeholder="e.g. KraussMaffei 650T Imm">
             </div>
 
             <div class="erp-form-group">
               <label class="erp-label required">Asset Tag / Code</label>
-              <input type="text" class="erp-input text-uppercase font-mono" [(ngModel)]="machineForm.machineCode" name="mCode" required placeholder="e.g. IMM-003">
+              <input type="text" class="erp-input text-uppercase font-mono" [(ngModel)]="machineForm.machineCode" name="mCode" required placeholder="e.g. IMM-038">
+            </div>
+
+            <div class="erp-form-group">
+              <label class="erp-label">OEM Manufacturer</label>
+              <select class="erp-input" [(ngModel)]="machineForm.manufacturer" name="mManufacturer">
+                <option value="Windsor Machines Ltd.">Windsor Machines Ltd.</option>
+                <option value="Haitian Precision">Haitian Precision (Mars II)</option>
+                <option value="Toshiba Machine">Toshiba Machine</option>
+                <option value="L&amp;T Plastics Machinery">L&amp;T Plastics Machinery</option>
+                <option value="Engel Austria">Engel Austria</option>
+                <option value="KraussMaffei">KraussMaffei Group</option>
+              </select>
             </div>
 
             <div class="erp-form-group">
@@ -240,7 +260,7 @@
             </div>
 
             <!-- Live Output Preview Badge -->
-            <div *ngIf="machineForm.capacityPerHour > 0" class="erp-alert-info mt-2 d-flex justify-content-between align-items-center">
+            <div *ngIf="machineForm.capacityPerHour > 0" class="erp-alert-info col-span-2 d-flex justify-content-between align-items-center">
               <span class="small"><i class="bi bi-lightning-charge-fill me-1 text-primary"></i> Daily Rated Output:</span>
               <strong class="font-mono text-primary">{{ machineForm.capacityPerHour * 24 | number:'1.0-0' }} crates/day</strong>
             </div>
@@ -261,19 +281,27 @@
     <div class="erp-drawer-overlay" *ngIf="isBreakdownFormOpen && !isViewer()" (click)="cancelEditBreakdown()"></div>
     <div class="erp-drawer" *ngIf="isBreakdownFormOpen && !isViewer()" [class.open]="isBreakdownFormOpen && !isViewer()">
       <div class="erp-drawer-header">
-        <div>
-          <h3 class="erp-drawer-title">{{ editingBreakdownId ? 'Edit Breakdown Record' : 'Log Maintenance Incident' }}</h3>
-          <p class="erp-drawer-subtitle">Record downtime hours & service resolution</p>
+        <div class="d-flex align-items-center gap-3">
+          <div class="drawer-header-icon mach-icon-danger">
+            <i class="bi bi-tools"></i>
+          </div>
+          <div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <h3 class="erp-drawer-title">{{ editingBreakdownId ? 'Edit Breakdown Record' : 'Log Maintenance Incident' }}</h3>
+              <span *ngIf="editingBreakdownId" class="badge-code-pill font-mono">INC-{{ editingBreakdownId }}</span>
+            </div>
+            <p class="erp-drawer-subtitle">Record downtime hours &amp; service resolution</p>
+          </div>
         </div>
-        <button type="button" class="btn-action-icon" (click)="cancelEditBreakdown()" title="Close Form">
+        <button type="button" class="drawer-close-btn" (click)="cancelEditBreakdown()" title="Close Form (Esc)" aria-label="Close">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
       
       <form (ngSubmit)="saveBreakdown()" class="d-flex flex-column h-100" style="overflow: hidden; min-height: 0; flex: 1 1 auto; margin: 0;">
         <div class="erp-drawer-body">
-          <div class="d-flex flex-column gap-3">
-            <div class="erp-form-group">
+          <div class="erp-fields-grid-2col">
+            <div class="erp-form-group col-span-2">
               <label class="erp-label required">Affected Equipment</label>
               <select class="erp-input" [(ngModel)]="breakdownForm.machineId" name="bdMachine" required>
                 <option value="" disabled>-- Select Machine Unit --</option>
@@ -292,8 +320,8 @@
             </div>
 
             <div class="erp-form-group">
-              <label class="erp-label required">Fault / Cause Description</label>
-              <textarea class="erp-input" [(ngModel)]="breakdownForm.description" name="bdDesc" rows="3" required placeholder="e.g. Hydraulic valve leak, seal replacement..."></textarea>
+              <label class="erp-label">Technician / Lead Engineer</label>
+              <input type="text" class="erp-input" [(ngModel)]="breakdownForm.resolvedBy" name="bdTechnician" placeholder="e.g. Rajesh Patil (Lead Maintenance)">
             </div>
 
             <div class="erp-form-group">
@@ -302,8 +330,13 @@
               <div class="text-muted mt-1" style="font-size: 11px;">Leave blank if unit is still offline undergoing repairs</div>
             </div>
 
+            <div class="erp-form-group col-span-2">
+              <label class="erp-label required">Fault / Cause Description</label>
+              <textarea class="erp-input" [(ngModel)]="breakdownForm.description" name="bdDesc" rows="3" required placeholder="e.g. Hydraulic valve leak, seal replacement..."></textarea>
+            </div>
+
             <!-- Live Disruption Impact Badge -->
-            <div *ngIf="breakdownForm.downtimeHours > 0" class="erp-alert-info mt-2 d-flex justify-content-between align-items-center" style="border-color: rgba(239, 68, 68, 0.3);">
+            <div *ngIf="breakdownForm.downtimeHours > 0" class="erp-alert-info col-span-2 d-flex justify-content-between align-items-center" style="border-color: rgba(239, 68, 68, 0.3);">
               <span class="small text-danger"><i class="bi bi-exclamation-octagon-fill me-1"></i> Fleet Disruption:</span>
               <strong class="font-mono text-danger">-{{ breakdownForm.downtimeHours * 450 | number:'1.0-0' }} crates lost</strong>
             </div>

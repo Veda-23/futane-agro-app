@@ -73,7 +73,7 @@ const server = http.createServer((req, res) => {
   });
 });
 
-const PORT = 4200;
+const PORT = process.env.PORT || parseInt(process.argv[2], 10) || 4300;
 
 server.on('error', (err) => {
   console.error('Server error:', err);

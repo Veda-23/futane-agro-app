@@ -737,6 +737,9 @@
 
       <!-- Drawer Fixed Footer -->
       <div class="drawer-footer" style="justify-content: flex-end;">
+        <button type="button" class="btn btn-secondary btn-action-secondary me-2" (click)="closeFormDrawer()">
+          Cancel
+        </button>
         <button type="submit" form="salaryDrawerForm" class="btn btn-primary btn-action-primary btn-submit-salary" [disabled]="isLoading">
           <i class="bi me-1" [ngClass]="isEditing() ? 'bi-check-lg' : 'bi-cash-coin'"></i>
           <span>{{ isEditing() ? 'Update Payroll Record' : 'Disburse &amp; Record' }}</span>
@@ -863,6 +866,17 @@
 
         <div class="slip-footer-note">
           <span>This is an official computer-generated payroll voucher slip from Futane Agro Products ERP. Valid for audit and accounts reconciliation.</span>
+        </div>
+      </div>
+
+      <!-- Docked Modal Action Footer -->
+      <div class="modal-footer-toolbar no-print d-flex align-items-center justify-content-between p-3 border-top bg-light">
+        <span class="text-muted small"><i class="bi bi-info-circle me-1"></i>Official Computer-Generated Payroll Slip.</span>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeViewModal()">Close</button>
+          <button type="button" class="btn btn-primary btn-sm" (click)="printVoucher()">
+            <i class="bi bi-printer me-1"></i>Print Slip
+          </button>
         </div>
       </div>
     </div>
