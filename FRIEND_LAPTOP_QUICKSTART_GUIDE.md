@@ -46,6 +46,7 @@ If you prefer running directly on your laptop without Docker:
 Open two terminal windows:
 
 **Terminal 1 (Backend):**
+*(If building the JAR for the first time: `cd backend && ./mvnw package -DskipTests` or `mvnw.cmd package -DskipTests`)*
 ```bash
 java -Xms128m -Xmx384m -jar backend/target/futane-agro-app-0.0.1-SNAPSHOT.jar --spring.profiles.active=uat --server.port=8081
 ```

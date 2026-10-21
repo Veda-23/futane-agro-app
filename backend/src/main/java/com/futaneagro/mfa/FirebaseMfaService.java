@@ -156,7 +156,10 @@ public class FirebaseMfaService {
             }
 
             // 4. Mark token as used to prevent replay
-            long expSeconds = decodedToken.getExpirationTime();
+            Object expClaim = decodedToken.getClaims().get("exp");
+            long expSeconds = (expClaim instanceof Number)
+                    ? ((Number) expClaim).longValue()
+                    : (System.currentTimeMillis() / 1000L + 3600L);
             LocalDateTime expiresAt = LocalDateTime.ofInstant(Instant.ofEpochSecond(expSeconds), ZoneId.systemDefault());
             usedTokenRepository.save(new MfaUsedToken(tokenHash, user.getId(), expiresAt));
 
