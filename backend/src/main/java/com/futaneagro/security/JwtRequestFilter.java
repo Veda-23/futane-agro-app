@@ -43,7 +43,17 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             }
 
             try {
-                username = jwtUtils.extractUsername(jwt);
+                if (jwtUtils.isPreAuthToken(jwt)) {
+                    String uri = request.getRequestURI();
+                    if (!uri.contains("/api/users/mfa/")) {
+                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"error\": \"Pre-authentication token cannot access protected business resources. Complete MFA verification.\"}");
+                        return;
+                    }
+                } else {
+                    username = jwtUtils.extractUsername(jwt);
+                }
             } catch (Exception e) {
                 // Token parsing failed (expired or invalid)
                 logger.warn("JWT token validation failed: " + e.getMessage());

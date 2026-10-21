@@ -80,4 +80,60 @@ public class JwtUtils {
         final String extractedUsername = extractUsername(token);
         return (extractedUsername.equals(username) && !isTokenExpired(token));
     }
+
+    /**
+     * Generates a temporary Pre-Authentication JWT used strictly between Step 1 (password)
+     * and Step 2 (MFA verification). Has short 5-minute TTL, contains scope: "PRE_MFA" and NO business roles.
+     */
+    public String generatePreAuthToken(String userId, String username, String factor) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
+        claims.put("scope", "PRE_MFA");
+        claims.put("factor", factor);
+        long preAuthExpirationMs = 300_000L; // 5 minutes
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(username)
+                .setId(UUID.randomUUID().toString())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + preAuthExpirationMs))
+                .signWith(SignatureAlgorithm.HS256, secret)
+                .compact();
+    }
+
+    public boolean isPreAuthToken(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            return "PRE_MFA".equals(claims.get("scope", String.class));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean validatePreAuthToken(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            return "PRE_MFA".equals(claims.get("scope", String.class)) && !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public String extractUserId(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            return claims.get("userId", String.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public String extractFactor(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            return claims.get("factor", String.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

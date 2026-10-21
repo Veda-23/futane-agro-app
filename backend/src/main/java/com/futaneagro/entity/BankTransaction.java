@@ -10,7 +10,12 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "t_fin_transaction")
+@Table(name = "t_fin_transaction", indexes = {
+    @Index(name = "idx_bank_date", columnList = "date"),
+    @Index(name = "idx_bank_type", columnList = "type"),
+    @Index(name = "idx_bank_mode", columnList = "mode"),
+    @Index(name = "idx_bank_active_deleted", columnList = "is_active, is_deleted")
+})
 @Where(clause = "is_active = true AND is_deleted = false")
 @SQLDelete(sql = "UPDATE t_fin_transaction SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
 public class BankTransaction extends BaseEntity {

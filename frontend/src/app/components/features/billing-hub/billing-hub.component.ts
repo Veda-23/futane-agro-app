@@ -140,24 +140,39 @@ export class BillingHubComponent implements OnInit, OnChanges {
     return Math.round((taxable + (taxable * 0.18)) * 100) / 100;
   }
 
+  queuePageSize: number = 40;
+  visibleQueueRecords: any[] = [];
+  cachedQueueCount: number = 0;
+  cachedQueueValue: number = 0;
+  cachedQueueTax: number = 0;
+
   get totalQueueCount(): number {
-    return this.getFilteredRecords().length;
+    return this.cachedQueueCount;
   }
 
   get totalQueueValue(): number {
-    const list = this.getFilteredRecords();
-    return list.reduce((acc, item) => acc + this.getRecordAmount(item), 0);
+    return this.cachedQueueValue;
   }
 
   get totalQueueTax(): number {
-    if (this.activeBillType === 'tax_invoice' || this.activeBillType === 'purchase_invoice') {
-      return Math.round((this.totalQueueValue * 0.18) * 100) / 100;
-    }
-    return 0;
+    return this.cachedQueueTax;
   }
 
   get activeDocTypeTitle(): string {
     return this.currentTheme.title;
+  }
+
+  trackByRecordId(index: number, item: any): any {
+    return this.getRecordId(item) || index;
+  }
+
+  loadMoreQueueRecords() {
+    this.queuePageSize += 40;
+    this.updateVisibleQueue();
+  }
+
+  updateVisibleQueue() {
+    this.visibleQueueRecords = (this._cachedHubFilteredRecords || []).slice(0, this.queuePageSize);
   }
 
   getRecordAmount(item: any): number {
@@ -487,11 +502,25 @@ export class BillingHubComponent implements OnInit, OnChanges {
     }
   }
 
+  // Memoization Cache for High Load (10,000+ Records)
+  private _cachedHubFilterKey: string = '';
+  private _cachedHubFilteredRecords: any[] = [];
+  private _cachedHubSelectableRecords: any[] = [];
+
   getFilteredRecords(): any[] {
     const source = this.getCurrentSourceList();
-    if (!source || source.length === 0) return [];
+    if (!source || source.length === 0) {
+      this._cachedHubFilteredRecords = [];
+      this._cachedHubSelectableRecords = [];
+      return [];
+    }
 
-    return source.filter((item: any) => {
+    const key = `${source.length}_${this.activeBillType}_${this.filterYear}_${this.filterMonth}_${this.filterDateFrom}_${this.filterDateTo}_${this.filterSearch}`;
+    if (key === this._cachedHubFilterKey && this._cachedHubFilteredRecords) {
+      return this._cachedHubFilteredRecords;
+    }
+
+    const filtered = source.filter((item: any) => {
       const recDate = this.getRecordDateString(item);
       const recYear = this.getRecordYear(item, recDate);
       const recMonth = this.getRecordMonth(item, recDate);
@@ -545,6 +574,27 @@ export class BillingHubComponent implements OnInit, OnChanges {
 
       return true;
     });
+
+    this._cachedHubFilterKey = key;
+    this._cachedHubFilteredRecords = filtered;
+    this._cachedHubSelectableRecords = filtered.map(item => ({
+      id: String(this.getRecordId(item)),
+      label: this.getRecordLabel(item),
+      subLabel: this.getRecordDateString(item)
+    }));
+
+    this.cachedQueueCount = filtered.length;
+    let sum = 0;
+    for (let i = 0; i < filtered.length; i++) {
+      sum += this.getRecordAmount(filtered[i]);
+    }
+    this.cachedQueueValue = Math.round(sum * 100) / 100;
+    this.cachedQueueTax = (this.activeBillType === 'tax_invoice' || this.activeBillType === 'purchase_invoice')
+      ? Math.round((sum * 0.18) * 100) / 100
+      : 0;
+
+    this.updateVisibleQueue();
+    return this._cachedHubFilteredRecords;
   }
 
   getRecordDateString(item: any): string {
@@ -604,12 +654,8 @@ export class BillingHubComponent implements OnInit, OnChanges {
   }
 
   get selectableRecords(): any[] {
-    const records = this.getFilteredRecords();
-    return records.map(item => ({
-      id: String(this.getRecordId(item)),
-      label: this.getRecordLabel(item),
-      subLabel: this.getRecordDateString(item)
-    }));
+    this.getFilteredRecords();
+    return this._cachedHubSelectableRecords;
   }
 
   getMatchCountText(): string {

@@ -5,6 +5,7 @@ import { AutoSelectDirective } from '../../../../directives/auto-select.directiv
 import { FormStateDirective } from '../../../../directives/form-state.directive';
 import { NotificationService } from '../../../../services/notification.service';
 import { ApiService } from '../../../../api.service';
+import { MfaService } from '../../../../services/mfa.service';
 import { environment } from '../../../../../environments/environment';
 
 @Component({
@@ -35,8 +36,18 @@ export class LoginComponent implements OnInit, OnDestroy {
   otpTimerInterval: any = null;
   showPassword = false;
 
+  // Multi-Factor Authentication (MFA) State
+  isMfaFlow = false;
+  mfaFactor = '';
+  preAuthToken = '';
+  maskedPhone = '';
+  showRecoveryCodeMode = false;
+  recoveryCodeInput = '';
+  isRecaptchaLoading = false;
+
   constructor(
     private apiService: ApiService,
+    private mfaService: MfaService,
     private notificationService: NotificationService
   ) {}
 
@@ -99,7 +110,10 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.apiService.login(this.loginCredentials).subscribe({
       next: (res) => {
         this.isSubmitting = false;
-        if (res.status === 'OTP_REQUIRED' || res.status === 'OTP_SENT') {
+        if (res.mfaRequired || res.status === 'MFA_REQUIRED') {
+          this.initiateMfaFlow(res);
+        } else if (res.status === 'OTP_REQUIRED' || res.status === 'OTP_SENT') {
+          this.isMfaFlow = false;
           this.showOtpScreen = true;
           this.tempOtp = res.tempOtp || '';
           this.otpDigits = ['', '', '', '', '', ''];
@@ -218,14 +232,101 @@ export class LoginComponent implements OnInit, OnDestroy {
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   }
 
-  verifyOtp() {
-    if (this.otpValue.length < 6) {
-      this.loginError = 'Please enter all 6 digits of the verification code.';
+  initiateMfaFlow(res: any) {
+    this.isMfaFlow = true;
+    this.showOtpScreen = true;
+    this.showRecoveryCodeMode = false;
+    this.recoveryCodeInput = '';
+    this.preAuthToken = res.preAuthToken || '';
+    this.maskedPhone = res.maskedPhone || '';
+    this.mfaFactor = res.factor || 'PHONE_FIREBASE';
+    this.tempOtp = '';
+    this.otpDigits = ['', '', '', '', '', ''];
+    this.startOtpTimer();
+
+    // Trigger Firebase Phone Auth SMS if PHONE_FIREBASE factor
+    if (this.mfaFactor === 'PHONE_FIREBASE') {
+      this.sendFirebaseSms();
+    }
+  }
+
+  async sendFirebaseSms() {
+    this.isRecaptchaLoading = true;
+    try {
+      // In local dev/UAT environment without a live real-time SMS gateway configured,
+      // Firebase will use either test phone numbers or reCAPTCHA
+      await this.mfaService.setupRecaptcha('firebase-recaptcha-verifier', 'invisible');
+      this.isRecaptchaLoading = false;
+    } catch (err: any) {
+      this.isRecaptchaLoading = false;
+      console.warn('Firebase reCAPTCHA setup:', err.message);
+    }
+  }
+
+  toggleRecoveryCodeMode() {
+    this.showRecoveryCodeMode = !this.showRecoveryCodeMode;
+    this.loginError = '';
+    this.recoveryCodeInput = '';
+  }
+
+  async verifyOtp() {
+    this.loginError = '';
+    this.isSubmitting = true;
+
+    // ── MFA Branch ──
+    if (this.isMfaFlow) {
+      if (this.showRecoveryCodeMode) {
+        if (!this.recoveryCodeInput.trim()) {
+          this.loginError = 'Please enter your emergency recovery code.';
+          this.isSubmitting = false;
+          return;
+        }
+
+        this.mfaService.verifyRecoveryCodeBackend(this.preAuthToken, this.recoveryCodeInput.trim()).subscribe({
+          next: (res) => {
+            this.isSubmitting = false;
+            this.completeLoginLocal(res);
+          },
+          error: (err) => {
+            this.isSubmitting = false;
+            this.handleMfaError(err);
+          }
+        });
+      } else {
+        // Firebase Phone Auth OTP
+        if (this.otpValue.length < 6) {
+          this.loginError = 'Please enter all 6 digits of the SMS verification code.';
+          this.isSubmitting = false;
+          return;
+        }
+
+        try {
+          const firebaseIdToken = await this.mfaService.confirmOtpAndGetIdToken(this.otpValue);
+          this.mfaService.verifyFirebaseOtpBackend(this.preAuthToken, firebaseIdToken).subscribe({
+            next: (res) => {
+              this.isSubmitting = false;
+              this.completeLoginLocal(res);
+            },
+            error: (err) => {
+              this.isSubmitting = false;
+              this.handleMfaError(err);
+            }
+          });
+        } catch (err: any) {
+          this.isSubmitting = false;
+          console.error('Firebase OTP confirmation error:', err);
+          this.loginError = err.message || 'Invalid or expired SMS OTP. Please check and try again.';
+        }
+      }
       return;
     }
 
-    this.loginError = '';
-    this.isSubmitting = true;
+    // ── Legacy / Internal OTP Branch ──
+    if (this.otpValue.length < 6) {
+      this.loginError = 'Please enter all 6 digits of the verification code.';
+      this.isSubmitting = false;
+      return;
+    }
 
     this.apiService.verifyOtp({
       username: this.loginCredentials.username,
@@ -249,24 +350,51 @@ export class LoginComponent implements OnInit, OnDestroy {
     });
   }
 
+  handleMfaError(err: any) {
+    console.error('MFA verification failed:', err);
+    if (err.status === 0) {
+      this.loginError = 'Connection failed. Please check your network and try again.';
+    } else if (err.status === 429) {
+      this.loginError = err.error?.message || 'Too many attempts. Please wait 60 seconds.';
+    } else if (err.status === 401) {
+      this.loginError = err.error?.message || 'Verification failed. Pre-auth token or OTP is invalid.';
+    } else {
+      this.loginError = err.error?.message || 'MFA verification failed. Please try again.';
+    }
+  }
+
   resendOtp() {
     this.otpDigits = ['', '', '', '', '', ''];
-    this.handleLogin();
+    if (this.isMfaFlow) {
+      this.sendFirebaseSms();
+    } else {
+      this.handleLogin();
+    }
   }
 
   backToLogin() {
     this.showOtpScreen = false;
+    this.isMfaFlow = false;
+    this.showRecoveryCodeMode = false;
+    this.preAuthToken = '';
+    this.maskedPhone = '';
     this.otpDigits = ['', '', '', '', '', ''];
     this.tempOtp = '';
     this.loginError = '';
     this.clearOtpTimer();
+    this.mfaService.clearRecaptcha();
   }
 
   completeLoginLocal(res: any) {
     this.showOtpScreen = false;
+    this.isMfaFlow = false;
+    this.showRecoveryCodeMode = false;
+    this.preAuthToken = '';
+    this.maskedPhone = '';
     this.otpDigits = ['', '', '', '', '', ''];
     this.tempOtp = '';
     this.clearOtpTimer();
+    this.mfaService.clearRecaptcha();
     this.onLoginSuccess.emit(res);
   }
 
@@ -276,5 +404,6 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.clearOtpTimer();
+    this.mfaService.clearRecaptcha();
   }
 }

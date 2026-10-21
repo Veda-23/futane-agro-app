@@ -11,7 +11,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "t_fin_payment")
+@Table(name = "t_fin_payment", indexes = {
+    @Index(name = "idx_pay_party", columnList = "party_id"),
+    @Index(name = "idx_pay_date", columnList = "payment_date"),
+    @Index(name = "idx_pay_mode", columnList = "payment_mode")
+})
 @Where(clause = "is_active = true AND is_deleted = false")
 @SQLDelete(sql = "UPDATE t_fin_payment SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
 public class PaymentCollection extends BaseEntity {

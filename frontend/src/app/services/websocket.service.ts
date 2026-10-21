@@ -33,9 +33,9 @@ export class WebSocketService {
       const wsUrl = `${environment.apiUrl.replace('/api', '')}/ws-erp`;
       this.client = new Client({
         webSocketFactory: () => new (SockJS as any)(wsUrl),
-        reconnectDelay: 5000,
-        heartbeatIncoming: 4000,
-        heartbeatOutgoing: 4000,
+        reconnectDelay: 10000,
+        heartbeatIncoming: 20000,
+        heartbeatOutgoing: 20000,
         debug: (str) => {
           // Silent in production
         }

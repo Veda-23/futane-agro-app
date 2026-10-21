@@ -12,6 +12,8 @@ function getDistPath() {
   return pBrowser;
 }
 
+const zlib = require('zlib');
+
 const mimeTypes = {
   '.html': 'text/html',
   '.js': 'text/javascript',
@@ -27,24 +29,44 @@ const mimeTypes = {
 const server = http.createServer((req, res) => {
   // Proxy API and WebSocket requests to Spring Boot UAT backend (port 8081)
   if (req.url.startsWith('/api') || req.url.startsWith('/ws-erp')) {
+    const proxyHeaders = { ...req.headers, host: '127.0.0.1:8081' };
     const proxyReq = http.request({
       hostname: '127.0.0.1',
       port: 8081,
       path: req.url,
       method: req.method,
-      headers: req.headers
+      headers: proxyHeaders
     }, (proxyRes) => {
       res.writeHead(proxyRes.statusCode, proxyRes.headers);
-      proxyRes.pipe(res, { end: true });
+      proxyRes.pipe(res);
     });
 
     proxyReq.on('error', (err) => {
-      res.writeHead(502, { 'Content-Type': 'application/json' });
+      if (!res.headersSent) {
+        res.writeHead(502, { 'Content-Type': 'application/json' });
+      }
       res.end(JSON.stringify({ error: 'Backend unreachable on port 8081', details: err.message }));
     });
 
-    req.pipe(proxyReq, { end: true });
+    if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') {
+      proxyReq.end();
+    } else {
+      req.pipe(proxyReq);
+    }
     return;
+  }
+
+  // Docs static route
+  if (req.url.startsWith('/docs/')) {
+    const cleanUrl = req.url.split('?')[0];
+    const docFilePath = path.join(rootDir, cleanUrl);
+    if (fs.existsSync(docFilePath) && !fs.statSync(docFilePath).isDirectory()) {
+      const ext = path.extname(docFilePath);
+      const contentType = mimeTypes[ext] || 'application/octet-stream';
+      res.writeHead(200, { 'Content-Type': contentType });
+      fs.createReadStream(docFilePath).pipe(res);
+      return;
+    }
   }
 
   // Static files and Angular SPA routing
@@ -56,20 +78,45 @@ const server = http.createServer((req, res) => {
   }
   const ext = path.extname(filePath);
   const contentType = mimeTypes[ext] || 'application/octet-stream';
+  
+  // Smart caching: Hashed chunks (.js, .css, fonts) are immutable (365 days cache)
+  // index.html is no-cache to guarantee instant pickup of updates
+  const isHashedAsset = ext !== '.html' && /[.-][a-zA-Z0-9_-]{8,}\.(js|css|woff2|png|svg)$/.test(filePath);
+  const cacheControl = isHashedAsset 
+    ? 'public, max-age=31536000, immutable' 
+    : 'no-cache, no-store, must-revalidate';
+
   fs.readFile(filePath, (err, content) => {
     if (err) {
       res.writeHead(500);
       res.end('Server Error: ' + err.message);
+      return;
+    }
+
+    const acceptEncoding = req.headers['accept-encoding'] || '';
+    const compressible = /text|javascript|json|svg|css/.test(contentType);
+
+    if (compressible && acceptEncoding.includes('gzip')) {
+      zlib.gzip(content, (gzErr, zipped) => {
+        if (gzErr) {
+          res.writeHead(200, { 'Content-Type': contentType, 'Cache-Control': cacheControl });
+          res.end(content);
+        } else {
+          res.writeHead(200, {
+            'Content-Type': contentType,
+            'Content-Encoding': 'gzip',
+            'Cache-Control': cacheControl
+          });
+          res.end(zipped);
+        }
+      });
     } else {
       res.writeHead(200, {
         'Content-Type': contentType,
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
+        'Cache-Control': cacheControl
       });
-      res.end(content, 'utf-8');
+      res.end(content);
     }
-
   });
 });
 

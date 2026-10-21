@@ -158,8 +158,22 @@
       <!-- ── Step 2: Two-Factor Authentication (OTP) ─────────── -->
       <form *ngIf="showOtpScreen" (ngSubmit)="verifyOtp()" class="login-form-content otp-form-content" novalidate>
 
-        <!-- Compact Professional UAT Helper Pill -->
-        <div *ngIf="tempOtp"
+        <!-- MFA Info Banner -->
+        <div *ngIf="isMfaFlow" class="mfa-info-pill mb-3">
+          <i class="bi bi-shield-check text-success me-2 fs-5"></i>
+          <div>
+            <div class="fw-semibold text-dark">Two-Factor Authentication</div>
+            <div class="text-muted small">
+              {{ showRecoveryCodeMode ? 'Enter emergency backup code' : 'Code sent to ' + (maskedPhone || loginCredentials.username) }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Hidden reCAPTCHA container for Firebase Phone Auth -->
+        <div id="firebase-recaptcha-verifier"></div>
+
+        <!-- Compact Professional UAT Helper Pill (Non-MFA only) -->
+        <div *ngIf="!isMfaFlow && tempOtp"
              class="uat-otp-helper-pill"
              (click)="fillOtpFromHelper(tempOtp)"
              role="button"
@@ -172,7 +186,8 @@
           <span class="helper-pill-action">Auto-fill <i class="bi bi-arrow-right-short"></i></span>
         </div>
 
-        <div class="form-group-field otp-input-group">
+        <!-- Standard SMS / OTP 6 Discrete Digits -->
+        <div *ngIf="!showRecoveryCodeMode" class="form-group-field otp-input-group">
           <div class="field-label-row">
             <label class="field-label">
               <i class="bi bi-shield-lock me-1"></i> Security Code
@@ -202,17 +217,43 @@
           </div>
         </div>
 
+        <!-- Emergency Recovery Code Input Mode -->
+        <div *ngIf="showRecoveryCodeMode" class="form-group-field">
+          <label for="recoveryCode" class="field-label">
+            <i class="bi bi-key-fill me-1"></i> Emergency Recovery Code
+          </label>
+          <div class="field-input-box">
+            <input type="text"
+                   id="recoveryCode"
+                   name="recoveryCode"
+                   [(ngModel)]="recoveryCodeInput"
+                   placeholder="e.g. ABCDE-12345"
+                   autocomplete="off"
+                   class="enterprise-input"
+                   style="letter-spacing: 2px; font-weight: 600; text-transform: uppercase;">
+          </div>
+          <span class="text-muted small mt-1 d-block">Each recovery code can only be used once.</span>
+        </div>
+
         <!-- Error Feedback Banner -->
         <div *ngIf="loginError" class="enterprise-alert-banner">
           <i class="bi bi-exclamation-circle-fill alert-icon"></i>
           <span class="alert-message">{{ loginError }}</span>
         </div>
 
+        <!-- Recovery Code Toggle Link (MFA only) -->
+        <div *ngIf="isMfaFlow" class="text-center my-2">
+          <button type="button" class="btn btn-link btn-sm text-decoration-none p-0" (click)="toggleRecoveryCodeMode()">
+            <i class="bi" [class.bi-key]="!showRecoveryCodeMode" [class.bi-phone]="showRecoveryCodeMode"></i>
+            {{ showRecoveryCodeMode ? 'Back to SMS verification' : 'Lost phone access? Use recovery code' }}
+          </button>
+        </div>
+
         <!-- Verify Button -->
         <button type="submit"
                 id="otp-verify-submit-btn"
                 class="enterprise-primary-btn"
-                [disabled]="isSubmitting || otpValue.length < 6">
+                [disabled]="isSubmitting || (!showRecoveryCodeMode && otpValue.length < 6) || (showRecoveryCodeMode && !recoveryCodeInput.trim())">
           <span *ngIf="!isSubmitting">Verify &amp; Enter Portal</span>
           <span *ngIf="isSubmitting" class="d-flex align-items-center justify-content-center">
             <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -223,7 +264,8 @@
 
         <!-- Secondary Actions -->
         <div class="otp-actions-row">
-          <button type="button"
+          <button *ngIf="!showRecoveryCodeMode"
+                  type="button"
                   class="enterprise-secondary-btn"
                   [disabled]="otpCountdown > 0 || isSubmitting"
                   (click)="resendOtp()">

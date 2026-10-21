@@ -14,7 +14,13 @@ import javax.persistence.FetchType;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "t_log_dispatch")
+@Table(name = "t_log_dispatch", indexes = {
+    @Index(name = "idx_dispatch_date", columnList = "date"),
+    @Index(name = "idx_dispatch_sale_id", columnList = "sale_id"),
+    @Index(name = "idx_dispatch_vehicle", columnList = "vehicle_number"),
+    @Index(name = "idx_dispatch_status", columnList = "status"),
+    @Index(name = "idx_dispatch_active_deleted", columnList = "is_active, is_deleted")
+})
 @Where(clause = "is_active = true AND is_deleted = false")
 @SQLDelete(sql = "UPDATE t_log_dispatch SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
 @JsonIgnoreProperties(value = {"hibernateLazyInitializer", "handler"}, ignoreUnknown = true)

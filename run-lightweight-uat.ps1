@@ -29,11 +29,21 @@ if (-not (Test-Path (Join-Path $DIST 'index.html'))) {
     exit 1
 }
 
-# 3. Check if backend is already running on port 8081
+# 3. Ensure PostgreSQL 16 is running on port 5432
+$pgConn = Get-NetTCPConnection -LocalPort 5432 -State Listen -ErrorAction SilentlyContinue
+if (-not $pgConn) {
+    Write-Host '[1/3] Starting PostgreSQL 16 engine on port 5432...' -ForegroundColor Green
+    & 'C:\Users\Vedant\pgsql\bin\pg_ctl.exe' -D 'C:\Users\Vedant\pgsql\data' -l 'C:\Users\Vedant\pgsql\logfile.log' start
+    Start-Sleep -Seconds 2
+} else {
+    Write-Host '[1/3] PostgreSQL 16 engine is active on port 5432.' -ForegroundColor Green
+}
+
+# 4. Check if backend is already running on port 8081
 $backendConn = Get-NetTCPConnection -LocalPort 8081 -State Listen -ErrorAction SilentlyContinue
 if (-not $backendConn) {
-    Write-Host '[1/2] Starting Spring Boot UAT backend on port 8081 (Max 512MB RAM)...' -ForegroundColor Green
-    $backendArgs = @('-Xms256m', '-Xmx512m', '-jar', $JAR, '--spring.profiles.active=uat', '--server.port=8081', '--spring.liquibase.enabled=false')
+    Write-Host '[2/3] Starting Spring Boot UAT backend on port 8081 (Max 384MB RAM)...' -ForegroundColor Green
+    $backendArgs = @('-Xms128m', '-Xmx384m', '-jar', $JAR, '--spring.profiles.active=uat', '--server.port=8081', '--spring.liquibase.enabled=false')
     $backend = Start-Process 'java' -ArgumentList $backendArgs -PassThru -WindowStyle Minimized
     Write-Host '      Backend PID:' $backend.Id -ForegroundColor Gray
     Write-Host '      Waiting for backend to bind to port 8081...' -ForegroundColor Gray
@@ -56,8 +66,8 @@ if (-not $backendConn) {
     Write-Host '[1/2] Backend is already running on port 8081.' -ForegroundColor Green
 }
 
-# 4. Start Lightweight Static Server on Port 4300 (Uses ~30MB RAM)
-Write-Host '[2/2] Starting lightweight frontend server on port 4300 with API proxy...' -ForegroundColor Green
+# 5. Start Lightweight Static Server on Port 4300 (Uses ~30MB RAM)
+Write-Host '[3/3] Starting lightweight frontend server on port 4300 with API proxy...' -ForegroundColor Green
 $serveScript = Join-Path $ROOT 'scripts\lightweight-server.js'
 $frontend = Start-Process 'node' -ArgumentList @($serveScript, '4300') -PassThru -WindowStyle Normal
 

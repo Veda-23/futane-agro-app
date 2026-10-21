@@ -151,4 +151,37 @@ public class User extends BaseEntity {
     public void setForcePasswordChange(Boolean forcePasswordChange) {
         this.forcePasswordChange = forcePasswordChange;
     }
+
+    @Column(name = "mfa_enabled", nullable = false)
+    private Boolean mfaEnabled = false;
+
+    @Column(name = "mfa_factor", length = 32)
+    private String mfaFactor;
+
+    @Column(name = "mfa_phone_e164", length = 20)
+    private String mfaPhoneE164;
+
+    public Boolean getMfaEnabled() {
+        return mfaEnabled != null && mfaEnabled;
+    }
+
+    public void setMfaEnabled(Boolean mfaEnabled) {
+        this.mfaEnabled = mfaEnabled;
+    }
+
+    public String getMfaFactor() {
+        return mfaFactor;
+    }
+
+    public void setMfaFactor(String mfaFactor) {
+        this.mfaFactor = mfaFactor;
+    }
+
+    public String getMfaPhoneE164() {
+        return mfaPhoneE164;
+    }
+
+    public void setMfaPhoneE164(String mfaPhoneE164) {
+        this.mfaPhoneE164 = mfaPhoneE164;
+    }
 }

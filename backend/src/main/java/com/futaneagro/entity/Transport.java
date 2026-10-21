@@ -11,7 +11,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "t_log_transport")
+@Table(name = "t_log_transport", indexes = {
+    @Index(name = "idx_tr_date", columnList = "date"),
+    @Index(name = "idx_tr_driver", columnList = "driver_id"),
+    @Index(name = "idx_tr_truck", columnList = "truck_number")
+})
 @Where(clause = "is_active = true AND is_deleted = false")
 @SQLDelete(sql = "UPDATE t_log_transport SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
 public class Transport extends BaseEntity {

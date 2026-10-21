@@ -212,8 +212,18 @@ export class BankComponent implements OnInit {
     window.print();
   }
 
-  // --- Filtered & Sorted Records ---
+  // --- Filtered & Sorted Records (Memoized for 10,000+ Records) ---
+  private _cachedBankFilterKey: string = '';
+  private _cachedBankFilteredList: BankTransactionItem[] = [];
+  private _cachedBankPageKey: string = '';
+  private _cachedBankPaginatedList: BankTransactionItem[] = [];
+
   get filteredList(): BankTransactionItem[] {
+    const key = `${(this.bankTransactionsList || []).length}_${this.activeSubtab}_${this.filterType}_${this.filterDateFrom}_${this.filterDateTo}_${this.searchQuery}_${this.sortField}_${this.sortAsc}`;
+    if (key === this._cachedBankFilterKey && this._cachedBankFilteredList) {
+      return this._cachedBankFilteredList;
+    }
+
     let list = [...(this.bankTransactionsList || [])];
 
     // Filter by Subtab
@@ -266,12 +276,21 @@ export class BankComponent implements OnInit {
     });
 
     this.tableFilteredCounts['bank'] = list.length;
-    return list;
+    this._cachedBankFilterKey = key;
+    this._cachedBankFilteredList = list;
+    return this._cachedBankFilteredList;
   }
 
   get paginatedList(): BankTransactionItem[] {
+    const list = this.filteredList;
+    const pageKey = `${this._cachedBankFilterKey}_${this.currentPage}_${this.pageSize}`;
+    if (pageKey === this._cachedBankPageKey && this._cachedBankPaginatedList) {
+      return this._cachedBankPaginatedList;
+    }
     const start = (this.currentPage - 1) * this.pageSize;
-    return this.filteredList.slice(start, start + this.pageSize);
+    this._cachedBankPageKey = pageKey;
+    this._cachedBankPaginatedList = list.slice(start, start + this.pageSize);
+    return this._cachedBankPaginatedList;
   }
 
   get totalPages(): number {

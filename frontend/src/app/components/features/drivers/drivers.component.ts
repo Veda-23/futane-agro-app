@@ -1,7 +1,8 @@
-import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@angular/core';
+import { Component, OnInit, OnChanges, OnDestroy, SimpleChanges, Input, Output, EventEmitter, HostListener, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { ApiService } from '../../../api.service';
 import { NotificationService } from '../../../services/notification.service';
 import { TranslatePipe } from '../../../translate.service';
@@ -21,9 +22,10 @@ import { EmptyStateComponent } from '../../shared/empty-state/empty-state.compon
     EmptyStateComponent
   ],
   templateUrl: './drivers.component.html',
-  styleUrls: ['./drivers.component.css']
+  styleUrls: ['./drivers.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DriversComponent implements OnInit {
+export class DriversComponent implements OnInit, OnChanges, OnDestroy {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'drivers';
   @Input() loggedInUser: any = null;
@@ -33,6 +35,7 @@ export class DriversComponent implements OnInit {
   drivers: any[] = [];
   isLoading = false;
   isRefreshing = false;
+  private driverStatsMap: Map<string, { trips: number; earnings: number }> = new Map();
   hasError = false;
   isFormDrawerOpen = false;
 
@@ -52,7 +55,10 @@ export class DriversComponent implements OnInit {
 
   // Filter & Search State
   filterStatus: 'ALL' | 'ACTIVE' | 'LICENSED' | 'STANDBY' = 'ALL';
+  searchInputText: string = '';
   filterSearchQuery: string = '';
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
 
   // Table Configuration & Pagination
   tableDensity: 'compact' | 'normal' | 'spacious' = 'normal';
@@ -91,14 +97,70 @@ export class DriversComponent implements OnInit {
 
   constructor(
     private apiService: ApiService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    public cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
     try {
       localStorage.removeItem('cols_width_drivers_table');
     } catch (_) {}
+
+    this.searchSubject.pipe(
+      debounceTime(150),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(query => {
+      this.filterSearchQuery = query;
+      this.currentPage = 1;
+      this.cdr.markForCheck();
+    });
+
+    this.rebuildDriverStatsMap();
     this.loadData();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onSearchInput(value: string) {
+    this.searchInputText = value;
+    this.searchSubject.next(value);
+  }
+
+  clearSearch() {
+    this.searchInputText = '';
+    this.filterSearchQuery = '';
+    this.currentPage = 1;
+    this.cdr.markForCheck();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['transportsList']) {
+      this.rebuildDriverStatsMap();
+      this.cdr.markForCheck();
+    }
+  }
+
+  private rebuildDriverStatsMap(): void {
+    this.driverStatsMap.clear();
+    const list = this.transportsList || [];
+    for (let i = 0; i < list.length; i++) {
+      const t = list[i];
+      const id = String(t.driver?.id || t.driverId || '');
+      if (!id) continue;
+      let stat = this.driverStatsMap.get(id);
+      if (!stat) {
+        stat = { trips: 0, earnings: 0 };
+        this.driverStatsMap.set(id, stat);
+      }
+      stat.trips++;
+      stat.earnings += (Number(t.rent) || 0);
+    }
+    this._cachedFilterKey = '';
+    this._driverCountsCacheLength = -1;
   }
 
   loadData(forceRefresh: boolean = false) {
@@ -118,18 +180,21 @@ export class DriversComponent implements OnInit {
       next: ({ drivers, transports }: { drivers: any[]; transports: any[] }) => {
         this.drivers = drivers || [];
         this.transportsList = transports || [];
+        this.rebuildDriverStatsMap();
         this.tableFilteredCounts['drivers'] = this.drivers.length;
         this.isLoading = false;
         this.isRefreshing = false;
         if (forceRefresh) {
           this.notificationService.success('Roster Refreshed', 'Drivers registry and transport activity updated.');
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.isLoading = false;
         this.isRefreshing = false;
         this.hasError = true;
         this.notificationService.error('Load Failed', 'Could not load drivers directory and transport logs.');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -184,21 +249,98 @@ export class DriversComponent implements OnInit {
     return (this.transportsList || []).reduce((acc: number, curr: any) => acc + (Number(curr.rent) || 0), 0);
   }
 
-  // Driver Statistics Helper
+  // O(1) Driver Statistics Helper
   getDriverStats(driverId: string | number): { trips: number; earnings: number } {
     if (!driverId) return { trips: 0, earnings: 0 };
-    const trips = (this.transportsList || []).filter((t: any) => 
-      (t.driver && String(t.driver.id) === String(driverId)) || 
-      (t.driverId && String(t.driverId) === String(driverId))
-    );
-    return {
-      trips: trips.length,
-      earnings: trips.reduce((acc: number, t: any) => acc + (Number(t.rent) || 0), 0)
-    };
+    return this.driverStatsMap.get(String(driverId)) || { trips: 0, earnings: 0 };
+  }
+
+  private _cachedFilterKey = '';
+  private _cachedFilteredDrivers: any[] = [];
+  private _cachedFilteredTrips = 0;
+  private _cachedFilteredEarnings = 0;
+  private _cachedActiveDriversCount = 0;
+  private _cachedStandbyDriversCount = 0;
+  private _driverCountsCacheLength = -1;
+
+  private _ensureDriverCountsCache(): void {
+    const len = this.drivers?.length || 0;
+    if (this._driverCountsCacheLength === len && this._cachedFilterKey !== '') return;
+    let active = 0;
+    let standby = 0;
+    for (let i = 0; i < len; i++) {
+      const d = this.drivers[i];
+      const stat = this.getDriverStats(d.id);
+      if (stat.trips > 0) active++;
+      else standby++;
+    }
+    this._cachedActiveDriversCount = active;
+    this._cachedStandbyDriversCount = standby;
+    this._driverCountsCacheLength = len;
+  }
+
+  get activeDriversCount(): number {
+    this._ensureDriverCountsCache();
+    return this._cachedActiveDriversCount;
+  }
+
+  get standbyDriversCount(): number {
+    this._ensureDriverCountsCache();
+    return this._cachedStandbyDriversCount;
+  }
+
+  private _ensureFilteredDriversCache(): void {
+    const key = `${this.drivers?.length || 0}_${this.transportsList?.length || 0}_${this.filterStatus}_${this.filterSearchQuery || ''}`;
+    if (this._cachedFilterKey === key) return;
+
+    let result = [...(this.drivers || [])];
+
+    if (this.filterStatus === 'ACTIVE') {
+      result = result.filter((d: any) => this.getDriverStats(d.id).trips > 0);
+    } else if (this.filterStatus === 'LICENSED') {
+      result = result.filter((d: any) => !!d.licenseNumber && d.licenseNumber.trim() !== '');
+    } else if (this.filterStatus === 'STANDBY') {
+      result = result.filter((d: any) => this.getDriverStats(d.id).trips === 0);
+    }
+
+    if (this.filterSearchQuery && this.filterSearchQuery.trim()) {
+      const q = this.filterSearchQuery.trim().toLowerCase();
+      result = result.filter((d: any) => {
+        const name = (d.driverName || '').toLowerCase();
+        const mobile = (d.mobile || '').toLowerCase();
+        const license = (d.licenseNumber || '').toLowerCase();
+        const address = (d.address || '').toLowerCase();
+        return name.includes(q) || mobile.includes(q) || license.includes(q) || address.includes(q);
+      });
+    }
+
+    let totTrips = 0;
+    let totEarnings = 0;
+    for (let i = 0; i < result.length; i++) {
+      const stat = this.getDriverStats(result[i].id);
+      totTrips += stat.trips;
+      totEarnings += stat.earnings;
+    }
+
+    this._cachedFilteredDrivers = result;
+    this._cachedFilteredTrips = totTrips;
+    this._cachedFilteredEarnings = totEarnings;
+    this._cachedFilterKey = key;
+  }
+
+  get filteredDrivers(): any[] {
+    this._ensureFilteredDriversCache();
+    return this._cachedFilteredDrivers;
   }
 
   getTotalFilteredTrips(): number {
-    return (this.filteredDrivers || []).reduce((sum: number, d: any) => sum + this.getDriverStats(d.id).trips, 0);
+    this._ensureFilteredDriversCache();
+    return this._cachedFilteredTrips;
+  }
+
+  getTotalFilteredEarnings(): number {
+    this._ensureFilteredDriversCache();
+    return this._cachedFilteredEarnings;
   }
 
   formatDriverId(id: any): string {
@@ -218,47 +360,6 @@ export class DriversComponent implements OnInit {
     if (this.isFormDrawerOpen) {
       this.closeFormDrawer();
     }
-  }
-
-  getTotalFilteredEarnings(): number {
-    return (this.filteredDrivers || []).reduce((sum: number, d: any) => sum + this.getDriverStats(d.id).earnings, 0);
-  }
-
-  // Filter Counts
-  get activeDriversCount(): number {
-    return (this.drivers || []).filter((d: any) => this.getDriverStats(d.id).trips > 0).length;
-  }
-
-  get standbyDriversCount(): number {
-    return (this.drivers || []).filter((d: any) => this.getDriverStats(d.id).trips === 0).length;
-  }
-
-  // Filter & Search Logic
-  get filteredDrivers(): any[] {
-    let result = [...(this.drivers || [])];
-
-    // Status Filter
-    if (this.filterStatus === 'ACTIVE') {
-      result = result.filter((d: any) => this.getDriverStats(d.id).trips > 0);
-    } else if (this.filterStatus === 'LICENSED') {
-      result = result.filter((d: any) => !!d.licenseNumber && d.licenseNumber.trim() !== '');
-    } else if (this.filterStatus === 'STANDBY') {
-      result = result.filter((d: any) => this.getDriverStats(d.id).trips === 0);
-    }
-
-    // Text Search
-    if (this.filterSearchQuery && this.filterSearchQuery.trim()) {
-      const q = this.filterSearchQuery.trim().toLowerCase();
-      result = result.filter((d: any) => {
-        const name = (d.driverName || '').toLowerCase();
-        const mobile = (d.mobile || '').toLowerCase();
-        const license = (d.licenseNumber || '').toLowerCase();
-        const address = (d.address || '').toLowerCase();
-        return name.includes(q) || mobile.includes(q) || license.includes(q) || address.includes(q);
-      });
-    }
-
-    return result;
   }
 
   hasActiveFilters(): boolean {
@@ -282,9 +383,11 @@ export class DriversComponent implements OnInit {
   }
 
   resetFilters() {
+    this.searchInputText = '';
     this.filterSearchQuery = '';
     this.filterStatus = 'ALL';
     this.currentPage = 1;
+    this.cdr.markForCheck();
   }
 
   setDensity(density: 'compact' | 'normal' | 'spacious') {
@@ -478,8 +581,16 @@ export class DriversComponent implements OnInit {
     }
   }
 
+  private _driversCache: any[] = [];
+  private _driversCacheKey = '';
+
   getProcessedList(list: any[], table: string): any[] {
-    if (!list) return [];
+    if (!list || list.length === 0) return [];
+
+    const cacheKey = `${table}_${list.length}_${this.currentPage}_${this.pageSize}_${this.sortField}_${this.sortAsc}`;
+    if (this._driversCacheKey === cacheKey) {
+      return this._driversCache;
+    }
 
     const sorted = [...list].sort((a: any, b: any) => {
       let valA: any;
@@ -503,7 +614,11 @@ export class DriversComponent implements OnInit {
 
     this.tableFilteredCounts[table] = sorted.length;
     const start = (this.currentPage - 1) * this.pageSize;
-    return sorted.slice(start, start + this.pageSize);
+    const paginated = sorted.slice(start, start + this.pageSize);
+
+    this._driversCacheKey = cacheKey;
+    this._driversCache = paginated;
+    return paginated;
   }
 
   private resolvePath(obj: any, path: string): any {

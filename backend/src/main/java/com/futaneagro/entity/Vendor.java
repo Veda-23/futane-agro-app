@@ -13,6 +13,10 @@ import java.time.LocalDate;
 @Table(name = "t_crm_vendor", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"vendor_name"}),
     @UniqueConstraint(columnNames = {"mobile"})
+}, indexes = {
+    @Index(name = "idx_vendor_name", columnList = "vendor_name"),
+    @Index(name = "idx_vendor_mobile", columnList = "mobile"),
+    @Index(name = "idx_vendor_active_deleted", columnList = "is_active, is_deleted")
 })
 @Where(clause = "is_active = true AND is_deleted = false")
 @SQLDelete(sql = "UPDATE t_crm_vendor SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")

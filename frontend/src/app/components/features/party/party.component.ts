@@ -1,6 +1,8 @@
-import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, HostListener, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { AutoSelectDirective } from '../../../directives/auto-select.directive';
 import { FormStateDirective } from '../../../directives/form-state.directive';
 import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
@@ -39,9 +41,10 @@ export interface PartyRecord {
     UniversalImporterComponent
   ],
   templateUrl: './party.component.html',
-  styleUrls: ['./party.component.css']
+  styleUrls: ['./party.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PartyComponent implements OnInit {
+export class PartyComponent implements OnInit, OnDestroy {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'parties';
   @Input() loggedInUser: any = null;
@@ -61,7 +64,10 @@ export class PartyComponent implements OnInit {
   subTab: 'all' | 'wholesalers' | 'gst' | 'mh' | 'interstate' = 'all';
 
   // Toolbar & Search Filters
+  searchInputText: string = '';
   searchQuery: string = '';
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
   filterPartyType: string = '';
   filterState: string = '';
   filterGstStatus: string = '';
@@ -72,6 +78,22 @@ export class PartyComponent implements OnInit {
   currentPage: number = 1;
   itemsPerPage: number = 10;
   itemsPerPageOptions: number[] = [10, 25, 50, 100];
+  totalPages: number = 1;
+
+  // Cached Filtered & Paged Lists for High Data Volumes
+  filteredParties: PartyRecord[] = [];
+  pagedParties: PartyRecord[] = [];
+  filteredPartiesCount: number = 0;
+
+  // Cached Metrics (Computed in single-pass O(N))
+  cachedWholesalerDistributorCount: number = 0;
+  cachedGstRegisteredCount: number = 0;
+  cachedGstRegisteredPercent: number = 0;
+  cachedMhPartiesCount: number = 0;
+  cachedInterstatePartiesCount: number = 0;
+  cachedUniqueStates: string[] = [];
+  cachedActiveFilterCount: number = 0;
+  cachedSelectedCount: number = 0;
 
   // Selection
   selectedPartyIds: { [id: string]: boolean } = {};
@@ -109,11 +131,69 @@ export class PartyComponent implements OnInit {
 
   constructor(
     private apiService: ApiService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    public cdr: ChangeDetectorRef
   ) {}
 
-  ngOnInit() {
+  ngOnInit(): void {
+    this.searchSubject.pipe(
+      debounceTime(200),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(query => {
+      this.searchQuery = query;
+      this.currentPage = 1;
+      this.recomputeFilteredParties();
+    });
+
     this.loadData();
+  }
+
+  public ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  trackByPartyId(index: number, party: PartyRecord): any {
+    return party.partyId || party.id || index;
+  }
+
+  onSearchInput(value: string) {
+    this.searchInputText = value;
+    this.searchSubject.next(value);
+  }
+
+  clearSearch() {
+    this.searchInputText = '';
+    this.searchQuery = '';
+    this.currentPage = 1;
+    this.recomputeFilteredParties();
+  }
+
+  computeOverallMetrics() {
+    const list = this.parties || [];
+    let wholesalerCount = 0;
+    let gstCount = 0;
+    let mhCount = 0;
+    let interstateCount = 0;
+    const states = new Set<string>();
+
+    for (let i = 0; i < list.length; i++) {
+      const p = list[i];
+      const type = this.getPartyType(p);
+      if (type === 'Wholesaler' || type === 'Distributor') wholesalerCount++;
+      if (this.isGstCompliant(p.gstNumber)) gstCount++;
+      if (this.isMaharashtra(p)) mhCount++;
+      else interstateCount++;
+      if (p.state && p.state.trim()) states.add(p.state.trim());
+    }
+
+    this.cachedWholesalerDistributorCount = wholesalerCount;
+    this.cachedGstRegisteredCount = gstCount;
+    this.cachedGstRegisteredPercent = list.length > 0 ? Math.round((gstCount / list.length) * 100) : 0;
+    this.cachedMhPartiesCount = mhCount;
+    this.cachedInterstatePartiesCount = interstateCount;
+    this.cachedUniqueStates = Array.from(states).sort();
   }
 
   loadData(notify: boolean = false) {
@@ -124,6 +204,8 @@ export class PartyComponent implements OnInit {
         this.isRefreshing = false;
         this.selectedPartyIds = {};
         this.selectAllChecked = false;
+        this.computeOverallMetrics();
+        this.recomputeFilteredParties();
         if (notify) {
           this.notificationService.success('Directory Refreshed', `Loaded ${this.parties.length} customer & party accounts.`);
         }
@@ -131,6 +213,7 @@ export class PartyComponent implements OnInit {
       error: (err) => {
         this.isRefreshing = false;
         this.notificationService.error('Fetch Failed', 'Unable to retrieve party records: ' + (err.error?.message || err.message));
+        this.cdr.markForCheck();
       }
     });
   }
@@ -150,6 +233,7 @@ export class PartyComponent implements OnInit {
     this.currentPage = 1;
     this.selectedPartyIds = {};
     this.selectAllChecked = false;
+    this.recomputeFilteredParties();
   }
 
   // --- Party Type Classification ---
@@ -169,18 +253,11 @@ export class PartyComponent implements OnInit {
   }
 
   getWholesalerDistributorCount(): number {
-    return (this.parties || []).filter(p => {
-      const t = this.getPartyType(p);
-      return t === 'Wholesaler' || t === 'Distributor';
-    }).length;
+    return this.cachedWholesalerDistributorCount;
   }
 
   getActiveFilterCount(): number {
-    let count = 0;
-    if (this.filterPartyType) count++;
-    if (this.filterState) count++;
-    if (this.filterGstStatus) count++;
-    return count;
+    return this.cachedActiveFilterCount;
   }
 
   toggleFilterPopover() {
@@ -197,20 +274,19 @@ export class PartyComponent implements OnInit {
   }
 
   getGstRegisteredCount(): number {
-    return (this.parties || []).filter(p => this.isGstCompliant(p.gstNumber)).length;
+    return this.cachedGstRegisteredCount;
   }
 
   getGstRegisteredPercent(): number {
-    if (!this.parties || this.parties.length === 0) return 0;
-    return Math.round((this.getGstRegisteredCount() / this.parties.length) * 100);
+    return this.cachedGstRegisteredPercent;
   }
 
   getMhPartiesCount(): number {
-    return (this.parties || []).filter(p => this.isMaharashtra(p)).length;
+    return this.cachedMhPartiesCount;
   }
 
   getInterstatePartiesCount(): number {
-    return (this.parties || []).filter(p => !this.isMaharashtra(p)).length;
+    return this.cachedInterstatePartiesCount;
   }
 
   getProfileReadinessPercent(): number {
@@ -220,13 +296,7 @@ export class PartyComponent implements OnInit {
   }
 
   getUniqueStates(): string[] {
-    const states = new Set<string>();
-    (this.parties || []).forEach(p => {
-      if (p.state && p.state.trim()) {
-        states.add(p.state.trim());
-      }
-    });
-    return Array.from(states).sort();
+    return this.cachedUniqueStates;
   }
 
   isMaharashtra(party: PartyRecord): boolean {
@@ -253,7 +323,7 @@ export class PartyComponent implements OnInit {
   }
 
   // --- Filtering & Pagination ---
-  getFilteredParties(): PartyRecord[] {
+  recomputeFilteredParties() {
     let list = this.parties || [];
 
     // 1. Subtab filter
@@ -301,27 +371,52 @@ export class PartyComponent implements OnInit {
       list = list.filter(p => !this.isGstCompliant(p.gstNumber));
     }
 
-    return list;
+    this.filteredParties = list;
+    this.filteredPartiesCount = list.length;
+    this.totalPages = Math.ceil(this.filteredPartiesCount / this.itemsPerPage) || 1;
+    if (this.currentPage > this.totalPages) this.currentPage = 1;
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    this.pagedParties = this.filteredParties.slice(startIndex, startIndex + this.itemsPerPage);
+
+    let activeFilterCount = 0;
+    if (this.filterPartyType) activeFilterCount++;
+    if (this.filterState) activeFilterCount++;
+    if (this.filterGstStatus) activeFilterCount++;
+    this.cachedActiveFilterCount = activeFilterCount;
+    this.cachedSelectedCount = Object.values(this.selectedPartyIds).filter(Boolean).length;
+
+    this.cdr.markForCheck();
+  }
+
+  getFilteredParties(): PartyRecord[] {
+    return this.filteredParties;
   }
 
   getPaginatedParties(): PartyRecord[] {
-    const filtered = this.getFilteredParties();
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    return filtered.slice(startIndex, startIndex + this.itemsPerPage);
+    return this.pagedParties;
   }
 
   getTotalPages(): number {
-    const totalItems = this.getFilteredParties().length;
-    return Math.ceil(totalItems / this.itemsPerPage) || 1;
+    return this.totalPages;
   }
 
   setPage(page: number) {
-    if (page >= 1 && page <= this.getTotalPages()) {
+    if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
+      const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+      this.pagedParties = this.filteredParties.slice(startIndex, startIndex + this.itemsPerPage);
+      this.cdr.markForCheck();
     }
   }
 
+  onPageSizeChange(newSize: number) {
+    this.itemsPerPage = newSize;
+    this.currentPage = 1;
+    this.recomputeFilteredParties();
+  }
+
   resetFilters() {
+    this.searchInputText = '';
     this.searchQuery = '';
     this.filterPartyType = '';
     this.filterState = '';
@@ -331,27 +426,30 @@ export class PartyComponent implements OnInit {
     this.selectedPartyIds = {};
     this.selectAllChecked = false;
     this.isFilterPopoverOpen = false;
+    this.recomputeFilteredParties();
   }
 
   // --- Multi-Selection ---
   toggleSelectAll() {
     this.selectAllChecked = !this.selectAllChecked;
-    const visibleParties = this.getPaginatedParties();
-    visibleParties.forEach(p => {
+    this.pagedParties.forEach(p => {
       const id = String(p.id);
       this.selectedPartyIds[id] = this.selectAllChecked;
     });
+    this.cachedSelectedCount = Object.values(this.selectedPartyIds).filter(Boolean).length;
+    this.cdr.markForCheck();
   }
 
   toggleRowSelection(id: any) {
     const key = String(id);
     this.selectedPartyIds[key] = !this.selectedPartyIds[key];
-    const visibleParties = this.getPaginatedParties();
-    this.selectAllChecked = visibleParties.length > 0 && visibleParties.every(p => this.selectedPartyIds[String(p.id)]);
+    this.selectAllChecked = this.pagedParties.length > 0 && this.pagedParties.every(p => this.selectedPartyIds[String(p.id)]);
+    this.cachedSelectedCount = Object.values(this.selectedPartyIds).filter(Boolean).length;
+    this.cdr.markForCheck();
   }
 
   getSelectedCount(): number {
-    return Object.values(this.selectedPartyIds).filter(Boolean).length;
+    return this.cachedSelectedCount;
   }
 
   // --- Density & Columns ---

@@ -4,7 +4,7 @@
 # When Free RAM drops below 1.2 GB, automatically frees 1-2 GB instantly!
 # ==============================================================================
 
-$ThresholdFreeGB = 1.2
+$ThresholdFreeGB = 2.0
 $IntervalSec = 30
 $LogDir = Join-Path $PSScriptRoot "logs"
 if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir -Force | Out-Null }
@@ -28,7 +28,7 @@ public class RamBooster {
 "@ -ErrorAction SilentlyContinue
 
 Write-Host "=================================================================" -ForegroundColor Cyan
-Write-Host "   FUTANE AGRO ERP - CONTINUOUS RAM WATCHDOG ACTIVE" -ForegroundColor Cyan
+Write-Host "   FUTANE AGRO ERP - CONTINUOUS RAM WATCHDOG ACTIVE (2.0GB TARGET)" -ForegroundColor Cyan
 Write-Host "   Monitoring RAM every $IntervalSec seconds." -ForegroundColor Cyan
 Write-Host "   Trigger: Auto-boosts when Free RAM < $ThresholdFreeGB GB" -ForegroundColor Cyan
 Write-Host "   Press Ctrl+C to stop watchdog." -ForegroundColor Yellow
@@ -42,12 +42,15 @@ while ($true) {
         $timestamp = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
 
         if ($freeGB -lt $ThresholdFreeGB) {
-            $msg = "[$timestamp] [ALERT] Free RAM low ($freeGB GB / $totalGB GB). Auto-trimming memory..."
+            $msg = "[$timestamp] [ALERT] Free RAM low ($freeGB GB / $totalGB GB). Auto-trimming memory to reach 2.0+ GB..."
             Write-Host $msg -ForegroundColor Yellow
             Add-Content -Path $LogFile -Value $msg
 
-            # 1. Kill stray Grafana processes if present (preserve esbuild during active builds)
+            # 1. Kill stray Grafana and headless Chrome processes
             Get-Process -Name "*grafana*" -ErrorAction SilentlyContinue | ForEach-Object {
+                Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+            }
+            Get-Process -Name "chrome-headless-shell" -ErrorAction SilentlyContinue | ForEach-Object {
                 Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
             }
 

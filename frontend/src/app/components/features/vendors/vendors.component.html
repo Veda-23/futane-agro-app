@@ -320,9 +320,9 @@
         <input type="text" 
                class="toolbar-search-input" 
                placeholder="Search by vendor name, code, GSTIN, phone, city..." 
-               [(ngModel)]="searchQuery" 
-               (input)="applyFilters()">
-        <button type="button" class="search-clear-btn" *ngIf="searchQuery" (click)="searchQuery = ''; applyFilters()">
+               [ngModel]="searchInputText" 
+               (ngModelChange)="onSearchInput($event)">
+        <button type="button" class="search-clear-btn" *ngIf="searchInputText" (click)="clearSearch()">
           <i class="bi bi-x"></i>
         </button>
       </div>

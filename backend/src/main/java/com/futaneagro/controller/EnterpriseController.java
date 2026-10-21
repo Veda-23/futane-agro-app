@@ -10,6 +10,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -77,6 +78,7 @@ public class EnterpriseController {
 
     // --- Machine Master ---
     @GetMapping("/machines")
+    @Transactional(readOnly = true)
     @Cacheable(value = "machines")
     public List<MachineMaster> getAllMachines() {
         return machineRepo.findAll();
@@ -125,6 +127,7 @@ public class EnterpriseController {
 
     // --- Machine Breakdown ---
     @GetMapping({"/breakdowns", "/machine-breakdowns"})
+    @Transactional(readOnly = true)
     public List<MachineBreakdown> getAllBreakdowns() {
         return breakdownRepo.findAll();
     }
@@ -212,6 +215,7 @@ public class EnterpriseController {
 
     // --- Expense ---
     @GetMapping("/expenses")
+    @Transactional(readOnly = true)
     public List<Expense> getAllExpenses() {
         return expenseRepo.findAll();
     }
@@ -251,6 +255,7 @@ public class EnterpriseController {
 
     // --- Bank Transactions ---
     @GetMapping("/bank-transactions")
+    @Transactional(readOnly = true)
     public List<BankTransaction> getAllTransactions() {
         return bankRepo.findAll();
     }

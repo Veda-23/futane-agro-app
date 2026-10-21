@@ -9,10 +9,8 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl, Title } from '@angular/platform-browser';
 import { ApiService } from './api.service';
 import { TranslateService, Language, TranslatePipe } from './translate.service';
-import { Chart, registerables } from 'chart.js';
 // jsPDF and html2canvas are dynamically imported inside downloadPDFInvoice() — not needed at startup
 import { environment } from '../environments/environment';
-import { DataTableComponent } from './components/data-table/data-table.component';
 import { DashboardComponent } from './components/features/dashboard/dashboard.component';
 import { ProductionComponent } from './components/features/production/production.component';
 import { PartyComponent } from './components/features/party/party.component';
@@ -39,21 +37,18 @@ import { HeaderComponent } from './components/layout/header/header.component';
 import { SidebarComponent } from './components/layout/sidebar/sidebar.component';
 import { LoginComponent } from './components/features/auth/login/login.component';
 import { GlobalFilterComponent } from './components/features/global-filter/global-filter.component';
-import { AiCopilotComponent } from './components/shared/ai-copilot/ai-copilot.component';
-import { UniversalImporterComponent } from './components/shared/universal-importer/universal-importer.component';
 import { NotificationService } from './services/notification.service';
 import { AppNotificationService } from './services/app-notification.service';
 import { WebSocketService } from './services/websocket.service';
 import { ModalManagerService } from './services/modal-manager.service';
 import { PaymentService } from './services/payment.service';
-Chart.register(...registerables);
 
 // XLSX is dynamically imported inside exportTableToExcel() to avoid adding ~1MB to the initial bundle
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, DataTableComponent, HeaderComponent, SidebarComponent, DashboardComponent, ProductionComponent, PartyComponent, SalesComponent, PaymentsComponent, RawMaterialsComponent, VendorsComponent, InventoryComponent, EmployeesComponent, SalariesComponent, TransportsComponent, DriversComponent, InvoicesComponent, ReportsComponent, MachinesComponent, DispatchComponent, ExpensesComponent, BankComponent, AnalyticsComponent, AuditLogsComponent, BillingHubComponent, SettingsComponent, LoginComponent, GlobalFilterComponent, AiCopilotComponent, UniversalImporterComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, HeaderComponent, SidebarComponent, DashboardComponent, ProductionComponent, PartyComponent, SalesComponent, PaymentsComponent, RawMaterialsComponent, VendorsComponent, InventoryComponent, EmployeesComponent, SalariesComponent, TransportsComponent, DriversComponent, InvoicesComponent, ReportsComponent, MachinesComponent, DispatchComponent, ExpensesComponent, BankComponent, AnalyticsComponent, AuditLogsComponent, BillingHubComponent, SettingsComponent, LoginComponent, GlobalFilterComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
@@ -519,10 +514,12 @@ export class AppComponent implements OnInit, OnDestroy {
   grafanaEmbedUrl: SafeResourceUrl | null = null;
   rawGrafanaUrl: string = '';
   telemetryHealth = {
-    grafanaOnline: false,
+    postgresOnline: true,
+    backendOnline: true,
+    grafanaOnline: true,
     grafanaVersion: 'v10.4.2',
-    prometheusOnline: false,
-    backendOnline: false,
+    prometheusOnline: true,
+    allHealthy: true,
     lastUpdated: '',
     checking: false,
     alertLevel: 'green' as 'green' | 'yellow' | 'red',
@@ -1307,8 +1304,10 @@ export class AppComponent implements OnInit, OnDestroy {
       },
       error: () => {}
     });
-    this.prewarmBackgroundTabs();
-    this.preloadTabsProgressively();
+    // On-demand loading: Do not prewarm all 21 tabs simultaneously on startup
+    // Each tab loads its data when switched to, preserving RAM and CPU.
+    // this.prewarmBackgroundTabs();
+    // this.preloadTabsProgressively();
   }
 
   /**
@@ -1376,11 +1375,19 @@ export class AppComponent implements OnInit, OnDestroy {
         this.renderedTabs[tab] = true;
         this.loadedTabsSet.add(tab);
         idx++;
-        this.cdr.markForCheck();
-        setTimeout(step, 45);
+        this.cdr.detectChanges();
+        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+          (window as any).requestIdleCallback(step, { timeout: 180 });
+        } else {
+          setTimeout(step, 80);
+        }
       }
     };
-    setTimeout(step, 90);
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(step, { timeout: 300 });
+    } else {
+      setTimeout(step, 120);
+    }
   }
 
   loadDataForTab(tab: string, notify: boolean = false) {
@@ -1650,7 +1657,7 @@ export class AppComponent implements OnInit, OnDestroy {
       try {
         window.scrollTo({ top: 0, behavior: 'instant' });
       } catch (e) {}
-      this.cdr.markForCheck();
+      this.cdr.detectChanges();
     }
   }
 
@@ -3427,9 +3434,11 @@ export class AppComponent implements OnInit, OnDestroy {
         this.stats = { ...this.stats, ...stats };
       }
       this.telemetryHealth.backendOnline = backendUp;
+      this.telemetryHealth.postgresOnline = backendUp;
       this.telemetryHealth.grafanaOnline = true; // Active on port 3000
       this.telemetryHealth.grafanaVersion = 'v10.4.2';
       this.telemetryHealth.prometheusOnline = true; // Active on port 9090
+      this.telemetryHealth.allHealthy = backendUp;
 
       const alerts: { severity: string; env: string; name: string; summary: string; timestamp: string }[] = [];
       const envName = this.selectedAnalyticsEnv.toUpperCase();

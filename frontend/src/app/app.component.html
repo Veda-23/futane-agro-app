@@ -52,63 +52,63 @@
 
     <div class="content-body animated-fade">
       <!-- 1. Dashboard Tab -->
-      <app-dashboard
-        [class.tab-active-view]="activeTab === 'dashboard'"
-        [hidden]="activeTab !== 'dashboard'"
-        [style.display]="activeTab === 'dashboard' ? 'block' : 'none'"
-        [currentLang]="currentLang"
-        [loggedInUser]="loggedInUser"
-        (onNavigateTab)="switchTab($event)">
-      </app-dashboard>
+      @if (activeTab === 'dashboard') {
+        <app-dashboard
+          class="tab-active-view"
+          [currentLang]="currentLang"
+          [loggedInUser]="loggedInUser"
+          (onNavigateTab)="switchTab($event)">
+        </app-dashboard>
+      }
 
       <!-- 2 & 3. Production Tabs (Daily & Monthly) -->
-      @defer (when renderedTabs['production'] || activeTab === 'production' || activeTab === 'monthly-production'; prefetch on idle) {
-        <app-production
-          [class.tab-active-view]="activeTab === 'production' || activeTab === 'monthly-production'"
-          [hidden]="activeTab !== 'production' && activeTab !== 'monthly-production'"
-          [style.display]="(activeTab === 'production' || activeTab === 'monthly-production') ? 'block' : 'none'"
-          [currentLang]="currentLang"
-          [activeTab]="activeTab"
-          [loggedInUser]="loggedInUser"
-          [filterSearchQuery]="filterSearchQuery"
-          [filterDate]="filterDate"
-          [filterDateFrom]="filterDateFrom"
-          [filterDateTo]="filterDateTo"
-          [filterMonth]="filterMonth"
-          [filterYear]="filterYear"
-          [filterStatus]="filterStatus"
-          [tabFilterCrateType]="filterCrateType"
-          [tabFilterShift]="filterShift"
-          [tabFilterMinSuccessful]="filterMinSuccessful"
-          [tabFilterMinEfficiency]="filterMinEfficiency"
-          (onNavigateTab)="switchTab($event)">
-        </app-production>
+      @defer (when activeTab === 'production' || activeTab === 'monthly-production') {
+        @if (activeTab === 'production' || activeTab === 'monthly-production') {
+          <app-production
+            class="tab-active-view"
+            [currentLang]="currentLang"
+            [activeTab]="activeTab"
+            [loggedInUser]="loggedInUser"
+            [filterSearchQuery]="filterSearchQuery"
+            [filterDate]="filterDate"
+            [filterDateFrom]="filterDateFrom"
+            [filterDateTo]="filterDateTo"
+            [filterMonth]="filterMonth"
+            [filterYear]="filterYear"
+            [filterStatus]="filterStatus"
+            [tabFilterCrateType]="filterCrateType"
+            [tabFilterShift]="filterShift"
+            [tabFilterMinSuccessful]="filterMinSuccessful"
+            [tabFilterMinEfficiency]="filterMinEfficiency"
+            (onNavigateTab)="switchTab($event)">
+          </app-production>
+        }
       }
 
       <!-- 4. Party Tab -->
-      @defer (when renderedTabs['parties'] || activeTab === 'parties'; prefetch on idle) {
-        <app-party
-          [class.tab-active-view]="activeTab === 'parties'"
-          [hidden]="activeTab !== 'parties'"
-          [style.display]="activeTab === 'parties' ? 'block' : 'none'"
-          [currentLang]="currentLang"
-          [activeTab]="activeTab"
-          [loggedInUser]="loggedInUser"
-          (onNavigateTab)="switchTab($event)">
-        </app-party>
+      @defer (when activeTab === 'parties') {
+        @if (activeTab === 'parties') {
+          <app-party
+            class="tab-active-view"
+            [currentLang]="currentLang"
+            [activeTab]="activeTab"
+            [loggedInUser]="loggedInUser"
+            (onNavigateTab)="switchTab($event)">
+          </app-party>
+        }
       }
 
       <!-- 5. Sales Entry Component -->
-      @defer (when renderedTabs['sales'] || activeTab === 'sales'; prefetch on idle) {
-        <app-sales
-          [class.tab-active-view]="activeTab === 'sales'"
-          [hidden]="activeTab !== 'sales'"
-          [style.display]="activeTab === 'sales' ? 'block' : 'none'"
-          [currentLang]="currentLang"
-          [activeTab]="activeTab"
-          [loggedInUser]="loggedInUser"
-          (onNavigateTab)="switchTab($event)">
-        </app-sales>
+      @defer (when activeTab === 'sales') {
+        @if (activeTab === 'sales') {
+          <app-sales
+            class="tab-active-view"
+            [currentLang]="currentLang"
+            [activeTab]="activeTab"
+            [loggedInUser]="loggedInUser"
+            (onNavigateTab)="switchTab($event)">
+          </app-sales>
+        }
       }
 
       <!-- 6. Customer Receipts & Payment Collections -->

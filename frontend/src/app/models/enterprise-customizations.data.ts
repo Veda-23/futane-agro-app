@@ -2465,7 +2465,7 @@ export const MASTER_CUSTOMIZATIONS_CATALOG: CustomizationOption[] = [
     id: 'c200',
     key: 'sec.auto_database_backup_cron',
     category: 'Security & Governance',
-    title: 'Daily Automated Database mysqldump Backup',
+    title: 'Daily Automated PostgreSQL Database Backup',
     description: 'Executes automated encrypted SQL backup every night at 02:00 AM.',
     type: 'boolean',
     value: true,

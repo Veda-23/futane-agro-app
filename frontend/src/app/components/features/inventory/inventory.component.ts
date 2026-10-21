@@ -6,7 +6,6 @@ import { ApiService } from '../../../api.service';
 import { NotificationService } from '../../../services/notification.service';
 import { AutoSelectDirective } from '../../../directives/auto-select.directive';
 import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
-import * as XLSX from 'xlsx';
 
 export interface InventoryItem {
   id?: string | number;
@@ -337,7 +336,20 @@ export class InventoryComponent implements OnInit {
   // FILTERED & PAGINATED LIST
   // ======================================================
 
+  // --- Filtering & Sorting (Memoized for 10,000+ Records) ---
+  private _cachedInvFilterKey: string = '';
+  private _cachedInvFilteredList: InventoryItem[] = [];
+  private _cachedInvPageKey: string = '';
+  private _cachedInvPaginatedList: InventoryItem[] = [];
+  private _cachedInvTotalAvailable: number = 0;
+  private _cachedInvTotalValuation: number = 0;
+
   get filteredList(): InventoryItem[] {
+    const key = `${this.inventoryList.length}_${this.selectedSubtab}_${this.searchQuery}_${this.filterMaterial}_${this.filterStockHealth}_${this.filterWarehouseZone}_${this.sortField}_${this.sortAsc}`;
+    if (key === this._cachedInvFilterKey && this._cachedInvFilteredList) {
+      return this._cachedInvFilteredList;
+    }
+
     let list = this.applySubtabFilter(this.inventoryList, this.selectedSubtab);
 
     if (this.searchQuery?.trim()) {
@@ -367,12 +379,34 @@ export class InventoryComponent implements OnInit {
       );
     }
 
-    return this.sortList(list);
+    const sorted = this.sortList(list);
+
+    let sumStock = 0;
+    let sumVal = 0;
+    for (let i = 0; i < sorted.length; i++) {
+      const itm = sorted[i];
+      const stock = itm.currentStock || 0;
+      sumStock += stock;
+      sumVal += stock * (itm.unitPrice || this.CRATE_RATE);
+    }
+    this._cachedInvTotalAvailable = sumStock;
+    this._cachedInvTotalValuation = sumVal;
+
+    this._cachedInvFilterKey = key;
+    this._cachedInvFilteredList = sorted;
+    return this._cachedInvFilteredList;
   }
 
   get paginatedList(): InventoryItem[] {
+    const list = this.filteredList;
+    const pageKey = `${this._cachedInvFilterKey}_${this.currentPage}_${this.pageSize}`;
+    if (pageKey === this._cachedInvPageKey && this._cachedInvPaginatedList) {
+      return this._cachedInvPaginatedList;
+    }
     const start = (this.currentPage - 1) * this.pageSize;
-    return this.filteredList.slice(start, start + this.pageSize);
+    this._cachedInvPageKey = pageKey;
+    this._cachedInvPaginatedList = list.slice(start, start + this.pageSize);
+    return this._cachedInvPaginatedList;
   }
 
   get totalPages(): number {
@@ -380,11 +414,13 @@ export class InventoryComponent implements OnInit {
   }
 
   get filteredTotalAvailable(): number {
-    return this.filteredList.reduce((sum, i) => sum + (i.currentStock || 0), 0);
+    this.filteredList;
+    return this._cachedInvTotalAvailable;
   }
 
   get filteredTotalValuation(): number {
-    return this.filteredList.reduce((sum, i) => sum + (i.currentStock || 0) * (i.unitPrice || this.CRATE_RATE), 0);
+    this.filteredList;
+    return this._cachedInvTotalValuation;
   }
 
   private sortList(list: InventoryItem[]): InventoryItem[] {
@@ -822,7 +858,7 @@ export class InventoryComponent implements OnInit {
     this.notificationService.success('CSV Downloaded', 'Finished goods stock records exported.');
   }
 
-  exportToExcel() {
+  async exportToExcel() {
     const data = this.filteredList.map(inv => ({
       'Crate ID': inv.id ?? inv.inventoryId,
       'Crate Type / Description': inv.crateType,
@@ -838,8 +874,9 @@ export class InventoryComponent implements OnInit {
       'Last Audit / Update': inv.lastUpdated || 'N/A'
     }));
 
-    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(data);
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    const XLSX = await import('xlsx');
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Warehouse Stock');
     XLSX.writeFile(wb, `finished_goods_crates_stock_${new Date().toISOString().slice(0, 10)}.xlsx`);
 

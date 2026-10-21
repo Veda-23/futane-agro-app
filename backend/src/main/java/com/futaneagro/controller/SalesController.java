@@ -68,6 +68,7 @@ public class SalesController {
 
     // --- Sales Endpoints ---
     @GetMapping("/sales")
+    @Transactional(readOnly = true)
     public List<Sales> getAllSales() {
         return salesRepository.findAll();
     }
@@ -201,6 +202,7 @@ public class SalesController {
 
     // --- Payment Collection Endpoints ---
     @GetMapping("/payments")
+    @Transactional(readOnly = true)
     public List<PaymentCollection> getAllPayments() {
         return paymentCollectionRepository.findAll();
     }
@@ -284,12 +286,14 @@ public class SalesController {
 
     // --- Invoice Endpoints ---
     @GetMapping("/invoices")
+    @Transactional(readOnly = true)
     public List<Invoice> getAllInvoices() {
         return invoiceRepository.findAll();
     }
 
     // --- Tally Prime XML Export (Z-01) ---
     @GetMapping(value = "/reports/tally-xml", produces = "application/xml")
+    @Transactional(readOnly = true)
     public ResponseEntity<String> exportTallySalesXml(
             @RequestParam(required = false) String fromDate,
             @RequestParam(required = false) String toDate) {

@@ -1,8 +1,8 @@
-import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, HostListener, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { forkJoin, of, Subject } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 import { ApiService } from '../../../api.service';
@@ -54,9 +54,10 @@ export interface SaleItem {
     SearchableSelectComponent
   ],
   templateUrl: './sales.component.html',
-  styleUrls: ['./sales.component.css']
+  styleUrls: ['./sales.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SalesComponent implements OnInit {
+export class SalesComponent implements OnInit, OnDestroy {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'sales';
   @Input() loggedInUser: any = null;
@@ -85,7 +86,10 @@ export class SalesComponent implements OnInit {
   showWebOrderDossier: boolean = false;
 
   // Toolbar & Search Filters
+  searchInputText: string = '';
   searchQuery: string = '';
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
   filterPartyId: string = '';
   filterPaymentStatus: string = 'ALL'; // 'ALL', 'PAID', 'PENDING'
   filterOutwardStatus: string = 'ALL'; // 'ALL', 'DISPATCHED', 'AWAITING'
@@ -212,11 +216,39 @@ export class SalesComponent implements OnInit {
 
   constructor(
     private apiService: ApiService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    public cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
+    this.searchSubject.pipe(
+      debounceTime(150),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(query => {
+      this.searchQuery = query;
+      this.currentPage = 1;
+      this.cdr.markForCheck();
+    });
+
     this.loadData();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onSearchInput(value: string) {
+    this.searchInputText = value;
+    this.searchSubject.next(value);
+  }
+
+  clearSearch() {
+    this.searchInputText = '';
+    this.searchQuery = '';
+    this.currentPage = 1;
+    this.cdr.markForCheck();
   }
 
   loadData(notify: boolean = false) {
@@ -238,18 +270,21 @@ export class SalesComponent implements OnInit {
         this.parties = parties || [];
         this.salesList = sales || [];
         this.dispatchesList = dispatches || [];
+        this.rebuildDispatchMap();
         this.isLoading = false;
         this.isRefreshing = false;
         this.loadWebOrders();
         if (notify) {
           this.notificationService.success('Refreshed', 'Sales orders and outward dispatches updated.');
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.isLoading = false;
         this.isRefreshing = false;
         this.hasError = true;
         this.notificationService.error('Load Failed', 'Could not load sales orders.');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -398,11 +433,22 @@ export class SalesComponent implements OnInit {
     }
   }
 
-  // Material Outward & Dispatch Helpers
+  // O(1) Dispatch Index
+  private dispatchMap = new Map<string, any>();
+
+  private rebuildDispatchMap(): void {
+    this.dispatchMap.clear();
+    for (const d of this.dispatchesList) {
+      const sId = String(d.sale?.id || d.sale?.saleId || d.saleId || '');
+      if (sId) this.dispatchMap.set(sId, d);
+    }
+  }
+
+  // Material Outward & Dispatch Helpers (O(1) Map Lookup)
   getDispatchForSale(sale: SaleItem): any {
     if (!sale) return null;
-    const saleId = String(sale.saleId || sale.id);
-    return this.dispatchesList.find(d => String(d.sale?.id || d.sale?.saleId || d.saleId) === saleId);
+    const saleId = String(sale.saleId || sale.id || '');
+    return this.dispatchMap.get(saleId) || null;
   }
 
   isDispatched(sale: SaleItem): boolean {
@@ -462,6 +508,7 @@ export class SalesComponent implements OnInit {
     this.apiService.createDispatch(dispatchPayload).subscribe({
       next: (res) => {
         this.dispatchesList.unshift(res);
+        this.rebuildDispatchMap();
         this.notificationService.success('Material Outward Created', `Dispatched Order #${sale.saleId || sale.id} with vehicle ${dispatchPayload.vehicleNumber}.`);
         this.logAudit(`Created material outward for sale #${sale.saleId || sale.id}`);
         this.closeOutwardModal();
@@ -1067,8 +1114,23 @@ export class SalesComponent implements OnInit {
     }
   }
 
-  // Filtering & Pagination Data Engine
+  // Composite Memoization Cache for High Load (10,000+ Records)
+  private _cachedFilterKey: string = '';
+  private _cachedFilteredList: SaleItem[] = [];
+  private _cachedPageKey: string = '';
+  private _cachedPaginatedList: SaleItem[] = [];
+  private _cachedFilteredTotalQty: number = 0;
+  private _cachedFilteredTotalAmt: number = 0;
+  private _cachedFilteredTotalPaid: number = 0;
+  private _cachedFilteredTotalRemaining: number = 0;
+
+  // Filtering & Pagination Data Engine (Memoized)
   getFilteredList(): SaleItem[] {
+    const key = `${this.salesList.length}_${this.dispatchesList.length}_${this.subTab}_${this.searchQuery}_${this.filterSearchQuery}_${this.filterPartyId}_${this.filterPaymentStatus}_${this.filterOutwardStatus}_${this.filterCrateType}_${this.filterDate}_${this.filterMonth}_${this.sortField}_${this.sortAsc}`;
+    if (key === this._cachedFilterKey && this._cachedFilteredList) {
+      return this._cachedFilteredList;
+    }
+
     let result = [...this.salesList];
 
     // 1. Subtab filter
@@ -1084,7 +1146,7 @@ export class SalesComponent implements OnInit {
       result = result.filter(s => (Number(s.quantity) || 0) >= 10000);
     }
 
-    // 2. Search query (multi-field)
+    // 2. Search query (multi-field with O(1) dispatch lookup)
     if (this.searchQuery && this.searchQuery.trim()) {
       const q = this.searchQuery.toLowerCase().trim();
       result = result.filter(s => {
@@ -1161,7 +1223,25 @@ export class SalesComponent implements OnInit {
       return 0;
     });
 
-    return result;
+    // Compute dynamic accounting totals in a single pass
+    let totalQty = 0;
+    let totalAmt = 0;
+    let totalPaid = 0;
+    let totalRem = 0;
+    for (let i = 0; i < result.length; i++) {
+      const s = result[i];
+      totalQty += (Number(s.quantity) || 0);
+      totalAmt += (Number(s.totalAmount) || 0);
+      totalPaid += (Number(s.paid) || 0);
+      totalRem += (Number(s.remaining) || 0);
+    }
+    this._cachedFilteredTotalQty = totalQty;
+    this._cachedFilteredTotalAmt = totalAmt;
+    this._cachedFilteredTotalPaid = totalPaid;
+    this._cachedFilteredTotalRemaining = totalRem;
+    this._cachedFilterKey = key;
+    this._cachedFilteredList = result;
+    return this._cachedFilteredList;
   }
 
   private resolveSortValue(item: SaleItem, field: string): any {
@@ -1180,8 +1260,14 @@ export class SalesComponent implements OnInit {
 
   getPaginatedList(): SaleItem[] {
     const list = this.getFilteredList();
+    const pageKey = `${this._cachedFilterKey}_${this.currentPage}_${this.pageSize}`;
+    if (pageKey === this._cachedPageKey && this._cachedPaginatedList) {
+      return this._cachedPaginatedList;
+    }
     const start = (this.currentPage - 1) * this.pageSize;
-    return list.slice(start, start + this.pageSize);
+    this._cachedPageKey = pageKey;
+    this._cachedPaginatedList = list.slice(start, start + this.pageSize);
+    return this._cachedPaginatedList;
   }
 
   getTotalPages(): number {
@@ -1190,6 +1276,7 @@ export class SalesComponent implements OnInit {
   }
 
   resetFilters() {
+    this.searchInputText = '';
     this.searchQuery = '';
     this.filterPartyId = '';
     this.filterPaymentStatus = 'ALL';
@@ -1198,23 +1285,28 @@ export class SalesComponent implements OnInit {
     this.subTab = 'all';
     this.currentPage = 1;
     this.isFilterPopoverOpen = false;
+    this.cdr.markForCheck();
   }
 
-  // Dynamic Accounting Totals for <tfoot>
+  // Dynamic Accounting Totals for <tfoot> (O(1) Instant from Memoized Pass)
   getFilteredTotalQuantity(): number {
-    return this.getFilteredList().reduce((sum, s) => sum + (Number(s.quantity) || 0), 0);
+    this.getFilteredList();
+    return this._cachedFilteredTotalQty;
   }
 
   getFilteredTotalAmount(): number {
-    return this.getFilteredList().reduce((sum, s) => sum + (Number(s.totalAmount) || 0), 0);
+    this.getFilteredList();
+    return this._cachedFilteredTotalAmt;
   }
 
   getFilteredTotalPaid(): number {
-    return this.getFilteredList().reduce((sum, s) => sum + (Number(s.paid) || 0), 0);
+    this.getFilteredList();
+    return this._cachedFilteredTotalPaid;
   }
 
   getFilteredTotalRemaining(): number {
-    return this.getFilteredList().reduce((sum, s) => sum + (Number(s.remaining) || 0), 0);
+    this.getFilteredList();
+    return this._cachedFilteredTotalRemaining;
   }
 
   // Export to CSV & Excel

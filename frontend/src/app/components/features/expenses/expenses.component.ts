@@ -257,8 +257,18 @@ export class ExpensesComponent implements OnInit {
     window.print();
   }
 
-  // --- Filtered & Sorted Records ---
+  // --- Filtered & Sorted Records (Memoized for 10,000+ Records) ---
+  private _cachedExpFilterKey: string = '';
+  private _cachedExpFilteredList: ExpenseItem[] = [];
+  private _cachedExpPageKey: string = '';
+  private _cachedExpPaginatedList: ExpenseItem[] = [];
+
   get filteredList(): ExpenseItem[] {
+    const key = `${(this.expensesList || []).length}_${this.activeSubtab}_${this.selectedCategory}_${this.filterDateFrom}_${this.filterDateTo}_${this.searchQuery}_${this.sortField}_${this.sortAsc}`;
+    if (key === this._cachedExpFilterKey && this._cachedExpFilteredList) {
+      return this._cachedExpFilteredList;
+    }
+
     let list = [...(this.expensesList || [])];
 
     // Subtab High Value Filter
@@ -305,12 +315,21 @@ export class ExpensesComponent implements OnInit {
     });
 
     this.tableFilteredCounts['expenses'] = list.length;
-    return list;
+    this._cachedExpFilterKey = key;
+    this._cachedExpFilteredList = list;
+    return this._cachedExpFilteredList;
   }
 
   get paginatedList(): ExpenseItem[] {
+    const list = this.filteredList;
+    const pageKey = `${this._cachedExpFilterKey}_${this.currentPage}_${this.pageSize}`;
+    if (pageKey === this._cachedExpPageKey && this._cachedExpPaginatedList) {
+      return this._cachedExpPaginatedList;
+    }
     const start = (this.currentPage - 1) * this.pageSize;
-    return this.filteredList.slice(start, start + this.pageSize);
+    this._cachedExpPageKey = pageKey;
+    this._cachedExpPaginatedList = list.slice(start, start + this.pageSize);
+    return this._cachedExpPaginatedList;
   }
 
   get totalPages(): number {

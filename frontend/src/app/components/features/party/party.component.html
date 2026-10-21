@@ -304,12 +304,12 @@
           <i class="bi bi-search search-icon"></i>
           <input 
             type="text" 
-            [(ngModel)]="searchQuery" 
-            (ngModelChange)="currentPage = 1"
+            [ngModel]="searchInputText" 
+            (ngModelChange)="onSearchInput($event)"
             class="form-control-search" 
             placeholder="Search party name, contact, GSTIN, city..."
             aria-label="Search Parties">
-          <button *ngIf="searchQuery" type="button" class="btn-clear-search" (click)="searchQuery = ''; currentPage = 1" title="Clear Search" aria-label="Clear Search">
+          <button *ngIf="searchInputText" type="button" class="btn-clear-search" (click)="clearSearch()" title="Clear Search" aria-label="Clear Search">
             <i class="bi bi-x"></i>
           </button>
         </div>
@@ -332,7 +332,7 @@
               <!-- Party Type -->
               <div class="filter-field-group">
                 <label class="filter-field-label">Party Type</label>
-                <select [(ngModel)]="filterPartyType" (change)="currentPage = 1" class="form-select-filter">
+                <select [(ngModel)]="filterPartyType" (change)="currentPage = 1; recomputeFilteredParties()" class="form-select-filter">
                   <option value="">All Party Types</option>
                   <option value="Wholesaler">Wholesaler</option>
                   <option value="Distributor">Distributor</option>
@@ -344,7 +344,7 @@
               <!-- State / Region -->
               <div class="filter-field-group">
                 <label class="filter-field-label">Region / State</label>
-                <select [(ngModel)]="filterState" (change)="currentPage = 1" class="form-select-filter">
+                <select [(ngModel)]="filterState" (change)="currentPage = 1; recomputeFilteredParties()" class="form-select-filter">
                   <option value="">All Regions</option>
                   <option *ngFor="let s of getUniqueStates()" [value]="s">{{ s }}</option>
                 </select>
@@ -353,7 +353,7 @@
               <!-- GST Status -->
               <div class="filter-field-group">
                 <label class="filter-field-label">Tax Compliance</label>
-                <select [(ngModel)]="filterGstStatus" (change)="currentPage = 1" class="form-select-filter">
+                <select [(ngModel)]="filterGstStatus" (change)="currentPage = 1; recomputeFilteredParties()" class="form-select-filter">
                   <option value="">All Tax Status</option>
                   <option value="gst_yes">GSTIN Verified</option>
                   <option value="gst_no">Unregistered / Regular</option>
@@ -449,7 +449,7 @@
         </thead>
         <tbody>
           <!-- Empty State -->
-          <tr *ngIf="getFilteredParties().length === 0">
+          <tr *ngIf="filteredPartiesCount === 0">
             <td colspan="10" class="empty-state-cell">
               <div class="empty-state-box">
                 <i class="bi bi-people empty-state-icon"></i>
@@ -468,7 +468,7 @@
           </tr>
 
           <!-- Data Rows -->
-          <tr *ngFor="let party of getPaginatedParties()" [class.row-selected]="selectedPartyIds[party.id]" class="enterprise-data-row">
+          <tr *ngFor="let party of pagedParties; trackBy: trackByPartyId" [class.row-selected]="selectedPartyIds[party.id]" class="enterprise-data-row">
             <!-- Checkbox -->
             <td class="td-checkbox">
               <input type="checkbox" [checked]="selectedPartyIds[party.id]" (change)="toggleRowSelection(party.id)">
@@ -568,11 +568,11 @@
         </tbody>
 
         <!-- Accounting / Summary Totals Footer Row -->
-        <tfoot *ngIf="getFilteredParties().length > 0" class="table-summary-tfoot">
+        <tfoot *ngIf="filteredPartiesCount > 0" class="table-summary-tfoot">
           <tr>
             <td class="td-checkbox"></td>
             <td *ngIf="isColumnVisible('partyName')" class="tfoot-label">
-              <strong>TOTALS ({{ getFilteredParties().length }} PARTIES)</strong>
+              <strong>TOTALS ({{ filteredPartiesCount }} PARTIES)</strong>
             </td>
             <td *ngIf="isColumnVisible('partyType')">
               <strong>{{ getWholesalerDistributorCount() }}</strong> Wholesalers/Dist.
@@ -594,16 +594,16 @@
     </div>
 
     <!-- ── STANDARD PAGINATION FOOTER ── -->
-    <div class="erp-table-footer no-print" *ngIf="getFilteredParties().length > 0">
+    <div class="erp-table-footer no-print" *ngIf="filteredPartiesCount > 0">
       <div class="erp-footer-info">
-        Showing <strong>{{ getFilteredParties().length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1 }}</strong> to
-        <strong>{{ currentPage * itemsPerPage > getFilteredParties().length ? getFilteredParties().length : currentPage * itemsPerPage }}</strong> of
-        <strong>{{ getFilteredParties().length }}</strong> parties
+        Showing <strong>{{ filteredPartiesCount === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1 }}</strong> to
+        <strong>{{ currentPage * itemsPerPage > filteredPartiesCount ? filteredPartiesCount : currentPage * itemsPerPage }}</strong> of
+        <strong>{{ filteredPartiesCount }}</strong> parties
       </div>
       <div class="erp-footer-controls">
         <div class="erp-rows-selector">
           <span>Rows:</span>
-          <select [(ngModel)]="itemsPerPage" (change)="currentPage = 1" class="erp-rows-select" aria-label="Rows per page">
+          <select [(ngModel)]="itemsPerPage" (ngModelChange)="onPageSizeChange($event)" class="erp-rows-select" aria-label="Rows per page">
             <option *ngFor="let opt of itemsPerPageOptions" [value]="opt">{{ opt }}</option>
           </select>
         </div>
@@ -611,8 +611,8 @@
           <button type="button" class="erp-page-nav-btn" [disabled]="currentPage === 1" (click)="setPage(currentPage - 1)">
             <i class="bi bi-chevron-left"></i> Prev
           </button>
-          <span class="erp-page-counter">Page <strong>{{ currentPage }}</strong> of <strong>{{ getTotalPages() }}</strong></span>
-          <button type="button" class="erp-page-nav-btn" [disabled]="currentPage >= getTotalPages()" (click)="setPage(currentPage + 1)">
+          <span class="erp-page-counter">Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong></span>
+          <button type="button" class="erp-page-nav-btn" [disabled]="currentPage >= totalPages" (click)="setPage(currentPage + 1)">
             Next <i class="bi bi-chevron-right"></i>
           </button>
         </div>

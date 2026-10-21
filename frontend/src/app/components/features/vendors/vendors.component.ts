@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, HostListener, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -6,9 +6,8 @@ import { ApiService } from '../../../api.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import * as XLSX from 'xlsx';
+import { forkJoin, of, Subject } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 export interface VendorItem {
   id?: string;
@@ -42,9 +41,10 @@ export interface VendorProcurementSummary {
     IndianDatePipe
   ],
   templateUrl: './vendors.component.html',
-  styleUrls: ['./vendors.component.css']
+  styleUrls: ['./vendors.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class VendorsComponent implements OnInit {
+export class VendorsComponent implements OnInit, OnDestroy {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'vendors';
   @Input() loggedInUser: any = null;
@@ -60,7 +60,10 @@ export class VendorsComponent implements OnInit {
   selectedSubtab: string = 'all';
 
   // Search & Filter
+  searchInputText: string = '';
   searchQuery: string = '';
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
   filterGstStatus: string = '';
   filterCategory: string = '';
   filterLocation: string = '';
@@ -128,7 +131,8 @@ export class VendorsComponent implements OnInit {
 
   constructor(
     private apiService: ApiService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    public cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -138,7 +142,35 @@ export class VendorsComponent implements OnInit {
     } catch (e) {
       // ignore
     }
+
+    this.searchSubject.pipe(
+      debounceTime(150),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(query => {
+      this.searchQuery = query;
+      this.currentPage = 1;
+      this.cdr.markForCheck();
+    });
+
     this.loadData();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onSearchInput(value: string): void {
+    this.searchInputText = value;
+    this.searchSubject.next(value);
+  }
+
+  clearSearch(): void {
+    this.searchInputText = '';
+    this.searchQuery = '';
+    this.currentPage = 1;
+    this.cdr.markForCheck();
   }
 
   // Click outside listener
@@ -188,17 +220,20 @@ export class VendorsComponent implements OnInit {
           id: v.id || String(v.vendorId)
         }));
         this.rawMaterialsList = rawMaterials || [];
+        this.rebuildVendorProcurementMap();
         this.isLoading = false;
         this.updateActiveFilterCount();
 
         if (notify) {
           this.notificationService.success('Refreshed', `Loaded ${this.vendorsList.length} approved vendors.`);
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.isLoading = false;
         this.hasError = true;
         this.notificationService.error('Load Failed', 'Could not load vendor directory data.');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -244,42 +279,66 @@ export class VendorsComponent implements OnInit {
     return this.rawMaterialsList.reduce((sum, rm) => sum + (Number(rm.amount) || ((Number(rm.weight) || 0) * (Number(rm.rate) || 0))), 0);
   }
 
-  // --- Linkage per Vendor ---
-  getVendorProcurementSummary(vendorId: string | number | undefined): VendorProcurementSummary {
-    if (!vendorId) return { batchesCount: 0, totalWeightKg: 0, totalSpendAmount: 0, materialsList: [] };
-    const matches = this.rawMaterialsList.filter(rm => {
-      const vId = rm.vendor?.id || rm.vendor?.vendorId;
-      return String(vId) === String(vendorId);
-    });
+  // --- Precomputed O(1) Vendor Procurement Linkage Map ---
+  private vendorProcurementMap = new Map<string, VendorProcurementSummary>();
+  private vendorCategoryMap = new Map<string, { key: string; label: string; badgeClass: string; icon: string }>();
 
-    const totalWeight = matches.reduce((sum, rm) => sum + (Number(rm.weight) || 0), 0);
-    const totalSpend = matches.reduce((sum, rm) => sum + (Number(rm.amount) || ((Number(rm.weight) || 0) * (Number(rm.rate) || 0))), 0);
-    const materials = Array.from(new Set(matches.map(rm => rm.materialName).filter(Boolean)));
+  public rebuildVendorProcurementMap(): void {
+    this.vendorProcurementMap.clear();
+    this.vendorCategoryMap.clear();
+    const map = new Map<string, { count: number; weight: number; spend: number; materials: Set<string> }>();
+    for (const rm of (this.rawMaterialsList || [])) {
+      const vId = String(rm.vendor?.id || rm.vendor?.vendorId || '');
+      if (!vId) continue;
+      let entry = map.get(vId);
+      if (!entry) {
+        entry = { count: 0, weight: 0, spend: 0, materials: new Set<string>() };
+        map.set(vId, entry);
+      }
+      entry.count++;
+      entry.weight += (Number(rm.weight) || 0);
+      entry.spend += (Number(rm.amount) || ((Number(rm.weight) || 0) * (Number(rm.rate) || 0)));
+      if (rm.materialName) entry.materials.add(rm.materialName);
+    }
 
-    return {
-      batchesCount: matches.length,
-      totalWeightKg: totalWeight,
-      totalSpendAmount: totalSpend,
-      materialsList: materials
-    };
+    for (const [vId, data] of map.entries()) {
+      this.vendorProcurementMap.set(vId, {
+        batchesCount: data.count,
+        totalWeightKg: data.weight,
+        totalSpendAmount: data.spend,
+        materialsList: Array.from(data.materials)
+      });
+    }
   }
 
-  // --- Supplier Category Inference ---
+  // --- Linkage per Vendor (O(1) Map Lookup) ---
+  getVendorProcurementSummary(vendorId: string | number | undefined): VendorProcurementSummary {
+    if (!vendorId) return { batchesCount: 0, totalWeightKg: 0, totalSpendAmount: 0, materialsList: [] };
+    const summary = this.vendorProcurementMap.get(String(vendorId));
+    return summary || { batchesCount: 0, totalWeightKg: 0, totalSpendAmount: 0, materialsList: [] };
+  }
+
+  // --- Supplier Category Inference (Memoized) ---
   getSupplierCategory(vendor: VendorItem): { key: string; label: string; badgeClass: string; icon: string } {
+    const vKey = String(vendor.id || vendor.vendorId || vendor.vendorName || '');
+    const cached = this.vendorCategoryMap.get(vKey);
+    if (cached) return cached;
+
     const name = (vendor.vendorName || '').toLowerCase();
     const summary = this.getVendorProcurementSummary(vendor.id || vendor.vendorId);
     const materialsStr = summary.materialsList.join(' ').toLowerCase();
 
+    let cat = { key: 'general', label: 'General Industrial', badgeClass: 'cat-badge-default', icon: 'bi-building' };
     if (name.includes('nilkamal') || name.includes('crate') || name.includes('carton') || materialsStr.includes('carton') || materialsStr.includes('sheet')) {
-      return { key: 'packaging', label: 'Packaging & Crates', badgeClass: 'cat-badge-packaging', icon: 'bi-box-seam' };
+      cat = { key: 'packaging', label: 'Packaging & Crates', badgeClass: 'cat-badge-packaging', icon: 'bi-box-seam' };
+    } else if (name.includes('colour') || name.includes('pigment') || name.includes('additive') || materialsStr.includes('masterbatch') || materialsStr.includes('pigment') || materialsStr.includes('stabilizer')) {
+      cat = { key: 'additives', label: 'Color & Additives', badgeClass: 'cat-badge-additive', icon: 'bi-palette-fill' };
+    } else if (name.includes('polymer') || name.includes('poly') || name.includes('resin') || materialsStr.includes('hdpe') || materialsStr.includes('pp')) {
+      cat = { key: 'polymer', label: 'Polymer & Resin', badgeClass: 'cat-badge-polymer', icon: 'bi-boxes' };
     }
-    if (name.includes('colour') || name.includes('pigment') || name.includes('additive') || materialsStr.includes('masterbatch') || materialsStr.includes('pigment') || materialsStr.includes('stabilizer')) {
-      return { key: 'additives', label: 'Color & Additives', badgeClass: 'cat-badge-additive', icon: 'bi-palette-fill' };
-    }
-    if (name.includes('polymer') || name.includes('poly') || name.includes('resin') || materialsStr.includes('hdpe') || materialsStr.includes('pp')) {
-      return { key: 'polymer', label: 'Polymer & Resin', badgeClass: 'cat-badge-polymer', icon: 'bi-boxes' };
-    }
-    return { key: 'general', label: 'General Industrial', badgeClass: 'cat-badge-default', icon: 'bi-building' };
+
+    this.vendorCategoryMap.set(vKey, cat);
+    return cat;
   }
 
   // --- Subtabs Filter ---
@@ -299,8 +358,18 @@ export class VendorsComponent implements OnInit {
     return this.vendorsList.filter(v => this.getSupplierCategory(v).key === tabKey).length;
   }
 
-  // --- Filtering & Sorting ---
+  // --- Filtering & Sorting (Memoized for 10,000+ Records) ---
+  private _cachedFilterKey: string = '';
+  private _cachedFilteredList: VendorItem[] = [];
+  private _cachedPageKey: string = '';
+  private _cachedPaginatedList: VendorItem[] = [];
+
   get filteredList(): VendorItem[] {
+    const key = `${this.vendorsList.length}_${this.rawMaterialsList.length}_${this.selectedSubtab}_${this.searchQuery}_${this.filterGstStatus}_${this.filterCategory}_${this.filterHasProcurements}_${this.filterLocation}_${this.sortField}_${this.sortAsc}`;
+    if (key === this._cachedFilterKey && this._cachedFilteredList) {
+      return this._cachedFilteredList;
+    }
+
     let result = [...this.vendorsList];
 
     // Subtab filter
@@ -369,13 +438,21 @@ export class VendorsComponent implements OnInit {
       return 0;
     });
 
-    return result;
+    this._cachedFilterKey = key;
+    this._cachedFilteredList = result;
+    return this._cachedFilteredList;
   }
 
   get paginatedList(): VendorItem[] {
     const list = this.filteredList;
+    const pageKey = `${this._cachedFilterKey}_${this.currentPage}_${this.pageSize}`;
+    if (pageKey === this._cachedPageKey && this._cachedPaginatedList) {
+      return this._cachedPaginatedList;
+    }
     const start = (this.currentPage - 1) * this.pageSize;
-    return list.slice(start, start + this.pageSize);
+    this._cachedPageKey = pageKey;
+    this._cachedPaginatedList = list.slice(start, start + this.pageSize);
+    return this._cachedPaginatedList;
   }
 
   get totalPages(): number {
@@ -420,6 +497,7 @@ export class VendorsComponent implements OnInit {
   }
 
   resetFilters(): void {
+    this.searchInputText = '';
     this.searchQuery = '';
     this.filterGstStatus = '';
     this.filterCategory = '';
@@ -428,6 +506,7 @@ export class VendorsComponent implements OnInit {
     this.activeFilterCount = 0;
     this.currentPage = 1;
     this.showFilterPopover = false;
+    this.cdr.markForCheck();
   }
 
   // --- Table Density & Column Manager ---
@@ -653,7 +732,7 @@ export class VendorsComponent implements OnInit {
     this.showExportDropdown = false;
   }
 
-  exportTableToExcel(): void {
+  async exportTableToExcel(): Promise<void> {
     const data = this.filteredList.map((v, idx) => {
       const summary = this.getVendorProcurementSummary(v.id || v.vendorId);
       return {
@@ -670,8 +749,9 @@ export class VendorsComponent implements OnInit {
       };
     });
 
-    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(data);
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    const XLSX = await import('xlsx');
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Polymer Suppliers');
     XLSX.writeFile(wb, `futane_suppliers_directory_${new Date().toISOString().slice(0, 10)}.xlsx`);
     this.showExportDropdown = false;

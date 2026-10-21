@@ -10,7 +10,12 @@ import javax.persistence.FetchType;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "t_fin_invoice")
+@Table(name = "t_fin_invoice", indexes = {
+    @Index(name = "idx_invoice_no", columnList = "invoice_no"),
+    @Index(name = "idx_invoice_sale_id", columnList = "sale_id"),
+    @Index(name = "idx_invoice_created_date", columnList = "created_date"),
+    @Index(name = "idx_invoice_active_deleted", columnList = "is_active, is_deleted")
+})
 @Where(clause = "is_active = true AND is_deleted = false")
 @SQLDelete(sql = "UPDATE t_fin_invoice SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
 public class Invoice extends BaseEntity {

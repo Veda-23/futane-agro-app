@@ -2,7 +2,6 @@ import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@a
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import * as XLSX from 'xlsx';
 import { ApiService } from '../../../api.service';
 import { NotificationService } from '../../../services/notification.service';
 import { TranslatePipe } from '../../../translate.service';
@@ -365,6 +364,23 @@ export class SalariesComponent implements OnInit {
     this.isViewModalOpen = false;
   }
 
+  formatVoucherId(id: any): string {
+    if (!id) return 'NEW';
+    const s = String(id).replace(/-/g, '');
+    return s.length > 8 ? s.substring(0, 8).toUpperCase() : s.toUpperCase();
+  }
+
+  formatEmpId(id: any): string {
+    if (!id) return '—';
+    const s = String(id).replace(/-/g, '');
+    return 'EMP-' + (s.length > 6 ? s.substring(0, 6).toUpperCase() : s.toUpperCase());
+  }
+
+  formatStaffName(name: string): string {
+    if (!name) return 'Staff Member';
+    return name.replace(/\s+\d{10,}$/, '').trim();
+  }
+
   printVoucher() {
     window.print();
   }
@@ -557,8 +573,16 @@ export class SalariesComponent implements OnInit {
     }
   }
 
+  private _salariesCache: any[] = [];
+  private _salariesCacheKey = '';
+
   getProcessedList(list: any[], table: string): any[] {
-    if (!list) return [];
+    if (!list || list.length === 0) return [];
+
+    const cacheKey = `${table}_${list.length}_${this.currentPage}_${this.pageSize}_${this.sortField}_${this.sortAsc}`;
+    if (this._salariesCacheKey === cacheKey) {
+      return this._salariesCache;
+    }
 
     const sorted = [...list].sort((a, b) => {
       const valA = this.resolvePath(a, this.sortField);
@@ -571,7 +595,11 @@ export class SalariesComponent implements OnInit {
 
     this.tableFilteredCounts[table] = sorted.length;
     const start = (this.currentPage - 1) * this.pageSize;
-    return sorted.slice(start, start + this.pageSize);
+    const paginated = sorted.slice(start, start + this.pageSize);
+
+    this._salariesCacheKey = cacheKey;
+    this._salariesCache = paginated;
+    return paginated;
   }
 
   private resolvePath(obj: any, path: string): any {
@@ -620,7 +648,7 @@ export class SalariesComponent implements OnInit {
     this.notificationService.success('Export Ready', 'Salary records exported to CSV successfully.');
   }
 
-  exportExcel() {
+  async exportExcel() {
     const dataToExport = this.filteredSalaries;
     if (!dataToExport || dataToExport.length === 0) {
       this.notificationService.warning('Export Empty', 'No salary records to export.');
@@ -639,8 +667,9 @@ export class SalariesComponent implements OnInit {
       'Disbursement Date': s.paidDate || '—'
     }));
 
-    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(rows);
-    const workbook: XLSX.WorkBook = { Sheets: { 'Salaries': worksheet }, SheetNames: ['Salaries'] };
+    const XLSX = await import('xlsx');
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = { Sheets: { 'Salaries': worksheet }, SheetNames: ['Salaries'] };
     const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
     const blob: Blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const link = document.createElement('a');

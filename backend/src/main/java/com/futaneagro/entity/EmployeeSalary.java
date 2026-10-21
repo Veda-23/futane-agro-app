@@ -11,7 +11,12 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "t_hr_salary")
+@Table(name = "t_hr_salary", indexes = {
+    @Index(name = "idx_salary_emp_id", columnList = "emp_id"),
+    @Index(name = "idx_salary_month_year", columnList = "month, year"),
+    @Index(name = "idx_salary_status", columnList = "status"),
+    @Index(name = "idx_salary_active_deleted", columnList = "is_active, is_deleted")
+})
 @Where(clause = "is_active = true AND is_deleted = false")
 @SQLDelete(sql = "UPDATE t_hr_salary SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
 public class EmployeeSalary extends BaseEntity {

@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -70,6 +71,7 @@ public class ProductionController {
 
     // --- PPD Endpoints ---
     @GetMapping("/ppd")
+    @Transactional(readOnly = true)
     public List<Ppd> getAllPpd() {
         return ppdRepository.findAll();
     }
@@ -161,6 +163,7 @@ public class ProductionController {
 
     // --- PPM Endpoints ---
     @GetMapping("/ppm")
+    @Transactional(readOnly = true)
     public List<Ppm> getAllPpm() {
         return ppmRepository.findAll();
     }
@@ -245,6 +248,7 @@ public class ProductionController {
 
     // --- Raw Material Endpoints ---
     @GetMapping("/raw-materials")
+    @Transactional(readOnly = true)
     public List<RawMaterial> getAllRawMaterials() {
         return rawMaterialRepository.findAll();
     }

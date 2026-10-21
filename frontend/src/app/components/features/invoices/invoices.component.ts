@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, HostListener, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { AutoSelectDirective } from '../../../directives/auto-select.directive';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,6 +7,8 @@ import { ApiService } from '../../../api.service';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import Swal from 'sweetalert2';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
@@ -29,10 +31,11 @@ import { SearchableSelectComponent } from '../../shared/searchable-select/search
     SearchableSelectComponent
   ],
   templateUrl: './invoices.component.html',
-  styleUrls: ['./invoices.component.css']
+  styleUrls: ['./invoices.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 // Standardized Invoices Component per reference master
-export class InvoicesComponent implements OnInit {
+export class InvoicesComponent implements OnInit, OnDestroy {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'invoices';
   @Input() loggedInUser: any = null;
@@ -44,6 +47,23 @@ export class InvoicesComponent implements OnInit {
 
   // Subtabs status filter
   activeSubtab: 'all' | 'paid' | 'partial' | 'unpaid' | 'high_value' = 'all';
+
+  // High-Volume Precomputed Metrics Cache (O(1) Template Binding)
+  cachedTotalInvoiceAmount: number = 0;
+  cachedTotalInvoicePaid: number = 0;
+  cachedTotalInvoicePending: number = 0;
+  cachedFilteredTaxableTotal: number = 0;
+  cachedFilteredGstTotal: number = 0;
+  cachedFilteredTotalBill: number = 0;
+  subtabCountAll: number = 0;
+  subtabCountPaid: number = 0;
+  subtabCountPartial: number = 0;
+  subtabCountUnpaid: number = 0;
+  subtabCountHighValue: number = 0;
+
+  // Debounced search engine
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
 
   // Pagination & Sort
   currentPage = 1;
@@ -135,7 +155,8 @@ export class InvoicesComponent implements OnInit {
   constructor(
     private apiService: ApiService,
     private notificationService: NotificationService,
-    public terminologyService: TerminologyService
+    public terminologyService: TerminologyService,
+    public cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -146,6 +167,19 @@ export class InvoicesComponent implements OnInit {
     if (saved === 'compact' || saved === 'comfortable' || saved === 'spacious') {
       this.tableDensity = saved;
     }
+
+    // Debounced search engine to prevent CPU spiking on high record sets
+    this.searchSubject.pipe(
+      debounceTime(250),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(query => {
+      this.filterSearchQuery = query;
+      this.currentPage = 1;
+      this.updateFilteredInvoices();
+      this.cdr.markForCheck();
+    });
+
     this.loadData();
     this.loadPartiesIfEmpty();
 
@@ -153,6 +187,15 @@ export class InvoicesComponent implements OnInit {
     this.defaultColumns.forEach(col => {
       this.columnsVisibility['invoices'][col] = true;
     });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onSearchInput(value: string) {
+    this.searchSubject.next(value || '');
   }
 
   loadPartiesIfEmpty() {
@@ -207,13 +250,14 @@ export class InvoicesComponent implements OnInit {
   }
 
   getCountBySubtab(tab: 'all' | 'paid' | 'partial' | 'unpaid' | 'high_value'): number {
-    if (!this.invoicesList) return 0;
-    if (tab === 'all') return this.invoicesList.length;
-    if (tab === 'paid') return this.invoicesList.filter(i => (i.sale?.remaining ?? 0) === 0).length;
-    if (tab === 'partial') return this.invoicesList.filter(i => (i.sale?.remaining ?? 0) > 0 && (i.sale?.remaining ?? 0) < (i.sale?.totalAmount ?? 0)).length;
-    if (tab === 'unpaid') return this.invoicesList.filter(i => (i.sale?.remaining ?? 0) >= (i.sale?.totalAmount ?? 0) && (i.sale?.remaining ?? 0) > 0).length;
-    if (tab === 'high_value') return this.invoicesList.filter(i => (i.sale?.totalAmount ?? 0) >= 50000).length;
-    return 0;
+    switch (tab) {
+      case 'paid': return this.subtabCountPaid;
+      case 'partial': return this.subtabCountPartial;
+      case 'unpaid': return this.subtabCountUnpaid;
+      case 'high_value': return this.subtabCountHighValue;
+      case 'all':
+      default: return this.subtabCountAll;
+    }
   }
 
   get activeFilterCount(): number {
@@ -245,7 +289,7 @@ export class InvoicesComponent implements OnInit {
     this.updateFilteredInvoices();
   }
 
-  // ── KPI & Tax Helpers ────────────────────────────────────────────────────────
+  // ── KPI & Tax Helpers (O(1) Cached Access) ──────────────────────────────────
   formatDate(d: any): string {
     if (!d) return '—';
     if (Array.isArray(d)) {
@@ -263,38 +307,35 @@ export class InvoicesComponent implements OnInit {
   }
 
   getTotalInvoiceAmount(): number {
-    return this.invoicesList.reduce((s, i) => s + (i.sale?.totalAmount || 0), 0);
+    return this.cachedTotalInvoiceAmount;
   }
 
   getTotalInvoicePaid(): number {
-    return this.invoicesList.reduce((s, i) => s + (i.sale?.paid || 0), 0);
+    return this.cachedTotalInvoicePaid;
   }
 
   getTotalInvoicePending(): number {
-    return this.invoicesList.reduce((s, i) => s + (i.sale?.remaining || 0), 0);
+    return this.cachedTotalInvoicePending;
   }
 
   getTotalTaxableAmount(): number {
-    return this.invoicesList.reduce((s, i) => s + ((i.sale?.quantity || 0) * (i.sale?.rate || 0)), 0);
+    return this.cachedFilteredTaxableTotal;
   }
 
   getTotalTaxAmount(): number {
-    return this.invoicesList.reduce((s, i) => s + ((i.sale?.cgst || 0) + (i.sale?.sgst || 0)), 0);
+    return this.cachedFilteredGstTotal;
   }
 
   getFilteredTaxableTotal(): number {
-    const list = this.getProcessedList(this.invoicesList, 'invoices', true);
-    return list.reduce((s: number, i: any) => s + ((i.sale?.quantity || 0) * (i.sale?.rate || 0)), 0);
+    return this.cachedFilteredTaxableTotal;
   }
 
   getFilteredGstTotal(): number {
-    const list = this.getProcessedList(this.invoicesList, 'invoices', true);
-    return list.reduce((s: number, i: any) => s + ((i.sale?.cgst || 0) + (i.sale?.sgst || 0)), 0);
+    return this.cachedFilteredGstTotal;
   }
 
   getFilteredTotalBill(): number {
-    const list = this.getProcessedList(this.invoicesList, 'invoices', true);
-    return list.reduce((s: number, i: any) => s + (i.sale?.totalAmount || 0), 0);
+    return this.cachedFilteredTotalBill;
   }
 
   toggleFilterPopover(event: Event) {
@@ -679,88 +720,168 @@ export class InvoicesComponent implements OnInit {
     this.updateFilteredInvoices();
   }
 
+  // Memoization Cache for High-Load Scalability (10,000+ Invoices)
+  private _cachedInvFilterKey: string = '';
+  private _cachedInvProcessedList: any[] = [];
+
   updateFilteredInvoices() {
+    // 1. Single-pass high-speed metric accumulation across the entire ledger
+    let totalAmt = 0;
+    let totalPaid = 0;
+    let totalPending = 0;
+    let cAll = 0, cPaid = 0, cPartial = 0, cUnpaid = 0, cHigh = 0;
+    const len = this.invoicesList ? this.invoicesList.length : 0;
+    for (let i = 0; i < len; i++) {
+      const inv = this.invoicesList[i];
+      const sale = inv.sale;
+      const tot = Number(sale?.totalAmount) || 0;
+      const pd = Number(sale?.paid) || 0;
+      const rem = sale?.remaining !== undefined && sale?.remaining !== null ? Number(sale.remaining) : Math.max(0, tot - pd);
+      totalAmt += tot;
+      totalPaid += pd;
+      totalPending += rem;
+      cAll++;
+      if (rem <= 0) cPaid++;
+      else if (rem < tot) cPartial++;
+      else cUnpaid++;
+      if (tot >= 50000) cHigh++;
+    }
+    this.cachedTotalInvoiceAmount = totalAmt;
+    this.cachedTotalInvoicePaid = totalPaid;
+    this.cachedTotalInvoicePending = totalPending;
+    this.subtabCountAll = cAll;
+    this.subtabCountPaid = cPaid;
+    this.subtabCountPartial = cPartial;
+    this.subtabCountUnpaid = cUnpaid;
+    this.subtabCountHighValue = cHigh;
+
+    // 2. Process filtered view
     const list = this.getProcessedList(this.invoicesList, 'invoices', true);
     this.totalFilteredCount = list.length;
     this.tableFilteredCounts['invoices'] = list.length;
+
+    // 3. Single-pass metric accumulation for filtered view footer
+    let fTaxable = 0;
+    let fGst = 0;
+    let fTotal = 0;
+    for (let i = 0; i < list.length; i++) {
+      const inv = list[i];
+      fTaxable += this.getTaxableAmount(inv);
+      fGst += this.getGstAmount(inv);
+      fTotal += (Number(inv.sale?.totalAmount) || 0);
+    }
+    this.cachedFilteredTaxableTotal = fTaxable;
+    this.cachedFilteredGstTotal = fGst;
+    this.cachedFilteredTotalBill = fTotal;
+
     const start = (this.currentPage - 1) * this.pageSize;
     this.pagedInvoices = list.slice(start, start + this.pageSize);
+    this.cdr.markForCheck();
   }
 
   getProcessedList(list: any[], table: string, allRecords = false): any[] {
-    if (!list) return [];
-    let result = [...list];
+    if (!list || list.length === 0) return [];
+    const filterKey = `${list.length}_${this.activeSubtab}_${this.filterSearchQuery}_${this.filterDate}_${this.filterMinAmount}_${this.filterMaxAmount}_${this.filterPartyId}_${this.filterPaymentStatus}_${this.sortField}_${this.sortAsc}`;
 
-    // 1. Subtab filtering
-    if (this.activeSubtab === 'paid') {
-      result = result.filter(inv => (inv.sale?.remaining ?? 0) === 0);
-    } else if (this.activeSubtab === 'partial') {
-      result = result.filter(inv => (inv.sale?.remaining ?? 0) > 0 && (inv.sale?.remaining ?? 0) < (inv.sale?.totalAmount ?? 0));
-    } else if (this.activeSubtab === 'unpaid') {
-      result = result.filter(inv => (inv.sale?.remaining ?? 0) >= (inv.sale?.totalAmount ?? 0) && (inv.sale?.remaining ?? 0) > 0);
-    } else if (this.activeSubtab === 'high_value') {
-      result = result.filter(inv => (inv.sale?.totalAmount ?? 0) >= 50000);
-    }
+    let result: any[];
+    if (this._cachedInvFilterKey === filterKey && this._cachedInvProcessedList) {
+      result = this._cachedInvProcessedList;
+    } else {
+      result = [...list];
 
-    // 2. Search filtering
-    if (this.filterSearchQuery) {
-      const q = this.filterSearchQuery.toLowerCase().trim();
-      result = result.filter(inv =>
-        inv.invoiceNo?.toLowerCase().includes(q) ||
-        inv.sale?.party?.partyName?.toLowerCase().includes(q) ||
-        inv.sale?.party?.gstNumber?.toLowerCase().includes(q) ||
-        inv.sale?.crateType?.toLowerCase().includes(q) ||
-        String(inv.id).includes(q)
-      );
-    }
+      // 1. Subtab filtering
+      if (this.activeSubtab === 'paid') {
+        result = result.filter(inv => (Number(inv.sale?.remaining) || 0) <= 0);
+      } else if (this.activeSubtab === 'partial') {
+        result = result.filter(inv => {
+          const rem = Number(inv.sale?.remaining) || 0;
+          const tot = Number(inv.sale?.totalAmount) || 0;
+          return rem > 0 && rem < tot;
+        });
+      } else if (this.activeSubtab === 'unpaid') {
+        result = result.filter(inv => {
+          const rem = Number(inv.sale?.remaining) || 0;
+          const tot = Number(inv.sale?.totalAmount) || 0;
+          return rem >= tot && rem > 0;
+        });
+      } else if (this.activeSubtab === 'high_value') {
+        result = result.filter(inv => (Number(inv.sale?.totalAmount) || 0) >= 50000);
+      }
 
-    // 3. Date filtering
-    if (this.filterDate) {
-      result = result.filter(inv => {
-        const d = inv.createdDate || inv.date;
-        return d && String(d).startsWith(this.filterDate);
+      // 2. Search filtering
+      if (this.filterSearchQuery && this.filterSearchQuery.trim()) {
+        const q = this.filterSearchQuery.toLowerCase().trim();
+        result = result.filter(inv => {
+          const invNo = (inv.invoiceNo || '').toLowerCase();
+          const pName = (inv.sale?.party?.partyName || '').toLowerCase();
+          const gst = (inv.sale?.party?.gstNumber || '').toLowerCase();
+          const crate = (inv.sale?.crateType || '').toLowerCase();
+          const id = String(inv.id || '');
+          return invNo.includes(q) || pName.includes(q) || gst.includes(q) || crate.includes(q) || id.includes(q);
+        });
+      }
+
+      // 3. Date filtering
+      if (this.filterDate) {
+        result = result.filter(inv => {
+          const d = inv.createdDate || inv.date;
+          return d && String(d).startsWith(this.filterDate);
+        });
+      }
+
+      // 4. Amount range filtering
+      if (this.filterMinAmount != null && this.filterMinAmount > 0) {
+        result = result.filter(inv => (Number(inv.sale?.totalAmount) || 0) >= this.filterMinAmount!);
+      }
+      if (this.filterMaxAmount != null && this.filterMaxAmount > 0) {
+        result = result.filter(inv => (Number(inv.sale?.totalAmount) || 0) <= this.filterMaxAmount!);
+      }
+
+      // 5. Party dropdown filtering
+      if (this.filterPartyId) {
+        result = result.filter(inv => String(inv.sale?.party?.id) === String(this.filterPartyId));
+      }
+
+      // 6. Payment status dropdown filter
+      if (this.filterPaymentStatus && this.filterPaymentStatus !== 'all') {
+        if (this.filterPaymentStatus === 'paid') {
+          result = result.filter(inv => (Number(inv.sale?.remaining) || 0) <= 0);
+        } else if (this.filterPaymentStatus === 'partial') {
+          result = result.filter(inv => {
+            const rem = Number(inv.sale?.remaining) || 0;
+            const tot = Number(inv.sale?.totalAmount) || 0;
+            return rem > 0 && rem < tot;
+          });
+        } else if (this.filterPaymentStatus === 'unpaid') {
+          result = result.filter(inv => {
+            const rem = Number(inv.sale?.remaining) || 0;
+            const tot = Number(inv.sale?.totalAmount) || 0;
+            return rem >= tot && rem > 0;
+          });
+        }
+      }
+
+      // 7. Dynamic sorting
+      result.sort((a, b) => {
+        let vA = this.resolvePath(a, this.sortField);
+        let vB = this.resolvePath(b, this.sortField);
+        if (this.sortField === 'taxable') {
+          vA = this.getTaxableAmount(a);
+          vB = this.getTaxableAmount(b);
+        } else if (this.sortField === 'gst') {
+          vA = this.getGstAmount(a);
+          vB = this.getGstAmount(b);
+        }
+        if (typeof vA === 'string') vA = vA.toLowerCase();
+        if (typeof vB === 'string') vB = vB.toLowerCase();
+        if (vA < vB) return this.sortAsc ? -1 : 1;
+        if (vA > vB) return this.sortAsc ? 1 : -1;
+        return 0;
       });
-    }
 
-    // 4. Amount range filtering
-    if (this.filterMinAmount != null && this.filterMinAmount > 0) {
-      result = result.filter(inv => (inv.sale?.totalAmount || 0) >= this.filterMinAmount!);
+      this._cachedInvFilterKey = filterKey;
+      this._cachedInvProcessedList = result;
     }
-    if (this.filterMaxAmount != null && this.filterMaxAmount > 0) {
-      result = result.filter(inv => (inv.sale?.totalAmount || 0) <= this.filterMaxAmount!);
-    }
-
-    // 5. Party dropdown filtering
-    if (this.filterPartyId) {
-      result = result.filter(inv => String(inv.sale?.party?.id) === String(this.filterPartyId));
-    }
-
-    // 6. Payment status dropdown filter
-    if (this.filterPaymentStatus && this.filterPaymentStatus !== 'all') {
-      if (this.filterPaymentStatus === 'paid') {
-        result = result.filter(inv => (inv.sale?.remaining ?? 0) === 0);
-      } else if (this.filterPaymentStatus === 'partial') {
-        result = result.filter(inv => (inv.sale?.remaining ?? 0) > 0 && (inv.sale?.remaining ?? 0) < (inv.sale?.totalAmount ?? 0));
-      } else if (this.filterPaymentStatus === 'unpaid') {
-        result = result.filter(inv => (inv.sale?.remaining ?? 0) >= (inv.sale?.totalAmount ?? 0) && (inv.sale?.remaining ?? 0) > 0);
-      }
-    }
-
-    // 7. Dynamic sorting
-    result.sort((a, b) => {
-      let vA = this.resolvePath(a, this.sortField);
-      let vB = this.resolvePath(b, this.sortField);
-      if (this.sortField === 'taxable') {
-        vA = this.getTaxableAmount(a);
-        vB = this.getTaxableAmount(b);
-      } else if (this.sortField === 'gst') {
-        vA = this.getGstAmount(a);
-        vB = this.getGstAmount(b);
-      }
-      if (vA < vB) return this.sortAsc ? -1 : 1;
-      if (vA > vB) return this.sortAsc ? 1 : -1;
-      return 0;
-    });
 
     if (allRecords) return result;
     const start = (this.currentPage - 1) * this.pageSize;

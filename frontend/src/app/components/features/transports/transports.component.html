@@ -192,14 +192,14 @@
         <i class="bi bi-search search-icon"></i>
         <input type="text" 
                class="search-input" 
-               [(ngModel)]="filterSearchQuery" 
-               (input)="currentPage = 1" 
+               [ngModel]="searchInputText" 
+               (ngModelChange)="onSearchInput($event)" 
                placeholder="Search truck, driver, mobile, amount..." 
                aria-label="Search freight transport records">
-        <button *ngIf="filterSearchQuery" 
+        <button *ngIf="searchInputText" 
                 type="button" 
                 class="btn-clear-search" 
-                (click)="filterSearchQuery = ''; currentPage = 1"
+                (click)="clearSearch()"
                 aria-label="Clear search input">
           <i class="bi bi-x"></i>
         </button>

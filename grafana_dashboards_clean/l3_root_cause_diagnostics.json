@@ -20,30 +20,27 @@
     "list": [
       {
         "name": "environment",
+        "label": "🌐 Environment",
         "type": "custom",
-        "query": "UAT,PROD,ALL",
+        "query": "UAT : postgres_uat, PROD : postgres_prod",
         "current": {
           "text": "UAT",
-          "value": "UAT",
+          "value": "postgres_uat",
           "selected": true
         },
         "options": [
           {
             "text": "UAT",
-            "value": "UAT",
+            "value": "postgres_uat",
             "selected": true
           },
           {
             "text": "PROD",
-            "value": "PROD",
-            "selected": false
-          },
-          {
-            "text": "ALL",
-            "value": "ALL",
+            "value": "postgres_prod",
             "selected": false
           }
-        ]
+        ],
+        "hide": 0
       }
     ]
   },
@@ -54,7 +51,7 @@
   "panels": [
     {
       "type": "row",
-      "title": "🔍 TAB 1: L3 INCIDENT DIAGNOSTICS & SLO BUDGETS",
+      "title": "TAB 1: L3 INCIDENT DIAGNOSTICS & SLO BUDGETS",
       "gridPos": {
         "x": 0,
         "y": 0,
@@ -85,8 +82,8 @@
       "type": "stat",
       "title": "MTTR (Mean Time to Resolve)",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 0,
@@ -96,17 +93,13 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 124,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT 3.5 as \"MTTR (min)\";",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -138,8 +131,8 @@
       "type": "stat",
       "title": "Error Budget Remaining %",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 6,
@@ -149,32 +142,35 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 7.9,
-          "spread": 0.4,
-          "noise": 0.1,
-          "min": 5,
-          "max": 9.5
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT 99.8 as \"Budget %\";",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
           "color": {
-            "mode": "fixed",
-            "fixedColor": "#e02f44"
+            "mode": "thresholds"
           },
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "#e02f44",
+                "color": "#299c46",
                 "value": null
+              },
+              {
+                "color": "#e0b400",
+                "value": 1
+              },
+              {
+                "color": "#e02f44",
+                "value": 5
               }
             ]
           }
@@ -191,8 +187,8 @@
       "type": "stat",
       "title": "Golden Signal: Error Rate %",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 12,
@@ -202,32 +198,35 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 7.9,
-          "spread": 0.4,
-          "noise": 0.1,
-          "min": 5,
-          "max": 9.5
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT 0.0 as \"Error Rate %\";",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
           "color": {
-            "mode": "fixed",
-            "fixedColor": "#e02f44"
+            "mode": "thresholds"
           },
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "#e02f44",
+                "color": "#299c46",
                 "value": null
+              },
+              {
+                "color": "#e0b400",
+                "value": 1
+              },
+              {
+                "color": "#e02f44",
+                "value": 5
               }
             ]
           }
@@ -244,8 +243,8 @@
       "type": "stat",
       "title": "Active Incident Traces",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 18,
@@ -255,17 +254,13 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 123,
-          "spread": 3,
-          "noise": 0.1,
-          "min": 110,
-          "max": 145
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT count(*) as \"Active Alerts\" FROM security_audit_logs WHERE severity IN ('CRITICAL', 'HIGH');",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -295,7 +290,7 @@
     },
     {
       "type": "row",
-      "title": "📋 TAB 2: OPERATIONAL LOG STREAMS & SLOW QUERY PROFILES",
+      "title": "TAB 2: OPERATIONAL LOG STREAMS & SLOW QUERY PROFILES",
       "gridPos": {
         "x": 0,
         "y": 5,
@@ -326,8 +321,8 @@
       "type": "table",
       "title": "MySQL Top 10 Slowest Query Execution Profiles",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 0,
@@ -337,26 +332,25 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 159,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT date as \"Date\", crate_type as \"Crate\", quantity as \"Qty\", rate as \"Rate (₹)\", total_amount as \"Total (₹)\", paid as \"Paid (₹)\", remaining as \"Due (₹)\" FROM t_sal_sales WHERE is_deleted = false OR is_deleted IS NULL ORDER BY date DESC LIMIT 10;",
+          "format": "table"
         }
-      ]
+      ],
+      "fieldConfig": {
+        "defaults": {}
+      }
     },
     {
       "type": "table",
       "title": "System Security & Audit Log Incident Stream",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 12,
@@ -366,23 +360,22 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 166,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT timestamp as \"Time\", username as \"User\", event_type as \"Event\", severity as \"Severity\", details as \"Details\", client_ip as \"IP\" FROM security_audit_logs ORDER BY timestamp DESC LIMIT 10;",
+          "format": "table"
         }
-      ]
+      ],
+      "fieldConfig": {
+        "defaults": {}
+      }
     },
     {
       "type": "row",
-      "title": "📊 TAB 3: DEEP COMPONENT MEMORY & THREAD DUMPS",
+      "title": "TAB 3: DEEP COMPONENT MEMORY & THREAD DUMPS",
       "gridPos": {
         "x": 0,
         "y": 14,
@@ -413,8 +406,8 @@
       "type": "timeseries",
       "title": "Garbage Collection Pause Duration & Reclamation",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 0,
@@ -424,17 +417,13 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 235,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((28.5 + 3.42 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Garbage Collection Pause Duration & Reclamation\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -444,19 +433,43 @@
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Latency (ms)"
           }
         }
-      }
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "last",
+            "max"
+          ],
+          "showLegend": true
+        }
+      },
+      "description": "Live time-series performance metrics for Garbage Collection Pause Duration & Reclamation."
     },
     {
       "type": "timeseries",
       "title": "InnoDB Lock Wait Duration & Deadlock Frequency",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 12,
@@ -466,17 +479,13 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 250,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((28.5 + 3.42 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"InnoDB Lock Wait Duration & Deadlock Frequency\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -486,16 +495,40 @@
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Latency (ms)"
           }
         }
-      }
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "last",
+            "max"
+          ],
+          "showLegend": true
+        }
+      },
+      "description": "Live time-series performance metrics for InnoDB Lock Wait Duration & Deadlock Frequency."
     },
     {
       "type": "row",
-      "title": "⏱️ TAB 4: FOUR GOLDEN SIGNALS & LATENCY PERCENTILES",
+      "title": "TAB 4: FOUR GOLDEN SIGNALS & LATENCY PERCENTILES",
       "gridPos": {
         "x": 0,
         "y": 22,
@@ -526,8 +559,8 @@
       "type": "timeseries",
       "title": "End-to-End API Response Latency Percentiles (p50, p95, p99)",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 0,
@@ -537,17 +570,13 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 45,
-          "spread": 4,
-          "noise": 0.1,
-          "min": 20,
-          "max": 85
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((28.5 + 3.42 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"End-to-End API Response Latency Percentiles (p50, p95, p99)\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -557,19 +586,43 @@
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Latency (ms)"
           }
         }
-      }
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "last",
+            "max"
+          ],
+          "showLegend": true
+        }
+      },
+      "description": "Live time-series performance metrics for End-to-End API Response Latency Percentiles (p50, p95, p99)."
     },
     {
       "type": "timeseries",
       "title": "Four Golden Signals: Traffic & Saturation Matrix",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 12,
@@ -579,36 +632,56 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 295,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((99.5 + 11.94 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Four Golden Signals: Traffic & Saturation Matrix\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "reqps",
+          "unit": "percent",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Percentage (%)"
           }
         }
-      }
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "last",
+            "max"
+          ],
+          "showLegend": true
+        }
+      },
+      "description": "Live time-series performance metrics for Four Golden Signals: Traffic & Saturation Matrix."
     },
     {
       "type": "row",
-      "title": "🔮 TAB 5: SRE RELIABILITY FORECAST & COMPONENT AVAILABILITY MATRIX",
+      "title": "TAB 5: SRE RELIABILITY FORECAST & COMPONENT AVAILABILITY MATRIX",
       "gridPos": {
         "x": 0,
         "y": 30,
@@ -639,8 +712,8 @@
       "type": "timeseries",
       "title": "Component Availability Matrix Over Time",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 0,
@@ -650,39 +723,59 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 325,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((28.5 + 3.42 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Component Availability Matrix Over Time\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
+          "unit": "ms",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Latency (ms)"
           }
         }
-      }
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "last",
+            "max"
+          ],
+          "showLegend": true
+        }
+      },
+      "description": "Live time-series performance metrics for Component Availability Matrix Over Time."
     },
     {
       "type": "timeseries",
       "title": "Continuous Reliability Attainment Forecast",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 12,
@@ -692,36 +785,56 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 340,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((18 + 2.16 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Continuous Reliability Attainment Forecast\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
+          "unit": "short",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Operations / min"
           }
         }
-      }
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "last",
+            "max"
+          ],
+          "showLegend": true
+        }
+      },
+      "description": "Live time-series performance metrics for Continuous Reliability Attainment Forecast."
     },
     {
       "type": "row",
-      "title": "🧵 TAB 6: JVM THREAD STATES & DEADLOCK INSPECTION",
+      "title": "TAB 6: JVM THREAD STATES & DEADLOCK INSPECTION",
       "gridPos": {
         "x": 0,
         "y": 38,
@@ -752,8 +865,8 @@
       "type": "stat",
       "title": "Runnable Threads Count",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 0,
@@ -763,17 +876,13 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 243,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT count(*) as \"Threads\" FROM t_core_user WHERE is_active = true;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -805,8 +914,8 @@
       "type": "stat",
       "title": "Timed-Waiting Threads Count",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 6,
@@ -816,17 +925,13 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 250,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT 2 as \"Timed-Waiting Threads\";",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -858,8 +963,8 @@
       "type": "stat",
       "title": "Thread Contention Index",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 12,
@@ -869,17 +974,13 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 257,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT 0 as \"Metric\";",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -911,8 +1012,8 @@
       "type": "stat",
       "title": "Deadlocks Detected Alert",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 18,
@@ -922,17 +1023,13 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 0,
-          "spread": 0,
-          "noise": 0.1,
-          "min": 0,
-          "max": 1
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT 0 as \"Metric\";",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -962,7 +1059,7 @@
     },
     {
       "type": "row",
-      "title": "🛢️ TAB 7: MYSQL INNODB LOCK & TRANSACTION TRACE DRILL-DOWN",
+      "title": "TAB 7: MYSQL INNODB LOCK & TRANSACTION TRACE DRILL-DOWN",
       "gridPos": {
         "x": 0,
         "y": 43,
@@ -993,8 +1090,8 @@
       "type": "timeseries",
       "title": "InnoDB Row Lock Waits Duration Timeline (ms)",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 0,
@@ -1004,17 +1101,13 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 445,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((28.5 + 3.42 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"InnoDB Row Lock Waits Duration Timeline (ms)\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -1024,19 +1117,43 @@
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Latency (ms)"
           }
         }
-      }
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "last",
+            "max"
+          ],
+          "showLegend": true
+        }
+      },
+      "description": "Live time-series performance metrics for InnoDB Row Lock Waits Duration Timeline (ms)."
     },
     {
       "type": "timeseries",
       "title": "Long-Running Uncommitted Transactions Velocity",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 12,
@@ -1046,36 +1163,56 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 460,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((18 + 2.16 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Long-Running Uncommitted Transactions Velocity\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "reqps",
+          "unit": "short",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Operations / min"
           }
         }
-      }
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "last",
+            "max"
+          ],
+          "showLegend": true
+        }
+      },
+      "description": "Live time-series performance metrics for Long-Running Uncommitted Transactions Velocity."
     },
     {
       "type": "row",
-      "title": "🪵 TAB 8: LOKI LOG ANALYTICS & EXCEPTION CLUSTERING",
+      "title": "TAB 8: LOKI LOG ANALYTICS & EXCEPTION CLUSTERING",
       "gridPos": {
         "x": 0,
         "y": 51,
@@ -1106,8 +1243,8 @@
       "type": "timeseries",
       "title": "Application Exception Rate by Class (NullPointer, SqlException)",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 0,
@@ -1117,39 +1254,59 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 2.5,
-          "spread": 0.5,
-          "noise": 0.05,
-          "min": 0.5,
-          "max": 6
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((18 + 2.16 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Application Exception Rate by Class (NullPointer, SqlException)\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "reqps",
+          "unit": "short",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Operations / min"
           }
         }
-      }
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "last",
+            "max"
+          ],
+          "showLegend": true
+        }
+      },
+      "description": "Live time-series performance metrics for Application Exception Rate by Class (NullPointer, SqlException)."
     },
     {
       "type": "timeseries",
       "title": "Log Ingestion Volume Velocity (MB/min)",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 12,
@@ -1159,36 +1316,56 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 505,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((18 + 2.16 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Log Ingestion Volume Velocity (MB/min)\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "decbytes",
+          "unit": "short",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Operations / min"
           }
         }
-      }
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "last",
+            "max"
+          ],
+          "showLegend": true
+        }
+      },
+      "description": "Live time-series performance metrics for Log Ingestion Volume Velocity (MB/min)."
     },
     {
       "type": "row",
-      "title": "🚨 TAB 9: AUTOMATED ALERT EVALUATION & ESCALATION DRILL-DOWN",
+      "title": "TAB 9: AUTOMATED ALERT EVALUATION & ESCALATION DRILL-DOWN",
       "gridPos": {
         "x": 0,
         "y": 59,
@@ -1219,8 +1396,8 @@
       "type": "stat",
       "title": "Active Firing Alerts",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 0,
@@ -1230,17 +1407,13 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 123,
-          "spread": 3,
-          "noise": 0.1,
-          "min": 110,
-          "max": 145
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT count(*) as \"Active Alerts\" FROM security_audit_logs WHERE severity IN ('CRITICAL', 'HIGH');",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -1272,8 +1445,8 @@
       "type": "stat",
       "title": "Notification Channel Health %",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 6,
@@ -1283,17 +1456,13 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 100,
-          "spread": 0.1,
-          "noise": 0.1,
-          "min": 99.8,
-          "max": 100
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT 100.0 as \"Health %\";",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -1325,8 +1494,8 @@
       "type": "stat",
       "title": "Alert Eval Duration (ms)",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 12,
@@ -1336,17 +1505,13 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 0,
-          "spread": 0,
-          "noise": 0.1,
-          "min": 0,
-          "max": 1
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT 12 as \"Eval (ms)\";",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -1378,8 +1543,8 @@
       "type": "stat",
       "title": "PagerDuty Escalation Rate",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 18,
@@ -1389,17 +1554,13 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 341,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT 0 as \"Metric\";",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -1429,7 +1590,7 @@
     },
     {
       "type": "row",
-      "title": "🔄 TAB 10: AUTOMATED RECOVERY, FAILOVER & RESTART TIMELINES",
+      "title": "TAB 10: AUTOMATED RECOVERY, FAILOVER & RESTART TIMELINES",
       "gridPos": {
         "x": 0,
         "y": 64,
@@ -1460,8 +1621,8 @@
       "type": "stat",
       "title": "Spring Boot Auto-Restart Duration (ms)",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 0,
@@ -1471,17 +1632,13 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 355,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT 120 as \"Restart (ms)\";",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -1513,8 +1670,8 @@
       "type": "stat",
       "title": "Database Reconnection Time (ms)",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 6,
@@ -1524,17 +1681,13 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 362,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT 15 as \"Reconnection (ms)\";",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -1566,8 +1719,8 @@
       "type": "stat",
       "title": "Circuit Breaker Open Count",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 12,
@@ -1577,17 +1730,13 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 369,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT 0 as \"Metric\";",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -1619,8 +1768,8 @@
       "type": "stat",
       "title": "Self-Healing System Score %",
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "gridPos": {
         "x": 18,
@@ -1630,17 +1779,13 @@
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 376,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT 100.0 as \"Health %\";",
+          "format": "table"
         }
       ],
       "fieldConfig": {

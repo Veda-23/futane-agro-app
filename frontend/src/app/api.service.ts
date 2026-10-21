@@ -168,6 +168,31 @@ export class ApiService {
     return this.http.put(`${this.baseUrl}/users/change-password`, data);
   }
 
+  // ── Multi-Factor Authentication (MFA) ──
+  verifyFirebaseOtp(payload: { preAuthToken: string; firebaseIdToken: string }): Observable<any> {
+    return this.http.post(`${this.baseUrl}/users/mfa/verify-firebase-otp`, payload);
+  }
+
+  verifyMfaRecoveryCode(payload: { preAuthToken: string; recoveryCode: string }): Observable<any> {
+    return this.http.post(`${this.baseUrl}/users/mfa/verify-recovery-code`, payload);
+  }
+
+  getMfaStatus(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/users/mfa/status`);
+  }
+
+  enrollMfa(payload: { firebaseIdToken: string }): Observable<any> {
+    return this.http.post(`${this.baseUrl}/users/mfa/enroll`, payload);
+  }
+
+  disableMfa(payload: { password: string }): Observable<any> {
+    return this.http.post(`${this.baseUrl}/users/mfa/disable`, payload);
+  }
+
+  regenerateMfaRecoveryCodes(payload: { password: string }): Observable<any> {
+    return this.http.post(`${this.baseUrl}/users/mfa/regenerate-recovery-codes`, payload);
+  }
+
   // Google ADK & AI Research Agent
   runAiResearch(query: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/adk/research`, { query });

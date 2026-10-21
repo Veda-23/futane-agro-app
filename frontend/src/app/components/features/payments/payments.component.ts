@@ -1,8 +1,8 @@
-import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, HostListener, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { forkJoin, of, Subject } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 import { ApiService } from '../../../api.service';
@@ -52,9 +52,10 @@ import { SearchableSelectComponent } from '../../shared/searchable-select/search
     SearchableSelectComponent
   ],
   templateUrl: './payments.component.html',
-  styleUrls: ['./payments.component.css']
+  styleUrls: ['./payments.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PaymentsComponent implements OnInit {
+export class PaymentsComponent implements OnInit, OnDestroy {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'payments';
   @Input() loggedInUser: any = null;
@@ -70,6 +71,23 @@ export class PaymentsComponent implements OnInit {
   parties: any[] = [];
   invoicesList: any[] = [];
   salesList: any[] = [];
+
+  // High-Volume Precomputed Metrics Cache (O(1) Template Binding)
+  cachedTotalCollections: number = 0;
+  cachedMonthlyCollections: number = 0;
+  cachedDigitalCollections: number = 0;
+  cachedCashCollections: number = 0;
+  cachedDigitalPct: number = 0;
+  cachedUpiCount: number = 0;
+  cachedBankCount: number = 0;
+  cachedCashCount: number = 0;
+  cachedChequeCount: number = 0;
+  cachedHighValueCount: number = 0;
+  cachedTotalOutstanding: number = 0;
+
+  // Debounced search engine
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
 
   // Subtab filtering
   subTab: 'all' | 'upi' | 'bank' | 'cash' | 'cheque' | 'high_value' = 'all';
@@ -151,11 +169,32 @@ export class PaymentsComponent implements OnInit {
 
   constructor(
     private apiService: ApiService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    public cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
+    this.searchSubject.pipe(
+      debounceTime(250),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(query => {
+      this.searchQuery = query;
+      this.currentPage = 1;
+      this.updateFilteredPayments();
+      this.cdr.markForCheck();
+    });
+
     this.loadData();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onSearchInput(value: string) {
+    this.searchSubject.next(value || '');
   }
 
   loadData(notify: boolean = false) {
@@ -185,12 +224,14 @@ export class PaymentsComponent implements OnInit {
         if (notify) {
           this.notificationService.success('Refreshed', 'Customer receipts and payment registry updated.');
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.isLoading = false;
         this.isRefreshing = false;
         this.hasError = true;
         this.notificationService.error('Load Failed', 'Could not load customer payment records.');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -226,72 +267,54 @@ export class PaymentsComponent implements OnInit {
   }
 
   getTotalOutstandingAcrossAllParties(): number {
-    const partyIds = new Set(this.parties.map(p => String(p.id)));
-    let total = 0;
-    partyIds.forEach(id => {
-      total += this.getOutstandingBalance(id);
-    });
-    return total;
+    return this.cachedTotalOutstanding;
   }
 
-  // Financial Summary Metrics
+  // Financial Summary Metrics (O(1) Cached Access)
   getTotalCollections(): number {
-    return this.paymentsList.reduce((sum, p) => sum + (Number(p.amountReceived) || 0), 0);
+    return this.cachedTotalCollections;
   }
 
   getMonthlyCollections(): number {
-    const currentMonth = new Date().toISOString().slice(0, 7);
-    return this.paymentsList
-      .filter(p => (p.paymentDate || '').startsWith(currentMonth))
-      .reduce((sum, p) => sum + (Number(p.amountReceived) || 0), 0);
+    return this.cachedMonthlyCollections;
   }
 
   getDigitalCollections(): number {
-    return this.paymentsList
-      .filter(p => {
-        const m = (p.paymentMode || '').toUpperCase();
-        return m.includes('UPI') || m.includes('BANK') || m.includes('NEFT') || m.includes('RTGS');
-      })
-      .reduce((sum, p) => sum + (Number(p.amountReceived) || 0), 0);
+    return this.cachedDigitalCollections;
   }
 
   getCashCollections(): number {
-    return this.paymentsList
-      .filter(p => (p.paymentMode || '').toUpperCase().includes('CASH'))
-      .reduce((sum, p) => sum + (Number(p.amountReceived) || 0), 0);
+    return this.cachedCashCollections;
   }
 
   getAverageReceipt(): number {
     if (!this.paymentsList || this.paymentsList.length === 0) return 0;
-    return Math.round(this.getTotalCollections() / this.paymentsList.length);
+    return Math.round(this.cachedTotalCollections / this.paymentsList.length);
   }
 
-  // Subtab count helpers
+  // Subtab count helpers (O(1) Cached Access)
   getAllCount(): number {
-    return this.paymentsList.length;
+    return this.paymentsList ? this.paymentsList.length : 0;
   }
 
   getUpiCount(): number {
-    return this.paymentsList.filter(p => (p.paymentMode || '').toUpperCase().includes('UPI')).length;
+    return this.cachedUpiCount;
   }
 
   getBankCount(): number {
-    return this.paymentsList.filter(p => {
-      const m = (p.paymentMode || '').toUpperCase();
-      return m.includes('BANK') || m.includes('NEFT') || m.includes('RTGS');
-    }).length;
+    return this.cachedBankCount;
   }
 
   getCashCount(): number {
-    return this.paymentsList.filter(p => (p.paymentMode || '').toUpperCase().includes('CASH')).length;
+    return this.cachedCashCount;
   }
 
   getChequeCount(): number {
-    return this.paymentsList.filter(p => (p.paymentMode || '').toUpperCase().includes('CHEQUE')).length;
+    return this.cachedChequeCount;
   }
 
   getHighValueCount(): number {
-    return this.paymentsList.filter(p => Number(p.amountReceived) >= 50000).length;
+    return this.cachedHighValueCount;
   }
 
   // Filters Popover
@@ -326,8 +349,20 @@ export class PaymentsComponent implements OnInit {
     return count;
   }
 
-  // Filter & Search pipeline
+  // Memoization Cache for High-Load Scalability (10,000+ Receipts)
+  private _cachedPaymentFilterKey: string = '';
+  private _cachedFilteredPayments: PaymentItem[] = [];
+
+  // Filter & Search pipeline (Memoized)
   getFilteredPayments(): PaymentItem[] {
+    if (!this.paymentsList || this.paymentsList.length === 0) return [];
+
+    const filterKey = `${this.paymentsList.length}_${this.subTab}_${this.searchQuery}_${this.filterPartyId}_${this.filterPaymentMode}_${this.filterInvoiceType}_${this.filterDateFrom}_${this.filterDateTo}_${this.sortField}_${this.sortAsc}`;
+
+    if (this._cachedPaymentFilterKey === filterKey && this._cachedFilteredPayments) {
+      return this._cachedFilteredPayments;
+    }
+
     let list = [...this.paymentsList];
 
     // 1. Subtab filter
@@ -348,7 +383,7 @@ export class PaymentsComponent implements OnInit {
         list = list.filter(p => (p.paymentMode || '').toUpperCase().includes('CHEQUE'));
         break;
       case 'high_value':
-        list = list.filter(p => Number(p.amountReceived) >= 50000);
+        list = list.filter(p => (Number(p.amountReceived) || 0) >= 50000);
         break;
       case 'all':
       default:
@@ -408,6 +443,8 @@ export class PaymentsComponent implements OnInit {
       return 0;
     });
 
+    this._cachedPaymentFilterKey = filterKey;
+    this._cachedFilteredPayments = list;
     return list;
   }
 
@@ -425,7 +462,6 @@ export class PaymentsComponent implements OnInit {
     }
   }
 
-
   setPageSize(size: number) {
     this.pageSize = size;
     this.currentPage = 1;
@@ -438,11 +474,70 @@ export class PaymentsComponent implements OnInit {
   }
 
   updateFilteredPayments() {
+    // 1. High-speed single-pass metric accumulation across the entire ledger
+    let totalColl = 0;
+    let monthlyColl = 0;
+    let digitalColl = 0;
+    let cashColl = 0;
+    let upiCnt = 0;
+    let bankCnt = 0;
+    let cashCnt = 0;
+    let chequeCnt = 0;
+    let highValCnt = 0;
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const listLen = this.paymentsList ? this.paymentsList.length : 0;
+
+    for (let i = 0; i < listLen; i++) {
+      const p = this.paymentsList[i];
+      const amt = Number(p.amountReceived) || 0;
+      totalColl += amt;
+      const m = (p.paymentMode || '').toUpperCase();
+      if ((p.paymentDate || '').startsWith(currentMonth)) {
+        monthlyColl += amt;
+      }
+      if (m.includes('UPI')) {
+        upiCnt++;
+        digitalColl += amt;
+      } else if (m.includes('BANK') || m.includes('NEFT') || m.includes('RTGS')) {
+        bankCnt++;
+        digitalColl += amt;
+      } else if (m.includes('CHEQUE')) {
+        chequeCnt++;
+      } else if (m.includes('CASH')) {
+        cashCnt++;
+        cashColl += amt;
+      }
+      if (amt >= 50000) {
+        highValCnt++;
+      }
+    }
+
+    this.cachedTotalCollections = totalColl;
+    this.cachedMonthlyCollections = monthlyColl;
+    this.cachedDigitalCollections = digitalColl;
+    this.cachedCashCollections = cashColl;
+    this.cachedDigitalPct = totalColl > 0 ? Math.round((digitalColl / totalColl) * 100) : 0;
+    this.cachedUpiCount = upiCnt;
+    this.cachedBankCount = bankCnt;
+    this.cachedCashCount = cashCnt;
+    this.cachedChequeCount = chequeCnt;
+    this.cachedHighValueCount = highValCnt;
+
+    // 2. High-speed O(N) party outstanding ledger calculation
+    let totalSalesAmt = 0;
+    const salesLen = this.salesList ? this.salesList.length : 0;
+    for (let i = 0; i < salesLen; i++) {
+      totalSalesAmt += (Number(this.salesList[i].totalAmount) || 0);
+    }
+    this.cachedTotalOutstanding = Math.max(0, totalSalesAmt - totalColl);
+
+    // 3. Filtered and paged records
     const filtered = this.getFilteredPayments();
     this.filteredPaymentsCount = filtered.length;
     this.totalPages = Math.max(1, Math.ceil(filtered.length / this.pageSize));
     const start = (this.currentPage - 1) * this.pageSize;
     this.pagedPayments = filtered.slice(start, start + this.pageSize);
+    this.cdr.markForCheck();
   }
 
   getPaginatedPayments(): PaymentItem[] {

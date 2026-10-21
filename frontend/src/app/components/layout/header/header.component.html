@@ -117,9 +117,9 @@
         </div>
         <div class="telemetry-status-grid">
           <div class="telemetry-item">
-            <span class="service-name"><i class="bi bi-database" style="margin-right: 4px;"></i> MySQL 8.0</span>
-            <span class="service-state" [class.state-up]="telemetryHealth?.mysqlOnline" [class.state-down]="!telemetryHealth?.mysqlOnline">
-              ● {{ telemetryHealth?.mysqlOnline ? 'ONLINE' : 'OFFLINE' }}
+            <span class="service-name"><i class="bi bi-database" style="margin-right: 4px;"></i> PostgreSQL 16</span>
+            <span class="service-state" [class.state-up]="telemetryHealth?.postgresOnline ?? telemetryHealth?.backendOnline" [class.state-down]="!(telemetryHealth?.postgresOnline ?? telemetryHealth?.backendOnline)">
+              ● {{ (telemetryHealth?.postgresOnline ?? telemetryHealth?.backendOnline) ? 'ONLINE' : 'OFFLINE' }}
             </span>
           </div>
           <div class="telemetry-item">
@@ -230,6 +230,10 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             <span>System Settings</span>
           </button>
+          <a class="user-menu-item" href="http://localhost:5433" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit;">
+            <i class="bi bi-database-fill-gear text-primary" style="margin-right: 8px; font-size: 14px;"></i>
+            <span>Database Studio (5433)</span>
+          </a>
         </div>
         <div class="user-dropdown-divider"></div>
         <button class="user-menu-item text-danger" (click)="handleLogout()">

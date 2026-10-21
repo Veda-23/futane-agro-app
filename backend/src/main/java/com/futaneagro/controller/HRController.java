@@ -59,6 +59,7 @@ public class HRController {
 
     // --- Employee Endpoints ---
     @GetMapping("/employees")
+    @Transactional(readOnly = true)
     @Cacheable(value = "employees")
     public List<Employee> getAllEmployees() {
         return employeeRepository.findAll();
@@ -117,6 +118,7 @@ public class HRController {
 
     // --- Salary Endpoints ---
     @GetMapping("/salaries")
+    @Transactional(readOnly = true)
     public List<EmployeeSalary> getAllSalaries() {
         return employeeSalaryRepository.findAll();
     }

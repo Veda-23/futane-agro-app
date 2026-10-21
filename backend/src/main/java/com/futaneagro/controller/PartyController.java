@@ -62,6 +62,7 @@ public class PartyController {
 
     // --- Party Endpoints ---
     @GetMapping("/parties")
+    @Transactional(readOnly = true)
     @Cacheable(value = "parties")
     public List<Party> getAllParties() {
         return partyRepository.findAll();
@@ -120,6 +121,7 @@ public class PartyController {
 
     // --- Vendor Endpoints ---
     @GetMapping("/vendors")
+    @Transactional(readOnly = true)
     @Cacheable(value = "vendors")
     public List<Vendor> getAllVendors() {
         return vendorRepository.findAll();
@@ -171,6 +173,7 @@ public class PartyController {
 
     // --- Driver Endpoints ---
     @GetMapping("/drivers")
+    @Transactional(readOnly = true)
     @Cacheable(value = "drivers")
     public List<Driver> getAllDrivers() {
         return driverRepository.findAll();

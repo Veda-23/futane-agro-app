@@ -396,14 +396,14 @@
           type="text" 
           class="search-input" 
           placeholder="Search order #, customer, crate, vehicle..." 
-          [(ngModel)]="searchQuery" 
-          (ngModelChange)="currentPage = 1"
+          [ngModel]="searchInputText" 
+          (ngModelChange)="onSearchInput($event)"
           aria-label="Search sales orders" />
         <button 
-          *ngIf="searchQuery" 
+          *ngIf="searchInputText" 
           type="button" 
           class="btn-clear-search" 
-          (click)="searchQuery = ''; currentPage = 1" 
+          (click)="clearSearch()" 
           title="Clear search query"
           aria-label="Clear search">
           <i class="bi bi-x-circle-fill"></i>

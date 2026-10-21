@@ -1,7 +1,7 @@
 # ==============================================================================
 # FUTANE AGRO ERP — FORCEFUL PROCESS CLEANER & RAM BOOST (8GB RAM PRESERVATION)
 # Safely terminates orphaned Node/Java dev servers & flushes memory working sets
-# NEVER touches MySQL or critical Windows system processes
+# NEVER touches PostgreSQL or critical Windows system processes
 # ==============================================================================
 
 Write-Host "=================================================================" -ForegroundColor Cyan
@@ -43,6 +43,13 @@ Get-Process -Name "esbuild" -ErrorAction SilentlyContinue | ForEach-Object {
 # 3b. Clean up any lingering Grafana processes
 Get-Process -Name "*grafana*" -ErrorAction SilentlyContinue | ForEach-Object {
     Write-Host "  [Kill] Stray Grafana process (PID: $($_.Id))" -ForegroundColor Yellow
+    Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+    $TerminatedCount++
+}
+
+# 3c. Clean up any lingering headless Chrome workers
+Get-Process -Name "chrome-headless-shell" -ErrorAction SilentlyContinue | ForEach-Object {
+    Write-Host "  [Kill] Stray Headless Chrome worker (PID: $($_.Id))" -ForegroundColor Yellow
     Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
     $TerminatedCount++
 }

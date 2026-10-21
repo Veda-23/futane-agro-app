@@ -24,7 +24,7 @@ This document organizes and explains all **Docker stacks**, **GitHub Actions**, 
 | **Frontend UI** | **Local Bare-Metal** | [http://localhost:4201](http://localhost:4201) | `4201` | Angular dev server via `run-local-uat.ps1` |
 | **Backend API** | **Local Bare-Metal** | [http://localhost:8081/api](http://localhost:8081/api) | `8081` | Spring Boot JAR via `run-local-uat.ps1` |
 | **Prod Stack** | **Production (Docker)**| [http://localhost:80](http://localhost:80) | `80/443` | Full production stack with Nginx SSL reverse proxy |
-| **Grafana** | **Monitoring** | [http://localhost:3000](http://localhost:3000) | `3000` | L1-L3 Telemetry Dashboards (`admin / admin`) |
+| **Grafana** | **Monitoring** | [http://localhost:3000](http://localhost:3000) | `3000` | L1-L3 Telemetry Dashboards (`admin / FutaneAgro@Monitor2026!`) |
 
 ---
 

@@ -55,6 +55,7 @@ public class InventoryController {
     }
 
     @GetMapping("/inventory")
+    @Transactional(readOnly = true)
     public List<Inventory> getAllInventory() {
         return inventoryRepository.findAll();
     }

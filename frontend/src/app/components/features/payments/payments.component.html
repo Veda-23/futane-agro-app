@@ -368,14 +368,14 @@
           type="text" 
           class="search-input" 
           placeholder="Search receipt #, customer, invoice, mode..." 
-          [(ngModel)]="searchQuery" 
-          (ngModelChange)="currentPage = 1; updateFilteredPayments()"
+          [ngModel]="searchQuery" 
+          (input)="onSearchInput($any($event.target).value)"
           aria-label="Search payment records" />
         <button 
           *ngIf="searchQuery" 
           type="button" 
           class="btn-clear-search" 
-          (click)="searchQuery = ''; currentPage = 1; updateFilteredPayments()" 
+          (click)="searchQuery = ''; onSearchInput('')" 
           title="Clear search query"
           aria-label="Clear search">
           <i class="bi bi-x-circle-fill"></i>
@@ -567,7 +567,7 @@
       </div>
 
       <!-- Empty State -->
-      <div *ngIf="!isLoading && !hasError && getFilteredPayments().length === 0" class="table-empty-container">
+      <div *ngIf="!isLoading && !hasError && filteredPaymentsCount === 0" class="table-empty-container">
         <div class="empty-icon-circle">
           <i class="bi bi-receipt"></i>
         </div>
@@ -590,7 +590,7 @@
 
       <!-- Real Data Table -->
       <table 
-        *ngIf="!isLoading && !hasError && getFilteredPayments().length > 0" 
+        *ngIf="!isLoading && !hasError && filteredPaymentsCount > 0" 
         class="enterprise-payments-table"
         appResizableTable [tableId]="'payments_table'">
         <thead>
@@ -783,13 +783,13 @@
         </tbody>
 
         <!-- Accounting Table Summary Footer -->
-        <tfoot class="table-summary-tfoot" *ngIf="getFilteredPayments().length > 0">
+        <tfoot class="table-summary-tfoot" *ngIf="filteredPaymentsCount > 0">
           <tr>
             <td class="td-checkbox"></td>
             <td *ngIf="isColVisible('paymentDate')" class="tfoot-label"><strong>TOTALS</strong></td>
             <td *ngIf="isColVisible('voucherRef')"></td>
             <td *ngIf="isColVisible('party')">
-              <strong>{{ getFilteredPayments().length }} collections</strong>
+              <strong>{{ filteredPaymentsCount }} collections</strong>
             </td>
             <td *ngIf="isColVisible('invoiceRef')"></td>
             <td *ngIf="isColVisible('paymentMode')"></td>

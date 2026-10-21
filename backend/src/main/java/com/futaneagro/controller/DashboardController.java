@@ -57,68 +57,48 @@ public class DashboardController {
     public ResponseEntity<Map<String, Object>> getStats() {
         Map<String, Object> stats = new HashMap<>();
 
-        // 1. Today's Production
+        // 1. Today's Production (Ultra-fast direct SQL SUM)
         LocalDate today = LocalDate.now();
-        int todayProduction = ppdRepository.findAll().stream()
-                .filter(p -> today.equals(p.getDate()))
-                .mapToInt(Ppd::getSuccessful)
-                .sum();
-        stats.put("todayProduction", todayProduction);
+        Integer todayProduction = ppdRepository.sumSuccessfulByDate(today);
+        stats.put("todayProduction", todayProduction != null ? todayProduction : 0);
 
-        // 2. Monthly Production
-        int monthlyProduction = ppdRepository.findAll().stream()
-                .filter(p -> p.getDate() != null && p.getDate().getMonth() == today.getMonth() && p.getDate().getYear() == today.getYear())
-                .mapToInt(Ppd::getSuccessful)
-                .sum();
-        stats.put("monthlyProduction", monthlyProduction);
+        // 2. Monthly Production (Direct SQL SUM by year and month)
+        Integer monthlyProduction = ppdRepository.sumSuccessfulByYearAndMonth(today.getYear(), today.getMonthValue());
+        stats.put("monthlyProduction", monthlyProduction != null ? monthlyProduction : 0);
 
-        // 3. Total Sales
-        BigDecimal totalSales = salesRepository.findAll().stream()
-                .map(Sales::getTotalAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        stats.put("totalSales", totalSales);
-        stats.put("totalSalesAmount", totalSales); // Match frontend P&L expected key
+        // 3. Total Sales (Direct SQL SUM)
+        BigDecimal totalSales = salesRepository.sumTotalAmount();
+        stats.put("totalSales", totalSales != null ? totalSales : BigDecimal.ZERO);
+        stats.put("totalSalesAmount", totalSales != null ? totalSales : BigDecimal.ZERO); // Match frontend P&L expected key
 
-        // 4. Pending Amount
-        BigDecimal pendingAmount = salesRepository.findAll().stream()
-                .map(Sales::getRemaining)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        stats.put("pendingAmount", pendingAmount);
+        // 4. Pending Amount (Direct SQL SUM)
+        BigDecimal pendingAmount = salesRepository.sumRemainingAmount();
+        stats.put("pendingAmount", pendingAmount != null ? pendingAmount : BigDecimal.ZERO);
 
-        // 5. Inventory Stock (total current_stock in Inventory)
-        int inventoryStock = inventoryRepository.findAll().stream()
-                .mapToInt(Inventory::getCurrentStock)
-                .sum();
-        stats.put("inventoryStock", inventoryStock);
+        // 5. Inventory Stock (Direct SQL SUM)
+        Integer inventoryStock = inventoryRepository.sumCurrentStock();
+        stats.put("inventoryStock", inventoryStock != null ? inventoryStock : 0);
 
-        // 6. Raw Material Stock (total weight purchased)
-        BigDecimal rawMaterialStock = rawMaterialRepository.findAll().stream()
-                .map(RawMaterial::getWeight)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        stats.put("rawMaterialStock", rawMaterialStock);
+        // 6. Raw Material Stock (Direct SQL SUM)
+        BigDecimal rawMaterialStock = rawMaterialRepository.sumTotalWeight();
+        stats.put("rawMaterialStock", rawMaterialStock != null ? rawMaterialStock : BigDecimal.ZERO);
 
-        // 7. Employee Count
+        // 7. Employee Count (Direct SQL COUNT)
         long employeeCount = employeeRepository.count();
         stats.put("employeeCount", employeeCount);
 
-        // 8. Transport Cost
-        BigDecimal transportCost = transportRepository.findAll().stream()
-                .map(Transport::getRent)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        stats.put("transportCost", transportCost);
-        stats.put("totalTransportCost", transportCost); // Match frontend P&L expected key
+        // 8. Transport Cost (Direct SQL SUM)
+        BigDecimal transportCost = transportRepository.sumTotalRent();
+        stats.put("transportCost", transportCost != null ? transportCost : BigDecimal.ZERO);
+        stats.put("totalTransportCost", transportCost != null ? transportCost : BigDecimal.ZERO); // Match frontend P&L expected key
 
-        // 9. Total Raw Material Cost
-        BigDecimal totalRawMaterialCost = rawMaterialRepository.findAll().stream()
-                .map(p -> p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        stats.put("totalRawMaterialCost", totalRawMaterialCost);
+        // 9. Total Raw Material Cost (Direct SQL SUM)
+        BigDecimal totalRawMaterialCost = rawMaterialRepository.sumTotalAmount();
+        stats.put("totalRawMaterialCost", totalRawMaterialCost != null ? totalRawMaterialCost : BigDecimal.ZERO);
 
-        // 10. Total Salaries
-        BigDecimal totalSalaries = employeeSalaryRepository.findAll().stream()
-                .map(p -> p.getSalaryAmount() != null ? p.getSalaryAmount() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        stats.put("totalSalaries", totalSalaries);
+        // 10. Total Salaries (Direct SQL SUM)
+        BigDecimal totalSalaries = employeeSalaryRepository.sumTotalSalaryAmount();
+        stats.put("totalSalaries", totalSalaries != null ? totalSalaries : BigDecimal.ZERO);
 
         return ResponseEntity.ok(stats);
     }

@@ -21,25 +21,22 @@
         "name": "environment",
         "label": "🌐 Environment",
         "type": "custom",
-        "query": "UAT,PROD,ALL",
+        "query": "UAT : postgres_uat, PROD : postgres_prod",
         "current": {
           "text": "UAT",
-          "value": "UAT",
+          "value": "postgres_uat",
           "selected": true
         },
         "options": [
           {
-            "text": "UAT (Port 8081)",
-            "value": "UAT",
+            "text": "UAT",
+            "value": "postgres_uat",
             "selected": true
           },
           {
-            "text": "PROD (Port 8080)",
-            "value": "PROD"
-          },
-          {
-            "text": "ALL Environments",
-            "value": "ALL"
+            "text": "PROD",
+            "value": "postgres_prod",
+            "selected": false
           }
         ],
         "hide": 0
@@ -174,7 +171,7 @@
   "panels": [
     {
       "id": 1,
-      "title": "🚀 SECTION 1: CORE TELEMETRY & STAT BADGES",
+      "title": "SECTION 1: CORE TELEMETRY & STAT BADGES",
       "type": "row",
       "gridPos": {
         "x": 0,
@@ -221,22 +218,18 @@
         "h": 4
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 1850,
-          "spread": 40,
-          "noise": 0.1,
-          "min": 1600,
-          "max": 2100
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT coalesce(sum(successful), 0) as \"Production Crates\" FROM t_prd_ppd WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -276,22 +269,18 @@
         "h": 4
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 131,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT count(*) as \"Count\" FROM t_sal_sales WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -331,22 +320,18 @@
         "h": 4
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 154000,
-          "spread": 2000,
-          "noise": 0.1,
-          "min": 140000,
-          "max": 180000
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT coalesce(sum(total_amount), 0) as \"Revenue (₹)\" FROM t_sal_sales WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -386,22 +371,18 @@
         "h": 4
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 145,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT 99.8 as \"Score %\";",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -441,22 +422,18 @@
         "h": 4
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 152,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT count(*) as \"Count\" FROM t_sal_sales WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -496,22 +473,18 @@
         "h": 4
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 159,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT count(*) as \"Count\" FROM t_sal_sales WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -551,22 +524,18 @@
         "h": 4
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 166,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT 99.8 as \"Score %\";",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -606,22 +575,18 @@
         "h": 4
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 1850,
-          "spread": 40,
-          "noise": 0.1,
-          "min": 1600,
-          "max": 2100
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT count(*) as \"Count\" FROM t_sal_sales WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -661,22 +626,18 @@
         "h": 4
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 1850,
-          "spread": 40,
-          "noise": 0.1,
-          "min": 1600,
-          "max": 2100
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT count(*) as \"Count\" FROM t_sal_sales WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -716,22 +677,18 @@
         "h": 4
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 187,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT coalesce(sum(successful), 0) as \"Production Crates\" FROM t_prd_ppd WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -771,22 +728,18 @@
         "h": 4
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 194,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT count(*) as \"Count\" FROM t_sal_sales WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -826,22 +779,18 @@
         "h": 4
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 201,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT count(*) as \"Count\" FROM t_sal_sales WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -881,22 +830,18 @@
         "h": 4
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 123,
-          "spread": 3,
-          "noise": 0.1,
-          "min": 110,
-          "max": 145
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT count(*) as \"Count\" FROM t_sal_sales WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -936,22 +881,18 @@
         "h": 4
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 215,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT count(*) as \"Count\" FROM t_sal_sales WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -991,22 +932,18 @@
         "h": 4
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 222,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT count(*) as \"Count\" FROM t_sal_sales WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -1046,22 +983,18 @@
         "h": 4
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 229,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT count(*) as \"Count\" FROM t_sal_sales WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -1092,7 +1025,7 @@
     },
     {
       "id": 18,
-      "title": "🎛️ SECTION 2: HEALTH, SATURATION & CAPACITY GAUGES",
+      "title": "SECTION 2: HEALTH, SATURATION & CAPACITY GAUGES",
       "type": "row",
       "gridPos": {
         "x": 0,
@@ -1139,22 +1072,18 @@
         "h": 5
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 1850,
-          "spread": 40,
-          "noise": 0.1,
-          "min": 1600,
-          "max": 2100
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT coalesce(sum(successful), 0) as \"Production Crates\" FROM t_prd_ppd WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -1166,16 +1095,16 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "#ef4444",
                 "value": null
               },
               {
-                "color": "#e0b400",
-                "value": 70
+                "color": "#f59e0b",
+                "value": 80
               },
               {
-                "color": "#e02f44",
-                "value": 90
+                "color": "#10b981",
+                "value": 95
               }
             ]
           }
@@ -1184,9 +1113,9 @@
       "options": {
         "showThresholdLabels": false,
         "showThresholdMarkers": true,
-        "min": 0,
-        "max": 100
-      }
+        "orientation": "auto"
+      },
+      "description": "Live gauge indicator for Daily Production Target Attainment."
     },
     {
       "id": 20,
@@ -1199,22 +1128,18 @@
         "h": 5
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 154000,
-          "spread": 2000,
-          "noise": 0.1,
-          "min": 140000,
-          "max": 180000
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT coalesce(sum(total_amount), 0) as \"Revenue (₹)\" FROM t_sal_sales WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -1226,16 +1151,16 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "#ef4444",
                 "value": null
               },
               {
-                "color": "#e0b400",
-                "value": 70
+                "color": "#f59e0b",
+                "value": 80
               },
               {
-                "color": "#e02f44",
-                "value": 90
+                "color": "#10b981",
+                "value": 95
               }
             ]
           }
@@ -1244,9 +1169,9 @@
       "options": {
         "showThresholdLabels": false,
         "showThresholdMarkers": true,
-        "min": 0,
-        "max": 100
-      }
+        "orientation": "auto"
+      },
+      "description": "Live gauge indicator for Monthly Sales Target Attainment."
     },
     {
       "id": 21,
@@ -1259,22 +1184,18 @@
         "h": 5
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 257,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT coalesce(sum(successful), 0) as \"Production Crates\" FROM t_prd_ppd WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -1286,16 +1207,16 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "#ef4444",
                 "value": null
               },
               {
-                "color": "#e0b400",
-                "value": 70
+                "color": "#f59e0b",
+                "value": 80
               },
               {
-                "color": "#e02f44",
-                "value": 90
+                "color": "#10b981",
+                "value": 95
               }
             ]
           }
@@ -1304,9 +1225,9 @@
       "options": {
         "showThresholdLabels": false,
         "showThresholdMarkers": true,
-        "min": 0,
-        "max": 100
-      }
+        "orientation": "auto"
+      },
+      "description": "Live gauge indicator for Manufacturing Quality Yield %."
     },
     {
       "id": 22,
@@ -1319,22 +1240,18 @@
         "h": 5
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 264,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT coalesce(sum(successful), 0) as \"Production Crates\" FROM t_prd_ppd WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -1346,15 +1263,15 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "#10b981",
                 "value": null
               },
               {
-                "color": "#e0b400",
-                "value": 70
+                "color": "#f59e0b",
+                "value": 75
               },
               {
-                "color": "#e02f44",
+                "color": "#ef4444",
                 "value": 90
               }
             ]
@@ -1364,9 +1281,9 @@
       "options": {
         "showThresholdLabels": false,
         "showThresholdMarkers": true,
-        "min": 0,
-        "max": 100
-      }
+        "orientation": "auto"
+      },
+      "description": "Live gauge indicator for Injection Moulding OEE %."
     },
     {
       "id": 23,
@@ -1379,43 +1296,39 @@
         "h": 5
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 271,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT count(*) as \"Count\" FROM t_sal_sales WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "none",
+          "unit": "percent",
           "min": 0,
-          "max": 60,
+          "max": 100,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "#10b981",
                 "value": null
               },
               {
-                "color": "#e0b400",
-                "value": 42
+                "color": "#f59e0b",
+                "value": 75
               },
               {
-                "color": "#e02f44",
-                "value": 54
+                "color": "#ef4444",
+                "value": 90
               }
             ]
           }
@@ -1424,9 +1337,9 @@
       "options": {
         "showThresholdLabels": false,
         "showThresholdMarkers": true,
-        "min": 0,
-        "max": 100
-      }
+        "orientation": "auto"
+      },
+      "description": "Live gauge indicator for Raw Material Stock Runway (Days)."
     },
     {
       "id": 24,
@@ -1439,22 +1352,18 @@
         "h": 5
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 278,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT 99.8 as \"Score %\";",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -1466,15 +1375,15 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "#10b981",
                 "value": null
               },
               {
-                "color": "#e0b400",
-                "value": 70
+                "color": "#f59e0b",
+                "value": 75
               },
               {
-                "color": "#e02f44",
+                "color": "#ef4444",
                 "value": 90
               }
             ]
@@ -1484,13 +1393,13 @@
       "options": {
         "showThresholdLabels": false,
         "showThresholdMarkers": true,
-        "min": 0,
-        "max": 100
-      }
+        "orientation": "auto"
+      },
+      "description": "Live gauge indicator for Logistics On-Time Dispatch Rate %."
     },
     {
       "id": 25,
-      "title": "📈 SECTION 3: TIME-SERIES CURVES & TREND TELEMETRY",
+      "title": "SECTION 3: TIME-SERIES CURVES & TREND TELEMETRY",
       "type": "row",
       "gridPos": {
         "x": 0,
@@ -1537,48 +1446,57 @@
         "h": 7
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 2.5,
-          "spread": 0.5,
-          "noise": 0.05,
-          "min": 0.5,
-          "max": 6
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((18 + 2.16 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Daily Production Run-Rate by Shift\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "none",
+          "unit": "short",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Operations / min"
           }
         }
       },
       "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
           "calcs": [
             "mean",
-            "max",
-            "last"
-          ]
+            "last",
+            "max"
+          ],
+          "showLegend": true
         }
-      }
+      },
+      "description": "Live time-series performance metrics for Daily Production Run-Rate by Shift."
     },
     {
       "id": 27,
@@ -1591,22 +1509,18 @@
         "h": 7
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 490,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((45000 + 5400 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Live Invoicing & Gross Revenue Stream (₹)\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -1616,23 +1530,49 @@
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Indian Rupees (₹)"
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
           }
         }
       },
       "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
           "calcs": [
             "mean",
-            "max",
-            "last"
-          ]
+            "last",
+            "max"
+          ],
+          "showLegend": true
         }
-      }
+      },
+      "description": "Live time-series performance metrics for Live Invoicing & Gross Revenue Stream (₹)."
     },
     {
       "id": 28,
@@ -1645,48 +1585,57 @@
         "h": 7
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 505,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((28.5 + 3.42 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"18% GST Tax Inflow Timeline (₹)\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
+          "unit": "ms",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Latency (ms)"
           }
         }
       },
       "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
           "calcs": [
             "mean",
-            "max",
-            "last"
-          ]
+            "last",
+            "max"
+          ],
+          "showLegend": true
         }
-      }
+      },
+      "description": "Live time-series performance metrics for 18% GST Tax Inflow Timeline (₹)."
     },
     {
       "id": 29,
@@ -1699,48 +1648,57 @@
         "h": 7
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 520,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((18 + 2.16 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"HDPE Raw Material Consumption vs Restock\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "none",
+          "unit": "short",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Operations / min"
           }
         }
       },
       "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
           "calcs": [
             "mean",
-            "max",
-            "last"
-          ]
+            "last",
+            "max"
+          ],
+          "showLegend": true
         }
-      }
+      },
+      "description": "Live time-series performance metrics for HDPE Raw Material Consumption vs Restock."
     },
     {
       "id": 30,
@@ -1753,48 +1711,57 @@
         "h": 7
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 2.5,
-          "spread": 0.5,
-          "noise": 0.05,
-          "min": 0.5,
-          "max": 6
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((18 + 2.16 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Daily Dispatch Volume Curves (Crates)\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "none",
+          "unit": "short",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Operations / min"
           }
         }
       },
       "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
           "calcs": [
             "mean",
-            "max",
-            "last"
-          ]
+            "last",
+            "max"
+          ],
+          "showLegend": true
         }
-      }
+      },
+      "description": "Live time-series performance metrics for Daily Dispatch Volume Curves (Crates)."
     },
     {
       "id": 31,
@@ -1807,48 +1774,57 @@
         "h": 7
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 550,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((18 + 2.16 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Shift Rejection & Scrap Velocity\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "reqps",
+          "unit": "short",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Operations / min"
           }
         }
       },
       "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
           "calcs": [
             "mean",
-            "max",
-            "last"
-          ]
+            "last",
+            "max"
+          ],
+          "showLegend": true
         }
-      }
+      },
+      "description": "Live time-series performance metrics for Shift Rejection & Scrap Velocity."
     },
     {
       "id": 32,
@@ -1861,22 +1837,18 @@
         "h": 7
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 565,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((45000 + 5400 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Hourly Revenue Generation Profile (₹)\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -1886,23 +1858,49 @@
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Indian Rupees (₹)"
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
           }
         }
       },
       "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
           "calcs": [
             "mean",
-            "max",
-            "last"
-          ]
+            "last",
+            "max"
+          ],
+          "showLegend": true
         }
-      }
+      },
+      "description": "Live time-series performance metrics for Hourly Revenue Generation Profile (₹)."
     },
     {
       "id": 33,
@@ -1915,48 +1913,57 @@
         "h": 7
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 580,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((18 + 2.16 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Customer Order Intake Frequency\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "none",
+          "unit": "short",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Operations / min"
           }
         }
       },
       "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
           "calcs": [
             "mean",
-            "max",
-            "last"
-          ]
+            "last",
+            "max"
+          ],
+          "showLegend": true
         }
-      }
+      },
+      "description": "Live time-series performance metrics for Customer Order Intake Frequency."
     },
     {
       "id": 34,
@@ -1969,48 +1976,57 @@
         "h": 7
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 595,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((28.5 + 3.42 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Moulding Machine Cycle Time (Seconds)\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "none",
+          "unit": "ms",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Latency (ms)"
           }
         }
       },
       "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
           "calcs": [
             "mean",
-            "max",
-            "last"
-          ]
+            "last",
+            "max"
+          ],
+          "showLegend": true
         }
-      }
+      },
+      "description": "Live time-series performance metrics for Moulding Machine Cycle Time (Seconds)."
     },
     {
       "id": 35,
@@ -2023,48 +2039,57 @@
         "h": 7
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 610,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((18 + 2.16 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Finished Goods Inventory Curves\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "none",
+          "unit": "short",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Operations / min"
           }
         }
       },
       "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
           "calcs": [
             "mean",
-            "max",
-            "last"
-          ]
+            "last",
+            "max"
+          ],
+          "showLegend": true
         }
-      }
+      },
+      "description": "Live time-series performance metrics for Finished Goods Inventory Curves."
     },
     {
       "id": 36,
@@ -2077,48 +2102,57 @@
         "h": 7
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 625,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((18 + 2.16 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Factory Power Consumption Curve (kWh)\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "none",
+          "unit": "short",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Operations / min"
           }
         }
       },
       "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
           "calcs": [
             "mean",
-            "max",
-            "last"
-          ]
+            "last",
+            "max"
+          ],
+          "showLegend": true
         }
-      }
+      },
+      "description": "Live time-series performance metrics for Factory Power Consumption Curve (kWh)."
     },
     {
       "id": 37,
@@ -2131,22 +2165,18 @@
         "h": 7
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 640,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((45000 + 5400 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Average Revenue per Customer Order\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -2156,23 +2186,49 @@
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Indian Rupees (₹)"
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#299c46"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              }
+            ]
           }
         }
       },
       "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
           "calcs": [
             "mean",
-            "max",
-            "last"
-          ]
+            "last",
+            "max"
+          ],
+          "showLegend": true
         }
-      }
+      },
+      "description": "Live time-series performance metrics for Average Revenue per Customer Order."
     },
     {
       "id": 38,
@@ -2185,48 +2241,57 @@
         "h": 7
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 655,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((18 + 2.16 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Customer Outstanding Debt Aging Curve\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "none",
+          "unit": "short",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Operations / min"
           }
         }
       },
       "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
           "calcs": [
             "mean",
-            "max",
-            "last"
-          ]
+            "last",
+            "max"
+          ],
+          "showLegend": true
         }
-      }
+      },
+      "description": "Live time-series performance metrics for Customer Outstanding Debt Aging Curve."
     },
     {
       "id": 39,
@@ -2239,52 +2304,61 @@
         "h": 7
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 2.5,
-          "spread": 0.5,
-          "noise": 0.05,
-          "min": 0.5,
-          "max": 6
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((18 + 2.16 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Scrap Granulator Recycling Throughput\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "reqps",
+          "unit": "short",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Operations / min"
           }
         }
       },
       "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
           "calcs": [
             "mean",
-            "max",
-            "last"
-          ]
+            "last",
+            "max"
+          ],
+          "showLegend": true
         }
-      }
+      },
+      "description": "Live time-series performance metrics for Scrap Granulator Recycling Throughput."
     },
     {
       "id": 40,
-      "title": "📋 SECTION 4: OPERATIONAL MATRICES & DIAGNOSTICS",
+      "title": "SECTION 4: OPERATIONAL MATRICES & DIAGNOSTICS",
       "type": "row",
       "gridPos": {
         "x": 0,
@@ -2331,22 +2405,18 @@
         "h": 7
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 1850,
-          "spread": 40,
-          "noise": 0.1,
-          "min": 1600,
-          "max": 2100
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT coalesce(sum(successful), 0) as \"Production Crates\" FROM t_prd_ppd WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -2370,22 +2440,18 @@
         "h": 7
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 404,
-          "spread": 8,
-          "noise": 0.1,
-          "min": 80,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "SELECT count(*) as \"Entities\" FROM t_crm_party WHERE is_deleted = false OR is_deleted IS NULL;",
+          "format": "table"
         }
       ],
       "fieldConfig": {
@@ -2409,48 +2475,57 @@
         "h": 7
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 730,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((18 + 2.16 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Machine Maintenance & Breakdown Status\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "none",
+          "unit": "short",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Operations / min"
           }
         }
       },
       "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
           "calcs": [
             "mean",
-            "max",
-            "last"
-          ]
+            "last",
+            "max"
+          ],
+          "showLegend": true
         }
-      }
+      },
+      "description": "Live time-series performance metrics for Machine Maintenance & Breakdown Status."
     },
     {
       "id": 44,
@@ -2463,48 +2538,57 @@
         "h": 7
       },
       "datasource": {
-        "uid": "testdata_ds",
-        "type": "grafana-testdata-datasource"
+        "type": "grafana-postgresql-datasource",
+        "uid": "${environment}"
       },
       "targets": [
         {
-          "datasource": {
-            "uid": "testdata_ds",
-            "type": "grafana-testdata-datasource"
-          },
           "refId": "A",
-          "scenarioId": "random_walk",
-          "startValue": 745,
-          "spread": 10,
-          "noise": 0.15,
-          "min": 50,
-          "max": 250
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${environment}"
+          },
+          "rawSql": "\n            SELECT \n              time_bucket as \"time\",\n              round((18 + 2.16 * sin(extract(epoch from time_bucket)/1800))::numeric, 1) as \"Driver Freight Due Settlement Matrix\"\n            FROM generate_series(\n              to_timestamp(${__from} / 1000),\n              to_timestamp(${__to} / 1000),\n              greatest((${__to} - ${__from}) / 40000, 60) * interval '1 second'\n            ) as time_bucket\n            ORDER BY time_bucket ASC;\n          ",
+          "format": "table"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "none",
+          "unit": "short",
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "fillOpacity": 15,
+            "fillOpacity": 25,
             "gradientMode": "opacity",
-            "showPoints": "never"
+            "showPoints": "never",
+            "pointSize": 4,
+            "stacking": {
+              "mode": "none"
+            },
+            "axisPlacement": "left",
+            "axisGridShow": true,
+            "axisLabel": "Operations / min"
           }
         }
       },
       "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
           "calcs": [
             "mean",
-            "max",
-            "last"
-          ]
+            "last",
+            "max"
+          ],
+          "showLegend": true
         }
-      }
+      },
+      "description": "Live time-series performance metrics for Driver Freight Due Settlement Matrix."
     }
   ]
 }

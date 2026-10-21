@@ -232,12 +232,12 @@
           <i class="bi bi-search inv-search-icon"></i>
           <input type="text" 
                  appAutoSelect 
-                 [(ngModel)]="filterSearchQuery" 
+                 [ngModel]="filterSearchQuery" 
                  name="invSearch"
                  placeholder="Search party, invoice no, GSTIN, {{ (terminologyService.get('itemUnitSingular') || 'item') | lowercase }}..." 
-                 (input)="currentPage = 1; updateFilteredInvoices()"
+                 (input)="onSearchInput($any($event.target).value)"
                  class="inv-search-input">
-          <button type="button" class="inv-search-clear" *ngIf="filterSearchQuery" (click)="filterSearchQuery = ''; currentPage = 1; updateFilteredInvoices()" title="Clear search">
+          <button type="button" class="inv-search-clear" *ngIf="filterSearchQuery" (click)="filterSearchQuery = ''; onSearchInput('')" title="Clear search">
             <i class="bi bi-x-circle-fill"></i>
           </button>
         </div>

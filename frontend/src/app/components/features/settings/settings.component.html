@@ -1,67 +1,98 @@
-<div class="module-hub-breadcrumb no-print" *ngIf="activeTab === 'settings'">
-  <i class="bi bi-house"></i>
-  <span class="crumb-text">{{ 'appName' | term }}</span>
-  <span class="crumb-sep">/</span>
-  <span class="crumb-text">ADMINISTRATION</span>
-  <span class="crumb-sep">/</span>
-  <span class="crumb-active">{{ getActiveSubTabTitle() | uppercase }}</span>
+<div class="settings-breadcrumb-trail no-print" *ngIf="activeTab === 'settings'">
+  <div class="breadcrumb-trail">
+    <i class="bi bi-house me-1"></i>
+    <span>{{ 'appName' | term }}</span>
+    <span class="sep">/</span>
+    <span>Super Admin Hub</span>
+    <span class="sep">/</span>
+    <span class="active">{{ getActiveSubTabTitle() }}</span>
+  </div>
 </div>
+
+<!-- Master Enterprise Page Header Card (Stable & Fixed Super Admin Center) -->
+<header class="settings-page-header no-print" *ngIf="activeTab === 'settings'">
+  <div class="header-main-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 14px;">
+    <div class="header-left-col">
+      <div class="header-icon-box">
+        <i class="bi bi-shield-lock-fill"></i>
+      </div>
+      <div class="header-title-meta">
+        <h1 class="header-main-title">Super Admin Control Center</h1>
+        <div class="header-sub-row">
+          <span class="header-desc-text">Centralized enterprise operating suite for branding, business rules, API gateways, security &amp; governance</span>
+          <span class="header-badge-live">
+            <span class="pulse-dot"></span>
+            <span>Enterprise Active</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-right-col">
+      <button 
+        type="button" 
+        class="btn-header-action btn-secondary" 
+        (click)="loadAllControlCenterData(true)" 
+        title="Sync and refresh enterprise configuration">
+        <i class="bi bi-arrow-clockwise"></i>
+        <span>Sync Data</span>
+      </button>
+
+      <button 
+        type="button" 
+        class="btn-header-action btn-secondary" 
+        (click)="downloadEnterpriseBackupSnapshot()" 
+        title="Download system configuration backup snapshot">
+        <i class="bi bi-cloud-arrow-down"></i>
+        <span>Export Config</span>
+      </button>
+
+      <button 
+        type="button" 
+        class="btn-header-action btn-primary" 
+        (click)="saveCurrentTabSettings()" 
+        title="Save active tab configurations">
+        <i class="bi bi-check2-circle"></i>
+        <span>Save Changes</span>
+      </button>
+    </div>
+  </div>
+</header>
 
 <div class="admin-control-center" *ngIf="activeTab === 'settings'">
 
-  <!-- Top Banner: Futuristic Command Center HUD (Governance & System Telemetry Only) -->
-  <div class="admin-header-banner" *ngIf="activeSubTab === 'governance'">
-    <div class="banner-main-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 14px;">
-      <div class="banner-left">
-        <div class="banner-icon-box">
-          <i class="bi bi-sliders"></i>
-        </div>
-        <div class="banner-titles">
-          <h2>
-            Super Admin Control Center
-            <span class="super-admin-badge">
-              <i class="bi bi-shield-check" style="font-size: 14px;"></i>
-              SUPER ADMIN
-            </span>
-            <span class="hud-live-pill">
-              <span class="hud-live-dot"></span>
-              LIVE SYNC
-            </span>
-          </h2>
-          <p>Centralized enterprise operating suite for branding, business rules, API gateways, and governance.</p>
-          
-          <!-- Futuristic HUD Micro-Telemetry Strip -->
-          <div class="hud-telemetry-strip">
-            <span class="hud-metric" title="STOMP WebSocket broker live connection">
-              <i class="bi bi-broadcast hud-icon"></i>
-              WS Broker: <strong>Connected</strong>
-            </span>
-            <span class="hud-divider">|</span>
-            <span class="hud-metric" title="In-Memory Cache TTL">
-              <i class="bi bi-lightning-charge-fill hud-icon"></i>
-              Caffeine: <strong>30m TTL Active</strong>
-            </span>
-            <span class="hud-divider">|</span>
-            <span class="hud-metric" title="Database Health Status">
-              <i class="bi bi-database hud-icon" [style.color]="systemHealth?.db === 'HEALTHY' ? '#10b981' : '#ef4444'"></i>
-              DB: <strong [style.color]="systemHealth?.db === 'HEALTHY' ? '#10b981' : '#ef4444'">{{ systemHealth?.db === 'HEALTHY' ? 'Healthy' : 'Degraded' }}</strong>
-            </span>
-            <span class="hud-divider">|</span>
-            <span class="hud-metric" title="Mail Service Connectivity">
-              <i class="bi bi-envelope hud-icon" [style.color]="systemHealth?.mail === 'CONNECTED' ? '#10b981' : '#ef4444'"></i>
-              Mail: <strong [style.color]="systemHealth?.mail === 'CONNECTED' ? '#10b981' : '#ef4444'">{{ systemHealth?.mail === 'CONNECTED' ? 'Connected' : 'Disconnected' }}</strong>
-            </span>
-            <span class="hud-divider">|</span>
-            <span class="hud-metric" title="Audit Trail IP Logging">
-              <i class="bi bi-shield-lock hud-icon"></i>
-              Audit Guard: <strong>IP Logged</strong>
-            </span>
-          </div>
-        </div>
+  <!-- Subsystem Telemetry Quick-Bar (Governance Sub-Tab Only) -->
+  <div class="governance-telemetry-card" *ngIf="activeSubTab === 'governance'">
+    <div class="hud-telemetry-strip" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; width: 100%;">
+      <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+        <span class="hud-metric" title="STOMP WebSocket broker live connection">
+          <i class="bi bi-broadcast hud-icon" style="color: #0284c7;"></i>
+          WS Broker: <strong>Connected</strong>
+        </span>
+        <span class="hud-divider">|</span>
+        <span class="hud-metric" title="In-Memory Cache TTL">
+          <i class="bi bi-lightning-charge-fill hud-icon" style="color: #eab308;"></i>
+          Caffeine: <strong>30m TTL Active</strong>
+        </span>
+        <span class="hud-divider">|</span>
+        <span class="hud-metric" title="Database Health Status">
+          <i class="bi bi-database hud-icon" [style.color]="systemHealth?.db === 'HEALTHY' ? '#10b981' : '#ef4444'"></i>
+          DB: <strong [style.color]="systemHealth?.db === 'HEALTHY' ? '#10b981' : '#ef4444'">{{ systemHealth?.db === 'HEALTHY' ? 'Healthy' : 'Degraded' }}</strong>
+        </span>
+        <span class="hud-divider">|</span>
+        <span class="hud-metric" title="Mail Service Connectivity">
+          <i class="bi bi-envelope hud-icon" [style.color]="systemHealth?.mail === 'CONNECTED' ? '#10b981' : '#ef4444'"></i>
+          Mail: <strong [style.color]="systemHealth?.mail === 'CONNECTED' ? '#10b981' : '#ef4444'">{{ systemHealth?.mail === 'CONNECTED' ? 'Connected' : 'Disconnected' }}</strong>
+        </span>
+        <span class="hud-divider">|</span>
+        <span class="hud-metric" title="Audit Trail IP Logging">
+          <i class="bi bi-shield-lock hud-icon" style="color: #6366f1;"></i>
+          Audit Guard: <strong>IP Logged</strong>
+        </span>
       </div>
-      <div class="banner-right">
-        <button class="btn btn-outline-secondary btn-sm hud-sync-btn" (click)="loadAllControlCenterData(true)" title="Reload settings and evict stale local state">
-          <i class="bi bi-arrow-clockwise" style="font-size: 15px; vertical-align: middle;"></i> Sync Data
+      <div>
+        <button class="btn btn-outline-secondary btn-sm hud-sync-btn" (click)="loadAllControlCenterData(true)" title="Reload telemetry metrics" style="font-size: 12px; padding: 4px 10px; border-radius: 6px;">
+          <i class="bi bi-arrow-clockwise" style="font-size: 13px; vertical-align: middle;"></i> Sync Telemetry
         </button>
       </div>
     </div>
@@ -1829,6 +1860,15 @@
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
                           <span>Revoke</span>
                         </button>
+                        <button
+                          type="button"
+                          class="btn btn-danger-subtle btn-xs"
+                          (click)="deleteApiKey(k)"
+                          title="Permanently remove API key"
+                        >
+                          <i class="bi bi-trash" style="font-size: 11px;"></i>
+                          <span>Delete</span>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -2457,7 +2497,7 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
               </div>
               <h4 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 700; color: var(--text-primary, #0f172a);">Subsystem & Domain Operations</h4>
               <p style="margin: 0 0 14px 0; font-size: 12px; color: var(--text-muted, #64748b); line-height: 1.4;">
-                Engineering control for MySQL InnoDB, HikariCP pools, Nginx gateways, and Spring Boot APM actuators.
+                Engineering control for PostgreSQL 16, HikariCP pools, Nginx gateways, and Spring Boot APM actuators.
               </p>
               <a href="http://localhost:3000/d/l2_subsystem_control/fd01c25" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
                 <i class="bi bi-box-arrow-up-right" style="font-size: 15px;"></i> Launch L2 Control
@@ -2609,11 +2649,11 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
             <span class="health-pill-meta">Spring Boot 3</span>
           </div>
 
-          <!-- MySQL Database -->
+          <!-- PostgreSQL Database -->
           <div class="health-pill-card">
             <div class="health-pill-indicator" [ngClass]="systemHealth?.db === 'HEALTHY' ? 'indicator-healthy' : 'indicator-danger'"></div>
             <div class="health-pill-body">
-              <span class="health-pill-title">MySQL Database</span>
+              <span class="health-pill-title">PostgreSQL Database</span>
               <span class="health-pill-status" [ngClass]="systemHealth?.db === 'HEALTHY' ? 'text-healthy' : 'text-danger'">
                 {{ systemHealth?.db === 'HEALTHY' ? 'HEALTHY' : 'DEGRADED' }}
               </span>
@@ -2850,7 +2890,7 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
                 </div>
                 <div>
                   <h3 class="panel-title">Database Health &amp; Retention Policy</h3>
-                  <p class="panel-subtitle">MySQL 8.0 InnoDB connection pool parameters and audit compliance archiving.</p>
+                  <p class="panel-subtitle">PostgreSQL 16 connection pool parameters and audit compliance archiving.</p>
                 </div>
               </div>
             </div>
@@ -2859,17 +2899,17 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
             <div class="db-info-grid">
               <div class="db-info-card">
                 <span class="db-info-label">Database Engine</span>
-                <strong class="db-info-val">MySQL 8.0 InnoDB</strong>
-                <span class="db-info-sub">ACID Compliant / UTF8MB4</span>
+                <strong class="db-info-val">PostgreSQL 16 Enterprise</strong>
+                <span class="db-info-sub">ACID Compliant / UTF8</span>
               </div>
               <div class="db-info-card">
                 <span class="db-info-label">Connection Pool</span>
-                <strong class="db-info-val">HikariCP (10 Max)</strong>
+                <strong class="db-info-val">HikariCP (8 Max)</strong>
                 <span class="db-info-sub">Leak Detection: 30000ms</span>
               </div>
               <div class="db-info-card">
                 <span class="db-info-label">Active Database</span>
-                <strong class="db-info-val mono-code">futane_erp</strong>
+                <strong class="db-info-val mono-code">futane_agro_db</strong>
                 <span class="db-info-sub">Master Manufacturing Schema</span>
               </div>
               <div class="db-info-card">
@@ -2925,7 +2965,7 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
               <div>
                 <h3 class="panel-title">Database Backups &amp; Disaster Recovery Archives</h3>
                 <p class="panel-subtitle">
-                  Point-in-time MySQL database dumps, enterprise snapshots, and disaster recovery restore operations.
+                  Point-in-time PostgreSQL database dumps, enterprise snapshots, and disaster recovery restore operations.
                 </p>
               </div>
             </div>
@@ -2976,7 +3016,7 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
                 class="btn-action-compact btn-primary-compact" 
                 (click)="triggerDatabaseBackup()" 
                 [disabled]="isTriggeringBackup"
-                title="Create immediate MySQL database dump">
+                title="Create immediate PostgreSQL database backup">
                 <i class="bi bi-plus-lg" [class.spin-animate]="isTriggeringBackup"></i>
                 <span>{{ isTriggeringBackup ? 'Backing Up...' : 'Create Backup' }}</span>
               </button>
@@ -3016,7 +3056,7 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
                   </td>
                   <td>
                     <span class="format-badge">
-                      <i class="bi bi-filetype-sql"></i> MySQL Dump (.sql)
+                      <i class="bi bi-filetype-sql"></i> PostgreSQL Dump (.sql / .dump)
                     </span>
                   </td>
                   <td style="text-align: right;">
@@ -3389,7 +3429,7 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
                           title="Deactivate department"
                           aria-label="Deactivate department"
                         >
-                          <i class="bi bi-trash"></i>
+                          <i class="bi bi-slash-circle"></i>
                           <span>Deactivate</span>
                         </button>
                         <button 
@@ -3402,6 +3442,16 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
                         >
                           <i class="bi bi-check-lg"></i>
                           <span>Activate</span>
+                        </button>
+                        <button 
+                          type="button" 
+                          class="btn btn-danger-subtle btn-xs dept-action-btn dept-btn-danger" 
+                          (click)="deleteTeam(t)" 
+                          title="Permanently remove department"
+                          aria-label="Delete department"
+                        >
+                          <i class="bi bi-trash"></i>
+                          <span>Delete</span>
                         </button>
                       </div>
                     </td>
@@ -4729,12 +4779,19 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
                         <button type="button" class="btn btn-action-subtle btn-xs" (click)="openChangeRoleModal(u)" title="Change assigned role" style="padding: 4px 7px; border-radius: 6px;">
                           <i class="bi bi-person-badge" style="font-size: 13px; color: #7c3aed;"></i>
                         </button>
+                        <!-- Delete User -->
+                        <button type="button" class="btn btn-action-subtle btn-xs text-danger" *ngIf="u.username !== 'SUPER_ADMIN'" (click)="deleteUser(u)" title="Delete user account" style="padding: 4px 7px; border-radius: 6px;">
+                          <i class="bi bi-trash" style="font-size: 13px; color: #dc2626;"></i>
+                        </button>
                         <!-- Kebab Dropdown -->
                         <div class="kebab-menu-wrapper" style="position: relative; display: inline-block;">
                           <button type="button" class="btn-kebab-trigger" (click)="toggleUserKebab(u, $event)" title="More security actions" style="background: none; border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 6px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center;">
                             <i class="bi bi-three-dots-vertical" style="font-size: 14px;"></i>
                           </button>
                           <div class="kebab-dropdown-menu glass-dropdown" [class.kebab-dropup]="i >= filteredAdminUsers.length - 2 && filteredAdminUsers.length > 3" *ngIf="openKebabUserId === u.username" (click)="$event.stopPropagation()">
+                            <button type="button" class="kebab-item" (click)="openEditUserModal(u)" style="width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: none; border: none; font-size: 12px; color: var(--text-primary); cursor: pointer; text-align: left;">
+                              <i class="bi bi-pencil" style="font-size: 15px; color: #0284c7;"></i> Edit Profile
+                            </button>
                             <button type="button" class="kebab-item" (click)="forceResetPassword(u)" style="width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: none; border: none; font-size: 12px; color: var(--text-primary); cursor: pointer; text-align: left;">
                               <i class="bi bi-key" style="font-size: 15px; color: #dc2626;"></i> Reset Password
                             </button>
@@ -4745,6 +4802,9 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
                               <i [class]="u.accountLocked ? 'bi bi-unlock' : 'bi bi-slash-circle'" style="font-size: 15px;"></i> {{ u.accountLocked ? 'Unlock Account' : 'Deactivate User' }}
                             </button>
                             <div style="border-top: 1px solid var(--border-color); margin: 4px 0;"></div>
+                            <button type="button" class="kebab-item text-danger" *ngIf="u.username !== 'SUPER_ADMIN'" (click)="deleteUser(u)" style="width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: none; border: none; font-size: 12px; color: #dc2626; cursor: pointer; text-align: left;">
+                              <i class="bi bi-trash" style="font-size: 15px; color: #dc2626;"></i> Delete User Account
+                            </button>
                             <button type="button" class="kebab-item" (click)="viewUserAudit(u)" style="width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: none; border: none; font-size: 12px; color: var(--text-primary); cursor: pointer; text-align: left;">
                               <i class="bi bi-clock-history" style="font-size: 15px; color: var(--text-secondary);"></i> View Audit History
                             </button>
@@ -5767,6 +5827,67 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
         <!-- Two-Column Operational Security Workspace -->
         <div class="sec-workspace-grid">
 
+          <!-- Full Width: Multi-Factor Authentication (Firebase Phone Auth) -->
+          <div class="sec-card mb-3" style="grid-column: 1 / -1;">
+            <div class="sec-card-header">
+              <div class="sec-card-header-left">
+                <div class="sec-card-icon" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
+                  <i class="bi bi-shield-check"></i>
+                </div>
+                <div>
+                  <div class="d-flex align-items-center gap-2">
+                    <h4 class="sec-card-title">Two-Factor Authentication (Firebase Phone Auth)</h4>
+                    <span class="sec-pill-tag" [ngClass]="mfaStatus?.mfaEnabled ? 'sec-pill-success' : 'sec-pill-warning'">
+                      {{ mfaStatus?.mfaEnabled ? 'ACTIVE &amp; PROTECTED' : 'DISABLED' }}
+                    </span>
+                  </div>
+                  <p class="sec-card-desc">Protect your account with SMS OTP verification via Firebase Auth and emergency single-use backup recovery codes.</p>
+                </div>
+              </div>
+              <div class="header-actions">
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="loadMfaStatus()">
+                  <i class="bi bi-arrow-clockwise me-1"></i> Check Status
+                </button>
+              </div>
+            </div>
+
+            <div class="sec-card-body">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-3 bg-light rounded-3">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="fs-2 text-success" *ngIf="mfaStatus?.mfaEnabled">
+                    <i class="bi bi-phone-vibrate"></i>
+                  </div>
+                  <div class="fs-2 text-secondary" *ngIf="!mfaStatus?.mfaEnabled">
+                    <i class="bi bi-shield-slash"></i>
+                  </div>
+                  <div>
+                    <div class="fw-bold fs-6">
+                      {{ mfaStatus?.mfaEnabled ? 'Registered Phone: ' + (mfaStatus?.maskedPhone || 'Active') : 'MFA is currently disabled for this account' }}
+                    </div>
+                    <div class="text-muted small" *ngIf="mfaStatus?.mfaEnabled">
+                      Remaining Emergency Backup Codes: <strong>{{ mfaStatus?.remainingRecoveryCodes || 0 }}</strong>
+                    </div>
+                    <div class="text-muted small" *ngIf="!mfaStatus?.mfaEnabled">
+                      Enabling MFA requires SMS verification on every login attempt.
+                    </div>
+                  </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                  <button *ngIf="!mfaStatus?.mfaEnabled" type="button" class="btn btn-success btn-sm px-3" (click)="openMfaEnrollModal()">
+                    <i class="bi bi-shield-plus me-1"></i> Enable Phone 2FA
+                  </button>
+                  <button *ngIf="mfaStatus?.mfaEnabled" type="button" class="btn btn-outline-primary btn-sm" (click)="regenerateMfaRecoveryCodes()">
+                    <i class="bi bi-key me-1"></i> New Backup Codes
+                  </button>
+                  <button *ngIf="mfaStatus?.mfaEnabled" type="button" class="btn btn-outline-danger btn-sm" (click)="openMfaDisableModal()">
+                    <i class="bi bi-shield-x me-1"></i> Disable 2FA
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Left Column: Master Credential Rotation -->
           <div class="sec-card">
             <div class="sec-card-header">
@@ -6072,6 +6193,126 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
               {{ changingPassword ? 'Updating Password...' : 'Confirm & Rotate Password' }}
             </button>
           </div>
+      <!-- MFA Phone Enrollment Modal -->
+      <div class="modal-backdrop sec-modal-backdrop" *ngIf="showMfaEnrollModal" (click)="closeMfaEnrollModal()">
+        <div class="modal-content sec-confirm-modal" (click)="$event.stopPropagation()" style="max-width: 540px;">
+          <div class="modal-header sec-confirm-header">
+            <div class="modal-title-group">
+              <div class="modal-icon-shield" style="background: rgba(16, 185, 129, 0.12); color: #10B981;">
+                <i class="bi bi-phone"></i>
+              </div>
+              <div>
+                <h4 class="sec-confirm-modal-title">Enable Two-Factor Authentication</h4>
+                <span class="modal-subtitle">Firebase Phone Auth SMS Verification</span>
+              </div>
+            </div>
+            <button type="button" class="btn-close" (click)="closeMfaEnrollModal()" aria-label="Close"></button>
+          </div>
+
+          <div class="modal-body sec-confirm-body">
+            <!-- Step 1: Phone input -->
+            <div *ngIf="mfaEnrollStep === 'phone'">
+              <div id="mfa-enroll-recaptcha"></div>
+              <p class="text-muted small mb-3">
+                Enter your mobile phone number with country code (e.g., <code>+919876543210</code>). You will receive a 6-digit SMS verification code.
+              </p>
+              <div class="form-group mb-3">
+                <label class="form-label fw-bold">Mobile Phone Number (E.164)</label>
+                <input type="tel" class="form-control" [(ngModel)]="mfaEnrollPhone" placeholder="+919876543210" [disabled]="mfaActionLoading">
+              </div>
+              <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary" (click)="closeMfaEnrollModal()">Cancel</button>
+                <button type="button" class="btn btn-success" (click)="sendMfaEnrollSms()" [disabled]="mfaActionLoading || !mfaEnrollPhone">
+                  <span *ngIf="mfaActionLoading" class="spinner-border spinner-border-sm me-1"></span>
+                  Send Verification SMS
+                </button>
+              </div>
+            </div>
+
+            <!-- Step 2: OTP verification -->
+            <div *ngIf="mfaEnrollStep === 'otp'">
+              <p class="text-muted small mb-3">
+                Enter the 6-digit verification code sent to <strong>{{ mfaEnrollPhone }}</strong>:
+              </p>
+              <div class="form-group mb-3">
+                <label class="form-label fw-bold">SMS Verification Code</label>
+                <input type="text" class="form-control text-center fs-4 fw-bold letter-spacing-2" [(ngModel)]="mfaEnrollOtp" placeholder="123456" maxlength="6" [disabled]="mfaActionLoading">
+              </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <button type="button" class="btn btn-link text-decoration-none p-0" (click)="sendMfaEnrollSms()" [disabled]="mfaActionLoading">
+                  Resend SMS
+                </button>
+                <div class="d-flex gap-2">
+                  <button type="button" class="btn btn-secondary" (click)="mfaEnrollStep = 'phone'">Back</button>
+                  <button type="button" class="btn btn-success" (click)="verifyMfaEnrollOtp()" [disabled]="mfaActionLoading || mfaEnrollOtp.length < 6">
+                    <span *ngIf="mfaActionLoading" class="spinner-border spinner-border-sm me-1"></span>
+                    Verify &amp; Activate
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3: Backup recovery codes -->
+            <div *ngIf="mfaEnrollStep === 'codes'">
+              <div class="alert alert-success d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-check-circle-fill fs-5"></i>
+                <div>Two-Factor Authentication is now active!</div>
+              </div>
+              <div class="alert alert-warning mb-3">
+                <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Save Your Emergency Recovery Codes</strong>
+                <p class="small mb-0 mt-1">If you lose access to your phone, these single-use codes are the only way to sign in. Store them in a secure password manager.</p>
+              </div>
+              <div class="p-3 bg-light rounded-3 font-monospace small mb-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div *ngFor="let code of newRecoveryCodes" class="p-1 px-2 bg-white rounded border fw-bold text-center">
+                  {{ code }}
+                </div>
+              </div>
+              <div class="d-flex justify-content-end">
+                <button type="button" class="btn btn-primary" (click)="closeMfaEnrollModal()">
+                  I Have Saved My Recovery Codes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MFA Disable Modal -->
+      <div class="modal-backdrop sec-modal-backdrop" *ngIf="showMfaDisableModal" (click)="showMfaDisableModal = false">
+        <div class="modal-content sec-confirm-modal" (click)="$event.stopPropagation()" style="max-width: 480px;">
+          <div class="modal-header sec-confirm-header">
+            <div class="modal-title-group">
+              <div class="modal-icon-shield" style="background: rgba(239, 68, 68, 0.12); color: #EF4444;">
+                <i class="bi bi-shield-x"></i>
+              </div>
+              <div>
+                <h4 class="sec-confirm-modal-title">Disable Two-Factor Authentication</h4>
+                <span class="modal-subtitle">Security Downgrade Confirmation</span>
+              </div>
+            </div>
+            <button type="button" class="btn-close" (click)="showMfaDisableModal = false" aria-label="Close"></button>
+          </div>
+
+          <div class="modal-body sec-confirm-body">
+            <p class="text-danger small mb-3">
+              <i class="bi bi-exclamation-triangle-fill me-1"></i>
+              Disabling MFA removes the second layer of security from your account. Your account will only be protected by your password.
+            </p>
+            <div class="form-group mb-3">
+              <label class="form-label fw-bold">Confirm Your Master Password</label>
+              <input type="password" class="form-control" [(ngModel)]="mfaDisablePassword" placeholder="Enter current password" [disabled]="mfaActionLoading">
+            </div>
+          </div>
+
+          <div class="modal-footer sec-confirm-footer">
+            <button type="button" class="btn btn-secondary" (click)="showMfaDisableModal = false" [disabled]="mfaActionLoading">
+              Cancel
+            </button>
+            <button type="button" class="btn btn-danger" (click)="confirmDisableMfa()" [disabled]="mfaActionLoading || !mfaDisablePassword">
+              <span *ngIf="mfaActionLoading" class="spinner-border spinner-border-sm me-1"></span>
+              Disable 2FA
+            </button>
+          </div>
         </div>
       </div>
   </div>
@@ -6326,7 +6567,7 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
         <label style="font-size: 13px; font-weight: 600; color: var(--text-primary, #0f172a); margin-bottom: 6px; display: block;">
           Event Trigger Type <span style="color: #dc2626;">*</span>
         </label>
-        <select [(ngModel)]="newWebhookForm.eventType" class="form-control" style="height: 38px; font-size: 13px;">
+        <select [(ngModel)]="newWebhookForm.eventType" style="width: 100%; height: 38px; padding: 0 12px; border: 1px solid var(--border-color, #cbd5e1); border-radius: 8px; font-size: 13px; background: #ffffff; color: #0f172a; outline: none;">
           <option value="INVOICE_CREATED">INVOICE_CREATED (When new GST tax invoice is approved)</option>
           <option value="PAYMENT_RECEIVED">PAYMENT_RECEIVED (Customer settlement recorded in ledger)</option>
           <option value="PRODUCTION_BATCH_COMPLETED">PRODUCTION_BATCH_COMPLETED (Shift crate output logged)</option>

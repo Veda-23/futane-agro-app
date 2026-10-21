@@ -1,8 +1,8 @@
-import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, HostListener, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
-import * as XLSX from 'xlsx';
+import { forkJoin, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { ApiService } from '../../../api.service';
 import { NotificationService } from '../../../services/notification.service';
 import { TranslatePipe } from '../../../translate.service';
@@ -28,9 +28,10 @@ import { SearchableSelectComponent } from '../../shared/searchable-select/search
     SearchableSelectComponent
   ],
   templateUrl: './transports.component.html',
-  styleUrls: ['./transports.component.css']
+  styleUrls: ['./transports.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TransportsComponent implements OnInit {
+export class TransportsComponent implements OnInit, OnDestroy {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'transports';
   @Input() loggedInUser: any = null;
@@ -60,7 +61,10 @@ export class TransportsComponent implements OnInit {
   };
 
   // Filter & Search State
+  searchInputText: string = '';
   filterSearchQuery: string = '';
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
   filterStatus: string = 'ALL'; // 'ALL', 'SETTLED', 'PENDING'
   filterDriver: string = 'ALL';
   filterMonth: string = 'ALL';
@@ -103,7 +107,8 @@ export class TransportsComponent implements OnInit {
 
   constructor(
     private apiService: ApiService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    public cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -111,7 +116,35 @@ export class TransportsComponent implements OnInit {
       localStorage.removeItem('cols_width_transports_table');
     } catch (_) {}
     this.initColumns();
+
+    this.searchSubject.pipe(
+      debounceTime(150),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(query => {
+      this.filterSearchQuery = query;
+      this.currentPage = 1;
+      this.cdr.markForCheck();
+    });
+
     this.loadData();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onSearchInput(value: string) {
+    this.searchInputText = value;
+    this.searchSubject.next(value);
+  }
+
+  clearSearch() {
+    this.searchInputText = '';
+    this.filterSearchQuery = '';
+    this.currentPage = 1;
+    this.cdr.markForCheck();
   }
 
   onPageSizeChange(newSize: number) {
@@ -159,12 +192,14 @@ export class TransportsComponent implements OnInit {
         if (forceRefresh) {
           this.notificationService.success('Ledger Refreshed', 'Logistics haulage data updated from server.');
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.isLoading = false;
         this.isRefreshing = false;
         this.hasError = true;
         this.notificationService.error('Load Failed', 'Could not load transport and logistics data.');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -239,33 +274,129 @@ export class TransportsComponent implements OnInit {
     }
   }
 
+  private _cachedFilterKey = '';
+  private _cachedFilteredTransports: any[] = [];
+  private _cachedTotalRent = 0;
+  private _cachedTotalAdvance = 0;
+  private _cachedTotalBalance = 0;
+  private _cachedSettledCount = 0;
+  private _cachedPendingCount = 0;
+  private _countsCalculatedForLength = -1;
+
+  private _ensureFilteredCache(): void {
+    const key = `${this.transportsList?.length || 0}_${this.filterStatus}_${this.filterDriver}_${this.filterMonth}_${this.filterYear}_${this.filterSearchQuery || ''}`;
+    if (this._cachedFilterKey === key) return;
+
+    let result = [...(this.transportsList || [])];
+
+    if (this.filterStatus === 'SETTLED') {
+      result = result.filter((t: any) => ((Number(t.rent) || 0) - (Number(t.advance) || 0)) <= 0);
+    } else if (this.filterStatus === 'PENDING') {
+      result = result.filter((t: any) => ((Number(t.rent) || 0) - (Number(t.advance) || 0)) > 0);
+    }
+
+    if (this.filterDriver !== 'ALL') {
+      result = result.filter((t: any) => String(t.driver?.id || t.driverId) === String(this.filterDriver));
+    }
+
+    if (this.filterMonth !== 'ALL') {
+      const monthIdx = this.allMonths.indexOf(this.filterMonth);
+      if (monthIdx >= 0) {
+        result = result.filter((t: any) => {
+          if (!t.date) return false;
+          return new Date(t.date).getMonth() === monthIdx;
+        });
+      }
+    }
+
+    if (this.filterYear !== 'ALL') {
+      result = result.filter((t: any) => {
+        if (!t.date) return false;
+        return String(new Date(t.date).getFullYear()) === String(this.filterYear);
+      });
+    }
+
+    if (this.filterSearchQuery && this.filterSearchQuery.trim()) {
+      const q = this.filterSearchQuery.trim().toLowerCase();
+      result = result.filter((t: any) => {
+        const truck = (t.truckNumber || '').toLowerCase();
+        const driverName = (t.driver?.driverName || '').toLowerCase();
+        const driverMobile = (t.driver?.mobile || '').toLowerCase();
+        const date = (t.date || '').toLowerCase();
+        const rent = String(t.rent || '');
+        const advance = String(t.advance || '');
+        const remaining = String(t.remaining || '');
+
+        return truck.includes(q) ||
+               driverName.includes(q) ||
+               driverMobile.includes(q) ||
+               date.includes(q) ||
+               rent.includes(q) ||
+               advance.includes(q) ||
+               remaining.includes(q);
+      });
+    }
+
+    let totRent = 0;
+    let totAdv = 0;
+    let totBal = 0;
+    for (let i = 0; i < result.length; i++) {
+      const curr = result[i];
+      const r = Number(curr.rent) || 0;
+      const a = Number(curr.advance) || 0;
+      totRent += r;
+      totAdv += a;
+      const rem = Number(curr.remaining ?? (r - a));
+      if (rem > 0) totBal += rem;
+    }
+
+    this._cachedFilteredTransports = result;
+    this._cachedTotalRent = totRent;
+    this._cachedTotalAdvance = totAdv;
+    this._cachedTotalBalance = totBal;
+    this._cachedFilterKey = key;
+  }
+
+  private _ensureCountsCache(): void {
+    const len = this.transportsList?.length || 0;
+    if (this._countsCalculatedForLength === len) return;
+
+    let settled = 0;
+    let pending = 0;
+    for (let i = 0; i < len; i++) {
+      const t = this.transportsList[i];
+      const rem = (Number(t.rent) || 0) - (Number(t.advance) || 0);
+      if (rem <= 0) settled++;
+      else pending++;
+    }
+    this._cachedSettledCount = settled;
+    this._cachedPendingCount = pending;
+    this._countsCalculatedForLength = len;
+  }
+
   get totalFilteredRent(): number {
-    return (this.filteredTransports || []).reduce((acc: number, curr: any) => acc + (Number(curr.rent) || 0), 0);
+    this._ensureFilteredCache();
+    return this._cachedTotalRent;
   }
 
   get totalFilteredAdvance(): number {
-    return (this.filteredTransports || []).reduce((acc: number, curr: any) => acc + (Number(curr.advance) || 0), 0);
+    this._ensureFilteredCache();
+    return this._cachedTotalAdvance;
   }
 
   get totalFilteredBalance(): number {
-    return (this.filteredTransports || []).reduce((acc: number, curr: any) => {
-      const rem = Number(curr.remaining ?? ((Number(curr.rent) || 0) - (Number(curr.advance) || 0)));
-      return acc + (rem > 0 ? rem : 0);
-    }, 0);
+    this._ensureFilteredCache();
+    return this._cachedTotalBalance;
   }
 
   get settledCount(): number {
-    return (this.transportsList || []).filter((t: any) => {
-      const rem = (Number(t.rent) || 0) - (Number(t.advance) || 0);
-      return rem <= 0;
-    }).length;
+    this._ensureCountsCache();
+    return this._cachedSettledCount;
   }
 
   get pendingCount(): number {
-    return (this.transportsList || []).filter((t: any) => {
-      const rem = (Number(t.rent) || 0) - (Number(t.advance) || 0);
-      return rem > 0;
-    }).length;
+    this._ensureCountsCache();
+    return this._cachedPendingCount;
   }
 
   get availableYears(): number[] {
@@ -315,64 +446,10 @@ export class TransportsComponent implements OnInit {
     return 0;
   }
 
-  // Filter & Search Logic
+  // Filter & Search Logic (0ms instantaneous memoized cache)
   get filteredTransports(): any[] {
-    let result = [...(this.transportsList || [])];
-
-    // Status Filter
-    if (this.filterStatus === 'SETTLED') {
-      result = result.filter((t: any) => ((Number(t.rent) || 0) - (Number(t.advance) || 0)) <= 0);
-    } else if (this.filterStatus === 'PENDING') {
-      result = result.filter((t: any) => ((Number(t.rent) || 0) - (Number(t.advance) || 0)) > 0);
-    }
-
-    // Driver Filter
-    if (this.filterDriver !== 'ALL') {
-      result = result.filter((t: any) => String(t.driver?.id || t.driverId) === String(this.filterDriver));
-    }
-
-    // Month Filter
-    if (this.filterMonth !== 'ALL') {
-      const monthIdx = this.allMonths.indexOf(this.filterMonth);
-      if (monthIdx >= 0) {
-        result = result.filter((t: any) => {
-          if (!t.date) return false;
-          return new Date(t.date).getMonth() === monthIdx;
-        });
-      }
-    }
-
-    // Year Filter
-    if (this.filterYear !== 'ALL') {
-      result = result.filter((t: any) => {
-        if (!t.date) return false;
-        return String(new Date(t.date).getFullYear()) === String(this.filterYear);
-      });
-    }
-
-    // Text Search
-    if (this.filterSearchQuery && this.filterSearchQuery.trim()) {
-      const q = this.filterSearchQuery.trim().toLowerCase();
-      result = result.filter((t: any) => {
-        const truck = (t.truckNumber || '').toLowerCase();
-        const driverName = (t.driver?.driverName || '').toLowerCase();
-        const driverMobile = (t.driver?.mobile || '').toLowerCase();
-        const date = (t.date || '').toLowerCase();
-        const rent = String(t.rent || '');
-        const advance = String(t.advance || '');
-        const remaining = String(t.remaining || '');
-
-        return truck.includes(q) ||
-               driverName.includes(q) ||
-               driverMobile.includes(q) ||
-               date.includes(q) ||
-               rent.includes(q) ||
-               advance.includes(q) ||
-               remaining.includes(q);
-      });
-    }
-
-    return result;
+    this._ensureFilteredCache();
+    return this._cachedFilteredTransports;
   }
 
   hasActiveFilters(): boolean {
@@ -386,12 +463,14 @@ export class TransportsComponent implements OnInit {
   }
 
   resetFilters() {
+    this.searchInputText = '';
     this.filterSearchQuery = '';
     this.filterStatus = 'ALL';
     this.filterDriver = 'ALL';
     this.filterMonth = 'ALL';
     this.filterYear = 'ALL';
     this.currentPage = 1;
+    this.cdr.markForCheck();
   }
 
   setDensity(density: 'compact' | 'normal' | 'spacious') {
@@ -605,8 +684,16 @@ export class TransportsComponent implements OnInit {
     }
   }
 
+  private _transportsCache: any[] = [];
+  private _transportsCacheKey = '';
+
   getProcessedList(list: any[], table: string): any[] {
-    if (!list) return [];
+    if (!list || list.length === 0) return [];
+
+    const cacheKey = `${table}_${list.length}_${this.currentPage}_${this.pageSize}_${this.sortField}_${this.sortAsc}`;
+    if (this._transportsCacheKey === cacheKey) {
+      return this._transportsCache;
+    }
 
     const sorted = [...list].sort((a: any, b: any) => {
       const valA = this.resolvePath(a, this.sortField);
@@ -619,7 +706,11 @@ export class TransportsComponent implements OnInit {
 
     this.tableFilteredCounts[table] = sorted.length;
     const start = (this.currentPage - 1) * this.pageSize;
-    return sorted.slice(start, start + this.pageSize);
+    const paginated = sorted.slice(start, start + this.pageSize);
+
+    this._transportsCacheKey = cacheKey;
+    this._transportsCache = paginated;
+    return paginated;
   }
 
   private resolvePath(obj: any, path: string): any {
@@ -675,7 +766,7 @@ export class TransportsComponent implements OnInit {
     this.notificationService.success('Export Ready', 'Transport records exported to CSV successfully.');
   }
 
-  exportExcel() {
+  async exportExcel() {
     const dataToExport = this.filteredTransports;
     if (!dataToExport || dataToExport.length === 0) {
       this.notificationService.warning('Export Empty', 'No transport records to export.');
@@ -701,8 +792,9 @@ export class TransportsComponent implements OnInit {
       };
     });
 
-    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(rows);
-    const workbook: XLSX.WorkBook = { Sheets: { 'Transports': worksheet }, SheetNames: ['Transports'] };
+    const XLSX = await import('xlsx');
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = { Sheets: { 'Transports': worksheet }, SheetNames: ['Transports'] };
     const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
     const blob: Blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const link = document.createElement('a');

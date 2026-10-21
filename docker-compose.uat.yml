@@ -1,72 +1,69 @@
 version: '3.8'
 
 services:
-  # MySQL Database Service for UAT
-  mysql-uat:
-    image: mysql:8.0
-    container_name: futane_agro_mysql_uat
+  postgres-uat:
+    image: postgres:16-alpine
+    container_name: futane_postgres_uat
     ports:
-      - "127.0.0.1:3307:3306"
+      - "127.0.0.1:5432:5432"
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-Vedant}
-      MYSQL_DATABASE: futane_agro_uat
+      POSTGRES_DB: futane_erp_uat
+      POSTGRES_USER: futane_app_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-FutaneAgro#Secure2026!App}
     volumes:
-      - mysql_uat_data:/var/lib/mysql
+      - postgres_uat_data:/var/lib/postgresql/data
     restart: always
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-Vedant}"]
+      test: ["CMD-SHELL", "pg_isready -U futane_app_user -d futane_erp_uat"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - uat-network
 
-  # Spring Boot Backend Service for UAT
   backend-uat:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: futane_agro_backend_uat
+    container_name: futane_backend_uat
     ports:
-      - "8082:8081"
-    entrypoint: ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar", "--spring.profiles.active=uat", "--server.port=8081", "--server.http2.enabled=false"]
+      - "8081:8081"
     environment:
       - SPRING_PROFILES_ACTIVE=uat
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-uat:3306/futane_agro_uat?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-Vedant}
-      - MAIL_USERNAME=${MAIL_USERNAME:-vedantmehare25@gmail.com}
-      - MAIL_PASSWORD=${MAIL_PASSWORD:-vsbtirkwuqviuicj}
-      - SERVER_HTTP2_ENABLED=false
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-uat:5432/futane_erp_uat
+      - SPRING_DATASOURCE_USERNAME=futane_app_user
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-FutaneAgro#Secure2026!App}
+      - SERVER_PORT=8081
     depends_on:
-      mysql-uat:
+      postgres-uat:
         condition: service_healthy
     volumes:
       - backend_uat_uploads:/app/uploads
+      - backend_uat_logs:/app/logs
     restart: always
     networks:
       - uat-network
 
-  # Angular Frontend Service for UAT
   frontend-uat:
     build:
       context: ./frontend
       dockerfile: Dockerfile.uat
       args:
         - BUILD_CONFIG=uat
-    container_name: futane_agro_frontend_uat
+    container_name: futane_frontend_uat
     ports:
-      - "8081:80"
+      - "4300:80"
     depends_on:
       - backend-uat
     restart: always
     networks:
       - uat-network
 
-volumes:
-  mysql_uat_data:
-  backend_uat_uploads:
-
 networks:
   uat-network:
-    name: futane-uat-network
+    driver: bridge
+
+volumes:
+  postgres_uat_data:
+  backend_uat_uploads:
+  backend_uat_logs:

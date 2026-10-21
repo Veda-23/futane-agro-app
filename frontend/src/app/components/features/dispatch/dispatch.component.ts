@@ -224,6 +224,22 @@ export class DispatchComponent implements OnInit {
     return `DSP-${str.toUpperCase()}`;
   }
 
+  formatOrderId(id: any): string {
+    if (!id && id !== 0) return '—';
+    const str = String(id).trim();
+    if (/^\d+$/.test(str)) {
+      return `ORD-${str.padStart(4, '0')}`;
+    }
+    if (str.includes('-')) {
+      const parts = str.split('-');
+      return `ORD-${parts[0].toUpperCase()}`;
+    }
+    if (str.length > 8) {
+      return `ORD-${str.slice(0, 8).toUpperCase()}`;
+    }
+    return `ORD-${str.toUpperCase()}`;
+  }
+
 
   // Sales available to dispatch (not yet dispatched, or currently being edited)
   get availableSales(): any[] {
@@ -238,7 +254,7 @@ export class DispatchComponent implements OnInit {
   get selectableSales(): any[] {
     return this.availableSales.map(s => ({
       id: s.id,
-      label: `${s.party?.partyName || s.partyName || 'Customer #' + s.id} — ${s.crateType || 'Crates'}`,
+      label: `${s.party?.partyName || s.partyName || 'Customer ' + this.formatOrderId(s.id)} — ${s.crateType || 'Crates'}`,
       subLabel: `${s.date || s.saleDate || ''} • Qty: ${s.quantity || s.cratesCount || 0}`
     }));
   }
@@ -376,7 +392,7 @@ export class DispatchComponent implements OnInit {
     if (this.editingDispatchId) {
       this.apiService.updateDispatch(String(this.editingDispatchId), payload).subscribe({
         next: () => {
-          this.notificationService.success('Manifest Updated', `Dispatch manifest #${this.editingDispatchId} updated.`);
+          this.notificationService.success('Manifest Updated', `Dispatch manifest ${this.formatManifestId(this.editingDispatchId)} updated.`);
           this.logAudit(`Updated dispatch manifest ID: ${this.editingDispatchId}`);
           this.cancelEditDispatch();
           this.isFormOpen = false;
@@ -490,7 +506,7 @@ export class DispatchComponent implements OnInit {
       if (!this.dispatchForm.deliveryAddress && (matchedSale.party?.address || matchedSale.party?.partyAddress)) {
         this.dispatchForm.deliveryAddress = matchedSale.party.address || matchedSale.party.partyAddress;
       }
-      this.notificationService.success('QR Scanned', `Matched Sale Order #${matchedSale.id} (${matchedSale.crateType})`);
+      this.notificationService.success('QR Scanned', `Matched Sale Order ${this.formatOrderId(matchedSale.id)} (${matchedSale.crateType})`);
     } else {
       this.notificationService.info('QR Decoded', `Scanned Value: ${cleanCode}`);
     }

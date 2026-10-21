@@ -79,6 +79,13 @@ public class AuthController {
     @Autowired
     private com.futaneagro.security.RateLimitingService rateLimitingService;
 
+    @Autowired
+    private com.futaneagro.mfa.FirebaseMfaService firebaseMfaService;
+
+    public static void storeRefreshToken(String token, String username, LocalDateTime expiry) {
+        refreshTokenCache.put(token, new RefreshTokenDetails(username, expiry));
+    }
+
     private Map<String, Object> createErrorResponse(String error, String message, int status) {
         Map<String, Object> map = new HashMap<>();
         map.put("error", error);
@@ -144,6 +151,25 @@ public class AuthController {
             user.setAccountLocked(false);
             user.setLockTime(null);
             userRepository.save(user);
+
+            // ── Step 1 Complete: Check if MFA is required (Firebase Phone Auth / Extensible Factors) ──
+            if (firebaseMfaService.isMfaEnabledGlobally() && user.getMfaEnabled()) {
+                String factor = user.getMfaFactor() != null ? user.getMfaFactor() : "PHONE_FIREBASE";
+                String preAuthToken = jwtUtils.generatePreAuthToken(user.getId(), user.getUsername(), factor);
+                String phone = user.getMfaPhoneE164() != null ? user.getMfaPhoneE164() : user.getMobileNumber();
+                String maskedPhone = firebaseMfaService.maskPhone(phone);
+
+                Map<String, Object> mfaResponse = new HashMap<>();
+                mfaResponse.put("mfaRequired", true);
+                mfaResponse.put("status", "MFA_REQUIRED");
+                mfaResponse.put("factor", factor);
+                mfaResponse.put("preAuthToken", preAuthToken);
+                mfaResponse.put("maskedPhone", maskedPhone);
+                mfaResponse.put("username", user.getUsername());
+
+                securityAuditService.logMfaChallengeIssued(user.getUsername(), factor, request);
+                return ResponseEntity.ok(mfaResponse);
+            }
 
             // Generate cryptographically secure 6-digit OTP
             String otp = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));

@@ -14,7 +14,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "t_sal_sales")
+@Table(name = "t_sal_sales", indexes = {
+    @Index(name = "idx_sales_date", columnList = "date"),
+    @Index(name = "idx_sales_party", columnList = "party_id"),
+    @Index(name = "idx_sales_active_del", columnList = "is_active, is_deleted")
+})
 @Where(clause = "is_active = true AND is_deleted = false")
 @SQLDelete(sql = "UPDATE t_sal_sales SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
 @JsonIgnoreProperties(value = {"hibernateLazyInitializer", "handler"}, ignoreUnknown = true)

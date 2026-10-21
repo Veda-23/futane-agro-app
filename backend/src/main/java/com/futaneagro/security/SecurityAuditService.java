@@ -120,6 +120,42 @@ public class SecurityAuditService {
             "Sensitive data accessed: " + resource, resource);
     }
 
+    @Async
+    public void logMfaChallengeIssued(String username, String factor, HttpServletRequest request) {
+        persist(EventType.MFA_CHALLENGE_ISSUED, Severity.INFO, username, request,
+            "MFA challenge issued for factor: " + factor, null);
+    }
+
+    @Async
+    public void logMfaSuccess(String username, String factor, HttpServletRequest request) {
+        persist(EventType.MFA_VERIFY_SUCCESS, Severity.INFO, username, request,
+            "MFA verification successful via factor: " + factor, null);
+    }
+
+    @Async
+    public void logMfaFailed(String username, String factor, String reason, HttpServletRequest request) {
+        persist(EventType.MFA_VERIFY_FAILED, Severity.HIGH, username, request,
+            "MFA verification failed (" + factor + "): " + reason, null);
+    }
+
+    @Async
+    public void logMfaRecoveryCodeUsed(String username, HttpServletRequest request) {
+        persist(EventType.MFA_RECOVERY_CODE_USED, Severity.HIGH, username, request,
+            "Emergency single-use MFA recovery code consumed", null);
+    }
+
+    @Async
+    public void logMfaEnrolled(String username, String factor, HttpServletRequest request) {
+        persist(EventType.MFA_ENROLLED, Severity.MEDIUM, username, request,
+            "User enrolled into MFA factor: " + factor, null);
+    }
+
+    @Async
+    public void logMfaDisabled(String username, HttpServletRequest request) {
+        persist(EventType.MFA_DISABLED, Severity.HIGH, username, request,
+            "MFA was disabled for user", null);
+    }
+
     // ─── Summary (for dashboard) ──────────────────────────────────────────────
 
     public long countLoginFailuresLast24h() {

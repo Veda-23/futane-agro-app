@@ -8,7 +8,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "t_inv_inventory")
+@Table(name = "t_inv_inventory", indexes = {
+    @Index(name = "idx_inv_crate", columnList = "crate_type"),
+    @Index(name = "idx_inv_mat", columnList = "material_type")
+})
 @Where(clause = "is_active = true AND is_deleted = false")
 @SQLDelete(sql = "UPDATE t_inv_inventory SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
 public class Inventory extends BaseEntity {

@@ -306,13 +306,13 @@
       </div>
 
       <div class="queue-scroll-container">
-        <div *ngIf="getFilteredRecords().length === 0" class="queue-empty-box">
+        <div *ngIf="totalQueueCount === 0" class="queue-empty-box">
           <i class="bi bi-inbox empty-icon"></i>
           <p>No records match filter</p>
           <button class="btn btn-sm btn-outline" (click)="resetFilters()">Reset Filters</button>
         </div>
 
-        <div *ngFor="let item of getFilteredRecords()"
+        <div *ngFor="let item of visibleQueueRecords; trackBy: trackByRecordId"
              class="queue-record-card"
              [class.active-item]="isItemSelected(item)"
              (click)="selectRecordItem(item)">
@@ -331,6 +331,12 @@
               <i class="bi bi-calendar3 me-1"></i>{{ (getRecordDateString(item) || today) | date:'dd MMM yyyy' }}
             </span>
           </div>
+        </div>
+
+        <div *ngIf="totalQueueCount > visibleQueueRecords.length" class="text-center p-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary w-100" (click)="loadMoreQueueRecords()">
+            Load more ({{ totalQueueCount - visibleQueueRecords.length }} remaining)...
+          </button>
         </div>
       </div>
     </div>

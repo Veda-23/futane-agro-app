@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, HostListener, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../translate.service';
@@ -6,9 +6,8 @@ import { ApiService } from '../../../api.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import * as XLSX from 'xlsx';
+import { forkJoin, of, Subject } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 export interface RawMaterialItem {
   id?: string;
@@ -45,9 +44,10 @@ import { SearchableSelectComponent } from '../../shared/searchable-select/search
     SearchableSelectComponent
   ],
   templateUrl: './raw-materials.component.html',
-  styleUrls: ['./raw-materials.component.css']
+  styleUrls: ['./raw-materials.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class RawMaterialsComponent implements OnInit {
+export class RawMaterialsComponent implements OnInit, OnDestroy {
   @Input() currentLang: string = 'en';
   @Input() activeTab: string = 'raw-materials';
   @Input() loggedInUser: any = null;
@@ -71,7 +71,10 @@ export class RawMaterialsComponent implements OnInit {
   selectedSubtab: string = 'all';
 
   // Search & Filter
+  searchInputText: string = '';
   searchQuery: string = '';
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
   filterVendorId: string = '';
   filterCategory: string = '';
   filterWeightRange: string = '';
@@ -144,7 +147,8 @@ export class RawMaterialsComponent implements OnInit {
 
   constructor(
     private apiService: ApiService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    public cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -153,7 +157,35 @@ export class RawMaterialsComponent implements OnInit {
     } catch (e) {
       // ignore
     }
+
+    this.searchSubject.pipe(
+      debounceTime(150),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(query => {
+      this.searchQuery = query;
+      this.currentPage = 1;
+      this.cdr.markForCheck();
+    });
+
     this.loadData();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onSearchInput(value: string): void {
+    this.searchInputText = value;
+    this.searchSubject.next(value);
+  }
+
+  clearSearch(): void {
+    this.searchInputText = '';
+    this.searchQuery = '';
+    this.currentPage = 1;
+    this.cdr.markForCheck();
   }
 
   // Click outside to close dropdowns
@@ -213,11 +245,13 @@ export class RawMaterialsComponent implements OnInit {
         if (notify) {
           this.notificationService.success('Refreshed', `Loaded ${this.rawMaterialsList.length} procurement batches`);
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.isLoading = false;
         this.hasError = true;
         this.notificationService.error('Load Failed', 'Could not load polymer raw materials data.');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -254,22 +288,27 @@ export class RawMaterialsComponent implements OnInit {
     return vendorIds.size || this.vendors.length;
   }
 
-  // --- Category Classification ---
+  // --- Category Classification (Memoized) ---
+  private materialCategoryCache = new Map<string, { key: string; label: string; badgeClass: string; icon: string }>();
+
   getMaterialCategory(materialName: string): { key: string; label: string; badgeClass: string; icon: string } {
-    const name = (materialName || '').toLowerCase();
-    if (name.includes('virgin') || name.includes('hdpe grade') || name.includes('impact copolymer')) {
-      return { key: 'virgin', label: 'Virgin Polymer', badgeClass: 'cat-badge-virgin', icon: 'bi-shield-check' };
+    const key = (materialName || '').trim().toLowerCase();
+    const cached = this.materialCategoryCache.get(key);
+    if (cached) return cached;
+
+    let cat = { key: 'general', label: 'Polymer Resin', badgeClass: 'cat-badge-default', icon: 'bi-boxes' };
+    if (key.includes('virgin') || key.includes('hdpe grade') || key.includes('impact copolymer')) {
+      cat = { key: 'virgin', label: 'Virgin Polymer', badgeClass: 'cat-badge-virgin', icon: 'bi-shield-check' };
+    } else if (key.includes('recycled') || key.includes('compound') || key.includes('regrind')) {
+      cat = { key: 'recycled', label: 'Recycled Comp', badgeClass: 'cat-badge-recycled', icon: 'bi-recycle' };
+    } else if (key.includes('masterbatch') || key.includes('pigment') || key.includes('colour') || key.includes('uv') || key.includes('filler')) {
+      cat = { key: 'masterbatch', label: 'Masterbatch', badgeClass: 'cat-badge-additive', icon: 'bi-palette-fill' };
+    } else if (key.includes('carton') || key.includes('sheet') || key.includes('box') || key.includes('packaging')) {
+      cat = { key: 'packaging', label: 'Packaging', badgeClass: 'cat-badge-packaging', icon: 'bi-box-seam' };
     }
-    if (name.includes('recycled') || name.includes('compound') || name.includes('regrind')) {
-      return { key: 'recycled', label: 'Recycled Comp', badgeClass: 'cat-badge-recycled', icon: 'bi-recycle' };
-    }
-    if (name.includes('masterbatch') || name.includes('pigment') || name.includes('colour') || name.includes('uv') || name.includes('filler')) {
-      return { key: 'masterbatch', label: 'Masterbatch', badgeClass: 'cat-badge-additive', icon: 'bi-palette-fill' };
-    }
-    if (name.includes('carton') || name.includes('sheet') || name.includes('box') || name.includes('packaging')) {
-      return { key: 'packaging', label: 'Packaging', badgeClass: 'cat-badge-packaging', icon: 'bi-box-seam' };
-    }
-    return { key: 'general', label: 'Polymer Resin', badgeClass: 'cat-badge-default', icon: 'bi-boxes' };
+
+    this.materialCategoryCache.set(key, cat);
+    return cat;
   }
 
   // --- Subtabs Filter ---
@@ -286,8 +325,20 @@ export class RawMaterialsComponent implements OnInit {
     return this.rawMaterialsList.filter(rm => this.getMaterialCategory(rm.materialName).key === tabKey).length;
   }
 
-  // --- Filtering & Sorting ---
+  // --- Filtering & Sorting (Memoized for 10,000+ Records) ---
+  private _cachedFilterKey: string = '';
+  private _cachedFilteredList: RawMaterialItem[] = [];
+  private _cachedPageKey: string = '';
+  private _cachedPaginatedList: RawMaterialItem[] = [];
+  private _cachedTotalWeight: number = 0;
+  private _cachedTotalValue: number = 0;
+
   get filteredList(): RawMaterialItem[] {
+    const key = `${this.rawMaterialsList.length}_${this.selectedSubtab}_${this.searchQuery}_${this.filterVendorId}_${this.filterCategory}_${this.filterWeightRange}_${this.filterDateFrom}_${this.filterDateTo}_${this.sortField}_${this.sortAsc}`;
+    if (key === this._cachedFilterKey && this._cachedFilteredList) {
+      return this._cachedFilteredList;
+    }
+
     let result = [...this.rawMaterialsList];
 
     // Subtab filter
@@ -354,26 +405,46 @@ export class RawMaterialsComponent implements OnInit {
       return 0;
     });
 
-    return result;
+    // Compute totals in single pass
+    let sumWeight = 0;
+    let sumValue = 0;
+    for (let i = 0; i < result.length; i++) {
+      sumWeight += (result[i].weight || 0);
+      sumValue += (result[i].amount || 0);
+    }
+    this._cachedTotalWeight = sumWeight;
+    this._cachedTotalValue = sumValue;
+
+    this._cachedFilterKey = key;
+    this._cachedFilteredList = result;
+    return this._cachedFilteredList;
   }
 
   get paginatedList(): RawMaterialItem[] {
     const list = this.filteredList;
+    const pageKey = `${this._cachedFilterKey}_${this.currentPage}_${this.pageSize}`;
+    if (pageKey === this._cachedPageKey && this._cachedPaginatedList) {
+      return this._cachedPaginatedList;
+    }
     const start = (this.currentPage - 1) * this.pageSize;
-    return list.slice(start, start + this.pageSize);
+    this._cachedPageKey = pageKey;
+    this._cachedPaginatedList = list.slice(start, start + this.pageSize);
+    return this._cachedPaginatedList;
   }
 
   get totalPages(): number {
     return Math.ceil(this.filteredList.length / this.pageSize) || 1;
   }
 
-  // Summary row computed on currently filtered subset
+  // Summary row computed on currently filtered subset (O(1) Instant)
   get filteredTotalWeight(): number {
-    return this.filteredList.reduce((sum, rm) => sum + (rm.weight || 0), 0);
+    this.filteredList;
+    return this._cachedTotalWeight;
   }
 
   get filteredTotalValue(): number {
-    return this.filteredList.reduce((sum, rm) => sum + (rm.amount || 0), 0);
+    this.filteredList;
+    return this._cachedTotalValue;
   }
 
   get filteredAverageRate(): number {
@@ -406,6 +477,7 @@ export class RawMaterialsComponent implements OnInit {
   }
 
   resetFilters(): void {
+    this.searchInputText = '';
     this.searchQuery = '';
     this.filterVendorId = '';
     this.filterCategory = '';
@@ -415,6 +487,7 @@ export class RawMaterialsComponent implements OnInit {
     this.activeFilterCount = 0;
     this.currentPage = 1;
     this.showFilterPopover = false;
+    this.cdr.markForCheck();
   }
 
   // --- Table Density & Column Manager ---
@@ -650,7 +723,7 @@ export class RawMaterialsComponent implements OnInit {
     this.showExportDropdown = false;
   }
 
-  exportTableToExcel(): void {
+  async exportTableToExcel(): Promise<void> {
     const data = this.filteredList.map((rm, idx) => ({
       'Sr No': idx + 1,
       'Batch ID': rm.rawMaterialId || rm.id,
@@ -666,8 +739,9 @@ export class RawMaterialsComponent implements OnInit {
       'Weight Slip Ref': rm.weightSlipPath || 'N/A'
     }));
 
-    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(data);
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    const XLSX = await import('xlsx');
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Polymer Raw Materials');
     XLSX.writeFile(wb, `futane_raw_materials_ledger_${new Date().toISOString().slice(0, 10)}.xlsx`);
     this.showExportDropdown = false;

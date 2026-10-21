@@ -1,9 +1,8 @@
-import { Component, Input, Output, EventEmitter, OnChanges, OnInit, OnDestroy, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, OnInit, OnDestroy, SimpleChanges, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import * as XLSX from 'xlsx';
 
 export interface TableColumn {
   key: string;
@@ -25,7 +24,8 @@ import { ResizableTableDirective } from '../../directives/resizable-table.direct
   standalone: true,
   imports: [CommonModule, FormsModule, ResizableTableDirective],
   templateUrl: './data-table.component.html',
-  styleUrls: ['./data-table.component.css']
+  styleUrls: ['./data-table.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DataTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() data: any[] = [];
@@ -47,10 +47,14 @@ export class DataTableComponent implements OnInit, OnChanges, OnDestroy {
   sortDirection: 'asc' | 'desc' = 'asc';
   currentPage: number = 1;
   pageSize: number = 10;
+  totalPages: number = 1;
+  totalFilteredCount: number = 0;
   
   processedData: any[] = [];
   selectedRows: Set<string> = new Set();
   allSelected = false;
+
+  constructor(private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.searchSub = this.searchSubject.pipe(
@@ -162,23 +166,31 @@ export class DataTableComponent implements OnInit, OnChanges, OnDestroy {
   }
   
   processData() {
-    if (!this.data) return;
+    if (!this.data || this.data.length === 0) {
+      this.processedData = [];
+      this.totalPages = 1;
+      this.totalFilteredCount = 0;
+      this.cdr.markForCheck();
+      return;
+    }
     let result = [...this.data];
     
-    // Deep search helper — traverses nested objects
-    const deepSearch = (item: any, term: string): boolean => {
-      if (item === null || item === undefined) return false;
-      if (typeof item === 'object') {
-        return Object.values(item).some(val => deepSearch(val, term));
-      }
-      return String(item).toLowerCase().includes(term);
-    };
-
-    // Search
+    // Fast flat & deep search helper
     if (this.searchTerm) {
-      const term = this.searchTerm.toLowerCase();
-      result = result.filter(item => deepSearch(item, term));
+      const term = this.searchTerm.toLowerCase().trim();
+      result = result.filter(item => {
+        if (!item) return false;
+        for (const key of Object.keys(item)) {
+          const val = item[key];
+          if (val != null && String(val).toLowerCase().includes(term)) return true;
+        }
+        return false;
+      });
     }
+
+    this.totalFilteredCount = result.length;
+    this.totalPages = Math.ceil(result.length / this.pageSize) || 1;
+    if (this.currentPage > this.totalPages) this.currentPage = 1;
     
     // Sort
     if (this.sortColumn) {
@@ -194,27 +206,18 @@ export class DataTableComponent implements OnInit, OnChanges, OnDestroy {
       });
     }
     
-    // Pagination
+    // Pagination (Only slices the current page — never renders all 10,000 rows into DOM)
     const startIndex = (this.currentPage - 1) * this.pageSize;
     this.processedData = result.slice(startIndex, startIndex + this.pageSize);
+    this.cdr.markForCheck();
   }
   
-  getTotalPages() {
-    let result = this.data || [];
-    if (this.searchTerm) {
-      const term = this.searchTerm.toLowerCase();
-      const deepSearch = (item: any): boolean => {
-        if (item === null || item === undefined) return false;
-        if (typeof item === 'object') return Object.values(item).some(v => deepSearch(v));
-        return String(item).toLowerCase().includes(term);
-      };
-      result = result.filter(item => deepSearch(item));
-    }
-    return Math.ceil(result.length / this.pageSize) || 1;
+  getTotalPages(): number {
+    return this.totalPages;
   }
   
   changePage(page: number) {
-    if (page >= 1 && page <= this.getTotalPages()) {
+    if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
       this.processData();
     }
@@ -241,7 +244,7 @@ export class DataTableComponent implements OnInit, OnChanges, OnDestroy {
       a.click();
   }
 
-  exportExcel() {
+  async exportExcel() {
     if (!this.data || this.data.length === 0) return;
     const flat = this.data.map(item => {
       const row: any = {};
@@ -251,6 +254,7 @@ export class DataTableComponent implements OnInit, OnChanges, OnDestroy {
       return row;
     });
 
+    const XLSX = await import('xlsx');
     const ws = XLSX.utils.json_to_sheet(flat);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Data');

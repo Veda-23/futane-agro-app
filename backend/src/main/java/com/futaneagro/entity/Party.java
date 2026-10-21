@@ -18,6 +18,10 @@ import java.time.LocalDate;
     @UniqueConstraint(columnNames = {"party_name"}),
     @UniqueConstraint(columnNames = {"party_contact"}),
     @UniqueConstraint(columnNames = {"email"})
+}, indexes = {
+    @Index(name = "idx_party_name", columnList = "party_name"),
+    @Index(name = "idx_party_contact", columnList = "party_contact"),
+    @Index(name = "idx_party_active_deleted", columnList = "is_active, is_deleted")
 })
 @Where(clause = "is_active = true AND is_deleted = false")
 @SQLDelete(sql = "UPDATE t_crm_party SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")

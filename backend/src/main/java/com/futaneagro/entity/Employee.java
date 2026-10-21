@@ -18,6 +18,10 @@ import java.time.LocalDate;
 @Table(name = "t_hr_employee", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"emp_name"}),
     @UniqueConstraint(columnNames = {"emp_contact"})
+}, indexes = {
+    @Index(name = "idx_employee_name", columnList = "emp_name"),
+    @Index(name = "idx_employee_contact", columnList = "emp_contact"),
+    @Index(name = "idx_employee_active_deleted", columnList = "is_active, is_deleted")
 })
 @Where(clause = "is_active = true AND is_deleted = false")
 @SQLDelete(sql = "UPDATE t_hr_employee SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")

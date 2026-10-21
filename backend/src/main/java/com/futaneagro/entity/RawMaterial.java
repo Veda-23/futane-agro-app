@@ -11,7 +11,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "t_inv_raw_material")
+@Table(name = "t_inv_raw_material", indexes = {
+    @Index(name = "idx_rm_date", columnList = "date"),
+    @Index(name = "idx_rm_vendor", columnList = "vendor_id"),
+    @Index(name = "idx_rm_material", columnList = "material_name")
+})
 @Where(clause = "is_active = true AND is_deleted = false")
 @SQLDelete(sql = "UPDATE t_inv_raw_material SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
 public class RawMaterial extends BaseEntity {

@@ -755,7 +755,7 @@
       <div class="modal-header-toolbar no-print">
         <div class="voucher-title-wrap">
           <span class="voucher-badge"><i class="bi bi-receipt me-1"></i>Salary Payment Voucher</span>
-          <span class="voucher-id-tag font-mono">Ref #VCH-{{ selectedVoucher?.id || 'NEW' }}</span>
+          <span class="voucher-id-tag font-mono">Ref #VCH-{{ formatVoucherId(selectedVoucher?.id) }}</span>
         </div>
         <div class="modal-header-actions">
           <button type="button" class="btn btn-primary btn-sm" (click)="printVoucher()" title="Print salary slip">
@@ -778,7 +778,7 @@
           </div>
           <div class="slip-doc-badge">
             <span class="slip-type">PAYMENT VOUCHER</span>
-            <span class="slip-ref font-mono">#VCH-{{ selectedVoucher?.id || 'RECORD' }}</span>
+            <span class="slip-ref font-mono">#VCH-{{ formatVoucherId(selectedVoucher?.id) }}</span>
           </div>
         </div>
 
@@ -789,11 +789,11 @@
           <div class="slip-info-col">
             <div class="info-row">
               <span class="info-lbl">Staff Member:</span>
-              <span class="info-val fw-bold">{{ selectedVoucher?.employee?.empName || 'Staff #' + (selectedVoucher?.employee?.id || selectedVoucher?.employeeId) }}</span>
+              <span class="info-val fw-bold">{{ formatStaffName(selectedVoucher?.employee?.empName) }}</span>
             </div>
             <div class="info-row">
               <span class="info-lbl">Employee ID:</span>
-              <span class="info-val font-mono">#{{ selectedVoucher?.employee?.id || selectedVoucher?.employeeId || '—' }}</span>
+              <span class="info-val font-mono">{{ formatEmpId(selectedVoucher?.employee?.id || selectedVoucher?.employeeId) }}</span>
             </div>
             <div class="info-row">
               <span class="info-lbl">Designation:</span>

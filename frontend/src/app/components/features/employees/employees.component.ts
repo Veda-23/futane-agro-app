@@ -9,7 +9,6 @@ import { FormStateDirective } from '../../../directives/form-state.directive';
 import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
-import * as XLSX from 'xlsx';
 
 export interface EmployeeItem {
   id?: string | number;
@@ -566,8 +565,16 @@ export class EmployeesComponent implements OnInit {
     this.currentPage = 1;
   }
 
+  private _employeesCache: any[] = [];
+  private _employeesCacheKey = '';
+
   getProcessedList(list: any[], table: string): any[] {
-    if (!list) return [];
+    if (!list || list.length === 0) return [];
+
+    const cacheKey = `${table}_${list.length}_${this.currentPage}_${this.pageSize}_${this.sortField}_${this.sortAsc}`;
+    if (this._employeesCacheKey === cacheKey) {
+      return this._employeesCache;
+    }
 
     const sorted = [...list].sort((a, b) => {
       const valA = this.resolvePath(a, this.sortField);
@@ -580,7 +587,11 @@ export class EmployeesComponent implements OnInit {
 
     this.tableFilteredCounts[table] = sorted.length;
     const start = (this.currentPage - 1) * this.pageSize;
-    return sorted.slice(start, start + this.pageSize);
+    const paginated = sorted.slice(start, start + this.pageSize);
+
+    this._employeesCacheKey = cacheKey;
+    this._employeesCache = paginated;
+    return paginated;
   }
 
   private resolvePath(obj: any, path: string): any {
@@ -633,7 +644,7 @@ export class EmployeesComponent implements OnInit {
   }
 
   // Export Excel (.xlsx)
-  exportExcel() {
+  async exportExcel() {
     const dataToExport = this.filteredEmployees;
     if (!dataToExport || dataToExport.length === 0) {
       this.notificationService.warning('Export Empty', 'No employee records to export.');
@@ -641,7 +652,7 @@ export class EmployeesComponent implements OnInit {
     }
 
     const rows = dataToExport.map(e => ({
-      'Employee ID': `EMP-${e.id}`,
+      'Employee ID': this.formatEmpId(e.id),
       'Full Name': e.empName,
       'Role / Designation': e.designation,
       'Contact Number': e.empContact,
@@ -652,12 +663,29 @@ export class EmployeesComponent implements OnInit {
       'Residential Address': e.address || 'N/A'
     }));
 
-    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(rows);
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    const XLSX = await import('xlsx');
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Staff Directory');
     XLSX.writeFile(wb, `futane_workforce_roster_${new Date().toISOString().substring(0, 10)}.xlsx`);
 
     this.showExportDropdown = false;
     this.notificationService.success('Excel Generated', 'Workforce directory exported to Excel successfully.');
+  }
+
+  formatEmpId(id: any): string {
+    if (!id && id !== 0) return '—';
+    const str = String(id).trim();
+    if (/^\d+$/.test(str)) {
+      return `EMP-${str.padStart(4, '0')}`;
+    }
+    if (str.includes('-')) {
+      const parts = str.split('-');
+      return `EMP-${parts[0].toUpperCase()}`;
+    }
+    if (str.length > 8) {
+      return `EMP-${str.slice(0, 8).toUpperCase()}`;
+    }
+    return `EMP-${str.toUpperCase()}`;
   }
 }
