@@ -28,6 +28,32 @@ export class LoginComponent implements OnInit, OnDestroy {
   loginCredentials = { username: '', password: '' };
   isSubmitting = false;
 
+  // Tab State: 'login' or 'register'
+  activeAuthTab: 'login' | 'register' = 'login';
+
+  // Registration State
+  registerData = {
+    name: '',
+    username: '',
+    email: '',
+    mobileNumber: '',
+    role: 'VIEWER',
+    password: '',
+    confirmPassword: ''
+  };
+  showRegisterPassword = false;
+  showRegisterConfirmPassword = false;
+  registerError = '';
+  registerSuccess = '';
+  isRegistering = false;
+
+  availableRoles = [
+    { value: 'OPERATOR', label: 'Plant Operator', icon: 'bi-gear-wide-connected', desc: 'Production batches, machines & dispatch' },
+    { value: 'ACCOUNTANT', label: 'Accounts & Billing', icon: 'bi-receipt-cutoff', desc: 'GST invoices, billing & payments' },
+    { value: 'STORE_MANAGER', label: 'Store & Silo Control', icon: 'bi-box-seam', desc: 'Raw material intake & silo ledgers' },
+    { value: 'VIEWER', label: 'General / Viewer', icon: 'bi-eye', desc: 'Read-only access to operational logs' }
+  ];
+
   // OTP State
   showOtpScreen = false;
   otpDigits: string[] = ['', '', '', '', '', ''];
@@ -53,6 +79,102 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   get otpValue(): string {
     return this.otpDigits.join('');
+  }
+
+  switchAuthTab(tab: 'login' | 'register') {
+    this.activeAuthTab = tab;
+    this.loginError = '';
+    this.registerError = '';
+    this.registerSuccess = '';
+  }
+
+  getPasswordStrength(): { score: number; label: string; colorClass: string } {
+    const p = this.registerData.password || '';
+    if (!p) return { score: 0, label: '', colorClass: '' };
+    let score = 0;
+    if (p.length >= 6) score++;
+    if (p.length >= 10) score++;
+    if (/[A-Z]/.test(p) && /[a-z]/.test(p)) score++;
+    if (/[0-9]/.test(p) || /[^A-Za-z0-9]/.test(p)) score++;
+
+    if (score <= 1) return { score: 25, label: 'Weak', colorClass: 'strength-weak' };
+    if (score === 2) return { score: 50, label: 'Fair', colorClass: 'strength-fair' };
+    if (score === 3) return { score: 75, label: 'Good', colorClass: 'strength-good' };
+    return { score: 100, label: 'Strong', colorClass: 'strength-strong' };
+  }
+
+  handleRegister() {
+    this.registerError = '';
+    this.registerSuccess = '';
+
+    const name = this.registerData.name?.trim();
+    const username = this.registerData.username?.trim();
+    const email = this.registerData.email?.trim();
+    const password = this.registerData.password;
+    const confirmPassword = this.registerData.confirmPassword;
+
+    if (!name || name.length < 2) {
+      this.registerError = 'Please enter your full name (minimum 2 characters).';
+      return;
+    }
+    if (!username || username.length < 3) {
+      this.registerError = 'Username must be at least 3 characters.';
+      return;
+    }
+    if (!/^[a-zA-Z0-9_.-]+$/.test(username)) {
+      this.registerError = 'Username can only contain letters, numbers, dots, and underscores.';
+      return;
+    }
+    if (!email || !/^[A-Za-z0-9+_.-]+@(.+)$/.test(email)) {
+      this.registerError = 'Please enter a valid work email address.';
+      return;
+    }
+    if (!password || password.length < 6) {
+      this.registerError = 'Password must be at least 6 characters.';
+      return;
+    }
+    if (password !== confirmPassword) {
+      this.registerError = 'Passwords do not match. Please re-enter to confirm.';
+      return;
+    }
+
+    this.isRegistering = true;
+    this.apiService.register({
+      name,
+      username,
+      email,
+      mobileNumber: this.registerData.mobileNumber?.trim() || null,
+      password,
+      role: this.registerData.role || 'VIEWER'
+    }).subscribe({
+      next: (res: any) => {
+        this.isRegistering = false;
+        this.registerSuccess = res.message || 'Account registered successfully!';
+        this.notificationService.success(
+          'Registration Successful',
+          `Welcome, ${name}! Your account has been created. Redirecting to Sign In...`
+        );
+        // Prepopulate login credentials and transition to login tab
+        this.loginCredentials.username = username;
+        this.loginCredentials.password = password;
+
+        setTimeout(() => {
+          this.activeAuthTab = 'login';
+          this.registerSuccess = '';
+        }, 1200);
+      },
+      error: (err: any) => {
+        this.isRegistering = false;
+        console.error('Registration failed:', err);
+        if (err.status === 409) {
+          this.registerError = err.error?.message || 'Username or email already in use.';
+        } else if (err.status === 429) {
+          this.registerError = 'Too many registration requests. Please wait a moment.';
+        } else {
+          this.registerError = err.error?.message || 'Failed to complete registration. Please try again.';
+        }
+      }
+    });
   }
 
   forgotPassword() {

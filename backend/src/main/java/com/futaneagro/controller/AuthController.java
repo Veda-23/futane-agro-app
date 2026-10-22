@@ -94,6 +94,89 @@ public class AuthController {
         return map;
     }
 
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody Map<String, String> payload, HttpServletRequest request) {
+        if (rateLimitingService.isRateLimited(request, com.futaneagro.security.RateLimitingService.Action.REGISTER)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(
+                    createErrorResponse("Too Many Requests", "Too many registration attempts. Please wait 60 seconds.", 429));
+        }
+
+        try {
+            String name = payload.get("name");
+            String username = payload.get("username");
+            String email = payload.get("email");
+            String mobileNumber = payload.get("mobileNumber");
+            String password = payload.get("password");
+            String requestedRole = payload.get("role");
+
+            if (name == null || name.trim().length() < 2) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Bad Request", "Full name must be at least 2 characters.", 400));
+            }
+            if (username == null || username.trim().length() < 3) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Bad Request", "Username must be at least 3 characters.", 400));
+            }
+            String sanitizedUsername = username.trim();
+            if (!sanitizedUsername.matches("^[a-zA-Z0-9_.-]+$")) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Bad Request", "Username can only contain letters, numbers, dots, and underscores.", 400));
+            }
+            if (email == null || !email.trim().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Bad Request", "A valid email address is required.", 400));
+            }
+            if (password == null || password.length() < 6) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Bad Request", "Password must be at least 6 characters long.", 400));
+            }
+
+            // Check duplicate username
+            if (userRepository.findByUsernameIgnoreCase(sanitizedUsername).isPresent()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                        createErrorResponse("Conflict", "Username '" + sanitizedUsername + "' is already taken.", 409));
+            }
+
+            // Check duplicate email
+            if (userRepository.findByEmailIgnoreCase(email.trim()).isPresent()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                        createErrorResponse("Conflict", "Email address '" + email.trim() + "' is already registered.", 409));
+            }
+
+            // Safe role mapping: default to VIEWER or allow OPERATOR, ACCOUNTANT, STORE_MANAGER, VIEWER
+            String assignedRole = "VIEWER";
+            if (requestedRole != null) {
+                String upperRole = requestedRole.trim().toUpperCase();
+                if (upperRole.equals("OPERATOR") || upperRole.equals("ACCOUNTANT") || upperRole.equals("STORE_MANAGER") || upperRole.equals("VIEWER")) {
+                    assignedRole = upperRole;
+                }
+            }
+
+            User newUser = new User();
+            newUser.setName(name.trim());
+            newUser.setUsername(sanitizedUsername);
+            newUser.setEmail(email.trim().toLowerCase());
+            newUser.setMobileNumber(mobileNumber != null && !mobileNumber.trim().isEmpty() ? mobileNumber.trim() : null);
+            newUser.setPassword(passwordEncoder.encode(password));
+            newUser.setRole(assignedRole);
+            newUser.setStatus("ACTIVE");
+            newUser.setAccountLocked(false);
+            newUser.setFailedAttempts(0);
+            newUser.setMfaEnabled(false);
+            newUser.setForcePasswordChange(false);
+
+            userRepository.save(newUser);
+            securityAuditService.logUserCreated("SELF_REGISTRATION", sanitizedUsername, request);
+
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("success", true);
+            resp.put("message", "Account registered successfully! You can now log in.");
+            resp.put("username", sanitizedUsername);
+            resp.put("role", assignedRole);
+            return ResponseEntity.status(HttpStatus.CREATED).body(resp);
+
+        } catch (Exception e) {
+            logger.error("Failed to register user: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    createErrorResponse("Internal Server Error", "Registration failed: " + e.getMessage(), 500));
+        }
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> credentials, HttpServletRequest request) {
         try {

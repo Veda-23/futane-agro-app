@@ -141,6 +141,10 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/users/login`, credentials);
   }
 
+  register(payload: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/users/register`, payload);
+  }
+
   verifyOtp(payload: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/users/login/verify`, payload);
   }

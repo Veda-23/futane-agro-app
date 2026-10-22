@@ -29,6 +29,7 @@ public class RateLimitingService {
 
     public enum Action {
         LOGIN(10, 60_000L),           // 10 attempts / 1 min
+        REGISTER(5, 60_000L),        // 5 registrations / 1 min
         OTP_VERIFY(5, 60_000L),        // 5 attempts / 1 min
         PASSWORD_CHANGE(5, 60_000L),   // 5 attempts / 1 min
         REFRESH_TOKEN(15, 60_000L),    // 15 requests / 1 min

@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../api.service';
@@ -122,7 +122,8 @@ export class EmployeesComponent implements OnInit {
 
   constructor(
     private apiService: ApiService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -502,9 +503,11 @@ export class EmployeesComponent implements OnInit {
             this.tableFilteredCounts['employees'] = this.filteredEmployees.length;
             this.notificationService.success('Record Removed', 'Staff record deleted successfully.');
             this.logAudit(`Deleted staff record ID: ${id}`);
+            this.cdr.markForCheck();
           },
           error: (err) => {
             this.notificationService.error('Delete Failed', err.error?.message || err.message || 'Failed to delete employee.');
+            this.cdr.markForCheck();
           }
         });
       }

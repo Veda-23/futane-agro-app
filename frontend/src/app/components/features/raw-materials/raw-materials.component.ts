@@ -239,6 +239,8 @@ export class RawMaterialsComponent implements OnInit, OnDestroy {
           amount: Number(rm.amount) || ((Number(rm.weight) || 0) * (Number(rm.rate) || 0))
         }));
 
+        this._cachedFilterKey = '';
+        this._cachedPageKey = '';
         this.isLoading = false;
         this.updateActiveFilterCount();
 
@@ -648,6 +650,8 @@ export class RawMaterialsComponent implements OnInit, OnDestroy {
     if (this.editingRawMaterialId) {
       this.apiService.updateRawMaterial(this.editingRawMaterialId, payload).subscribe({
         next: () => {
+          this._cachedFilterKey = '';
+          this._cachedPageKey = '';
           this.loadData();
           this.notificationService.success('Record Updated', `Batch updated successfully: ${this.rawMaterialsForm.materialName}`);
           this.logAudit(`Updated raw material procurement: ${this.rawMaterialsForm.materialName} (${this.rawMaterialsForm.weight} kg)`);
@@ -655,11 +659,14 @@ export class RawMaterialsComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.notificationService.error('Update Failed', err.error?.message || err.message);
+          this.cdr.markForCheck();
         }
       });
     } else {
       this.apiService.createRawMaterial(payload).subscribe({
         next: (res) => {
+          this._cachedFilterKey = '';
+          this._cachedPageKey = '';
           this.loadData();
           this.notificationService.success('Batch Logged', `New procurement batch logged: ${this.rawMaterialsForm.materialName}`);
           this.logAudit(`Added raw material procurement: ${this.rawMaterialsForm.materialName} from ${vendor.vendorName}`);
@@ -667,6 +674,7 @@ export class RawMaterialsComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.notificationService.error('Save Failed', err.error?.message || err.message);
+          this.cdr.markForCheck();
         }
       });
     }
@@ -687,11 +695,15 @@ export class RawMaterialsComponent implements OnInit, OnDestroy {
         this.apiService.deleteRawMaterial(String(id)).subscribe({
           next: () => {
             this.rawMaterialsList = this.rawMaterialsList.filter(x => (x.rawMaterialId ? String(x.rawMaterialId) : String(x.id)) !== String(id));
+            this._cachedFilterKey = '';
+            this._cachedPageKey = '';
             this.notificationService.success('Batch Deleted', 'Procurement record deleted successfully.');
             this.logAudit(`Deleted raw material batch ID: ${id}`);
+            this.cdr.markForCheck();
           },
           error: (err) => {
             this.notificationService.error('Delete Failed', err.error?.message || err.message);
+            this.cdr.markForCheck();
           }
         });
       }

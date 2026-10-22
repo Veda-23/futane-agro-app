@@ -220,6 +220,8 @@ export class VendorsComponent implements OnInit, OnDestroy {
           id: v.id || String(v.vendorId)
         }));
         this.rawMaterialsList = rawMaterials || [];
+        this._cachedFilterKey = '';
+        this._cachedPageKey = '';
         this.rebuildVendorProcurementMap();
         this.isLoading = false;
         this.updateActiveFilterCount();
@@ -696,11 +698,15 @@ export class VendorsComponent implements OnInit, OnDestroy {
         this.apiService.deleteVendor(String(id)).subscribe({
           next: () => {
             this.vendorsList = this.vendorsList.filter(v => (v.vendorId ? String(v.vendorId) : String(v.id)) !== String(id));
+            this._cachedFilterKey = '';
+            this._cachedPageKey = '';
             this.notificationService.success('Vendor Removed', 'Supplier deleted from vendor registry.');
             this.logAudit(`Deleted vendor ID: ${id}`);
+            this.cdr.markForCheck();
           },
           error: (err) => {
             this.notificationService.error('Delete Failed', err.error?.message || err.message);
+            this.cdr.markForCheck();
           }
         });
       }

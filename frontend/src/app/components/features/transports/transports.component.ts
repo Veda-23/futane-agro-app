@@ -186,6 +186,8 @@ export class TransportsComponent implements OnInit, OnDestroy {
           ...t,
           remaining: (Number(t.rent) || 0) - (Number(t.advance) || 0)
         }));
+        this._cachedFilterKey = '';
+        this._countsCalculatedForLength = -1;
         this.tableFilteredCounts['transports'] = this.transportsList.length;
         this.isLoading = false;
         this.isRefreshing = false;
@@ -559,12 +561,15 @@ export class TransportsComponent implements OnInit, OnDestroy {
         next: () => {
           this.notificationService.success('Record Updated', `Transport entry for truck ${payload.truckNumber} updated successfully.`);
           this.logAudit(`Updated transport trip record for truck: ${payload.truckNumber}`);
+          this._cachedFilterKey = '';
+          this._countsCalculatedForLength = -1;
           this.cancelEdit();
           this.isFormDrawerOpen = false;
           this.loadData();
         },
         error: (err) => {
           this.notificationService.error('Update Failed', err.error?.message || err.message || 'Could not update transport record.');
+          this.cdr.markForCheck();
         }
       });
     } else {
@@ -573,12 +578,15 @@ export class TransportsComponent implements OnInit, OnDestroy {
         next: () => {
           this.notificationService.success('Trip Registered', `Freight trip for truck ${payload.truckNumber} logged successfully.`);
           this.logAudit(`Registered transport haulage for truck: ${payload.truckNumber} with driver ${driver.driverName}`);
+          this._cachedFilterKey = '';
+          this._countsCalculatedForLength = -1;
           this.cancelEdit();
           this.isFormDrawerOpen = false;
           this.loadData();
         },
         error: (err) => {
           this.notificationService.error('Registration Failed', err.error?.message || err.message || 'Could not save transport record.');
+          this.cdr.markForCheck();
         }
       });
     }
@@ -631,11 +639,16 @@ export class TransportsComponent implements OnInit, OnDestroy {
         this.apiService.deleteTransport(id).subscribe({
           next: () => {
             this.transportsList = this.transportsList.filter((x: any) => String(x.id) !== String(id));
+            this._cachedFilterKey = '';
+            this._countsCalculatedForLength = -1;
+            this.tableFilteredCounts['transports'] = this.transportsList.length;
             this.notificationService.success('Record Deleted', 'Transport record deleted successfully.');
             this.logAudit(`Deleted transport trip record ID: ${id}`);
+            this.cdr.markForCheck();
           },
           error: (err) => {
             this.notificationService.error('Delete Failed', err.error?.message || err.message || 'Failed to delete transport record.');
+            this.cdr.markForCheck();
           }
         });
       }

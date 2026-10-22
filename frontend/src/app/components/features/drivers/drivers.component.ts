@@ -180,6 +180,8 @@ export class DriversComponent implements OnInit, OnChanges, OnDestroy {
       next: ({ drivers, transports }: { drivers: any[]; transports: any[] }) => {
         this.drivers = drivers || [];
         this.transportsList = transports || [];
+        this._cachedFilterKey = '';
+        this._driverCountsCacheLength = -1;
         this.rebuildDriverStatsMap();
         this.tableFilteredCounts['drivers'] = this.drivers.length;
         this.isLoading = false;
@@ -466,11 +468,14 @@ export class DriversComponent implements OnInit, OnChanges, OnDestroy {
         next: () => {
           this.notificationService.success('Profile Updated', `Driver ${payload.driverName} updated successfully.`);
           this.logAudit(`Updated driver profile: ${payload.driverName}`);
+          this._cachedFilterKey = '';
+          this._driverCountsCacheLength = -1;
           this.closeFormDrawer();
           this.loadData();
         },
         error: (err) => {
           this.notificationService.error('Update Failed', err.error?.message || err.message || 'Could not update driver record.');
+          this.cdr.markForCheck();
         }
       });
     } else {
@@ -479,11 +484,14 @@ export class DriversComponent implements OnInit, OnChanges, OnDestroy {
         next: (res: any) => {
           this.notificationService.success('Driver Enrolled', `Driver ${payload.driverName} added to fleet roster.`);
           this.logAudit(`Enrolled commercial driver: ${payload.driverName}`);
+          this._cachedFilterKey = '';
+          this._driverCountsCacheLength = -1;
           this.closeFormDrawer();
           this.loadData();
         },
         error: (err) => {
           this.notificationService.error('Enrollment Failed', err.error?.message || err.message || 'Could not add driver to roster.');
+          this.cdr.markForCheck();
         }
       });
     }
@@ -529,11 +537,17 @@ export class DriversComponent implements OnInit, OnChanges, OnDestroy {
         this.apiService.deleteDriver(id).subscribe({
           next: () => {
             this.drivers = this.drivers.filter((x: any) => String(x.id) !== String(id));
+            this._cachedFilterKey = '';
+            this._driverCountsCacheLength = -1;
+            this.rebuildDriverStatsMap();
+            this.tableFilteredCounts['drivers'] = this.drivers.length;
             this.notificationService.success('Driver Removed', `${name} removed from fleet roster.`);
             this.logAudit(`Removed driver ID ${id} (${name})`);
+            this.cdr.markForCheck();
           },
           error: (err) => {
             this.notificationService.error('Removal Failed', err.error?.message || err.message || 'Failed to remove driver.');
+            this.cdr.markForCheck();
           }
         });
       }

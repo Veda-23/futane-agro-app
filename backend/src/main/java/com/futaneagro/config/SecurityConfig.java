@@ -46,7 +46,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors().and().csrf().disable()
             .authorizeRequests()
-            .antMatchers("/api/users/login", "/api/users/login/verify", "/api/users/verify-session", "/api/users/refresh-token").permitAll()
+            .antMatchers("/api/users/login", "/api/users/login/verify", "/api/users/verify-session", "/api/users/refresh-token", "/api/users/register").permitAll()
             .antMatchers("/ws-erp/**", "/ws-erp").permitAll()
             .antMatchers("/api/webhooks/razorpay").permitAll()
             .antMatchers(HttpMethod.GET, "/api/uploads/branding/**").permitAll()
