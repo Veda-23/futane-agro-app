@@ -202,11 +202,52 @@ Before making code changes, always observe these strict project rules:
 [Response Headers / Body] (Stored in browser localStorage under 'token' and 'currentUser')
 ```
 
-### Key Security Components
+### Key Security & Infrastructure Components
 
-- **`SecurityConfig.java`**: Configures stateless session management (`SessionCreationPolicy.STATELESS`), CORS rules (`localhost:4300`, `localhost:8081`), and endpoints requiring authentication vs public endpoints (`/api/auth/**`, `/actuator/health`).
-- **`JwtRequestFilter.java`**: Intercepts every inbound HTTP request. Extracts `Bearer <token>` from the `Authorization` header. Validates cryptographic signature and sets Spring Security `SecurityContextHolder`.
-- **`RateLimitingService.java`**: In-memory token bucket rate limiter. Protects sensitive endpoints (`LOGIN`: 5 req/min, `REGISTER`: 3 req/min, `DATA_IMPORT`: 10 req/min).
+- **`SecurityConfig.java` (`backend/src/main/java/com/futaneagro/config/SecurityConfig.java`)**:
+  - Stateless session policy (`SessionCreationPolicy.STATELESS`), disabling CSRF (API tokens used) and configuring comprehensive CORS origins.
+  - Enforces HSTS (`max-age=31536000; includeSubDomains`), Content Security Policy (`frame-ancestors 'self'`), `X-Content-Type-Options: nosniff`, and `X-Frame-Options: SAMEORIGIN`.
+  - Configures granular RBAC endpoint matchers: public routes (`/api/users/login`, `/api/v1/storefront/**`, `/api/health`, `/actuator/**`), pre-auth MFA routes (`/api/users/mfa/**`), and role-restricted admin routes (`/api/admin/**`).
+  - Registers `JwtRequestFilter` before `UsernamePasswordAuthenticationFilter`.
+
+- **`JwtUtils.java` (`backend/src/main/java/com/futaneagro/security/JwtUtils.java`)**:
+  - Signs and validates HMAC-SHA256 tokens using a secure 256-bit secret key.
+  - Generates standard 15-minute access tokens with subject username, roles claim, and unique UUID `jti` for forensic tracking.
+  - Generates scoped 5-minute Pre-Auth MFA tokens (`scope: PRE_MFA`) that block general ERP API access until OTP verification succeeds.
+  - Generates cryptographically secure 7-day UUID refresh tokens.
+
+- **`JwtRequestFilter.java` (`backend/src/main/java/com/futaneagro/security/JwtRequestFilter.java`)**:
+  - Intercepts every inbound HTTP request to extract `Bearer <token>` from the `Authorization` header.
+  - Server-side revocation barrier: Checks `TokenBlacklistService.isTokenBlacklisted(token)` to instantly invalidate logged-out sessions before expiration.
+  - MFA Scope Firewall: If the token has `scope: PRE_MFA`, strictly blocks requests unless the path matches `/api/users/mfa/*`.
+  - Reconstructs Spring Security `UsernamePasswordAuthenticationToken` with extracted roles and registers it in `SecurityContextHolder`.
+
+- **`FirebaseMfaService.java` (`backend/src/main/java/com/futaneagro/mfa/FirebaseMfaService.java`)**:
+  - Validates client-side Firebase Phone Auth SMS ID tokens using the Google Firebase Admin SDK.
+  - Anti-Replay Token Barrier: Computes SHA-256 of the token, queries `t_core_mfa_used_token`, rejects previously used tokens, and stores consumed hashes.
+  - Phone Matching: Verifies that the phone number attested in the Firebase token matches the user's enrolled phone number.
+  - Emergency Recovery Codes: Generates 10 cryptographically random 10-character codes, hashed using BCrypt before persisting into `t_core_mfa_recovery_code`.
+
+- **`PerformanceLoggingAspect.java` (`backend/src/main/java/com/futaneagro/config/PerformanceLoggingAspect.java`)**:
+  - AspectJ AOP interceptor around all `@RestController` endpoints.
+  - Measures execution latency; if runtime exceeds 200ms, logs a high-visibility `[SLOW API]` alert to pinpoint slow queries and bottlenecks.
+
+- **`WebSocketConfig.java` (`backend/src/main/java/com/futaneagro/config/WebSocketConfig.java`)**:
+  - Configures STOMP messaging broker with `/topic` outbound broadcast and `/app` inbound application destinations.
+  - Registers `/ws-erp` SockJS fallback endpoint with CORS origins allowed.
+
+- **`AsyncConfig.java` (`backend/src/main/java/com/futaneagro/config/AsyncConfig.java`)**:
+  - Configures Spring `@EnableAsync` thread pool: core size 4, max size 16, queue capacity 100, thread prefix `FutaneAsync-`.
+  - Provides thread isolation so long-running email, SMS, and backup tasks never block HTTP threads.
+
+- **`AuditorAwareImpl.java` (`backend/src/main/java/com/futaneagro/config/AuditorAwareImpl.java`)**:
+  - Supplies the authenticated user principal to Spring Data JPA's `@CreatedBy` and `@LastModifiedBy` audit fields on `BaseEntity`.
+
+- **`RazorpayConfig.java` (`backend/src/main/java/com/futaneagro/config/RazorpayConfig.java`)**:
+  - Configures and initializes the singleton `RazorpayClient` bean with configured Key ID and Secret.
+
+- **`RateLimitingService.java` (`backend/src/main/java/com/futaneagro/security/RateLimitingService.java`)**:
+  - In-memory token bucket rate limiter. Protects sensitive endpoints (`LOGIN`: 5 req/min, `REGISTER`: 3 req/min, `DATA_IMPORT`: 10 req/min).
 
 ---
 

@@ -9,7 +9,7 @@ const https = require('https');
 const { URL } = require('url');
 
 const BASE_URL = process.argv[2] || process.env.BASE_URL || 'http://localhost:8081';
-const JWT_TOKEN = process.argv[3] || process.env.JWT_TOKEN || '';
+let JWT_TOKEN = process.argv[3] || process.env.JWT_TOKEN || '';
 
 const ENDPOINTS = [
   { path: '/api/parties', name: 'Parties Master (Caffeine Cached)' },
@@ -157,6 +157,31 @@ async function main() {
   console.log(`======================================================`);
 
   try {
+    if (!JWT_TOKEN) {
+      console.log('Authenticating as SUPER_ADMIN to obtain JWT token...');
+      const loginPayload = JSON.stringify({ username: 'SUPER_ADMIN', password: 'superadmin123' });
+      const loginRes = await new Promise((resolve, reject) => {
+        const u = new URL(`${BASE_URL}/api/users/login`);
+        const req = http.request(u, { method: 'POST', headers: { 'Content-Type': 'application/json' } }, (res) => {
+          let d = ''; res.on('data', c => d += c); res.on('end', () => resolve({ status: res.statusCode, body: d }));
+        });
+        req.on('error', reject); req.write(loginPayload); req.end();
+      });
+      const loginData = JSON.parse(loginRes.body);
+      const otp = loginData.tempOtp || '123456';
+      const verifyPayload = JSON.stringify({ username: 'SUPER_ADMIN', otp });
+      const verifyRes = await new Promise((resolve, reject) => {
+        const u = new URL(`${BASE_URL}/api/users/login/verify`);
+        const req = http.request(u, { method: 'POST', headers: { 'Content-Type': 'application/json' } }, (res) => {
+          let d = ''; res.on('data', c => d += c); res.on('end', () => resolve({ status: res.statusCode, body: d }));
+        });
+        req.on('error', reject); req.write(verifyPayload); req.end();
+      });
+      const verifyData = JSON.parse(verifyRes.body);
+      JWT_TOKEN = verifyData.token;
+      console.log('Authentication successful! Token acquired.\n');
+    }
+
     // Stage 1: 10 concurrent users (baseline)
     await runStage(10, 100);
 

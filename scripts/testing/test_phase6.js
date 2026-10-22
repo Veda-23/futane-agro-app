@@ -14,7 +14,7 @@
 const http = require('http');
 const https = require('https');
 
-const BASE_URL = 'http://localhost:8082';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:8081';
 let passed = 0;
 let failed = 0;
 

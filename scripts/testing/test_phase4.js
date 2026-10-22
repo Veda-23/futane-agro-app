@@ -34,7 +34,7 @@ function createMultipartBody(boundary, filename, mimeType, fileBuffer) {
 
 async function runTests() {
   console.log("=== PHASE 4: FILE UPLOAD & ASSET PIPELINE SECURITY VERIFICATION ===\n");
-  const BASE_URL = 'http://localhost:8082';
+  const BASE_URL = process.env.BASE_URL || 'http://localhost:8081';
 
   // 1. Authenticate as SUPER_ADMIN with 2FA
   console.log("Step 1: Authenticating as SUPER_ADMIN...");

@@ -31,6 +31,23 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
+/**
+ * Firebase Admin Phone Multi-Factor Authentication (MFA) Service.
+ * <p>
+ * Implements enterprise-grade secondary authentication for administrative and financial workflows:
+ * <ul>
+ *   <li><b>Firebase Admin SDK Integration:</b> Validates cryptographic signatures of client-provided Firebase ID Tokens
+ *       using Google's official {@link FirebaseAuth} verification engine.</li>
+ *   <li><b>Anti-Replay Protection:</b> Computes a SHA-256 hash of each incoming ID token and verifies it against
+ *       {@code t_core_mfa_used_token}. Previously consumed tokens trigger an immediate {@link SecurityException}.</li>
+ *   <li><b>Phone Number Strict Binding:</b> Normalizes and compares the token's embedded {@code phone_number} claim
+ *       against the user's registered E.164 phone to prevent identity-swapping attacks.</li>
+ *   <li><b>Single-Use Emergency Recovery Codes:</b> Generates batches of 10 alphanumeric codes (e.g., {@code ABCDE-12345}),
+ *       stored in the database exclusively as irreversible BCrypt hashes.</li>
+ * </ul>
+ *
+ * @author Futane Agro Core Architecture Team
+ */
 @Service
 public class FirebaseMfaService {
 
@@ -53,6 +70,11 @@ public class FirebaseMfaService {
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private boolean firebaseInitialized = false;
 
+    /**
+     * Initializes the Firebase Admin SDK on startup if MFA is globally enabled.
+     * Looks for credentials path in Spring properties, then system env vars
+     * ({@code FIREBASE_CREDENTIALS_PATH} or {@code GOOGLE_APPLICATION_CREDENTIALS}).
+     */
     @PostConstruct
     public void init() {
         if (!mfaProperties.isEnabled()) {

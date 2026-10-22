@@ -8,6 +8,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+/**
+ * AspectJ AOP Performance Profiler & Latency Sentinel.
+ * <p>
+ * Non-intrusively profiles execution duration across all {@code @RestController} endpoints:
+ * <ul>
+ *   <li><b>Pointcut Definition:</b> Intercepts all REST controller method executions.</li>
+ *   <li><b>Slow Endpoint Detection:</b> Measures execution elapsed time using {@link System#currentTimeMillis()}.
+ *       If an API call exceeds the 200ms threshold ({@link #SLOW_THRESHOLD_MS}), emits a warning log
+ *       ({@code [SLOW API]}) to identify database query bottlenecks or serialization lag.</li>
+ *   <li><b>Diagnostic Metrics:</b> In debug mode, logs detailed timing metrics for telemetry aggregation.</li>
+ * </ul>
+ *
+ * @author Futane Agro Core Architecture Team
+ */
 @Aspect
 @Component
 public class PerformanceLoggingAspect {

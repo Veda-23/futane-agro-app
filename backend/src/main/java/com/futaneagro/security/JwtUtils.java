@@ -14,6 +14,21 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 
+/**
+ * JSON Web Token (JWT) Cryptographic Utilities.
+ * <p>
+ * Manages the issuance, parsing, validation, and claims extraction for stateless authentication tokens:
+ * <ul>
+ *   <li><b>Standard Business Tokens:</b> Signed with HMAC-SHA256 ({@link SignatureAlgorithm#HS256}) using
+ *       {@code jwt.secret}, embedding user roles, username subject, and a unique UUID token ID ({@code jti}) for auditing.</li>
+ *   <li><b>Pre-Authentication MFA Tokens:</b> Short-lived (5-minute TTL) tokens containing {@code scope: "PRE_MFA"}
+ *       and target MFA factor, but strictly omitting business authorization roles so unauthorized access is barred.</li>
+ *   <li><b>Token Expiry Telemetry:</b> Extracts precise epoch millisecond expiration times to set accurate TTLs
+ *       in {@link TokenBlacklistService} during user logouts.</li>
+ * </ul>
+ *
+ * @author Futane Agro Core Architecture Team
+ */
 @Component
 public class JwtUtils {
 
@@ -25,6 +40,12 @@ public class JwtUtils {
     @Value("${jwt.expiration}")
     private Long expiration;
 
+    /**
+     * Extracts the primary username subject from a signed JWT string.
+     *
+     * @param token the serialized JWT string
+     * @return the username subject claim
+     */
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }

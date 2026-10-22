@@ -18,7 +18,7 @@ function request(url, options = {}, postData = null) {
 
 async function runTests() {
   console.log("=== PHASE 5: TRANSPORT, HEADERS, RATE LIMITING & SECRETS VERIFICATION ===\n");
-  const BASE_URL = 'http://localhost:8082';
+  const BASE_URL = process.env.BASE_URL || 'http://localhost:8081';
 
   let passed = 0;
   let total = 0;

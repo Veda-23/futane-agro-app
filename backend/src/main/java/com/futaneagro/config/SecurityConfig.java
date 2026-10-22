@@ -24,6 +24,29 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 
+/**
+ * Master Enterprise Security & Access Control Configuration.
+ * <p>
+ * Implements end-to-end defense-in-depth protection across the HTTP network layer:
+ * <ul>
+ *   <li><b>Stateless Architecture:</b> Disables HTTP sessions ({@link SessionCreationPolicy#STATELESS}) and CSRF
+ *       tokens, delegating authentication entirely to short-lived cryptographic Bearer JWTs.</li>
+ *   <li><b>Role-Based Path Authorizations (RBAC):</b>
+ *     <ul>
+ *       <li>Public endpoints: {@code /api/users/login}, {@code /ws-erp/**}, {@code /api/webhooks/razorpay}, {@code /api/v1/storefront/**}, {@code /api/health}.</li>
+ *       <li>Read-only inspection: All {@code GET /api/**} open to {@code SUPER_ADMIN}, {@code ADMIN}, {@code ACCOUNTANT}, {@code OPERATOR}, {@code VIEWER}.</li>
+ *       <li>Commerce & Ledgers: {@code /api/payments/**}, {@code /api/expenses/**}, {@code /api/salaries/**}, {@code /api/invoices/**} strictly restricted to finance staff.</li>
+ *       <li>Factory Shopfloor: {@code /api/production/**}, {@code /api/machines/**}, {@code /api/inventory/**} assigned to operators and plant admins.</li>
+ *       <li>Master Control: {@code /api/admin/**}, {@code /api/users/**}, {@code /api/audit-logs/**} locked down to {@code SUPER_ADMIN}.</li>
+ *     </ul>
+ *   </li>
+ *   <li><b>Hardened Browser Security Headers:</b> Enforces 2-year HSTS with preload, X-Frame-Options DENY against clickjacking,
+ *       Strict Content Security Policy (CSP) supporting Razorpay checkout and WebSockets, and restricted Permissions-Policy.</li>
+ *   <li><b>Cross-Origin Resource Sharing (CORS):</b> Whitelists trusted dev origins (ports 4200, 4201, 4300, 8081) and production/UAT SSL domains.</li>
+ * </ul>
+ *
+ * @author Futane Agro Core Architecture Team
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
@@ -32,16 +55,25 @@ public class SecurityConfig {
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
 
+    /**
+     * Standard BCrypt password hashing bean with default cryptographic work factor.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Exposes Spring's {@link AuthenticationManager} for programmatic credential validation in {@link AuthController}.
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
+    /**
+     * Builds and registers the primary {@link SecurityFilterChain} bean.
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors().and().csrf().disable()

@@ -9,40 +9,82 @@ import { chromium } from 'playwright';
   console.log('🚀 Running Pre-Deployment Visual Regression & Design System Verification...\n');
 
   const targetUrl = process.env.TARGET_URL || 'http://localhost:4300';
-  const browser = await chromium.launch({ headless: true });
+
+  // Authenticate against live backend
+  let realToken = 'mock-jwt-token-admin';
+  let authUser = { username: 'SUPER_ADMIN', role: 'SUPER_ADMIN', name: 'Super Admin', token: realToken };
+  try {
+    const loginRes = await fetch('http://localhost:8081/api/users/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'SUPER_ADMIN', password: 'superadmin123' })
+    }).then(r => r.json());
+
+    if (loginRes && loginRes.tempOtp) {
+      const verifyRes = await fetch('http://localhost:8081/api/users/login/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: 'SUPER_ADMIN', otp: loginRes.tempOtp })
+      }).then(r => r.json());
+
+      if (verifyRes && verifyRes.token) {
+        realToken = verifyRes.token;
+        authUser = {
+          username: verifyRes.username || 'SUPER_ADMIN',
+          role: verifyRes.role || 'SUPER_ADMIN',
+          name: verifyRes.name || 'Super Admin',
+          token: realToken
+        };
+        console.log('🔑 Successfully authenticated with live backend as SUPER_ADMIN.');
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Could not obtain live JWT token from backend:', err.message);
+  }
+
+  const browser = await chromium.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
+  });
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 
-  await context.addInitScript(() => {
+  await context.addInitScript((data) => {
     try {
-      const user = { username: 'SUPER_ADMIN', role: 'SUPER_ADMIN', name: 'Super Admin', token: 'mock-jwt-token-admin' };
-      window.localStorage.setItem('user', JSON.stringify(user));
-      window.sessionStorage.setItem('user', JSON.stringify(user));
-      window.localStorage.setItem('jwtToken', 'mock-jwt-token-admin');
-      window.sessionStorage.setItem('jwtToken', 'mock-jwt-token-admin');
+      window.localStorage.setItem('user', JSON.stringify(data.authUser));
+      window.sessionStorage.setItem('user', JSON.stringify(data.authUser));
+      window.localStorage.setItem('jwtToken', data.realToken);
+      window.sessionStorage.setItem('jwtToken', data.realToken);
       window.sessionStorage.setItem('activeTab', 'settings');
     } catch (e) {
       // Ignored for about:blank
     }
-  });
+  }, { authUser, realToken });
 
   const page = await context.newPage();
+  page.on('close', () => console.log('⚠️ [PLAYWRIGHT] Page closed event fired'));
+  page.on('crash', () => console.log('💥 [PLAYWRIGHT] Page crashed'));
+  page.on('pageerror', err => console.log('🚨 [PAGE ERROR]:', err.message));
+  page.on('console', msg => {
+    if (msg.type() === 'error') {
+      console.log('🔴 [CONSOLE ERROR]:', msg.text());
+    }
+  });
+
   try {
-    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
-    await page.evaluate(() => {
+    await page.goto(targetUrl, { waitUntil: 'load', timeout: 30000 });
+    await page.evaluate((data) => {
       try {
-        const user = { username: 'SUPER_ADMIN', role: 'SUPER_ADMIN', name: 'Super Admin', token: 'mock-jwt-token-admin' };
-        localStorage.setItem('user', JSON.stringify(user));
-        sessionStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('jwtToken', 'mock-jwt-token-admin');
-        sessionStorage.setItem('jwtToken', 'mock-jwt-token-admin');
+        localStorage.setItem('user', JSON.stringify(data.authUser));
+        sessionStorage.setItem('user', JSON.stringify(data.authUser));
+        localStorage.setItem('jwtToken', data.realToken);
+        sessionStorage.setItem('jwtToken', data.realToken);
         sessionStorage.setItem('activeTab', 'settings');
       } catch (err) {}
-    });
+    }, { authUser, realToken });
   } catch (e) {
-    await page.waitForTimeout(2000);
+    console.warn('Navigation catch:', e.message);
   }
-  await page.waitForLoadState('networkidle').catch(() => {});
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(2000);
 
   // Fallback login if needed
   let pwdInput = null;
