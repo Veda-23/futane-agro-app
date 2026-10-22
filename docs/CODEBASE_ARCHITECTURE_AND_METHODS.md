@@ -674,7 +674,43 @@ Security-hardened HTTP interceptor:
 
 ---
 
-## 7. Developer Rules for Future Modifications
+## 7. Role-Based Access Control (RBAC) & Administrative Isolation Model
+
+Futane Agro ERP implements strict multi-tier zero-trust role isolation to ensure that sensitive system internals, database administration, developer tools, telemetry, and audit logs are visible and accessible exclusively to `SUPER_ADMIN`.
+
+### Role Permissions Hierarchy
+
+| Role | Business Operational Access | Sensitive Admin Access | System Telemetry & DB Tools |
+| :--- | :--- | :--- | :--- |
+| **`SUPER_ADMIN`** | Full Read/Write across all modules | Full Control (Settings, Custom Fields, Roles, API Keys) | Live Infrastructure Telemetry, DB Studio (5433), Seeders, Audit Trail |
+| **`ADMIN`** | Full Read/Write across all business modules | User management, bulk data import | Blocked (403 Forbidden) |
+| **`ACCOUNTANT`** | Sales, Invoices, Billing, Payments, OPEX, Bank, Salaries, Reports | Blocked (403 Forbidden) | Blocked (403 Forbidden) |
+| **`OPERATOR`** | Production (PPD/PPM), Machines, Inventory, Raw Materials, Dispatch | Blocked (403 Forbidden) | Blocked (403 Forbidden) |
+| **`VIEWER`** | Read-Only view of operational logs | Blocked (403 Forbidden) | Blocked (403 Forbidden) |
+
+### Layered Defense Mechanisms
+
+1. **Backend Security Filter Chain (`SecurityConfig.java`)**:
+   - `/api/audit-logs/**`: Guarded by `hasRole("SUPER_ADMIN")`.
+   - `/api/dev/**`: Guarded by `hasRole("SUPER_ADMIN")` (and blocked in production environments).
+   - `/api/admin/**`: High-privilege endpoints strictly restricted to `hasRole("SUPER_ADMIN")`.
+   - `/actuator/**`: Strictly restricted to `hasRole("SUPER_ADMIN")` (except `/actuator/health` and `/actuator/prometheus`).
+
+2. **Unified Enterprise Audit Logging (`AuditService.java`)**:
+   - Standardized fail-safe logging across `PartyController`, `InventoryController`, `HRController`, `SalesController`, `TransportController`, `ProductionController`, and `EnterpriseController`.
+   - Automatically resolves client IP via `X-Forwarded-For` and `HttpServletRequest.getRemoteAddr()`.
+   - Executes with non-blocking resilience: database audit write failures are logged without crashing client business operations.
+
+3. **Frontend Visual & Route Hardening**:
+   - **Header (`header.component.ts/html`)**: Telemetry popover and Database Studio link are restricted to `*ngIf="isSuperAdmin"`. Global search filters out `settings` and `audit-logs` for operational roles.
+   - **Sidebar (`sidebar.component.ts/html`)**: Administration navigation group (audit logs & settings) is strictly hidden unless `isSuperAdmin`.
+   - **Dashboard (`dashboard.component.ts/html`)**: Recent activity audit stream is restricted to `*ngIf="isSuperAdmin"`. Quick navigation and action shortcuts are guarded by `canAccess(tab)`.
+   - **Settings Hub (`settings.component.ts/html`)**: Entire configuration center is wrapped with `@defer` and `*ngIf="isSuperAdmin"`. Unauthorized access renders a restricted security splash screen.
+   - **App Routing (`app.component.ts`)**: `switchTab()` validates user role and prevents tab switching to protected administrative views, popping an error toast on unauthorized navigation attempts.
+
+---
+
+## 8. Developer Rules for Future Modifications
 
 When making any future changes to this codebase:
 1. **Never Break Compilation**: Always run `backend/mvnw.cmd test-compile -DskipTests` and `npm run build` in `frontend/` before pushing commits.
