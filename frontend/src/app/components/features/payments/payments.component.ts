@@ -37,6 +37,17 @@ export interface PaymentItem {
 
 import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
 
+/**
+ * Customer Payment Collection, Settlement & Treasury Reconciliation Hub.
+ *
+ * Capabilities:
+ * - Records customer payment receipts across modes (UPI, NEFT/RTGS, Bank Transfer, Cheque, Cash).
+ * - Applies payments directly against invoice balances and automatically updates linked sales remaining amounts.
+ * - Subtab workflows: All Receipts, UPI, Bank/NEFT, Cash Inflow, Cheques, and High Value (>₹1,00,000).
+ * - High-speed precomputed metrics: Total lifetime collections, monthly collections, digital vs cash breakdown.
+ * - Prevents overpayment errors and preserves immutable accounting ledger integrity.
+ * - Enforces `ChangeDetectionStrategy.OnPush` with debounced search.
+ */
 @Component({
   selector: 'app-payments',
   standalone: true,

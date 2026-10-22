@@ -20,6 +20,19 @@ import {
 import { TerminologyService } from '../../../services/terminology.service';
 import { TermPipe } from '../../../pipes/term.pipe';
 
+/**
+ * Enterprise Administration, Tenant Customizations & System Governance Hub.
+ *
+ * Responsibilities:
+ * - Corporate White-Label & Branding: Dynamic theme palette, custom logo upload, typography, and table density.
+ * - Multi-Tenant Customizations Catalog: 200+ dynamic switches across 10 industry verticals (Agri-Plastics, Dairy, Food Processing, Textiles).
+ * - Multi-Factor Authentication (MFA) Management: Firebase Phone 2FA enrollment, recovery codes generation, and single-use validation.
+ * - Granular Dynamic RBAC: Permission matrix granting View/Create/Edit/Delete rights per role per module.
+ * - Dynamic Feature Toggles: Zero-downtime runtime enablement of ERP modules (WhatsApp, Storefront, GPS Tracking).
+ * - Custom Fields Engine: Declarative user-defined attributes (Text, Number, Date, Dropdown) with zero database DDL migrations.
+ * - Developer Hub: High-entropy scoped API Keys (`fa_live_...`) and HMAC-SHA256 event Webhooks.
+ * - System Governance & Diagnostics: Live JVM heap/thread metrics, Caffeine cache hit/miss inspection, and database snapshots.
+ */
 @Component({
   selector: 'app-settings',
   standalone: true,

@@ -45,6 +45,17 @@ import { PaymentService } from './services/payment.service';
 
 // XLSX is dynamically imported inside exportTableToExcel() to avoid adding ~1MB to the initial bundle
 
+/**
+ * Master Root Orchestrator for Futane Agro ERP single-page application.
+ *
+ * Responsibilities:
+ * - Application lifecycle orchestration, zero-trust session verification, and token health monitoring.
+ * - Dynamic role-based module routing with lazy tab rendering (`renderedTabs`) and accessible navigation maps (`accessibleTabs`).
+ * - Real-time telemetry ingestion via WebSocketService and automated background alert polling.
+ * - Multi-factor inactivity and background tab watchdogs with automatic session invalidation.
+ * - Global cross-cutting features: global keyboard shortcuts (Alt+key), Excel export with lazy-loaded XLSX,
+ *   multi-density UI modes (compact/comfortable/spacious), and white-label branding synchronization.
+ */
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -69,6 +80,11 @@ export class AppComponent implements OnInit, OnDestroy {
   isSidebarOpen = window.innerWidth > 1024;
   isSidebarCollapsed = localStorage.getItem('futane_sidebar_collapsed') === 'true';
 
+  /**
+   * Toggles the navigation sidebar state based on the current viewport width.
+   * On wide desktop screens (>1024px), toggles icon-only rail collapse mode.
+   * On mobile or tablet devices, toggles off-canvas drawer open/close state.
+   */
   toggleSidebar() {
     if (window.innerWidth > 1024) {
       this.toggleSidebarCollapse();
@@ -77,11 +93,22 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Toggles collapsed rail view on desktop screens and persists preference to localStorage.
+   */
   toggleSidebarCollapse() {
     this.isSidebarCollapsed = !this.isSidebarCollapsed;
     localStorage.setItem('futane_sidebar_collapsed', this.isSidebarCollapsed ? 'true' : 'false');
   }
 
+  /**
+   * Dynamically loads the SheetJS (XLSX) library on demand and exports an array of tabular objects to Excel (.xlsx).
+   * Automatically flattens nested objects and strips internal ORM metadata columns (version, isDeleted, isActive).
+   *
+   * @param data Array of records to export.
+   * @param filename Target filename prefix (appends current ISO date).
+   * @param sheetName Sheet title inside the generated workbook (defaults to 'Data').
+   */
   async exportTableToExcel(data: any[], filename: string, sheetName: string = 'Data') {
     if (!data || data.length === 0) {
       this.notificationService.info('Export', 'No data to export.');
@@ -117,6 +144,11 @@ export class AppComponent implements OnInit, OnDestroy {
     this.notificationService.success('Export Complete', `${filename}_${dateStr}.xlsx downloaded successfully.`);
   }
 
+  /**
+   * Global keyboard shortcut listener for high-speed ERP operator navigation.
+   * Maps Alt + Key shortcuts (e.g., Alt+D for Dashboard, Alt+S for Sales, Alt+P for Production).
+   * Ignores keystrokes when focus is inside active text inputs, textareas, or dropdown selectors.
+   */
   @HostListener('document:keydown', ['$event'])
   onGlobalKeyDown(event: KeyboardEvent) {
     const activeTag = (document.activeElement as HTMLElement)?.tagName?.toLowerCase();
@@ -1275,11 +1307,21 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.loggedInUser && this.loggedInUser.role === 'VIEWER';
   }
 
+  /**
+   * Evaluates if the current authenticated user has administrative authorization to delete business records.
+   * Only SUPER_ADMIN and ADMIN roles are permitted to perform deletions.
+   */
   canDelete(): boolean {
     return this.loggedInUser && (this.loggedInUser.role === 'SUPER_ADMIN' || this.loggedInUser.role === 'ADMIN');
   }
 
-  // --- Load Database Data ---
+  /**
+   * Central data hydration trigger.
+   * Loads data for the currently active tab, refreshes telemetry health, and fetches
+   * global stats, machines, inventory, and logistics in the background to evaluate low-stock alerts.
+   *
+   * @param notify When true, displays a visual toast confirming successful data refresh.
+   */
   loadAllData(notify: boolean = false) {
     this.loadDataForTab(this.activeTab, notify);
     this.pollTelemetryHealth();
@@ -1633,7 +1675,20 @@ export class AppComponent implements OnInit, OnDestroy {
     return role === 'SUPER_ADMIN' || role === 'SUPERADMIN';
   }
 
-  // --- Tab Switcher ---
+  /**
+   * Enterprise Tab Router & Lifecycle Coordinator.
+   *
+   * Flow:
+   * 1. Access Control: Restricts 'settings' and 'audit-logs' strictly to SUPER_ADMIN.
+   * 2. Security Barrier: Forces users with temporary credentials (`forcePasswordChangeMode`) to remain on 'settings'.
+   * 3. RBAC Check: Validates against `accessibleTabs[tab]`.
+   * 4. State Isolation: Invokes `dismissPreviousTabState()` to clean up dangling modals, forms, and selections.
+   * 5. Lazy Rendering & Hydration: Adds tab to `renderedTabs` (DOM creation) and fetches data via `loadDataForTab(tab)`
+   *    only once per session (subsequent switches are instantaneous 0ms CSS visibility toggles).
+   * 6. Mobile Ergonomics: Automatically collapses sidebar on viewport widths <= 1024px.
+   *
+   * @param tab Destination module identifier (e.g. 'dashboard', 'sales', 'production', 'billinghub').
+   */
   switchTab(tab: string) {
     if ((tab === 'settings' || tab === 'audit-logs') && !this.isSuperAdmin) {
       this.notificationService.warning(

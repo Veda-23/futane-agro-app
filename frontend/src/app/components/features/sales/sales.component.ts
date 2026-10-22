@@ -39,6 +39,17 @@ export interface SaleItem {
   notes?: string;
 }
 
+/**
+ * Commercial Sales Ledger, Order Dispatch & Storefront Fulfillment Hub.
+ *
+ * Responsibilities:
+ * - Commercial wholesale crate sales order entry, ledger tracking, and receivables monitoring.
+ * - Subtab workflows: All Orders, Pending Dues, Fully Paid, Dispatched, Awaiting Outward, High Volume (>500 crates), and Web Orders.
+ * - Storefront B2B Web Order processing: reviews incoming public orders and converts them to official sales ledgers.
+ * - Outward dispatch linkage: generates vehicle gate-passes and tracks consignment delivery states.
+ * - Online payment integration via Razorpay modal checkout and payment links.
+ * - High-performance Angular architecture: utilizes `ChangeDetectionStrategy.OnPush` with RxJS input debouncing (300ms).
+ */
 @Component({
   selector: 'app-sales',
   standalone: true,

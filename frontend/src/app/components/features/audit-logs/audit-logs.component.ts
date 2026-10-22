@@ -24,6 +24,16 @@ export interface AuditLogItem {
   ipAddress?: string;
 }
 
+/**
+ * Forensic Security Audit Trail & Immutable Mutation Ledger Inspector.
+ *
+ * Responsibilities:
+ * - Restricted strictly to SUPER_ADMIN role for statutory compliance and forensic investigations.
+ * - Displays immutable transaction snapshots across database tables (`t_core_audit_log`).
+ * - Detailed before/after diff inspection modal (`selectedLogForDetail`) showing pre-mutation and post-mutation JSON state.
+ * - Multi-criteria forensic filters: Date Range, Action Type (INSERT/UPDATE/DELETE/LOGIN), Target Entity, and Operator Username.
+ * - One-click forensic JSON payload clipboard export.
+ */
 @Component({
   selector: 'app-audit-logs',
   standalone: true,

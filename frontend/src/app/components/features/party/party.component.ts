@@ -28,6 +28,16 @@ export interface PartyRecord {
   agreementPath?: string;
 }
 
+/**
+ * Customer Directory, Dealer KYC & B2B Client Dossier Manager.
+ *
+ * Responsibilities:
+ * - Central registry of agricultural buyers, wholesale distributors, and commercial farmers.
+ * - Tax & KYC validation: Indian GSTIN checksum evaluation, PAN extraction, and statutory document storage.
+ * - Subtab classifications: All Clients, Wholesalers/Distributors, GST Registered, Maharashtra (MH Intra-state), and Interstate.
+ * - Detailed Customer Dossier view: Inspects historical order volume, lifetime turnover, and outstanding credit.
+ * - OnPush Change Detection with single-pass O(N) cached metrics calculation for maximum rendering performance.
+ */
 @Component({
   selector: 'app-party',
   standalone: true,

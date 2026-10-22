@@ -17,6 +17,19 @@ import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
+/**
+ * Executive Telemetry & Plant Performance Dashboard.
+ *
+ * Capabilities:
+ * - Aggregates real-time financial, operational, and production KPI rollups (`stats`).
+ * - Visualizes historical metrics with Chart.js:
+ *     - Production monthly distribution (Bar Chart)
+ *     - Chronological revenue expansion (Line Chart)
+ *     - Customer revenue concentration (Doughnut Chart)
+ * - Live manufacturing floor telemetry (Shift progress, active lines, fleet OEE, warehouse and polymer capacity).
+ * - Real-time audit activity feed (`recentActivities`) tracking operator actions.
+ * - Quick Action Floating Action Button (FAB) menu with direct navigation emitters (`onNavigateTab`).
+ */
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -29,7 +42,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private sparklineCharts: any[] = [];
   @Input() currentLang: string = 'en';
   @Input() loggedInUser: any = null;
+  @Input() accessibleTabs: { [key: string]: boolean } = {};
   @Output() onNavigateTab = new EventEmitter<string>();
+
+  get isSuperAdmin(): boolean {
+    const role = (this.loggedInUser?.role || '').toUpperCase();
+    return role === 'SUPER_ADMIN' || role === 'ROLE_SUPER_ADMIN';
+  }
+
+  get isAdmin(): boolean {
+    const role = (this.loggedInUser?.role || '').toUpperCase();
+    return role === 'ADMIN' || role === 'ROLE_ADMIN' || this.isSuperAdmin;
+  }
+
+  canAccess(tab: string): boolean {
+    if (this.isSuperAdmin) return true;
+    if (!this.accessibleTabs || Object.keys(this.accessibleTabs).length === 0) return true;
+    return !!this.accessibleTabs[tab];
+  }
 
   Math = Math;
   stats: any = {};
@@ -102,6 +132,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   loadRecentActivity() {
+    if (!this.isSuperAdmin) {
+      this.recentActivities = [];
+      return;
+    }
     this.apiService.getAuditLogs().pipe(takeUntil(this.destroy$)).subscribe({
       next: (logs: any[]) => {
         if (logs && Array.isArray(logs)) {
@@ -113,7 +147,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   quickNavigate(tab: string) {
-    this.onNavigateTab.emit(tab);
+    if (this.canAccess(tab)) {
+      this.onNavigateTab.emit(tab);
+    }
     this.showFabMenu = false;
   }
 

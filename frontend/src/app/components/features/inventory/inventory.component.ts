@@ -22,6 +22,17 @@ export interface InventoryItem {
   category?: string;
 }
 
+/**
+ * Finished Goods Inventory & Warehouse Stock Controller.
+ *
+ * Capabilities:
+ * - Real-time finished goods stock tracking based on statutory ERP invariant:
+ *     `currentStock = (openingStock + producedStock) - soldStock`
+ * - Crate categorization: Fruit Crates, Vegetable Crates, Dairy Crates, Storage Crates.
+ * - Stock health assessment: Healthy (>50 crates), Low Stock (1-50 crates), Stockout (0 crates).
+ * - Real-time warehouse utilization and inventory valuation calculations.
+ * - Dynamic column visibility, resizable column grids, and pagination management.
+ */
 @Component({
   selector: 'app-inventory',
   standalone: true,

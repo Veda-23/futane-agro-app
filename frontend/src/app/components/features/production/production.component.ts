@@ -18,6 +18,17 @@ export interface ColumnConfig {
   pinned?: boolean;
 }
 
+/**
+ * Manufacturing Plant Production & Energy Telemetry Manager.
+ *
+ * Responsibilities:
+ * - Production Per Day (PPD): Records daily injection moulding outputs across shifts (Morning, Afternoon, Night).
+ *   Tracks planned output, successful crates, rejected defect counts, and efficiency percentages.
+ * - Production Per Month (PPM): Synthesizes monthly aggregated crate volumes against utility power metrics
+ *   (kWh electricity consumption, power bills, electricity units consumed per crate, and power cost per crate).
+ * - Multi-row selection, batch CSV export, and granular efficiency filter presets.
+ * - Enforces `ChangeDetectionStrategy.OnPush` with explicit change detection ticks (`cdr.markForCheck()`).
+ */
 @Component({
   selector: 'app-production',
   standalone: true,

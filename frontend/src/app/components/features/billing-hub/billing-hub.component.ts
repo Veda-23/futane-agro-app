@@ -18,6 +18,23 @@ import html2canvas from 'html2canvas';
 import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
 
+/**
+ * Unified Commercial Document Generation & Multi-Layout Print Hub.
+ *
+ * Capabilities:
+ * - Centralizes document printing across 7 core enterprise document templates:
+ *     1. GST Tax Invoice
+ *     2. Commercial Proforma Invoice
+ *     3. Goods Delivery Challan
+ *     4. Customer Payment Receipt
+ *     5. Vendor Purchase Invoice
+ *     6. Logistics Transport Receipt
+ *     7. Employee Monthly Salary Slip
+ * - Dynamic theme customization: Distinct primary, secondary, and accent colors per document type.
+ * - Dynamic UPI QR Code generator: Encodes VPA, merchant name, invoice number, and exact payable amount for zero-friction mobile settlement.
+ * - Interactive Canvas Zooming (0.50x to 1.25x) with exact 1:1 A4 dimensional print previews.
+ * - Vector-accurate PDF generation via jsPDF and HTML5 Canvas capture.
+ */
 @Component({
   selector: 'app-billing-hub',
   standalone: true,

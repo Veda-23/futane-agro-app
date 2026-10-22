@@ -17,6 +17,18 @@ import { TerminologyService } from '../../../services/terminology.service';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
 
+/**
+ * GST Tax Invoicing, Thermal Printing & Accounts Receivable Ledger.
+ *
+ * Responsibilities:
+ * - Issues statutory Indian GST Tax Invoices linked to commercial sales orders.
+ * - Enforces tax compliance: Intra-state (CGST 9% + SGST 9%) vs Inter-state (IGST 18%).
+ * - Generates high-fidelity vector PDF invoices via jsPDF & html2canvas with company branding,
+ *   HSN code breakdown, bank account details, and statutory terms.
+ * - Supports dual print formats: Standard A4 Tax Invoice and 80mm Thermal POS Receipt.
+ * - O(1) Precomputed Metrics Cache: Computes taxable totals, GST totals, and outstanding dues
+ *   before template binding to prevent CPU throttling on large dataset rendering.
+ */
 @Component({
   selector: 'app-invoices',
   standalone: true,

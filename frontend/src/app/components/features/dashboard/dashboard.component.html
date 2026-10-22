@@ -60,23 +60,23 @@
     </div>
     <div class="qa-buttons-wrap" role="toolbar" aria-label="Operational Quick Actions">
       <!-- Primary Action -->
-      <button type="button" class="btn btn-primary btn-sm qa-btn-primary" (click)="quickNavigate('sales')" aria-label="Create new sales order">
+      <button *ngIf="canAccess('sales')" type="button" class="btn btn-primary btn-sm qa-btn-primary" (click)="quickNavigate('sales')" aria-label="Create new sales order">
         <i class="bi bi-cart-plus me-1"></i>New Sale
       </button>
       <!-- Secondary Actions -->
-      <button type="button" class="btn btn-secondary btn-sm qa-btn" (click)="quickNavigate('production')" aria-label="Log daily production">
+      <button *ngIf="canAccess('production')" type="button" class="btn btn-secondary btn-sm qa-btn" (click)="quickNavigate('production')" aria-label="Log daily production">
         <i class="bi bi-building-add me-1"></i>Production
       </button>
-      <button type="button" class="btn btn-secondary btn-sm qa-btn" (click)="quickNavigate('payments')" aria-label="Record customer payment">
+      <button *ngIf="canAccess('payments')" type="button" class="btn btn-secondary btn-sm qa-btn" (click)="quickNavigate('payments')" aria-label="Record customer payment">
         <i class="bi bi-credit-card-2-front me-1"></i>Payment
       </button>
-      <button type="button" class="btn btn-secondary btn-sm qa-btn" (click)="quickNavigate('invoices')" aria-label="Generate tax invoice">
+      <button *ngIf="canAccess('invoices')" type="button" class="btn btn-secondary btn-sm qa-btn" (click)="quickNavigate('invoices')" aria-label="Generate tax invoice">
         <i class="bi bi-receipt me-1"></i>Tax Invoice
       </button>
-      <button type="button" class="btn btn-secondary btn-sm qa-btn" (click)="quickNavigate('dispatch')" aria-label="Create outward dispatch pass">
+      <button *ngIf="canAccess('dispatch')" type="button" class="btn btn-secondary btn-sm qa-btn" (click)="quickNavigate('dispatch')" aria-label="Create outward dispatch pass">
         <i class="bi bi-truck me-1"></i>Dispatch
       </button>
-      <button type="button" class="btn btn-secondary btn-sm qa-btn" (click)="quickNavigate('inventory')" aria-label="Check finished crates stock">
+      <button *ngIf="canAccess('inventory')" type="button" class="btn btn-secondary btn-sm qa-btn" (click)="quickNavigate('inventory')" aria-label="Check finished crates stock">
         <i class="bi bi-box-seam me-1"></i>Stock Check
       </button>
     </div>
@@ -84,7 +84,7 @@
 
   <!-- 3. Operational Attention & Alerts Strip (Zero Truncation Guaranteed) -->
   <section class="alerts-exceptions-strip" aria-label="System Alerts and Health Status">
-    <div class="alert-pill alert-warning-pill" (click)="quickNavigate('payments')" role="button" tabindex="0" title="Click to view pending receivables">
+    <div class="alert-pill alert-warning-pill" *ngIf="canAccess('payments')" (click)="quickNavigate('payments')" role="button" tabindex="0" title="Click to view pending receivables">
       <div class="alert-top-row">
         <div class="alert-headline-box">
           <span class="alert-icon"><i class="bi bi-exclamation-triangle-fill text-warning"></i></span>
@@ -98,7 +98,7 @@
       <div class="alert-gauge-sub">Recovery Rate: 68.8% Collected (₹877,500 settled)</div>
     </div>
 
-    <div class="alert-pill alert-info-pill" (click)="quickNavigate('raw-materials')" role="button" tabindex="0" title="Click to view raw polymer inventory">
+    <div class="alert-pill alert-info-pill" *ngIf="canAccess('raw-materials')" (click)="quickNavigate('raw-materials')" role="button" tabindex="0" title="Click to view raw polymer inventory">
       <div class="alert-top-row">
         <div class="alert-headline-box">
           <span class="alert-icon"><i class="bi bi-droplet-half text-info"></i></span>
@@ -112,7 +112,7 @@
       <div class="alert-gauge-sub">Buffer: {{ polymerBufferPct }}% Capacity (~16,300 crates equivalent)</div>
     </div>
 
-    <div class="alert-pill alert-success-pill" (click)="quickNavigate('production')" role="button" tabindex="0" title="Click to view plant output">
+    <div class="alert-pill alert-success-pill" *ngIf="canAccess('production')" (click)="quickNavigate('production')" role="button" tabindex="0" title="Click to view plant output">
       <div class="alert-top-row">
         <div class="alert-headline-box">
           <span class="alert-icon"><i class="bi bi-check-circle-fill text-success"></i></span>
@@ -369,13 +369,13 @@
   <!-- 9. Recent Activity Stream & Operations Navigation Shortcuts -->
   <section class="dashboard-widget-grid" aria-label="Recent Activity and Operational Navigation">
     
-    <!-- Recent Activity Feed -->
-    <div class="chart-card">
+    <!-- Recent Activity Feed (SUPER_ADMIN ONLY) -->
+    <div class="chart-card" *ngIf="isSuperAdmin">
       <div class="widget-header-row">
         <h3 class="widget-title">
           <i class="bi bi-activity text-primary me-1"></i>Recent Activity Stream
         </h3>
-        <button type="button" class="btn btn-xs btn-secondary" (click)="quickNavigate('audit-logs')" *ngIf="loggedInUser?.role === 'SUPER_ADMIN'" aria-label="View complete audit logs">
+        <button type="button" class="btn btn-xs btn-secondary" (click)="quickNavigate('audit-logs')" aria-label="View complete audit logs">
           View All Logs →
         </button>
       </div>
@@ -405,28 +405,28 @@
         </h3>
       </div>
       <div class="shortcuts-grid" role="group" aria-label="Operations Navigation Buttons">
-        <button type="button" class="shortcut-btn" (click)="quickNavigate('sales')" aria-label="Navigate to Sales Orders">
+        <button *ngIf="canAccess('sales')" type="button" class="shortcut-btn" (click)="quickNavigate('sales')" aria-label="Navigate to Sales Orders">
           <div class="shortcut-icon" aria-hidden="true"><i class="bi bi-cart"></i></div>
           <div class="shortcut-text">
             <div class="shortcut-title">Sales Orders</div>
             <div class="shortcut-desc">Outward billing</div>
           </div>
         </button>
-        <button type="button" class="shortcut-btn" (click)="quickNavigate('production')" aria-label="Navigate to Plant Shifts">
+        <button *ngIf="canAccess('production')" type="button" class="shortcut-btn" (click)="quickNavigate('production')" aria-label="Navigate to Plant Shifts">
           <div class="shortcut-icon" aria-hidden="true"><i class="bi bi-buildings"></i></div>
           <div class="shortcut-text">
             <div class="shortcut-title">Plant Shifts</div>
             <div class="shortcut-desc">Molding lines</div>
           </div>
         </button>
-        <button type="button" class="shortcut-btn" (click)="quickNavigate('reports')" aria-label="Navigate to Reports Hub">
+        <button *ngIf="canAccess('reports')" type="button" class="shortcut-btn" (click)="quickNavigate('reports')" aria-label="Navigate to Reports Hub">
           <div class="shortcut-icon" aria-hidden="true"><i class="bi bi-graph-up-arrow"></i></div>
           <div class="shortcut-text">
             <div class="shortcut-title">Reports Hub</div>
             <div class="shortcut-desc">Financial P&L</div>
           </div>
         </button>
-        <button type="button" class="shortcut-btn" (click)="quickNavigate('analytics')" aria-label="Navigate to PowerBI Suite">
+        <button *ngIf="canAccess('analytics')" type="button" class="shortcut-btn" (click)="quickNavigate('analytics')" aria-label="Navigate to PowerBI Suite">
           <div class="shortcut-icon" aria-hidden="true"><i class="bi bi-bar-chart-line"></i></div>
           <div class="shortcut-text">
             <div class="shortcut-title">PowerBI Suite</div>
@@ -464,8 +464,8 @@
     </div>
   </section>
 
-  <!-- 11. Centralized Universal CSV Data Import Hub (Collapsible / Non-intrusive) -->
-  <section class="universal-import-wrap" aria-label="Universal CSV Importer">
+  <!-- 11. Centralized Universal CSV Data Import Hub (SUPER_ADMIN & ADMIN ONLY) -->
+  <section class="universal-import-wrap" *ngIf="isSuperAdmin || isAdmin" aria-label="Universal CSV Importer">
     <app-universal-importer
       [module]="'parties'"
       [title]="'Universal CSV Data Import Hub'"
@@ -478,13 +478,13 @@
   <!-- 12. Quick-Add Floating FAB Menu -->
   <div class="fab-container" role="region" aria-label="Quick action floating menu">
     <div *ngIf="showFabMenu" class="fab-menu-items" role="menu">
-      <button type="button" (click)="quickNavigate('sales')" class="btn btn-primary btn-sm fab-item-btn" role="menuitem">
+      <button *ngIf="canAccess('sales')" type="button" (click)="quickNavigate('sales')" class="btn btn-primary btn-sm fab-item-btn" role="menuitem">
         <i class="bi bi-cart-plus me-1"></i>New Sale
       </button>
-      <button type="button" (click)="quickNavigate('production')" class="btn btn-primary btn-sm fab-item-btn" role="menuitem">
+      <button *ngIf="canAccess('production')" type="button" (click)="quickNavigate('production')" class="btn btn-primary btn-sm fab-item-btn" role="menuitem">
         <i class="bi bi-building-add me-1"></i>Production
       </button>
-      <button type="button" (click)="quickNavigate('payments')" class="btn btn-primary btn-sm fab-item-btn" role="menuitem">
+      <button *ngIf="canAccess('payments')" type="button" (click)="quickNavigate('payments')" class="btn btn-primary btn-sm fab-item-btn" role="menuitem">
         <i class="bi bi-credit-card-2-front me-1"></i>Payment
       </button>
     </div>

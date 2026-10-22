@@ -561,6 +561,60 @@ Security-hardened HTTP interceptor:
 
 ---
 
+### Core Angular Orchestrator & Feature Components
+
+#### `AppComponent` (`frontend/src/app/app.component.ts`)
+- **Master Orchestrator**: Manages zero-trust token session verification (`verifySession`), active tab routing, accessible tab permission maps (`accessibleTabs`), and lazy tab rendering (`renderedTabs`, `loadedTabsSet`).
+- **Telemetry & Watchdog**: Ingests real-time events via `WebSocketService`, polls `/actuator/health` and Prometheus telemetry every 30 seconds, and executes a 15-minute idle inactivity watchdog and 5-minute background tab auto-logout.
+- **Global Keyboard Navigation**: Intercepts `Alt+Key` combinations (Alt+D for Dashboard, Alt+S for Sales, Alt+P for Production, etc.) for high-speed plant floor navigation.
+- **Dynamic XLSX Export**: Dynamically imports SheetJS (`xlsx`) on demand inside `exportTableToExcel()`, reducing the initial bundle size by ~1MB.
+
+#### `DashboardComponent` (`frontend/src/app/components/features/dashboard/dashboard.component.ts`)
+- **Executive KPIs**: Real-time rollups of revenue, net profit, operating margin %, warehouse utilization, and polymer buffer.
+- **Chart.js Visualizations**: Interactive monthly production bar charts, chronological revenue line charts, and customer revenue doughnut charts.
+- **Manufacturing Floor Telemetry**: Displays current shift progress, active production lines, and fleet Overall Equipment Effectiveness (OEE).
+- **Recent Audit Stream**: Subscribes to `/api/audit-logs` to stream the 8 most recent operator mutation activities.
+
+#### `SalesComponent` (`frontend/src/app/components/features/sales/sales.component.ts`)
+- **Commercial Ledger**: Wholesale crate sales orders, outstanding balance tracking, and invoice linkages.
+- **Subtab Pipelines**: All Orders, Pending Dues, Fully Paid, Dispatched, Awaiting Outward, High Volume (>500 crates), and B2B Web Orders.
+- **Storefront Bridge**: Inspects incoming public B2B web orders and converts them directly into ERP commercial sales ledgers.
+- **Performance Invariant**: Enforces `ChangeDetectionStrategy.OnPush` with 300ms debounced searching.
+
+#### `InventoryComponent` (`frontend/src/app/components/features/inventory/inventory.component.ts`)
+- **Finished Stock Balance**: Enforces statutory stock calculation: `currentStock = (openingStock + producedStock) - soldStock`.
+- **Crate Classifications**: Categorizes inventory across fruit crates, vegetable crates, dairy crates, and storage models.
+- **Stock Health & Valuation**: Real-time evaluation of healthy (>50 crates), low stock (1-50 crates), and stockout items, alongside real-time warehouse valuation.
+
+#### `ProductionComponent` (`frontend/src/app/components/features/production/production.component.ts`)
+- **Daily Runs (PPD)**: Tracks shift injection moulding outputs, successful crates, rejected crates, and efficiency percentages.
+- **Monthly Telemetry (PPM)**: Synthesizes monthly volumes against power metrics: kWh electricity units consumed, utility power bills, electricity units per crate, and power cost per crate.
+
+#### `InvoicesComponent` (`frontend/src/app/components/features/invoices/invoices.component.ts`)
+- **GST Invoicing**: Indian GST tax invoicing with intra-state (CGST 9% + SGST 9%) vs inter-state (IGST 18%) tax splits.
+- **Dual Format Output**: Standard A4 vector PDF invoices via jsPDF & html2canvas, and 80mm POS thermal print receipts.
+- **O(1) Precomputed Cache**: Caches taxable totals, GST totals, and outstanding dues prior to template binding to prevent CPU throttling.
+
+#### `PaymentsComponent` (`frontend/src/app/components/features/payments/payments.component.ts`)
+- **Settlement Ledger**: Inbound collections across UPI, NEFT/RTGS, Bank Transfer, Cheque, and Cash.
+- **Automated Reconciliation**: Deducts receipts from invoice balances and updates sales dues without allowing overpayments.
+
+#### `PartyComponent` (`frontend/src/app/components/features/party/party.component.ts`)
+- **Customer Directory**: Customer registry, Indian GSTIN checksum verification, PAN extraction, and statutory KYC attachments.
+- **Subtabs & Dossier**: Wholesalers/Distributors, GST Registered, Maharashtra (State Code 27), and Interstate buyers, with an in-depth read-only Client Dossier inspection modal.
+
+#### `BillingHubComponent` (`frontend/src/app/components/features/billing-hub/billing-hub.component.ts`)
+- **Unified Document Designer**: Standardized layout designer supporting 7 statutory document templates: Tax Invoice, Proforma Invoice, Delivery Challan, Payment Receipt, Purchase Invoice, Transport Receipt, and Salary Slip.
+- **Dynamic UPI QR Code**: Dynamically encodes merchant VPA, invoice ID, and exact amount for instant mobile UPI settlement.
+
+#### `SettingsComponent` (`frontend/src/app/components/features/settings/settings.component.ts`)
+- **Enterprise Control Center**: Corporate branding & theme palettes, 200+ multi-tenant customizations catalog across 10 industry verticals, dynamic RBAC permission matrices, modular feature toggles, custom fields engine, developer API keys, webhooks, and phone MFA management.
+
+#### `AuditLogsComponent` (`frontend/src/app/components/features/audit-logs/audit-logs.component.ts`)
+- **Forensic Security Trail**: Super-Admin restricted immutable audit logs displaying pre-mutation and post-mutation JSON state with forensic filtering.
+
+---
+
 ## 7. Developer Rules for Future Modifications
 
 When making any future changes to this codebase:
