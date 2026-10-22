@@ -12,6 +12,25 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * <h3>ERP Web Orders Management REST Controller</h3>
+ * <p>
+ * Internal ERP interface for processing, approving, manufacturing, and converting
+ * customer web orders placed through the public B2B digital storefront.
+ * </p>
+ *
+ * <h4>Core Responsibilities:</h4>
+ * <ul>
+ *   <li><b>Order Queue Management:</b> Paginated filtering of incoming orders by operational status (Pending, Approved, In Production, Dispatched, Delivered).</li>
+ *   <li><b>Order Tracking Inspection:</b> Detailed milestone tracking and line-item review for warehouse managers.</li>
+ *   <li><b>Status Transitions:</b> Updating order lifecycle status with audit annotations.</li>
+ *   <li><b>Commercial Conversion:</b> Atomically converting an approved storefront order into an official
+ *       ERP commercial {@link com.futaneagro.entity.Sales} record and issuing an invoice.</li>
+ * </ul>
+ *
+ * @author Futane Agro Core Engineering
+ * @version 2.0
+ */
 @RestController
 @RequestMapping("/api/erp/web-orders")
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -21,7 +40,12 @@ public class ErpWebOrdersController {
     private StorefrontService storefrontService;
 
     /**
-     * Get paginated customer web orders for the ERP management interface.
+     * <b>GET /api/erp/web-orders</b> - Retrieves paginated customer web orders for internal ERP review.
+     *
+     * @param status Filter by status (e.g. ALL, PENDING, APPROVED, IN_PRODUCTION)
+     * @param page Zero-based page index (defaults to 0)
+     * @param size Page size limit (defaults to 20)
+     * @return Paginated {@link Page} of {@link CustomerOrder}
      */
     @GetMapping
     public ResponseEntity<Page<CustomerOrder>> listWebOrders(
@@ -34,7 +58,10 @@ public class ErpWebOrdersController {
     }
 
     /**
-     * Get tracking & details of an order by order number.
+     * <b>GET /api/erp/web-orders/{orderNumber}</b> - Retrieves live fulfillment tracking and customer details.
+     *
+     * @param orderNumber Order tracking identifier (e.g. "ORD-123456")
+     * @return 200 OK with tracking milestones and line items, or 404 NOT FOUND
      */
     @GetMapping("/{orderNumber}")
     public ResponseEntity<?> getOrderDetails(@PathVariable String orderNumber) {
@@ -50,7 +77,11 @@ public class ErpWebOrdersController {
     }
 
     /**
-     * Update order status (Approve, In Production, Dispatch, Deliver).
+     * <b>PUT /api/erp/web-orders/{id}/status</b> - Advances fulfillment status for a customer order.
+     *
+     * @param id Order entity UUID
+     * @param updateReq Request specifying new target status and notes
+     * @return 200 OK with updated {@link CustomerOrder}, or 400 Bad Request
      */
     @PutMapping("/{id}/status")
     public ResponseEntity<?> updateStatus(
@@ -69,7 +100,15 @@ public class ErpWebOrdersController {
     }
 
     /**
-     * Convert an approved web order into an official ERP Sales & Invoice record.
+     * <b>POST /api/erp/web-orders/{id}/create-sale</b> - Converts an approved web order into a commercial ERP Sale & Invoice.
+     * <p>
+     * <b>How it works:</b>
+     * Automatically registers the customer party if not existing, creates a sales order with line items,
+     * assigns sequential invoice number, and decrements finished goods warehouse inventory.
+     * </p>
+     *
+     * @param id Order entity UUID to convert
+     * @return 200 OK with created sale and invoice summary, or 400 Bad Request on failure
      */
     @PostMapping("/{id}/create-sale")
     public ResponseEntity<?> convertToSale(@PathVariable String id) {
@@ -84,3 +123,4 @@ public class ErpWebOrdersController {
         }
     }
 }
+

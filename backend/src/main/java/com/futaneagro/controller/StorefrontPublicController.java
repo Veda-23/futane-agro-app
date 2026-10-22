@@ -12,6 +12,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * <h3>Public B2B Storefront & Customer Portal REST Controller</h3>
+ * <p>
+ * Public unauthenticated portal endpoints allowing agricultural distributors, farmers, and commercial buyers
+ * to browse finished crates catalogs, submit wholesale procurement orders, and monitor real-time order tracking.
+ * </p>
+ *
+ * <h4>Core Responsibilities:</h4>
+ * <ul>
+ *   <li><b>Product Catalog Streaming:</b> Live available crate models, colors, material types, and real-time inventory availability.</li>
+ *   <li><b>Order Placement & Registration:</b> Ingests delivery addresses, requested crate quantities, and initiates tracking.</li>
+ *   <li><b>Live Fulfillment Tracking:</b> Public lookup by order tracking code for status progress (Production -> Dispatch -> Delivered).</li>
+ *   <li><b>Frictionless SMS OTP Verification:</b> Quick phone number ownership verification for seamless checkout.</li>
+ * </ul>
+ *
+ * @author Futane Agro Core Engineering
+ * @version 2.0
+ */
 @RestController
 @RequestMapping("/api/v1/storefront")
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -21,7 +39,9 @@ public class StorefrontPublicController {
     private StorefrontService storefrontService;
 
     /**
-     * Public catalog endpoint for customer storefront.
+     * <b>GET /api/v1/storefront/catalog</b> - Retrieves active finished goods crate catalog.
+     *
+     * @return 200 OK with list of {@link StorefrontCatalogItemDTO}
      */
     @GetMapping("/catalog")
     public ResponseEntity<List<StorefrontCatalogItemDTO>> getCatalog() {
@@ -29,7 +49,10 @@ public class StorefrontPublicController {
     }
 
     /**
-     * Submit customer order from storefront.
+     * <b>POST /api/v1/storefront/orders</b> - Places a new B2B wholesale order.
+     *
+     * @param orderRequest Customer contact, delivery address, and line items
+     * @return 200 OK with generated order tracking number and total, or 400/500 on validation failure
      */
     @PostMapping("/orders")
     public ResponseEntity<?> placeOrder(@RequestBody StorefrontOrderRequest orderRequest) {
@@ -57,7 +80,10 @@ public class StorefrontPublicController {
     }
 
     /**
-     * Live tracking for a specific order.
+     * <b>GET /api/v1/storefront/track/{orderNumber}</b> - Tracks order milestone progress.
+     *
+     * @param orderNumber Unique order identifier (e.g. "ORD-123456")
+     * @return 200 OK with milestone tracking details, or 404 NOT FOUND
      */
     @GetMapping("/track/{orderNumber}")
     public ResponseEntity<?> trackOrder(@PathVariable String orderNumber) {
@@ -73,7 +99,10 @@ public class StorefrontPublicController {
     }
 
     /**
-     * Quick OTP simulated verification for frictionless checkout.
+     * <b>POST /api/v1/storefront/auth/quick-otp</b> - Simulates or dispatches fast OTP for guest verification.
+     *
+     * @param body Map containing {@code "mobile"} phone number
+     * @return 200 OK with verification confirmation
      */
     @PostMapping("/auth/quick-otp")
     public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> body) {
@@ -87,3 +116,4 @@ public class StorefrontPublicController {
         return ResponseEntity.ok(resp);
     }
 }
+

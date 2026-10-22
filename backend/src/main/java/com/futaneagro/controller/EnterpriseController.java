@@ -23,6 +23,27 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
+/**
+ * <h3>Enterprise Operations & Facilities REST Controller</h3>
+ * <p>
+ * Central enterprise operations gateway managing manufacturing machinery assets, preventative
+ * maintenance & breakdown logs, delivery truck dispatches, operational expenditure ledgers,
+ * banking transactions, and physical database backup/restore operations.
+ * </p>
+ *
+ * <h4>Core Functional Sub-Domains:</h4>
+ * <ul>
+ *   <li><b>Plant Machine Master:</b> Lifecycle registry for injection moulding machinery (name, code, hourly capacity, warranty, status).</li>
+ *   <li><b>Maintenance & Breakdown:</b> Records mechanical breakdowns, downtime hours, root cause issues, and technician assignments.</li>
+ *   <li><b>Logistics Dispatches:</b> Vehicle numbers, driver allocations, and transit status.</li>
+ *   <li><b>Operational Expenses:</b> Category-based expense tracking (utilities, maintenance, consumables, factory supplies).</li>
+ *   <li><b>Bank Ledger Transactions:</b> Financial inflows/outflows, transaction types, reference numbers, and payment modes.</li>
+ *   <li><b>System Settings & DB Backup/Restore:</b> Super Admin physical backup dump creation and restore capabilities.</li>
+ * </ul>
+ *
+ * @author Futane Agro Core Engineering
+ * @version 2.0
+ */
 @RestController
 @RequestMapping("/api")
 public class EnterpriseController {
@@ -77,6 +98,15 @@ public class EnterpriseController {
     }
 
     // --- Machine Master ---
+
+    /**
+     * <b>GET /api/machines</b> - Retrieves all registered manufacturing machines.
+     * <p>
+     * <b>How it works:</b> Cached via {@code "machines"} cache region; retrieves full equipment roster.
+     * </p>
+     *
+     * @return List of {@link MachineMaster} machines
+     */
     @GetMapping("/machines")
     @Transactional(readOnly = true)
     @Cacheable(value = "machines")
@@ -84,6 +114,12 @@ public class EnterpriseController {
         return machineRepo.findAll();
     }
 
+    /**
+     * <b>POST /api/machines</b> - Registers a new manufacturing machine.
+     *
+     * @param machine Machine payload to save
+     * @return Persisted {@link MachineMaster} entity
+     */
     @PostMapping("/machines")
     @CacheEvict(value = "machines", allEntries = true)
     public MachineMaster createMachine(@RequestBody MachineMaster machine) {
@@ -92,6 +128,13 @@ public class EnterpriseController {
         return saved;
     }
 
+    /**
+     * <b>PUT /api/machines/{id}</b> - Updates machine specifications, capacity, or warranty.
+     *
+     * @param id Machine UUID
+     * @param details Incoming machine fields
+     * @return Updated {@link MachineMaster} entity
+     */
     @PutMapping("/machines/{id}")
     @CacheEvict(value = "machines", allEntries = true)
     public MachineMaster updateMachine(@PathVariable String id, @RequestBody MachineMaster details) {
@@ -112,6 +155,11 @@ public class EnterpriseController {
         return saved;
     }
 
+    /**
+     * <b>DELETE /api/machines/{id}</b> - Soft-deletes a machine from active manufacturing service.
+     *
+     * @param id Machine UUID
+     */
     @DeleteMapping("/machines/{id}")
     @CacheEvict(value = "machines", allEntries = true)
     public void deleteMachine(@PathVariable String id) {
@@ -126,12 +174,24 @@ public class EnterpriseController {
     }
 
     // --- Machine Breakdown ---
+
+    /**
+     * <b>GET /api/breakdowns</b> - Retrieves all logged machine breakdown events.
+     *
+     * @return List of {@link MachineBreakdown} entries
+     */
     @GetMapping({"/breakdowns", "/machine-breakdowns"})
     @Transactional(readOnly = true)
     public List<MachineBreakdown> getAllBreakdowns() {
         return breakdownRepo.findAll();
     }
 
+    /**
+     * <b>POST /api/breakdowns</b> - Logs an unplanned machine stoppage or maintenance incident.
+     *
+     * @param breakdown Breakdown details (issue, downtime hours, technician)
+     * @return Persisted {@link MachineBreakdown} incident log
+     */
     @PostMapping({"/breakdowns", "/machine-breakdowns"})
     public MachineBreakdown createBreakdown(@RequestBody MachineBreakdown breakdown) {
         MachineBreakdown saved = breakdownRepo.save(breakdown);
@@ -139,6 +199,13 @@ public class EnterpriseController {
         return saved;
     }
 
+    /**
+     * <b>PUT /api/breakdowns/{id}</b> - Updates resolution details, downtime, or root-cause summary.
+     *
+     * @param id Breakdown incident UUID
+     * @param details Updated incident information
+     * @return 200 OK with updated incident, or 404 NOT FOUND
+     */
     @PutMapping({"/breakdowns/{id}", "/machine-breakdowns/{id}"})
     public ResponseEntity<MachineBreakdown> updateBreakdown(@PathVariable String id, @RequestBody MachineBreakdown details) {
         return breakdownRepo.findById(id).map(bd -> {
@@ -154,6 +221,11 @@ public class EnterpriseController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * <b>DELETE /api/breakdowns/{id}</b> - Soft-deletes a machine breakdown record.
+     *
+     * @param id Breakdown incident UUID
+     */
     @DeleteMapping({"/breakdowns/{id}", "/machine-breakdowns/{id}"})
     public void deleteBreakdown(@PathVariable String id) {
         breakdownRepo.findById(id).ifPresent(b -> {
@@ -167,12 +239,24 @@ public class EnterpriseController {
     }
 
     // --- Dispatch ---
+
+    /**
+     * <b>GET /api/dispatches</b> - Retrieves all delivery dispatches.
+     *
+     * @return List of {@link Dispatch} logs
+     */
     @GetMapping("/dispatches")
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public List<Dispatch> getAllDispatches() {
         return dispatchRepo.findAll();
     }
 
+    /**
+     * <b>POST /api/dispatches</b> - Records a finished goods truck dispatch.
+     *
+     * @param dispatch Dispatch metadata (vehicle number, driver name, dispatch number)
+     * @return Persisted {@link Dispatch} entry
+     */
     @PostMapping("/dispatches")
     public Dispatch createDispatch(@RequestBody Dispatch dispatch) {
         if (dispatch.getDispatchNumber() == null || dispatch.getDispatchNumber().trim().isEmpty()) {
@@ -186,6 +270,13 @@ public class EnterpriseController {
         return saved;
     }
 
+    /**
+     * <b>PUT /api/dispatches/{id}</b> - Updates vehicle, driver, or transit status for a dispatch.
+     *
+     * @param id Dispatch UUID
+     * @param details Updated dispatch details
+     * @return The updated {@link Dispatch} record
+     */
     @PutMapping("/dispatches/{id}")
     public Dispatch updateDispatch(@PathVariable String id, @RequestBody Dispatch details) {
         Dispatch dispatch = dispatchRepo.findById(id).orElseThrow(() -> new RuntimeException("Dispatch not found"));
@@ -201,6 +292,11 @@ public class EnterpriseController {
         return saved;
     }
 
+    /**
+     * <b>DELETE /api/dispatches/{id}</b> - Soft-deletes a dispatch log.
+     *
+     * @param id Dispatch UUID
+     */
     @DeleteMapping("/dispatches/{id}")
     public void deleteDispatch(@PathVariable String id) {
         dispatchRepo.findById(id).ifPresent(d -> {
@@ -214,12 +310,24 @@ public class EnterpriseController {
     }
 
     // --- Expense ---
+
+    /**
+     * <b>GET /api/expenses</b> - Retrieves all operational expenses.
+     *
+     * @return List of {@link Expense} records
+     */
     @GetMapping("/expenses")
     @Transactional(readOnly = true)
     public List<Expense> getAllExpenses() {
         return expenseRepo.findAll();
     }
 
+    /**
+     * <b>POST /api/expenses</b> - Logs an operational expense expenditure.
+     *
+     * @param expense Expense entry (category, description, amount)
+     * @return Persisted {@link Expense} record
+     */
     @PostMapping("/expenses")
     public Expense createExpense(@RequestBody Expense expense) {
         Expense saved = expenseRepo.save(expense);
@@ -227,6 +335,13 @@ public class EnterpriseController {
         return saved;
     }
 
+    /**
+     * <b>PUT /api/expenses/{id}</b> - Updates date, category, description, or amount of an expense.
+     *
+     * @param id Expense UUID
+     * @param details Updated expense fields
+     * @return 200 OK with updated entity, or 404 NOT FOUND
+     */
     @PutMapping("/expenses/{id}")
     public ResponseEntity<Expense> updateExpense(@PathVariable String id, @RequestBody Expense details) {
         return expenseRepo.findById(id).map(expense -> {
@@ -241,6 +356,11 @@ public class EnterpriseController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * <b>DELETE /api/expenses/{id}</b> - Soft-deletes an operational expense entry.
+     *
+     * @param id Expense UUID
+     */
     @DeleteMapping("/expenses/{id}")
     public void deleteExpense(@PathVariable String id) {
         expenseRepo.findById(id).ifPresent(e -> {
@@ -254,12 +374,24 @@ public class EnterpriseController {
     }
 
     // --- Bank Transactions ---
+
+    /**
+     * <b>GET /api/bank-transactions</b> - Retrieves all bank transaction ledger entries.
+     *
+     * @return List of {@link BankTransaction} entries
+     */
     @GetMapping("/bank-transactions")
     @Transactional(readOnly = true)
     public List<BankTransaction> getAllTransactions() {
         return bankRepo.findAll();
     }
 
+    /**
+     * <b>POST /api/bank-transactions</b> - Records a new bank debit or credit transaction.
+     *
+     * @param transaction Transaction payload (type, amount, mode, description)
+     * @return Persisted {@link BankTransaction}
+     */
     @PostMapping("/bank-transactions")
     public BankTransaction createTransaction(@RequestBody BankTransaction transaction) {
         BankTransaction saved = bankRepo.save(transaction);
@@ -267,6 +399,13 @@ public class EnterpriseController {
         return saved;
     }
 
+    /**
+     * <b>PUT /api/bank-transactions/{id}</b> - Updates a bank transaction record.
+     *
+     * @param id Transaction UUID
+     * @param details Updated transaction fields
+     * @return 200 OK with updated record, or 404 NOT FOUND
+     */
     @PutMapping("/bank-transactions/{id}")
     public ResponseEntity<BankTransaction> updateBankTransaction(@PathVariable String id, @RequestBody BankTransaction details) {
         return bankRepo.findById(id).map(txn -> {
@@ -282,6 +421,11 @@ public class EnterpriseController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * <b>DELETE /api/bank-transactions/{id}</b> - Soft-deletes a bank transaction.
+     *
+     * @param id Transaction UUID
+     */
     @DeleteMapping("/bank-transactions/{id}")
     public void deleteTransaction(@PathVariable String id) {
         bankRepo.findById(id).ifPresent(t -> {
@@ -295,12 +439,24 @@ public class EnterpriseController {
     }
 
     // --- Settings (For Power BI URL) ---
+
+    /**
+     * <b>GET /api/settings/{key}</b> - Reads a dynamic configuration setting value.
+     *
+     * @param key Config key name
+     * @return 200 OK with {@link Settings} or empty value
+     */
     @GetMapping("/settings/{key}")
     public ResponseEntity<Settings> getSetting(@PathVariable String key) {
         Optional<Settings> setting = settingsRepo.findById(key);
         return setting.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.ok(new Settings(key, "")));
     }
 
+    /**
+     * <b>GET /api/settings</b> - Reads all configuration key-value pairs.
+     *
+     * @return List of configuration setting key-value pairs
+     */
     @GetMapping("/settings")
     public List<Map<String, String>> getAllSettings() {
         return settingsRepo.findAll().stream().map(s -> {
@@ -311,6 +467,12 @@ public class EnterpriseController {
         }).collect(Collectors.toList());
     }
 
+    /**
+     * <b>POST /api/settings</b> - Persists or updates a configuration parameter.
+     *
+     * @param payload Map containing {@code settingKey} and {@code settingValue}
+     * @return Persisted {@link Settings}
+     */
     @PostMapping("/settings")
     @org.springframework.security.access.prepost.PreAuthorize("hasRole('SUPER_ADMIN')")
     public Settings saveSetting(@RequestBody Map<String, String> payload) {
@@ -332,6 +494,11 @@ public class EnterpriseController {
     @org.springframework.beans.factory.annotation.Value("${spring.datasource.password:}")
     private String dbPassword;
 
+    /**
+     * <b>GET /api/settings/backups</b> - Lists existing physical SQL database backup dumps.
+     *
+     * @return 200 OK with file metadata list (filename, size, modification date)
+     */
     @GetMapping("/settings/backups")
     @org.springframework.security.access.prepost.PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> getBackups() {
@@ -354,6 +521,11 @@ public class EnterpriseController {
         return ResponseEntity.ok(list);
     }
 
+    /**
+     * <b>POST /api/settings/backup</b> - Executes physical database backup using isolated ProcessBuilder.
+     *
+     * @return 200 OK with backup status and filename, or 500 on process execution failure
+     */
     @PostMapping("/settings/backup")
     @org.springframework.security.access.prepost.PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> runBackup() {
@@ -391,6 +563,16 @@ public class EnterpriseController {
         }
     }
 
+    /**
+     * <b>POST /api/settings/restore</b> - Restores database state from a validated local SQL backup dump.
+     * <p>
+     * <b>Security Note:</b> Strictly validates filename regex and verifies canonical path boundaries
+     * to eliminate directory traversal risks.
+     * </p>
+     *
+     * @param payload Map containing the target {@code "filename"}
+     * @return 200 OK on successful restoration, or 400/403/404/500 on error
+     */
     @PostMapping("/settings/restore")
     @org.springframework.security.access.prepost.PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> runRestore(@RequestBody Map<String, String> payload) {

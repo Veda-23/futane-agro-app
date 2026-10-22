@@ -18,14 +18,25 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Razorpay Webhook Endpoint — SECURITY HARDENED
+ * <h3>Razorpay Asynchronous Webhook Ingestion Controller</h3>
+ * <p>
+ * Processes real-time asynchronous payment events dispatched by Razorpay servers (e.g., {@code payment_link.paid},
+ * {@code order.paid}, {@code payment.captured}) to reconcile customer invoices autonomously.
+ * </p>
  *
- * Security improvements over the original:
- * 1. TIMESTAMP VALIDATION — rejects events older than 5 minutes (prevents replay attacks).
- * 2. IDEMPOTENCY CHECK — tracks processed event IDs in-memory; duplicate events are a no-op.
- * 3. SLF4J logging — no sensitive data in System.err.
- * 4. Constant-time HMAC comparison — prevents timing side-channel attacks.
- * 5. Body size limit — rejects payloads > 512KB.
+ * <h4>Security Hardening & Resilience Safeguards:</h4>
+ * <ul>
+ *   <li><b>Constant-Time HMAC-SHA256:</b> Employs {@link MessageDigest#isEqual(byte[], byte[])} to eliminate
+ *       timing side-channel attacks against the secret signature.</li>
+ *   <li><b>Anti-Replay Timestamp Validation:</b> Rejects events older than 5 minutes ({@code MAX_EVENT_AGE_MS}).</li>
+ *   <li><b>Idempotency Deduplication:</b> Tracks SHA-256 hashes of processed event IDs in-memory to prevent duplicate
+ *       financial ledger entries if Razorpay retries webhook delivery.</li>
+ *   <li><b>Volumetric Rate Limiting:</b> Guards against malicious DDoS or flood attempts via {@link com.futaneagro.security.RateLimitingService}.</li>
+ *   <li><b>Payload Size Ceiling:</b> Rejects raw payloads larger than 512KB.</li>
+ * </ul>
+ *
+ * @author Futane Agro Core Engineering
+ * @version 2.0
  */
 @RestController
 @RequestMapping("/api/webhooks")
@@ -59,10 +70,26 @@ public class RazorpayWebhookController {
     private com.futaneagro.security.RateLimitingService rateLimitingService;
 
     /**
-     * POST /api/webhooks/razorpay
+     * <b>POST /api/webhooks/razorpay</b> - Ingests and processes Razorpay payment webhook notifications.
+     * <p>
+     * <b>How it works:</b>
+     * <ol>
+     *   <li>Verifies request frequency against the webhook rate limiter.</li>
+     *   <li>Enforces 512KB raw payload body size limit.</li>
+     *   <li>Validates cryptographic HMAC-SHA256 signature against {@code webhookSecret}.</li>
+     *   <li>Checks event timestamp to defend against replay attacks.</li>
+     *   <li>Deduplicates event against in-memory idempotency register.</li>
+     *   <li>Processes {@code payment_link.paid} or {@code order.paid}/{@code payment.captured}
+     *       to mark the sales invoice as paid and record financial reconciliation.</li>
+     *   <li>Always returns 200 OK so Razorpay does not retry valid deliveries.</li>
+     * </ol>
+     * </p>
      *
-     * No JWT — excluded in SecurityConfig (Razorpay cannot send Bearer tokens).
-     * Always returns 200 to prevent Razorpay from retrying on auth failures.
+     * @param signature Cryptographic HMAC-SHA256 signature header ({@code X-Razorpay-Signature})
+     * @param eventId Unique event identifier header ({@code X-Razorpay-Event-Id})
+     * @param rawBody Unparsed JSON body string
+     * @param request HTTP servlet request for client IP tracking
+     * @return 200 OK acknowledgment
      */
     @PostMapping("/razorpay")
     public ResponseEntity<String> handleWebhook(

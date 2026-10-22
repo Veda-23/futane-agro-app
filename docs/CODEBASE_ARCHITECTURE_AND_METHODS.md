@@ -211,6 +211,106 @@ Enterprise administration, tenant branding, dynamic RBAC, custom fields, and dev
 | `/confirm` | POST | Admin/Operator | ACID transactional batch execution with user-selected duplicate resolution (SKIP or UPDATE). |
 | `/template/{module}` | GET | Authenticated | Direct file download of pre-formatted, RFC 4180-compliant `.csv` template with realistic sample data. |
 
+### `PartyController` (`/api`)
+| Endpoint | Method | Role | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/parties` | GET / POST | Authenticated | Customer & dealer directory with stateful pagination, regex search, GSTIN validation, and PAN extraction. |
+| `/parties/{id}` | GET / PUT / DELETE | Authenticated | Party profile management, billing address updates, and soft-deletion lifecycle. |
+| `/vendors` | GET / POST / PUT / DELETE | Authenticated | Supplier & raw material vendor directory with contact info and payment terms. |
+| `/drivers` | GET / POST / PUT / DELETE | Authenticated | Logistics driver registry, license tracking, and dispatch assignment. |
+
+### `InventoryController` (`/api/inventory`)
+| Endpoint | Method | Role | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/inventory` | GET / POST | Authenticated | Finished goods crate inventory registry tracking `currentStock = (opening + produced) - sold`. Broadcasts WebSocket events. |
+| `/inventory/{id}` | PUT / DELETE | Authenticated | Inventory adjustments, warehouse stock reconciliation, and soft-delete archival. |
+
+### `DashboardController` (`/api/dashboard`)
+| Endpoint | Method | Role | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/stats` | GET | Authenticated | Executive KPI indicators computed via direct SQL sums (today/monthly production, revenue, stock, expenses, payroll). Cached. |
+| `/charts` | GET | Authenticated | Synthesizes production monthly bars, chronological sales growth line chart, and top customers distribution. Cached. |
+| `/import` | POST | SUPER_ADMIN, ADMIN | Secure bulk Excel import with 10MB limit, magic-byte checks, and cache eviction. |
+
+### `HRController` (`/api`)
+| Endpoint | Method | Role | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/employees` | GET / POST | Authenticated | Factory staff registry, Aadhaar KYC, bank accounts, and cached employee rosters. |
+| `/employees/{id}` | PUT / DELETE | Authenticated | Personnel data updates and soft-deletion offboarding. |
+| `/salaries` | GET / POST | Authenticated | Monthly payroll ledger, wage liabilities, and voucher disbursement tracking. |
+| `/salaries/{id}` | PUT / DELETE | Authenticated | Salary amount adjustment, payout status clearance, and cancellation. |
+
+### `TransportController` (`/api/transports`)
+| Endpoint | Method | Role | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/transports` | GET / POST | Authenticated | Logistics freight dispatches, truck registration numbers, assigned drivers, hire rent, and cash advances. |
+| `/transports/{id}` | PUT / DELETE | Authenticated | Weighbridge freight adjustments, proof-of-delivery attachments, and soft-deletion. |
+
+### `UploadController` (`/api/uploads`)
+| Endpoint | Method | Role | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/upload` | POST | Staff Roles | Secure file upload with magic-byte validation, UUID prefix salting, and anti-path traversal checks. |
+| `/{filename}` | GET | Authenticated | Streams confidential documents with `attachment` disposition and `nosniff` headers. |
+| `/branding/{filename}` | GET | Public | Serves cached public corporate branding logos with strict `.png/.jpg/.svg` verification. |
+
+### `PaymentLinkController` (`/api/sales`)
+| Endpoint | Method | Role | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/{saleId}/payment-link` | POST | Admin/Accountant | Creates Razorpay hosted payment link for WhatsApp/SMS dispatch. |
+| `/{saleId}/checkout/order` | POST | Admin/Accountant | Generates Razorpay Order ID for in-app standard web modal checkout. |
+| `/checkout/verify` | POST | Public/Auth | Validates HMAC-SHA256 signature and records automated receipt in sales ledger. |
+
+### `RazorpayWebhookController` (`/api/webhooks`)
+| Endpoint | Method | Role | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/razorpay` | POST | Public (Webhook) | Asynchronous Razorpay webhook ingestion with constant-time HMAC-SHA256, 5-minute anti-replay, and idempotency cache. |
+
+### `MfaAuthController` (`/api/users/mfa`)
+| Endpoint | Method | Role | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/verify-firebase-otp` | POST | Pre-Auth | Validates Firebase SMS OTP token and exchanges for full ERP JWT. |
+| `/verify-recovery-code` | POST | Pre-Auth | Emergency fallback using single-use hashed recovery code. |
+| `/status` | GET | Authenticated | Returns current user's 2FA enrollment status, factor type, and remaining codes. |
+| `/enroll` | POST | Authenticated | Enrolls user into Phone MFA and returns 10 emergency recovery codes. |
+| `/disable` | POST | Authenticated | Disables 2FA with mandatory password confirmation. |
+| `/regenerate-recovery-codes`| POST | Authenticated | Re-mints 10 emergency recovery codes with password confirmation. |
+
+### `EnterpriseController` (`/api`)
+| Endpoint | Method | Role | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/machines` | GET / POST / PUT / DEL | Authenticated | Plant machinery inventory, capacity per hour, manufacturer, and warranty tracking. |
+| `/breakdowns` | GET / POST / PUT / DEL | Authenticated | Mechanical stoppage logs, downtime hours, technician resolution, and root cause notes. |
+| `/dispatches` | GET / POST / PUT / DEL | Authenticated | Outbound vehicle dispatches and transit status tracking. |
+| `/expenses` | GET / POST / PUT / DEL | Authenticated | Category-based operational expense accounting. |
+| `/bank-transactions` | GET / POST / PUT / DEL | Authenticated | Bank account ledger inflows and outflows. |
+| `/settings` | GET / POST | SUPER_ADMIN (POST) | System configuration properties (PowerBI URLs, operational flags). |
+| `/settings/backup` & `/restore`| POST | SUPER_ADMIN | Physical database SQL dumps and restorations via isolated process executions. |
+
+### `Storefront & B2B Web Orders` (`/api/v1/storefront` & `/api/erp/web-orders`)
+| Endpoint | Method | Role | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/api/v1/storefront/catalog` | GET | Public | Public catalog streaming available crates, materials, and colors. |
+| `/api/v1/storefront/orders` | POST | Public | Customer wholesale purchase order placement with tracking generation. |
+| `/api/v1/storefront/track/{num}`| GET | Public | Public order fulfillment tracking lookup. |
+| `/api/erp/web-orders` | GET | Authenticated | Paginated ERP order processing queue with status filters. |
+| `/api/erp/web-orders/{id}/status`| PUT | Authenticated | Updates order fulfillment progress (Approved, In Production, Dispatched). |
+| `/api/erp/web-orders/{id}/create-sale`| POST | Authenticated | Converts approved web order directly into official ERP commercial sale and invoice. |
+
+### `AdkCopilotController` (`/api/adk`)
+| Endpoint | Method | Role | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/chat` | POST | Authenticated | Stateful multi-turn conversational AI copilot assistant for natural language ERP queries. |
+| `/session/reset` | POST | Authenticated | Resets dialog context and memory for a new session. |
+| `/research` | POST | Authenticated | Autonomous intelligence research on polymers, raw materials, and GST advisory. |
+
+### `HealthController` & `AuditLogController`
+| Endpoint | Method | Role | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/api/health` | GET | Public | Minimal liveness probe for load balancers and container monitoring (`{"status": "UP"}`). |
+| `/api/admin/env` | GET | SUPER_ADMIN | Diagnostics probe reporting active profile and DataSource connectivity. |
+| `/api/audit-logs` | GET / POST | SUPER_ADMIN | Master audit trail log inspector with entity snapshots before and after mutation. |
+| `/api/dev/seed-data` | POST | SUPER_ADMIN | Comprehensive mock fixture generator (hard-blocked in production profiles). |
+
 ---
 
 ## 5. Database Entity Architecture (PostgreSQL 16)

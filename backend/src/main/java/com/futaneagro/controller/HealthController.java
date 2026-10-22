@@ -14,6 +14,24 @@ import java.sql.Connection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * <h3>Health & Diagnostics REST Controller</h3>
+ * <p>
+ * Provides server liveness probes for container orchestration (Docker/Kubernetes/reverse proxies)
+ * and secure operational environment diagnostics for Super Administrators.
+ * </p>
+ *
+ * <h4>Core Responsibilities & Security Model:</h4>
+ * <ul>
+ *   <li><b>Public Liveness Probe ({@code /api/health}):</b> Open unauthenticated probe returning
+ *       minimal status ({@code {"status": "UP"}}) to avoid information disclosure (no ports, profiles, or DB names).</li>
+ *   <li><b>Super Admin Diagnostics ({@code /api/admin/env}):</b> Role-restricted endpoint checking active
+ *       Spring profile and testing live database connection validation via {@link Connection#isValid(int)}.</li>
+ * </ul>
+ *
+ * @author Futane Agro Core Engineering
+ * @version 2.0
+ */
 @RestController
 public class HealthController {
 
@@ -26,8 +44,15 @@ public class HealthController {
     private DataSource dataSource;
 
     /**
-     * SECURITY: /api/health is public (used by load balancers / monitoring probes).
-     * Returns only a minimal liveness signal — no profile, port, or db name.
+     * <b>GET /api/health</b> - Public health check probe.
+     * <p>
+     * <b>How it works:</b> Returns HTTP 200 with {@code {"status": "UP"}} immediately.
+     * </p>
+     * <p>
+     * <b>Used for:</b> AWS/GCP/Nginx load balancer health checks and Docker container liveness monitoring.
+     * </p>
+     *
+     * @return 200 OK with minimal status map
      */
     @GetMapping("/api/health")
     public ResponseEntity<Map<String, String>> health() {
@@ -37,9 +62,17 @@ public class HealthController {
     }
 
     /**
-     * SECURITY: Full env/db diagnostic is SUPER_ADMIN-only and returns only
-     * high-level operational status — not raw db names, connection URLs, or ports.
-     * Previously exposed at unauthenticated /api/env.
+     * <b>GET /api/admin/env</b> - Environment and database connectivity diagnostics.
+     * <p>
+     * <b>Security Note:</b> Strictly restricted to {@code SUPER_ADMIN} to prevent reconnaissance.
+     * Returns active Spring profile name and validates DataSource connectivity without revealing
+     * raw JDBC URLs, credentials, or internal schema names.
+     * </p>
+     * <p>
+     * <b>Used for:</b> The Admin Control Center System Health & Governance dashboard.
+     * </p>
+     *
+     * @return 200 OK with active profile and database connection health
      */
     @GetMapping("/api/admin/env")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
@@ -64,3 +97,4 @@ public class HealthController {
         return ResponseEntity.ok(info);
     }
 }
+

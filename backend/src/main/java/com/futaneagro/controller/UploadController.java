@@ -30,6 +30,25 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * <h3>File Upload & Media Serving Security Controller</h3>
+ * <p>
+ * Secure gateway for uploading, validating, and streaming binary assets (KYC identity documents,
+ * employee photos, driver licenses, dispatch truck imagery, and corporate branding assets).
+ * </p>
+ *
+ * <h4>OWASP Hardening & Security Safeguards:</h4>
+ * <ul>
+ *   <li><b>Rate Limiting:</b> Guards upload endpoints against DoS disk exhaustion attacks via {@link com.futaneagro.security.RateLimitingService}.</li>
+ *   <li><b>Deep Magic-Byte Verification:</b> Rejects masqueraded file extensions by inspecting internal binary signatures via {@link FileSecurityService}.</li>
+ *   <li><b>Strict Path Traversal Defenses:</b> Enforces canonical path resolution checks ({@code targetPath.startsWith(baseDir)}) to prevent directory escape.</li>
+ *   <li><b>UUID Filename Salting:</b> Prefixes uploaded filenames with random UUIDs to eliminate overwrite collisions and prediction attacks.</li>
+ *   <li><b>Browser Execution Prevention:</b> Serves confidential attachments with {@code Content-Disposition: attachment} and {@code X-Content-Type-Options: nosniff}.</li>
+ * </ul>
+ *
+ * @author Futane Agro Core Engineering
+ * @version 2.0
+ */
 @RestController
 @RequestMapping("/api/uploads")
 public class UploadController {
@@ -51,6 +70,26 @@ public class UploadController {
     @Autowired
     private com.futaneagro.security.RateLimitingService rateLimitingService;
 
+    /**
+     * <b>POST /api/uploads/upload</b> - Receives and securely stores an uploaded multipart file.
+     * <p>
+     * <b>How it works:</b>
+     * <ol>
+     *   <li>Verifies client upload frequency against the sliding-window rate limiter (returns 429 on abuse).</li>
+     *   <li>Runs binary magic-byte, extension, and deep content checks via {@link FileSecurityService#validate(MultipartFile)}.</li>
+     *   <li>Generates collision-free storage filename using {@code UUID.randomUUID() + "_" + sanitizedFilename}.</li>
+     *   <li>Validates that canonical target path resides inside base upload directory to block path traversal.</li>
+     *   <li>Writes file stream to disk, records an audit event, and returns URI and metadata.</li>
+     * </ol>
+     * </p>
+     * <p>
+     * <b>Used for:</b> Attaching employee photos, Aadhaar cards, bank passbooks, driver licenses, and truck photos.
+     * </p>
+     *
+     * @param file Uploaded multipart file
+     * @param request HTTP request for IP tracking and rate limiting
+     * @return 200 OK with uploaded filename and resource URL, or 400/403/429/500 on validation or IO failure
+     */
     @PostMapping("/upload")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'OPERATOR')")
     public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file,
@@ -99,8 +138,23 @@ public class UploadController {
     }
 
     /**
-     * Serve uploaded user documents (Aadhaar, passbooks, invoices, delivery notes).
-     * Protected endpoint — requires authenticated user with appropriate role.
+     * <b>GET /api/uploads/{filename}</b> - Streams confidential user and transactional documents.
+     * <p>
+     * <b>How it works:</b>
+     * <ol>
+     *   <li>Sanitizes the requested filename, stripping path separators.</li>
+     *   <li>Enforces canonical path boundary checks against the uploads directory.</li>
+     *   <li>Verifies existence and readability of {@link UrlResource}.</li>
+     *   <li>Returns binary stream with {@code Content-Disposition: attachment} and {@code X-Content-Type-Options: nosniff}
+     *       to prevent malicious script execution in the browser context.</li>
+     * </ol>
+     * </p>
+     * <p>
+     * <b>Used for:</b> Downloading or previewing Aadhaar cards, salary receipts, and logistics documents.
+     * </p>
+     *
+     * @param filename Targeted filename on disk
+     * @return 200 OK with binary stream resource, or 403/404 on invalid path or missing file
      */
     @GetMapping("/{filename:.+}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'OPERATOR', 'VIEWER')")
@@ -143,8 +197,21 @@ public class UploadController {
     }
 
     /**
-     * Serve public branding assets (company logos for login screen and top nav).
-     * Publicly accessible with aggressive caching and strict extension verification.
+     * <b>GET /api/uploads/branding/{filename}</b> - Serves public branding assets (company logos).
+     * <p>
+     * <b>How it works:</b>
+     * <ol>
+     *   <li>Enforces extension verification strictly limited to {@code .png, .jpg, .jpeg, .svg}.</li>
+     *   <li>Enforces canonical path boundary checks against {@code uploads/branding}.</li>
+     *   <li>Streams public image with 1-day public browser caching header ({@code max-age=86400}).</li>
+     * </ol>
+     * </p>
+     * <p>
+     * <b>Used for:</b> Rendering corporate logo on public login screens, invoice templates, and header navigation.
+     * </p>
+     *
+     * @param filename Image asset filename
+     * @return 200 OK with cached image stream, or 400/403/404 on error
      */
     @GetMapping("/branding/{filename:.+}")
     public ResponseEntity<Resource> getBrandingLogo(@PathVariable String filename) {
@@ -190,8 +257,14 @@ public class UploadController {
         }
     }
 
+    /**
+     * Resolves the authenticated username from Spring Security context, or returns "anonymous".
+     *
+     * @return Current authenticated username or "anonymous"
+     */
     private String getCurrentUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return auth != null ? auth.getName() : "anonymous";
     }
 }
+
