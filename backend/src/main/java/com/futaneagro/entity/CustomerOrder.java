@@ -10,6 +10,25 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * <h1>CustomerOrder Entity (B2B E-Commerce & Customer Storefront Order Header)</h1>
+ * <p>
+ * Maps to table {@code t_ord_customer_orders}. Represents online or storefront purchase orders placed by agricultural clients.
+ * Manages the entire lifecycle from placement ({@code NEW_ORDER}) through credit approval ({@code APPROVED}),
+ * production scheduling ({@code IN_PRODUCTION}), packing, gate dispatch, and final delivery.
+ * </p>
+ *
+ * <h3>Key Financial & Architectural Invariants:</h3>
+ * <ul>
+ *   <li><b>Statutory Taxes:</b> Supports CGST and SGST splits based on the statutory GST rate (default 18%).</li>
+ *   <li><b>ERP Pipeline Bridge:</b> When approved, links directly to the enterprise billing and fulfillment system
+ *       via {@code erpSaleId} and {@code erpDispatchId}.</li>
+ *   <li><b>Cascading Composition:</b> Holds cascade-all collections for {@link OrderItem} and {@link OrderTrackingEvent}.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_ord_customer_orders")
 @Where(clause = "is_active = true AND is_deleted = false")

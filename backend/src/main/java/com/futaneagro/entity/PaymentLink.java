@@ -6,6 +6,23 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * <h1>PaymentLink Entity (Razorpay Digital Payment Link & WhatsApp Gateway)</h1>
+ * <p>
+ * Maps to table {@code t_pay_payment_links}. Persists dynamic payment gateway payment links generated via
+ * the Razorpay API for B2B invoice collection and WhatsApp settlement reminders.
+ * </p>
+ *
+ * <h3>Key Lifecycle Attributes:</h3>
+ * <ul>
+ *   <li><b>Gateway ID:</b> {@code razorpayPaymentLinkId} stores the unique remote identifier from Razorpay.</li>
+ *   <li><b>Short URL:</b> Provides customer-clickable link for UPI, Net Banking, and Debit/Credit Card checkout.</li>
+ *   <li><b>Settlement Status:</b> Tracks states: {@code CREATED}, {@code PAID}, {@code EXPIRED}, or {@code CANCELLED}.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_pay_payment_links")
 @Where(clause = "is_active = true")

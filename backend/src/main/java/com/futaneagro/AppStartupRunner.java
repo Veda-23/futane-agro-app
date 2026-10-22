@@ -18,6 +18,16 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * Spring Boot Application Bootstrap Runner.
+ *
+ * Execution lifecycle:
+ * - Runs immediately upon Spring Boot startup completion (`CommandLineRunner`).
+ * - Generates sample seed Excel workbook (`futane_agro_data.xlsx`) if missing from disk.
+ * - Invokes `DataSeederService.seedAllComprehensiveData()` to bootstrap all 18 enterprise business domains.
+ * - Provisions environment-aware default user accounts (UAT vs Production) with BCrypt-hashed credentials.
+ * - Idempotent execution: Checks repository record counts before creating initial records.
+ */
 @Component
 public class AppStartupRunner implements CommandLineRunner {
 

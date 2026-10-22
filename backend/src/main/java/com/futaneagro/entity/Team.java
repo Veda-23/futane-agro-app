@@ -3,6 +3,17 @@ package com.futaneagro.entity;
 import javax.persistence.*;
 import org.hibernate.annotations.Where;
 
+/**
+ * <h1>Team Entity (Organizational Departments & Functional Divisions)</h1>
+ * <p>
+ * Maps to table {@code t_core_team}. Represents functional organizational departments
+ * (e.g., Production, Sales & Marketing, Logistics, Quality Assurance, HR, Accounts).
+ * Configures portal navigation layout, sidebar sequence order, and visual badges.
+ * </p>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_core_team")
 @Where(clause = "is_active = true")

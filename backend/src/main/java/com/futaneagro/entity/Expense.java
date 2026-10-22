@@ -10,6 +10,24 @@ import javax.validation.constraints.Pattern;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * <h1>Expense Entity (Factory Overheads & Operational Cost Ledger)</h1>
+ * <p>
+ * Maps to table {@code t_fin_expense}. Tracks factory overhead costs including diesel for generators,
+ * electricity bills, machinery repairs, office expenses, employee welfare, and logistical maintenance.
+ * </p>
+ *
+ * <h3>Key Compliance & Validation Invariants:</h3>
+ * <ul>
+ *   <li><b>Category Enum Validation:</b> Category is strictly validated using {@code @Pattern} matching allowed categories:
+ *       {@code Fuel|Diesel|Electricity|Repair|Office|Office Expense|Salary|Utilities|Miscellaneous|Transport|Maintenance|Other}.</li>
+ *   <li><b>Monetary Accuracy:</b> Monetary values stored as {@link BigDecimal} for exact double-entry arithmetic.</li>
+ *   <li><b>Audit & Soft Delete:</b> Extends {@link BaseEntity} to preserve P&L accounting records through soft deletion.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_fin_expense", indexes = {
     @Index(name = "idx_expense_date", columnList = "date"),

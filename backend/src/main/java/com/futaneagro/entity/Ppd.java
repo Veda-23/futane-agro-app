@@ -8,6 +8,14 @@ import org.hibernate.annotations.Where;
 import javax.persistence.*;
 import java.time.LocalDate;
 
+/**
+ * Daily Manufacturing Production Run (PPD) Entity (`t_prd_ppd`).
+ *
+ * Operational Metrics:
+ * - Records daily injection moulding tallies by machine shift (Morning, Afternoon, Night).
+ * - Tracks planned production volume, successful defect-free output, and rejected scrap units.
+ * - Indexed on `date`, `crate_type`, and `shift` for high-throughput reporting queries.
+ */
 @Entity
 @Table(name = "t_prd_ppd", indexes = {
     @Index(name = "idx_ppd_date", columnList = "date"),

@@ -2,6 +2,16 @@ package com.futaneagro.entity;
 
 import javax.persistence.*;
 
+/**
+ * <h1>Settings Entity (Global System Configuration Key-Value Store)</h1>
+ * <p>
+ * Maps to table {@code t_sys_settings}. Stores dynamic runtime platform properties,
+ * backup configurations, SMS/WhatsApp gateway credentials, and system operational flags.
+ * </p>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_sys_settings")
 public class Settings extends BaseEntity {

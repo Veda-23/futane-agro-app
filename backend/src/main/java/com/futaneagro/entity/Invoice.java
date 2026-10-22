@@ -9,6 +9,15 @@ import javax.persistence.*;
 import javax.persistence.FetchType;
 import java.time.LocalDate;
 
+/**
+ * Statutory Indian GST Tax Invoice Record Entity (`t_fin_invoice`).
+ *
+ * Capabilities:
+ * - Represents official statutory tax invoices issued for commercial wholesale crate orders.
+ * - Invariant: Unique statutory invoice identifier (`invoice_no` e.g. `INV-YYYYMMDD-{id}`).
+ * - Linked to parent commercial [`Sales`](file:///backend/src/main/java/com/futaneagro/entity/Sales.java) ledger.
+ * - Soft-delete protected via `@SQLDelete` and active status filters.
+ */
 @Entity
 @Table(name = "t_fin_invoice", indexes = {
     @Index(name = "idx_invoice_no", columnList = "invoice_no"),

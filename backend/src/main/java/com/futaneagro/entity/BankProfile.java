@@ -5,6 +5,22 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * <h1>BankProfile Entity (Statutory Banking Details & UPI Configuration)</h1>
+ * <p>
+ * Maps to table {@code t_cfg_bank_profiles}. Stores company bank account details, IFSC codes, branch information,
+ * and Unified Payments Interface (UPI) VPA identifiers rendered on tax invoices and B2B payment links.
+ * </p>
+ *
+ * <h3>Key Features:</h3>
+ * <ul>
+ *   <li><b>Primary Account Flag:</b> {@code isPrimary} designates the principal bank account displayed on generated PDF invoices.</li>
+ *   <li><b>Dynamic UPI QR Generation:</b> The {@code upiId} is used to generate dynamic BharatQR/UPI QR codes on customer invoices.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_cfg_bank_profiles")
 public class BankProfile {

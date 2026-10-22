@@ -4,6 +4,22 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * <h1>WebhookConfig Entity (Event-Driven Outbound Webhook Subscriptions)</h1>
+ * <p>
+ * Maps to table {@code t_core_webhooks}. Manages HTTP callbacks triggered on critical domain lifecycle events
+ * (e.g., {@code INVOICE_CREATED}, {@code PAYMENT_RECEIVED}, {@code ORDER_DISPATCHED}).
+ * </p>
+ *
+ * <h3>Delivery & Security Guarantees:</h3>
+ * <ul>
+ *   <li><b>HMAC Signing:</b> Payloads are signed with {@code secretToken} for cryptographic origin verification.</li>
+ *   <li><b>Fault Tolerance:</b> Automatically retries failed dispatches up to {@code retryCount} (default 3).</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_core_webhooks")
 public class WebhookConfig {

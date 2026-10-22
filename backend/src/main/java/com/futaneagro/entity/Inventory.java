@@ -7,6 +7,15 @@ import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * Finished Goods Crate Inventory Entity (`t_inv_inventory`).
+ *
+ * Warehouse Stock Calculation Invariant:
+ * - Server-Side Formula: `@PrePersist` and `@PreUpdate` automatically enforce the core ERP invariant:
+ *     `currentStock = (openingStock + producedStock) - soldStock`
+ * - Automatically updates `lastUpdated` timestamp on every stock transition.
+ * - Indexed on `crate_type` and `material_type` for high-throughput warehouse lookups.
+ */
 @Entity
 @Table(name = "t_inv_inventory", indexes = {
     @Index(name = "idx_inv_crate", columnList = "crate_type"),

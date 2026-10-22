@@ -10,6 +10,25 @@ import javax.persistence.FetchType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * <h1>Transport Entity (Logistics Freight & Fleet Operations)</h1>
+ * <p>
+ * Maps to table {@code t_log_transport}. Manages external and internal freight movements,
+ * trucking logistics, driver associations, agreed rental charges, cash advances, and balance settlement.
+ * </p>
+ *
+ * <h3>Key Business & Financial Invariants:</h3>
+ * <ul>
+ *   <li><b>Balance Invariant:</b> {@code remaining} must always equal {@code rent - advance}. Computed automatically
+ *       in {@link #calculateRemaining()} during {@code @PrePersist} and {@code @PreUpdate}.</li>
+ *   <li><b>Audit & Soft Deletion:</b> Inherits UUID PK, versioning, and auditing from {@link BaseEntity}.
+ *       Deletions execute soft update via {@code @SQLDelete} setting {@code is_deleted = true}.</li>
+ *   <li><b>Document Attachments:</b> Stores storage references to driver licenses and vehicle photographs.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_log_transport", indexes = {
     @Index(name = "idx_tr_date", columnList = "date"),
@@ -48,6 +67,10 @@ public class Transport extends BaseEntity {
     private String driverLicensePath;
     public Transport() {}
 
+    /**
+     * Calculates the outstanding freight payable balance before persistence or update.
+     * <p>Formula: {@code remaining = rent - advance}</p>
+     */
     @PrePersist
     @PreUpdate
     public void calculateRemaining() {

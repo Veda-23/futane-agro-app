@@ -4,6 +4,22 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * <h1>UserMfaRecoveryCode Entity (Emergency Multi-Factor Authentication Backup Codes)</h1>
+ * <p>
+ * Maps to table {@code t_user_mfa_recovery_codes}. Stores BCrypt-hashed one-time emergency recovery codes
+ * generated when a user configures Time-based One-Time Password (TOTP) or SMS multi-factor authentication.
+ * </p>
+ *
+ * <h3>Security Guarantees:</h3>
+ * <ul>
+ *   <li><b>Hashed Storage:</b> Only cryptographic hashes ({@code codeHash}) are stored, never plaintext recovery codes.</li>
+ *   <li><b>Single Use Invariant:</b> Marked as {@code used = true} immediately upon successful verification.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_user_mfa_recovery_codes")
 public class UserMfaRecoveryCode {

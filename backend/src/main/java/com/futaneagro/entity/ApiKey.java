@@ -4,6 +4,22 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * <h1>ApiKey Entity (External B2B API Token & Developer Integration Credential)</h1>
+ * <p>
+ * Maps to table {@code t_core_api_keys}. Authenticates external client systems, ERP connectors,
+ * and IoT weighbridge devices communicating with the REST API.
+ * </p>
+ *
+ * <h3>Security Safeguards:</h3>
+ * <ul>
+ *   <li><b>Scopes:</b> Enforces OAuth-style granular scopes (e.g., {@code read:sales,write:production}).</li>
+ *   <li><b>Lifecycle:</b> Supports expiration timestamps ({@code expiresAt}) and last usage telemetry ({@code lastUsedAt}).</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_core_api_keys")
 public class ApiKey {

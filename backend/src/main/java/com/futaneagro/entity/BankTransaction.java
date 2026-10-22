@@ -9,6 +9,23 @@ import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * <h1>BankTransaction Entity (Banking Passbook & Cash Book Ledger)</h1>
+ * <p>
+ * Maps to table {@code t_fin_transaction}. Records company bank balance credits and debits across all active accounts.
+ * Supports Cash, Bank Transfer (NEFT/RTGS/IMPS), and UPI settlement modes.
+ * </p>
+ *
+ * <h3>Key Financial & Reconciliation Invariants:</h3>
+ * <ul>
+ *   <li><b>Transaction Types:</b> Strictly classifies cash flow as {@code Credit} (inflows) or {@code Debit} (outflows).</li>
+ *   <li><b>Indexing for Fast Ledgers:</b> Indexed by date, type, mode, and soft-delete status for high-speed monthly statement generation.</li>
+ *   <li><b>Financial Invariant:</b> Amounts are exact {@link BigDecimal} values; financial records are never hard-deleted.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_fin_transaction", indexes = {
     @Index(name = "idx_bank_date", columnList = "date"),

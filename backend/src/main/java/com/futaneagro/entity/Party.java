@@ -12,6 +12,16 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
 
+/**
+ * Customer Directory & Wholesale Client Entity (`t_crm_party`).
+ *
+ * Statutory & Encryption Invariants:
+ * - Transparent Attribute Encryption: Protects sensitive Indian tax identification (`gstNumber`)
+ *   at rest in PostgreSQL using AES-256 via `AttributeEncryptor`.
+ * - Indian GSTIN Checksum: Enforces official statutory regex format (`^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$`).
+ * - Soft-Delete Execution: Intercepts Hibernate deletion with `@SQLDelete` to ensure non-destructive archival.
+ * - Database Indexing: Fast B-Tree indexes on `party_name`, `party_contact`, and compound active flags (`is_active, is_deleted`).
+ */
 @Entity
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Table(name = "t_crm_party", uniqueConstraints = {

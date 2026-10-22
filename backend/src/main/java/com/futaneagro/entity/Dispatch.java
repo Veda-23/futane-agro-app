@@ -13,6 +13,26 @@ import javax.persistence.*;
 import javax.persistence.FetchType;
 import java.time.LocalDate;
 
+/**
+ * <h1>Dispatch Entity (Finished Goods Outward Manifest & Gate Pass)</h1>
+ * <p>
+ * Maps to table {@code t_log_dispatch}. Records physical gate dispatch events for crates leaving the manufacturing plant.
+ * Connects directly to the originating {@link Sales} order, assigning vehicle registration number, driver identity,
+ * and dispatch status (e.g. {@code Pending}, {@code In Transit}, {@code Delivered}).
+ * </p>
+ *
+ * <h3>Key Architectural & Performance Invariants:</h3>
+ * <ul>
+ *   <li><b>Fault-Tolerant Relationship:</b> {@code @ManyToOne} to {@link Sales} utilizes {@code @NotFound(action = NotFoundAction.IGNORE)}
+ *       to prevent ORM exceptions if legacy sales records were archived.</li>
+ *   <li><b>JSON Serialization Safety:</b> Uses {@code @JsonIgnoreProperties} to prevent circular serialization recursion
+ *       between Sales and Dispatch collections.</li>
+ *   <li><b>Soft Deletion:</b> Preserves gate pass audit trails with soft deletion.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_log_dispatch", indexes = {
     @Index(name = "idx_dispatch_date", columnList = "date"),

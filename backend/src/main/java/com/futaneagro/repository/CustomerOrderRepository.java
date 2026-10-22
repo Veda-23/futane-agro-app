@@ -11,6 +11,17 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * <h1>CustomerOrder Repository</h1>
+ * <p>
+ * Spring Data JPA repository for the {@link CustomerOrder} entity.
+ * Supports B2B storefront order lookups by order number, client mobile tracking queries,
+ * paginated filtering by order status, and status tally counts.
+ * </p>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Repository
 public interface CustomerOrderRepository extends JpaRepository<CustomerOrder, String> {
 

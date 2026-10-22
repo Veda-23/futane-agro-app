@@ -5,6 +5,22 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * <h1>InvoiceTemplateConfig Entity (Tax Invoice Layout & Legal Print Specification)</h1>
+ * <p>
+ * Maps to table {@code t_cfg_invoice_templates}. Configures visual styling, terms & conditions,
+ * jurisdiction clauses, signatory titles, and layout toggles for PDF Tax Invoice printing.
+ * </p>
+ *
+ * <h3>Compliance Defaults:</h3>
+ * <ul>
+ *   <li><b>Statutory Sections:</b> Toggles inclusion of Bank Account Details, UPI QR Codes, Company Logo, and HSN/SAC summary breakdowns.</li>
+ *   <li><b>Legal Terms:</b> Contains non-negotiable clauses regarding goods return, delayed payment interest (18% p.a.), and Pune jurisdiction.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_cfg_invoice_templates")
 public class InvoiceTemplateConfig {

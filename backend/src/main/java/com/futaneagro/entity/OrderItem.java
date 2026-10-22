@@ -7,6 +7,23 @@ import org.hibernate.annotations.Where;
 import javax.persistence.*;
 import java.math.BigDecimal;
 
+/**
+ * <h1>OrderItem Entity (B2B Purchase Order Line Item & Customization Spec)</h1>
+ * <p>
+ * Maps to table {@code t_ord_order_items}. Records individual crate requirements within a {@link CustomerOrder}.
+ * Captures product dimensions, plastic resin polymer type, custom dye color (default 'Agro Emerald'),
+ * custom hot-foil embossing text, ordered quantity, unit price, and gross extended pricing.
+ * </p>
+ *
+ * <h3>Key Relationships:</h3>
+ * <ul>
+ *   <li><b>Order Header:</b> {@code @ManyToOne} back-reference to {@link CustomerOrder}.</li>
+ *   <li><b>Finished Goods Inventory Link:</b> Optionally maps to an {@code inventoryId} in {@link Inventory} for stock reservation.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_ord_order_items")
 @Where(clause = "is_active = true AND is_deleted = false")

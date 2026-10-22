@@ -14,6 +14,15 @@ import javax.validation.constraints.Min;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * Factory Staff & Personnel Entity (`t_hr_employee`).
+ *
+ * Statutory & Compliance Invariants:
+ * - Aadhaar KYC Validation: Enforces official Indian 12-digit Aadhaar number regex (`^[2-9]{1}[0-9]{11}$`).
+ * - Banking Data Encryption: Protects sensitive bank account numbers at rest using AES-256 via `AttributeEncryptor`.
+ * - Contracted Salary: `BigDecimal salary` storing contracted monthly base wage.
+ * - Soft-Deletion: Non-destructive archival via `@SQLDelete`.
+ */
 @Entity
 @Table(name = "t_hr_employee", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"emp_name"}),

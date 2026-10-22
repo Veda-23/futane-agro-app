@@ -8,6 +8,14 @@ import org.hibernate.annotations.Where;
 import javax.persistence.*;
 import java.time.LocalDate;
 
+/**
+ * Monthly Aggregate Production & Utility Power Metric Entity (`t_prd_ppm`).
+ *
+ * Operational Metrics:
+ * - Aggregates monthly finished crate volume (`cratesProduced`) against factory utility consumption.
+ * - Tracks total power units consumed (`electricityUnits` in kWh) and electricity utility billing (`electricityBill`).
+ * - Used to calculate power efficiency: kWh per crate and energy cost per finished crate.
+ */
 @Entity
 @Table(name = "t_prd_ppm")
 @Where(clause = "is_active = true AND is_deleted = false")

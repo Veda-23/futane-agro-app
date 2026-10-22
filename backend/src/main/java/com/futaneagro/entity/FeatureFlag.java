@@ -2,6 +2,16 @@ package com.futaneagro.entity;
 
 import javax.persistence.*;
 
+/**
+ * <h1>FeatureFlag Entity (Dynamic Module & Feature Enablement Toggles)</h1>
+ * <p>
+ * Maps to table {@code t_sys_feature_flags}. Controls platform-wide module visibility and feature activation
+ * (e.g. AI Copilot, Storefront Portal, WhatsApp Reminders, Cloud Backups) without restarting application servers.
+ * </p>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_sys_feature_flags")
 public class FeatureFlag extends BaseEntity {

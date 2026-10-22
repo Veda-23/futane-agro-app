@@ -5,6 +5,22 @@ import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 
+/**
+ * <h1>Branch Entity (Multi-Location Plant & Depot Network)</h1>
+ * <p>
+ * Maps to table {@code t_branches}. Represents physical manufacturing facilities, satellite distribution depots,
+ * and regional sales offices.
+ * </p>
+ *
+ * <h3>Key Features:</h3>
+ * <ul>
+ *   <li><b>Main Plant Designation:</b> {@code isMainPlant} identifies the primary manufacturing unit hosting production lines.</li>
+ *   <li><b>Inventory Inter-Transfer:</b> Serves as source or destination origin in {@link StockTransfer} movements.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_branches")
 @SQLDelete(sql = "UPDATE t_branches SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")

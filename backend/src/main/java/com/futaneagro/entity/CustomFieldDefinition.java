@@ -3,6 +3,25 @@ package com.futaneagro.entity;
 import javax.persistence.*;
 import org.hibernate.annotations.Where;
 
+/**
+ * <h1>CustomFieldDefinition Entity (Dynamic Tenant Schema Extension Metadata)</h1>
+ * <p>
+ * Maps to table {@code t_sys_custom_field_def}. Enables zero-code user interface schema extensions
+ * on core enterprise entities: {@code PARTIES}, {@code VENDORS}, {@code EMPLOYEES}, and {@code MACHINES}.
+ * </p>
+ *
+ * <h3>Supported Field Types:</h3>
+ * <ul>
+ *   <li>{@code TEXT} - Single line input string.</li>
+ *   <li>{@code NUMBER} - Numeric decimal/integer.</li>
+ *   <li>{@code DATE} - ISO-8601 calendar date.</li>
+ *   <li>{@code SELECT} - Dropdown selection from JSON options in {@code optionsJson}.</li>
+ *   <li>{@code CHECKBOX} - Boolean true/false toggle.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_sys_custom_field_def")
 @Where(clause = "is_active = true")

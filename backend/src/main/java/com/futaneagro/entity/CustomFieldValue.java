@@ -2,6 +2,16 @@ package com.futaneagro.entity;
 
 import javax.persistence.*;
 
+/**
+ * <h1>CustomFieldValue Entity (Dynamic Tenant Custom Attribute Values)</h1>
+ * <p>
+ * Maps to table {@code t_sys_custom_field_val}. Stores the entity-attribute-value (EAV) mapping
+ * linking an entity record (e.g. party UUID) to a {@link CustomFieldDefinition} and its stringified text value.
+ * </p>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_sys_custom_field_val", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"field_def_id", "entity_record_id"})

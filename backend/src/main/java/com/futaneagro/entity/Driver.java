@@ -8,6 +8,23 @@ import org.hibernate.annotations.Where;
 import javax.persistence.*;
 import java.time.LocalDate;
 
+/**
+ * <h1>Driver Entity (Logistics Driver Master)</h1>
+ * <p>
+ * Maps to table {@code t_hr_driver}. Represents internal plant drivers and third-party commercial vehicle operators.
+ * Tracks driver names, contact mobile numbers, Indian Regional Transport Office (RTO) driving license numbers, and residential addresses.
+ * </p>
+ *
+ * <h3>Key Invariants:</h3>
+ * <ul>
+ *   <li><b>Audit & Soft Deletion:</b> Extends {@link BaseEntity} with UUID identifier and optimistic concurrency.
+ *       Soft deleted via {@code @SQLDelete} to preserve foreign key historical references in transport manifests.</li>
+ *   <li><b>Logistics Relation:</b> Referenced by {@link Transport} logistics entries.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_hr_driver")
 @Where(clause = "is_active = true AND is_deleted = false")

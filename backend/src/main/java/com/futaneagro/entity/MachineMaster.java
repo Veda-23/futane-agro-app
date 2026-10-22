@@ -10,6 +10,24 @@ import org.hibernate.annotations.Where;
 import javax.persistence.*;
 import java.time.LocalDate;
 
+/**
+ * <h1>MachineMaster Entity (Plant Machinery & Injection Molding Asset Catalog)</h1>
+ * <p>
+ * Maps to table {@code t_prd_machine_master}. Catalogs the injection molding machinery assets at the factory.
+ * Tracks machine identification codes, hourly crate output throughput capacity (e.g. 600 crates/hr),
+ * manufacturer, commissioning date, warranty lifecycle, and operational status ({@code Running}, {@code Maintenance}, {@code Stopped}).
+ * </p>
+ *
+ * <h3>Key Plant Operations Invariants:</h3>
+ * <ul>
+ *   <li><b>Unique Identity:</b> Enforces a unique constraint on {@code machine_name}.</li>
+ *   <li><b>Throughput Fallback:</b> Default capacity fallback is configured to 600 units/hour.</li>
+ *   <li><b>Breakdown Tracking:</b> Referenced by {@link MachineBreakdown} to audit equipment downtime.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_prd_machine_master", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"machine_name"})

@@ -4,6 +4,16 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * <h1>MfaUsedToken Entity (Replay Attack Prevention for TOTP & OTP Codes)</h1>
+ * <p>
+ * Maps to table {@code t_mfa_used_tokens}. Tracks one-time token hashes and expiration windows
+ * to prevent replay attacks during multi-factor authentication challenges.
+ * </p>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_mfa_used_tokens")
 public class MfaUsedToken {

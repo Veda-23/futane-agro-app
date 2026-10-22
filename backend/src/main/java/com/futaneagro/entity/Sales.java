@@ -13,6 +13,19 @@ import javax.persistence.FetchType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * Commercial Wholesale Sales Order & Tax Ledger Entity (`t_sal_sales`).
+ *
+ * Financial & Statutory Tax Invariants:
+ * - High-Precision Currency: Employs `BigDecimal` with `ROUND_HALF_UP` rounding to avoid IEEE 754 floating-point errors.
+ * - Server-Side Automatic Tax Computation: `@PrePersist` and `@PreUpdate` lifecycle hooks execute `calculateTotals()`:
+ *     - Gross Subtotal = `rate * quantity`
+ *     - Intra-State Tax (MH): Split equally into CGST (`rate * gstRate / 200`) and SGST (`cgst`).
+ *     - Total Invoice Value = `Gross + CGST + SGST`.
+ *     - Net Outstanding Due: Strictly computed as `totalAmount - paid`.
+ * - Entity Relationships: LAZY-loaded relationship to Party.
+ * - Soft-Deletion: Non-destructive archival via `@SQLDelete` and `@Where(clause = "is_active = true AND is_deleted = false")`.
+ */
 @Entity
 @Table(name = "t_sal_sales", indexes = {
     @Index(name = "idx_sales_date", columnList = "date"),

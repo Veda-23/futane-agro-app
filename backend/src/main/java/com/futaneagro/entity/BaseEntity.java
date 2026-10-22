@@ -11,6 +11,16 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Abstract Base Entity for all PostgreSQL enterprise database domain models.
+ *
+ * Statutory architectural patterns:
+ * - High-Entropy Primary Key: Generates random UUID v4 string (`id`) to prevent sequential enumeration attacks (IDOR).
+ * - Automatic JPA Auditing: `@EntityListeners(AuditingEntityListener.class)` populates `createdAt`, `updatedAt`,
+ *   and user principals (`createdBy`, `updatedBy`) resolved by `AuditorAwareImpl`.
+ * - Optimistic Locking Sentinel: `@Version private Integer version` prevents concurrent write race conditions.
+ * - Soft-Deletion Invariant: `isActive = true` and `isDeleted = false` with audit tracking (`deletedBy`, `deletedDate`).
+ */
 @MappedSuperclass
 @JsonIgnoreProperties(value = {"hibernateLazyInitializer", "handler"}, ignoreUnknown = true)
 @EntityListeners(AuditingEntityListener.class)

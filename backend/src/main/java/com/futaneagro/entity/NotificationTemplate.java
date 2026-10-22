@@ -5,6 +5,23 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * <h1>NotificationTemplate Entity (Multi-Channel Alerts & Indian TRAI DLT Templates)</h1>
+ * <p>
+ * Maps to table {@code t_cfg_notification_templates}. Configures automated customer and staff notification messages
+ * across WhatsApp, SMS, and Email channels.
+ * </p>
+ *
+ * <h3>Key Features:</h3>
+ * <ul>
+ *   <li><b>Telecom Compliance:</b> Stores Indian Telecom Regulatory Authority (TRAI) Distributed Ledger Technology
+ *       ({@code dltTemplateId}) registration identifiers for transactional SMS delivery compliance.</li>
+ *   <li><b>Event Routing:</b> Triggers on events such as {@code INVOICE_DISPATCHED}, {@code PAYMENT_REMINDER}, and {@code LOW_STOCK_ALERT}.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_cfg_notification_templates")
 public class NotificationTemplate {

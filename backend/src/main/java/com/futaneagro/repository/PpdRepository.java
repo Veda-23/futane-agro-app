@@ -7,6 +7,17 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 
+/**
+ * <h1>Ppd Repository (Daily Injection Molding Production Tracking)</h1>
+ * <p>
+ * Spring Data JPA repository for the {@link Ppd} entity.
+ * Provides high-speed aggregation queries calculating daily output tallies ({@link #sumSuccessfulByDate(LocalDate)})
+ * and monthly production runs ({@link #sumSuccessfulByYearAndMonth(int, int)}).
+ * </p>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Repository
 public interface PpdRepository extends JpaRepository<Ppd, String> {
     @Query("SELECT COALESCE(SUM(p.successful), 0) FROM Ppd p WHERE p.date = :date")

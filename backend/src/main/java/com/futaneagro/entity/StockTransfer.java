@@ -3,6 +3,23 @@ package com.futaneagro.entity;
 import javax.persistence.*;
 import java.time.LocalDate;
 
+/**
+ * <h1>StockTransfer Entity (Inter-Branch Inventory Rebalancing)</h1>
+ * <p>
+ * Maps to table {@code t_stock_transfers}. Tracks transfer of finished crates between company branches
+ * (e.g. from Central Factory to Pune Distribution Warehouse).
+ * </p>
+ *
+ * <h3>Transfer States:</h3>
+ * <ul>
+ *   <li>{@code IN_TRANSIT} - Crates dispatched from source plant, awaiting arrival.</li>
+ *   <li>{@code RECEIVED} - Consignment inspected and inwarded at destination plant.</li>
+ *   <li>{@code CANCELLED} - Transfer revoked prior to shipment.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_stock_transfers")
 public class StockTransfer extends BaseEntity {

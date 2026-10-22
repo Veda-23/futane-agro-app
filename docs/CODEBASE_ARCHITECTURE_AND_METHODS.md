@@ -437,12 +437,13 @@ Enterprise administration, tenant branding, dynamic RBAC, custom fields, and dev
 
 ---
 
-## 5. Database Entity Architecture (PostgreSQL 16)
+## 5. Database Entity & Repository Architecture (PostgreSQL 16)
 
-The application models 41 tables in the `public` schema:
+The application models 42 JPA entities mapping to relational tables in PostgreSQL:
+
 ```
                        ┌─────────────────────────┐
-                       │       t_core_user       │ (Users, Roles, 2FA)
+                       │       t_core_user       │ (Users, Roles, MFA)
                        └────────────┬────────────┘
                                     │
           ┌─────────────────────────┼────────────────────────┐
@@ -458,8 +459,112 @@ The application models 41 tables in the `public` schema:
   └───────────────┘         └───────────────┘
 ```
 
-- All entity classes extend `BaseEntity.java` (`id`, `created_at`, `created_by`, `updated_at`, `updated_by`, `version`, `is_active`, `is_deleted`).
-- Soft delete pattern: Queries automatically exclude deleted records via Hibernate `@Where(clause = "is_active = true")`.
+### Base Architecture Invariants (`BaseEntity.java`)
+- **Primary Key:** UUID v4 String (`CHAR(36)`), immutable, auto-generated on creation.
+- **Audit Logging:** Handled via Spring Data JPA `@EntityListeners(AuditingEntityListener.class)` tracking `@CreatedBy`, `@CreatedDate`, `@LastModifiedBy`, and `@LastModifiedDate`.
+- **Optimistic Locking:** Protected by `@Version private Long version` to prevent concurrent write collisions under multi-user operational loads.
+- **Soft Deletion Pattern:** Managed by Hibernate `@SQLDelete` updating `is_deleted = true, is_active = false, deleted_date = NOW()`, with read filtering enforced via `@Where(clause = "is_active = true AND is_deleted = false")`.
+- **Sensitive Field Encryption:** Handled via AES-256 `@Convert(converter = AttributeEncryptor.class)` on statutory tax and banking attributes (`Party.gstNumber`, `Vendor.gstNumber`, `Employee.bankAccount`).
+
+---
+
+### Entity Catalog by Functional Domain
+
+#### 1. Core Identity & Governance
+| Entity Class | Table Name | Key Attributes & Constraints | Notes & Invariants |
+| :--- | :--- | :--- | :--- |
+| **`BaseEntity`** | *N/A (Abstract)* | `id`, `created_date`, `created_by`, `last_modified_date`, `last_modified_by`, `version`, `is_active`, `is_deleted` | JPA MappedSuperclass providing UUID PK, auditing, optimistic lock, and soft delete. |
+| **`User`** | `t_core_user` | `username` (unique), `password`, `email`, `role`, `mfa_enabled`, `phone_number`, `failed_attempts`, `locked_until` | Password protected via `@JsonProperty(access = WRITE_ONLY)`. Auto-locks after 5 failed login attempts. |
+| **`UserMfaRecoveryCode`**| `t_user_mfa_recovery_codes` | `user_id`, `code_hash`, `used`, `used_at`, `created_date` | BCrypt-hashed one-time emergency MFA recovery codes. |
+| **`MfaUsedToken`** | `t_mfa_used_tokens` | `token_hash` (unique), `user_id`, `expires_at` | Prevents replay attacks on TOTP and Firebase SMS tokens. |
+| **`RolePermission`** | `t_core_role_permissions` | `role`, `module_key` (unique composite), `can_view`, `can_create`, `can_edit`, `can_delete`, `can_export` | Dynamic RBAC entitlement matrix. |
+| **`FeatureFlag`** | `t_sys_feature_flags` | `module_key` (unique), `module_name`, `category`, `enabled`, `icon` | Runtime modular toggles without application restart. |
+| **`ApiKey`** | `t_core_api_keys` | `api_key` (unique), `key_prefix`, `scopes`, `expires_at`, `last_used_at` | External B2B API integration authentication. |
+| **`WebhookConfig`** | `t_core_webhooks` | `name`, `endpoint_url`, `event_type`, `secret_token`, `retry_count`, `last_status_code` | Outbound event dispatches with HMAC SHA-256 signature verification. |
+| **`Team`** | `t_core_team` | `name`, `code` (unique), `icon`, `color_tag`, `sidebar_order`, `show_in_sidebar` | Departmental divisions and navigation sequence. |
+| **`Branch`** | `t_branches` | `branch_name`, `branch_code` (unique), `location`, `is_main_plant` | Multi-facility plant and regional depot network. |
+
+#### 2. Commercial Sales & CRM
+| Entity Class | Table Name | Key Attributes & Constraints | Notes & Invariants |
+| :--- | :--- | :--- | :--- |
+| **`Party`** | `t_crm_party` | `party_name` (unique), `party_contact` (unique), `party_address`, `gst_number` (encrypted) | Wholesaler/buyer master. GSTIN validated against Indian format regex `\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}`. |
+| **`Sales`** | `t_sal_sales` | `party_id`, `rate`, `quantity`, `bill_amount`, `gst_rate`, `cgst`, `sgst`, `total_amount`, `paid_amount`, `remaining` | Core commercial ledger. Enforces `calculateTotals()` in `@PrePersist`/`@PreUpdate` with statutory 50/50 CGST+SGST split. |
+| **`Invoice`** | `t_fin_invoice` | `invoice_no` (unique), `sale_id`, `date`, `total_amount`, `paid_amount`, `remaining` | Formal tax invoices. Linked via `@ManyToOne` to `Sales`. |
+| **`PaymentCollection`**| `t_fin_payment` | `sale_id`, `party_id`, `date`, `amount`, `payment_mode`, `reference_no` | Customer collection receipts. Reconciles sales balance and payment ledger. |
+| **`PaymentLink`** | `t_pay_payment_links` | `sale_id`, `razorpay_payment_link_id` (unique), `short_url`, `amount`, `status` | Razorpay digital invoice collection links with WhatsApp reminders. |
+
+#### 3. Manufacturing & Plant Operations
+| Entity Class | Table Name | Key Attributes & Constraints | Notes & Invariants |
+| :--- | :--- | :--- | :--- |
+| **`MachineMaster`** | `t_prd_machine_master` | `machine_name` (unique), `machine_code`, `capacity_per_hour`, `manufacturer`, `status` | Injection molding machinery assets. Capacity fallback: 600 crates/hour. |
+| **`MachineBreakdown`**| `t_prd_breakdown` | `machine_id`, `date`, `issue`, `resolved_by`, `downtime` (minutes) | Unscheduled plant equipment downtime logs. |
+| **`Ppd`** | `t_prd_ppd` | `date`, `shift`, `crate_type`, `planned`, `successful`, `damaged`, `efficiency` | Daily production tally per machine shift. Computes efficiency % automatically. |
+| **`Ppm`** | `t_prd_ppm` | `year`, `month`, `crate_type`, `total_produced`, `electricity_units`, `power_bill` | Monthly production telemetry and electrical utility power cost analysis. |
+
+#### 4. Inventory, Materials & Procurement
+| Entity Class | Table Name | Key Attributes & Constraints | Notes & Invariants |
+| :--- | :--- | :--- | :--- |
+| **`Inventory`** | `t_inv_inventory` | `crate_type`, `material_type`, `opening_stock`, `produced_stock`, `soldStock`, `current_stock` | Finished crate warehouse stock. Invariant formula: `currentStock = (openingStock + producedStock) - soldStock`. |
+| **`RawMaterial`** | `t_inv_raw_material` | `date`, `material_name`, `vendor_id`, `weight`, `rate`, `amount`, `purchase_bill_path` | Polymer granules, masterbatch, and resin inward weighbridge shipments. Formula: `amount = weight * rate`. |
+| **`Vendor`** | `t_crm_vendor` | `vendor_name` (unique), `mobile` (unique), `address`, `gst_number` (encrypted) | Petrochemical resin and equipment supplier master. |
+| **`StockTransfer`** | `t_stock_transfers` | `transfer_date`, `source_branch_id`, `destination_branch_id`, `crate_type`, `quantity`, `status` | Inter-branch finished crate rebalancing (`IN_TRANSIT`, `RECEIVED`, `CANCELLED`). |
+
+#### 5. Logistics & Fleet Fleet
+| Entity Class | Table Name | Key Attributes & Constraints | Notes & Invariants |
+| :--- | :--- | :--- | :--- |
+| **`Driver`** | `t_hr_driver` | `driver_name`, `mobile`, `license_number`, `address` | Commercial truck drivers directory with RTO driving license records. |
+| **`Transport`** | `t_log_transport` | `date`, `truck_number`, `driver_id`, `rent`, `advance`, `remaining` | Freight manifest. Invariant: `remaining = rent - advance` on `@PrePersist`/`@PreUpdate`. |
+| **`Dispatch`** | `t_log_dispatch` | `dispatch_number` (unique), `sale_id`, `vehicle_number`, `driver_name`, `date`, `status` | Outward gate pass supervisor for loaded transport vehicles. |
+
+#### 6. Human Resources & Payroll
+| Entity Class | Table Name | Key Attributes & Constraints | Notes & Invariants |
+| :--- | :--- | :--- | :--- |
+| **`Employee`** | `t_hr_employee` | `employee_name`, `mobile`, `aadhaar_number`, `bank_account` (encrypted), `salary` | Staff roster. 12-digit Aadhaar validation regex `^\d{12}$`. |
+| **`EmployeeSalary`** | `t_hr_salary` | `employee_id`, `month`, `year`, `salary`, `payment_status`, `payment_date` | Monthly wage disbursements (`Pending`, `Paid`, `Cancelled`). |
+
+#### 7. Treasury & Financial Accounting
+| Entity Class | Table Name | Key Attributes & Constraints | Notes & Invariants |
+| :--- | :--- | :--- | :--- |
+| **`Expense`** | `t_fin_expense` | `date`, `category`, `amount`, `description` | Factory operating overheads. Pattern: `Fuel|Diesel|Electricity|Repair|Office|...`. |
+| **`BankTransaction`**| `t_fin_transaction` | `date`, `mode` (`Cash`, `Bank`, `UPI`), `amount`, `type` (`Debit`, `Credit`) | Corporate passbook ledger tracking treasury inflows and outflows. |
+| **`BankProfile`** | `t_cfg_bank_profiles` | `bank_name`, `account_holder_name`, `account_number`, `ifsc_code`, `upi_id`, `is_primary` | Bank account profiles and dynamic UPI QR code parameters for invoice printouts. |
+| **`CompanyProfile`** | `t_cfg_company_profiles` | `company_name`, `trade_name`, `gstin`, `pan`, `cin`, `state_code` ("27") | Statutory corporate identity and legal jurisdiction configuration. |
+
+#### 8. B2B Customer Storefront
+| Entity Class | Table Name | Key Attributes & Constraints | Notes & Invariants |
+| :--- | :--- | :--- | :--- |
+| **`CustomerOrder`** | `t_ord_customer_orders` | `order_number` (unique), `customer_name`, `customer_mobile`, `grand_total`, `order_status` | B2B web storefront purchase order header. Bridges to ERP sale via `erpSaleId`. |
+| **`OrderItem`** | `t_ord_order_items` | `order_id`, `crate_type`, `color`, `embossing_text`, `quantity`, `unit_price`, `gross_amount` | Individual product specification line items with custom branding options. |
+| **`OrderTrackingEvent`**| `t_ord_tracking_events`| `order_id`, `step_key`, `title`, `description`, `vehicle_number`, `event_time` | Real-time buyer tracking milestone events. |
+
+#### 9. Dynamic Customization & Auditing
+| Entity Class | Table Name | Key Attributes & Constraints | Notes & Invariants |
+| :--- | :--- | :--- | :--- |
+| **`CustomFieldDefinition`**| `t_sys_custom_field_def` | `entity_name`, `field_key`, `field_label`, `field_type`, `options_json`, `is_required` | Zero-code schema extension metadata for Parties, Vendors, Employees, and Machines. |
+| **`CustomFieldValue`** | `t_sys_custom_field_val` | `field_def_id`, `entity_name`, `entity_record_id`, `field_value` | Entity-Attribute-Value (EAV) storage for tenant custom fields. |
+| **`NotificationTemplate`**| `t_cfg_notification_templates`| `event_key`, `channel`, `template_name`, `template_text`, `dlt_template_id` | Automated WhatsApp, SMS, and Email alert templates with Indian DLT compliance. |
+| **`InvoiceTemplateConfig`**| `t_cfg_invoice_templates`| `template_name`, `invoice_title`, `terms_and_conditions`, `jurisdiction_clause`, `primary_color_hex` | Legal invoice layout configuration and printing terms. |
+| **`Settings`** | `t_sys_settings` | `config_key`, `config_value` | Global runtime key-value configuration store. |
+| **`AuditLog`** | `audit_log` | `username`, `action`, `table_name`, `old_value`, `new_value`, `ip_address`, `timestamp` | Application-level mutation changelog. |
+| **`SecurityAuditLog`** | `security_audit_logs` | `event_type`, `severity`, `username`, `client_ip`, `user_agent`, `details`, `timestamp` | Immutable forensic security event trail for ISO 27001, SOC 2, and DPDP Act 2023. |
+
+---
+
+### Repository Layer Architecture (`backend/src/main/java/com/futaneagro/repository/`)
+
+The repository tier leverages Spring Data JPA with zero-overhead performance patterns:
+
+1. **Eager Fetch Entity Graphs (`@EntityGraph`):**
+   - Eliminates the N+1 select problem by fetching associated entities via SQL `LEFT OUTER JOIN` in a single query roundtrip:
+     - `SalesRepository`: `@EntityGraph(attributePaths = {"party"})`
+     - `InvoiceRepository`: `@EntityGraph(attributePaths = {"sale", "sale.party"})`
+     - `RawMaterialRepository`: `@EntityGraph(attributePaths = {"vendor"})`
+2. **Coalesced Aggregate Queries:**
+   - Enforces `COALESCE(SUM(...), 0)` across financial, inventory, and production metrics (`SalesRepository.sumTotalAmount()`, `InventoryRepository.sumCurrentStock()`, `RawMaterialRepository.sumTotalWeight()`, `PpdRepository.sumSuccessfulByDate()`) to ensure queries return valid zeroes instead of `null` on new installations.
+3. **Forensic Threat Aggregation:**
+   - `SecurityAuditLogRepository` executes real-time brute-force intrusion detection via `findTopAttackingIps()` grouping failed logins by client IP within sliding time windows.
+4. **Case-Insensitive Authentication:**
+   - `UserRepository` enforces `findByUsernameIgnoreCase()` and `findByEmailIgnoreCase()` to eliminate case-sensitivity vulnerabilities during credential verification.
 
 ---
 

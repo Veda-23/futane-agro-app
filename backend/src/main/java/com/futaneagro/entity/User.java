@@ -4,6 +4,17 @@ import javax.persistence.*;
 import org.hibernate.annotations.Where;
 import java.time.LocalDateTime;
 
+/**
+ * User Account & Authentication Principal Entity (`t_core_user`).
+ *
+ * Security and Governance:
+ * - Credential Protection: Password serialized as `WRITE_ONLY` to prevent hash leakage in REST responses.
+ * - Brute-Force Lockout Defense: Increments `failedAttempts` on bad logins; locks account (`accountLocked = true`)
+ *   for 30 minutes after 5 successive invalid attempts.
+ * - Temporary Credential Compliance: `forcePasswordChange = true` restricts access until operator changes default password.
+ * - Multi-Factor Authentication: Tracks phone MFA enrollment status (`mfaEnabled`) and registered mobile number.
+ * - Hibernate Soft-Delete: Query results automatically exclude inactive records via `@Where(clause = "is_active = true")`.
+ */
 @Entity
 @Table(name = "t_core_user")
 @Where(clause = "is_active = true")

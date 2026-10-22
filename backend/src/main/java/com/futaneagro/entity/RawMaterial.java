@@ -10,6 +10,24 @@ import javax.persistence.FetchType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * <h1>RawMaterial Entity (Polymer Granules & Resin Inward Invoicing)</h1>
+ * <p>
+ * Maps to table {@code t_inv_raw_material}. Records purchases and weighbridge inward arrivals of High-Density
+ * Polyethylene (HDPE), Polypropylene (PP), masterbatches, and regrind plastics from suppliers.
+ * </p>
+ *
+ * <h3>Key Calculation & Compliance Invariants:</h3>
+ * <ul>
+ *   <li><b>Valuation Formula:</b> {@code amount = weight * rate}. Synchronized automatically via
+ *       {@link #calculateAmount()} on {@code @PrePersist} and {@code @PreUpdate}.</li>
+ *   <li><b>Vendor Ledger:</b> Mandatory {@code @ManyToOne} association with {@link Vendor}.</li>
+ *   <li><b>Statutory Documents:</b> Stores storage references to supplier Tax Invoices and weighbridge slips.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_inv_raw_material", indexes = {
     @Index(name = "idx_rm_date", columnList = "date"),
@@ -48,6 +66,10 @@ public class RawMaterial extends BaseEntity {
     private String weightSlipPath;
     public RawMaterial() {}
 
+    /**
+     * Calculates the raw material purchase total valuation prior to persistence or update.
+     * <p>Formula: {@code amount = weight * rate}</p>
+     */
     @PrePersist
     @PreUpdate
     public void calculateAmount() {

@@ -10,6 +10,14 @@ import javax.persistence.FetchType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * Monthly Factory Payroll Voucher Entity (`t_hr_salary`).
+ *
+ * Capabilities:
+ * - Records monthly salary disbursement vouchers for staff members across billing cycles (Month/Year).
+ * - Tracks voucher disbursement state (Paid, Pending, Cancelled) and actual disbursement date (`paidDate`).
+ * - Many-to-One relationship to [`Employee`](file:///backend/src/main/java/com/futaneagro/entity/Employee.java).
+ */
 @Entity
 @Table(name = "t_hr_salary", indexes = {
     @Index(name = "idx_salary_emp_id", columnList = "emp_id"),

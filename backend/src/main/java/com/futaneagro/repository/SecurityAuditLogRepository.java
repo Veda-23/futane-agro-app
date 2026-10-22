@@ -12,6 +12,18 @@ import org.springframework.data.repository.query.Param;
 import java.time.Instant;
 import java.util.List;
 
+/**
+ * <h1>SecurityAuditLog Repository (Forensic Query & Threat Analytics)</h1>
+ * <p>
+ * Spring Data JPA repository for the {@link SecurityAuditLog} entity.
+ * Provides specialized queries for SIEM ingestion, intrusion detection,
+ * high-severity alerts ({@link #findRecentHighSeverityEvents(Instant)}),
+ * and brute-force IP aggregation ({@link #findTopAttackingIps(Instant)}).
+ * </p>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 public interface SecurityAuditLogRepository extends JpaRepository<SecurityAuditLog, Long> {
 
     Page<SecurityAuditLog> findByUsername(String username, Pageable pageable);

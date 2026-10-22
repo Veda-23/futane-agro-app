@@ -2,6 +2,25 @@ package com.futaneagro.entity;
 
 import javax.persistence.*;
 
+/**
+ * <h1>RolePermission Entity (Granular RBAC Module Entitlement Matrix)</h1>
+ * <p>
+ * Maps to table {@code t_core_role_permissions}. Defines granular operational rights for user roles
+ * (e.g., {@code ROLE_ADMIN}, {@code ROLE_STAFF}, {@code ROLE_ACCOUNTANT}) per ERP module.
+ * </p>
+ *
+ * <h3>Permission Vectors:</h3>
+ * <ul>
+ *   <li>{@code canView} - View records in tables and forms.</li>
+ *   <li>{@code canCreate} - Insert new records.</li>
+ *   <li>{@code canEdit} - Modify existing entries.</li>
+ *   <li>{@code canDelete} - Trigger soft deletion workflows.</li>
+ *   <li>{@code canExport} - Export records to Excel, CSV, or PDF format.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_core_role_permissions", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"role", "module_key"})

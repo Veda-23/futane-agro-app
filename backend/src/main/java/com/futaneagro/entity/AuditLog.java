@@ -4,6 +4,17 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * <h1>AuditLog Entity (Operational Change History & Data Mutation Audit)</h1>
+ * <p>
+ * Maps to table {@code audit_log}. Persists a chronological log of business operations across tables,
+ * capturing the modifying user, target entity/table, diff states ({@code oldValue} vs {@code newValue}),
+ * and client IP address.
+ * </p>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "audit_log")
 public class AuditLog {

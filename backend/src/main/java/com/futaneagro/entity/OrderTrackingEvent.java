@@ -7,6 +7,26 @@ import org.hibernate.annotations.Where;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * <h1>OrderTrackingEvent Entity (Customer Storefront Order Status Timeline)</h1>
+ * <p>
+ * Maps to table {@code t_ord_tracking_events}. Stores chronological milestone checkpoints for buyer visibility
+ * in the customer portal and live tracking dashboard.
+ * </p>
+ *
+ * <h3>Milestone Stages:</h3>
+ * <ul>
+ *   <li>{@code ORDER_PLACED} - Order created by client or sales agent.</li>
+ *   <li>{@code CONFIRMED} - Credit check verified, order approved by accounts.</li>
+ *   <li>{@code IN_PRODUCTION} - Molds mounted on injection molding machine; manufacturing underway.</li>
+ *   <li>{@code PACKED_INVOICED} - Crates palletized, tax invoice issued.</li>
+ *   <li>{@code DISPATCHED} - Gate pass verified, loaded on freight truck with driver details.</li>
+ *   <li>{@code DELIVERED} - Proof of delivery signed by client receiving depot.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_ord_tracking_events")
 @Where(clause = "is_active = true AND is_deleted = false")

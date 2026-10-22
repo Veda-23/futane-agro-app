@@ -9,6 +9,24 @@ import org.hibernate.annotations.Where;
 import javax.persistence.*;
 import java.time.LocalDate;
 
+/**
+ * <h1>Vendor Entity (Supplier Directory & Procurement Master)</h1>
+ * <p>
+ * Maps to table {@code t_crm_vendor}. Catalogs suppliers providing polymer granules, masterbatches,
+ * packaging material, machinery spares, and industrial maintenance services.
+ * </p>
+ *
+ * <h3>Key Security & Business Invariants:</h3>
+ * <ul>
+ *   <li><b>Data Encryption:</b> The supplier's GSTIN ({@code gstNumber}) is encrypted at rest using AES-256 via
+ *       {@link com.futaneagro.security.AttributeEncryptor}.</li>
+ *   <li><b>Unique Identity:</b> Enforces unique constraints on supplier name ({@code vendor_name}) and mobile number ({@code mobile}).</li>
+ *   <li><b>Procurement Relation:</b> Linked to inward raw material records in {@link RawMaterial}.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_crm_vendor", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"vendor_name"}),

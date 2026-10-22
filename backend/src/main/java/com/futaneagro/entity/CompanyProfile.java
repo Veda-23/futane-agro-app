@@ -5,6 +5,23 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * <h1>CompanyProfile Entity (Multi-Tenant Legal Entity & Statutory GST Identity)</h1>
+ * <p>
+ * Maps to table {@code t_cfg_company_profiles}. Maintains the legal entity profile of Futane Agro Industries,
+ * including legal trade name, 15-character GSTIN, Permanent Account Number (PAN), Corporate Identification Number (CIN),
+ * registered office address, factory address, contact information, and state code (27 for Maharashtra).
+ * </p>
+ *
+ * <h3>Statutory & Multi-Tenant Invariants:</h3>
+ * <ul>
+ *   <li><b>Default Entity:</b> {@code isDefault} marks the active operating entity for header branding on invoices.</li>
+ *   <li><b>State Code:</b> Defaults to {@code "27"} (Maharashtra) to determine CGST+SGST vs IGST applicability.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_cfg_company_profiles")
 public class CompanyProfile {

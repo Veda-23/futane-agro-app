@@ -10,6 +10,15 @@ import javax.persistence.FetchType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * Customer Payment Receipt & Settlement Collection Entity (`t_fin_payment`).
+ *
+ * Responsibilities:
+ * - Records inbound monetary collections against commercial customer invoices.
+ * - Modes supported: Cash, UPI, Cheque, Bank Transfer, NEFT/RTGS.
+ * - Precision: `BigDecimal amountReceived` preserving exact monetary figures.
+ * - Many-to-One relationship to [`Party`](file:///backend/src/main/java/com/futaneagro/entity/Party.java).
+ */
 @Entity
 @Table(name = "t_fin_payment", indexes = {
     @Index(name = "idx_pay_party", columnList = "party_id"),

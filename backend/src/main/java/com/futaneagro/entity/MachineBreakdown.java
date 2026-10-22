@@ -9,6 +9,23 @@ import javax.persistence.*;
 import javax.persistence.FetchType;
 import java.time.LocalDate;
 
+/**
+ * <h1>MachineBreakdown Entity (Unscheduled Plant Downtime & Maintenance Log)</h1>
+ * <p>
+ * Maps to table {@code t_prd_breakdown}. Logs mechanical faults, electrical outages, hydraulic issues,
+ * and scheduled tooling changeovers across injection molding lines.
+ * </p>
+ *
+ * <h3>Key Metrics:</h3>
+ * <ul>
+ *   <li><b>Downtime Duration:</b> Tracks total idle production time in minutes ({@code downtime}).</li>
+ *   <li><b>Resolution Accountability:</b> Captures the maintenance engineer or technician identity ({@code resolvedBy}).</li>
+ *   <li><b>Machine Master Link:</b> {@code @ManyToOne} association with {@link MachineMaster}.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Entity
 @Table(name = "t_prd_breakdown")
 @Where(clause = "is_active = true AND is_deleted = false")

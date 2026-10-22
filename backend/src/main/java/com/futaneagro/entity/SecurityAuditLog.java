@@ -4,9 +4,20 @@ import javax.persistence.*;
 import java.time.Instant;
 
 /**
- * Immutable security audit log entry.
- * Records MUST NEVER be modified or deleted (compliance requirement).
- * Supports: ISO 27001, SOC 2, India DPDP Act 2023.
+ * <h1>SecurityAuditLog Entity (Immutable Security & Forensic Event Log)</h1>
+ * <p>
+ * Maps to table {@code security_audit_logs}. Records authentication successes/failures, OTP issuances,
+ * account lockouts, privilege escalation attempts, token revocations, and rate limit exceptions.
+ * </p>
+ *
+ * <h3>Compliance & Legal Standards:</h3>
+ * <ul>
+ *   <li><b>Immutability:</b> Records MUST NEVER be updated or deleted under any circumstances.</li>
+ *   <li><b>Statutory Alignment:</b> Conforms to ISO 27001, SOC 2, and India Digital Personal Data Protection (DPDP) Act 2023.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
  */
 @Entity
 @Table(name = "security_audit_logs", indexes = {
