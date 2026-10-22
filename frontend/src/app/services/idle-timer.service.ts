@@ -1,6 +1,19 @@
 import { Injectable, NgZone, OnDestroy } from '@angular/core';
 import { Subject } from 'rxjs';
 
+/**
+ * Client-Side Inactivity Watchdog & Auto-Logout Countdown Service.
+ * <p>
+ * Guards application security by monitoring user interaction across the browser window:
+ * <ul>
+ *   <li><b>Passive Event Listeners:</b> Listens to {@code mousemove}, {@code click}, {@code keypress}, {@code scroll},
+ *       and {@code touchstart} events with {@code { passive: true }}.</li>
+ *   <li><b>NgZone Performance Shield:</b> Event registration and 1-second interval timers run strictly outside
+ *       Angular's zone ({@link NgZone#runOutsideAngular}) to prevent constant change detection cycles.</li>
+ *   <li><b>Session Timeout:</b> Triggers {@link #idle$} after 10 minutes (600,000 ms) of total inactivity,
+ *       emitting a formatted {@code mm:ss} countdown string via {@link #countdown$} for display in warning dialogs.</li>
+ * </ul>
+ */
 @Injectable({ providedIn: 'root' })
 export class IdleTimerService implements OnDestroy {
   private readonly IDLE_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes

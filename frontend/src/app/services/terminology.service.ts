@@ -80,6 +80,20 @@ export const INDUSTRY_PRESET_TERMINOLOGY: Record<string, Partial<TerminologyDict
   }
 };
 
+/**
+ * Dynamic Multi-Tenant White-Label Terminology Engine.
+ * <p>
+ * Allows the Futane Agro ERP frontend to morph its business vocabulary dynamically per tenant without code redeployments:
+ * <ul>
+ *   <li><b>Industry Vocabulary Presets:</b> Supports pre-packaged dictionaries for Agri-Plastics (Crates / Polymer),
+ *       Textiles (Fabric Rolls / Yarn & Loom), Food Processing (Cartons / Raw Ingredients), Electronics (Modules / Component Reels),
+ *       and General Discrete Manufacturing.</li>
+ *   <li><b>Cross-Tab Synchronization:</b> Listens to browser {@code 'storage'} events to immediately update
+ *       sibling tabs when an administrator changes tenant vocabulary settings in another window.</li>
+ *   <li><b>Reactive State:</b> Exposes {@link #terms$} Observable and synchronous {@link #current} getters
+ *       consumed by components, pipes, and template interpolations.</li>
+ * </ul>
+ */
 @Injectable({
   providedIn: 'root'
 })

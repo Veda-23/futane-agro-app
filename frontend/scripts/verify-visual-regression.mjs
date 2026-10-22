@@ -41,7 +41,8 @@ import { chromium } from 'playwright';
   } catch (e) {
     await page.waitForTimeout(2000);
   }
-  await page.waitForTimeout(1500);
+  await page.waitForLoadState('networkidle').catch(() => {});
+  await page.waitForTimeout(1000);
 
   // Fallback login if needed
   let pwdInput = null;
@@ -49,13 +50,19 @@ import { chromium } from 'playwright';
     pwdInput = await page.$('input[type="password"]');
   } catch (e) {
     await page.waitForTimeout(1000);
-    pwdInput = await page.$('input[type="password"]');
+    try {
+      pwdInput = await page.$('input[type="password"]');
+    } catch (e2) {
+      pwdInput = null;
+    }
   }
   if (pwdInput) {
-    await page.fill('input[type="text"]', 'SUPER_ADMIN');
-    await page.fill('input[type="password"]', 'superadmin123');
-    await page.click('button[type="submit"]');
-    await page.waitForTimeout(1500);
+    try {
+      await page.fill('input[type="text"]', 'SUPER_ADMIN');
+      await page.fill('input[type="password"]', 'superadmin123');
+      await page.click('button[type="submit"]');
+      await page.waitForTimeout(2000);
+    } catch (loginErr) {}
   }
 
   // Ensure Settings tab is active

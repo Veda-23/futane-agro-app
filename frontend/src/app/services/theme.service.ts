@@ -2,6 +2,18 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+/**
+ * Enterprise Dark / Light Theme Switching Service.
+ * <p>
+ * Controls application visual aesthetics across the DOM:
+ * <ul>
+ *   <li><b>Environment-Isolated Storage:</b> Stores user preferences in isolated keys ({@code erp_dark_mode_prod} vs {@code erp_dark_mode_uat})
+ *       to prevent theme collisions between testing and production staging instances.</li>
+ *   <li><b>CSS Body Class Binding:</b> Dynamically toggles {@code .dark-theme} on {@code document.body},
+ *       activating global CSS custom property variables for dark surfaces ({@code #0b1120}), card backgrounds, and neon borders.</li>
+ *   <li><b>Reactive State:</b> Exposes {@link #isDark$} BehaviorSubject observable and synchronous {@link #isDark} boolean.</li>
+ * </ul>
+ */
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   private readonly storageKey = environment.production && !(environment as any).uat

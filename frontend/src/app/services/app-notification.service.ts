@@ -11,6 +11,18 @@ export interface AppNotification {
   actionRoute?: string;
 }
 
+/**
+ * In-App Notification Center & Bell Drawer State Service.
+ * <p>
+ * Manages the persistent bell icon dropdown and notification inbox in the application topbar:
+ * <ul>
+ *   <li><b>Retention Buffer:</b> Retains the most recent 50 notification items, sorted chronologically with new arrivals prepended.</li>
+ *   <li><b>Deduplication Guard:</b> Ignores incoming notifications with identical title and message to prevent spamming the drawer.</li>
+ *   <li><b>Unread Badge Counter:</b> Dynamically evaluates {@link #unreadCount} to display badge counts on the top navigation bar.</li>
+ *   <li><b>Deep Linking:</b> Supports optional {@code actionRoute} properties allowing users to click a notification
+ *       to navigate directly to relevant invoices, inventory items, or machine repair tickets.</li>
+ * </ul>
+ */
 @Injectable({ providedIn: 'root' })
 export class AppNotificationService {
   private _notifications$ = new BehaviorSubject<AppNotification[]>([]);

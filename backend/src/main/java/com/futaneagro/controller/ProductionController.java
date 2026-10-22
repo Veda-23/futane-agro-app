@@ -44,10 +44,13 @@ public class ProductionController {
     private RawMaterialRepository rawMaterialRepository;
 
     @Autowired
+    private VendorRepository vendorRepository;
+
+    @Autowired
     private InventoryRepository inventoryRepository;
 
     @Autowired
-    private AuditLogRepository auditRepo;
+    private com.futaneagro.service.AuditService auditService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -59,18 +62,11 @@ public class ProductionController {
     private com.futaneagro.service.ProductionForecastService forecastService;
 
     private String getCurrentUser() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return (principal != null) ? principal.toString() : "system";
+        return auditService.getCurrentUser();
     }
 
     private void saveAuditLog(String action, String tableName, String oldValue, String newValue) {
-        AuditLog log = new AuditLog();
-        log.setUsername(getCurrentUser());
-        log.setAction(action);
-        log.setTableName(tableName);
-        log.setOldValue(oldValue);
-        log.setNewValue(newValue);
-        auditRepo.save(log);
+        auditService.log(action, tableName, oldValue, newValue);
     }
 
     private String toJson(Object obj) {
@@ -344,6 +340,9 @@ public class ProductionController {
      */
     @PostMapping("/raw-materials")
     public RawMaterial createRawMaterial(@RequestBody RawMaterial rawMaterial) {
+        if (rawMaterial.getVendor() != null && rawMaterial.getVendor().getId() != null) {
+            vendorRepository.findById(rawMaterial.getVendor().getId()).ifPresent(rawMaterial::setVendor);
+        }
         RawMaterial saved = rawMaterialRepository.save(rawMaterial);
         saveAuditLog("Created raw material entry: " + saved.getMaterialName(), "Raw_Material", null, toJson(saved));
         return saved;

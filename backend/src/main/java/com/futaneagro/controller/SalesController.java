@@ -65,7 +65,7 @@ public class SalesController {
     private InventoryRepository inventoryRepository;
 
     @Autowired
-    private AuditLogRepository auditRepo;
+    private com.futaneagro.service.AuditService auditService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -79,8 +79,7 @@ public class SalesController {
      * @return The username string of the active session, or "system" if unauthenticated.
      */
     private String getCurrentUser() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return (principal != null) ? principal.toString() : "system";
+        return auditService.getCurrentUser();
     }
 
     /**
@@ -92,13 +91,7 @@ public class SalesController {
      * @param newValue   JSON representation of the entity after modification (null for deletion).
      */
     private void saveAuditLog(String action, String tableName, String oldValue, String newValue) {
-        AuditLog log = new AuditLog();
-        log.setUsername(getCurrentUser());
-        log.setAction(action);
-        log.setTableName(tableName);
-        log.setOldValue(oldValue);
-        log.setNewValue(newValue);
-        auditRepo.save(log);
+        auditService.log(action, tableName, oldValue, newValue);
     }
 
     /**

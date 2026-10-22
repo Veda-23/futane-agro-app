@@ -69,24 +69,17 @@ public class EnterpriseController {
     private SettingsRepository settingsRepo;
 
     @Autowired
-    private AuditLogRepository auditRepo;
+    private com.futaneagro.service.AuditService auditService;
 
     @Autowired
     private ObjectMapper objectMapper;
 
     private String getCurrentUser() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return (principal != null) ? principal.toString() : "system";
+        return auditService.getCurrentUser();
     }
 
     private void saveAuditLog(String action, String tableName, String oldValue, String newValue) {
-        AuditLog log = new AuditLog();
-        log.setUsername(getCurrentUser());
-        log.setAction(action);
-        log.setTableName(tableName);
-        log.setOldValue(oldValue);
-        log.setNewValue(newValue);
-        auditRepo.save(log);
+        auditService.log(action, tableName, oldValue, newValue);
     }
 
     private String toJson(Object obj) {
@@ -194,6 +187,9 @@ public class EnterpriseController {
      */
     @PostMapping({"/breakdowns", "/machine-breakdowns"})
     public MachineBreakdown createBreakdown(@RequestBody MachineBreakdown breakdown) {
+        if (breakdown.getMachine() != null && breakdown.getMachine().getId() != null) {
+            machineRepo.findById(breakdown.getMachine().getId()).ifPresent(breakdown::setMachine);
+        }
         MachineBreakdown saved = breakdownRepo.save(breakdown);
         saveAuditLog("Logged breakdown for machine ID: " + (saved.getMachine() != null ? saved.getMachine().getId() : "N/A"), "Machine_Breakdown", null, toJson(saved));
         return saved;

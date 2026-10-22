@@ -109,9 +109,10 @@ Assert-Test "PROD" "2.2 Query Daily Production list" {
 }
 
 Assert-Test "PROD" "2.3 Create Monthly Production (PPM) summary" {
+    $testYear = 2030 + (Get-Random -Minimum 1 -Maximum 99)
     $ppmBody = @{
-        month = "August"
-        year = 2026
+        month = "December"
+        year = $testYear
         cratesProduced = 5000
         electricityUnits = 1200
         electricityBill = 14400.0
@@ -400,7 +401,7 @@ Assert-Test "SOFT_DELETE" "16.1 Execute Soft Delete and Verify Query Exclusion" 
 # MODULE 17: ACTUATOR HEALTH AND PROMETHEUS METRICS
 # -------------------------------------------------------------------------------
 Assert-Test "ACTUATOR" "17.1 Actuator Prometheus Metrics Probe" {
-    $metrics = Invoke-WebRequest -Uri "$BaseUrl/actuator/prometheus" -Method Get
+    $metrics = Invoke-WebRequest -Uri "$BaseUrl/actuator/prometheus" -Method Get -UseBasicParsing -TimeoutSec 5
     if ($metrics.StatusCode -ne 200) { throw "Prometheus probe failed with status $($metrics.StatusCode)" }
 }
 

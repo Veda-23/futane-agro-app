@@ -12,6 +12,22 @@ const METADATA_BLACKLIST = new Set([
   '__v', 'isDeleted', 'isActive', 'deletedDate', 'version', 'rawResponse'
 ]);
 
+/**
+ * Universal Data Export Engine.
+ * <p>
+ * Provides robust client-side document generation without requiring backend round-trips:
+ * <ul>
+ *   <li><b>CSV Export:</b> Emits RFC-4180 compliant CSV files with UTF-8 Byte Order Mark (BOM: {@code \uFEFF})
+ *       so Microsoft Excel correctly renders Unicode characters and currency symbols (₹).</li>
+ *   <li><b>OWASP Formula Injection Defense:</b> Prepends apostrophe ({@code '}) to cells starting with
+ *       risky formula symbols ({@code =}, {@code +}, {@code -}, {@code @}) to prevent DDE code execution.</li>
+ *   <li><b>Metadata Filtering:</b> Automatically scrubs technical database fields (UUIDs, version, password hashes)
+ *       using a blacklist set prior to document emission.</li>
+ *   <li><b>Excel 2003 XML Spreadsheet:</b> Generates native {@code .xls} XML files with styled headers, bold fonts,
+ *       and formatted cell types without heavyweight external third-party dependencies.</li>
+ *   <li><b>JSON Snapshot Export:</b> Formats sanitized JSON archives for administrative backups.</li>
+ * </ul>
+ */
 @Injectable({
   providedIn: 'root'
 })

@@ -11,6 +11,20 @@ export interface MfaStatus {
   recoveryCodes?: string[];
 }
 
+/**
+ * Multi-Factor Authentication (MFA) & Firebase Phone Verification Service.
+ * <p>
+ * Orchestrates secondary identity verification for high-security administrative roles:
+ * <ul>
+ *   <li><b>Lazy-Loaded Firebase SDK:</b> Dynamically imports {@code firebase/app} and {@code firebase/auth} on demand
+ *       to keep initial Angular bundle load times minimal.</li>
+ *   <li><b>Invisible reCAPTCHA Management:</b> Mounts, renders, and resets Google reCAPTCHA v2/v3 containers
+ *       to block automated SMS pumping abuse before dispatching OTPs.</li>
+ *   <li><b>Token Exchange Protocol:</b> Exchanging Firebase SMS OTP confirmation for a cryptographically signed
+ *       Firebase ID Token, which is then submitted alongside the short-lived {@code preAuthToken} to {@code /api/users/mfa/verify-firebase-otp}.</li>
+ *   <li><b>Emergency Fallback:</b> Supports single-use backup recovery codes when cell networks or SMS services are degraded.</li>
+ * </ul>
+ */
 @Injectable({
   providedIn: 'root'
 })

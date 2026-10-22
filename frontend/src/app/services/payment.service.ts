@@ -28,11 +28,24 @@ export interface PaymentIntent {
   notes?: string;
 }
 
+/**
+ * Unified Payment Gateway & Transaction Processing Service.
+ * <p>
+ * Integrates client-side checkout mechanisms for online and offline payment collection:
+ * <ul>
+ *   <li><b>Razorpay In-App Checkout:</b> Dynamically loads {@code checkout.js}, requests an authenticated order
+ *       token from {@code /api/sales/{saleId}/checkout/order}, launches the payment modal, and verifies the HMAC signature.</li>
+ *   <li><b>Multi-Method Routing:</b> Supports Online Razorpay, UPI QR/Intent, Debit/Credit Card, and offline Cash/Cheque entries.</li>
+ *   <li><b>State Streaming:</b> Publishes lifecycle transitions through {@link #paymentStatus$} BehaviorSubject.</li>
+ *   <li><b>Resilience:</b> Built-in 15-second timeouts, single retry backoff on network errors, and modal dismiss handling.</li>
+ * </ul>
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class PaymentService {
   private paymentStatusSubject = new BehaviorSubject<PaymentResult | null>(null);
+  /** Observable stream emitting the latest payment operation result */
   paymentStatus$ = this.paymentStatusSubject.asObservable();
 
   constructor(
@@ -41,7 +54,7 @@ export class PaymentService {
 
   /**
    * Process a payment through the unified payment gateway
-   * @param intent Payment details
+   * @param intent Payment details including sale ID, amount, method, and customer info
    * @returns Observable of PaymentResult
    */
   processPayment(intent: PaymentIntent): Observable<PaymentResult> {

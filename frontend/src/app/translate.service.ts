@@ -1104,6 +1104,19 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
   },
 };
 
+/**
+ * Internationalization & Trilingual Localization Service.
+ * <p>
+ * Provides real-time dynamic translation across three regional Indian industrial languages:
+ * <ul>
+ *   <li><b>English ({@code 'en'}):</b> Official corporate lingua franca and default fallback.</li>
+ *   <li><b>Marathi ({@code 'mr'}):</b> Regional plant and shopfloor language in Maharashtra.</li>
+ *   <li><b>Hindi ({@code 'hi'}):</b> National trade and logistics driver language across inter-state supply chains.</li>
+ * </ul>
+ * <p>
+ * <b>Fallback Cascade:</b> If a key is missing in the chosen language, falls back to English,
+ * and if still missing, returns the raw key identifier.
+ */
 @Injectable({ providedIn: 'root' })
 export class TranslateService {
   private currentLanguage$ = new BehaviorSubject<Language>('en');
@@ -1137,6 +1150,10 @@ export class TranslateService {
   }
 }
 
+/**
+ * Pure Angular Standalone Pipe for instant UI template localization:
+ * {@code {{ 'nav.dashboard' | translate:currentLang }}}
+ */
 @Pipe({
   name: 'translate',
   pure: true,

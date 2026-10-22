@@ -29,9 +29,9 @@ Run-Test "Actuator Health Check" {
     if ($res.status -ne "UP") { throw "Status was $($res.status)" }
 }
 
-Run-Test "Public Settings Query" {
-    $res = Invoke-RestMethod -Uri "$BaseUrl/api/settings" -Method Get
-    if ($null -eq $res) { throw "Settings returned null" }
+Run-Test "Public Storefront Catalog Query" {
+    $res = Invoke-RestMethod -Uri "$BaseUrl/api/v1/storefront/catalog" -Method Get
+    if ($null -eq $res -or $res.Count -eq 0) { throw "Storefront catalog returned empty" }
 }
 
 Run-Test "Invalid Credentials Rejection (401)" {

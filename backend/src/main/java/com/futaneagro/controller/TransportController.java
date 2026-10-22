@@ -43,7 +43,10 @@ public class TransportController {
     private TransportRepository transportRepository;
 
     @Autowired
-    private AuditLogRepository auditRepo;
+    private DriverRepository driverRepository;
+
+    @Autowired
+    private com.futaneagro.service.AuditService auditService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -55,8 +58,7 @@ public class TransportController {
      * @return Current authenticated username or "system"
      */
     private String getCurrentUser() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return (principal != null) ? principal.toString() : "system";
+        return auditService.getCurrentUser();
     }
 
     /**
@@ -68,13 +70,7 @@ public class TransportController {
      * @param newValue JSON representation of new state after modification
      */
     private void saveAuditLog(String action, String tableName, String oldValue, String newValue) {
-        AuditLog log = new AuditLog();
-        log.setUsername(getCurrentUser());
-        log.setAction(action);
-        log.setTableName(tableName);
-        log.setOldValue(oldValue);
-        log.setNewValue(newValue);
-        auditRepo.save(log);
+        auditService.log(action, tableName, oldValue, newValue);
     }
 
     /**
@@ -128,6 +124,9 @@ public class TransportController {
      */
     @PostMapping("/transports")
     public Transport createTransport(@RequestBody Transport transport) {
+        if (transport.getDriver() != null && transport.getDriver().getId() != null) {
+            driverRepository.findById(transport.getDriver().getId()).ifPresent(transport::setDriver);
+        }
         Transport saved = transportRepository.save(transport);
         saveAuditLog("Created transport entry: truck " + saved.getTruckNumber(), "Transport", null, toJson(saved));
         return saved;

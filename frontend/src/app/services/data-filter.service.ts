@@ -13,9 +13,26 @@ export interface FilterCriteria {
   pageSize: number;
 }
 
+/**
+ * Client-Side Dataset Filtering & Aggregation Engine.
+ * <p>
+ * Provides in-memory query, date-range evaluation, and mathematical summation across tabular datasets:
+ * <ul>
+ *   <li><b>Date Range Presets:</b> Supports dynamic calculation of {@code today}, {@code yesterday}, {@code this_week},
+ *       {@code this_month}, {@code last_month}, and the Indian Statutory Financial Year (April 1 to March 31).</li>
+ *   <li><b>Multi-Criteria Evaluation:</b> Combines date bounds, customer party IDs, crate SKU types, work shifts,
+ *       and deep JSON substring full-text search.</li>
+ *   <li><b>Real-Time Financial Totals:</b> Automatically calculates running count, aggregate currency turnover,
+ *       and aggregate crate quantity metrics for active table views.</li>
+ *   <li><b>Client-Side Pagination:</b> Slices arrays according to requested page number and page size.</li>
+ * </ul>
+ */
 @Injectable({ providedIn: 'root' })
 export class DataFilterService {
 
+  /**
+   * Generates default filter parameters set to the current calendar month with a page size of 25.
+   */
   getDefaultCriteria(): FilterCriteria {
     return {
       searchTerm: '',

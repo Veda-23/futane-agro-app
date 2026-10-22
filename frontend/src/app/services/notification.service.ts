@@ -1,6 +1,21 @@
 import { Injectable } from '@angular/core';
 import Swal from 'sweetalert2';
 
+/**
+ * Enterprise Toast & Dialog Notification Service.
+ * <p>
+ * Standardizes visual feedback and user alerts across the Futane Agro ERP application using SweetAlert2 (Swal):
+ * <ul>
+ *   <li><b>Glassmorphic Toasts:</b> Fixed-width (410px) top-end floating toasts with gradient squircle badges,
+ *       inline vector SVGs, linear progress timers, and hover-pause behavior.</li>
+ *   <li><b>Theme-Aware Modals:</b> Automatically inspects {@code document.body.classList} for {@code dark-theme}
+ *       to render dark slate ({@code #0f172a}) or crisp white ({@code #ffffff}) dialog surfaces.</li>
+ *   <li><b>HTTP Status Error Mapping:</b> {@link #handleApiError} maps REST status codes (400, 401, 403, 404, 409, 422, 500)
+ *       to contextual user-friendly titles and guidance.</li>
+ *   <li><b>Accessibility Focus Assist:</b> {@link #showValidationError} automatically scrolls to and focuses
+ *       the problematic input element upon dialog dismissal.</li>
+ * </ul>
+ */
 @Injectable({
   providedIn: 'root'
 })

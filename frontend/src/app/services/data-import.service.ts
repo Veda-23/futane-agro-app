@@ -39,6 +39,19 @@ export interface ImportResultResponse {
   failedCount: number;
 }
 
+/**
+ * Client-Side Bulk Data Import Communication Service.
+ * <p>
+ * Manages the multi-stage spreadsheet data onboarding pipeline:
+ * <ol>
+ *   <li><b>Dry-Run Preview ({@link #previewImport}):</b> Submits uploaded CSV/Excel files to {@code /api/data-import/preview}
+ *       to compute error diagnostics, schema validation, and detect existing database duplicates without altering tables.</li>
+ *   <li><b>Conflict Strategy Execution ({@link #confirmImport}):</b> Commits validated records using {@code 'UPDATE'}
+ *       (overwrite existing entity) or {@code 'SKIP'} (retain existing entity) strategies in an ACID transaction.</li>
+ *   <li><b>Template Ingestion ({@link #downloadTemplate}):</b> Downloads pre-configured blank spreadsheet templates
+ *       with correct headers and format guidelines.</li>
+ * </ol>
+ */
 @Injectable({
   providedIn: 'root'
 })

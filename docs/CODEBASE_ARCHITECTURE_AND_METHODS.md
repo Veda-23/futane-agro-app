@@ -440,6 +440,83 @@ Encapsulates SweetAlert2 (Swal) toasts and modals:
 - `success(title, text)`: Top-end auto-closing green toast.
 - `error(title, text)`: Top-end red alert toast.
 - `confirmAction(title, text, confirmBtnText)`: Asynchronous Promise-based confirmation modal.
+- `handleApiError(error)`: Status-aware HTTP exception mapper (400, 401, 403, 404, 409, 422, 500).
+
+### `WebSocketService` (`frontend/src/app/services/websocket.service.ts`)
+Bidirectional STOMP/SockJS real-time telemetry stream:
+- Connects to `/ws-erp` with 20s heartbeats and 10s auto-reconnect.
+- Subscribes to `/topic/updates` and emits parsed `RealtimeUpdate` objects over `updates$`.
+
+### `PaymentService` (`frontend/src/app/services/payment.service.ts`)
+Unified payment gateway orchestrator:
+- Loads Razorpay `checkout.js` on demand, requests order tokens, handles modal dismissal, and verifies signatures.
+- Routes across Razorpay, UPI QR, Debit/Credit Card, and offline Cash/Cheque.
+
+### `UniversalExportService` (`frontend/src/app/services/universal-export.service.ts`)
+Client-side document generator:
+- `exportToCsv()`: Emits UTF-8 BOM (`\uFEFF`) CSVs with OWASP formula injection protection (`'`, `=`, `+`, `-`, `@`).
+- `exportToExcelXml()`: Generates styled Excel 2003 XML spreadsheets with formatted headers.
+- `exportToJson()`: Emits sanitized JSON archives with password/token fields stripped.
+
+### `MfaService` (`frontend/src/app/services/mfa.service.ts`)
+Phone Multi-Factor Authentication manager:
+- Lazy-loads Firebase Auth (`firebase/app`, `firebase/auth`).
+- Manages invisible Google reCAPTCHA v2/v3 instances to prevent SMS pumping.
+- Submits Firebase ID tokens alongside `preAuthToken` to `/api/users/mfa/verify-firebase-otp`.
+
+### `DataFilterService` (`frontend/src/app/services/data-filter.service.ts`)
+In-memory dataset querying and aggregation:
+- Computes presets: `today`, `yesterday`, `this_week`, `this_month`, `last_month`, and Indian FY (Apr 1 - Mar 31).
+- Evaluates multi-criteria dates, party IDs, crate types, shifts, and full-text substrings.
+- Computes real-time record count, total monetary turnover, and total quantity aggregations.
+
+### `DataImportService` (`frontend/src/app/services/data-import.service.ts`)
+Communicates with backend bulk data onboarding endpoints:
+- `previewImport()`: Submits file for dry-run validation, duplicate detection, and error diagnostics.
+- `confirmImport()`: Submits confirmed rows with `UPDATE` or `SKIP` conflict resolution.
+- `downloadTemplate()`: Fetches RFC-compliant sample `.xlsx` templates.
+
+### `FormValidationService` (`frontend/src/app/services/form-validation.service.ts`)
+Submission-time accessibility and validation assistant:
+- Recursively traverses `FormGroup` controls to mark them `touched` and `dirty`.
+- Automatically scrolls to and keyboard-focuses the first `.ng-invalid` input field.
+
+### `IdleTimerService` (`frontend/src/app/services/idle-timer.service.ts`)
+Inactivity watchdog and auto-logout timer:
+- Registers passive DOM listeners (`mousemove`, `click`, `keypress`, `scroll`) outside Angular's zone.
+- Triggers `idle$` after 10 minutes of inactivity and emits formatted `mm:ss` countdowns via `countdown$`.
+
+### `ModalManagerService` (`frontend/src/app/services/modal-manager.service.ts`)
+Universal modal and drawer accessibility supervisor:
+- Uses `MutationObserver` outside Angular zone to detect dialog insertions, debounced with `requestAnimationFrame`.
+- Locks body scrolling (`.modal-open`) and focuses/selects the first editable form input.
+- Listens to global `Escape` keydown to trigger modal closure.
+
+### `TerminologyService` (`frontend/src/app/services/terminology.service.ts`)
+Multi-tenant white-label vocabulary engine:
+- Morphs UI labels dynamically per industry preset (Agri-Plastics, Textiles, Food Processing, Electronics, Discrete).
+- Synchronizes changes across open browser tabs via window `'storage'` events.
+
+### `ThemeService` (`frontend/src/app/services/theme.service.ts`)
+Dark and Light visual aesthetics controller:
+- Toggles `.dark-theme` on `document.body`.
+- Persists isolated preference keys (`erp_dark_mode_prod` vs `erp_dark_mode_uat`).
+
+### `AppNotificationService` (`frontend/src/app/services/app-notification.service.ts`)
+Topbar notification drawer and bell badge manager:
+- Buffers the 50 most recent notifications with deduplication guards.
+- Tracks `unreadCount` badge and supports deep linking via `actionRoute`.
+
+### `TranslateService` & `TranslatePipe` (`frontend/src/app/translate.service.ts`)
+Trilingual localization engine:
+- Supports English (`'en'`), Marathi (`'mr'`), and Hindi (`'hi'`).
+- Pure standalone Angular pipe `{{ key | translate:lang }}` with automatic fallback to English.
+
+### `JwtInterceptor` (`frontend/src/app/jwt.interceptor.ts`)
+Security-hardened HTTP interceptor:
+- Injects `Authorization: Bearer <token>` strictly to API calls (never third-party domains).
+- Enforces `Cache-Control: no-store` on sensitive queries.
+- Triggers server-side token blacklisting and complete client state wipe upon 401 Unauthorized responses.
 
 ---
 

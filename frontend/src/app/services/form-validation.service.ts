@@ -2,6 +2,18 @@ import { Injectable, ElementRef } from '@angular/core';
 import { FormGroup, AbstractControl } from '@angular/forms';
 import { NotificationService } from './notification.service';
 
+/**
+ * Reactive Form Validation & Accessibility Focus Assistant.
+ * <p>
+ * Standardizes submission-time validation across all ERP data entry forms:
+ * <ul>
+ *   <li><b>Recursive Tree Traversal:</b> Walks nested {@link FormGroup} and {@link AbstractControl} hierarchies,
+ *       marking controls as {@code touched} and {@code dirty} to activate Angular {@code .ng-invalid} CSS borders.</li>
+ *   <li><b>Contextual Alert:</b> Displays an immediate error notification advising the user to correct marked fields.</li>
+ *   <li><b>First-Invalid Auto-Focus:</b> Uses {@link ElementRef} to query {@code .ng-invalid} form controls,
+ *       automatically shifting DOM keyboard focus to the first failing input/select/textarea.</li>
+ * </ul>
+ */
 @Injectable({
   providedIn: 'root'
 })

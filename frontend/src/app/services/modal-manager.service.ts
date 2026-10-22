@@ -1,5 +1,20 @@
 import { Injectable, NgZone } from '@angular/core';
 
+/**
+ * Universal Modal, Drawer & Overlay Focus Manager.
+ * <p>
+ * Implements accessible, automated modal interaction management across the application:
+ * <ul>
+ *   <li><b>MutationObserver DOM Sentinel:</b> Watches {@code document.body} outside Angular's zone for modal/drawer
+ *       DOM insertions and class modifications, debounced using {@code requestAnimationFrame}.</li>
+ *   <li><b>Body Scroll Locking:</b> Appends {@code .modal-open} to {@code document.body} when fixed overlays
+ *       are open to prevent background scrolling.</li>
+ *   <li><b>Autofocus & Selection:</b> Automatically scrolls in-page dialogs to center and focuses/selects
+ *       the first editable {@code input}, {@code select}, or {@code textarea}.</li>
+ *   <li><b>Keyboard Dismissal:</b> Hooks the global {@code Escape} keydown event outside Angular's zone
+ *       to simulate clicking the active modal's close button.</li>
+ * </ul>
+ */
 @Injectable({
   providedIn: 'root'
 })
