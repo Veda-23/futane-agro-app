@@ -20,6 +20,15 @@ export interface BankTransactionItem {
   createdAt?: string;
 }
 
+/**
+ * Corporate Treasury, Bank Inflows & Account Reconciliation Ledger.
+ *
+ * Capabilities:
+ * - Records corporate bank account inflows (Credit) and disbursements (Debit) with transaction reference numbers (UTR / Cheque).
+ * - Real-time Treasury Balances: Computes running bank balance, total cumulative credits, total debits, and net cashflow.
+ * - Subtabs: All Banking Vouchers, Customer Credits, Supplier Debits, and High-Value Transactions (>₹50,000).
+ * - Multi-criteria filters: Date range, transaction type, reference UTR search, and pagination.
+ */
 @Component({
   selector: 'app-bank',
   standalone: true,

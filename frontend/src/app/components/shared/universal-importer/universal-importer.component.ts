@@ -5,6 +5,16 @@ import { DataImportService, ImportPreviewResponse, RowError } from '../../../ser
 import { UniversalExportService } from '../../../services/universal-export.service';
 import { NotificationService } from '../../../services/notification.service';
 
+/**
+ * Universal Bulk CSV Spreadsheet Onboarding & Dry-Run Validation Component.
+ *
+ * Capabilities:
+ * - Multi-Module Bulk Ingestion: Supports 8 core ERP domains (Parties, Raw Materials, Production, Inventory, Vendors, Employees, Machines, Expenses).
+ * - Pre-Flight Dry-Run Preview: Submits uploaded files to backend `DataImportService.previewImport()` for regex validation,
+ *   duplicate entity identification, and sanitization without modifying the database.
+ * - Conflict Resolution: Provides operator choice between `UPDATE` (in-place entity mutation) and `SKIP` (preserve existing records).
+ * - Sample Template Downloads: Delivers pre-formatted, RFC 4180-compliant `.csv` templates pre-populated with realistic records.
+ */
 @Component({
   selector: 'app-universal-importer',
   standalone: true,

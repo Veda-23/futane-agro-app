@@ -19,6 +19,16 @@ interface CopilotMessage {
   status: 'sending' | 'completed' | 'error';
 }
 
+/**
+ * Voice-Enabled Autonomous AI Copilot & Natural Language Query Assistant.
+ *
+ * Capabilities:
+ * - Conversational dialog agent communicating with Google ADK backend (`/api/adk/chat`).
+ * - Multilingual Speech Recognition: Uses browser Web Speech API for real-time speech-to-text in English, Hindi, and Marathi.
+ * - Action Proposal Engine: Suggests operational actions (e.g. creating sales orders, triggering machine maintenance)
+ *   with operator confirmation modals before mutating ERP state.
+ * - Local agronomic knowledge base fallback when offline.
+ */
 @Component({
   selector: 'app-ai-copilot',
   standalone: true,

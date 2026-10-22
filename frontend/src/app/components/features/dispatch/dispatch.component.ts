@@ -13,6 +13,17 @@ import { QrScannerModalComponent } from '../../shared/qr-scanner-modal/qr-scanne
 
 import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
 
+/**
+ * Outbound Material Dispatch Manifest & QR Loading Dock Gate-Pass Supervisor.
+ *
+ * Capabilities:
+ * - Coordinates outbound crate shipments from factory floor to commercial agricultural clients.
+ * - QR Barcode Scanning: Integrated camera modal (`QrScannerModalComponent`) for instant loading-dock verification
+ *   and barcode dispatch clearance.
+ * - Dispatch Status Lifecycle: Pending Loading, In Transit, Delivered to Destination, and Returned/Cancelled.
+ * - Consignment Details: Associates truck registration numbers, logistics drivers, shipping addresses, and sales order items.
+ * - Multi-row batch export and column visibility personalization.
+ */
 @Component({
   selector: 'app-dispatch',
   standalone: true,

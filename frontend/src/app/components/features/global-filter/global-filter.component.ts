@@ -3,6 +3,16 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AutoSelectDirective } from '../../../directives/auto-select.directive';
 
+/**
+ * Universal Multi-Criteria Query Engine & Contextual Filter Drawer.
+ *
+ * Capabilities:
+ * - Adapts criteria fields dynamically according to the active module context (Sales, Production, Inventory, HR, Logistics).
+ * - Multi-dimensional filtering: Full-text substring search, Date ranges (From/To), Month/Year picker, Shift,
+ *   Crate Model, Indian GST Party, Payment Mode, Stock Health, and Minimum Production Efficiency %.
+ * - Preserves user query states across tab navigation using session storage.
+ * - Emits filtered count telemetry and provides quick triggers for batch CSV export and live data re-fetching.
+ */
 @Component({
   selector: 'app-global-filter',
   standalone: true,

@@ -1,5 +1,11 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
+/**
+ * Statutory Indian Calendar Date Formatter (`indianDate`).
+ *
+ * Formats ISO timestamps or Date objects into standard Indian `DD/MM/YYYY` notation (e.g. `22/10/2026`),
+ * with optional 12-hour AM/PM time formatting for audit trail logs. Returns em-dash (`—`) for empty values.
+ */
 @Pipe({ name: 'indianDate', standalone: true })
 export class IndianDatePipe implements PipeTransform {
   transform(value: string | Date | null | undefined, showTime = false): string {

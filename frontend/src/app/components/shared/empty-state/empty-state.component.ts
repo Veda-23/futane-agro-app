@@ -1,6 +1,12 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+/**
+ * Zero-Data & Search Fallback Empty State Display (`app-empty-state`).
+ *
+ * Renders rich glassmorphic empty-state indicators across ERP tables when query results are empty
+ * or no records exist in the current filter context, with optional call-to-action buttons (`action`).
+ */
 @Component({
   selector: 'app-empty-state',
   standalone: true,

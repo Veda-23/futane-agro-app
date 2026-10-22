@@ -7,6 +7,16 @@ import { AppNotificationService, AppNotification } from '../../../services/app-n
 import { ThemeService } from '../../../services/theme.service';
 import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 
+/**
+ * Master Topbar Navigation, Telemetry Indicator & User Profile Header.
+ *
+ * Responsibilities:
+ * - Environment Indicator: Displays UAT (amber pill) vs Production (emerald pill) visual banner.
+ * - Live System Telemetry: Renders real-time clock, session elapsed duration, and automatic logout countdown.
+ * - Global Omnibox Search: Searches instantaneously across parties, sales orders, staff members, and vehicle dispatches.
+ * - Notification Center: Topbar bell drawer with unread count badge and deep links to relevant business modules.
+ * - User Profile & Theme Switcher: Toggles Dark/Light theme mode and manages user profile dropdown.
+ */
 @Component({
   selector: 'app-header',
   standalone: true,
@@ -31,12 +41,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
   @Input() salesList: any[] = [];
   @Input() dispatchesList: any[] = [];
   @Input() telemetryHealth: any = null;
+  @Input() accessibleTabs: { [key: string]: boolean } = {};
   @Output() onToggleAlerts = new EventEmitter<void>();
   @Output() refreshData = new EventEmitter<void>();
 
   get isSuperAdmin(): boolean {
     const role = (this.loggedInUser?.role || '').toUpperCase();
-    return role === 'SUPER_ADMIN' || role === 'SUPERADMIN';
+    return role === 'SUPER_ADMIN' || role === 'SUPERADMIN' || role === 'ROLE_SUPER_ADMIN';
   }
 
   triggerDataSync() {
@@ -193,7 +204,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
       { type: 'Navigation', label: 'System Settings & Config', detail: 'App preferences & company details', tab: 'settings' }
     ];
 
-    systemTabs.filter(t => t.label.toLowerCase().includes(q) || t.detail.toLowerCase().includes(q) || t.tab.includes(q))
+    const filteredSystemTabs = systemTabs.filter(t => {
+      if ((t.tab === 'settings' || t.tab === 'audit-logs') && !this.isSuperAdmin) {
+        return false;
+      }
+      if (this.accessibleTabs && Object.keys(this.accessibleTabs).length > 0 && this.accessibleTabs[t.tab] === false) {
+        return false;
+      }
+      return true;
+    });
+
+    filteredSystemTabs.filter(t => t.label.toLowerCase().includes(q) || t.detail.toLowerCase().includes(q) || t.tab.includes(q))
       .slice(0, 3).forEach(t => results.push(t));
 
     // 2. Data Records Search
@@ -217,6 +238,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   goToSearchResult(result: any) {
+    if ((result.tab === 'settings' || result.tab === 'audit-logs') && !this.isSuperAdmin) {
+      return;
+    }
+    if (this.accessibleTabs && Object.keys(this.accessibleTabs).length > 0 && this.accessibleTabs[result.tab] === false) {
+      return;
+    }
     this.onNavigateTab.emit(result.tab);
     this.globalSearchResults = [];
     this.globalSearchQuery = '';

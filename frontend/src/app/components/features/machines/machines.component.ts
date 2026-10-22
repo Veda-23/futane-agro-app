@@ -10,6 +10,17 @@ import { ResizableTableDirective } from '../../../directives/resizable-table.dir
 import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 
+/**
+ * Plant Injection Moulding Machinery & Mechanical Breakdown Sentinel.
+ *
+ * Capabilities:
+ * - Plant Equipment Registry: Tracks high-tonnage injection moulding machines, rated crate output/hour,
+ *   machine codes, manufacturers, and live operating statuses (Running, Idle, Maintenance).
+ * - Breakdown & Downtime Logging: Records mechanical stoppages, root cause descriptions, technician assignments,
+ *   resolution timestamps, and total cumulative downtime hours.
+ * - Subtabs: Plant Machinery Roster, Breakdown & Maintenance Logs.
+ * - Keyboard accessibility: Listens to global Escape to gracefully dismiss modal edit drawers.
+ */
 @Component({
   selector: 'app-machines',
   standalone: true,

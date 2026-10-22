@@ -2,6 +2,13 @@ import { Component, Output, EventEmitter, OnInit, OnDestroy, ViewChild, ElementR
 import { CommonModule } from '@angular/common';
 import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
 
+/**
+ * Hardware Camera Optical QR & Barcode Scanner Modal (`app-qr-scanner-modal`).
+ *
+ * Uses `@zxing/browser` (`BrowserMultiFormatReader`) to stream live device video and
+ * decode crate QR labels and dispatch barcodes in real-time, emitting the decoded string
+ * over `scanned` to instantly auto-populate gate-pass manifests.
+ */
 @Component({
   selector: 'app-qr-scanner-modal',
   standalone: true,

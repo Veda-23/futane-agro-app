@@ -3494,7 +3494,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   pollTelemetryHealth() {
-    if (!this.isAuthenticated) {
+    if (!this.isAuthenticated || !this.isSuperAdmin) {
       return;
     }
     this.telemetryHealth.checking = true;

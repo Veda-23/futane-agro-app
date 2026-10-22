@@ -19,6 +19,21 @@ import { ThemeService } from '../../../services/theme.service';
 
 Chart.register(...registerables);
 
+/**
+ * Analytical Report Generator, Business Audit & PDF Summary Hub.
+ *
+ * Capabilities:
+ * - Synthesizes enterprise business reports across 6 core operational modules:
+ *     1. Daily & Monthly Production Run Yields
+ *     2. Commercial Sales & Customer Invoicing
+ *     3. Customer Payments & Outstanding Dues
+ *     4. Operating Expenses & Cash Outflow Heads
+ *     5. Workforce Payroll & Staff Salary Disbursements
+ *     6. Logistics Freight Trips & Truck Hire Expenses
+ * - Visual trend charts powered by Chart.js (Bar and Line chart analytics).
+ * - Multi-criteria filter engines: Date ranges (From/To), customer party filters, and staff employee selectors.
+ * - One-click vector PDF report export via jsPDF and HTML5 canvas rasterization.
+ */
 @Component({
   selector: 'app-reports',
   standalone: true,

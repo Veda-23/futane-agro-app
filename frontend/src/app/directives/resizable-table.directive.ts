@@ -15,6 +15,16 @@ export interface ColumnPreset {
   width: number;
 }
 
+/**
+ * Enterprise Interactive Table Column Resizer (`appResizableTable`).
+ *
+ * Capabilities:
+ * - Injects interactive drag handles onto `<th>` table headers with active grab cursor feedback.
+ * - Live Width HUD Indicator: Displays real-time pixel dimensions (`px`) while dragging.
+ * - Vertical Guide Beam: Renders an illuminated vertical guideline across the entire table grid for precise alignment.
+ * - Persistent Memory: Automatically saves custom column widths to `localStorage` keyed by `tableId`.
+ * - MutationObserver Integration: Dynamically re-binds drag handles when table columns are toggled or sorted.
+ */
 @Directive({
   selector: '[appResizableTable]',
   standalone: true

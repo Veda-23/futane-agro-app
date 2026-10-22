@@ -20,6 +20,16 @@ export interface ExpenseItem {
   paymentMode?: string;
 }
 
+/**
+ * Factory Operating Expenses (OPEX) & Petty Cash Disbursement Ledger.
+ *
+ * Capabilities:
+ * - Records plant operating expenditures across operational heads: Plant Maintenance, Utility Bills,
+ *   Diesel/Generator Fuel, Mould Tooling, Packaging Materials, and Office Consumables.
+ * - Multi-mode disbursements: Cash, Corporate Bank Account, UPI QR, and Imprest Petty Cash.
+ * - Financial rollups: Live computation of today's expenses, current calendar month spend, and top expense categories.
+ * - Form validation with automatic focusing (`AutoSelectDirective`, `FormStateDirective`) and responsive table density.
+ */
 @Component({
   selector: 'app-expenses',
   standalone: true,

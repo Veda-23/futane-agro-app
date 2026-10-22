@@ -5,6 +5,15 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { DataFilterService, FilterCriteria } from '../../../services/data-filter.service';
 
+/**
+ * Reusable Preset Chips & Filter Toolbar Component (`app-filter-bar`).
+ *
+ * Capabilities:
+ * - Quick Preset Date Range Chips: Today, Yesterday, This Week, This Month, Last Month, and Indian Financial Year.
+ * - Debounced Full-Text Search Input (300ms) with clearable search badge.
+ * - Dynamic Criteria Inputs: From Date, To Date, Customer Party Select, Shift Select, Page Size options.
+ * - Matching Records Counter and active aggregations (Total Quantity and Total Rupee Value).
+ */
 @Component({
   selector: 'app-filter-bar',
   standalone: true,

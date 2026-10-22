@@ -4,6 +4,14 @@ import { Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { NotificationService } from '../services/notification.service';
 
+/**
+ * Reactive Form Auto-Save & Recovery Directive (`appFormState`).
+ *
+ * Capabilities:
+ * - Debounces form value changes (1000ms) and saves drafts to `sessionStorage` under `form_state_${formName}`.
+ * - Automatically restores unsaved draft values upon component recreation if an operator accidentally navigates away.
+ * - Automatically purges cached draft upon valid form submission (`@HostListener('submit')`).
+ */
 @Directive({
   selector: '[appFormState]',
   standalone: true

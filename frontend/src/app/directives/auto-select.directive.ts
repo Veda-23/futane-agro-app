@@ -1,5 +1,11 @@
 import { Directive, ElementRef, HostListener } from '@angular/core';
 
+/**
+ * Auto-Select Input Text Directive (`appAutoSelect`).
+ *
+ * Automatically highlights/selects all text inside an `<input>` or `<textarea>` element upon receiving focus,
+ * allowing factory operators to rapidly overwrite numeric rates, weights, and counts without manual backspacing.
+ */
 @Directive({
   selector: '[appAutoSelect]',
   standalone: true

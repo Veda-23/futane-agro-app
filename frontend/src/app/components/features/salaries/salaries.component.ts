@@ -12,6 +12,16 @@ import { ResizableTableDirective } from '../../../directives/resizable-table.dir
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
 
+/**
+ * Factory Payroll Disbursement & Monthly Wage Liability Ledger.
+ *
+ * Capabilities:
+ * - Records monthly salary payments for factory staff and machine operators across billing cycles (Month/Year).
+ * - Voucher lifecycle management: Tracks status (Paid, Pending, Partial, Cancelled) and payment settlement dates.
+ * - Employee wage reconciliation: Automatically links disbursements against contracted employee base salaries.
+ * - Subtab workflows: All Vouchers, Paid Disbursements, Pending Payouts, and High Wage Vouchers.
+ * - Generates individual employee monthly salary slips with printable deductions and bank disbursement details.
+ */
 @Component({
   selector: 'app-salaries',
   standalone: true,

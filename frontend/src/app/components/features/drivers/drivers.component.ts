@@ -10,6 +10,17 @@ import { AutoSelectDirective } from '../../../directives/auto-select.directive';
 import { ResizableTableDirective } from '../../../directives/resizable-table.directive';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 
+/**
+ * Logistics Chauffeur Directory, Driving Licenses & Trip Performance Manager.
+ *
+ * Capabilities:
+ * - Central registry of in-house and third-party logistics truck drivers and transit operators.
+ * - Driver telemetry: Computes real-time trip statistics (`driverStatsMap`) aggregating total completed dispatches
+ *   and cumulative freight earnings across historical transport runs.
+ * - KYC & Compliance: Commercial driving license (CDL) verification, contact mobile numbers, and permanent addresses.
+ * - Subtabs: All Drivers, Active Dispatchers, Licensed Drivers, Standby Operators.
+ * - Enforces `ChangeDetectionStrategy.OnPush` with debounced search.
+ */
 @Component({
   selector: 'app-drivers',
   standalone: true,

@@ -3,6 +3,16 @@ import { CommonModule } from '@angular/common';
 import { TranslatePipe } from '../../../translate.service';
 import { TerminologyService } from '../../../services/terminology.service';
 
+/**
+ * Modular Navigation Sidebar & Collapsible Icon Rail.
+ *
+ * Capabilities:
+ * - Dynamic Module Navigation: Groups ERP features into logical operational domains (Commercial, Manufacturing,
+ *   Workforce, Logistics, Treasury, Enterprise Governance).
+ * - Dynamic RBAC Masking: Inspects `accessibleTabs` input to hide unauthorized navigation items.
+ * - Multi-Viewport Ergonomics: Operates as an expandable off-canvas drawer on mobile screens and an icon rail on desktop.
+ * - Dynamic White-Label Terminology: Dynamically adapts module titles per industry preset via `TerminologyService`.
+ */
 @Component({
   selector: 'app-sidebar',
   standalone: true,

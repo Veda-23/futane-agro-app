@@ -13,6 +13,16 @@ import { IndianDatePipe } from '../../../pipes/indian-date.pipe';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
 
+/**
+ * Logistics Freight, Truck Hire & Transit Fleet Manager.
+ *
+ * Responsibilities:
+ * - Records outward and inter-plant freight trips, truck registration numbers, and assigned logistics drivers.
+ * - Freight financials: Tracks total contracted truck rent, cash advances paid to drivers, and net balance due upon delivery.
+ * - Transport documents: Ingests truck photo attachments, weighbridge gate passes, and signed proof-of-delivery (POD) slips.
+ * - Subtabs: All Trips, Fully Paid Freight, Advance Settled, and High Rent Trips (>₹10,000).
+ * - Enforces `ChangeDetectionStrategy.OnPush` with debounce-guarded search inputs.
+ */
 @Component({
   selector: 'app-transports',
   standalone: true,

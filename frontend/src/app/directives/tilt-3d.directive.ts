@@ -1,5 +1,14 @@
 import { Directive, ElementRef, HostListener, Input, Renderer2 } from '@angular/core';
 
+/**
+ * Premium 3D Gyroscope Mouse-Tracking Tilt Directive (`appTilt3d`).
+ *
+ * Capabilities:
+ * - Calculates cursor delta from center of glassmorphic KPI cards upon mousemove.
+ * - Applies smooth CSS 3D matrix transforms (`perspective`, `rotateX`, `rotateY`, `scale3d`)
+ *   to create a dynamic tactile aesthetic for executive metrics.
+ * - Resets smoothly to normal scale on mouseleave.
+ */
 @Directive({
   selector: '[appTilt3d]',
   standalone: true

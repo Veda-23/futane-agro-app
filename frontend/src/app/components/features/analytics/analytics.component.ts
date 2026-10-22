@@ -11,6 +11,16 @@ import { EmptyStateComponent } from '../../shared/empty-state/empty-state.compon
 import { environment } from '../../../../environments/environment';
 import { forkJoin } from 'rxjs';
 
+/**
+ * Executive BI Cockpit & Embedded PowerBI Analytics Suite.
+ *
+ * Capabilities:
+ * - Executive Plant Cockpit: Ingests production, sales, expenses, and machine telemetry for live C-suite dashboards.
+ * - Interactive Slicers: Real-time slicing by Time Grain (Today, Month, Quarter, Year) and Plant Shift (Morning, Afternoon, Night).
+ * - Embedded Analytics: Embeds Microsoft PowerBI and Grafana dashboards via sanitized iframes (`SafeResourceUrl`).
+ * - High-speed local fallback simulator when external PowerBI workspaces are unreachable or offline.
+ * - Fullscreen toggle mode for wall-mounted plant floor monitoring screens.
+ */
 @Component({
   selector: 'app-analytics',
   standalone: true,

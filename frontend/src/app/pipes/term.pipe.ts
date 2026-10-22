@@ -1,6 +1,13 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { TerminologyService, TerminologyDictionary } from '../services/terminology.service';
 
+/**
+ * Multi-Tenant Dynamic Terminology Transformer (`term`).
+ *
+ * Impure Angular pipe (`pure: false`) that translates generic terminology keys
+ * into tenant-specific business domain terms dynamically (e.g. 'crate' -> 'fabric_roll' in Textiles,
+ * or 'crate' -> 'milk_can' in Dairy).
+ */
 @Pipe({
   name: 'term',
   standalone: true,

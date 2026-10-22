@@ -2,6 +2,14 @@ import { Component, Input, OnChanges, ElementRef, ViewChild, AfterViewInit } fro
 import { CommonModule } from '@angular/common';
 import * as QRCode from 'qrcode';
 
+/**
+ * Dynamic HTML5 Canvas QR Code Generator (`app-qr-code`).
+ *
+ * Uses the `qrcode` library to render vector QR codes onto an HTML5 canvas.
+ * Used across the ERP for:
+ * - Generating UPI payment QR codes (`upi://pay?pa=...`) for instant invoice settlement.
+ * - Generating Dispatch gate-pass verification barcodes for loading dock scanners.
+ */
 @Component({
   selector: 'app-qr-code',
   standalone: true,

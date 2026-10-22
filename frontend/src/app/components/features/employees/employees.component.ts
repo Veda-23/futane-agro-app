@@ -26,6 +26,16 @@ export interface EmployeeItem {
   bankPassbookPath?: string;
 }
 
+/**
+ * Factory Personnel Roster, KYC Documents & Staff Administration Hub.
+ *
+ * Capabilities:
+ * - Manages factory workforce records across departments (Moulding, Quality, Maintenance, Logistics, Administration).
+ * - Statutory Indian KYC Verification: 12-digit Aadhaar number validation, emergency contacts, and residential addresses.
+ * - Banking & Payroll Setup: Bank account numbers, IFSC codes, and passbook attachment uploads for direct wage transfers.
+ * - Profile and KYC document inspection drawers (`aadhaarCardPath`, `bankPassbookPath`, `photoPath`).
+ * - Real-time active headcount and monthly base wage liability aggregations.
+ */
 @Component({
   selector: 'app-employees',
   standalone: true,

@@ -610,8 +610,67 @@ Security-hardened HTTP interceptor:
 #### `SettingsComponent` (`frontend/src/app/components/features/settings/settings.component.ts`)
 - **Enterprise Control Center**: Corporate branding & theme palettes, 200+ multi-tenant customizations catalog across 10 industry verticals, dynamic RBAC permission matrices, modular feature toggles, custom fields engine, developer API keys, webhooks, and phone MFA management.
 
-#### `AuditLogsComponent` (`frontend/src/app/components/features/audit-logs/audit-logs.component.ts`)
-- **Forensic Security Trail**: Super-Admin restricted immutable audit logs displaying pre-mutation and post-mutation JSON state with forensic filtering.
+#### `RawMaterialsComponent` (`frontend/src/app/components/features/raw-materials/raw-materials.component.ts`)
+- **Polymer Inward Consignments**: Tracks bulk shipments of Virgin HDPE, Masterbatch, and UV Stabilizers with weighbridge slip attachments and supplier bills.
+
+#### `VendorsComponent` (`frontend/src/app/components/features/vendors/vendors.component.ts`)
+- **Supplier Directory**: Petrochemical suppliers directory with cumulative tonnage delivered (kg), spend summaries, and Indian GSTIN validation.
+
+#### `EmployeesComponent` (`frontend/src/app/components/features/employees/employees.component.ts`)
+- **Staff Roster & KYC**: Factory personnel registry, 12-digit Aadhaar number validation, bank account IFSC verification, and monthly base wage liabilities.
+
+#### `SalariesComponent` (`frontend/src/app/components/features/salaries/salaries.component.ts`)
+- **Payroll Disbursement**: Monthly wage voucher processing (Pending, Paid, Cancelled), cash/bank disbursement clearance, and individual employee salary slips.
+
+#### `TransportsComponent` (`frontend/src/app/components/features/transports/transports.component.ts`)
+- **Logistics Freight Fleet**: Outbound freight trips, truck registration numbers, hire rents, driver cash advances, and signed proof-of-delivery (POD) attachments.
+
+#### `DriversComponent` (`frontend/src/app/components/features/drivers/drivers.component.ts`)
+- **Chauffeur Directory**: Driver registry, commercial driving license (CDL) verification, trip counts, and cumulative earnings metrics.
+
+#### `MachinesComponent` (`frontend/src/app/components/features/machines/machines.component.ts`)
+- **Injection Moulding Equipment**: Plant equipment capacity (crates/hour), running statuses, and mechanical breakdown downtime tracking.
+
+#### `DispatchComponent` (`frontend/src/app/components/features/dispatch/dispatch.component.ts`)
+- **Outward Gate-Pass Supervisor**: Vehicle dispatch manifest with integrated QR camera barcode scanning (`QrScannerModalComponent`) for loading dock clearance.
+
+#### `ExpensesComponent` (`frontend/src/app/components/features/expenses/expenses.component.ts`)
+- **Operating Expenses (OPEX)**: Factory operating disbursements across maintenance, utility power, diesel fuel, tooling, and consumables.
+
+#### `BankComponent` (`frontend/src/app/components/features/bank/bank.component.ts`)
+- **Corporate Treasury**: Bank account ledger tracking credit inflows and debit outflows with UTR reference numbers and real-time bank balances.
+
+#### `ReportsComponent` (`frontend/src/app/components/features/reports/reports.component.ts`)
+- **Analytical Reporting**: Cross-module business analytics (Production, Sales, Payments, OPEX, Payroll, Logistics) with Chart.js visualization and vector PDF export.
+
+#### `AnalyticsComponent` (`frontend/src/app/components/features/analytics/analytics.component.ts`)
+- **Executive BI Cockpit**: Executive cockpit indicators with time grain (Month, Today, Quarter, Year) and shift slicers, alongside sanitized Microsoft PowerBI iframe embedding.
+
+#### `GlobalFilterComponent` (`frontend/src/app/components/features/global-filter/global-filter.component.ts`)
+- **Universal Query Drawer**: Dynamic contextual query engine with full-text search, date ranges, shift, crate type, and party filters with session persistence.
+
+#### `HeaderComponent` & `SidebarComponent` (`frontend/src/app/components/layout/`)
+- **Header**: Live telemetry clock, session duration timer, inactivity auto-logout countdown, unread notification drawer, global search, and dark mode toggle.
+- **Sidebar**: Dynamic collapsible icon rail, RBAC permission masking, and multi-tenant dynamic vocabulary mapping.
+
+---
+
+### Directives, Pipes & Shared Components
+
+- **`AutoSelectDirective` (`[appAutoSelect]`)**: Auto-selects input field text upon receiving focus for rapid numeric entry on factory floor terminals.
+- **`FormStateDirective` (`[appFormState]`)**: Debounces form inputs (1000ms) and saves drafts to `sessionStorage`, auto-restoring unsaved changes if an operator accidentally navigates away.
+- **`ResizableTableDirective` (`[appResizableTable]`)**: Drag-and-drop table column resizing with live pixel HUD, vertical laser guide beam, and `localStorage` column width persistence.
+- **`Tilt3dDirective` (`[appTilt3d]`)**: Dynamic 3D gyroscope cursor tracking tilt effect on executive glassmorphic KPI cards.
+- **`IndianDatePipe` (`indianDate`)**: Formats dates into Indian `DD/MM/YYYY` format with optional 12-hour AM/PM timestamps.
+- **`InrPipe` (`inr`)**: Formats numbers into standardized Indian Rupee notation (e.g. `₹1,25,000.00`).
+- **`TermPipe` (`term`)**: Dynamic multi-tenant terminology morphing per tenant industry configuration.
+- **`UniversalImporterComponent` (`app-universal-importer`)**: Dry-run bulk CSV validation dialog with duplicate entity conflict resolution (`UPDATE` or `SKIP`).
+- **`SearchableSelectComponent` (`app-searchable-select`)**: Accessible typeahead dropdown implementing `ControlValueAccessor` with keyboard arrow navigation.
+- **`QrCodeComponent` (`app-qr-code`)**: HTML5 Canvas vector QR code generator for UPI invoice payments and dispatch passes.
+- **`QrScannerModalComponent` (`app-qr-scanner-modal`)**: Hardware camera barcode/QR scanner powered by `@zxing/browser`.
+- **`PasswordStrengthComponent` (`app-password-strength`)**: Real-time password entropy meter with color-coded feedback.
+- **`EmptyStateComponent` (`app-empty-state`)**: Glassmorphic zero-data indicator for empty query results.
+- **`FilterBarComponent` (`app-filter-bar`)**: Reusable preset chips (Today, Yesterday, This Week, Month, FY) with debounced search.
 
 ---
 

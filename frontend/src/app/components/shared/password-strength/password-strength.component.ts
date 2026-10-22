@@ -1,6 +1,15 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+/**
+ * Password Entropy & Complexity Feedback Bar (`app-password-strength`).
+ *
+ * Evaluates password entropy against enterprise security policies:
+ * - Minimum 8 characters (and bonus for 12+ characters).
+ * - Uppercase letters (`[A-Z]`), numeric digits (`[0-9]`), and special symbols.
+ * - Displays a multi-stage colored progress bar (Weak/Red, Fair/Amber, Good/Blue, Strong/Emerald)
+ *   with actionable hints for operator credential updates.
+ */
 @Component({
   selector: 'app-password-strength',
   standalone: true,

@@ -30,6 +30,17 @@ export interface VendorProcurementSummary {
   materialsList: string[];
 }
 
+/**
+ * Raw Material Polymer Vendor & Masterbatch Supplier Directory.
+ *
+ * Responsibilities:
+ * - Maintains vendor profiles for petrochemical suppliers, polymer compounders, and masterbatch manufacturers.
+ * - Procurement telemetry: Computes supplier spend summaries (`VendorProcurementSummary`), historical batch counts,
+ *   cumulative tonnage delivered (kg), and financial disbursements.
+ * - Statutory validation: Indian GSTIN verification, business addresses, and primary contact persons.
+ * - Subtab classifications: All Vendors, Active Suppliers, GST Registered, High Volume Suppliers.
+ * - Enforces `ChangeDetectionStrategy.OnPush` with debounce-guarded search filtering.
+ */
 @Component({
   selector: 'app-vendors',
   standalone: true,

@@ -14,6 +14,16 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule, ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
+/**
+ * High-Performance Searchable Typeahead Dropdown (`app-searchable-select`).
+ *
+ * Implements Angular `ControlValueAccessor` for seamless two-way binding (`[(ngModel)]` / `formControlName`).
+ * Features:
+ * - Real-time client-side substring search filtering across primary label and optional secondary subtitle keys.
+ * - Full keyboard accessibility: ArrowUp/ArrowDown navigation, Enter key selection, and Escape dismissal.
+ * - Click-outside listener for automatic popover closing.
+ * - Clearable selection (`allowClear`) and disabled state handling.
+ */
 @Component({
   selector: 'app-searchable-select',
   standalone: true,

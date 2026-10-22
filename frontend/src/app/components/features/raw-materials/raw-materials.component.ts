@@ -32,6 +32,16 @@ export interface RawMaterialItem {
 
 import { SearchableSelectComponent } from '../../shared/searchable-select/searchable-select.component';
 
+/**
+ * Raw Material Polymer Inbound Consignment & Weighbridge Registry.
+ *
+ * Capabilities:
+ * - Records inbound truckloads of plastic polymer granules (Virgin HDPE, Recycled Plastic, Color Masterbatch, UV Stabilizers).
+ * - Weighbridge calibration: Enforces weighbridge slip attachments, tare weight verification, and gross weight settlement.
+ * - Vendor billing linkage: Reconciles supplier purchase invoices with received quantities and rate per kg.
+ * - Subtabs: All Consignments, Virgin HDPE, Masterbatch, and Bulk Shipments (>1,000 kg).
+ * - Enforces `ChangeDetectionStrategy.OnPush` with single-pass O(N) cached financial rollups.
+ */
 @Component({
   selector: 'app-raw-materials',
   standalone: true,

@@ -146,6 +146,9 @@ public class ExcelImporterService {
                 String partyContact = getStringValue(row.getCell(3));
 
                 java.util.Optional<Party> existingOpt = partyRepo.findByPartyId(partyId);
+                if (!existingOpt.isPresent() && !partyContact.isEmpty()) {
+                    existingOpt = partyRepo.findFirstByPartyContact(partyContact);
+                }
                 Party party;
                 if (existingOpt.isPresent()) {
                     party = existingOpt.get();
