@@ -51,7 +51,7 @@ public class DataImportController {
      * @return 200 OK with ImportPreviewDTO, or 400 Bad Request on schema/file validation errors, or 429 on rate limit.
      */
     @PostMapping("/preview")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'OPERATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ResponseEntity<?> previewImport(
             @RequestParam("file") MultipartFile file,
             @RequestParam("module") String module,
@@ -77,7 +77,7 @@ public class DataImportController {
      * @return 200 OK with ImportResultDTO showing inserted, updated, and skipped counts.
      */
     @PostMapping("/confirm")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'OPERATOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ResponseEntity<?> confirmImport(@RequestBody ImportConfirmRequestDTO request) throws Exception {
         try {
             ImportResultDTO result = importService.executeImport(request);

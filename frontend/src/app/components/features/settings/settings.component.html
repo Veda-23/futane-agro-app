@@ -59,7 +59,7 @@
   </div>
 </header>
 
-<div class="admin-control-center" *ngIf="activeTab === 'settings'">
+<div class="admin-control-center" *ngIf="activeTab === 'settings' && isSuperAdmin">
 
   <!-- Subsystem Telemetry Quick-Bar (Governance Sub-Tab Only) -->
   <div class="governance-telemetry-card" *ngIf="activeSubTab === 'governance'">
@@ -7709,6 +7709,22 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
         <i class="bi bi-check-lg"></i> Save Changes
       </button>
     </div>
+  </div>
+</div>
+
+<!-- Access Restricted Warning for Non-Superadmin Roles -->
+<div class="settings-access-restricted" *ngIf="activeTab === 'settings' && !isSuperAdmin" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 60px 20px; text-align:center; min-height: 480px;">
+  <div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(239, 68, 68, 0.1); color: #ef4444; display:flex; align-items:center; justify-content:center; font-size: 32px; margin-bottom: 20px;">
+    <i class="bi bi-shield-slash-fill"></i>
+  </div>
+  <h2 style="font-size: 22px; font-weight: 700; color: var(--text-primary, #1e293b); margin-bottom: 8px;">Super Admin Privileges Required</h2>
+  <p style="max-width: 520px; color: var(--text-secondary, #64748b); font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
+    The System Settings and Enterprise Control Center contains mission-critical infrastructure, database tools, API configurations, and security policies. Only users with the <strong>SUPER_ADMIN</strong> role can view or modify these parameters.
+  </p>
+  <div style="display: flex; gap: 12px;">
+    <span class="badge" style="background: rgba(100, 116, 139, 0.15); color: var(--text-secondary, #64748b); padding: 8px 16px; border-radius: 6px; font-weight: 600;">
+      Current Role: {{ (loggedInUser?.role || 'USER') | uppercase }}
+    </span>
   </div>
 </div>
 

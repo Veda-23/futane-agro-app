@@ -23,6 +23,22 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Authentication & Identity Management REST Controller.
+ *
+ * Core Responsibilities:
+ * 1. User Self-Registration (/register) with rate limiting, input sanitization, and role whitelisting.
+ * 2. Multi-Tier Login (/login) with BCrypt hashing, brute force lockout, and 2FA challenge.
+ * 3. Two-Factor Authentication (/verify-otp, /resend-otp) via in-memory secure OTP or Firebase Phone MFA.
+ * 4. Session Token Lifecycle (/refresh-token, /logout) with JWT signing (HS512) and cryptographic blacklisting.
+ * 5. Password Management (/change-password, /forgot-password, /reset-password).
+ *
+ * Security Invariants:
+ * - Passwords must ALWAYS be hashed via Spring Security's BCryptPasswordEncoder (strength 10).
+ * - Login is rate-limited to 5 attempts per IP per 60 seconds.
+ * - Brute-force protection: 5 consecutive failed attempts lock the account for 30 minutes.
+ * - In production mode, OTP codes are NEVER returned in API responses; delivered only via Email/SMS.
+ */
 @RestController
 @RequestMapping("/api/users")
 public class AuthController {
@@ -94,6 +110,21 @@ public class AuthController {
         return map;
     }
 
+    /**
+     * User Self-Registration Endpoint.
+     *
+     * HOW IT WORKS:
+     * 1. Checks IP rate limit (max 3 registrations per IP per 60s).
+     * 2. Validates name, username format (alphanumeric, dots, underscores), email regex, and minimum 6-character password.
+     * 3. Checks database uniqueness: rejects duplicates for existing usernames or email addresses.
+     * 4. Maps requested role safely: defaults to 'VIEWER' or assigns OPERATOR/ACCOUNTANT/STORE_MANAGER (SUPER_ADMIN cannot be self-registered).
+     * 5. Encodes password using BCrypt and persists the new User entity to PostgreSQL.
+     * 6. Records an audit event in `security_audit_logs`.
+     *
+     * @param payload JSON map containing name, username, email, mobileNumber, password, and optional role.
+     * @param request HttpServletRequest for IP tracking.
+     * @return 201 CREATED with success message, or 400 Bad Request, or 409 Conflict if user exists.
+     */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> payload, HttpServletRequest request) {
         if (rateLimitingService.isRateLimited(request, com.futaneagro.security.RateLimitingService.Action.REGISTER)) {
@@ -177,6 +208,27 @@ public class AuthController {
         }
     }
 
+    /**
+     * User Login & Two-Factor Authentication Challenge Dispatcher.
+     *
+     * HOW IT WORKS:
+     * 1. Rate Limiting: Evaluates IP rate limit (maximum 5 login attempts per IP per 60 seconds).
+     * 2. Identity Resolution: Case-insensitive search by Username, then Email, with alias fallbacks for Super Admin.
+     * 3. Brute Force Protection: Checks `account_locked`. If 5 prior attempts failed and 30-minute lockout has not expired, returns 403 Forbidden.
+     * 4. Password Verification: Compares raw password with the stored hash using `passwordEncoder.matches(password, hash)`.
+     *    - If invalid: Increments `failed_attempts`. If attempts reach 5, locks the account for 30 minutes.
+     *    - If valid: Resets failed attempts to 0.
+     * 5. Two-Factor Authentication (2FA):
+     *    - If Firebase Phone MFA is active for the user: Issues a temporary signed pre-auth token (`preAuthToken`)
+     *      and returns `mfaRequired: true` for phone verification.
+     *    - Otherwise: Generates a cryptographically secure 6-digit OTP stored in `otpCache` (5-minute expiry).
+     *      * In DEV/UAT mode: Logs the OTP to the console and includes `tempOtp` in the response for developer ease.
+     *      * In PROD mode: Transmits OTP strictly via Email/SMS and hides it from the response body.
+     *
+     * @param credentials JSON map containing `username` and `password`.
+     * @param request     HttpServletRequest for IP tracking and security audit logs.
+     * @return 200 OK with OTP/MFA challenge details, or 401 Unauthorized, or 403 Forbidden, or 429 Too Many Requests.
+     */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> credentials, HttpServletRequest request) {
         try {
@@ -352,6 +404,23 @@ public class AuthController {
         }
     }
 
+    /**
+     * OTP Verification & Final JWT Token Issuance Endpoint.
+     *
+     * HOW IT WORKS:
+     * 1. Rate Limiting: Guards against automated 6-digit enumeration (Action.OTP_VERIFY).
+     * 2. Zero-Trust Verification: Retrieves cached hashed OTP, ensures `expiry` is in the future,
+     *    and verifies incoming plain digits against stored BCrypt hash (`passwordEncoder.matches`).
+     * 3. Single-Use Replay Protection: Immediately purges the OTP from `otpCache` upon verification.
+     * 4. Session Token Minting:
+     *    - Generates 15-minute cryptographically signed JWT Access Token (`jwtUtils.generateToken`).
+     *    - Generates 7-day cryptographically secure Refresh Token (`UUID` stored in `refreshTokenCache`).
+     * 5. Audit Logging: Calls `securityAuditService.logLoginSuccess` recording operator IP and user agent.
+     *
+     * @param payload JSON map containing `username` and `otp`.
+     * @param request HttpServletRequest for IP tracking and security audit log.
+     * @return 200 OK with `token`, `refreshToken`, user profile object, and permissions array.
+     */
     @PostMapping("/login/verify")
     public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> payload, HttpServletRequest request) {
         if (rateLimitingService.isRateLimited(request, com.futaneagro.security.RateLimitingService.Action.OTP_VERIFY)) {
@@ -441,6 +510,11 @@ public class AuthController {
         }
     }
 
+    /**
+     * Session Verification Endpoint.
+     * Validates incoming JWT from either http-only cookie or Authorization header.
+     * Confirms the token is not expired, not blacklisted, and that the account is active.
+     */
     @GetMapping("/verify-session")
     public ResponseEntity<?> verifySession(@CookieValue(value = "erp_session_cookie", required = false) String token,
             @RequestHeader(value = "Authorization", required = false) String authHeader,
@@ -565,6 +639,16 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * Refresh Token Rotation & Session Renewal Endpoint.
+     *
+     * HOW IT WORKS:
+     * 1. Validates the incoming refresh token against `refreshTokenCache`.
+     * 2. Checks expiry (7 days from creation).
+     * 3. Implements single-use Token Rotation: immediately deletes the old refresh token.
+     * 4. Mints a brand-new 15-minute JWT access token AND a brand-new 7-day refresh token.
+     * 5. Protects against stolen refresh token reuse.
+     */
     @PostMapping("/refresh-token")
     public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> payload, HttpServletRequest request) {
         if (rateLimitingService.isRateLimited(request, com.futaneagro.security.RateLimitingService.Action.REFRESH_TOKEN)) {
@@ -605,6 +689,18 @@ public class AuthController {
         return ResponseEntity.ok(resp);
     }
 
+    /**
+     * Self-Service & Admin Password Change Endpoint.
+     *
+     * HOW IT WORKS:
+     * 1. Rate Limiting: Action.PASSWORD_CHANGE (max 5 per IP per 60s).
+     * 2. IDOR Protection: Strictly verifies that the authenticated user is changing their own password,
+     *    or has verified SUPER_ADMIN privileges.
+     * 3. BCrypt Verification: Confirms existing current password matches database hash.
+     * 4. Password Hardening: Enforces minimum 8 characters with at least one letter and one number/symbol.
+     * 5. Session Revocation: Invalidates all existing active refresh tokens and blacklists current JWT
+     *    to kick out any unauthorized open sessions.
+     */
     @PutMapping("/change-password")
     public ResponseEntity<?> changePassword(@RequestBody Map<String, String> req, HttpServletRequest httpReq) {
         if (rateLimitingService.isRateLimited(httpReq, com.futaneagro.security.RateLimitingService.Action.PASSWORD_CHANGE)) {
@@ -681,6 +777,15 @@ public class AuthController {
         return ResponseEntity.ok(res);
     }
 
+    /**
+     * Session Termination & Logout Endpoint.
+     *
+     * HOW IT WORKS:
+     * 1. Extracts JWT access token from `Authorization: Bearer <token>`.
+     * 2. Registers the token in `TokenBlacklistService` with its remaining TTL so it cannot be reused.
+     * 3. Purges all active refresh tokens associated with the user.
+     * 4. Writes a logout event to `security_audit_logs`.
+     */
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");

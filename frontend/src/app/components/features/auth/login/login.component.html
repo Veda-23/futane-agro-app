@@ -21,18 +21,19 @@
         <!-- Official Company Logo & Identity -->
         <div class="brand-branding-box">
           <div class="brand-emblem-badge" title="Futane Agro Industries Pvt. Ltd.">
+            <div class="emblem-halo"></div>
             <img src="assets/logo.svg" alt="Futane Agro Industries" class="hero-logo-img">
           </div>
           <div class="brand-text-block">
             <h1 class="brand-title">Futane Agro <span class="highlight-gold">Industries</span></h1>
-            <p class="brand-subtitle">Pvt. Ltd. &mdash; Enterprise Resource Planning</p>
+            <p class="brand-subtitle">Maharashtra's Certified Agro-Manufacturing ERP</p>
           </div>
         </div>
 
         <!-- System Node Health Pill -->
         <div class="live-node-pill">
           <span class="pulsing-beacon" [class.uat-beacon]="isUat"></span>
-          <span class="node-text">{{ isUat ? 'UAT Test Cluster' : 'Production Cloud Node v6.2' }}</span>
+          <span class="node-text">{{ isUat ? 'UAT Cluster Pune' : 'Production Cloud Node v6.2' }}</span>
           <span class="secure-tag"><i class="bi bi-shield-check"></i> TLS 1.3</span>
         </div>
 
@@ -83,28 +84,37 @@
       <!-- Hero Bottom Cluster (Compact Operational Metrics) -->
       <div class="hero-bottom-cluster">
         
-        <!-- Live Plant Telemetry Card (Zero blank space) -->
+        <!-- Live Plant Telemetry Card (Interactive Command Feed) -->
         <div class="plant-telemetry-card">
           <div class="telemetry-header">
-            <span class="telemetry-title"><i class="bi bi-activity text-success me-1"></i> Plant Telemetry</span>
-            <span class="telemetry-live-pill"><i class="bi bi-broadcast me-1"></i> LIVE</span>
+            <span class="telemetry-title">
+              <span class="telemetry-beacon"></span>
+              Plant Telemetry
+            </span>
+            <span class="telemetry-clock-badge">
+              <i class="bi bi-clock-history me-1"></i>{{ liveClock || 'LIVE' }}
+            </span>
           </div>
+
+          <!-- Silo Fill Gauge Bar -->
+          <div class="silo-gauge-row">
+            <div class="gauge-meta-line">
+              <span class="gauge-caption"><i class="bi bi-water me-1"></i>Silo Capacity</span>
+              <span class="gauge-percentage">84.2% &bull; Optimal</span>
+            </div>
+            <div class="gauge-track">
+              <div class="gauge-fill" style="width: 84.2%;"></div>
+            </div>
+          </div>
+
           <div class="telemetry-grid">
             <div class="telemetry-item">
-              <span class="telemetry-label">Facility</span>
-              <span class="telemetry-val">Plant Line #1</span>
+              <span class="telemetry-label">Line Status</span>
+              <span class="telemetry-val text-emerald"><i class="bi bi-check2-circle me-1"></i>Line #1 Active</span>
             </div>
             <div class="telemetry-item">
-              <span class="telemetry-label">Silo Level</span>
-              <span class="telemetry-val text-success">84.2%</span>
-            </div>
-            <div class="telemetry-item">
-              <span class="telemetry-label">Shift Status</span>
-              <span class="telemetry-val">Shift B &bull; 98%</span>
-            </div>
-            <div class="telemetry-item">
-              <span class="telemetry-label">Security</span>
-              <span class="telemetry-val text-warning">ISO 27001</span>
+              <span class="telemetry-label">Extrusion OEE</span>
+              <span class="telemetry-val text-amber"><i class="bi bi-lightning-charge me-1"></i>Shift B &bull; 98.4%</span>
             </div>
           </div>
         </div>
@@ -402,28 +412,42 @@
           </div>
         </div>
 
-        <!-- Live Password Strength Meter -->
+        <!-- Live Password Security Suite: 4-Tier Segmented Meter + Requirements Pills -->
         <div *ngIf="registerData.password" class="strength-meter-wrap">
           <div class="strength-header">
-            <span class="strength-caption">Security Strength:</span>
+            <span class="strength-caption">Security Level:</span>
             <span class="strength-score-label" [ngClass]="getPasswordStrength().colorClass">
               {{ getPasswordStrength().label }}
             </span>
           </div>
-          <div class="strength-bar-track">
-            <div class="strength-bar-fill"
-                 [style.width.%]="getPasswordStrength().score"
-                 [ngClass]="getPasswordStrength().colorClass"></div>
+          <!-- 4 Segmented Bars -->
+          <div class="strength-segments-row">
+            <div class="strength-segment" [class.active-segment]="getPasswordStrength().score >= 25" [ngClass]="getPasswordStrength().colorClass"></div>
+            <div class="strength-segment" [class.active-segment]="getPasswordStrength().score >= 50" [ngClass]="getPasswordStrength().colorClass"></div>
+            <div class="strength-segment" [class.active-segment]="getPasswordStrength().score >= 75" [ngClass]="getPasswordStrength().colorClass"></div>
+            <div class="strength-segment" [class.active-segment]="getPasswordStrength().score >= 100" [ngClass]="getPasswordStrength().colorClass"></div>
+          </div>
+          <!-- Interactive Rule Badges -->
+          <div class="password-rules-row">
+            <span class="rule-chip" [class.rule-met]="hasMinLength">
+              <i class="bi" [ngClass]="hasMinLength ? 'bi-check-circle-fill' : 'bi-dash-circle'"></i> 6+ chars
+            </span>
+            <span class="rule-chip" [class.rule-met]="hasMixedCase">
+              <i class="bi" [ngClass]="hasMixedCase ? 'bi-check-circle-fill' : 'bi-dash-circle'"></i> A-z mixed
+            </span>
+            <span class="rule-chip" [class.rule-met]="hasNumberOrSymbol">
+              <i class="bi" [ngClass]="hasNumberOrSymbol ? 'bi-check-circle-fill' : 'bi-dash-circle'"></i> 0-9 / symbols
+            </span>
           </div>
         </div>
 
         <!-- Password Match Check Indicator -->
         <div *ngIf="registerData.confirmPassword" class="match-check-feedback">
           <span *ngIf="registerData.password === registerData.confirmPassword" class="text-success small fw-semibold">
-            <i class="bi bi-check-circle-fill me-1"></i> Passwords match correctly
+            <i class="bi bi-shield-check me-1"></i> Passwords match correctly
           </span>
           <span *ngIf="registerData.password !== registerData.confirmPassword" class="text-danger small fw-semibold">
-            <i class="bi bi-x-circle-fill me-1"></i> Passwords do not match
+            <i class="bi bi-shield-x me-1"></i> Passwords do not match
           </span>
         </div>
 
@@ -612,4 +636,65 @@
 
     </div>
   </div>
+
+  <!-- ── Elegant Help Modal for Forgot Password ─────────────── -->
+  <div *ngIf="showForgotPasswordModal" class="auth-modal-backdrop" (click)="closeForgotPasswordModal()">
+    <div class="auth-modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header-row">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge">
+            <i class="bi bi-shield-lock-fill text-emerald"></i>
+          </div>
+          <div>
+            <h3 class="modal-title">Security &amp; Password Recovery</h3>
+            <span class="modal-sub">Futane Agro Enterprise Identity Governance</span>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" (click)="closeForgotPasswordModal()" aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="modal-body-content">
+        <p class="modal-explainer">
+          In adherence to <strong>ISO 27001</strong> and <strong>Zero-Trust Enterprise Policy</strong>, automated self-reset of plant operator &amp; billing accounts is restricted to prevent unauthorized factory line disruption.
+        </p>
+
+        <div class="modal-contact-grid">
+          <div class="help-contact-card">
+            <div class="contact-icon icon-phone">
+              <i class="bi bi-telephone-inbound-fill"></i>
+            </div>
+            <div class="contact-meta">
+              <span class="contact-title">Plant IT Helpdesk (Chakan)</span>
+              <span class="contact-detail">+91 (020) 2712-4400 (Ext. 104)</span>
+            </div>
+          </div>
+
+          <div class="help-contact-card">
+            <div class="contact-icon icon-mail">
+              <i class="bi bi-envelope-check-fill"></i>
+            </div>
+            <div class="contact-meta">
+              <span class="contact-title">Systems Security Officer</span>
+              <span class="contact-detail">it-admin&#64;futaneagro.com</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-notice-strip">
+          <i class="bi bi-info-circle-fill text-info me-2"></i>
+          <span>Super Admins can also reset operator passwords via <em>System Settings &gt; User Management</em>.</span>
+        </div>
+      </div>
+
+      <div class="modal-footer-row">
+        <button type="button" class="modal-primary-dismiss" (click)="closeForgotPasswordModal()">
+          <i class="bi bi-arrow-left me-1"></i> Return to Sign In
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>
+

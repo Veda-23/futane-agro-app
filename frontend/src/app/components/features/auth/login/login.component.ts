@@ -71,6 +71,11 @@ export class LoginComponent implements OnInit, OnDestroy {
   recoveryCodeInput = '';
   isRecaptchaLoading = false;
 
+  // Live Telemetry & Helpdesk State
+  liveClock = '';
+  private clockTimer: any = null;
+  showForgotPasswordModal = false;
+
   constructor(
     private apiService: ApiService,
     private mfaService: MfaService,
@@ -88,19 +93,38 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.registerSuccess = '';
   }
 
+  get hasMinLength(): boolean {
+    return (this.registerData.password || '').length >= 6;
+  }
+
+  get hasMixedCase(): boolean {
+    const p = this.registerData.password || '';
+    return /[A-Z]/.test(p) && /[a-z]/.test(p);
+  }
+
+  get hasNumberOrSymbol(): boolean {
+    const p = this.registerData.password || '';
+    return /[0-9]/.test(p) || /[^A-Za-z0-9]/.test(p);
+  }
+
+  updateClock() {
+    const now = new Date();
+    this.liveClock = now.toLocaleTimeString('en-IN', { hour12: false }) + ' IST';
+  }
+
   getPasswordStrength(): { score: number; label: string; colorClass: string } {
     const p = this.registerData.password || '';
     if (!p) return { score: 0, label: '', colorClass: '' };
     let score = 0;
-    if (p.length >= 6) score++;
+    if (this.hasMinLength) score++;
     if (p.length >= 10) score++;
-    if (/[A-Z]/.test(p) && /[a-z]/.test(p)) score++;
-    if (/[0-9]/.test(p) || /[^A-Za-z0-9]/.test(p)) score++;
+    if (this.hasMixedCase) score++;
+    if (this.hasNumberOrSymbol) score++;
 
-    if (score <= 1) return { score: 25, label: 'Weak', colorClass: 'strength-weak' };
+    if (score <= 1) return { score: 25, label: 'Basic', colorClass: 'strength-weak' };
     if (score === 2) return { score: 50, label: 'Fair', colorClass: 'strength-fair' };
     if (score === 3) return { score: 75, label: 'Good', colorClass: 'strength-good' };
-    return { score: 100, label: 'Strong', colorClass: 'strength-strong' };
+    return { score: 100, label: 'High Security', colorClass: 'strength-strong' };
   }
 
   handleRegister() {
@@ -178,10 +202,11 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   forgotPassword() {
-    this.notificationService.showWarning(
-      'Password Assistance',
-      'Please contact your Futane Agro System Administrator or IT Helpdesk to initiate a password reset.'
-    );
+    this.showForgotPasswordModal = true;
+  }
+
+  closeForgotPasswordModal() {
+    this.showForgotPasswordModal = false;
   }
 
   fillCredentials(username: string, password: string, autoSubmit = false) {
@@ -193,6 +218,9 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.updateClock();
+    this.clockTimer = setInterval(() => this.updateClock(), 1000);
+
     // Purge any stale localhost backend_url to prevent missing /api proxy routing
     const saved = localStorage.getItem('backend_url');
     if (saved && (saved.includes('localhost') || saved.includes('127.0.0.1') || saved.includes(':8080') || saved.includes(':8081'))) {
@@ -525,6 +553,10 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    if (this.clockTimer) {
+      clearInterval(this.clockTimer);
+      this.clockTimer = null;
+    }
     this.clearOtpTimer();
     this.mfaService.clearRecaptcha();
   }

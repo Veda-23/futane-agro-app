@@ -312,6 +312,7 @@ public class EnterpriseController {
     }
 
     @PostMapping("/settings")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('SUPER_ADMIN')")
     public Settings saveSetting(@RequestBody Map<String, String> payload) {
         String key = payload.get("settingKey");
         String value = payload.get("settingValue");

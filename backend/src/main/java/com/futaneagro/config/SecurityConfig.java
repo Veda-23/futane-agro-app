@@ -56,22 +56,23 @@ public class SecurityConfig {
             .antMatchers("/api/v1/storefront/**").permitAll()
             .antMatchers("/api/erp/web-orders/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "ACCOUNTANT", "OPERATOR")
 
-            // ── SECURITY: Dev endpoints require explicit non-prod guard in the controller ──
-            .antMatchers("/api/dev/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
+            // ── SECURITY: Dev endpoints strictly restricted to SUPER_ADMIN in non-prod environments ──
+            .antMatchers("/api/dev/**").hasRole("SUPER_ADMIN")
 
             // ── SECURITY: Actuator — only health & prometheus are public; rest require SUPER_ADMIN ──
             .antMatchers("/actuator/health", "/actuator/prometheus").permitAll()
             .antMatchers("/actuator/**").hasRole("SUPER_ADMIN")
 
-            // Administrative Endpoints
+            // Administrative Endpoints — Public branding & features; read company & custom fields; rest strictly SUPER_ADMIN
             .antMatchers("/api/admin/branding", "/api/admin/features").permitAll()
-            .antMatchers(HttpMethod.GET, "/api/admin/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "ACCOUNTANT", "OPERATOR", "VIEWER")
+            .antMatchers(HttpMethod.GET, "/api/admin/billing/companies", "/api/admin/custom-fields/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "ACCOUNTANT", "OPERATOR", "VIEWER")
             .antMatchers("/api/admin/**").hasRole("SUPER_ADMIN")
             // Self-service user actions (logout, change password) open to all authenticated roles
             .antMatchers("/api/users/logout", "/api/users/change-password").authenticated()
             .antMatchers("/api/users/**").hasRole("SUPER_ADMIN")
-            .antMatchers("/api/settings/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
-            .antMatchers("/api/audit-logs/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
+            .antMatchers(HttpMethod.GET, "/api/settings/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "ACCOUNTANT", "OPERATOR", "VIEWER")
+            .antMatchers("/api/settings/**").hasRole("SUPER_ADMIN")
+            .antMatchers("/api/audit-logs/**").hasRole("SUPER_ADMIN")
 
             // Read-only (GET) allowed to all authenticated roles
             .antMatchers(HttpMethod.GET, "/api/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "ACCOUNTANT", "OPERATOR", "VIEWER")
@@ -82,7 +83,7 @@ public class SecurityConfig {
             .antMatchers("/api/sales/**", "/api/parties/**", "/api/invoices/**", "/api/vendors/**", "/api/bank/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "ACCOUNTANT")
             .antMatchers("/api/ppd/**", "/api/ppm/**", "/api/inventory/**", "/api/raw-materials/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "OPERATOR")
             .antMatchers("/api/production/**", "/api/machines/**", "/api/dispatch/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "OPERATOR")
-            .antMatchers("/api/data-import/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "ACCOUNTANT", "OPERATOR")
+            .antMatchers("/api/data-import/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
             .antMatchers("/api/adk/**", "/api/ai/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "ACCOUNTANT", "OPERATOR", "VIEWER")
 
             .anyRequest().hasAnyRole("SUPER_ADMIN", "ADMIN")

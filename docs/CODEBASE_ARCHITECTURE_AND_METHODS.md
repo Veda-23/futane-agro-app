@@ -138,6 +138,79 @@ All controllers reside in `com.futaneagro.controller`. Standard HTTP Status Code
 - `409 CONFLICT`: Duplicate entity (e.g. username, email, GST number already taken).
 - `429 TOO MANY REQUESTS`: Rate limit triggered by IP.
 
+### `AuthController` (`/api/users`)
+| Endpoint | Method | Role | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/register` | POST | Public | Validates user input, checks uniqueness, hashes password with BCrypt, assigns VIEWER/OPERATOR/ACCOUNTANT role. |
+| `/login` | POST | Public | Rate-limited (5/min). Verifies credentials against BCrypt hash, checks 30-min lockout, triggers 2FA or in-memory OTP. |
+| `/login/verify` | POST | Public | Verifies 6-digit OTP, deletes OTP from cache, mints 15-minute JWT access token + 7-day UUID refresh token. |
+| `/verify-session` | GET | Public | Validates JWT token from cookie or Authorization header and returns current user permissions. |
+| `/refresh-token` | POST | Public | Implements single-use token rotation: invalidates old refresh token and issues a fresh JWT and refresh token. |
+| `/change-password` | PUT | Authenticated | IDOR-guarded password change with 8-character complexity and full session revocation. |
+| `/logout` | POST | Authenticated | Blacklists active JWT in `TokenBlacklistService` with TTL matching token expiry and purges user refresh tokens. |
+
+### `ProductionController` (`/api`)
+| Endpoint | Method | Role | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/ppd` | GET | Authenticated | Read-only query fetching all active daily production run records. |
+| `/ppd` | POST | Authenticated | Creates a daily production entry, automatically increments `t_inv_inventory.produced_stock`, and broadcasts WebSocket event. |
+| `/ppd/{id}` | PUT | Authenticated | Updates daily run with inventory delta re-calculation and before/after audit tracking. |
+| `/ppd/{id}` | DELETE | Authenticated | Soft-deletes daily run (`is_active = false`) and subtracts crates from inventory stock. |
+| `/ppm` | GET / POST / PUT | Authenticated | Aggregates monthly production output, kWh electricity consumption, and utility billing. |
+| `/forecast/demand/{months}` | GET | Authenticated | 7-day and multi-month predictive demand projection based on historical PPD runs. |
+| `/raw-materials` | GET / POST / PUT | Authenticated | Inbound plastic polymer granule deliveries, vendor weighment slips, and billing attachments. |
+
+### `SalesController` (`/api`)
+Commercial operations, automated tax invoicing, ledger collection, and Tally Prime XML accounting sync:
+| Endpoint | Method | Role | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/sales` | GET | Authenticated | Read-only fetch of all active sales orders across customers. |
+| `/sales` | POST | SUPER_ADMIN, ADMIN, ACCOUNTANT, OPERATOR | Creates a sale, enforces server-side `calculateTotals()`, increments finished inventory `soldStock`, and auto-generates linked `Invoice` (`INV-YYYYMMDD-{id}`). |
+| `/sales/{id}` | PUT | SUPER_ADMIN, ADMIN, ACCOUNTANT, OPERATOR | Updates sales order, computes delta differences on finished inventory sold stock, and recalculates financial balances. |
+| `/sales/{id}` | DELETE | SUPER_ADMIN, ADMIN | Soft-deletes sales order, reverts sold stock from inventory, and cascades soft-delete to linked tax invoices. |
+| `/payments` | GET | Authenticated | Lists all customer payment receipts across bank accounts and invoices. |
+| `/payments` | POST | SUPER_ADMIN, ADMIN, ACCOUNTANT | Records payment collection, applies amount against invoice balance, updates `sales.paid` & `sales.remaining`, and prevents overpayment errors. |
+| `/payments/{id}` | PUT | SUPER_ADMIN, ADMIN, ACCOUNTANT | Updates payment metadata (mode, date). Prohibits direct amount changes to preserve ledger idempotency. |
+| `/payments/{id}` | DELETE | SUPER_ADMIN, ADMIN | Soft-deletes payment receipt and reverses the amount from the invoice's remaining balance. |
+| `/invoices` | GET | Authenticated | Read-only registry of all issued GST tax invoices. |
+| `/reports/tally-xml` | GET | Authenticated | Generates Z-01 specification Tally Prime XML sales vouchers with CGST/SGST/IGST breakdown for direct statutory accounting ingestion. |
+
+### `AdminControlCenterController` (`/api/admin`)
+Enterprise administration, tenant branding, dynamic RBAC, custom fields, and developer hub:
+| Endpoint | Method | Role | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/branding` | GET / POST | SUPER_ADMIN (POST) | Retrieves or updates corporate display name, brand palette, and themes with Caffeine cache invalidation. |
+| `/branding/logo-upload` | POST | SUPER_ADMIN | Multi-part corporate logo upload with extension checks, MIME magic byte sniffing, and path traversal protection. |
+| `/teams` | GET / POST / PUT | SUPER_ADMIN (Mutations) | Hierarchical department management enriched with live user and employee headcounts. |
+| `/teams/{id}/deactivate` | PATCH / DELETE | SUPER_ADMIN | Soft-deactivates an organizational department. |
+| `/users` | GET | SUPER_ADMIN, ADMIN | Lists user accounts with account lock flags, failed login attempts, and force-password-reset indicators. |
+| `/users/invite` | POST | SUPER_ADMIN | Creates user account, generates 16-char crypto password, hashes with BCrypt, dispatches invite email (zero password leakage in response). |
+| `/users/{username}/reset-password` | POST | SUPER_ADMIN | Emergency administrative password reset, unlocking account and emailing temporary credential. |
+| `/users/{username}` | PUT | SUPER_ADMIN, ADMIN | Updates profile metadata with strict SUPER_ADMIN checks on role elevation. |
+| `/permissions` | GET / POST | SUPER_ADMIN (POST) | Manages granular CRUD permissions per role per module. Guarded against SUPER_ADMIN role tampering. |
+| `/features` | GET | Authenticated | Returns operational status of all modular system feature flags. |
+| `/features/{moduleKey}/toggle` | POST | SUPER_ADMIN | Dynamic zero-downtime runtime toggle of ERP features (WhatsApp, B2B storefront, GPS). |
+| `/custom-fields/{entityName}` | GET / POST | SUPER_ADMIN (POST) | Declares or retrieves dynamic metadata attributes (TEXT, NUMBER, DATE, SELECT) on domain models without DDL changes. |
+| `/custom-fields/values/{entity}/{id}` | GET / POST | Authenticated | Reads or saves dynamic custom attribute values for individual business records. |
+| `/api-keys` | GET / POST / DELETE | SUPER_ADMIN (POST/DEL) | Generates high-entropy API tokens (`fa_live_...`) with masked prefixes and granular OAuth scopes. |
+| `/webhooks` | GET / POST / DELETE | SUPER_ADMIN (POST/DEL) | Configures external HTTP POST event subscribers with shared HMAC-SHA256 secrets. |
+| `/cache/stats` & `/cache/flush` | GET / POST | SUPER_ADMIN | Inspects Caffeine hit/miss ratios or purges all in-memory cache regions. |
+| `/governance/diagnostics` | GET | SUPER_ADMIN | Live JVM memory telemetry, thread counts, and DB latency measurements. |
+| `/governance/backup/export` | GET | SUPER_ADMIN | Downloads comprehensive JSON snapshot of companies, banks, templates, and flags. |
+| `/billing/companies` | GET / POST / DELETE | SUPER_ADMIN (Mutations) | Multi-company statutory tax entities; enforces single default billing company invariant. |
+| `/billing/banks` | GET / POST / DELETE | SUPER_ADMIN (Mutations) | Settlement bank registry; enforces single primary settlement account invariant. |
+| `/billing/invoice-template` | GET / POST | SUPER_ADMIN (POST) | Configures thermal and A4 print layout, column visibility, and legal disclaimers. |
+| `/notifications/templates` | GET / POST | SUPER_ADMIN (POST) | Configurable regulatory DLT WhatsApp and SMS notification templates with placeholder interpolation. |
+| `/system-health` | GET | SUPER_ADMIN | Probes WebSocket broker, cache manager, PostgreSQL DB, and mail server health. |
+| `/sessions/force-logout-all` | POST | SUPER_ADMIN | Emergency cluster-wide session invalidation via broadcasted WebSocket disconnect. |
+
+### `DataImportController` (`/api/data-import`)
+| Endpoint | Method | Role | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/preview` | POST | Admin/Operator | Dry-run CSV validation, regex checks, and duplicate identification without mutating PostgreSQL. |
+| `/confirm` | POST | Admin/Operator | ACID transactional batch execution with user-selected duplicate resolution (SKIP or UPDATE). |
+| `/template/{module}` | GET | Authenticated | Direct file download of pre-formatted, RFC 4180-compliant `.csv` template with realistic sample data. |
+
 ---
 
 ## 5. Database Entity Architecture (PostgreSQL 16)
@@ -173,8 +246,11 @@ The application models 41 tables in the `public` schema:
 
 ### `ApiService` (`frontend/src/app/api.service.ts`)
 Centralizes all HTTP calls to the Spring Boot backend (`http://localhost:8081/api`):
-- Automatically attaches `Authorization: Bearer <token>` through `AuthInterceptor`.
-- Handles unified error parsing and toast notification dispatching.
+- **Stale-While-Revalidate (SWR) In-Memory Cache:** Serves cached data instantly (&lt;1ms) via `getCachedOrFetch()` to eliminate blank loading screens during navigation.
+- **Request Deduplication:** Parallel calls to identical endpoints share the same in-flight Observable via `inFlightRequests` and `shareReplay({ bufferSize: 1, refCount: true })`.
+- **Transient Retry Resilience:** Retries network drops once with backoff, while rejecting immediate 401, 403, and 404 responses.
+- **Targeted Cache Invalidation:** Domain mutations trigger specific cache eviction routines (e.g., `invalidatePartiesCache()`, `invalidateCache('/sales')`).
+- **Auth Token Interception:** Automatically attaches `Authorization: Bearer <token>` through `AuthInterceptor`.
 
 ### `NotificationService` (`frontend/src/app/services/notification.service.ts`)
 Encapsulates SweetAlert2 (Swal) toasts and modals:

@@ -13,15 +13,18 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Map;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 /**
  * Development-only data seeding controller.
  *
  * SECURITY: All endpoints in this controller are HARD-BLOCKED in production profiles.
  * Any access attempt in prod is logged as a HIGH-severity security event.
- * This controller should NEVER be deployed to production without the guard.
+ * Strictly restricted to SUPER_ADMIN.
  */
 @RestController
 @RequestMapping("/api/dev")
+@PreAuthorize("hasRole('SUPER_ADMIN')")
 public class DevSeedController {
 
     private static final Logger log = LoggerFactory.getLogger(DevSeedController.class);

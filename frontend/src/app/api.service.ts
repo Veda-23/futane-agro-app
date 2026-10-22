@@ -3,6 +3,29 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of, retry, shareReplay, tap, catchError, timer, MonoTypeOperatorFunction } from 'rxjs';
 import { environment } from '../environments/environment';
 
+/**
+ * <h1>ApiService</h1>
+ * <p>
+ * Centralized Angular HTTP Client Service for Futane Agro ERP.
+ * Orchestrates all RESTful communication between the Angular 17 single-page application
+ * and the Spring Boot 3 enterprise backend.
+ * </p>
+ *
+ * <h3>Key Performance & Architectural Features:</h3>
+ * <ul>
+ *   <li><b>Stale-While-Revalidate (SWR) In-Memory Cache:</b> Eliminates blank loading skeletons on tab changes
+ *       by serving cached JSON payloads immediately (&lt;1ms) while background-revalidating.</li>
+ *   <li><b>Request Deduplication:</b> Re-uses identical in-flight HTTP requests via {@code inFlightRequests}
+ *       and RxJS {@code shareReplay({ bufferSize: 1, refCount: true })} to prevent duplicate network roundtrips.</li>
+ *   <li><b>Safe Transient Retry Policy:</b> Retries failed network requests once with exponential backoff,
+ *       while strictly prohibiting retries on HTTP 401 Unauthorized, 403 Forbidden, and 404 Not Found errors.</li>
+ *   <li><b>Granular Cache Invalidation:</b> Provides targeted prefix and entity invalidation methods
+ *       (e.g., {@link #invalidatePartiesCache}, {@link #invalidateCache}) triggered upon entity mutations.</li>
+ * </ul>
+ *
+ * @author Futane Agro Engineering Team
+ * @version 2.0 (Enterprise Multi-Tenant)
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -41,7 +64,13 @@ export class ApiService {
     }
   }
 
-  // Safe retry policy: Retries transient errors once after 1s, but NEVER retries 401 Unauthorized, 403 Forbidden, or 404 Not Found
+  /**
+   * Safe transient retry operator for HTTP observables.
+   * <p>Retries transient socket or 5xx server glitches, but rejects immediate 401, 403, and 404 failures
+   * to avoid flooding authentication endpoints or masking client errors.</p>
+   *
+   * @param count Number of retry attempts (default 1).
+   */
   private retryPolicy<T = any>(count: number = 1): MonoTypeOperatorFunction<T> {
     return retry<T>({
       count,
@@ -55,8 +84,14 @@ export class ApiService {
   }
 
   /**
-   * High-Performance Stale-While-Revalidate In-Memory Fetch:
-   * Returns cached data immediately (0ms) if available, eliminating blank loading screens on tab changes.
+   * High-Performance Stale-While-Revalidate (SWR) In-Memory Fetcher:
+   * <p>Returns cached data immediately (0ms) if within the TTL window, preventing layout shifts
+   * and blank loading screens on navigation. Deduplicates parallel requests via {@code inFlightRequests}.</p>
+   *
+   * @param url          Full target endpoint URL.
+   * @param forceRefresh If true, bypasses the memory cache and executes an immediate network call.
+   * @param ttl          Time-to-live in milliseconds (defaults to 5 minutes).
+   * @returns RxJS Observable delivering the typed payload.
    */
   public getCachedOrFetch<T = any>(url: string, forceRefresh: boolean = false, ttl: number = this.DEFAULT_CACHE_TTL): Observable<T> {
     const cached = this.dataCache.get(url);
@@ -89,11 +124,21 @@ export class ApiService {
     return req$;
   }
 
+  /**
+   * Deduplicates concurrent GET requests for identical resources.
+   *
+   * @param url          Endpoint URL.
+   * @param forceRefresh Force fresh server fetch.
+   */
   public dedupeGet<T = any>(url: string, forceRefresh: boolean = false): Observable<T> {
     return this.getCachedOrFetch<T>(url, forceRefresh);
   }
 
-  // Targeted Cache Invalidation
+  /**
+   * Selectively purges cached HTTP responses matching a URL key or substring prefix.
+   *
+   * @param urlKeyOrPrefix String fragment (e.g., "/sales", "/parties", "/inventory").
+   */
   public invalidateCache(urlKeyOrPrefix: string): void {
     for (const key of Array.from(this.dataCache.keys())) {
       if (key.includes(urlKeyOrPrefix)) {
@@ -107,16 +152,18 @@ export class ApiService {
     }
   }
 
+  /** Manually caches pre-fetched data for a URL. */
   public setCacheData(urlKey: string, data: any): void {
     this.dataCache.set(urlKey, { data, timestamp: Date.now() });
   }
 
+  /** Retrieves in-memory cached payload synchronously without triggering network requests. */
   public getCacheData<T = any>(urlKey: string): T | null {
     const item = this.dataCache.get(urlKey);
     return item ? (item.data as T) : null;
   }
 
-  // Cache invalidation helpers
+  // --- Entity-Specific Cache Invalidation Helpers ---
   invalidatePartiesCache(): void { this.cachedParties$ = undefined; this.invalidateCache('/parties'); }
   invalidateVendorsCache(): void { this.cachedVendors$ = undefined; this.invalidateCache('/vendors'); }
   invalidateDriversCache(): void { this.cachedDrivers$ = undefined; this.invalidateCache('/drivers'); }
@@ -124,6 +171,8 @@ export class ApiService {
   invalidateMachinesCache(): void { this.cachedMachines$ = undefined; this.invalidateCache('/machines'); }
   invalidateStatsCache(): void { this.cachedStats$ = undefined; this.invalidateCache('/dashboard/stats'); }
   invalidateChartsCache(): void { this.cachedCharts$ = undefined; this.invalidateCache('/dashboard/charts'); }
+
+  /** Flushes all in-memory SWR caches and active in-flight request handles. */
   clearAllReferenceCache(): void {
     this.cachedParties$ = undefined;
     this.cachedVendors$ = undefined;
@@ -136,19 +185,26 @@ export class ApiService {
     this.inFlightRequests.clear();
   }
 
-  // Auth
+  // ==========================================
+  // AUTHENTICATION & SESSION MANAGEMENT
+  // ==========================================
+
+  /** Authenticates user with username & password; initiates OTP/MFA workflow or grants access. */
   login(credentials: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/users/login`, credentials);
   }
 
+  /** Self-registers a new customer or organization account. */
   register(payload: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/users/register`, payload);
   }
 
+  /** Validates login OTP and retrieves active JWT access token & refresh token. */
   verifyOtp(payload: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/users/login/verify`, payload);
   }
 
+  /** Verifies active JWT token validity and fetches current user roles. */
   verifySession(token?: string): Observable<any> {
     const headers: { [key: string]: string } = {};
     if (token) {
@@ -157,6 +213,7 @@ export class ApiService {
     return this.http.get(`${this.baseUrl}/users/verify-session`, { headers });
   }
 
+  /** Blacklists active JWT token and invalidates server-side refresh session. */
   logout(): Observable<any> {
     const token = sessionStorage.getItem('jwtToken') || localStorage.getItem('jwtToken');
     const headers: { [key: string]: string } = {};
@@ -168,15 +225,19 @@ export class ApiService {
     );
   }
 
+  /** Changes the authenticated user's password with current password verification. */
   changePassword(data: { username: string; currentPassword: string; newPassword: string }): Observable<any> {
     return this.http.put(`${this.baseUrl}/users/change-password`, data);
   }
 
   // ── Multi-Factor Authentication (MFA) ──
+
+  /** Verifies Firebase Phone Auth ID token during secondary login challenge. */
   verifyFirebaseOtp(payload: { preAuthToken: string; firebaseIdToken: string }): Observable<any> {
     return this.http.post(`${this.baseUrl}/users/mfa/verify-firebase-otp`, payload);
   }
 
+  /** Validates an emergency single-use MFA recovery code. */
   verifyMfaRecoveryCode(payload: { preAuthToken: string; recoveryCode: string }): Observable<any> {
     return this.http.post(`${this.baseUrl}/users/mfa/verify-recovery-code`, payload);
   }
@@ -261,20 +322,27 @@ export class ApiService {
     return this.http.get(`${this.baseUrl}/env`);
   }
 
-  // Parties (Cached with SWR)
+  // ==========================================
+  // PARTIES & MASTER DIRECTORIES
+  // ==========================================
+
+  /** Retrieves all registered parties (customers/dealers), serving SWR cached data when fresh. */
   getParties(forceRefresh: boolean = false): Observable<any> {
     return this.getCachedOrFetch(`${this.baseUrl}/parties`, forceRefresh);
   }
+  /** Creates a new customer/party and evicts parties cache. */
   createParty(party: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/parties`, party).pipe(
       tap(() => this.invalidatePartiesCache())
     );
   }
+  /** Updates an existing customer/party and evicts parties cache. */
   updateParty(id: string, party: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/parties/${id}`, party).pipe(
       tap(() => this.invalidatePartiesCache())
     );
   }
+  /** Soft-deletes a customer/party and evicts parties cache. */
   deleteParty(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/parties/${id}`).pipe(
       tap(() => this.invalidatePartiesCache())
@@ -282,19 +350,23 @@ export class ApiService {
   }
 
   // Vendors (Cached with SWR)
+  /** Retrieves all raw material and service vendors. */
   getVendors(forceRefresh: boolean = false): Observable<any> {
     return this.getCachedOrFetch(`${this.baseUrl}/vendors`, forceRefresh);
   }
+  /** Creates a vendor and purges vendor cache. */
   createVendor(vendor: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/vendors`, vendor).pipe(
       tap(() => this.invalidateVendorsCache())
     );
   }
+  /** Updates vendor details and purges vendor cache. */
   updateVendor(id: string, vendor: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/vendors/${id}`, vendor).pipe(
       tap(() => this.invalidateVendorsCache())
     );
   }
+  /** Soft-deletes a vendor and purges vendor cache. */
   deleteVendor(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/vendors/${id}`).pipe(
       tap(() => this.invalidateVendorsCache())
@@ -302,107 +374,135 @@ export class ApiService {
   }
 
   // Drivers (Cached with SWR)
+  /** Retrieves all registered logistics drivers and contact phone numbers. */
   getDrivers(forceRefresh: boolean = false): Observable<any> {
     return this.getCachedOrFetch(`${this.baseUrl}/drivers`, forceRefresh);
   }
+  /** Registers a new logistics driver. */
   createDriver(driver: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/drivers`, driver).pipe(
       tap(() => this.invalidateDriversCache())
     );
   }
+  /** Updates driver contact or vehicle assignment. */
   updateDriver(id: string, driver: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/drivers/${id}`, driver).pipe(
       tap(() => this.invalidateDriversCache())
     );
   }
+  /** Soft-deletes a driver profile. */
   deleteDriver(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/drivers/${id}`).pipe(
       tap(() => this.invalidateDriversCache())
     );
   }
 
-  // PPD Production (Cached with SWR)
+  // ==========================================
+  // PRODUCTION & RAW MATERIALS (MANUFACTURING)
+  // ==========================================
+
+  /** Retrieves daily production runs (PPD) across injection molding machines. */
   getPpd(forceRefresh: boolean = false): Observable<any> {
     return this.getCachedOrFetch(`${this.baseUrl}/ppd`, forceRefresh);
   }
+  /** Logs a daily production run; atomically increments finished goods produced stock. */
   createPpd(ppd: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/ppd`, ppd).pipe(
       tap(() => this.invalidateCache('/ppd'))
     );
   }
+  /** Updates a daily production run and reconciles inventory adjustments. */
   updatePpd(id: string, ppd: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/ppd/${id}`, ppd).pipe(
       tap(() => this.invalidateCache('/ppd'))
     );
   }
+  /** Soft-deletes a daily production run and rolls back inventory counts. */
   deletePpd(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/ppd/${id}`).pipe(
       tap(() => this.invalidateCache('/ppd'))
     );
   }
 
-  // PPM Production (Cached with SWR)
+  // PPM Production (Monthly aggregated metrics & utility costs)
+  /** Retrieves monthly production summary reports (PPM). */
   getPpm(forceRefresh: boolean = false): Observable<any> {
     return this.getCachedOrFetch(`${this.baseUrl}/ppm`, forceRefresh);
   }
+  /** Records a monthly plant production consolidation with electricity/water billing. */
   createPpm(ppm: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/ppm`, ppm).pipe(
       tap(() => this.invalidateCache('/ppm'))
     );
   }
+  /** Updates monthly production report metrics. */
   updatePpm(id: string, ppm: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/ppm/${id}`, ppm).pipe(
       tap(() => this.invalidateCache('/ppm'))
     );
   }
+  /** Soft-deletes a monthly production report. */
   deletePpm(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/ppm/${id}`).pipe(
       tap(() => this.invalidateCache('/ppm'))
     );
   }
 
-  // Raw Materials (Cached with SWR)
+  // Raw Materials (Inventory & Inward Stock)
+  /** Retrieves raw polymer material batches (HDPE granules, masterbatch pigments). */
   getRawMaterials(forceRefresh: boolean = false): Observable<any> {
     return this.getCachedOrFetch(`${this.baseUrl}/raw-materials`, forceRefresh);
   }
+  /** Logs an inward raw material receipt and updates inventory buffer. */
   createRawMaterial(rm: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/raw-materials`, rm).pipe(
       tap(() => this.invalidateCache('/raw-materials'))
     );
   }
+  /** Modifies raw material consignment parameters. */
   updateRawMaterial(id: string, rm: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/raw-materials/${id}`, rm).pipe(
       tap(() => this.invalidateCache('/raw-materials'))
     );
   }
+  /** Soft-deletes a raw material consignment. */
   deleteRawMaterial(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/raw-materials/${id}`).pipe(
       tap(() => this.invalidateCache('/raw-materials'))
     );
   }
 
-  // Sales (Cached with SWR)
+  // ==========================================
+  // COMMERCIAL OPERATIONS: SALES & INVOICING
+  // ==========================================
+
+  /** Retrieves all sales orders, dispatching cached SWR representation when available. */
   getSales(forceRefresh: boolean = false): Observable<any> {
     return this.getCachedOrFetch(`${this.baseUrl}/sales`, forceRefresh);
   }
+  /** Records a sales order, auto-generating a tax invoice and reducing finished stock. */
   createSale(sale: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/sales`, sale).pipe(
       tap(() => this.invalidateCache('/sales'))
     );
   }
+  /** Updates a sales record and reconciles finished goods inventory differences. */
   updateSale(id: string, sale: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/sales/${id}`, sale).pipe(
       tap(() => this.invalidateCache('/sales'))
     );
   }
+  /** Soft-deletes a sales order and reverts associated inventory sold stock. */
   deleteSale(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/sales/${id}`).pipe(
       tap(() => this.invalidateCache('/sales'))
     );
   }
+  /** Generates a Razorpay payment link for customer remittance via SMS/WhatsApp. */
   generatePaymentLink(saleId: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/sales/${saleId}/payment-link`, {});
   }
+  /** Creates a server-side Razorpay order ID for in-app UPI/NetBanking modal checkout. */
   createRazorpayOrder(saleId: string, requestedAmount?: number): Observable<any> {
     let url = `${this.baseUrl}/sales/${saleId}/checkout/order`;
     if (requestedAmount && requestedAmount > 0) {
@@ -410,49 +510,58 @@ export class ApiService {
     }
     return this.http.post(url, {});
   }
+  /** Validates HMAC-SHA256 signature from Razorpay modal payment completion. */
   verifyRazorpayPayment(data: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/sales/checkout/verify?razorpay_order_id=${data.razorpay_order_id}&razorpay_payment_id=${data.razorpay_payment_id}&razorpay_signature=${data.razorpay_signature}`, {});
   }
 
   // Customer Web Orders (Storefront Integration Bridge)
+  /** Fetches B2B e-commerce orders placed through the public customer portal. */
   getWebOrders(status: string = 'ALL'): Observable<any> {
     return this.http.get(`${this.baseUrl}/erp/web-orders?status=${status}`).pipe(
       catchError(() => of([])),
       this.retryPolicy(1)
     );
   }
-
+  /** Updates fulfillment status of an inbound web order (CONFIRMED, IN_PRODUCTION, DISPATCHED). */
   updateWebOrderStatus(id: string, payload: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/erp/web-orders/${id}/status`, payload);
   }
-
+  /** Converts a confirmed web purchase order into an official ERP sales transaction. */
   convertWebOrderToSale(id: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/erp/web-orders/${id}/create-sale`, {}).pipe(
       tap(() => this.invalidateCache('/sales'))
     );
   }
 
-  // Payments (Cached with SWR)
+  // ==========================================
+  // PAYMENT COLLECTIONS & INVOICES
+  // ==========================================
+
+  /** Retrieves all customer payment receipts. */
   getPayments(forceRefresh: boolean = false): Observable<any> {
     return this.getCachedOrFetch(`${this.baseUrl}/payments`, forceRefresh);
   }
+  /** Registers a customer payment and decreases the outstanding balance on the related sale invoice. */
   createPayment(payment: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/payments`, payment).pipe(
       tap(() => this.invalidateCache('/payments'))
     );
   }
+  /** Updates payment receipt metadata (mode, payment date). Amount is immutable for ledger safety. */
   updatePayment(id: string, payment: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/payments/${id}`, payment).pipe(
       tap(() => this.invalidateCache('/payments'))
     );
   }
+  /** Soft-deletes a payment receipt and restores the outstanding balance on the invoice. */
   deletePayment(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/payments/${id}`).pipe(
       tap(() => this.invalidateCache('/payments'))
     );
   }
 
-  // Invoices (Cached with SWR)
+  /** Retrieves all issued tax invoices. */
   getInvoices(forceRefresh: boolean = false): Observable<any> {
     return this.getCachedOrFetch(`${this.baseUrl}/invoices`, forceRefresh);
   }

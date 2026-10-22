@@ -144,6 +144,7 @@
 }
 
 .brand-emblem-badge {
+  position: relative;
   width: 44px;
   height: 44px;
   border-radius: 12px;
@@ -158,7 +159,24 @@
   box-sizing: border-box;
 }
 
+.emblem-halo {
+  position: absolute;
+  inset: -3px;
+  border-radius: 14px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.35) 0%, rgba(16, 185, 129, 0.2) 60%, transparent 100%);
+  z-index: 0;
+  animation: haloBreathe 3.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes haloBreathe {
+  0%, 100% { opacity: 0.5; transform: scale(0.96); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+
 .hero-logo-img {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -322,6 +340,9 @@
 }
 
 .telemetry-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 0.68rem;
   font-weight: 700;
   color: #e2e8f0;
@@ -329,20 +350,74 @@
   letter-spacing: 0.04em;
 }
 
-.telemetry-live-pill {
-  font-size: 0.60rem;
-  font-weight: 700;
+.telemetry-beacon {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: beaconPulse 2s infinite;
+}
+
+.telemetry-clock-badge {
+  font-size: 0.62rem;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-weight: 600;
   color: #34d399;
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: 999px;
-  background: rgba(16, 185, 129, 0.15);
+  background: rgba(16, 185, 129, 0.14);
   border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+/* Silo Gauge Strip */
+.silo-gauge-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.gauge-meta-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.gauge-caption {
+  color: #cbd5e1;
+}
+
+.gauge-percentage {
+  color: #34d399;
+  font-weight: 700;
+}
+
+.gauge-track {
+  width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.gauge-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #059669 0%, #10b981 70%, #34d399 100%);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+  transition: width 0.8s ease;
 }
 
 .telemetry-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 4px 8px;
+  gap: 3px 8px;
 }
 
 .telemetry-item {
@@ -351,14 +426,22 @@
 }
 
 .telemetry-label {
-  font-size: 0.62rem;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.60rem;
+  color: rgba(255, 255, 255, 0.45);
 }
 
 .telemetry-val {
-  font-size: 0.70rem;
+  font-size: 0.68rem;
   font-weight: 600;
   color: #f8fafc;
+}
+
+.text-emerald {
+  color: #34d399 !important;
+}
+
+.text-amber {
+  color: #fbbf24 !important;
 }
 
 .uat-credential-pill {
@@ -643,11 +726,11 @@
   color: #334155;
 }
 
-/* Password Strength Meter */
+/* Password Strength Meter & Security Rules */
 .strength-meter-wrap {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   margin-top: -2px;
 }
 
@@ -659,34 +742,81 @@
 
 .strength-caption {
   color: #64748b;
+  font-weight: 500;
 }
 
 .strength-score-label {
   font-weight: 700;
 }
 
-.strength-bar-track {
-  width: 100%;
-  height: 3px;
+.strength-segments-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-top: 1px;
+}
+
+.strength-segment {
+  height: 4px;
+  border-radius: 999px;
   background: #e2e8f0;
-  border-radius: 999px;
-  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.strength-bar-fill {
-  height: 100%;
-  border-radius: 999px;
-  transition: width 0.3s ease, background 0.3s ease;
+.strength-segment.active-segment.strength-weak {
+  background: #ef4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
 }
 
-.strength-weak   { background: #ef4444; color: #ef4444; }
-.strength-fair   { background: #f59e0b; color: #f59e0b; }
-.strength-good   { background: #3b82f6; color: #3b82f6; }
-.strength-strong { background: #10b981; color: #10b981; }
+.strength-segment.active-segment.strength-fair {
+  background: #f59e0b;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+}
+
+.strength-segment.active-segment.strength-good {
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+}
+
+.strength-segment.active-segment.strength-strong {
+  background: #059669;
+  box-shadow: 0 0 8px rgba(5, 150, 105, 0.5);
+}
+
+.password-rules-row {
+  display: flex;
+  gap: 5px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+
+.rule-chip {
+  font-size: 0.62rem;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #94a3b8;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  transition: all 0.2s ease;
+}
+
+.rule-chip.rule-met {
+  background: #ecfdf5;
+  color: #059669;
+  font-weight: 600;
+}
+
+.strength-weak   { color: #ef4444; }
+.strength-fair   { color: #f59e0b; }
+.strength-good   { color: #10b981; }
+.strength-strong { color: #059669; }
 
 .match-check-feedback {
-  margin-top: -4px;
-  font-size: 0.70rem;
+  margin-top: -3px;
+  font-size: 0.68rem;
 }
 
 /* ── Alerts & Feedback Banners ───────────────────────────── */
@@ -751,6 +881,8 @@
 
 /* ── Primary CTA Buttons ─────────────────────────────────── */
 .cta-primary-btn {
+  position: relative;
+  overflow: hidden;
   width: 100%;
   padding: 9px 14px;
   border-radius: 8px;
@@ -763,6 +895,24 @@
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 3px 10px rgba(5, 150, 105, 0.25);
   margin-top: 2px;
+}
+
+.cta-primary-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+  transform: skewX(-20deg);
+  animation: btnSweep 4s infinite;
+  pointer-events: none;
+}
+
+@keyframes btnSweep {
+  0% { left: -100%; }
+  25%, 100% { left: 200%; }
 }
 
 .cta-primary-btn:hover:not(:disabled) {
@@ -1038,6 +1188,202 @@
   color: #94a3b8;
   display: flex;
   align-items: center;
+}
+/* ── Elegant Forgot Password Modal ───────────────────────── */
+.auth-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.auth-modal-card {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  padding: 22px;
+  animation: modalScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+@keyframes modalScaleUp {
+  0% { opacity: 0; transform: scale(0.94) translateY(12px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.modal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-icon-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.modal-sub {
+  font-size: 0.68rem;
+  color: #64748b;
+  display: block;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: all 0.15s ease;
+}
+
+.modal-close-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.modal-body-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-explainer {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.modal-contact-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.help-contact-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.contact-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+}
+
+.contact-icon.icon-phone {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+.contact-icon.icon-mail {
+  background: rgba(59, 130, 246, 0.12);
+  color: #2563eb;
+}
+
+.contact-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-title {
+  font-size: 0.70rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.contact-detail {
+  font-size: 0.78rem;
+  color: #0f172a;
+  font-weight: 600;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+}
+
+.modal-notice-strip {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  font-size: 0.72rem;
+  color: #1e40af;
+  line-height: 1.35;
+}
+
+.modal-footer-row {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.modal-primary-dismiss {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 0.80rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+}
+
+.modal-primary-dismiss:hover {
+  background: #1e293b;
 }
 
 /* ── Responsive Viewports ────────────────────────────────── */
