@@ -10,6 +10,17 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Scheduled Database Backup Daemon for Futane Agro ERP.
+ * <p>
+ * Executes automated scheduled snapshots of the primary relational database to ensure
+ * business continuity, disaster recovery, and regulatory audit compliance for manufacturing ledger data.
+ * <p>
+ * <b>Cron Timing:</b> Defaults to {@code "0 30 23 * * ?"} (daily at 23:30 / 11:30 PM local plant time).
+ * Backups are stored in the designated {@code erp.backup.dir} directory with timestamped filenames.
+ *
+ * @author Futane Agro Core Architecture Team
+ */
 @Service
 public class ScheduledBackupService {
 
@@ -24,7 +35,13 @@ public class ScheduledBackupService {
     @Value("${erp.backup.dir:backups}")
     private String backupDir;
 
-    // Runs every day at 11:30 PM (23:30)
+    /**
+     * Executes the nightly database backup job.
+     * <p>
+     * Ensures the target backup directory exists, builds a timestamped backup filename
+     * (format: {@code futane_backup_yyyyMMdd_HHmmss.sql}), and exports the relational schema
+     * and transactional tables. Captures and logs exceptions to prevent cron task termination.
+     */
     @Scheduled(cron = "0 30 23 * * ?")
     public void runNightlyDatabaseBackup() {
         log.info("Executing scheduled nightly database backup for Futane Agro ERP...");

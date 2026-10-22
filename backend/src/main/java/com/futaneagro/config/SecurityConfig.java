@@ -82,7 +82,7 @@ public class SecurityConfig {
             .antMatchers("/api/salaries/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "ACCOUNTANT")
             .antMatchers("/api/sales/**", "/api/parties/**", "/api/invoices/**", "/api/vendors/**", "/api/bank/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "ACCOUNTANT")
             .antMatchers("/api/ppd/**", "/api/ppm/**", "/api/inventory/**", "/api/raw-materials/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "OPERATOR")
-            .antMatchers("/api/production/**", "/api/machines/**", "/api/dispatch/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "OPERATOR")
+            .antMatchers("/api/production/**", "/api/machines/**", "/api/dispatch/**", "/api/transports/**", "/api/drivers/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "OPERATOR")
             .antMatchers("/api/data-import/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
             .antMatchers("/api/adk/**", "/api/ai/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "ACCOUNTANT", "OPERATOR", "VIEWER")
 

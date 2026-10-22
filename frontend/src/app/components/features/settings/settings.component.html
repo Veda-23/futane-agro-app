@@ -4788,7 +4788,7 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
                           <button type="button" class="btn-kebab-trigger" (click)="toggleUserKebab(u, $event)" title="More security actions" style="background: none; border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 6px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center;">
                             <i class="bi bi-three-dots-vertical" style="font-size: 14px;"></i>
                           </button>
-                          <div class="kebab-dropdown-menu glass-dropdown" [class.kebab-dropup]="i >= filteredAdminUsers.length - 2 && filteredAdminUsers.length > 3" *ngIf="openKebabUserId === u.username" (click)="$event.stopPropagation()">
+                          <div class="kebab-dropdown-menu glass-dropdown" [class.kebab-dropup]="i >= filteredAdminUsers.length - 2 && filteredAdminUsers.length > 3" *ngIf="openKebabUserId && (openKebabUserId === u.username || openKebabUserId === u.id)" (click)="$event.stopPropagation()">
                             <button type="button" class="kebab-item" (click)="openEditUserModal(u)" style="width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: none; border: none; font-size: 12px; color: var(--text-primary); cursor: pointer; text-align: left;">
                               <i class="bi bi-pencil" style="font-size: 15px; color: #0284c7;"></i> Edit Profile
                             </button>
@@ -6143,6 +6143,8 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
 
       </div>
 
+    </div> <!-- Close .admin-content-panel -->
+
       <!-- Master Password Reset Confirmation Modal -->
       <div class="modal-backdrop sec-modal-backdrop" *ngIf="showMasterPasswordConfirmModal" (click)="cancelMasterPasswordChange()">
         <div class="modal-content sec-confirm-modal" (click)="$event.stopPropagation()">
@@ -6193,6 +6195,9 @@ def verify_futane_webhook(raw_body_bytes, signature_header, secret):
               {{ changingPassword ? 'Updating Password...' : 'Confirm & Rotate Password' }}
             </button>
           </div>
+        </div>
+      </div>
+
       <!-- MFA Phone Enrollment Modal -->
       <div class="modal-backdrop sec-modal-backdrop" *ngIf="showMfaEnrollModal" (click)="closeMfaEnrollModal()">
         <div class="modal-content sec-confirm-modal" (click)="$event.stopPropagation()" style="max-width: 540px;">

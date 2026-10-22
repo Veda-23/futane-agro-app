@@ -46,5 +46,6 @@ Run-Test "Invalid Credentials Rejection (401)" {
 }
 
 Write-Host "=========================================" -ForegroundColor Cyan
-Write-Host "Summary: $TestsPassed Passed | $TestsFailed Failed" -ForegroundColor ($TestsFailed -eq 0 ? 'Green' : 'Red')
+$summaryColor = if ($TestsFailed -eq 0) { 'Green' } else { 'Red' }
+Write-Host "Summary: $TestsPassed Passed | $TestsFailed Failed" -ForegroundColor $summaryColor
 if ($TestsFailed -gt 0) { exit 1 } else { exit 0 }

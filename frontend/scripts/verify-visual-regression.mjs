@@ -8,24 +8,49 @@ import { chromium } from 'playwright';
 (async () => {
   console.log('🚀 Running Pre-Deployment Visual Regression & Design System Verification...\n');
 
+  const targetUrl = process.env.TARGET_URL || 'http://localhost:4300';
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 
   await context.addInitScript(() => {
-    const user = { username: 'SUPER_ADMIN', role: 'SUPER_ADMIN', name: 'Super Admin', token: 'mock-jwt-token-admin' };
-    localStorage.setItem('user', JSON.stringify(user));
-    sessionStorage.setItem('user', JSON.stringify(user));
-    localStorage.setItem('jwtToken', 'mock-jwt-token-admin');
-    sessionStorage.setItem('jwtToken', 'mock-jwt-token-admin');
-    sessionStorage.setItem('activeTab', 'settings');
+    try {
+      const user = { username: 'SUPER_ADMIN', role: 'SUPER_ADMIN', name: 'Super Admin', token: 'mock-jwt-token-admin' };
+      window.localStorage.setItem('user', JSON.stringify(user));
+      window.sessionStorage.setItem('user', JSON.stringify(user));
+      window.localStorage.setItem('jwtToken', 'mock-jwt-token-admin');
+      window.sessionStorage.setItem('jwtToken', 'mock-jwt-token-admin');
+      window.sessionStorage.setItem('activeTab', 'settings');
+    } catch (e) {
+      // Ignored for about:blank
+    }
   });
 
   const page = await context.newPage();
-  await page.goto('http://localhost:4200', { waitUntil: 'domcontentloaded' });
+  try {
+    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await page.evaluate(() => {
+      try {
+        const user = { username: 'SUPER_ADMIN', role: 'SUPER_ADMIN', name: 'Super Admin', token: 'mock-jwt-token-admin' };
+        localStorage.setItem('user', JSON.stringify(user));
+        sessionStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('jwtToken', 'mock-jwt-token-admin');
+        sessionStorage.setItem('jwtToken', 'mock-jwt-token-admin');
+        sessionStorage.setItem('activeTab', 'settings');
+      } catch (err) {}
+    });
+  } catch (e) {
+    await page.waitForTimeout(2000);
+  }
   await page.waitForTimeout(1500);
 
   // Fallback login if needed
-  const pwdInput = await page.$('input[type="password"]');
+  let pwdInput = null;
+  try {
+    pwdInput = await page.$('input[type="password"]');
+  } catch (e) {
+    await page.waitForTimeout(1000);
+    pwdInput = await page.$('input[type="password"]');
+  }
   if (pwdInput) {
     await page.fill('input[type="text"]', 'SUPER_ADMIN');
     await page.fill('input[type="password"]', 'superadmin123');

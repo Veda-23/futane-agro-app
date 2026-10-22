@@ -15,6 +15,24 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Enterprise Synthetic Data Seeding & Bootstrap Engine.
+ * <p>
+ * Populates empty or newly provisioned Futane Agro ERP database instances with realistic,
+ * production-fidelity dummy datasets across all 18 enterprise modules:
+ * <ul>
+ *   <li><b>Security & RBAC:</b> Pre-configured administrative users (SUPER_ADMIN, ADMIN, MANAGER, ACCOUNTANT, OPERATOR, VIEWER) with BCrypt-hashed passwords.</li>
+ *   <li><b>CRM & Supply Chain:</b> Parties (Mahindra Agri, Sahyadri Farms, Reliance Fresh, BigBasket), Vendors, Drivers, and Transport Fleets.</li>
+ *   <li><b>Manufacturing:</b> Machine master records, PPD production batches, PPM maintenance records, and Raw Material stocks (virgin polymer HDPE, masterbatch).</li>
+ *   <li><b>Commerce & Finance:</b> Finished goods crates, Sales ledger transactions, GST Tax Invoices, Payment collections, Operating expenses, and Bank ledger entries.</li>
+ *   <li><b>System Metadata:</b> Feature flags, custom field schemas, branding configurations, multi-branch warehouses, and security audit trails.</li>
+ * </ul>
+ * <p>
+ * <b>Idempotency:</b> Each seeding phase checks table record counts prior to insertion, ensuring safe repeated calls
+ * without duplicating records or corrupting relational keys.
+ *
+ * @author Futane Agro Core Architecture Team
+ */
 @Service
 public class DataSeederService {
 
@@ -75,6 +93,12 @@ public class DataSeederService {
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    /**
+     * Executes the comprehensive full-system data seeding routine within a single transaction.
+     * Invokes private seeding methods across all 18 database domains and logs an audit log milestone.
+     *
+     * @return a summary map containing execution status, human-readable confirmation message, and final record counts
+     */
     @Transactional
     public Map<String, Object> seedAllComprehensiveData() {
         System.out.println("🌾 DataSeederService: Initiating enterprise dummy dataset population...");

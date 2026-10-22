@@ -13,6 +13,22 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.time.LocalDate;
 
+/**
+ * Apache POI Excel Workbook Bulk Data Importer Service.
+ * <p>
+ * Provides robust file ingestion capabilities for legacy and external Microsoft Excel (.xlsx / .xls) spreadsheets:
+ * <ul>
+ *   <li><b>Inventory Opening Stock:</b> Parses the {@code "Inventory"} worksheet to load crate specifications,
+ *       polymer material types, and initial warehouse quantities into {@code t_inv_inventory}.</li>
+ *   <li><b>Party Directory:</b> Parses the {@code "Party"} worksheet to upsert customer and supplier records
+ *       with business names, addresses, and phone contacts into {@code t_crm_party}.</li>
+ * </ul>
+ * <p>
+ * <b>Cell Evaluation Resilience:</b> Safely handles heterogeneous Apache POI cell types
+ * (String, Numeric, Boolean, Blank, and calculated Formulas via {@link Cell#getCachedFormulaResultType()}).
+ *
+ * @author Futane Agro Core Architecture Team
+ */
 @Service
 public class ExcelImporterService {
 
@@ -22,6 +38,13 @@ public class ExcelImporterService {
     @Autowired
     private PartyRepository partyRepo;
 
+    /**
+     * Ingests crate SKU inventory definitions and opening balance counts from an Excel file on disk.
+     *
+     * @param filePath absolute path to the uploaded workbook file
+     * @throws IllegalArgumentException if the {@code "Inventory"} sheet is missing
+     * @throws Exception                if POI fails to open or read the stream
+     */
     @Transactional
     public void importInventory(String filePath) throws Exception {
         try (FileInputStream fis = new FileInputStream(new File(filePath));
@@ -77,6 +100,14 @@ public class ExcelImporterService {
         }
     }
 
+    /**
+     * Ingests party / customer entries from the {@code "Party"} sheet of an uploaded Excel workbook.
+     * Performs upsert based on the unique integer {@code partyId}.
+     *
+     * @param filePath absolute path to the uploaded workbook file
+     * @throws IllegalArgumentException if the {@code "Party"} sheet is absent
+     * @throws Exception                if POI encounters an I/O or XML parsing fault
+     */
     @Transactional
     public void importParty(String filePath) throws Exception {
         try (FileInputStream fis = new FileInputStream(new File(filePath));
@@ -134,6 +165,12 @@ public class ExcelImporterService {
         }
     }
 
+    /**
+     * Safely reads cell content as a trimmed string, handling numeric conversion, formulas, and booleans.
+     *
+     * @param cell the Apache POI cell to inspect
+     * @return clean string value or empty string if null or blank
+     */
     private String getStringValue(Cell cell) {
         if (cell == null) {
             return "";
@@ -161,6 +198,12 @@ public class ExcelImporterService {
         }
     }
 
+    /**
+     * Safely extracts numeric values from a cell, parsing string digits or formula numbers.
+     *
+     * @param cell the Apache POI cell to inspect
+     * @return double precision numerical value or 0.0 on blank/unparseable values
+     */
     private double getNumericValue(Cell cell) {
         if (cell == null) {
             return 0.0;

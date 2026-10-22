@@ -53,7 +53,7 @@ public class PartyController {
     private DriverRepository driverRepository;
 
     @Autowired
-    private AuditLogRepository auditRepo;
+    private com.futaneagro.service.AuditService auditService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -64,12 +64,11 @@ public class PartyController {
      * @return Username string, or "system" if unauthenticated.
      */
     private String getCurrentUser() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return (principal != null) ? principal.toString() : "system";
+        return auditService.getCurrentUser();
     }
 
     /**
-     * Writes an audit trail record to {@code t_sec_audit_log}.
+     * Writes an audit trail record to {@code t_sec_audit_log} with caller IP and fail-safe handling.
      *
      * @param action    Operation description.
      * @param tableName Target entity table name.
@@ -77,13 +76,7 @@ public class PartyController {
      * @param newValue  JSON representation after mutation.
      */
     private void saveAuditLog(String action, String tableName, String oldValue, String newValue) {
-        AuditLog log = new AuditLog();
-        log.setUsername(getCurrentUser());
-        log.setAction(action);
-        log.setTableName(tableName);
-        log.setOldValue(oldValue);
-        log.setNewValue(newValue);
-        auditRepo.save(log);
+        auditService.log(action, tableName, oldValue, newValue);
     }
 
     /**
@@ -181,7 +174,6 @@ public class PartyController {
             party.setIsDeleted(true);
             party.setIsActive(false);
             partyRepository.save(party);
-            partyRepository.deleteById(id);
             saveAuditLog("DELETED party: " + party.getPartyName(), "Party", oldState, null);
             return ResponseEntity.noContent().<Void>build();
         }).orElse(ResponseEntity.notFound().build());
@@ -260,7 +252,6 @@ public class PartyController {
             vendor.setIsDeleted(true);
             vendor.setIsActive(false);
             vendorRepository.save(vendor);
-            vendorRepository.deleteById(id);
             saveAuditLog("DELETED vendor: " + vendor.getVendorName(), "Vendor", oldState, null);
             return ResponseEntity.noContent().<Void>build();
         }).orElse(ResponseEntity.notFound().build());
@@ -339,7 +330,6 @@ public class PartyController {
             driver.setIsDeleted(true);
             driver.setIsActive(false);
             driverRepository.save(driver);
-            driverRepository.deleteById(id);
             saveAuditLog("DELETED driver: " + driver.getDriverName(), "Driver", oldState, null);
             return ResponseEntity.noContent().<Void>build();
         }).orElse(ResponseEntity.notFound().build());

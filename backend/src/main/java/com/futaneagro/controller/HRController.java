@@ -214,7 +214,6 @@ public class HRController {
             emp.setIsDeleted(true);
             emp.setIsActive(false);
             employeeRepository.save(emp);
-            employeeRepository.deleteById(id);
             saveAuditLog("DELETED employee: " + emp.getEmpName(), "Employees", oldState, null);
             return ResponseEntity.noContent().<Void>build();
         }).orElse(ResponseEntity.notFound().build());
@@ -318,7 +317,6 @@ public class HRController {
             salary.setIsDeleted(true);
             salary.setIsActive(false);
             employeeSalaryRepository.save(salary);
-            employeeSalaryRepository.deleteById(id);
             saveAuditLog("DELETED salary record ID: " + id, "Employee_Salary", oldState, null);
             return ResponseEntity.noContent().<Void>build();
         }).orElse(ResponseEntity.notFound().build());

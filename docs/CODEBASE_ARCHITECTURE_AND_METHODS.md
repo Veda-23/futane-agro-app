@@ -94,7 +94,90 @@ Before making code changes, always observe these strict project rules:
 
 ### `StorefrontService`
 **File:** `backend/src/main/java/com/futaneagro/service/StorefrontService.java`  
-**Purpose:** Customer-facing web order placement, live crate catalogue, order tracking, and invoice dispatch status.
+**Purpose:** Customer-facing web order placement, live crate catalog streaming, lifecycle tracking, and ERP sales/invoice conversion.
+
+| Method | Inputs | Returns | What It Does & How It Works |
+| :--- | :--- | :--- | :--- |
+| `getCatalog()` | None | `List<StorefrontCatalogItemDTO>` | Streams standard crate models with dimensions, tare weights, volume tiers, food-grade HDPE ratings, and product images. |
+| `createOrder(StorefrontOrderRequest req)` | `req` (items, customer details, address) | `CustomerOrder` | Validates items, generates tracking code (`FA-ORD-YYYY-XXXXX`), auto-syncs buyer to `t_crm_party`, calculates 18% GST and volume freight, and saves initial `ORDER_PLACED` milestone. |
+| `getOrderTracking(String orderNumber)` | `orderNumber` | `Map<String, Object>` | Public order lookup returning order headers, line items, and chronological status history. |
+| `getOrdersForErp(String status, Pageable pageable)` | `status`, `pageable` | `Page<CustomerOrder>` | Paginated ERP backoffice order processing queue with status filters. |
+| `updateOrderStatus(String orderId, OrderStatusUpdateRequest req)` | `orderId`, `req` | `CustomerOrder` | Updates fulfillment state (`APPROVED`, `IN_PRODUCTION`, `PACKED`, `DISPATCHED`, `DELIVERED`) and logs tracking event. |
+| `convertOrderToSaleAndInvoice(String orderId)` | `orderId` | `Map<String, Object>` | Converts approved web order to official `Sales` ledger record and generates GST Tax `Invoice`. |
+
+---
+
+### `NotificationBroadcastService`
+**File:** `backend/src/main/java/com/futaneagro/service/NotificationBroadcastService.java`  
+**Purpose:** Real-time STOMP/SockJS WebSocket message broker for distributed client notifications across ERP operator stations.
+
+| Method | Inputs | Returns | What It Does & How It Works |
+| :--- | :--- | :--- | :--- |
+| `broadcast(String module, String action, String description)` | `module`, `action`, `description` | `void` | Constructs a `RealtimeNotification` payload and dispatches it over destination `/topic/updates` to connected Angular browsers. |
+
+---
+
+### `TallyExportService`
+**File:** `backend/src/main/java/com/futaneagro/service/TallyExportService.java`  
+**Purpose:** Generates official TallyPrime / Tally ERP 9 XML Integration documents for statutory accounting sync.
+
+| Method | Inputs | Returns | What It Does & How It Works |
+| :--- | :--- | :--- | :--- |
+| `exportSalesToTallyXml(LocalDate startDate, LocalDate endDate)` | `startDate`, `endDate` | `String` | Generates standard `<ENVELOPE>` XML schema with `<VOUCHER VCHTYPE="Sales">`, ledger allocations (Party, Sales, CGST, SGST, IGST), and HSN codes. |
+
+---
+
+### `AuditService`
+**File:** `backend/src/main/java/com/futaneagro/service/AuditService.java`  
+**Purpose:** Non-blocking administrative and financial audit log recorder.
+
+| Method | Inputs | Returns | What It Does & How It Works |
+| :--- | :--- | :--- | :--- |
+| `getCurrentUser()` | None | `String` | Extracts authenticated username from `SecurityContextHolder` or returns `"SYSTEM"`. |
+| `getClientIp()` | None | `String` | Resolves client network address from `X-Forwarded-For` proxy header or request remote address. |
+| `log(String action, String tableName, String oldValue, String newValue)` | Action, table, old & new diff | `void` | Persists an immutable forensic audit trail record in `t_core_audit_log`. |
+
+---
+
+### `WhatsAppCloudApiService` & `SmsService` & `EmailService`
+**Files:** `WhatsAppCloudApiService.java`, `SmsService.java`, `EmailService.java`  
+**Purpose:** Omnichannel transactional notifications (WhatsApp Cloud API, Twilio SMS, and Spring JavaMailSender).
+
+| Service | Method | Purpose |
+| :--- | :--- | :--- |
+| `WhatsAppCloudApiService` | `sendInvoiceNotification(...)` | Meta Graph API template dispatch with clean E.164 phone normalization and simulation fallback. |
+| `SmsService` | `sendOtpSms(...)` | Twilio SMS 2FA passcode delivery with PII masking and message SID audit trail. |
+| `SmsService` | `sendWhatsAppPaymentLink(...)` | Twilio WhatsApp interactive invoice reminder delivery. |
+| `EmailService` | `sendOtpEmail(...)` | Asynchronous (`@Async`) HTML-templated MFA verification email with XSS escaping. |
+| `EmailService` | `sendUserInvitation(...)` | Welcome email containing temporary credentials and system login URL. |
+| `EmailService` | `sendPasswordResetEmail(...)` | Emergency administrative password reset token dispatch. |
+
+---
+
+### `ExcelImporterService`
+**File:** `backend/src/main/java/com/futaneagro/service/ExcelImporterService.java`  
+**Purpose:** Ingests legacy Microsoft Excel (`.xlsx`/`.xls`) spreadsheets for inventory opening stock and party directories.
+
+| Method | Inputs | Returns | What It Does & How It Works |
+| :--- | :--- | :--- | :--- |
+| `importInventory(String filePath)` | `filePath` | `void` | Apache POI parsing of `"Inventory"` sheet to load crate opening balances into `t_inv_inventory`. |
+| `importParty(String filePath)` | `filePath` | `void` | Parses `"Party"` sheet to upsert customer records and contacts into `t_crm_party`. |
+
+---
+
+### `DataSeederService`
+**File:** `backend/src/main/java/com/futaneagro/service/DataSeederService.java`  
+**Purpose:** Comprehensive synthetic data bootstrap engine for local demo, staging, and automated integration testing.
+
+| Method | Inputs | Returns | What It Does & How It Works |
+| :--- | :--- | :--- | :--- |
+| `seedAllComprehensiveData()` | None | `Map<String, Object>` | Populates all 18 database domains (Users, Parties, Vendors, Drivers, Machines, PPD, Inventory, Sales, Invoices, Bank) with idempotent pre-checks. |
+
+---
+
+### `ScheduledBackupService`
+**File:** `backend/src/main/java/com/futaneagro/service/ScheduledBackupService.java`  
+**Purpose:** Nightly database snapshot scheduler (`@Scheduled(cron = "0 30 23 * * ?")`) exporting timestamped `.sql` backups to disk.
 
 ---
 

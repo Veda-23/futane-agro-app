@@ -19,6 +19,32 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
+/**
+ * <h3>B2B Digital Storefront & Wholesale Orders Fulfillment Service</h3>
+ * <p>
+ * Powering the public customer-facing wholesale ecommerce catalog, online ordering,
+ * automated GST calculations, milestone tracking, and seamless conversion into internal
+ * commercial sales and tax invoices.
+ * </p>
+ *
+ * <h4>Core Responsibilities:</h4>
+ * <ul>
+ *   <li><b>Live Wholesale Catalog:</b> Dynamically builds product specifications (load capacity,
+ *       tare weight, food-grade certifications, dimensions) enriched with wholesale volume tier pricing.</li>
+ *   <li><b>Automated GST Calculation:</b> Enforces standard 18% GST (CGST 9% + SGST 9%) on subtotal.</li>
+ *   <li><b>Logistics Freight Rules:</b> Offers free shipping on Full Truckload orders (>= 1,000 units),
+ *       applying standardized freight for smaller consignments.</li>
+ *   <li><b>Party Auto-Registration:</b> Automatically registers guest storefront buyers into
+ *       {@link Party} (CRM party directory) using their verified contact number.</li>
+ *   <li><b>Milestone Event Sourcing:</b> Emits immutable {@link OrderTrackingEvent} entries at each stage
+ *       (Order Placed, Approved, In Production, Quality Checked & Packed, Dispatched, Delivered).</li>
+ *   <li><b>ERP Commercial Conversion:</b> Transforms approved web orders into official {@link Sales}
+ *       and {@link Invoice} records without re-keying data.</li>
+ * </ul>
+ *
+ * @author Futane Agro Core Engineering
+ * @version 2.0
+ */
 @Service
 public class StorefrontService {
 
@@ -49,7 +75,18 @@ public class StorefrontService {
     private DispatchRepository dispatchRepo;
 
     /**
-     * Retrieves dynamic catalog for public customer storefront.
+     * Retrieves the complete catalog of agro-crates enriched with live warehouse stock and tiered wholesale pricing.
+     * <p>
+     * <b>How it works:</b>
+     * <ol>
+     *   <li>Reads all available finished goods inventories from {@link InventoryRepository}.</li>
+     *   <li>Enriches each item with engineering specifications (tare weight, dimensions, food grade, colors).</li>
+     *   <li>Computes 4-tier volume wholesale discounts (Standard, 5% off for 201-1,000 units, 10% off for 1,001-3,000 units, 15% off for full truckloads).</li>
+     *   <li>Falls back to predefined catalog blueprints if inventory database is initially empty.</li>
+     * </ol>
+     * </p>
+     *
+     * @return List of {@link StorefrontCatalogItemDTO} ready for frontend rendering
      */
     @Transactional(readOnly = true)
     public List<StorefrontCatalogItemDTO> getCatalog() {
@@ -131,7 +168,24 @@ public class StorefrontService {
     }
 
     /**
-     * Places a customer order from the storefront.
+     * Places a new commercial crate order initiated by a customer via the public e-commerce storefront.
+     * <p>
+     * <b>Operational Workflow:</b>
+     * <ol>
+     *   <li>Validates that at least one crate SKU is present and that a customer mobile number is provided.</li>
+     *   <li>Generates a unique tracking order number (format: {@code FA-ORD-<YEAR>-<5-DIGIT-RANDOM>}).</li>
+     *   <li>Auto-synchronizes customer contact details into the ERP Master Party ledger ({@code t_crm_party})
+     *       via {@link #syncCustomerWithParty(CustomerOrder)} to enable unified CRM and GST reconciliation.</li>
+     *   <li>Iterates through requested crate items, calculates line gross amounts, and links warehouse inventory IDs.</li>
+     *   <li>Computes Indian Statutory GST: 18% total (CGST 9% + SGST 9%) applied on subtotal.</li>
+     *   <li>Calculates wholesale freight charges: waived (₹0) on Full Truckloads (>= 1,000 crates); ₹1,200 nominal freight otherwise.</li>
+     *   <li>Persists the order record into {@code t_ord_customer_order} with status {@code NEW_ORDER}.</li>
+     *   <li>Appends an initial tracking milestone ({@code ORDER_PLACED}) into {@code t_ord_tracking_event}.</li>
+     * </ol>
+     *
+     * @param req the incoming storefront order payload containing items, customer contact, and delivery address
+     * @return the persisted {@link CustomerOrder} entity with assigned order number and calculation details
+     * @throws IllegalArgumentException if items are empty or customer mobile is missing
      */
     @Transactional
     public CustomerOrder createOrder(StorefrontOrderRequest req) {
@@ -226,7 +280,15 @@ public class StorefrontService {
     }
 
     /**
-     * Retrieves an order by its unique order number with tracking history.
+     * Retrieves the complete lifecycle tracking dossier of an order using its public order tracking code.
+     * <p>
+     * Fetches order headers, itemized crate lines, tax totals, and the chronological list
+     * of tracking timeline events (e.g. {@code ORDER_PLACED}, {@code IN_PRODUCTION}, {@code PACKED},
+     * {@code DISPATCHED}, {@code DELIVERED}). Used by the customer-facing order tracking portal.
+     *
+     * @param orderNumber the unique tracking number (e.g. {@code FA-ORD-2026-88123})
+     * @return a structured map of order fields, address, items, and chronological milestone events
+     * @throws IllegalArgumentException if the requested order number is not found
      */
     @Transactional(readOnly = true)
     public Map<String, Object> getOrderTracking(String orderNumber) {
@@ -260,7 +322,13 @@ public class StorefrontService {
     }
 
     /**
-     * Lists orders for ERP Web Orders Management screen.
+     * Lists and filters customer orders for administrative processing within the internal ERP backoffice.
+     * Supports status filtering (e.g. {@code ALL}, {@code NEW_ORDER}, {@code IN_PRODUCTION}, {@code PACKED})
+     * with paginated server-side retrieval.
+     *
+     * @param status   optional filter matching order status; pass {@code "ALL"} or null to retrieve all statuses
+     * @param pageable pagination parameters (page index, size, sorting)
+     * @return a page of matching {@link CustomerOrder} records
      */
     @Transactional(readOnly = true)
     public Page<CustomerOrder> getOrdersForErp(String status, Pageable pageable) {
@@ -269,7 +337,21 @@ public class StorefrontService {
     }
 
     /**
-     * Updates order status and logs tracking milestone.
+     * Updates an order's fulfillment status and records a timeline milestone in the tracking history.
+     * <p>
+     * <b>Supported Milestone Transitions:</b>
+     * <ul>
+     *   <li>{@code APPROVED}: Factory confirms stock availability and approves order execution.</li>
+     *   <li>{@code IN_PRODUCTION}: Injection moulding machine lines are assigned.</li>
+     *   <li>{@code PACKED}: Crates undergo QC inspection, palletizing, and shrink-wrapping.</li>
+     *   <li>{@code DISPATCHED}: Loaded onto logistics fleet vehicle; vehicle and driver details attached.</li>
+     *   <li>{@code DELIVERED}: Delivery destination reached and acknowledged; marks payment as {@code PAID}.</li>
+     * </ul>
+     *
+     * @param orderId the primary key UUID of the customer order
+     * @param req     payload containing the target status, custom milestone notes, and optional driver/vehicle details
+     * @return the updated {@link CustomerOrder} entity
+     * @throws IllegalArgumentException if the order id is not found
      */
     @Transactional
     public CustomerOrder updateOrderStatus(String orderId, OrderStatusUpdateRequest req) {
@@ -321,7 +403,21 @@ public class StorefrontService {
     }
 
     /**
-     * Automatically converts a web order into an official ERP Sales & Invoice record.
+     * Converts a storefront web order into an official ERP Sales ledger transaction and generates a GST Tax Invoice.
+     * <p>
+     * <b>Integration Pipeline:</b>
+     * <ol>
+     *   <li>Ensures the ordering customer exists in the {@link Party} ledger (auto-syncs if needed).</li>
+     *   <li>Aggregates order items and creates a primary {@link Sales} record with tax components (CGST, SGST).</li>
+     *   <li>Sets payment allocations based on whether the order was prepaid or is pending settlement.</li>
+     *   <li>Generates an official {@link Invoice} with sequence {@code INV-WEB-<YEAR>-<RANDOM>}.</li>
+     *   <li>Links {@code erpSaleId} back to the customer order, marks order status as {@code PACKED},
+     *       and appends a {@code PACKED_INVOICED} milestone tracking event.</li>
+     * </ol>
+     *
+     * @param orderId the primary key UUID of the web order to convert
+     * @return a map containing execution results: {@code saleId}, {@code invoiceNo}, and {@code orderNumber}
+     * @throws IllegalArgumentException if the order is not found
      */
     @Transactional
     public Map<String, Object> convertOrderToSaleAndInvoice(String orderId) {
@@ -397,7 +493,14 @@ public class StorefrontService {
     }
 
     /**
-     * Synchronizes web customer with ERP Party master (t_crm_party).
+     * Synchronizes a storefront web customer with the ERP Party master ({@code t_crm_party}).
+     * <p>
+     * If an existing party is located by mobile number, its ID is linked to the order.
+     * Otherwise, a new {@link Party} record is automatically registered with contact details,
+     * address, GST number (if provided), and an active CRM status.
+     *
+     * @param order the customer order containing buyer metadata
+     * @return the existing or newly created and saved {@link Party} entity
      */
     private Party syncCustomerWithParty(CustomerOrder order) {
         Optional<Party> existingParty = partyRepo.findFirstByPartyContact(order.getCustomerMobile());
@@ -424,6 +527,13 @@ public class StorefrontService {
         return savedParty;
     }
 
+    /**
+     * Builds the static catalog metadata dictionary defining manufacturing specifications,
+     * physical dimensions, tare weights, load capacities, food-grade certifications,
+     * and high-resolution product imagery for all standard crate models produced by Futane Agro.
+     *
+     * @return an ordered map mapping crate model names to their rich {@link CrateMeta} definitions
+     */
     private Map<String, CrateMeta> buildCrateMetaCatalog() {
         Map<String, CrateMeta> map = new LinkedHashMap<>();
 

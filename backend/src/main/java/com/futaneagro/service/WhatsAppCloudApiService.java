@@ -11,6 +11,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Meta WhatsApp Cloud API Integration Service.
+ * <p>
+ * Manages official outbound WhatsApp business messaging for invoice dispatches, payment receipts,
+ * and delivery notifications to farmers, buyers, and wholesale distributors.
+ * <p>
+ * <b>Operational Mechanics:</b>
+ * <ul>
+ *   <li>Communicates with Meta Graph API ({@code v19.0}) via HTTP POST JSON requests.</li>
+ *   <li>Requires an approved pre-registered HSM template (e.g. {@code "invoice_alert"}).</li>
+ *   <li>Cleans phone numbers into canonical E.164 numerical formats (e.g., stripping spaces, hyphens, and symbols).</li>
+ *   <li>Simulation Grace: When running locally or without active Graph API bearer tokens, logs the simulated payload
+ *       without dropping an unhandled exception or breaking invoice creation workflows.</li>
+ * </ul>
+ *
+ * @author Futane Agro Core Architecture Team
+ */
 @Service
 public class WhatsAppCloudApiService {
 
@@ -23,6 +40,15 @@ public class WhatsAppCloudApiService {
     @Value("${whatsapp.phone.number.id:}")
     private String phoneNumberId;
 
+    /**
+     * Dispatches an official WhatsApp template message containing invoice details and total payable amount.
+     *
+     * @param recipientPhone destination customer phone number
+     * @param partyName      business name of the customer party
+     * @param invoiceNo      tax invoice identifier (e.g. {@code "INV-2026-0099"})
+     * @param amount         total invoice grand total amount in INR
+     * @param pdfUrl         publicly accessible or secure signed download link for the generated PDF invoice
+     */
     public void sendInvoiceNotification(String recipientPhone, String partyName, String invoiceNo, double amount, String pdfUrl) {
         if (recipientPhone == null || recipientPhone.trim().isEmpty()) {
             return;

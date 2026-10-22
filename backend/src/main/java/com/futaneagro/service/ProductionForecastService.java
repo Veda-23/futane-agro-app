@@ -13,6 +13,30 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * <h3>Production Forecasting & Manufacturing Intelligence Service</h3>
+ * <p>
+ * Provides mathematical modeling, time-series moving averages, trend regressions,
+ * shift efficiency comparisons, and power/raw-material optimization algorithms for
+ * Futane Agro crate manufacturing plants.
+ * </p>
+ *
+ * <h4>Core Algorithms & Analytics:</h4>
+ * <ul>
+ *   <li><b>Demand Forecasting:</b> Computes a 6-month Simple Moving Average (SMA) augmented with
+ *       least-squares linear trend regression to predict future crate demand.</li>
+ *   <li><b>Shift Efficiency Benchmarking:</b> Compares Day, Night, and Rotational shifts by
+ *       {@code (successfulCrates / totalProduction) * 100} and detects operational anomalies.</li>
+ *   <li><b>Energy Consumption Auditing:</b> Evaluates electricity units consumed per finished crate
+ *       from {@link Ppm#getElectricityUnits()} to identify power wastage.</li>
+ *   <li><b>Raw Material Requirements Forecasting:</b> Estimates polymer weight (kg) and weekly stock
+ *       procurement needs taking rejection rates into account.</li>
+ *   <li><b>Daily Scheduled Alerts:</b> Background cron job checking upcoming stock runout conditions.</li>
+ * </ul>
+ *
+ * @author Futane Agro Core Engineering
+ * @version 2.0
+ */
 @Service
 public class ProductionForecastService {
 
@@ -22,7 +46,22 @@ public class ProductionForecastService {
     @Autowired
     private PpmRepository ppmRepository;
 
-    // --- Simple Moving Average for demand forecasting ---
+    /**
+     * Forecasts crate production demand for a given number of future calendar months.
+     * <p>
+     * <b>Algorithm:</b>
+     * <ol>
+     *   <li>Retrieves historical monthly aggregated records from {@link PpmRepository}.</li>
+     *   <li>Calculates moving average across the most recent 6 monthly data points.</li>
+     *   <li>Calculates linear slope (trend) using least squares: {@code slope = (n*ΣXY - ΣX*ΣY) / (n*ΣX² - (ΣX)²)}.</li>
+     *   <li>Projects demand for future months: {@code forecast = Math.max(0, avg + (trend * i))}.</li>
+     *   <li>Assigns statistical confidence scores based on sample window size.</li>
+     * </ol>
+     * </p>
+     *
+     * @param monthsAhead Number of future months to project (e.g., 3, 6, 12)
+     * @return Map containing historical average, trend factor, window size, and projected monthly forecasts
+     */
     public Map<String, Object> forecastDemand(int monthsAhead) {
         List<Ppm> history = ppmRepository.findAll();
         if (history.isEmpty()) {
@@ -84,7 +123,16 @@ public class ProductionForecastService {
         return result;
     }
 
-    // --- Shift optimization based on historical efficiency ---
+    /**
+     * Evaluates shift performance to identify productivity bottlenecks.
+     * <p>
+     * <b>Algorithm:</b>
+     * Groups daily production runs by shift (Shift A, Shift B, Night Shift),
+     * aggregates successful output versus total attempted cycles, and computes percentage efficiency.
+     * </p>
+     *
+     * @return Map containing sorted shift statistics, top performing shift, and actionable recommendations
+     */
     public Map<String, Object> getShiftOptimization() {
         List<Ppd> dailyData = ppdRepository.findAll();
         if (dailyData.isEmpty()) {
@@ -121,7 +169,16 @@ public class ProductionForecastService {
         return result;
     }
 
-    // --- Electricity efficiency analysis ---
+    /**
+     * Analyzes historical power consumption to calculate energy efficiency per crate.
+     * <p>
+     * <b>Algorithm:</b>
+     * Aggregates {@link Ppm#getElectricityUnits()} across all recorded months, divides by total crate output,
+     * and flags energy spikes or abnormally high consumption periods.
+     * </p>
+     *
+     * @return Map containing average electricity units per crate, highest/lowest energy months, and recommendations
+     */
     public Map<String, Object> getElectricityAnalysis() {
         List<Ppm> monthlyData = ppmRepository.findAll();
         if (monthlyData.isEmpty()) {
@@ -158,7 +215,16 @@ public class ProductionForecastService {
         return result;
     }
 
-    // --- Material requirement prediction ---
+    /**
+     * Projects plastic raw material (polypropylene/HDPE granules) requirement forecasts.
+     * <p>
+     * <b>Algorithm:</b>
+     * Groups daily production by crate type, computes historical rejection percentage,
+     * estimates raw polymer weight in kilograms (approx 0.5kg/crate), and predicts next week's procurement needs.
+     * </p>
+     *
+     * @return Map containing per-crate material requirements, rejection percentages, and low stock warnings
+     */
     public Map<String, Object> predictMaterialRequirements() {
         List<Ppd> dailyData = ppdRepository.findAll();
         if (dailyData.isEmpty()) {
@@ -195,7 +261,16 @@ public class ProductionForecastService {
         return result;
     }
 
-    // --- Efficiency trend analysis ---
+    /**
+     * Synthesizes day-by-day factory output efficiency timelines.
+     * <p>
+     * <b>Algorithm:</b>
+     * Aggregates daily runs across chronological dates, computing percentage yields and
+     * maximum, minimum, and average factory performance.
+     * </p>
+     *
+     * @return Map containing sorted daily efficiency array, min/max/average yields, and overall operational status
+     */
     public Map<String, Object> getEfficiencyTrend() {
         List<Ppd> dailyData = ppdRepository.findAll();
         if (dailyData.isEmpty()) {
@@ -237,7 +312,10 @@ public class ProductionForecastService {
         return result;
     }
 
-    // Scheduled job to check for low stock and alert
+    /**
+     * Daily scheduled background job that evaluates inventory levels against projected weekly demand.
+     * Runs every morning at 08:00 AM.
+     */
     @Scheduled(cron = "0 0 8 * * ?") // Run daily at 8 AM
     public void checkMaterialRequirements() {
         Map<String, Object> prediction = predictMaterialRequirements();

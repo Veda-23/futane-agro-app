@@ -3781,7 +3781,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   toggleUserKebab(u: any, event: Event) {
     event.stopPropagation();
-    this.openKebabUserId = this.openKebabUserId === u.username ? null : u.username;
+    const id = u.username || u.id;
+    this.openKebabUserId = this.openKebabUserId === id ? null : id;
   }
 
   openEditUserModal(u: any) {

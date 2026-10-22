@@ -22,6 +22,29 @@ import java.util.Map;
 import java.util.Optional;
 import java.time.LocalDate;
 
+/**
+ * <h3>Razorpay Payment Gateway Integration Service</h3>
+ * <p>
+ * Orchestrates online customer receivables, payment link generation, modal checkout order creation,
+ * HMAC-SHA256 signature verification, and automated ledger reconciliation for the Futane Agro ERP system.
+ * </p>
+ *
+ * <h4>Core Responsibilities:</h4>
+ * <ul>
+ *   <li><b>Hosted Payment Links:</b> Generates customer-specific payment links via Razorpay API with
+ *       amounts derived strictly from database state (preventing tampering).</li>
+ *   <li><b>Multi-Factor Web Checkout:</b> Creates Razorpay orders for in-app standard checkout popups.</li>
+ *   <li><b>Double-Idempotent Settlement:</b> Reconciles payments safely through {@link #markSaleAsPaid(String, String)},
+ *       protecting against duplicate webhook events or network retries.</li>
+ *   <li><b>Cryptographic Signature Verification:</b> Enforces constant-time HMAC-SHA256 validation to
+ *       thwart timing attacks.</li>
+ *   <li><b>Sales Ledger & Collection Registry Sync:</b> Updates invoice outstanding balances and logs
+ *       corresponding entries into {@link PaymentCollection}.</li>
+ * </ul>
+ *
+ * @author Futane Agro Core Engineering
+ * @version 2.0
+ */
 @Service
 public class PaymentLinkService {
 
@@ -49,8 +72,26 @@ public class PaymentLinkService {
     private String keySecret;
 
     /**
-     * Creates a Razorpay Payment Link for the given sale.
-     * Amount and customer details come exclusively from the DB — never from caller.
+     * Creates a Razorpay Payment Link for the specified sales invoice.
+     * <p>
+     * <b>Security Invariant:</b> Amount due and customer phone number are resolved exclusively
+     * from the PostgreSQL database — never accepted from untrusted caller parameters.
+     * </p>
+     * <p>
+     * <b>How it works:</b>
+     * <ol>
+     *   <li>Verifies active Razorpay client credentials.</li>
+     *   <li>Finds sale invoice by primary UUID or integer saleId.</li>
+     *   <li>Validates that outstanding amount ({@code remaining}) is greater than zero.</li>
+     *   <li>Converts amount to paise (1 INR = 100 paise).</li>
+     *   <li>Calls Razorpay API {@code razorpayClient.paymentLink.create(...)}.</li>
+     *   <li>Saves {@link PaymentLink} entity with short URL, status, and generated WhatsApp message.</li>
+     * </ol>
+     * </p>
+     *
+     * @param saleId UUID or numeric ID of the commercial sales invoice
+     * @return Map containing {@code paymentLinkId}, {@code shortUrl}, {@code whatsappMessage}, and {@code amount}
+     * @throws IllegalStateException If Razorpay is not configured or no balance remains
      */
     @Transactional
     public Map<String, String> createPaymentLink(String saleId) {
@@ -133,8 +174,23 @@ public class PaymentLinkService {
     }
 
     /**
-     * Called by webhook handler when payment_link.paid event is received.
-     * Idempotent — safe to call multiple times with same paymentId.
+     * Reconciles a paid invoice and settles accounts upon receiving payment confirmation.
+     * <p>
+     * <b>Idempotency Guarantees:</b>
+     * <ol>
+     *   <li>Checks {@code paymentLinkRepository.existsByRazorpayPaymentId(razorpayPaymentId)} to prevent duplicate execution.</li>
+     *   <li>Verifies link entity status is not already {@code "PAID"}.</li>
+     *   <li>Updates {@link Sales#getPaid()} and calculates new {@link Sales#getRemaining()}.</li>
+     *   <li>Appends a new immutable settlement voucher to {@link PaymentCollection} registry.</li>
+     * </ol>
+     * </p>
+     * <p>
+     * <b>Used by:</b> {@link com.futaneagro.controller.RazorpayWebhookController} and
+     * {@link #verifyStandardCheckoutSignature(String, String, String, String)}.
+     * </p>
+     *
+     * @param razorpayPaymentLinkId Razorpay Link or Order ID
+     * @param razorpayPaymentId Razorpay Payment transaction ID (e.g., "pay_...")
      */
     @Transactional
     public void markSaleAsPaid(String razorpayPaymentLinkId, String razorpayPaymentId) {
@@ -202,7 +258,21 @@ public class PaymentLinkService {
     }
 
     /**
-     * Standard Web Checkout: Create an Order
+     * Initializes a standard in-app modal checkout order transaction with Razorpay.
+     * <p>
+     * <b>How it works:</b>
+     * <ol>
+     *   <li>Retrieves sale by primary key or numeric invoice id.</li>
+     *   <li>Verifies balance due and ensures payment amount does not exceed remaining receivable.</li>
+     *   <li>Calls {@code razorpayClient.orders.create(...)} setting currency to INR.</li>
+     *   <li>Stores {@link PaymentLink} with status {@code "CREATED"} for reconciliation tracking.</li>
+     *   <li>Returns map with {@code order_id}, {@code amount}, {@code currency}, {@code sale_id}, and public {@code key_id}.</li>
+     * </ol>
+     * </p>
+     *
+     * @param saleId Sale invoice UUID
+     * @param requestedAmount Optional partial payment amount (defaults to full remaining amount if null)
+     * @return Map containing transaction metadata required by Razorpay JavaScript checkout SDK
      */
     public Map<String, Object> createStandardCheckoutOrder(String saleId, BigDecimal requestedAmount) {
         if (razorpayClient == null) {
@@ -272,7 +342,18 @@ public class PaymentLinkService {
     }
 
     /**
-     * Standard Web Checkout: Verify Signature and mark paid
+     * Verifies the cryptographic HMAC-SHA256 signature produced upon client web checkout completion.
+     * <p>
+     * <b>Security Note:</b>
+     * Employs {@link java.security.MessageDigest#isEqual(byte[], byte[])} for constant-time
+     * byte comparison to eliminate timing side-channel attacks against the secret key.
+     * </p>
+     *
+     * @param razorpayOrderId The order ID generated on checkout start
+     * @param razorpayPaymentId The transaction ID emitted by Razorpay
+     * @param razorpaySignature The hexadecimal HMAC-SHA256 signature from the frontend
+     * @param secret The webhook or API secret key
+     * @return {@code true} if signature is cryptographically valid, {@code false} otherwise
      */
     @Transactional
     public boolean verifyStandardCheckoutSignature(String razorpayOrderId, String razorpayPaymentId, String razorpaySignature, String secret) {

@@ -45,7 +45,7 @@ public class InventoryController {
     private InventoryRepository inventoryRepository;
 
     @Autowired
-    private AuditLogRepository auditRepo;
+    private com.futaneagro.service.AuditService auditService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -60,8 +60,7 @@ public class InventoryController {
      * @return Current authenticated username or "system"
      */
     private String getCurrentUser() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return (principal != null) ? principal.toString() : "system";
+        return auditService.getCurrentUser();
     }
 
     /**
@@ -73,13 +72,7 @@ public class InventoryController {
      * @param newValue JSON representation of new state after modification
      */
     private void saveAuditLog(String action, String tableName, String oldValue, String newValue) {
-        AuditLog log = new AuditLog();
-        log.setUsername(getCurrentUser());
-        log.setAction(action);
-        log.setTableName(tableName);
-        log.setOldValue(oldValue);
-        log.setNewValue(newValue);
-        auditRepo.save(log);
+        auditService.log(action, tableName, oldValue, newValue);
     }
 
     /**
@@ -212,7 +205,6 @@ public class InventoryController {
             inventory.setIsDeleted(true);
             inventory.setIsActive(false);
             inventoryRepository.save(inventory);
-            inventoryRepository.deleteById(id);
             saveAuditLog("DELETED inventory ID: " + id, "Inventory", oldState, null);
             return ResponseEntity.noContent().<Void>build();
         }).orElse(ResponseEntity.notFound().build());
