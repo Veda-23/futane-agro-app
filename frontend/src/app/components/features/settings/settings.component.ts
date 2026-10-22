@@ -39,6 +39,11 @@ export class SettingsComponent implements OnInit, OnDestroy {
   @Output() toggleTheme = new EventEmitter<boolean>();
   @Output() reloadData = new EventEmitter<void>();
 
+  get isSuperAdmin(): boolean {
+    const role = (this.loggedInUser?.role || '').toUpperCase();
+    return role === 'SUPER_ADMIN' || role === 'SUPERADMIN';
+  }
+
   protected readonly Math = Math;
 
   // Sub-Navigation Tabs (11 Organized Domains)

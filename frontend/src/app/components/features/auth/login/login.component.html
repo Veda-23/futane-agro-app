@@ -1,5 +1,5 @@
 <!-- ============================================================
-     FUTANE AGRO ERP — Next-Gen Enterprise Authentication & Onboarding
+     FUTANE AGRO ERP — Enterprise Authentication & Onboarding
      ============================================================ -->
 <div class="futane-auth-viewport">
 
@@ -18,22 +18,21 @@
     <div class="auth-hero-pane">
       <div class="hero-top-cluster">
         
-        <!-- Brand Emblem & Identity -->
+        <!-- Official Company Logo & Identity -->
         <div class="brand-branding-box">
-          <div class="brand-emblem-badge">
-            <img src="assets/logo.svg" alt="Futane Agro" class="hero-logo-img" onerror="this.style.display='none'">
-            <i class="bi bi-tree-fill emblem-fallback-icon"></i>
+          <div class="brand-emblem-badge" title="Futane Agro Industries Pvt. Ltd.">
+            <img src="assets/logo.svg" alt="Futane Agro Industries" class="hero-logo-img">
           </div>
           <div class="brand-text-block">
             <h1 class="brand-title">Futane Agro <span class="highlight-gold">Industries</span></h1>
-            <p class="brand-subtitle">Pvt. Ltd. — Enterprise Resource Planning</p>
+            <p class="brand-subtitle">Pvt. Ltd. &mdash; Enterprise Resource Planning</p>
           </div>
         </div>
 
         <!-- System Node Health Pill -->
         <div class="live-node-pill">
           <span class="pulsing-beacon" [class.uat-beacon]="isUat"></span>
-          <span class="node-text">{{ isUat ? 'UAT Pre-Production Cluster' : 'Production Cloud Node v6.2' }}</span>
+          <span class="node-text">{{ isUat ? 'UAT Test Cluster' : 'Production Cloud Node v6.2' }}</span>
           <span class="secure-tag"><i class="bi bi-shield-check"></i> TLS 1.3</span>
         </div>
 
@@ -44,8 +43,8 @@
               <i class="bi bi-boxes"></i>
             </div>
             <div class="feature-details">
-              <span class="feature-name">Silo &amp; Raw Material Ledger</span>
-              <span class="feature-sub">Live capacity tracking, moisture levels &amp; bin intake</span>
+              <span class="feature-name">Silo &amp; Material Ledger</span>
+              <span class="feature-sub">Live capacity, moisture levels &amp; bin intake</span>
             </div>
           </div>
 
@@ -55,7 +54,7 @@
             </div>
             <div class="feature-details">
               <span class="feature-name">Extrusion Plant Automation</span>
-              <span class="feature-sub">Real-time shift yields, machine uptime &amp; batch logs</span>
+              <span class="feature-sub">Real-time shift yields &amp; extruder line logs</span>
             </div>
           </div>
 
@@ -65,7 +64,7 @@
             </div>
             <div class="feature-details">
               <span class="feature-name">GST Billing &amp; E-Way Portal</span>
-              <span class="feature-sub">Instant compliant tax invoicing, dispatch &amp; ledgers</span>
+              <span class="feature-sub">Tax invoicing, dispatch &amp; accounts receivables</span>
             </div>
           </div>
 
@@ -75,14 +74,42 @@
             </div>
             <div class="feature-details">
               <span class="feature-name">Zero-Trust Enterprise Security</span>
-              <span class="feature-sub">Multi-factor SMS/OTP challenge &amp; audit tracking</span>
+              <span class="feature-sub">2FA cryptographic challenge &amp; audit tracking</span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Hero Bottom Test Helper & Credentials -->
+      <!-- Hero Bottom Cluster (Compact Operational Metrics) -->
       <div class="hero-bottom-cluster">
+        
+        <!-- Live Plant Telemetry Card (Zero blank space) -->
+        <div class="plant-telemetry-card">
+          <div class="telemetry-header">
+            <span class="telemetry-title"><i class="bi bi-activity text-success me-1"></i> Plant Telemetry</span>
+            <span class="telemetry-live-pill"><i class="bi bi-broadcast me-1"></i> LIVE</span>
+          </div>
+          <div class="telemetry-grid">
+            <div class="telemetry-item">
+              <span class="telemetry-label">Facility</span>
+              <span class="telemetry-val">Plant Line #1</span>
+            </div>
+            <div class="telemetry-item">
+              <span class="telemetry-label">Silo Level</span>
+              <span class="telemetry-val text-success">84.2%</span>
+            </div>
+            <div class="telemetry-item">
+              <span class="telemetry-label">Shift Status</span>
+              <span class="telemetry-val">Shift B &bull; 98%</span>
+            </div>
+            <div class="telemetry-item">
+              <span class="telemetry-label">Security</span>
+              <span class="telemetry-val text-warning">ISO 27001</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- UAT Demo Admin Quick-Fill -->
         <div *ngIf="isUat" class="uat-credential-pill" (click)="unlockAndReset()" role="button" title="Click to fill Super Admin credentials">
           <div class="uat-pill-content">
             <span class="uat-badge"><i class="bi bi-lightning-charge-fill"></i> DEMO ADMIN</span>
@@ -92,7 +119,7 @@
         </div>
 
         <div class="security-disclaimer">
-          <i class="bi bi-lock-fill"></i> Authorized Personnel Only &bull; ISO 27001 Certified System
+          <i class="bi bi-shield-check text-success me-1"></i> Authorized Personnel Only &bull; 256-Bit TLS Secured
         </div>
       </div>
     </div>
@@ -100,34 +127,35 @@
     <!-- ── Right Interactive Action Pane ──────────────────────── -->
     <div class="auth-card-pane">
 
-      <!-- Dynamic Header -->
+      <!-- Dynamic Compact Header -->
       <div class="auth-card-header">
-        <div class="header-emblem-mini">
-          <i *ngIf="!showOtpScreen && activeAuthTab === 'login'" class="bi bi-box-arrow-in-right"></i>
-          <i *ngIf="!showOtpScreen && activeAuthTab === 'register'" class="bi bi-person-plus-fill"></i>
+        <div class="header-status-badge">
+          <i *ngIf="!showOtpScreen && activeAuthTab === 'login'" class="bi bi-shield-lock-fill"></i>
+          <i *ngIf="!showOtpScreen && activeAuthTab === 'register'" class="bi bi-person-badge-fill"></i>
           <i *ngIf="showOtpScreen" class="bi bi-shield-check"></i>
+          <span>
+            {{ showOtpScreen ? 'Security Verification' : (activeAuthTab === 'login' ? 'Authentication Gateway' : 'New User Onboarding') }}
+          </span>
         </div>
-        <div class="header-titles">
-          <h2 class="auth-title">
-            <ng-container *ngIf="!showOtpScreen">
-              {{ activeAuthTab === 'login' ? 'Welcome Back' : 'Create Account' }}
-            </ng-container>
-            <ng-container *ngIf="showOtpScreen">
-              Two-Factor Authentication
-            </ng-container>
-          </h2>
-          <p class="auth-subtitle">
-            <ng-container *ngIf="!showOtpScreen">
-              {{ activeAuthTab === 'login' ? 'Sign in to access Futane Agro ERP portal' : 'Register a new enterprise operator account' }}
-            </ng-container>
-            <ng-container *ngIf="showOtpScreen">
-              {{ showRecoveryCodeMode ? 'Enter emergency backup code' : 'Enter 6-digit security verification code' }}
-            </ng-container>
-          </p>
-        </div>
+        <h2 class="auth-title">
+          <ng-container *ngIf="!showOtpScreen">
+            {{ activeAuthTab === 'login' ? 'Welcome Back' : 'Create Account' }}
+          </ng-container>
+          <ng-container *ngIf="showOtpScreen">
+            Two-Factor Authentication
+          </ng-container>
+        </h2>
+        <p class="auth-subtitle">
+          <ng-container *ngIf="!showOtpScreen">
+            {{ activeAuthTab === 'login' ? 'Sign in to access Futane Agro ERP portal' : 'Register a new enterprise operator account' }}
+          </ng-container>
+          <ng-container *ngIf="showOtpScreen">
+            {{ showRecoveryCodeMode ? 'Enter emergency backup code' : 'Enter 6-digit security verification code' }}
+          </ng-container>
+        </p>
       </div>
 
-      <!-- ── Tab Switcher (Only when not in OTP mode) ─────────── -->
+      <!-- ── Tab Switcher ─────────────────────────────────────── -->
       <div *ngIf="!showOtpScreen" class="auth-tab-switcher">
         <button type="button"
                 class="tab-btn"
@@ -139,7 +167,7 @@
                 class="tab-btn"
                 [class.tab-btn-active]="activeAuthTab === 'register'"
                 (click)="switchAuthTab('register')">
-          <i class="bi bi-person-plus me-1"></i> Register New User
+          <i class="bi bi-person-plus-fill me-1"></i> Register New User
         </button>
       </div>
 
@@ -215,11 +243,11 @@
                 class="cta-primary-btn"
                 [disabled]="isSubmitting">
           <span *ngIf="!isSubmitting" class="d-flex align-items-center justify-content-center">
-            Sign In to ERP Portal <i class="bi bi-arrow-right-short ms-2 fs-4"></i>
+            Sign In to ERP Portal <i class="bi bi-arrow-right-short ms-2 fs-5"></i>
           </span>
           <span *ngIf="isSubmitting" class="d-flex align-items-center justify-content-center">
             <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-            Authenticating credentials...
+            Authenticating...
           </span>
         </button>
 
@@ -233,9 +261,9 @@
       </form>
 
       <!-- ════════════════════════════════════════════════════════
-           TAB 2: REGISTER NEW USER FORM
+           TAB 2: REGISTER NEW USER FORM (COMPACT, NO CLIPPING)
            ════════════════════════════════════════════════════════ -->
-      <form *ngIf="!showOtpScreen && activeAuthTab === 'register'" (ngSubmit)="handleRegister()" class="auth-form-body registration-scroll-body" novalidate>
+      <form *ngIf="!showOtpScreen && activeAuthTab === 'register'" (ngSubmit)="handleRegister()" class="auth-form-body" novalidate>
 
         <!-- Full Name -->
         <div class="form-field-group">
@@ -254,7 +282,7 @@
           </div>
         </div>
 
-        <!-- Username & Email (Two Column on Desktop) -->
+        <!-- Username & Email (Two Column) -->
         <div class="form-two-cols">
           <div class="form-field-group">
             <label for="reg-username" class="field-label">
@@ -291,7 +319,7 @@
           </div>
         </div>
 
-        <!-- Mobile Number & Role -->
+        <!-- Mobile Number & Assigned Role (Select with Zero Clipping) -->
         <div class="form-two-cols">
           <div class="form-field-group">
             <label for="reg-mobile" class="field-label">
@@ -313,8 +341,8 @@
             <label for="reg-role" class="field-label">
               <i class="bi bi-briefcase me-1"></i> Assigned Role <span class="required-star">*</span>
             </label>
-            <div class="input-control-wrapper">
-              <i class="bi bi-shield-check field-icon"></i>
+            <div class="input-control-wrapper select-wrapper">
+              <i class="bi bi-shield-check field-icon select-icon"></i>
               <select id="reg-role"
                       name="regRole"
                       [(ngModel)]="registerData.role"
@@ -340,7 +368,7 @@
                      name="regPass"
                      [(ngModel)]="registerData.password"
                      required
-                     placeholder="Min. 6 characters"
+                     placeholder="Min. 6 chars"
                      class="auth-input">
               <button type="button"
                       class="input-suffix-btn"
@@ -420,7 +448,7 @@
           </span>
           <span *ngIf="isRegistering" class="d-flex align-items-center justify-content-center">
             <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-            Registering new account...
+            Registering...
           </span>
         </button>
 
@@ -561,24 +589,24 @@
         </div>
       </form>
 
-      <!-- ── Footer & Language Selector ──────────────────────── -->
+      <!-- ── Footer & Language Selector (Segmented Clean Control) ──────── -->
       <div class="auth-footer-bar">
-        <div class="lang-pills-row">
+        <div class="lang-segmented-bar">
           <button type="button"
-                  class="lang-chip"
-                  [class.lang-active]="currentLang === 'en'"
+                  class="lang-pill-item"
+                  [class.lang-pill-active]="currentLang === 'en'"
                   (click)="setLanguage('en')">English</button>
           <button type="button"
-                  class="lang-chip"
-                  [class.lang-active]="currentLang === 'mr'"
+                  class="lang-pill-item"
+                  [class.lang-pill-active]="currentLang === 'mr'"
                   (click)="setLanguage('mr')">मराठी</button>
           <button type="button"
-                  class="lang-chip"
-                  [class.lang-active]="currentLang === 'hi'"
+                  class="lang-pill-item"
+                  [class.lang-pill-active]="currentLang === 'hi'"
                   (click)="setLanguage('hi')">हिंदी</button>
         </div>
         <div class="auth-copyright-note">
-          &copy; 2026 Futane Agro Industries Pvt. Ltd.
+          <i class="bi bi-shield-lock text-success me-1"></i> &copy; 2026 Futane Agro
         </div>
       </div>
 

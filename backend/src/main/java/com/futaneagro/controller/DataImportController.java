@@ -17,6 +17,18 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Map;
 
+/**
+ * REST Controller for Enterprise Bulk Data Import and CSV Template Management.
+ *
+ * Provides endpoints for:
+ * 1. POST /api/data-import/preview: Dry-run CSV validation with duplicate detection.
+ * 2. POST /api/data-import/confirm: Transactional execution of batch upserts.
+ * 3. GET /api/data-import/template/{module}: Direct browser download of sample CSV templates.
+ *
+ * Security:
+ * - Protected by Spring Security @PreAuthorize role guards.
+ * - Rate limited by RateLimitingService to prevent brute-force file flooding.
+ */
 @RestController
 @RequestMapping("/api/data-import")
 public class DataImportController {
@@ -30,7 +42,13 @@ public class DataImportController {
     private com.futaneagro.security.RateLimitingService rateLimitingService;
 
     /**
-     * Dry-run Preview & Validation Endpoint
+     * Dry-run Preview & Validation Endpoint.
+     * Parses the uploaded CSV file, validates fields, and identifies duplicates without saving anything.
+     *
+     * @param file    The uploaded CSV file.
+     * @param module  Target ERP module (parties, inventory, production, etc.).
+     * @param request HTTP servlet request for rate-limit IP extraction.
+     * @return 200 OK with ImportPreviewDTO, or 400 Bad Request on schema/file validation errors, or 429 on rate limit.
      */
     @PostMapping("/preview")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'OPERATOR')")
@@ -38,6 +56,7 @@ public class DataImportController {
             @RequestParam("file") MultipartFile file,
             @RequestParam("module") String module,
             javax.servlet.http.HttpServletRequest request) throws Exception {
+        // Enforce rate limiting on file uploads
         if (rateLimitingService.isRateLimited(request, com.futaneagro.security.RateLimitingService.Action.DATA_IMPORT)) {
             return ResponseEntity.status(org.springframework.http.HttpStatus.TOO_MANY_REQUESTS)
                     .body(Map.of("error", "Data import rate limit exceeded. Please wait a moment before trying again."));
@@ -51,7 +70,11 @@ public class DataImportController {
     }
 
     /**
-     * Transactional Confirmation & Upsert Execution Endpoint
+     * Transactional Confirmation & Upsert Execution Endpoint.
+     * Executes the actual batch insert/update against PostgreSQL within an ACID transaction.
+     *
+     * @param request ImportConfirmRequestDTO containing module name, duplicate strategy (SKIP/UPDATE), and rows.
+     * @return 200 OK with ImportResultDTO showing inserted, updated, and skipped counts.
      */
     @PostMapping("/confirm")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'OPERATOR')")
@@ -65,7 +88,11 @@ public class DataImportController {
     }
 
     /**
-     * Download Sample Pre-Formatted CSV Template (.csv)
+     * Download Sample Pre-Formatted CSV Template (.csv).
+     * Returns a ready-to-use CSV template populated with correct headers and realistic sample rows.
+     *
+     * @param module Target module (parties, production, inventory, etc.).
+     * @return Raw CSV file stream with 'attachment' Content-Disposition header.
      */
     @GetMapping("/template/{module}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'OPERATOR', 'VIEWER')")

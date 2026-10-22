@@ -34,6 +34,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
   @Output() onToggleAlerts = new EventEmitter<void>();
   @Output() refreshData = new EventEmitter<void>();
 
+  get isSuperAdmin(): boolean {
+    const role = (this.loggedInUser?.role || '').toUpperCase();
+    return role === 'SUPER_ADMIN' || role === 'SUPERADMIN';
+  }
+
   triggerDataSync() {
     this.refreshData.emit();
   }

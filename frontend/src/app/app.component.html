@@ -338,9 +338,9 @@
         }
       }
 
-      <!-- 16. Security Audit Logs & Activity Trail -->
-      @defer (when activeTab === 'audit-logs') {
-        @if (activeTab === 'audit-logs') {
+      <!-- 16. Security Audit Logs & Activity Trail (SUPER_ADMIN ONLY) -->
+      @defer (when activeTab === 'audit-logs' && isSuperAdmin) {
+        @if (activeTab === 'audit-logs' && isSuperAdmin) {
           <app-audit-logs
             class="tab-active-view"
             [currentLang]="currentLang"
@@ -350,9 +350,9 @@
         }
       }
 
-      <!-- 23. Super Admin & Settings Control Center -->
-      @defer (when activeTab === 'settings') {
-        @if (activeTab === 'settings') {
+      <!-- 23. Super Admin & Settings Control Center (SUPER_ADMIN ONLY) -->
+      @defer (when activeTab === 'settings' && isSuperAdmin) {
+        @if (activeTab === 'settings' && isSuperAdmin) {
           <app-settings
             class="tab-active-view"
             [currentLang]="currentLang"

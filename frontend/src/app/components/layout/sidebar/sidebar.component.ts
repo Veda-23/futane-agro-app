@@ -23,6 +23,11 @@ export class SidebarComponent implements OnInit {
   @Output() onToggleCollapse = new EventEmitter<void>();
   @Output() onSwitchTab = new EventEmitter<string>();
 
+  get isSuperAdmin(): boolean {
+    const role = (this.loggedInUser?.role || '').toUpperCase();
+    return role === 'SUPER_ADMIN' || role === 'SUPERADMIN';
+  }
+
   showUserCard: boolean = true;
   collapsedSections: { [key: string]: boolean } = {};
 

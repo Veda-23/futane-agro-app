@@ -65,6 +65,11 @@ export class AnalyticsComponent implements OnInit {
     private notificationService: NotificationService
   ) {}
 
+  get isSuperAdmin(): boolean {
+    const role = (this.loggedInUser?.role || '').toUpperCase();
+    return role === 'SUPER_ADMIN' || role === 'SUPERADMIN';
+  }
+
   ngOnInit(): void {
     this.loadPowerBiSettings();
     if (!this.salesList || this.salesList.length === 0) {

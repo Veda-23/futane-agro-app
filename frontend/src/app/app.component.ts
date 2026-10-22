@@ -832,8 +832,7 @@ export class AppComponent implements OnInit, OnDestroy {
           'dashboard', 'production', 'monthly-production', 'parties', 'sales',
           'payments', 'raw-materials', 'vendors', 'inventory', 'employees',
           'salaries', 'transports', 'drivers', 'machines', 'dispatch',
-          'expenses', 'bank', 'invoices', 'billinghub', 'reports', 'analytics',
-          'audit-logs', 'settings'
+          'expenses', 'bank', 'invoices', 'billinghub', 'reports', 'analytics'
         ];
         adminTabs.forEach(t => this.accessibleTabs[t] = true);
       } else if (role === 'MANAGER') {
@@ -872,6 +871,13 @@ export class AppComponent implements OnInit, OnDestroy {
           this.accessibleTabs[f.moduleKey] = false;
         }
       });
+    }
+
+    // Strict Enterprise Guard: Only SUPER_ADMIN can ever view or access system settings & audit-logs
+    const isSuper = (role || '').toUpperCase() === 'SUPER_ADMIN' || (role || '').toUpperCase() === 'SUPERADMIN';
+    if (!isSuper) {
+      this.accessibleTabs['settings'] = false;
+      this.accessibleTabs['audit-logs'] = false;
     }
   }
 
@@ -1622,8 +1628,21 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
+  get isSuperAdmin(): boolean {
+    const role = (this.loggedInUser?.role || '').toUpperCase();
+    return role === 'SUPER_ADMIN' || role === 'SUPERADMIN';
+  }
+
   // --- Tab Switcher ---
   switchTab(tab: string) {
+    if ((tab === 'settings' || tab === 'audit-logs') && !this.isSuperAdmin) {
+      this.notificationService.warning(
+        'Access Restricted',
+        'Super Admin privileges are required to access enterprise governance & configurations.'
+      );
+      return;
+    }
+
     if (this.forcePasswordChangeMode && tab !== 'settings') {
       this.notificationService.warning(
         'Action Required',

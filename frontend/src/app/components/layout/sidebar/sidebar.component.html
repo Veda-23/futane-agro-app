@@ -357,9 +357,10 @@
     </ul>
 
     <!-- 6. ADMINISTRATION -->
-    <div class="nav-group-label" *ngIf="!isCollapsed">Administration</div>
-    <div class="nav-group-divider" *ngIf="isCollapsed" title="Administration"></div>
-    <ul class="nav-menu-list">
+    <!-- 5. ADMINISTRATION (SUPER_ADMIN ONLY) -->
+    <div class="nav-group-label" *ngIf="!isCollapsed && isSuperAdmin">Administration</div>
+    <div class="nav-group-divider" *ngIf="isCollapsed && isSuperAdmin" title="Administration"></div>
+    <ul class="nav-menu-list" *ngIf="isSuperAdmin">
       <li *ngIf="accessibleTabs['audit-logs']"
           [attr.data-tab]="'audit-logs'"
           [class.active]="activeTab === 'audit-logs'"

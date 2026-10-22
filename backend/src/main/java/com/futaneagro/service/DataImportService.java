@@ -40,17 +40,40 @@ public class DataImportService {
     @Autowired private AuditLogRepository auditRepo;
     @Autowired private com.futaneagro.security.FileSecurityService fileSecurityService;
 
+    // =========================================================================
+    // REGEX VALIDATION PATTERNS FOR DATA SANITIZATION
+    // =========================================================================
+    // Standard Indian 15-character GSTIN regex (State code 2 digits, PAN 10 chars, entity number, 'Z', checksum)
     private static final Pattern GST_PATTERN = Pattern.compile("^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$");
+    // Standard 10-digit Indian mobile number
     private static final Pattern PHONE_PATTERN = Pattern.compile("^\\d{10}$");
+    // RFC-compliant email address structure
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
+    // Unique 12-digit Indian UIDAI Aadhaar number (does not start with 0 or 1)
     private static final Pattern AADHAAR_PATTERN = Pattern.compile("^[2-9]{1}[0-9]{11}$");
 
     /**
-     * Preview & Dry-Run Validation without mutating database
+     * Preview & Dry-Run Validation without mutating database.
+     * 
+     * HOW IT WORKS:
+     * 1. Validates file security (extension, MIME type, maximum 10MB size, anti-malware magic bytes).
+     * 2. Reads the CSV stream line-by-line using UTF-8 decoding (handling optional UTF-8 BOM).
+     * 3. Sanitizes headers and removes potential CSV formula injection characters (=, +, -, @).
+     * 4. For each row: runs schema validation (required fields, regex checks for GST/Phone/Aadhaar, numeric ranges).
+     * 5. Checks against the database for duplicates (e.g. matching GST number or party/vendor name).
+     * 6. Returns a summary DTO showing total rows, valid count, invalid count, duplicates, and line-item error messages
+     *    WITHOUT writing anything to the database.
+     *
+     * @param file   The uploaded MultipartFile (strictly .csv format).
+     * @param module Target ERP module (e.g., "parties", "inventory", "production", "raw-materials", "employees", "vendors", "machines", "expenses").
+     * @return ImportPreviewDTO Containing preview row maps, validation errors, and duplicate counters for the UI dialog.
+     * @throws Exception If the file is malformed, empty, or fails security checks.
      */
     public ImportPreviewDTO previewImport(MultipartFile file, String module) throws Exception {
+        // Step 1: Perform strict security validation on the uploaded file
         validateFileSecurity(file);
 
+        // Step 2: Parse CSV file into a list of key-value maps
         List<Map<String, Object>> parsedRows = parseSpreadsheet(file);
         if (parsedRows.isEmpty()) {
             throw new IllegalArgumentException("The uploaded file contains no data rows.");
@@ -65,14 +88,17 @@ public class DataImportService {
         int dupCount = 0;
         int newCount = 0;
 
+        // Step 3: Iterate through every parsed row and perform field-by-field verification
         for (int i = 0; i < parsedRows.size(); i++) {
             int rowNum = i + 2; // Accounting for 1-based index and header row
             Map<String, Object> row = parsedRows.get(i);
             List<ImportPreviewDTO.RowErrorDTO> rowErrors = validateRow(row, module, rowNum);
 
             if (!rowErrors.isEmpty()) {
+                // Collect row validation issues (e.g. missing required field, bad GST format)
                 errors.addAll(rowErrors);
             } else {
+                // Check if this record already exists in the target table
                 boolean isDuplicate = checkDuplicate(row, module);
                 row.put("_isDuplicate", isDuplicate);
                 if (isDuplicate) {
@@ -84,6 +110,7 @@ public class DataImportService {
             }
         }
 
+        // Step 4: Populate and return preview summary statistics
         preview.setValidRows(validRows.size());
         preview.setInvalidRows(errors.size());
         preview.setDuplicateRows(dupCount);
@@ -95,7 +122,20 @@ public class DataImportService {
     }
 
     /**
-     * Execute Transactional Import with chosen duplicate resolution strategy
+     * Execute Transactional Import with chosen duplicate resolution strategy.
+     *
+     * HOW IT WORKS:
+     * 1. Runs within an ACID database transaction (@Transactional with rollbackFor = Exception.class).
+     * 2. Reads the validated rows submitted by the client after user confirmation.
+     * 3. Applies the user's selected Duplicate Strategy:
+     *    - "SKIP": Existing records are preserved as-is; new records are inserted.
+     *    - "UPDATE": Existing records are updated with incoming values (upsert); new records are inserted.
+     * 4. Persists entities via their corresponding Spring Data JPA repositories.
+     * 5. Automatically records an entry in the security audit log (`audit_log` table) noting the user and record counts.
+     * 6. If any unhandled database exception occurs, the entire batch rolls back completely.
+     *
+     * @param request ImportConfirmRequestDTO containing module name, chosen duplicate strategy ("SKIP" or "UPDATE"), and row maps.
+     * @return ImportResultDTO containing final counts of inserted, updated, and skipped records.
      */
     @Transactional(rollbackFor = Exception.class)
     public ImportResultDTO executeImport(ImportConfirmRequestDTO request) {
@@ -111,13 +151,17 @@ public class DataImportService {
         int updated = 0;
         int skipped = 0;
 
+        // Process each validated row
         for (Map<String, Object> row : rows) {
             boolean isDuplicate = checkDuplicate(row, module);
+
+            // Strategy: Skip duplicate records
             if (isDuplicate && "SKIP".equalsIgnoreCase(duplicateStrategy)) {
                 skipped++;
                 continue;
             }
 
+            // Strategy: Update existing record or insert new record
             if (isDuplicate) {
                 updateEntity(module, row);
                 updated++;
@@ -135,28 +179,38 @@ public class DataImportService {
         result.setMessage(String.format("Successfully processed %d records (%d inserted, %d updated, %d skipped).",
                 rows.size(), inserted, updated, skipped));
 
-        // Create Security Audit Log
+        // Create Security Audit Log entry for regulatory compliance
         recordImportAudit(module, inserted, updated, skipped);
 
         return result;
     }
 
     /**
-     * Generate Sample CSV Template (.csv) for specified module
+     * Generate Sample CSV Template (.csv) for specified module.
+     *
+     * HOW IT WORKS:
+     * 1. Fetches canonical column headers for the requested module via getModuleHeaders(module).
+     * 2. Fetches realistic demonstration row values via getModuleSampleRow(module).
+     * 3. Escapes any special CSV characters (commas, quotes, newlines) using RFC 4180 rules.
+     * 4. Encodes and returns the raw bytes formatted in standard UTF-8 for direct browser download.
+     *
+     * @param module Target ERP module (e.g., "parties", "inventory", "production", "raw-materials").
+     * @return byte[] The CSV file content as raw bytes ready to be sent in an HTTP attachment response.
+     * @throws IOException If byte encoding encounters any stream error.
      */
     public byte[] generateSampleCsvTemplate(String module) throws IOException {
         List<String> headers = getModuleHeaders(module);
         List<String> sampleValues = getModuleSampleRow(module);
 
         StringBuilder sb = new StringBuilder();
-        // Append Header Row
+        // Append Header Row with comma delimiters
         for (int i = 0; i < headers.size(); i++) {
             sb.append(escapeCsvField(headers.get(i)));
             if (i < headers.size() - 1) sb.append(",");
         }
         sb.append("\r\n");
 
-        // Append Sample Data Row
+        // Append Sample Data Row providing the user with correct formatting examples
         for (int i = 0; i < sampleValues.size(); i++) {
             sb.append(escapeCsvField(sampleValues.get(i)));
             if (i < sampleValues.size() - 1) sb.append(",");
@@ -166,6 +220,11 @@ public class DataImportService {
         return sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
     }
 
+    /**
+     * Escapes individual CSV cell text according to RFC 4180 standards.
+     * If the string contains a comma, quotation mark, or newline, it wraps the entire field
+     * in double-quotes and doubles up any internal quote characters (" -> "").
+     */
     private String escapeCsvField(String field) {
         if (field == null) return "";
         if (field.contains(",") || field.contains("\"") || field.contains("\n") || field.contains("\r")) {
@@ -178,6 +237,13 @@ public class DataImportService {
     // SECURITY & VALIDATION HELPERS
     // =========================================================================
 
+    /**
+     * Validates file security invariants before parsing:
+     * 1. Rejects null or zero-byte files.
+     * 2. Enforces strict 10MB maximum file size ceiling to prevent Denial-of-Service (DoS).
+     * 3. Requires strictly .csv file extension (Excel .xlsx / .xls are rejected to prevent XXE / ZIP-bomb vectors).
+     * 4. Calls FileSecurityService to inspect mime-type and magic bytes against known malware signatures.
+     */
     private void validateFileSecurity(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("No file uploaded or file is empty.");
@@ -197,12 +263,17 @@ public class DataImportService {
         }
     }
 
+    /**
+     * Parses a CSV file input stream into a list of row key-value maps.
+     * Handles UTF-8 Byte Order Marks (BOM), sanitizes header keys to standard lowercase alphanumeric forms,
+     * and sanitizes every incoming cell value against Formula Injection (CSV injection).
+     */
     private List<Map<String, Object>> parseSpreadsheet(MultipartFile file) throws Exception {
         List<Map<String, Object>> rows = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), java.nio.charset.StandardCharsets.UTF_8))) {
             String headerLine = reader.readLine();
             if (headerLine == null) return rows;
-            // Handle UTF-8 BOM if present
+            // Handle UTF-8 BOM if present (\uFEFF)
             if (headerLine.startsWith("\uFEFF")) {
                 headerLine = headerLine.substring(1);
             }
@@ -223,6 +294,10 @@ public class DataImportService {
         return rows;
     }
 
+    /**
+     * Custom lightweight RFC-compliant CSV line parser.
+     * Correctly handles quoted fields that contain commas without splitting them.
+     */
     private String[] parseCsvLine(String line) {
         List<String> list = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
@@ -241,6 +316,10 @@ public class DataImportService {
         return list.toArray(new String[0]);
     }
 
+    /**
+     * Normalizes header strings into standardized lookup keys.
+     * Example: "Party Name" or "party_name" -> "partyname"
+     */
     private String sanitizeKey(String key) {
         if (key == null) return "";
         return key.trim()
@@ -250,6 +329,19 @@ public class DataImportService {
                 .toLowerCase();
     }
 
+    /**
+     * OWASP CSV / Formula Injection (DDE) Defense.
+     *
+     * WHY IT MATTERS:
+     * When spreadsheet programs (MS Excel, LibreOffice, Google Sheets) open CSV files,
+     * cells starting with '=', '+', '-', or '@' are executed as dynamic formulas or shell commands.
+     * Attackers can craft malicious values that exfiltrate data or trigger remote code execution.
+     *
+     * HOW IT WORKS:
+     * 1. Valid numbers (e.g. "+123", "-45.6", "78") are detected via regex and kept as-is.
+     * 2. Any string beginning with '=', '+', '-', '@', '\t', or '\r' is prefixed with an apostrophe (').
+     *    In Excel, the leading apostrophe tells the spreadsheet to treat the cell as raw static text.
+     */
     private String sanitizeFormulaInjection(String value) {
         if (value == null) return "";
         String trimmed = value.trim();
@@ -265,6 +357,9 @@ public class DataImportService {
         return trimmed;
     }
 
+    /**
+     * Extracts string representation from Apache POI Cell, handling formatted dates, numeric integers, and booleans.
+     */
     private String getCellValueAsString(Cell cell) {
         if (cell == null) return "";
         switch (cell.getCellType()) {
@@ -285,6 +380,16 @@ public class DataImportService {
     // MODULE VALIDATION & DUPLICATE DETECTION
     // =========================================================================
 
+    /**
+     * Dispatches row-level validation based on target module schema requirements.
+     * Checks presence of mandatory fields, regex structure (GSTIN, mobile, Aadhaar),
+     * and numeric parseability for counts, weights, rates, and monetary amounts.
+     *
+     * @param row    The sanitized key-value map representing one row of data.
+     * @param module Target module name.
+     * @param rowNum Human-readable line number (1-based index plus header).
+     * @return List of RowErrorDTO objects detailing any validation infractions.
+     */
     private List<ImportPreviewDTO.RowErrorDTO> validateRow(Map<String, Object> row, String module, int rowNum) {
         List<ImportPreviewDTO.RowErrorDTO> errs = new ArrayList<>();
 
@@ -373,6 +478,19 @@ public class DataImportService {
         return null;
     }
 
+    /**
+     * Checks if a parsed row already exists in the database.
+     * Uses natural business keys per module:
+     * - Parties & Vendors: Case-insensitive match on 15-digit GST Number OR Name.
+     * - Production (PPD): Exact match on (Date + Shift + Crate Type).
+     * - Inventory: Exact match on (Crate Type + Material Type).
+     * - Employees: Match on 12-digit Aadhaar Number OR Employee Name.
+     * - Machines: Case-insensitive match on Machine Name.
+     *
+     * @param r      The row key-value map.
+     * @param module The module name.
+     * @return true if an existing entity matches the unique business key, false otherwise.
+     */
     private boolean checkDuplicate(Map<String, Object> r, String module) {
         switch (module.toLowerCase()) {
             case "parties": {
@@ -426,6 +544,14 @@ public class DataImportService {
     // 💾 TRANSACTIONAL UPSERT OPERATIONS
     // =========================================================================
 
+    /**
+     * Maps incoming CSV fields into a new JPA Entity and saves it to PostgreSQL.
+     * Handles type conversions (String -> LocalDate, Integer, BigDecimal) with safe defaults.
+     * In raw-materials: Automatically resolves or auto-provisions the foreign key Vendor entity.
+     *
+     * @param module Target module name.
+     * @param r      The row key-value map.
+     */
     private void insertEntity(String module, Map<String, Object> r) {
         switch (module.toLowerCase()) {
             case "parties":
@@ -519,6 +645,14 @@ public class DataImportService {
         }
     }
 
+    /**
+     * Updates an existing database record when the "UPDATE" duplicate strategy is selected.
+     * Locates the existing entity by unique business key and overwrites fields only when
+     * non-null replacement values are provided in the incoming CSV row.
+     *
+     * @param module Target module name.
+     * @param r      The row key-value map containing updated field values.
+     */
     private void updateEntity(String module, Map<String, Object> r) {
         switch (module.toLowerCase()) {
             case "parties": {
@@ -571,6 +705,15 @@ public class DataImportService {
         }
     }
 
+    /**
+     * Records a tamper-evident entry in the application security audit log.
+     * Captures the authenticated operator's username, module, timestamp, and detailed metrics.
+     *
+     * @param module   The imported ERP module.
+     * @param inserted Number of newly created database rows.
+     * @param updated  Number of modified existing database rows.
+     * @param skipped  Number of skipped duplicate rows.
+     */
     private void recordImportAudit(String module, int inserted, int updated, int skipped) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -613,6 +756,10 @@ public class DataImportService {
         }
     }
 
+    /**
+     * Canonical CSV Header definitions for all ERP modules.
+     * When users download an empty template or import a spreadsheet, headers must match these names.
+     */
     private List<String> getModuleHeaders(String module) {
         switch (module.toLowerCase()) {
             case "parties":
@@ -637,6 +784,9 @@ public class DataImportService {
         }
     }
 
+    /**
+     * Realistic sample row data populated in template CSVs to guide users on formatting.
+     */
     private List<String> getModuleSampleRow(String module) {
         switch (module.toLowerCase()) {
             case "parties":
