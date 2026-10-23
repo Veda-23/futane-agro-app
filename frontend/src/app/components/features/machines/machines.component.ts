@@ -442,6 +442,10 @@ export class MachinesComponent implements OnInit {
   }
 
   editMachine(m: any): void {
+    if (this.isViewer()) {
+      this.notificationService.warning('Permission Denied', 'Viewer role cannot edit machines.');
+      return;
+    }
     this.editingMachineId = m.id;
     this.machineForm = { ...m };
     if (this.machineForm.installedDate) {
@@ -469,6 +473,10 @@ export class MachinesComponent implements OnInit {
   }
 
   editBreakdown(b: any): void {
+    if (this.isViewer()) {
+      this.notificationService.warning('Permission Denied', 'Viewer role cannot edit breakdown records.');
+      return;
+    }
     this.editingBreakdownId = b.id || b.breakdownId;
     this.breakdownForm = { ...b };
     if (this.breakdownForm.breakdownDate) {

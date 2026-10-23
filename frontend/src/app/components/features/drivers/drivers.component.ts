@@ -414,6 +414,10 @@ export class DriversComponent implements OnInit, OnChanges, OnDestroy {
 
   // Drawer Management
   openEnrollDrawer() {
+    if (this.isViewer()) {
+      this.notificationService.warning('Permission Denied', 'Viewer role cannot enroll drivers.');
+      return;
+    }
     this.cancelEdit();
     this.isFormDrawerOpen = true;
   }
@@ -451,6 +455,10 @@ export class DriversComponent implements OnInit, OnChanges, OnDestroy {
 
   // CRUD Operations
   saveDriver() {
+    if (this.isViewer()) {
+      this.notificationService.warning('Permission Denied', 'Viewer role cannot register or modify driver profiles.');
+      return;
+    }
     if (!this.driverForm.driverName || !this.driverForm.driverName.trim()) {
       this.notificationService.warning('Validation Required', 'Driver full name is required.');
       return;
@@ -509,6 +517,10 @@ export class DriversComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   editDriver(driver: any) {
+    if (this.isViewer()) {
+      this.notificationService.warning('Permission Denied', 'Viewer role cannot edit driver profiles.');
+      return;
+    }
     this.driverForm = {
       id: driver.id,
       driverName: driver.driverName || '',

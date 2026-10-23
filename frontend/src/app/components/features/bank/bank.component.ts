@@ -391,6 +391,10 @@ export class BankComponent implements OnInit {
   }
 
   saveBankTransaction() {
+    if (this.isViewer()) {
+      this.notificationService.warning('Read-Only Access', 'Viewer role cannot modify bank transactions.');
+      return;
+    }
     if (!this.validateForm()) return;
 
     const payload = {
@@ -463,6 +467,10 @@ export class BankComponent implements OnInit {
   }
 
   editBankTransaction(bt: BankTransactionItem) {
+    if (this.isViewer()) {
+      this.notificationService.warning('Read-Only Access', 'Viewer role cannot edit bank transactions.');
+      return;
+    }
     this.editingId = bt.id;
     this.bankTxnForm = {
       id: bt.id,
@@ -490,6 +498,10 @@ export class BankComponent implements OnInit {
   }
 
   openDrawer() {
+    if (this.isViewer()) {
+      this.notificationService.warning('Read-Only Access', 'Viewer role cannot record bank transactions.');
+      return;
+    }
     this.cancelEdit();
     this.isDrawerOpen = true;
   }

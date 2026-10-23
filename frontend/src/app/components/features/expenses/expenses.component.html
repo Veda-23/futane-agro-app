@@ -475,7 +475,7 @@
                 <button type="button" class="btn-action-icon btn-view view-icon" (click)="openVoucherModal(e)" title="View Expense Voucher & Disbursement Slip">
                   <i class="bi bi-eye"></i>
                 </button>
-                <button type="button" class="btn-action-icon btn-edit edit-icon" (click)="editExpense(e)" title="Edit Voucher">
+                <button *ngIf="!isViewer()" type="button" class="btn-action-icon btn-edit edit-icon" (click)="editExpense(e)" title="Edit Voucher">
                   <i class="bi bi-pencil-square"></i>
                 </button>
                 <button *ngIf="canDelete()" type="button" class="btn-action-icon btn-delete delete-icon" (click)="deleteExpense(e.id)" title="Delete Voucher">
@@ -547,8 +547,8 @@
 <!-- ==========================================
      SIDE DRAWER FOR EXPENSE FORM
 =========================================== -->
-<div class="drawer-backdrop" *ngIf="isDrawerOpen" (click)="cancelEdit()"></div>
-<div class="enterprise-drawer" *ngIf="isDrawerOpen" [class.drawer-open]="isDrawerOpen">
+<div class="drawer-backdrop" *ngIf="isDrawerOpen && !isViewer()" (click)="cancelEdit()"></div>
+<div class="enterprise-drawer" *ngIf="isDrawerOpen && !isViewer()" [class.drawer-open]="isDrawerOpen && !isViewer()">
   <div class="drawer-header-strip">
     <div class="drawer-title-group">
       <div class="drawer-icon-box">

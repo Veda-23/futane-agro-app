@@ -465,6 +465,7 @@
                 <!-- Edit Profile -->
                 <button type="button" 
                         class="btn-row-action btn-edit" 
+                        *ngIf="!isViewer()"
                         (click)="editDriver(driver)" 
                         title="Edit Driver Credentials"
                         aria-label="Edit driver">
@@ -531,7 +532,7 @@
   </div>
 
   <!-- ── 6. SLIDE-OVER ENROLLMENT / EDIT DRAWER ─────────────────────── -->
-  <div class="drawer-backdrop" *ngIf="isFormDrawerOpen" (click)="closeFormDrawer()">
+  <div class="drawer-backdrop" *ngIf="isFormDrawerOpen && !isViewer()" (click)="closeFormDrawer()">
     <div class="slide-drawer" (click)="$event.stopPropagation()">
       <div class="drawer-header">
         <div class="drawer-title-group">

@@ -534,8 +534,17 @@ export class InvoicesComponent implements OnInit, OnDestroy {
     doc.save(`${inv.invoiceNo}.pdf`);
   }
 
+  isViewer(): boolean {
+    const role = (this.loggedInUser?.role || '').toUpperCase();
+    return role === 'VIEWER';
+  }
+
   // ── Create Invoice Slide-Over Drawer Methods ──────────────────────────────
   openCreateDrawer() {
+    if (this.isViewer()) {
+      this.notificationService.warning('Permission Denied', 'Viewer role cannot generate tax invoices.');
+      return;
+    }
     this.newInvoice = {
       partyId: this.parties && this.parties.length > 0 ? String(this.parties[0].id) : '',
       crateType: 'Jumbo Perforated Crate (600x400x325mm)',
@@ -593,6 +602,10 @@ export class InvoicesComponent implements OnInit, OnDestroy {
   }
 
   submitCreateInvoice() {
+    if (this.isViewer()) {
+      this.notificationService.warning('Permission Denied', 'Viewer role cannot generate tax invoices.');
+      return;
+    }
     if (!this.newInvoice.partyId) {
       this.notificationService.warning('Validation Warning', 'Please select a customer/party for this invoice.');
       return;

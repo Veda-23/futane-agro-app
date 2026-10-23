@@ -430,6 +430,10 @@ export class ExpensesComponent implements OnInit {
   }
 
   saveExpense() {
+    if (this.isViewer()) {
+      this.notificationService.warning('Read-Only Access', 'Viewer role does not have permission to modify expenses.');
+      return;
+    }
     if (!this.validateForm()) return;
 
     const payload = {
@@ -469,6 +473,10 @@ export class ExpensesComponent implements OnInit {
   }
 
   editExpense(e: ExpenseItem) {
+    if (this.isViewer()) {
+      this.notificationService.warning('Read-Only Access', 'Viewer role cannot edit expenses.');
+      return;
+    }
     this.editingId = e.id;
     this.expenseForm = {
       id: e.id,
@@ -498,6 +506,10 @@ export class ExpensesComponent implements OnInit {
   }
 
   openDrawer() {
+    if (this.isViewer()) {
+      this.notificationService.warning('Read-Only Access', 'Viewer role cannot add expenses.');
+      return;
+    }
     this.cancelEdit();
     this.isDrawerOpen = true;
   }

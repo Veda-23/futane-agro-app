@@ -67,6 +67,7 @@
 
         <!-- Primary CTA: Create Invoice -->
         <button 
+          *ngIf="!isViewer()"
           type="button" 
           class="btn-header-action btn-primary" 
           (click)="openCreateDrawer()" 
@@ -763,7 +764,7 @@
 </div>
 
 <!-- ── 6. Create / Generate Invoice Slide-Over Drawer ──────────────────────── -->
-<div class="invoice-drawer-backdrop" *ngIf="isCreateDrawerOpen" (click)="closeCreateDrawer()">
+<div class="invoice-drawer-backdrop" *ngIf="isCreateDrawerOpen && !isViewer()" (click)="closeCreateDrawer()">
   <div class="invoice-drawer-panel" (click)="$event.stopPropagation()">
 
     <!-- Drawer Header -->

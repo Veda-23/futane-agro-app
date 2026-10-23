@@ -432,6 +432,10 @@ export class DispatchComponent implements OnInit {
   }
 
   editDispatch(d: any): void {
+    if (this.isViewer()) {
+      this.notificationService.warning('Permission Denied', 'Viewer role cannot modify dispatch manifests.');
+      return;
+    }
     this.isFormOpen = true;
     this.editingDispatchId = d.id;
     this.dispatchForm = {
