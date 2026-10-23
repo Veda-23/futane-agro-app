@@ -10812,147 +10812,397 @@ table.enterprise-machines-table {
   }
 }
 
-/* 2. Standardized Row Action Buttons (View, Edit, Delete, Adjust, Salary/Voucher) */
+/* ==========================================================================
+   2. REFINED ENTERPRISE ROW ACTION BUTTONS (Universal Design System)
+   Cohesive, attractive, modern micro-buttons with proper spacing & elevation
+   ========================================================================== */
+
+/* Universal Row Actions Container: The Executive Action Dock */
+.row-actions,
+.row-actions-group,
+.enterprise-row-actions,
+.table-actions-cell,
+.action-buttons-group,
+.action-btn-group,
+.actions-flex-row,
+.action-buttons-wrap,
+td .row-actions-group,
+td .table-actions-cell,
+td .action-btn-group,
+td .action-buttons-group {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+  flex-wrap: nowrap !important;
+  padding: 3px 6px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+
+  &:hover {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.07), 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+  }
+}
+
+/* Row Action Table Cells (th and td) */
+td.cell-actions,
+td.td-actions,
+td.th-actions,
+td.col-actions,
+td.table-action-col,
+td.table-actions-cell,
+th.th-actions,
+th.col-actions,
+th.table-action-col {
+  white-space: nowrap !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  padding: 6px 10px !important;
+  overflow: visible !important;
+}
+
+th.th-actions,
+th.col-actions,
+th.table-action-col {
+  .th-content {
+    justify-content: center !important;
+    span {
+      font-size: 11px !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.08em !important;
+      text-transform: uppercase !important;
+      color: #64748b !important;
+    }
+  }
+}
+
+/* Base Standard Action Squircle Button Style - Identical Across All Tabs */
 .btn-row-action,
 .row-actions-group button,
 .row-actions button,
 .enterprise-row-actions button,
 .table-actions-cell button,
 .action-buttons-group button,
+.action-btn-group button,
+.actions-flex-row button,
+.action-buttons-wrap button,
 td .btn-icon-action,
 td .btn-action-icon,
 td .btn-table-action,
+td .btn-row-action,
 td .view-icon,
 td .edit-icon,
-td .delete-icon {
-  width: 28px !important;
-  height: 28px !important;
-  min-width: 28px !important;
-  max-width: 28px !important;
-  border-radius: 6px !important;
+td .delete-icon,
+button.btn-action-view,
+button.btn-action-pay,
+button.btn-action-dispatch,
+button.btn-action-receipt,
+button.btn-action-edit,
+button.btn-action-delete,
+button.btn-dossier,
+button.btn-salary {
+  position: relative !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  border-radius: 8px !important; /* Crisp Modern Squircle */
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   padding: 0 !important;
-  font-size: 13px !important;
-  border: 1px solid transparent !important;
+  margin: 0 !important;
+  font-size: 13.5px !important;
+  line-height: 1 !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #475569 !important;
   cursor: pointer !important;
   flex-shrink: 0 !important;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
   box-sizing: border-box !important;
-  box-shadow: none !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+  user-select: none !important;
 
-  /* Standard View Action — Sky Slate */
+  i, .bi, svg {
+    font-size: 13.5px !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    pointer-events: none !important;
+  }
+
+  /* Active press tactile feedback */
+  &:active:not(:disabled) {
+    transform: translateY(0px) scale(0.94) !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08) !important;
+  }
+
+  &:focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #0ea5e9 !important;
+  }
+
+  &:disabled {
+    opacity: 0.4 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    box-shadow: none !important;
+  }
+
+  /* -------------------------------------------------------------
+     SEMANTIC FRESH BUTTON VARIANTS (Dual-tone Soft Tint + Radiant Hover)
+     ------------------------------------------------------------- */
+
+  /* 1. View / Dossier / Inspect Action (Cyan/Sky) */
+  &.btn-action-view,
   &.btn-view,
   &.view-icon,
+  &.btn-dossier,
   &[title*="View" i],
-  &[aria-label*="View" i] {
+  &[aria-label*="View" i],
+  &[title*="Dossier" i] {
     color: #0284c7 !important;
-    background: rgba(2, 132, 199, 0.08) !important;
-    border-color: rgba(2, 132, 199, 0.22) !important;
+    background: #f0f9ff !important;
+    border-color: rgba(2, 132, 199, 0.28) !important;
 
-    &:hover {
-      background: #0284c7 !important;
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
       color: #ffffff !important;
       border-color: #0284c7 !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 3px 8px rgba(2, 132, 199, 0.32) !important;
+      transform: translateY(-2px) scale(1.05) !important;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.38) !important;
+
+      i, .bi, svg {
+        transform: scale(1.1) !important;
+      }
     }
   }
 
-  /* Standard Edit Action — Royal Indigo Blue */
+  /* 2. Collect Payment / UPI / QR Code Action (Emerald Green) */
+  &.btn-action-pay,
+  &.btn-pay,
+  &[title*="Pay" i],
+  &[title*="Collect" i],
+  &[title*="QR" i],
+  &[aria-label*="Payment" i] {
+    color: #059669 !important;
+    background: #ecfdf5 !important;
+    border-color: rgba(16, 185, 129, 0.32) !important;
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+      color: #ffffff !important;
+      border-color: #059669 !important;
+      transform: translateY(-2px) scale(1.05) !important;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.38) !important;
+
+      i, .bi, svg {
+        transform: scale(1.1) !important;
+      }
+    }
+  }
+
+  /* 3. Material Outward / Transport / Dispatch Action (Royal Indigo) */
+  &.btn-action-dispatch,
+  &.btn-dispatch,
+  &[title*="Dispatch" i],
+  &[title*="Outward" i],
+  &[title*="Haulage" i],
+  &[aria-label*="Dispatch" i] {
+    color: #4f46e5 !important;
+    background: #eef2ff !important;
+    border-color: rgba(99, 102, 241, 0.32) !important;
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+      color: #ffffff !important;
+      border-color: #4f46e5 !important;
+      transform: translateY(-2px) scale(1.05) !important;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.38) !important;
+
+      i, .bi, svg {
+        transform: scale(1.1) !important;
+      }
+    }
+
+    &.btn-dispatched {
+      color: #4338ca !important;
+      border-color: rgba(99, 102, 241, 0.4) !important;
+      background: #e0e7ff !important;
+    }
+  }
+
+  /* 4. Receipt / Invoice / Payment Voucher Slip (Purple / Violet) */
+  &.btn-action-receipt,
+  &.btn-receipt,
+  &.btn-invoice,
+  &[title*="Receipt" i],
+  &[title*="Slip" i],
+  &[title*="Print" i],
+  &[aria-label*="Receipt" i] {
+    color: #7c3aed !important;
+    background: #f5f3ff !important;
+    border-color: rgba(139, 92, 246, 0.32) !important;
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+      color: #ffffff !important;
+      border-color: #7c3aed !important;
+      transform: translateY(-2px) scale(1.05) !important;
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.38) !important;
+
+      i, .bi, svg {
+        transform: scale(1.1) !important;
+      }
+    }
+  }
+
+  /* 5. Edit / Modify Action (Classic Enterprise Blue) */
+  &.btn-action-edit,
   &.btn-edit,
   &.edit-icon,
   &[title*="Edit" i],
   &[aria-label*="Edit" i] {
-    color: #0B47D4 !important;
-    background: rgba(11, 71, 212, 0.08) !important;
-    border-color: rgba(11, 71, 212, 0.22) !important;
+    color: #2563eb !important;
+    background: #eff6ff !important;
+    border-color: rgba(37, 99, 235, 0.3) !important;
 
-    &:hover {
-      background: #0B47D4 !important;
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
       color: #ffffff !important;
-      border-color: #0B47D4 !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 3px 8px rgba(11, 71, 212, 0.32) !important;
+      border-color: #1d4ed8 !important;
+      transform: translateY(-2px) scale(1.05) !important;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.38) !important;
+
+      i, .bi, svg {
+        transform: scale(1.1) !important;
+      }
     }
   }
 
-  /* Standard Delete Action — Crimson Rose */
+  /* 6. Delete / Trash / Remove Action (Crimson Rose) */
+  &.btn-action-delete,
   &.btn-delete,
   &.delete-icon,
   &[title*="Delete" i],
+  &[title*="Remove" i],
   &[aria-label*="Delete" i] {
-    color: #ef4444 !important;
-    background: rgba(239, 68, 68, 0.08) !important;
-    border-color: rgba(239, 68, 68, 0.22) !important;
+    color: #dc2626 !important;
+    background: #fef2f2 !important;
+    border-color: rgba(239, 68, 68, 0.32) !important;
 
-    &:hover {
-      background: #ef4444 !important;
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
       color: #ffffff !important;
-      border-color: #ef4444 !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 3px 8px rgba(239, 68, 68, 0.32) !important;
+      border-color: #dc2626 !important;
+      transform: translateY(-2px) scale(1.05) !important;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.38) !important;
+
+      i, .bi, svg {
+        transform: scale(1.1) !important;
+      }
     }
   }
 
-  /* Standard Adjust / Config Action — Amber */
+  /* 7. Adjust / Config / Stocks Action (Warm Amber) */
   &.btn-adjust,
-  &[title*="Adjust" i] {
+  &[title*="Adjust" i],
+  &[title*="Stock" i] {
     color: #d97706 !important;
-    background: rgba(245, 158, 11, 0.08) !important;
-    border-color: rgba(245, 158, 11, 0.22) !important;
+    background: #fffbeb !important;
+    border-color: rgba(245, 158, 11, 0.32) !important;
 
-    &:hover {
-      background: #d97706 !important;
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
       color: #ffffff !important;
       border-color: #d97706 !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 3px 8px rgba(245, 158, 11, 0.32) !important;
+      transform: translateY(-2px) scale(1.05) !important;
+      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.38) !important;
+
+      i, .bi, svg {
+        transform: scale(1.1) !important;
+      }
     }
   }
 
-  /* Standard Salary / Disbursement / Voucher Action — Emerald Green */
+  /* 8. Salary / Disbursement / Approve / Voucher Action (Emerald Teal) */
   &.btn-salary,
+  &.btn-approve,
   &[title*="Salary" i],
-  &[title*="Voucher" i],
-  &[title*="Slip" i] {
-    color: #059669 !important;
-    background: rgba(5, 150, 105, 0.08) !important;
-    border-color: rgba(5, 150, 105, 0.22) !important;
+  &[title*="Approve" i],
+  &[title*="Voucher" i] {
+    color: #16a34a !important;
+    background: #f0fdf4 !important;
+    border-color: rgba(22, 163, 74, 0.32) !important;
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+      color: #ffffff !important;
+      border-color: #16a34a !important;
+      transform: translateY(-2px) scale(1.05) !important;
+      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.38) !important;
+
+      i, .bi, svg {
+        transform: scale(1.1) !important;
+      }
+    }
+  }
+}
+
+/* Dark Theme Support for Row Actions */
+body.dark-mode,
+[data-theme='dark'],
+.dark-theme {
+  .row-actions,
+  .row-actions-group,
+  .enterprise-row-actions,
+  .table-actions-cell,
+  .action-buttons-group,
+  .action-btn-group,
+  .actions-flex-row,
+  .action-buttons-wrap,
+  td .row-actions-group,
+  td .table-actions-cell,
+  td .action-btn-group,
+  td .action-buttons-group {
+    background: rgba(15, 23, 42, 0.75) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
 
     &:hover {
-      background: #059669 !important;
-      color: #ffffff !important;
-      border-color: #059669 !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 3px 8px rgba(5, 150, 105, 0.32) !important;
+      background: #1e293b !important;
+      border-color: rgba(255, 255, 255, 0.18) !important;
     }
   }
-}
 
-/* Row Action Container Clean Alignment */
-td.td-actions,
-td.th-actions,
-td.col-actions,
-td.table-action-col,
-th.th-actions,
-th.col-actions {
-  white-space: nowrap !important;
-  text-align: right !important;
-  vertical-align: middle !important;
-}
+  .btn-row-action,
+  .row-actions-group button,
+  .row-actions button,
+  .enterprise-row-actions button,
+  .table-actions-cell button,
+  .action-buttons-group button,
+  td .btn-icon-action,
+  td .btn-action-icon,
+  td .btn-table-action {
+    background: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35) !important;
 
-.row-actions,
-.row-actions-group,
-.enterprise-row-actions,
-.table-actions-cell,
-.action-buttons-group {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: flex-end !important;
-  gap: 5px !important;
-  white-space: nowrap !important;
+    &:hover:not(:disabled) {
+      color: #ffffff !important;
+    }
+  }
 }
 
 .btn-action-compact,

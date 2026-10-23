@@ -36,6 +36,7 @@ import java.time.LocalDate;
 })
 @Where(clause = "is_active = true AND is_deleted = false")
 @SQLDelete(sql = "UPDATE t_inv_raw_material SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(value = {"hibernateLazyInitializer", "handler"}, ignoreUnknown = true)
 public class RawMaterial extends BaseEntity {
     @Column(name = "raw_material_id")
     private Integer rawMaterialId;
@@ -48,6 +49,7 @@ public class RawMaterial extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vendor_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(value = {"hibernateLazyInitializer", "handler"}, ignoreUnknown = true)
     private Vendor vendor;
 
     @Column(name = "weight", nullable = false)

@@ -122,6 +122,7 @@ public class TransportController {
      * @param transport The new transport entity to save
      * @return Persisted {@link Transport} entity with generated primary key UUID
      */
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     @PostMapping("/transports")
     public Transport createTransport(@RequestBody Transport transport) {
         if (transport.getDriver() != null && transport.getDriver().getId() != null) {

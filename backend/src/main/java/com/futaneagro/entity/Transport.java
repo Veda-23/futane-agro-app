@@ -37,6 +37,7 @@ import java.time.LocalDate;
 })
 @Where(clause = "is_active = true AND is_deleted = false")
 @SQLDelete(sql = "UPDATE t_log_transport SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(value = {"hibernateLazyInitializer", "handler"}, ignoreUnknown = true)
 public class Transport extends BaseEntity {
     @Column(name = "transport_id")
     private Integer transportId;
@@ -49,6 +50,7 @@ public class Transport extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "driver_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(value = {"hibernateLazyInitializer", "handler"}, ignoreUnknown = true)
     private Driver driver;
 
     @Column(name = "rent", nullable = false)

@@ -381,7 +381,14 @@ Assert-Test "TALLY" "14.1 Generate Tally Prime XML Sales Envelope" {
 # MODULE 15: AUDIT LOGS
 # -------------------------------------------------------------------------------
 Assert-Test "AUDIT" "15.1 Verify Audit Log Trail Recording" {
-    $logs = Invoke-RestMethod -Uri "$BaseUrl/api/audit-logs" -Method Get -Headers $global:Headers
+    $superLogin = Invoke-RestMethod -Uri "$BaseUrl/api/users/login" -Method Post -Body (@{ username = 'SUPER_ADMIN'; password = 'superadmin123' } | ConvertTo-Json) -ContentType "application/json"
+    $superToken = if ($superLogin.token) { $superLogin.token } else {
+        $superOtp = if ($superLogin.tempOtp) { $superLogin.tempOtp } else { '123456' }
+        $superVerify = Invoke-RestMethod -Uri "$BaseUrl/api/users/login/verify" -Method Post -Body (@{ username = 'SUPER_ADMIN'; otp = $superOtp } | ConvertTo-Json) -ContentType "application/json"
+        $superVerify.token
+    }
+    $superHeaders = @{ 'Authorization' = "Bearer $superToken"; 'Content-Type' = 'application/json' }
+    $logs = Invoke-RestMethod -Uri "$BaseUrl/api/audit-logs" -Method Get -Headers $superHeaders
     if ($null -eq $logs -or $logs.Count -eq 0) { throw "No audit logs recorded" }
 }
 

@@ -38,6 +38,7 @@ import java.time.LocalDate;
 })
 @Where(clause = "is_active = true AND is_deleted = false")
 @SQLDelete(sql = "UPDATE t_crm_vendor SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(value = {"hibernateLazyInitializer", "handler"}, ignoreUnknown = true)
 public class Vendor extends BaseEntity {
     @Column(name = "vendor_id")
     private Integer vendorId;

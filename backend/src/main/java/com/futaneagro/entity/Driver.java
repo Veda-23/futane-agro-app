@@ -29,6 +29,7 @@ import java.time.LocalDate;
 @Table(name = "t_hr_driver")
 @Where(clause = "is_active = true AND is_deleted = false")
 @SQLDelete(sql = "UPDATE t_hr_driver SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(value = {"hibernateLazyInitializer", "handler"}, ignoreUnknown = true)
 public class Driver extends BaseEntity {
     @Column(name = "driver_id")
     private Integer driverId;

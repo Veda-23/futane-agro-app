@@ -338,6 +338,7 @@ public class ProductionController {
     /**
      * Records new inbound raw material delivery with weight, rate, and supplier.
      */
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     @PostMapping("/raw-materials")
     public RawMaterial createRawMaterial(@RequestBody RawMaterial rawMaterial) {
         if (rawMaterial.getVendor() != null && rawMaterial.getVendor().getId() != null) {
