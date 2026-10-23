@@ -11,6 +11,7 @@ import org.hibernate.annotations.Where;
 import javax.persistence.*;
 import javax.persistence.FetchType;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 
 /**
@@ -94,7 +95,7 @@ public class Sales extends BaseEntity {
             BigDecimal taxRate = (gstRate != null) ? gstRate : BigDecimal.valueOf(18.00);
             
             // CGST = gross * (gstRate / 2) / 100 = gross * gstRate / 200
-            this.cgst = gross.multiply(taxRate).divide(BigDecimal.valueOf(200), 2, BigDecimal.ROUND_HALF_UP);
+            this.cgst = gross.multiply(taxRate).divide(BigDecimal.valueOf(200), 2, RoundingMode.HALF_UP);
             this.sgst = this.cgst; // CGST = SGST
             
             this.totalAmount = gross.add(this.cgst).add(this.sgst);
