@@ -42,15 +42,16 @@ async function runTests() {
     process.exit(1);
   }
   const loginData = JSON.parse(loginRes.body);
-  const otp = loginData.tempOtp || '123456';
-
-  const verifyRes = await request(`${BASE_URL}/api/users/login/verify`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' }
-  }, JSON.stringify({ username: 'SUPER_ADMIN', otp }));
-
-  const authData = JSON.parse(verifyRes.body);
-  const token = authData.token;
+  let token = loginData.token;
+  if (!token) {
+    const otp = loginData.tempOtp || '123456';
+    const verifyRes = await request(`${BASE_URL}/api/users/login/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    }, JSON.stringify({ username: 'SUPER_ADMIN', otp }));
+    const authData = JSON.parse(verifyRes.body);
+    token = authData.token;
+  }
   console.log('Authentication successful! Token acquired.\n');
 
   const headers = {

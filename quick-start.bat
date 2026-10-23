@@ -75,7 +75,11 @@ if exist "backend\target\futane-agro-app-0.0.1-SNAPSHOT.jar" (
 ) else (
     echo [WARN] Backend JAR not found. Building with Maven...
     cd backend
-    call mvn clean package -DskipTests
+    if exist "mvnw.cmd" (
+        call mvnw.cmd clean package -DskipTests
+    ) else (
+        call mvn clean package -DskipTests
+    )
     cd ..
     start "Futane Agro - Backend (Port 8081)" java -Xms128m -Xmx384m -jar backend\target\futane-agro-app-0.0.1-SNAPSHOT.jar --spring.profiles.active=uat --server.port=8081 --spring.datasource.username=futane_app_user --spring.datasource.password="FutaneAgro#Secure2026!App"
 )
