@@ -486,6 +486,11 @@ public class AuthController {
 
             // Log successful login audit
             securityAuditService.logLoginSuccess(user.getUsername(), request);
+            if (rateLimitingService != null) {
+                String clientIp = rateLimitingService.getClientIp(request);
+                rateLimitingService.reset(clientIp, com.futaneagro.security.RateLimitingService.Action.OTP_VERIFY);
+                rateLimitingService.reset(clientIp, com.futaneagro.security.RateLimitingService.Action.LOGIN);
+            }
 
             // Issue cryptographically secure refresh token (UUID) valid for 7 days
             String refreshToken = java.util.UUID.randomUUID().toString();

@@ -579,13 +579,75 @@ The repository tier leverages Spring Data JPA with zero-overhead performance pat
    - Eliminates the N+1 select problem by fetching associated entities via SQL `LEFT OUTER JOIN` in a single query roundtrip:
      - `SalesRepository`: `@EntityGraph(attributePaths = {"party"})`
      - `InvoiceRepository`: `@EntityGraph(attributePaths = {"sale", "sale.party"})`
+     - `PaymentCollectionRepository`: `@EntityGraph(attributePaths = {"party"})`
+     - `DispatchRepository`: `@EntityGraph(attributePaths = {"sale", "sale.party"})`
      - `RawMaterialRepository`: `@EntityGraph(attributePaths = {"vendor"})`
+     - `TransportRepository`: `@EntityGraph(attributePaths = {"driver"})`
+     - `EmployeeSalaryRepository`: `@EntityGraph(attributePaths = {"employee"})`
+     - `MachineBreakdownRepository`: `@EntityGraph(attributePaths = {"machine"})`
+     - `StockTransferRepository`: `@EntityGraph(attributePaths = {"sourceBranch", "destinationBranch"})`
+
 2. **Coalesced Aggregate Queries:**
-   - Enforces `COALESCE(SUM(...), 0)` across financial, inventory, and production metrics (`SalesRepository.sumTotalAmount()`, `InventoryRepository.sumCurrentStock()`, `RawMaterialRepository.sumTotalWeight()`, `PpdRepository.sumSuccessfulByDate()`) to ensure queries return valid zeroes instead of `null` on new installations.
-3. **Forensic Threat Aggregation:**
-   - `SecurityAuditLogRepository` executes real-time brute-force intrusion detection via `findTopAttackingIps()` grouping failed logins by client IP within sliding time windows.
-4. **Case-Insensitive Authentication:**
+   - Enforces `COALESCE(SUM(...), 0)` across financial, inventory, logistics, payroll, and production metrics:
+     - `SalesRepository.sumTotalAmount()` & `sumRemainingAmount()`
+     - `InventoryRepository.sumCurrentStock()`
+     - `RawMaterialRepository.sumTotalWeight()` & `sumTotalAmount()`
+     - `TransportRepository.sumTotalRent()`
+     - `EmployeeSalaryRepository.sumTotalSalaryAmount()`
+     - `PpdRepository.sumSuccessfulByDate(LocalDate)` & `sumSuccessfulByYearAndMonth(int, int)`
+
+3. **Forensic Threat Aggregation & SIEM Queries:**
+   - `SecurityAuditLogRepository` executes real-time brute-force intrusion detection via `findTopAttackingIps()` grouping failed logins by client IP within sliding time windows, and retrieves high-severity security incidents with `findRecentHighSeverityEvents()`.
+
+4. **Case-Insensitive Authentication & Replay Prevention:**
    - `UserRepository` enforces `findByUsernameIgnoreCase()` and `findByEmailIgnoreCase()` to eliminate case-sensitivity vulnerabilities during credential verification.
+   - `MfaUsedTokenRepository` verifies `existsByTokenHash()` to prevent replay attacks and runs periodic TTL cleanup via `@Modifying deleteExpiredTokens()`.
+   - `UserMfaRecoveryCodeRepository` tracks unused emergency single-use codes (`findByUserIdAndUsedFalse()`) and enforces atomic batch regeneration with `@Modifying deleteByUserId()`.
+
+5. **Complete Repository Catalog (41 Repositories):**
+| Repository Interface | Entity Managed | Key Methods & Query Strategies |
+| :--- | :--- | :--- |
+| `ApiKeyRepository` | `ApiKey` | `findByApiKey()`, `findAllByOrderByCreatedAtDesc()` |
+| `AuditLogRepository` | `AuditLog` | Application-level mutation changelog CRUD |
+| `BankProfileRepository` | `BankProfile` | `findByIsActiveTrueOrderByIsPrimaryDescBankNameAsc()`, `findByCompanyIdAndIsActiveTrue()`, `findByIsPrimaryTrue()` |
+| `BankTransactionRepository`| `BankTransaction` | Operational treasury and bank statement tracking |
+| `BranchRepository` | `Branch` | Multi-location plant and warehouse depots |
+| `CompanyProfileRepository` | `CompanyProfile` | `findByIsActiveTrueOrderByIsDefaultDescCompanyNameAsc()`, `findByIsDefaultTrue()` |
+| `CustomFieldDefinitionRepository`| `CustomFieldDefinition`| `findByEntityName()`, `findByEntityNameAndFieldKey()` |
+| `CustomFieldValueRepository`| `CustomFieldValue` | `findByEntityNameAndEntityRecordId()`, `findByFieldDefIdAndEntityRecordId()`, `deleteByEntityNameAndEntityRecordId()` |
+| `CustomerOrderRepository` | `CustomerOrder` | `findByOrderNumber()`, `findByCustomerMobileOrderByCreatedAtDesc()`, `findOrdersFiltered()`, `countByOrderStatus()` |
+| `DispatchRepository` | `Dispatch` | `@EntityGraph(attributePaths = {"sale", "sale.party"}) findAll()` |
+| `DriverRepository` | `Driver` | Commercial chauffeur master and RTO driving licenses |
+| `EmployeeRepository` | `Employee` | Factory personnel roster and Aadhaar/salary tracking |
+| `EmployeeSalaryRepository`| `EmployeeSalary` | `@EntityGraph(attributePaths = {"employee"}) findAll()`, `sumTotalSalaryAmount()` |
+| `ExpenseRepository` | `Expense` | Factory overhead cost accounting |
+| `FeatureFlagRepository` | `FeatureFlag` | `findByModuleKey()` |
+| `InventoryRepository` | `Inventory` | `findByCrateTypeAndMaterialType()`, `sumCurrentStock()` |
+| `InvoiceRepository` | `Invoice` | `@EntityGraph(attributePaths = {"sale", "sale.party"}) findAll()`, `findByInvoiceNo()` |
+| `InvoiceTemplateConfigRepository`| `InvoiceTemplateConfig`| `findFirstByOrderByCreatedAtAsc()` |
+| `MachineBreakdownRepository`| `MachineBreakdown`| `@EntityGraph(attributePaths = {"machine"}) findAll()` |
+| `MachineMasterRepository` | `MachineMaster` | Injection molding machinery equipment assets |
+| `MfaUsedTokenRepository` | `MfaUsedToken` | `findByTokenHash()`, `existsByTokenHash()`, `deleteExpiredTokens()` |
+| `NotificationTemplateRepository`| `NotificationTemplate`| `findAllByOrderByCreatedAtAsc()`, `findByEventKeyAndChannel()` |
+| `OrderItemRepository` | `OrderItem` | `findByOrderId()` |
+| `OrderTrackingEventRepository`| `OrderTrackingEvent`| `findByOrderOrderByEventTimeAsc()` |
+| `PartyRepository` | `Party` | `findByPartyId()`, `findFirstByPartyContact()`, `findFirstByPartyName()` |
+| `PaymentCollectionRepository`| `PaymentCollection`| `@EntityGraph(attributePaths = {"party"}) findAll()` |
+| `PaymentLinkRepository` | `PaymentLink` | `findBySaleId()`, `findByRazorpayPaymentLinkId()`, `existsByRazorpayPaymentId()` |
+| `PpdRepository` | `Ppd` | `sumSuccessfulByDate()`, `sumSuccessfulByYearAndMonth()` |
+| `PpmRepository` | `Ppm` | Monthly electrical power bills and production analysis |
+| `RawMaterialRepository` | `RawMaterial` | `@EntityGraph(attributePaths = {"vendor"}) findAll()`, `sumTotalWeight()`, `sumTotalAmount()` |
+| `RolePermissionRepository` | `RolePermission` | `findByRole()`, `findByRoleAndModuleKey()` |
+| `SalesRepository` | `Sales` | `@EntityGraph(attributePaths = {"party"}) findAll()`, `findBySaleId()`, `sumTotalAmount()`, `sumRemainingAmount()` |
+| `SecurityAuditLogRepository`| `SecurityAuditLog`| Paginated forensic logs, `findRecentHighSeverityEvents()`, `findTopAttackingIps()` |
+| `SettingsRepository` | `Settings` | `findByConfigKey()` |
+| `StockTransferRepository` | `StockTransfer` | `@EntityGraph(attributePaths = {"sourceBranch", "destinationBranch"}) findAll()` |
+| `TeamRepository` | `Team` | `findByCode()`, `findAllByOrderBySidebarOrderAsc()` |
+| `TransportRepository` | `Transport` | `@EntityGraph(attributePaths = {"driver"}) findAll()`, `sumTotalRent()` |
+| `UserMfaRecoveryCodeRepository`| `UserMfaRecoveryCode`| `findByUserIdAndUsedFalse()`, `countByUserIdAndUsedFalse()`, `deleteByUserId()` |
+| `UserRepository` | `User` | `findByUsernameIgnoreCase()`, `findByEmailIgnoreCase()` |
+| `VendorRepository` | `Vendor` | Polymer resin and machinery supplier records |
+| `WebhookConfigRepository` | `WebhookConfig` | `findByEventTypeAndIsActiveTrue()`, `findAllByOrderByCreatedAtDesc()` |
 
 ---
 

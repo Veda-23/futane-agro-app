@@ -9,6 +9,17 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * <h1>UserMfaRecoveryCode Repository (Offline Multi-Factor Emergency Codes)</h1>
+ * <p>
+ * Spring Data JPA repository for the {@link UserMfaRecoveryCode} entity.
+ * Provides query methods for counting and retrieving unused cryptographic recovery codes,
+ * as well as atomic batch purging during MFA re-enrollment.
+ * </p>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Repository
 public interface UserMfaRecoveryCodeRepository extends JpaRepository<UserMfaRecoveryCode, String> {
 
