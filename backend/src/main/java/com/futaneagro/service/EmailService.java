@@ -40,6 +40,9 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String senderEmail;
 
+    @Value("${spring.mail.password:}")
+    private String mailPassword;
+
     @Value("${app.base-url:http://localhost:4200}")
     private String baseUrl;
 
@@ -55,6 +58,11 @@ public class EmailService {
         if (toEmail == null || toEmail.isEmpty()) {
             // SECURITY: don't log the raw email address at WARN in case it contains PII
             log.warn("sendOtpEmail skipped: recipient email is empty");
+            return;
+        }
+
+        if (mailPassword == null || mailPassword.trim().isEmpty() || mailPassword.contains("your_mail_password")) {
+            log.debug("sendOtpEmail skipped: SMTP mail password not configured");
             return;
         }
 

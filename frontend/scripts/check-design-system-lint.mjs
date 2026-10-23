@@ -6,10 +6,11 @@ import path from 'path';
  * Phase 6: Stops design regressions, hardcoded colors, and untokenized styles.
  */
 
-const FRONTEND_SRC = path.resolve('src');
+const rootDir = fs.existsSync(path.resolve('src')) ? path.resolve('.') : path.resolve('frontend');
+const FRONTEND_SRC = path.join(rootDir, 'src');
 const ALLOWED_HEX_FILES = [
-  path.normalize('src/styles/_tokens.scss'),
-  path.normalize('src/styles.scss')
+  path.join(rootDir, 'src/styles/_tokens.scss'),
+  path.join(rootDir, 'src/styles.scss')
 ];
 
 let totalErrors = 0;

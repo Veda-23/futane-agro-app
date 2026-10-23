@@ -1331,31 +1331,31 @@ export class AppComponent implements OnInit, OnDestroy {
       },
       error: () => {}
     });
-    this.apiService.getMachines().subscribe({
-      next: (m) => {
-        if (Array.isArray(m) && m.length > 0) this.machinesList = m;
-      },
-      error: () => {}
-    });
-    // Background check for business alert notifications
-    this.apiService.getInventory().subscribe({
-      next: (inv) => {
-        this.inventoryList = inv || [];
-        this.checkAndPushNotifications();
-      },
-      error: () => {}
-    });
-    this.apiService.getTransports().subscribe({
-      next: (tr) => {
-        this.transportsList = tr || [];
-        this.checkAndPushNotifications();
-      },
-      error: () => {}
-    });
-    // On-demand loading: Do not prewarm all 21 tabs simultaneously on startup
-    // Each tab loads its data when switched to, preserving RAM and CPU.
-    // this.prewarmBackgroundTabs();
-    // this.preloadTabsProgressively();
+
+    // Stagger non-urgent alert checks by 300ms to grant active tab full HikariCP pool bandwidth
+    setTimeout(() => {
+      if (!this.isAuthenticated) return;
+      this.apiService.getMachines().subscribe({
+        next: (m) => {
+          if (Array.isArray(m) && m.length > 0) this.machinesList = m;
+        },
+        error: () => {}
+      });
+      this.apiService.getInventory().subscribe({
+        next: (inv) => {
+          this.inventoryList = inv || [];
+          this.checkAndPushNotifications();
+        },
+        error: () => {}
+      });
+      this.apiService.getTransports().subscribe({
+        next: (tr) => {
+          this.transportsList = tr || [];
+          this.checkAndPushNotifications();
+        },
+        error: () => {}
+      });
+    }, 300);
   }
 
   /**

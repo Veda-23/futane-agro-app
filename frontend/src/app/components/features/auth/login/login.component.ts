@@ -228,14 +228,18 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
-  unlockAndReset() {
+  unlockAndReset(autoSubmit = false) {
     this.loginError = '';
     localStorage.removeItem('backend_url');
     this.loginCredentials = { username: 'SUPER_ADMIN', password: 'superadmin123' };
-    this.notificationService.showInfo(
-      'Credentials Populated',
-      'Super Administrator credentials loaded. Click "Secure Sign In" to proceed.'
-    );
+    if (autoSubmit) {
+      this.handleLogin();
+    } else {
+      this.notificationService.showInfo(
+        'Credentials Populated',
+        'Super Administrator credentials loaded. Click "Sign In to ERP Portal" to proceed.'
+      );
+    }
   }
 
   handleLogin() {

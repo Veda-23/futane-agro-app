@@ -365,6 +365,11 @@ public class MfaAuthController {
 
         securityAuditService.logMfaSuccess(user.getUsername(), factor, request);
         securityAuditService.logLoginSuccess(user.getUsername(), request);
+        if (rateLimitingService != null) {
+            String clientIp = rateLimitingService.getClientIp(request);
+            rateLimitingService.reset(clientIp, RateLimitingService.Action.OTP_VERIFY);
+            rateLimitingService.reset(clientIp, RateLimitingService.Action.LOGIN);
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("token", token);

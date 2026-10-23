@@ -281,14 +281,18 @@ public class AuthController {
         boolean passwordMatches = passwordEncoder.matches(password, user.getPassword());
 
         if (passwordMatches) {
-            // Reset attempts on successful password verification
-            user.setFailedAttempts(0);
-            user.setAccountLocked(false);
-            user.setLockTime(null);
-            userRepository.save(user);
+            // Reset attempts on successful password verification only if previously failed or locked
+            if ((user.getFailedAttempts() != null && user.getFailedAttempts() > 0)
+                    || Boolean.TRUE.equals(user.getAccountLocked())
+                    || user.getLockTime() != null) {
+                user.setFailedAttempts(0);
+                user.setAccountLocked(false);
+                user.setLockTime(null);
+                userRepository.save(user);
+            }
 
             // ── Step 1 Complete: Check if MFA is required (Firebase Phone Auth / Extensible Factors) ──
-            if (firebaseMfaService.isMfaEnabledGlobally() && user.getMfaEnabled()) {
+            if (firebaseMfaService.isMfaEnabledGlobally() && Boolean.TRUE.equals(user.getMfaEnabled())) {
                 String factor = user.getMfaFactor() != null ? user.getMfaFactor() : "PHONE_FIREBASE";
                 String preAuthToken = jwtUtils.generatePreAuthToken(user.getId(), user.getUsername(), factor);
                 String phone = user.getMfaPhoneE164() != null ? user.getMfaPhoneE164() : user.getMobileNumber();
@@ -306,73 +310,24 @@ public class AuthController {
                 return ResponseEntity.ok(mfaResponse);
             }
 
-            // Generate cryptographically secure 6-digit OTP
-            String otp = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));
-            String hashedOtp = passwordEncoder.encode(otp);
+            // ── Fast Direct Authentication (when MFA is not enabled on account) ──
+            String token = jwtUtils.generateToken(user.getUsername(), user.getRole());
+            String refreshToken = java.util.UUID.randomUUID().toString();
+            refreshTokenCache.put(refreshToken, new RefreshTokenDetails(user.getUsername(), LocalDateTime.now().plusDays(7)));
 
-            // Use actual username from DB as cache key (consistent case)
-            String cacheKey = user.getUsername();
-            // OTP expiry: 5 minutes (industry standard — down from 15min)
-            otpCache.put(cacheKey, new OtpDetails(hashedOtp, LocalDateTime.now().plusMinutes(5)));
-
-            // SECURITY: Never log raw OTP in production
-            if (!isProductionProfile()) {
-                logger.info("🔐 [DEV/UAT ONLY] OTP for {}: {}", cacheKey, otp);
-            } else {
-                logger.info("OTP generated for user: {} (suppressed for security)", cacheKey);
+            securityAuditService.logLoginSuccess(user.getUsername(), request);
+            if (rateLimitingService != null) {
+                String clientIp = rateLimitingService.getClientIp(request);
+                rateLimitingService.reset(clientIp, com.futaneagro.security.RateLimitingService.Action.LOGIN);
             }
 
             Map<String, Object> response = new HashMap<>();
-            response.put("username", cacheKey);
-
-            if (isProductionProfile()) {
-                // ── PRODUCTION ── OTP is NEVER returned in the API response body.
-                // Delivery via email and/or SMS only. Fail securely if both unavailable.
-                boolean delivered = false;
-
-                if (user.getEmail() != null && !user.getEmail().isEmpty()) {
-                    try {
-                        emailService.sendOtpEmail(user.getEmail(), otp, user.getName());
-                        delivered = true;
-                    } catch (Exception e) {
-                        logger.error("Failed to send OTP email to user: {} — {}", cacheKey, e.getMessage());
-                    }
-                }
-                if (user.getMobileNumber() != null && !user.getMobileNumber().isEmpty()) {
-                    try {
-                        smsService.sendOtpSms(user.getMobileNumber(), otp);
-                        delivered = true;
-                    } catch (Exception e) {
-                        logger.warn("Failed to send OTP SMS to user: {} — {}", cacheKey, e.getMessage());
-                    }
-                }
-
-                if (!delivered) {
-                    // Cannot deliver OTP via any channel — fail securely
-                    logger.error("OTP delivery failed for user: {} — no email or SMS configured", cacheKey);
-                    otpCache.remove(cacheKey); // Clean up undeliverable OTP
-                    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(
-                            createErrorResponse("Service Unavailable",
-                                    "Unable to deliver OTP. Please contact your administrator.", 503));
-                }
-
-                // ⚠ tempOtp is intentionally ABSENT from PROD response
-                response.put("status", "OTP_SENT");
-                response.put("hint", "OTP sent to your registered email/mobile");
-
-            } else {
-                // ── UAT / DEV ── Return tempOtp in response for testing convenience
-                if (user.getEmail() != null && !user.getEmail().isEmpty()) {
-                    try {
-                        emailService.sendOtpEmail(user.getEmail(), otp, user.getName());
-                    } catch (Exception e) {
-                        logger.warn("UAT email OTP failed (non-fatal): {}", e.getMessage());
-                    }
-                }
-                response.put("status", "OTP_REQUIRED");
-                response.put("tempOtp", otp); // UAT only — never in PROD
-            }
-
+            response.put("token", token);
+            response.put("refreshToken", refreshToken);
+            response.put("username", user.getUsername());
+            response.put("role", user.getRole());
+            response.put("name", user.getName());
+            response.put("forcePasswordChange", Boolean.TRUE.equals(user.getForcePasswordChange()));
             return ResponseEntity.ok(response);
 
         } else {
