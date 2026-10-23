@@ -4,6 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * <h1>ImportPreviewDTO (Universal Data Importer Dry-Run Preview DTO)</h1>
+ * <p>
+ * Returned during stage 1 dry-run validation of uploaded Excel (.xlsx) and CSV files.
+ * Provides diagnostics breakdown (valid, invalid, duplicate, new rows) and itemized row errors with suggested fixes.
+ * </p>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 public class ImportPreviewDTO {
     private String module;
     private int totalRows;

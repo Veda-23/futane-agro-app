@@ -16,6 +16,27 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * <h1>GlobalExceptionHandler (OWASP Information Leakage Defense & Error Sanitization)</h1>
+ * <p>
+ * Centralized exception handling interceptor for all Spring MVC {@code @RestController} endpoints.
+ * Enforces strict information-leakage prevention by intercepting uncaught exceptions, redacting database internals,
+ * and generating unique correlation {@code traceId} UUIDs for support debugging.
+ * </p>
+ *
+ * <h3>Security & Defense Strategies:</h3>
+ * <ul>
+ *   <li><b>Trace ID Correlation:</b> Uncaught runtime exceptions log the full stack trace server-side with a unique UUID,
+ *       returning only generic client errors referencing the {@code traceId} to prevent stack-trace exposure.</li>
+ *   <li><b>Database Constraint Redaction:</b> Catches {@link javax.validation.ConstraintViolationException} and suppresses
+ *       raw SQL table/column names, returning sanitized user-friendly guidance.</li>
+ *   <li><b>Explicit Client Exceptions:</b> Translates {@link org.springframework.web.server.ResponseStatusException}
+ *       and {@link org.springframework.web.bind.MethodArgumentNotValidException} into structured JSON response bodies.</li>
+ * </ul>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

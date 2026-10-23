@@ -1,5 +1,15 @@
 package com.futaneagro.dto;
 
+/**
+ * <h1>OrderStatusUpdateRequest (B2B Web Order Fulfillment Transition DTO)</h1>
+ * <p>
+ * Payload submitted by ERP operations when updating the fulfillment stage of an online customer order
+ * (e.g. assigning vehicle details upon dispatch or marking as delivered).
+ * </p>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 public class OrderStatusUpdateRequest {
     private String status;
     private String note;

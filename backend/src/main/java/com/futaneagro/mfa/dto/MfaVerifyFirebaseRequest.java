@@ -2,6 +2,16 @@ package com.futaneagro.mfa.dto;
 
 import javax.validation.constraints.NotBlank;
 
+/**
+ * <h1>MfaVerifyFirebaseRequest (Step-2 Firebase Verification Request DTO)</h1>
+ * <p>
+ * Transmits the intermediate {@code preAuthToken} along with the client-side Firebase ID token
+ * to finalize authentication and issue the primary JWT session token.
+ * </p>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 public class MfaVerifyFirebaseRequest {
 
     @NotBlank(message = "Pre-authentication token is required")

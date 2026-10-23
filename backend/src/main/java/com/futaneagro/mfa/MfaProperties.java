@@ -3,6 +3,17 @@ package com.futaneagro.mfa;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+/**
+ * <h1>MfaProperties (Multi-Factor Authentication Configuration Properties)</h1>
+ * <p>
+ * Configuration properties bound to prefix {@code auth.mfa.firebase}.
+ * Governs phone verification, Firebase Admin SDK service account credentials,
+ * pre-authentication intermediate token TTLs (default 300s), and allowed clock drift.
+ * </p>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Component
 @ConfigurationProperties(prefix = "auth.mfa.firebase")
 public class MfaProperties {

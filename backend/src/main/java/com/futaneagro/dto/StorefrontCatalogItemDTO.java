@@ -4,6 +4,17 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * <h1>StorefrontCatalogItemDTO (Public B2B Crate Catalog Presentation DTO)</h1>
+ * <p>
+ * Represents an individual product card in the public B2B storefront catalog.
+ * Contains technical specifications (dimensions, load capacity, tare weight, food grade certifications),
+ * real-time warehouse available stock, volume tier discount maps, and product imagery.
+ * </p>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 public class StorefrontCatalogItemDTO {
     private String id;
     private String crateType;

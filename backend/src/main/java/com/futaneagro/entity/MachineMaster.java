@@ -34,6 +34,7 @@ import java.time.LocalDate;
 })
 @Where(clause = "is_active = true AND is_deleted = false")
 @SQLDelete(sql = "UPDATE t_prd_machine_master SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(value = {"hibernateLazyInitializer", "handler"}, ignoreUnknown = true)
 public class MachineMaster extends BaseEntity {
     @Column(name = "machine_id")
     private Integer machineId;

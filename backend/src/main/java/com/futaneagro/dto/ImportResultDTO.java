@@ -1,5 +1,15 @@
 package com.futaneagro.dto;
 
+/**
+ * <h1>ImportResultDTO (Universal Data Importer Stage-2 Execution Result DTO)</h1>
+ * <p>
+ * Final execution report returning the counts of inserted, updated, skipped, and failed records
+ * upon batch import completion.
+ * </p>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 public class ImportResultDTO {
     private boolean success;
     private String message;

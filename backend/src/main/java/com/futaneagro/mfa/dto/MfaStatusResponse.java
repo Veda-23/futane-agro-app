@@ -2,6 +2,16 @@ package com.futaneagro.mfa.dto;
 
 import java.util.List;
 
+/**
+ * <h1>MfaStatusResponse (Account 2FA Status & Recovery Codes DTO)</h1>
+ * <p>
+ * Reports whether MFA is enabled, active factor type, masked telephone number,
+ * and remaining valid emergency recovery codes.
+ * </p>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 public class MfaStatusResponse {
     private boolean mfaEnabled;
     private String mfaFactor;

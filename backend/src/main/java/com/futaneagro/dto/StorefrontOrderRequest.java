@@ -3,6 +3,16 @@ package com.futaneagro.dto;
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * <h1>StorefrontOrderRequest (Public B2B Storefront Checkout Request DTO)</h1>
+ * <p>
+ * Submitted by prospective buyers through the public catalog checkout portal.
+ * Captures buyer KYC, company GSTIN, destination address, payment method, and list of customized crate items.
+ * </p>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 public class StorefrontOrderRequest {
     private String customerName;
     private String customerMobile;

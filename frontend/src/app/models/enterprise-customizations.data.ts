@@ -1,3 +1,16 @@
+/**
+ * <h1>Enterprise Multi-Tenant Customization Specifications & Industry Presets</h1>
+ * <p>
+ * Source of truth for 200+ multi-tenant configuration switches spanning 8 business categories:
+ * Branding, Multi-Company, Invoicing/Tax, Manufacturing, Inventory, Logistics, Workforce, and Governance.
+ * Supplies 10 turnkey industry vertical templates (Agri-Plastics, Automotive Molded Parts, Food Processing, etc.).
+ * </p>
+ *
+ * @module EnterpriseCustomizations
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
+
 export interface CustomizationOption {
   id: string;
   key: string;

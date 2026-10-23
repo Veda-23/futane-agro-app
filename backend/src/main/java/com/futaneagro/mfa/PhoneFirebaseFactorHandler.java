@@ -7,6 +7,16 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * <h1>PhoneFirebaseFactorHandler (SMS Phone Multi-Factor Authentication Strategy)</h1>
+ * <p>
+ * Implementation of {@link MfaFactorHandler} providing SMS OTP verification via the Firebase Admin SDK.
+ * Masks recipient phone numbers (e.g. "+91 98*** **321") for UI challenges and validates cryptographic ID tokens.
+ * </p>
+ *
+ * @author Futane Agro ERP Architecture Team
+ * @version 2.0
+ */
 @Component
 public class PhoneFirebaseFactorHandler implements MfaFactorHandler {
 

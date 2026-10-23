@@ -186,6 +186,7 @@ public class EnterpriseController {
      * @return Persisted {@link MachineBreakdown} incident log
      */
     @PostMapping({"/breakdowns", "/machine-breakdowns"})
+    @Transactional(rollbackFor = Exception.class)
     public MachineBreakdown createBreakdown(@RequestBody MachineBreakdown breakdown) {
         if (breakdown.getMachine() != null && breakdown.getMachine().getId() != null) {
             machineRepo.findById(breakdown.getMachine().getId()).ifPresent(breakdown::setMachine);
@@ -203,6 +204,7 @@ public class EnterpriseController {
      * @return 200 OK with updated incident, or 404 NOT FOUND
      */
     @PutMapping({"/breakdowns/{id}", "/machine-breakdowns/{id}"})
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<MachineBreakdown> updateBreakdown(@PathVariable String id, @RequestBody MachineBreakdown details) {
         return breakdownRepo.findById(id).map(bd -> {
             String oldState = toJson(bd);

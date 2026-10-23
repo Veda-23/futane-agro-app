@@ -435,6 +435,27 @@ Enterprise administration, tenant branding, dynamic RBAC, custom fields, and dev
 | `/api/audit-logs` | GET / POST | SUPER_ADMIN | Master audit trail log inspector with entity snapshots before and after mutation. |
 | `/api/dev/seed-data` | POST | SUPER_ADMIN | Comprehensive mock fixture generator (hard-blocked in production profiles). |
 
+### Multi-Factor Authentication Architecture Subsystem (`com.futaneagro.mfa`)
+- **Strategy Design Pattern (`MfaFactorHandler.java`):** Enables dynamic factor pluggability (`getFactorType()`, `createChallengeData()`, `verify()`).
+- **Firebase SMS Factor (`PhoneFirebaseFactorHandler.java`):** Manages Google reCAPTCHA phone authentication challenges, verifies cryptographic Firebase ID tokens, and masks telephone numbers (`+91 98*** **321`).
+- **Configuration & Invariants (`MfaProperties.java`):** Bound to `auth.mfa.firebase`, maintaining a 300-second intermediate pre-authentication token TTL, 60-second clock skew tolerance, and master feature toggle.
+- **DTO Protocol Layer (`com.futaneagro.mfa.dto`):**
+  - `MfaChallengeResponse`: Returns intermediate `preAuthToken` upon successful password authentication.
+  - `MfaEnrollRequest`: Validates client phone ownership via Firebase ID token.
+  - `MfaStatusResponse`: Telemetry DTO communicating enrollment state, masked phone, and remaining recovery codes.
+  - `MfaVerifyFirebaseRequest` & `MfaVerifyRecoveryCodeRequest`: Step-2 payload contracts exchanging challenge tokens for primary JWT bearer credentials.
+
+### OWASP Exception Handling & Information Leakage Defense (`com.futaneagro.exception`)
+- **`GlobalExceptionHandler.java`**:
+  - **Trace ID Correlation:** Uncaught runtime exceptions log full stack traces server-side and emit a unique UUID `traceId` to clients, shielding SQL structures, table schemas, and library internals.
+  - **Database Constraint Redaction:** Catches `ConstraintViolationException` and redacts raw database field details.
+  - **Status Mapping:** Safely translates `ResponseStatusException` and `MethodArgumentNotValidException` with field-level validation diagnostics.
+
+### Health Telemetry & Diagnostic Probes (`com.futaneagro.health`)
+- **`DatabaseLatencyHealthIndicator.java`**:
+  - Actuator health probe executing `SELECT 1` benchmark queries.
+  - Categorizes database performance as `OPTIMAL` (< 1000ms latency) or flags `Status.DOWN` with `SLOW` warning (> 1000ms latency).
+
 ---
 
 ## 5. Database Entity & Repository Architecture (PostgreSQL 16)

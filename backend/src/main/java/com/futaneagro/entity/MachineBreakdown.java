@@ -30,6 +30,7 @@ import java.time.LocalDate;
 @Table(name = "t_prd_breakdown")
 @Where(clause = "is_active = true AND is_deleted = false")
 @SQLDelete(sql = "UPDATE t_prd_breakdown SET is_deleted = true, is_active = false, deleted_date = NOW() WHERE id = ?")
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(value = {"hibernateLazyInitializer", "handler"}, ignoreUnknown = true)
 public class MachineBreakdown extends BaseEntity {
     @Column(name = "breakdown_id")
     private Integer breakdownId;

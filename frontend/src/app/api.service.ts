@@ -646,16 +646,45 @@ export class ApiService {
     );
   }
 
-  // Audit Logs (Cached with SWR)
+  /**
+   * Evaluates if current authenticated user holds SUPER_ADMIN authority.
+   */
+  private isSuperAdminUser(): boolean {
+    try {
+      const raw = sessionStorage.getItem('user') || localStorage.getItem('user');
+      if (raw) {
+        const u = JSON.parse(raw);
+        const role = (u?.role || '').toUpperCase();
+        return role === 'SUPER_ADMIN' || role === 'SUPERADMIN' || role === 'ROLE_SUPER_ADMIN';
+      }
+    } catch (e) {
+      // Fallback
+    }
+    return false;
+  }
+
+  // Audit Logs (Restricted strictly to SUPER_ADMIN)
   getAuditLogs(params?: any, forceRefresh: boolean = false): Observable<any> {
+    if (!this.isSuperAdminUser()) {
+      return of([]);
+    }
     if (!params || Object.keys(params).length === 0) {
       return this.getCachedOrFetch(`${this.baseUrl}/audit-logs`, forceRefresh);
     }
-    return this.http.get(`${this.baseUrl}/audit-logs`, { params });
+    return this.http.get(`${this.baseUrl}/audit-logs`, { params }).pipe(
+      catchError(() => of([]))
+    );
   }
+
   createAuditLog(log: any): Observable<any> {
+    if (!this.isSuperAdminUser()) {
+      // Backend services already record transactional audit entries automatically.
+      // Skipping client-side call prevents 403 Forbidden console spam for operational roles.
+      return of({ status: 'SERVER_AUDITED' });
+    }
     return this.http.post(`${this.baseUrl}/audit-logs`, log).pipe(
-      tap(() => this.invalidateCache('/audit-logs'))
+      tap(() => this.invalidateCache('/audit-logs')),
+      catchError(() => of(null))
     );
   }
 
